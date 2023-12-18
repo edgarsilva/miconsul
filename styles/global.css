@@ -1,3 +1,19 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+
+/* HTMX transitions*/
+ul li {
+  opacity: 1;
+  transition: opacity 0.5s ease-out;
+}
+
+ul li.htmx-swapping {
+  opacity: 0;
+}
+
+ul li.htmx-added {
+  opacity: 0;
+}

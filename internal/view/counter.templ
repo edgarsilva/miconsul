@@ -1,11 +1,11 @@
-package views
+package view
 
 import "strconv"
 
 templ Button(label string, path string) {
 	<button
  		class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
- 		hx-get={ path }
+ 		hx-put={ path }
  		hx-target="#counter_container"
  		hx-swap="outerHTML"
  		hx-indicator="dots"
@@ -31,28 +31,15 @@ templ CounterContainer(count int64) {
 				@Counter(count)
 			</p>
 			<div class="mt-10 flex items-center justify-center gap-x-6">
-				@Button("+ Increment", "/api/increment?count="+strconv.FormatInt(count, 10))
-				@Button("- Decrement", "/api/decrement?count="+strconv.FormatInt(count, 10))
+				@Button("+ Increment", "/counter/increment")
+				@Button("- Decrement", "/counter/decrement")
 			</div>
 		</div>
 	</div>
 }
 
 templ CounterPage(count int64) {
-	<html>
-		<head>
-			<meta charset="UTF-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<title>Todos</title>
-			<link href="/global.css" rel="stylesheet"/>
-			<script src="https://unpkg.com/htmx.org@1.9.9" integrity="sha384-QFjmbokDn2DjBjq+fM+8LUIVrAgqcNW2s0PjAxHETgRn9l4fvX31ZxDxvwQnyMOX" crossorigin="anonymous"></script>
-			<script src="https://unpkg.com/htmx.org/dist/ext/response-targets.js"></script>
-			<script src="https://unpkg.com/htmx.org/dist/ext/loading-states.js"></script>
-		</head>
-		<body class="bg-gray-200">
-			<main class="mx-auto">
-				@CounterContainer(count)
-			</main>
-		</body>
-	</html>
+	@BasePage() {
+		@CounterContainer(count)
+	}
 }
