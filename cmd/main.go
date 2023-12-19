@@ -2,6 +2,7 @@ package main
 
 import (
 	"fiber-blueprint/internal/counter"
+	"fiber-blueprint/internal/home"
 	"fiber-blueprint/internal/server"
 	"fiber-blueprint/internal/todos"
 	"os"
@@ -10,6 +11,7 @@ import (
 func main() {
 	app := server.New()
 
+	app.RegisterRouter(&home.Router{})
 	app.RegisterRouter(&counter.Router{})
 	app.RegisterRouter(&todos.Router{})
 

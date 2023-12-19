@@ -95,6 +95,7 @@ templ Todos(tds []database.Todo) {
 templ TodosPage(tds []database.Todo) {
 	@BasePage() {
 		<main id="root" class="bg-indigo-900 h-screen overflow-y-auto">
+			@BackToHome("Back to home", "/", "text-indigo-100 hover:text-white")
 			@Todos(tds)
 		</main>
 	}

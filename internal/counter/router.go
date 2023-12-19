@@ -1,8 +1,8 @@
 package counter
 
 import (
-	"context"
 	"fiber-blueprint/internal/server"
+	"fiber-blueprint/internal/util"
 	"fiber-blueprint/internal/view"
 	"strconv"
 
@@ -28,43 +28,34 @@ func (r *Router) RegisterRoutes(s *server.Server) {
 }
 
 func (r *Router) HandleIncrement(c *fiber.Ctx) error {
-	count := r.sessionCountVal(c)
-	count++
-	r.SessionSetVal(c, "count", strconv.FormatInt(count, 10))
+	cnt := r.sessionCountVal(c)
+	cnt++
+	r.SessionSetVal(c, "cnt", strconv.FormatInt(cnt, 10))
 
-	component := view.CounterContainer(int64(count))
-	c.Append("Content-Type", "text/html")
-
-	return component.Render(c.Context(), c)
+	return util.Render(c, view.CounterContainer(int64(cnt)))
 }
 
 func (r *Router) HandleDecrement(c *fiber.Ctx) error {
-	count := r.sessionCountVal(c)
-	count--
-	r.SessionSetVal(c, "count", strconv.FormatInt(count, 10))
+	cnt := r.sessionCountVal(c)
+	cnt--
+	r.SessionSetVal(c, "cnt", strconv.FormatInt(cnt, 10))
 
-	component := view.CounterContainer(int64(count))
-	c.Append("Content-Type", "text/html")
-
-	return component.Render(context.Background(), c)
+	return util.Render(c, view.CounterContainer(int64(cnt)))
 }
 
 func (r *Router) HandlePage(c *fiber.Ctx) error {
-	count := r.sessionCountVal(c)
-	r.SessionSetVal(c, "count", strconv.FormatInt(count, 10))
+	cnt := r.sessionCountVal(c)
+	r.SessionSetVal(c, "cnt", strconv.FormatInt(cnt, 10))
 
-	component := view.CounterPage(int64(count))
-	c.Append("Content-Type", "text/html")
-
-	return component.Render(context.Background(), c)
+	return util.Render(c, view.CounterPage(int64(cnt)))
 }
 
 // Utils
 func (r *Router) sessionCountVal(c *fiber.Ctx) int64 {
-	count, err := strconv.Atoi(r.SessionVal(c, "count"))
+	cnt, err := strconv.Atoi(r.SessionVal(c, "cnt"))
 	if err != nil {
-		count = 0
+		cnt = 0
 	}
 
-	return int64(count)
+	return int64(cnt)
 }

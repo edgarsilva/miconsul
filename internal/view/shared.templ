@@ -1,0 +1,26 @@
+package view
+
+templ BackToHome(label, url, classes string) {
+	<div class="m-10">
+		<a
+ 			class={
+				"flex items-center font-semibold leading-7",
+				templ.KV("text-indigo-900", classes == ""),
+				templ.KV(classes, classes != ""),
+			}
+ 			href={ templ.URL(url) }
+		>
+			<svg
+ 				class="w-6 h-6 mr-4"
+ 				xmlns="http://www.w3.org/2000/svg"
+ 				fill="none"
+ 				viewBox="0 0 24 24"
+ 				stroke-width="1.5"
+ 				stroke="currentColor"
+			>
+				<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 15.75L3 12m0 0l3.75-3.75M3 12h18"></path>
+			</svg>
+			Back to home
+		</a>
+	</div>
+}

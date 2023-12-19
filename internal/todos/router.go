@@ -3,9 +3,9 @@ package todos
 import (
 	"fiber-blueprint/internal/database"
 	"fiber-blueprint/internal/server"
+	"fiber-blueprint/internal/util"
 	"fiber-blueprint/internal/view"
 
-	"github.com/a-h/templ"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -34,7 +34,7 @@ func (r *Router) RegisterRoutes(s *server.Server) {
 func (r *Router) HandleTodos(c *fiber.Ctx) error {
 	var tds []database.Todo
 	r.DB.Find(&tds)
-	return render(c, view.TodosPage(tds))
+	return util.Render(c, view.TodosPage(tds))
 }
 
 func (r *Router) HandleApiTodos(c *fiber.Ctx) error {
@@ -72,7 +72,7 @@ func (r *Router) HandleDuplicateTodo(c *fiber.Ctx) error {
 	dup.ID = 0
 	r.DB.Create(&dup)
 
-	return render(c, view.Todo(dup))
+	return util.Render(c, view.Todo(dup))
 }
 
 func (r *Router) HandleDeleteTodo(c *fiber.Ctx) error {
@@ -100,7 +100,7 @@ func (r *Router) HandleCheckTodo(c *fiber.Ctx) error {
 	t.Completed = true
 	r.DB.Save(&t)
 
-	return render(c, view.Checkbox(t))
+	return util.Render(c, view.Checkbox(t))
 }
 
 func (r *Router) HandleUncheckTodo(c *fiber.Ctx) error {
@@ -116,10 +116,5 @@ func (r *Router) HandleUncheckTodo(c *fiber.Ctx) error {
 	t.Completed = false
 	r.DB.Save(&t)
 
-	return render(c, view.Checkbox(t))
-}
-
-func render(ctx *fiber.Ctx, com templ.Component) error {
-	ctx.Append("Content-Type", "text/html")
-	return com.Render(ctx.Context(), ctx)
+	return util.Render(c, view.Checkbox(t))
 }
