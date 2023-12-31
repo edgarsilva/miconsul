@@ -2,7 +2,6 @@ package counter
 
 import (
 	"fiber-blueprint/internal/server"
-	"fiber-blueprint/internal/util"
 	"fiber-blueprint/internal/view"
 	"strconv"
 
@@ -11,10 +10,6 @@ import (
 
 type Router struct {
 	*server.Server
-}
-
-func NewRouter() *Router {
-	return &Router{}
 }
 
 func (r *Router) RegisterRoutes(s *server.Server) {
@@ -32,7 +27,7 @@ func (r *Router) HandleIncrement(c *fiber.Ctx) error {
 	cnt++
 	r.SessionSetVal(c, "cnt", strconv.FormatInt(cnt, 10))
 
-	return util.Render(c, view.CounterContainer(int64(cnt)))
+	return view.Render(c, view.CounterContainer(int64(cnt)))
 }
 
 func (r *Router) HandleDecrement(c *fiber.Ctx) error {
@@ -40,14 +35,14 @@ func (r *Router) HandleDecrement(c *fiber.Ctx) error {
 	cnt--
 	r.SessionSetVal(c, "cnt", strconv.FormatInt(cnt, 10))
 
-	return util.Render(c, view.CounterContainer(int64(cnt)))
+	return view.Render(c, view.CounterContainer(int64(cnt)))
 }
 
 func (r *Router) HandlePage(c *fiber.Ctx) error {
 	cnt := r.sessionCountVal(c)
 	r.SessionSetVal(c, "cnt", strconv.FormatInt(cnt, 10))
 
-	return util.Render(c, view.CounterPage(int64(cnt)))
+	return view.Render(c, view.CounterPage(int64(cnt)))
 }
 
 // Utils

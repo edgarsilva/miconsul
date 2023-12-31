@@ -3,8 +3,8 @@ package todos
 import (
 	"fiber-blueprint/internal/database"
 	"fiber-blueprint/internal/server"
-	"fiber-blueprint/internal/util"
 	"fiber-blueprint/internal/view"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -29,12 +29,21 @@ func (r *Router) RegisterRoutes(s *server.Server) {
 	g.Patch("/:id<int>/uncheck", r.HandleUncheckTodo)
 
 	g.Get("/api/todos", r.HandleApiTodos)
+
+	// OOB Fragments
+	g.Get("/fragment/footer", r.HandleFooterFragment)
 }
 
 func (r *Router) HandleTodos(c *fiber.Ctx) error {
-	var tds []database.Todo
+	var (
+		filter = c.Query("filter")
+		tds    []database.Todo
+		left   int64
+	)
 	r.DB.Find(&tds)
-	return util.Render(c, view.TodosPage(tds))
+	r.DB.Model(&database.Todo{}).Where("completed = ?", false).Count(&left)
+
+	return view.Render(c, view.TodosPage(tds, strconv.Itoa(int(left)), filter))
 }
 
 func (r *Router) HandleApiTodos(c *fiber.Ctx) error {
@@ -45,15 +54,22 @@ func (r *Router) HandleApiTodos(c *fiber.Ctx) error {
 
 func (r *Router) HandleCreateTodo(c *fiber.Ctx) error {
 	t := database.Todo{
-		Title:     "Buy milk",
-		Body:      "Ad the supermarket store",
+		Title:     "",
+		Body:      "",
 		Priority:  "High",
 		Completed: false,
 	}
 
-	r.DB.Create(&t)
+	t.Title = c.FormValue("title")
+	res := r.DB.Create(&t)
 
-	return c.JSON(t)
+	if res.Error != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	c.Set("HX-Trigger", "todosUpd")
+
+	return view.Render(c, view.Todo(t))
 }
 
 func (r *Router) HandleDuplicateTodo(c *fiber.Ctx) error {
@@ -72,7 +88,9 @@ func (r *Router) HandleDuplicateTodo(c *fiber.Ctx) error {
 	dup.ID = 0
 	r.DB.Create(&dup)
 
-	return util.Render(c, view.Todo(dup))
+	c.Set("HX-Trigger", "todosUpd")
+
+	return view.Render(c, view.Todo(dup))
 }
 
 func (r *Router) HandleDeleteTodo(c *fiber.Ctx) error {
@@ -83,7 +101,9 @@ func (r *Router) HandleDeleteTodo(c *fiber.Ctx) error {
 
 	r.DB.Delete(&t, id)
 
+	c.Set("HX-Trigger", "todosUpd")
 	c.SendStatus(fiber.StatusOK)
+
 	return c.SendString("")
 }
 
@@ -97,10 +117,12 @@ func (r *Router) HandleCheckTodo(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusMethodNotAllowed)
 	}
 
+	c.Set("HX-Trigger", "todosUpd")
+
 	t.Completed = true
 	r.DB.Save(&t)
 
-	return util.Render(c, view.Checkbox(t))
+	return view.Render(c, view.Checkbox(t))
 }
 
 func (r *Router) HandleUncheckTodo(c *fiber.Ctx) error {
@@ -113,8 +135,21 @@ func (r *Router) HandleUncheckTodo(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusMethodNotAllowed)
 	}
 
+	c.Set("HX-Trigger", "todosUpd")
+
 	t.Completed = false
 	r.DB.Save(&t)
 
-	return util.Render(c, view.Checkbox(t))
+	return view.Render(c, view.Checkbox(t))
+}
+
+// Fragments
+func (r *Router) HandleFooterFragment(c *fiber.Ctx) error {
+	var (
+		filter = c.Query("filter")
+		left   int64
+	)
+	r.DB.Model(&database.Todo{}).Where("completed = ?", false).Count(&left)
+
+	return view.Render(c, view.TodosFooter(strconv.Itoa(int(left)), filter))
 }

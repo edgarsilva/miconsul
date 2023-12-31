@@ -6,7 +6,10 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/etag"
+	"github.com/gofiber/fiber/v2/middleware/favicon"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/gofiber/fiber/v2/middleware/session"
 )
 
@@ -25,9 +28,21 @@ func New() *Server {
 
 	// Initialize logger middleware config
 	fiberApp.Use(logger.New())
-
 	// Initialize CORS wit config
+
 	fiberApp.Use(cors.New())
+
+	// Initialize default config
+	fiberApp.Use(etag.New())
+
+	// Initialize request ID middleware config
+	fiberApp.Use(requestid.New())
+
+	// Or extend your config for customization
+	fiberApp.Use(favicon.New(favicon.Config{
+		File: "./public/favicon.ico",
+		URL:  "/favicon.ico",
+	}))
 
 	// Initialize session middleware config
 	sessionStore := session.New()
