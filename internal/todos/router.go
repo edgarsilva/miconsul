@@ -43,7 +43,7 @@ func (r *Router) HandleTodos(c *fiber.Ctx) error {
 	r.DB.Find(&tds)
 	r.DB.Model(&database.Todo{}).Where("completed = ?", false).Count(&left)
 
-	return view.Render(c, view.TodosPage(tds, strconv.Itoa(int(left)), filter))
+	return view.Render(c, TodosPage(tds, strconv.Itoa(int(left)), filter))
 }
 
 func (r *Router) HandleApiTodos(c *fiber.Ctx) error {
@@ -69,7 +69,7 @@ func (r *Router) HandleCreateTodo(c *fiber.Ctx) error {
 
 	c.Set("HX-Trigger", "todosUpd")
 
-	return view.Render(c, view.Todo(t))
+	return view.Render(c, TodoLi(t))
 }
 
 func (r *Router) HandleDuplicateTodo(c *fiber.Ctx) error {
@@ -90,7 +90,7 @@ func (r *Router) HandleDuplicateTodo(c *fiber.Ctx) error {
 
 	c.Set("HX-Trigger", "todosUpd")
 
-	return view.Render(c, view.Todo(dup))
+	return view.Render(c, TodoLi(dup))
 }
 
 func (r *Router) HandleDeleteTodo(c *fiber.Ctx) error {
@@ -122,7 +122,7 @@ func (r *Router) HandleCheckTodo(c *fiber.Ctx) error {
 	t.Completed = true
 	r.DB.Save(&t)
 
-	return view.Render(c, view.Checkbox(t))
+	return view.Render(c, TodoCheckbox(t))
 }
 
 func (r *Router) HandleUncheckTodo(c *fiber.Ctx) error {
@@ -140,7 +140,7 @@ func (r *Router) HandleUncheckTodo(c *fiber.Ctx) error {
 	t.Completed = false
 	r.DB.Save(&t)
 
-	return view.Render(c, view.Checkbox(t))
+	return view.Render(c, TodoCheckbox(t))
 }
 
 // Fragments
@@ -151,5 +151,5 @@ func (r *Router) HandleFooterFragment(c *fiber.Ctx) error {
 	)
 	r.DB.Model(&database.Todo{}).Where("completed = ?", false).Count(&left)
 
-	return view.Render(c, view.TodosFooter(strconv.Itoa(int(left)), filter))
+	return view.Render(c, TodosFooter(strconv.Itoa(int(left)), filter))
 }

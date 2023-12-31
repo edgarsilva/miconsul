@@ -1,19 +1,19 @@
-package view
+package todos
 
 import (
 	"fiber-blueprint/internal/database"
 	"strconv"
 )
 
-templ CreateTodoForm() {
+templ TodoCreateForm() {
 	<div class="mb-4 mx-auto container sm:max-w-xl">
 		<form hx-post="/todos" hx-swap="beforeend" hx-target="#todos">
-			@CreateTodoInput()
+			@TodoCreateInput()
 		</form>
 	</div>
 }
 
-templ CreateTodoInput() {
+templ TodoCreateInput() {
 	<input
  		class="block w-full rounded-lg border-0 bg-white/5 p-2 text-stone-100 shadow-sm ring-1 ring-inset ring-stone-200/10 focus:ring-2 focus:ring-inset focus:ring-stone-200 sm:text-lg sm:leading-6"
  		type="text"
@@ -24,7 +24,7 @@ templ CreateTodoInput() {
 	/>
 }
 
-templ Checkbox(t database.Todo) {
+templ TodoCheckbox(t database.Todo) {
 	<input
  		class="h-6 w-6 rounded-md border-blue-600 text-blue-600 focus:ring-blue-600"
  		id={ "todo_" + strconv.Itoa(int(t.ID)) }
@@ -41,10 +41,10 @@ templ Checkbox(t database.Todo) {
 	/>
 }
 
-templ Todo(t database.Todo) {
+templ TodoLi(t database.Todo) {
 	<li class="divide-y divide-stone-500 rounded-sm shadow">
 		<div class="flex w-full items-center justify-between space-x-6 p-6">
-			@Checkbox(t)
+			@TodoCheckbox(t)
 			<div class="flex-1 truncate">
 				<div class="flex items-center space-x-3">
 					<h3 class="truncate text-sm font-medium text-stone-100">{ t.Title }</h3>
@@ -96,7 +96,7 @@ templ Todo(t database.Todo) {
 	</li>
 }
 
-templ Todos(tds []database.Todo) {
+templ TodosList(tds []database.Todo) {
 	<div class="container m-auto">
 		<ul
  			class="flex flex-col gap-0 max-w-xl m-auto divide-y divide-stone-200 border border-stone-200"
@@ -104,7 +104,7 @@ templ Todos(tds []database.Todo) {
  			role="list"
 		>
 			for _, t := range tds {
-				@Todo(t)
+				@TodoLi(t)
 			}
 		</ul>
 	</div>
