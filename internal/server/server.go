@@ -69,7 +69,7 @@ func (s *Server) Session(c *fiber.Ctx) (*session.Session, error) {
 	return s.SessionStore.Get(c)
 }
 
-func (s *Server) SessionVal(c *fiber.Ctx, k string) string {
+func (s *Server) SessionGet(c *fiber.Ctx, k string) string {
 	sess, err := s.Session(c)
 	if err != nil {
 		return ""
@@ -90,9 +90,8 @@ func (s *Server) SessionVal(c *fiber.Ctx, k string) string {
 	return vStr
 }
 
-func (s *Server) SessionSetVal(c *fiber.Ctx, k string, v string) error {
+func (s *Server) SessionSet(c *fiber.Ctx, k string, v string) error {
 	sess, err := s.Session(c)
-
 	if err != nil {
 		fmt.Println("error saving session:", err)
 		return err

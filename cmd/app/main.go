@@ -11,9 +11,14 @@ import (
 func main() {
 	app := server.New()
 
-	app.RegisterRouter(&home.Router{})
-	app.RegisterRouter(&counter.Router{})
-	app.RegisterRouter(&todos.Router{})
+	homeRouter := home.NewRouter()
+	app.RegisterRouter(&homeRouter)
+
+	todosRouter := todos.NewRouter()
+	app.RegisterRouter(&todosRouter)
+
+	counterRouter := counter.NewRouter()
+	app.RegisterRouter(&counterRouter)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -21,7 +26,6 @@ func main() {
 	}
 
 	err := app.Listen(port) // <-- this is a blocking call
-
 	if err != nil {
 		panic("cannot start server")
 	}

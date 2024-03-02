@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   psql:
@@ -14,3 +14,4 @@ services:
 
 volumes:
   psql_volume:
+

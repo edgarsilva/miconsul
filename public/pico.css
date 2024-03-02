@@ -1,0 +1,31 @@
+:root {
+  /* --pico-border-radius: 2rem; */
+  /* --pico-typography-spacing-vertical: 1.5rem; */
+  /* --pico-form-element-spacing-vertical: 1rem; */
+  /* --pico-form-element-spacing-horizontal: 1.25rem; */
+}
+
+h1 {
+  /* --pico-font-family: Pacifico, cursive; */
+  /* --pico-font-weight: 400; */
+  /* --pico-typography-spacing-vertical: 0.5rem; */
+}
+
+button {
+  /* --pico-font-weight: 700; */
+}
+
+article {
+}
+
+article .badges .badge {
+  background-color: var(--pico-color-grey-100);
+  border-color: var(--pico-color-grey-400);
+  color: var(--pico-color-grey-600);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  vertical-align: text-bottom;
+}

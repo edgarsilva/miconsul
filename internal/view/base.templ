@@ -1,7 +1,38 @@
 package view
 
-templ BasePage() {
-	<html>
+templ Header() {
+	<header class="sticky top-0 z-10 rounded-b-lg flex justify-between items-center p-2 bg-neutral-400/75 dark:bg-white/10 backdrop-blur-sm drop-shadow-xl">
+		<span class="mr-auto order-first text-3xl font-semibold tracking-tight text-neutral-600 dark:text-neutral-100">edgarsilva.dev</span>
+		<div class="flex items-center ml-auto gap-2" x-data="{}">
+			<button
+				class="p-2 rounded-full bg-neutral-100 text-neutral-800 dark:text-neutral-100 dark:bg-neutral-800 hover:text-neutral-800 hover:bg-neutral-50 hover:ring hover:ring-neutral-100 hover:ring-offset-2 ring-offset-neutral-600 transition-colors duration-200"
+				hx-get="/api/theme?theme=light"
+				@click="document.documentElement.classList.remove('dark');localStorage.setItem('theme', 'light');"
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"></path>
+				</svg>
+			</button>
+			<button
+				class="p-2 rounded-full text-neutral-600 bg-neutral-400 dark:text-neutral-800 dark:bg-neutral-100 hover:bg-neutral-50 hover:ring hover:ring-neutral-50 hover:ring-offset-2 ring-offset-neutral-800 transition-colors duration-200"
+				hx-get="/api/theme?theme=dark"
+				@click="localStorage.setItem('theme', 'dark');document.documentElement.classList.add('dark');"
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"></path>
+				</svg>
+			</button>
+		</div>
+	</header>
+}
+
+templ BasePage(theme string) {
+	<!DOCTYPE html>
+	<html
+		if (theme == "dark") {
+			class="dark"
+		}
+	>
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -9,9 +40,102 @@ templ BasePage() {
 			<link href="/global.css" rel="stylesheet"/>
 			<script src="https://unpkg.com/htmx.org@1.9.9" integrity="sha384-QFjmbokDn2DjBjq+fM+8LUIVrAgqcNW2s0PjAxHETgRn9l4fvX31ZxDxvwQnyMOX" crossorigin="anonymous"></script>
 			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+			<script>
+              function setDarkTheme() {
+                const theme = localStorage.getItem("theme");
+
+                if (theme === "dark") {
+                  return document.documentElement.classList.add("dark");
+                }
+
+                if (theme === "light") {
+                  return document.documentElement.classList.remove("dark");
+                }
+
+                if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                  return document.documentElement.classList.add("dark");
+                } else {
+                  return document.documentElement.classList.remove("dark");
+                }
+              }
+
+              function init() {
+                setDarkTheme();
+              }
+
+              document.addEventListener("DOMContentLoaded", init);
+            </script>
+		</head>
+		<body class="bg-neutral-100 text-neutral-900 dark:bg-neutral-900 dark:text-neutral-200">
+			@Header()
+			{ children... }
+		</body>
+	</html>
+}
+
+templ PicoHeader() {
+	<header class="container-fluid">
+		<nav>
+			<ul>
+				<li><strong>edgarsilva.dev</strong></li>
+			</ul>
+			<ul>
+				<li>
+					<a href="?theme=light" class="contrast">
+						light
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke-width="1.5"
+							stroke="currentColor"
+							height="24"
+							with="24"
+						>
+							<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"></path>
+						</svg>
+					</a>
+				</li>
+				<li>
+					<a href="?theme=dark" class="contrast">
+						dark
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke-width="1.5"
+							stroke="currentColor"
+							height="20"
+							with="20"
+						>
+							<path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"></path>
+						</svg>
+					</a>
+				</li>
+			</ul>
+		</nav>
+	</header>
+}
+
+templ PicoBasePage(theme string) {
+	<!DOCTYPE html>
+	<html data-theme={ theme }>
+		<head>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<meta name="color-scheme" content="light dark"/>
+			<title>Todos</title>
+			<link href="/pico.css" rel="stylesheet"/>
+			<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"/>
+			<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.colors.min.css"/>
+			<script src="https://unpkg.com/htmx.org@1.9.9" integrity="sha384-QFjmbokDn2DjBjq+fM+8LUIVrAgqcNW2s0PjAxHETgRn9l4fvX31ZxDxvwQnyMOX" crossorigin="anonymous"></script>
+			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 		</head>
 		<body>
-			{ children... }
+			@PicoHeader()
+			<main class="container">
+				{ children... }
+			</main>
 		</body>
 	</html>
 }
