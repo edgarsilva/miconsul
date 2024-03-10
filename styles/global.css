@@ -1,8 +1,6 @@
-@tailwind base;
+/* @tailwind base; */
 @tailwind components;
 @tailwind utilities;
-
-
 
 /* HTMX transitions*/
 ul li {

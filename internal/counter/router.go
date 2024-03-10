@@ -51,7 +51,7 @@ func (r *Router) HandlePage(c *fiber.Ctx) error {
 
 // Utils
 func (r *Router) sessionCountVal(c *fiber.Ctx) int64 {
-	cnt, err := strconv.Atoi(r.SessionGet(c, "cnt"))
+	cnt, err := strconv.Atoi(r.SessionGet(c, "cnt", "0"))
 	if err != nil {
 		cnt = 0
 	}

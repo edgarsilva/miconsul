@@ -3,8 +3,6 @@ package todos
 import (
 	"fiber-blueprint/internal/database"
 	"fiber-blueprint/internal/view"
-
-	"strconv"
 )
 
 templ TodoCreateForm() {
@@ -31,14 +29,14 @@ templ TodoCreateInput() {
 
 templ TodoCheckbox(t database.Todo) {
 	<input
-		id={ "todo_" + strconv.Itoa(int(t.ID)) }
-		name={ "todo[" + strconv.Itoa(int(t.ID)) + "]" }
+		id={ t.ID }
+		name={ "todo[" + t.ID + "]" }
 		type="checkbox"
 		if t.Completed {
 			checked
-			hx-patch={ "/todos/" + strconv.Itoa(int(t.ID)) + "/uncheck" }
+			hx-patch={ "/todos/" + t.ID + "/uncheck" }
 		} else {
-			hx-patch={ "/todos/" + strconv.Itoa(int(t.ID)) + "/check" }
+			hx-patch={ "/todos/" + t.ID + "/check" }
 		}
 		hx-target="closest h3"
 		hx-swap="outerHTML swap:0.1s"
@@ -62,7 +60,7 @@ templ TodoCard(t database.Todo) {
 	<article>
 		<div class="badges">
 			<span class="badge">{ t.Priority }</span>
-			<span class="badge">ID: { strconv.Itoa(int(t.ID)) }</span>
+			<span class="badge">ID: { t.ID }</span>
 		</div>
 		<hgroup>
 			@TodoTitle(t)
@@ -71,7 +69,7 @@ templ TodoCard(t database.Todo) {
 		<p class="buttons">
 			<button
 				class="contrast outlined"
-				hx-delete={ "/todos/" + strconv.Itoa(int(t.ID)) }
+				hx-delete={ "/todos/" + t.ID }
 				hx-target="closest article"
 				hx-swap="outerHTML swap:0.1s"
 			>
@@ -90,7 +88,7 @@ templ TodoCard(t database.Todo) {
 			</button>
 			<button
 				class="contrast outlined"
-				hx-post={ "/todos/" + strconv.Itoa(int(t.ID)) + "/duplicate" }
+				hx-post={ "/todos/" + t.ID + "/duplicate" }
 				hx-target="#todos"
 				hx-swap="beforeend settle:0.1s"
 			>

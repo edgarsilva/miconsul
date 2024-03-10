@@ -17,18 +17,23 @@ func (r *Router) RegisterRoutes(s *server.Server) {
 
 	// Pages
 	g := r.Group("/todos")
-	g.Get("", r.HandleTodos)
-	g.Get("/filtered", r.HandleFilteredTodos)
-	g.Post("", r.HandleCreateTodo)
-	g.Delete("/:id<int>", r.HandleDeleteTodo)
-	g.Post("/:id<int>/duplicate", r.HandleDuplicateTodo)
-	g.Patch("/:id<int>/check", r.HandleCheckTodo)
-	g.Patch("/:id<int>/uncheck", r.HandleUncheckTodo)
+	g.Get("", r.handleTodos)
+	g.Get("/filtered", r.handleFilteredTodos)
+	g.Post("", r.handleCreateTodo)
+	g.Delete("/:id", r.handleDeleteTodo)
+	g.Post("/:id/duplicate", r.handleDuplicateTodo)
+	g.Patch("/:id/check", r.handleCheckTodo)
+	g.Patch("/:id/uncheck", r.handleUncheckTodo)
 
 	// Fragments
-	g.Get("/fragment/footer", r.HandleFooterFragment)
-	g.Get("/fragment/list", r.HandleTodosFragment)
+	g.Get("/fragment/footer", r.handleFooterFragment)
+	g.Get("/fragment/list", r.handleTodosFragment)
 
 	// API
-	g.Get("/api/todos", r.HandleApiTodos)
+	api := r.Group("/api/todos")
+	api.Get("", r.handleApiTodos)
+
+	// Test routes
+	api.Post("/1000Todos", r.handleCreate1000Todos)
+	api.Get("/count", r.handleCountTodos)
 }

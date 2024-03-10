@@ -6,12 +6,15 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func (r *Router) HandlePage(c *fiber.Ctx) error {
-	th := r.SessionGet(c, "theme")
-	return view.Render(c, view.LandingPage(th))
+func (r *router) HandlePage(c *fiber.Ctx) error {
+	th := r.SessionGet(c, "theme", "light")
+	return view.Render(c, LandingPage(th))
 }
 
-func (r *Router) HandleTheme(c *fiber.Ctx) error {
-	r.SessionSet(c, "theme", c.Query("theme", "light"))
-	return c.SendStatus(fiber.StatusNoContent)
+func (r *router) HandleThemeChange(c *fiber.Ctx) error {
+	t := c.Query("theme", "light")
+	r.SessionSet(c, "theme", t)
+
+	// return c.SendStatus(fiber.StatusNoContent)
+	return view.Render(c, view.PicoThemeIcon(t))
 }

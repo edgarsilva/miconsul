@@ -4,19 +4,19 @@ import (
 	"fiber-blueprint/internal/server"
 )
 
-type Router struct {
+type router struct {
 	*server.Server
 }
 
-func NewRouter() Router {
-	return Router{}
+func NewRouter() router {
+	return router{}
 }
 
-func (r *Router) RegisterRoutes(s *server.Server) {
+func (r *router) RegisterRoutes(s *server.Server) {
 	r.Server = s
 
-	g := r.Group("/")
+	g := r.Server.Group("/")
 
 	g.Get("", r.HandlePage)
-	g.Get("api/theme", r.HandleTheme)
+	g.Get("api/theme", r.HandleThemeChange)
 }

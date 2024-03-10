@@ -7,9 +7,11 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 )
 
-func (r *Router) HandleTodos(c *fiber.Ctx) error {
+// GET: /todos.html - Get all todos paginated.
+func (r *Router) handleTodos(c *fiber.Ctx) error {
 	var (
 		filter = c.Query("filter")
 		theme  = c.Query("theme")
@@ -18,9 +20,11 @@ func (r *Router) HandleTodos(c *fiber.Ctx) error {
 	)
 
 	if theme == "" {
-		theme = "light"
+		theme = r.SessionGet(c, "theme", "light")
 	}
+
 	r.SessionSet(c, "theme", theme)
+	log.Info("error saving theme:", theme)
 
 	tds = fetchTodos(r.DB, filter)
 	r.DB.Model(&database.Todo{}).Where("completed = ?", false).Count(&left)
@@ -28,7 +32,8 @@ func (r *Router) HandleTodos(c *fiber.Ctx) error {
 	return view.Render(c, TodosPage(tds, strconv.Itoa(int(left)), filter, theme))
 }
 
-func (r *Router) HandleFilteredTodos(c *fiber.Ctx) error {
+// GET: /todos.html - Get filtered todos.
+func (r *Router) handleFilteredTodos(c *fiber.Ctx) error {
 	var (
 		filter = c.Query("filter")
 		left   int64
@@ -41,13 +46,7 @@ func (r *Router) HandleFilteredTodos(c *fiber.Ctx) error {
 	return view.Render(c, TodosFooter(strconv.Itoa(int(left)), filter))
 }
 
-func (r *Router) HandleApiTodos(c *fiber.Ctx) error {
-	var tds []database.Todo
-	r.DB.Find(&tds)
-	return c.JSON(tds)
-}
-
-func (r *Router) HandleCreateTodo(c *fiber.Ctx) error {
+func (r *Router) handleCreateTodo(c *fiber.Ctx) error {
 	t := database.Todo{
 		Title:     "",
 		Body:      "",
@@ -67,20 +66,22 @@ func (r *Router) HandleCreateTodo(c *fiber.Ctx) error {
 	return view.Render(c, TodoCard(t))
 }
 
-func (r *Router) HandleDuplicateTodo(c *fiber.Ctx) error {
+// POST: /todos/:id/duplicate.html - Duplicates a todo
+func (r *Router) handleDuplicateTodo(c *fiber.Ctx) error {
 	var (
 		id  = c.Params("id")
-		ori database.Todo
+		src database.Todo
 		dup database.Todo
 	)
 
-	if res := r.DB.First(&ori, id); res.Error != nil {
+	src.ID = id
+	if res := r.DB.First(&src); res.Error != nil {
 		c.SendStatus(fiber.StatusMethodNotAllowed)
 		return c.SendString("")
 	}
 
-	dup = ori
-	dup.ID = 0
+	dup = src
+	dup.ID = ""
 	r.DB.Create(&dup)
 
 	c.Set("HX-Trigger", "refreshFooter")
@@ -88,13 +89,15 @@ func (r *Router) HandleDuplicateTodo(c *fiber.Ctx) error {
 	return view.Render(c, TodoCard(dup))
 }
 
-func (r *Router) HandleDeleteTodo(c *fiber.Ctx) error {
+// DELETE: /todos/:id.html - Delete a todo
+func (r *Router) handleDeleteTodo(c *fiber.Ctx) error {
 	var (
-		id = c.Params("id")
-		t  database.Todo
+		id   = c.Params("id")
+		todo database.Todo
 	)
 
-	r.DB.Delete(&t, id)
+	todo.ID = id
+	r.DB.Delete(&todo)
 
 	c.Set("HX-Trigger", "refreshFooter")
 	c.SendStatus(fiber.StatusOK)
@@ -102,7 +105,7 @@ func (r *Router) HandleDeleteTodo(c *fiber.Ctx) error {
 	return c.SendString("")
 }
 
-func (r *Router) HandleCheckTodo(c *fiber.Ctx) error {
+func (r *Router) handleCheckTodo(c *fiber.Ctx) error {
 	var (
 		id = c.Params("id")
 		t  database.Todo
@@ -120,7 +123,7 @@ func (r *Router) HandleCheckTodo(c *fiber.Ctx) error {
 	return view.Render(c, TodoTitle(t))
 }
 
-func (r *Router) HandleUncheckTodo(c *fiber.Ctx) error {
+func (r *Router) handleUncheckTodo(c *fiber.Ctx) error {
 	var (
 		id = c.Params("id")
 		t  database.Todo
@@ -139,7 +142,7 @@ func (r *Router) HandleUncheckTodo(c *fiber.Ctx) error {
 }
 
 // Fragments
-func (r *Router) HandleFooterFragment(c *fiber.Ctx) error {
+func (r *Router) handleFooterFragment(c *fiber.Ctx) error {
 	var (
 		filter = c.Query("filter")
 		left   int64
@@ -149,18 +152,65 @@ func (r *Router) HandleFooterFragment(c *fiber.Ctx) error {
 	return view.Render(c, TodosFooter(strconv.Itoa(int(left)), filter))
 }
 
-func (r *Router) HandleTodosFragment(c *fiber.Ctx) error {
+func (r *Router) handleTodosFragment(c *fiber.Ctx) error {
 	var (
 		filter = c.Query("filter")
 		tds    []database.Todo
 		left   int64
 	)
 
-	fmt.Println("Fetching todos")
-	fmt.Println(filter)
-
 	tds = fetchTodos(r.DB, filter)
 	r.DB.Model(&database.Todo{}).Where("completed = ?", false).Count(&left)
 
 	return view.Render(c, TodosList(tds))
+}
+
+// API: /api/todos
+
+// handleApiTodos returns all todos as JSON
+// GET: /api/todos - Get all todos
+func (r *Router) handleApiTodos(c *fiber.Ctx) error {
+	var tds []database.Todo
+	r.DB.Limit(10).Find(&tds)
+
+	return c.JSON(tds)
+}
+
+// GET: /api/todos/Count - Count all todos
+func (r *Router) handleCountTodos(c *fiber.Ctx) error {
+	var count int64
+	r.DB.Model(&database.Todo{}).Count(&count)
+	res := struct {
+		Count int64 `json:"count"`
+	}{Count: count}
+
+	return c.Status(fiber.StatusOK).JSON(res)
+}
+
+// handleCreate1000Todos creates 1000 todos
+// GET: /api/todos/count
+func (r *Router) handleCreate1000Todos(c *fiber.Ctx) error {
+	todos := []database.Todo{}
+
+	// var sb strings.Builder
+	for i := 1; i <= 100000; i++ {
+		todos = append(todos, database.Todo{
+			Title:     "title " + strconv.Itoa(i),
+			Body:      "body" + strconv.Itoa(i),
+			Priority:  "High",
+			Completed: false,
+		})
+	}
+
+	r.DB.CreateInBatches(&todos, 1000)
+
+	var count int64
+	r.DB.Model(&database.Todo{}).Count(&count)
+	fmt.Println("count", count)
+
+	res := struct {
+		Count int64 `json:"count"`
+	}{Count: count}
+
+	return c.Status(fiber.StatusOK).JSON(res)
 }

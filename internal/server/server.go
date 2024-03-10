@@ -1,3 +1,4 @@
+// Package server provides a server for the application that can be extended with routers.
 package server
 
 import (
@@ -13,7 +14,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/session"
 )
 
-type Router interface {
+type router interface {
 	RegisterRoutes(*Server)
 }
 
@@ -50,27 +51,31 @@ func New() *Server {
 	// Serve static files
 	fiberApp.Static("/", "./public")
 
-	return &Server{
+	server := &Server{
 		App:          fiberApp,
 		SessionStore: sessionStore,
 		DB:           database.NewDatabase(),
 	}
+	return server
 }
 
-func (s *Server) RegisterRouter(r Router) {
+// RegisterRouter registers a router Routes and exposes the endpoints on the server.
+func (s *Server) RegisterRouter(r router) {
 	r.RegisterRoutes(s)
 }
 
+// Listen starts the server on the specified port.
 func (s *Server) Listen(port string) error {
 	return s.App.Listen(fmt.Sprintf(":%v", port))
 }
 
-func (s *Server) Session(c *fiber.Ctx) (*session.Session, error) {
+func (s *Server) session(c *fiber.Ctx) (*session.Session, error) {
 	return s.SessionStore.Get(c)
 }
 
-func (s *Server) SessionGet(c *fiber.Ctx, k string) string {
-	sess, err := s.Session(c)
+// SessionGet gets a session value by key, or returns the default value.
+func (s *Server) SessionGet(c *fiber.Ctx, k string, d string) string {
+	sess, err := s.session(c)
 	if err != nil {
 		return ""
 	}
@@ -78,20 +83,21 @@ func (s *Server) SessionGet(c *fiber.Ctx, k string) string {
 	v := sess.Get(k)
 
 	if v == nil {
-		v = ""
+		v = d
 	}
 
 	vStr, ok := v.(string)
 
 	if !ok {
-		vStr = ""
+		vStr = d
 	}
 
 	return vStr
 }
 
+// SessionSet sets a session value.
 func (s *Server) SessionSet(c *fiber.Ctx, k string, v string) error {
-	sess, err := s.Session(c)
+	sess, err := s.session(c)
 	if err != nil {
 		fmt.Println("error saving session:", err)
 		return err
