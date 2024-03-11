@@ -3,21 +3,18 @@ package database
 import (
 	"errors"
 	"fiber-blueprint/internal/nanoid"
-	"time"
 
 	"gorm.io/gorm"
 )
 
 type Todo struct {
+	gorm.Model
 	ID        string `gorm:"type:string;primary_key"`
 	Title     string `json:"title"`
 	Body      string `json:"body"`
 	Content   string `json:"content"`
 	Priority  string `json:"priority"`
 	Completed bool   `json:"completed"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
 func (t *Todo) BeforeCreate(tx *gorm.DB) (err error) {

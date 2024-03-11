@@ -202,7 +202,7 @@ func (r *Router) handleCreate1000Todos(c *fiber.Ctx) error {
 		})
 	}
 
-	r.DB.CreateInBatches(&todos, 1000)
+	r.DB.CreateInBatches(&todos, 500)
 
 	var count int64
 	r.DB.Model(&database.Todo{}).Count(&count)
