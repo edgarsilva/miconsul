@@ -5,10 +5,10 @@ go 1.21.4
 require (
 	github.com/a-h/templ v0.2.476
 	github.com/gofiber/fiber/v2 v2.51.0
-	github.com/matoous/go-nanoid/v2 v2.0.0
 	github.com/pkg/errors v0.9.1
-	gorm.io/driver/sqlite v1.5.4
-	gorm.io/gorm v1.25.5
+	github.com/rs/xid v1.5.0
+	gorm.io/driver/sqlite v1.5.5
+	gorm.io/gorm v1.25.7-0.20240204074919-46816ad31dde
 )
 
 require (
@@ -20,7 +20,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
-	github.com/mattn/go-sqlite3 v1.14.22 // indirect
+	github.com/mattn/go-sqlite3 v1.14.17 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.51.0 // indirect

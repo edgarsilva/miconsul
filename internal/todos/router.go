@@ -34,6 +34,6 @@ func (r *Router) RegisterRoutes(s *server.Server) {
 	api.Get("", r.handleApiTodos)
 
 	// Test routes
-	api.Post("/1000Todos", r.handleCreate1000Todos)
+	api.Post("/N/:n", r.handleCreateNTodos)
 	api.Get("/count", r.handleCountTodos)
 }

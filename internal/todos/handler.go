@@ -3,7 +3,6 @@ package todos
 import (
 	"fiber-blueprint/internal/database"
 	"fiber-blueprint/internal/view"
-	"fmt"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -171,7 +170,7 @@ func (r *Router) handleTodosFragment(c *fiber.Ctx) error {
 // GET: /api/todos - Get all todos
 func (r *Router) handleApiTodos(c *fiber.Ctx) error {
 	var tds []database.Todo
-	r.DB.Limit(10).Find(&tds)
+	r.DB.Limit(100).Order("created_at desc").Find(&tds)
 
 	return c.JSON(tds)
 }
@@ -187,13 +186,18 @@ func (r *Router) handleCountTodos(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(res)
 }
 
-// handleCreate1000Todos creates 1000 todos
+// handleCreate100000Todos creates 100000 todos
 // GET: /api/todos/count
-func (r *Router) handleCreate1000Todos(c *fiber.Ctx) error {
+func (r *Router) handleCreateNTodos(c *fiber.Ctx) error {
+	n, err := strconv.Atoi(c.Params("n"))
+	if err != nil {
+		n = 1000
+	}
+
 	todos := []database.Todo{}
 
 	// var sb strings.Builder
-	for i := 1; i <= 100000; i++ {
+	for i := 1; i <= n; i++ {
 		todos = append(todos, database.Todo{
 			Title:     "title " + strconv.Itoa(i),
 			Body:      "body" + strconv.Itoa(i),
@@ -202,15 +206,7 @@ func (r *Router) handleCreate1000Todos(c *fiber.Ctx) error {
 		})
 	}
 
-	r.DB.CreateInBatches(&todos, 500)
+	r.DB.CreateInBatches(&todos, 2000)
 
-	var count int64
-	r.DB.Model(&database.Todo{}).Count(&count)
-	fmt.Println("count", count)
-
-	res := struct {
-		Count int64 `json:"count"`
-	}{Count: count}
-
-	return c.Status(fiber.StatusOK).JSON(res)
+	return c.SendStatus(fiber.StatusOK)
 }

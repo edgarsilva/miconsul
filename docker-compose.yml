@@ -1,17 +1,21 @@
-version: "3.8"
-
+version: "3.3"
+name: "goblog"
 services:
-  psql:
-    image: postgres:latest
+  db:
+    image: mysql:8.3
+    restart: always
     environment:
-      POSTGRES_DB: ${DB_DATABASE}
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: "app"
+      MYSQL_ROOT_PASSWORD: "mysql"
     ports:
-      - "${DB_PORT}:5432"
+      # <Port exposed> : <MySQL Port running inside container>
+      - "3306:3306"
+    expose:
+      # Opens port 3306 on the container
+      - "3334"
+      # Where our data will be persisted
     volumes:
-      - psql_volume:/var/lib/postgresql/data
-
+      - mysql-db:/var/lib/mysql
+# Names our volume
 volumes:
-  psql_volume:
-
+  mysql-db:
