@@ -42,7 +42,7 @@ templ CounterContainer(count int64) {
 
 templ CounterPage(count int64) {
 	@BasePage("dark") {
-		@BackToHome("Back to home", "/", "")
+		@BackToHome("Back to home", "/")
 		@CounterContainer(count)
 	}
 }

@@ -7,14 +7,19 @@ import (
 )
 
 func (r *router) HandlePage(c *fiber.Ctx) error {
-	th := r.SessionGet(c, "theme", "light")
+	th := r.SessionGet(c, "theme", "cmky")
 	return view.Render(c, LandingPage(th))
 }
 
 func (r *router) HandleThemeChange(c *fiber.Ctx) error {
-	t := c.Query("theme", "light")
-	r.SessionSet(c, "theme", t)
+	theme := c.Query("theme", "light")
+
+	if theme == "light" {
+		r.SessionSet(c, "theme", "light")
+	} else {
+		r.SessionSet(c, "theme", "dark")
+	}
 
 	// return c.SendStatus(fiber.StatusNoContent)
-	return view.Render(c, view.PicoThemeIcon(t))
+	return view.Render(c, view.ThemeIcon(theme))
 }

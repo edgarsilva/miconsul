@@ -32,5 +32,5 @@ node_modules
 *_templ.go
 
 # Don't include DB Store
-store/*.db
+store/**/*.*
 

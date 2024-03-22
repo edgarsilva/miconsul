@@ -5,107 +5,116 @@ import (
 	"fiber-blueprint/internal/view"
 )
 
+templ TodosPage(todos []database.Todo, left string, filter string, theme string) {
+	@view.BasePage(theme) {
+		@view.BackToHome("Back to home", "/")
+		<section class="mt-16">
+			@TodoCreateForm()
+			@TodosList(todos)
+			@TodosFooter(left, filter)
+		</section>
+	}
+}
+
 templ TodoCreateForm() {
-	<form hx-post="/todos" hx-swap="beforeend" hx-target="#todos">
-		<fieldset role="group">
-			@TodoCreateInput()
-			<button class="contrast" type="button">Create</button>
+	<form hx-post="/todos" hx-swap="beforeend" hx-target="#todos" class="mb-6 flex">
+		<fieldset class="join mx-auto w-full max-w-3xl drop-shadow-xl">
+      <input
+        id="todo"
+        name="todo"
+        type="text"
+        placeholder="What needs to be done?"
+        aria-label="Todo"
+        placeholder="What needs to be done?"
+        class="input input-bordered w-full join-item"
+      />
+			<button class="btn btn-primary join-item" type="button">Create</button>
 		</fieldset>
 	</form>
 }
 
-templ TodoCreateInput() {
-	<input
-		type="text"
-		placeholder="What needs to be done?"
-		aria-label="Todo"
-		type="text"
-		name="todo"
-		id="todo"
-		autocomplete="todo"
-		placeholder="What needs to be done?"
-	/>
-}
-
 templ TodoCheckbox(t database.Todo) {
 	<input
-		id={ t.ID }
-		name={ "todo[" + t.ID + "]" }
+		id={ t.UID }
+    class="checkbox checkbox-md"
+		name={ "todo[" + t.UID + "]" }
 		type="checkbox"
 		if t.Completed {
 			checked
-			hx-patch={ "/todos/" + t.ID + "/uncheck" }
+			hx-patch={ "/todos/" + t.UID + "/uncheck" }
 		} else {
-			hx-patch={ "/todos/" + t.ID + "/check" }
+			hx-patch={ "/todos/" + t.UID + "/check" }
 		}
-		hx-target="closest h3"
+		hx-target="closest hgroup"
 		hx-swap="outerHTML swap:0.1s"
 	/>
-	if t.Completed {
-		<s>{ t.Title }</s>
-	} else {
-		{ t.Title }
-	}
+  <span class="text-lg">
+    if t.Completed {
+      <s>{ t.Title }</s>
+    } else {
+      { t.Title }
+    }
+  </span>
 }
 
 templ TodoTitle(t database.Todo) {
-	<h3>
-		<label>
+	<hgroup class="form-control">
+		<label class="flex items-center gap-4">
 			@TodoCheckbox(t)
 		</label>
-	</h3>
+	</hgroup>
 }
 
 templ TodoCard(t database.Todo) {
-	<article>
-		<div class="badges">
-			<span class="badge">{ t.Priority }</span>
-			<span class="badge">ID: { t.ID }</span>
-		</div>
-		<hgroup>
+	<article class="card bg-base-100 shadow-xl w-full mx-auto border border-neutral-100">
+		<div class="card-body">
+			<div class="absolute right-8">
+				<span class="badge badge-lg badge-info">{ t.Priority }</span>
+				<span class="badge badge-lg">ID: { t.UID }</span>
+			</div>
 			@TodoTitle(t)
 			<p>{ t.Body }</p>
-		</hgroup>
-		<p class="buttons">
-			<button
-				class="contrast outlined"
-				hx-delete={ "/todos/" + t.ID }
-				hx-target="closest article"
-				hx-swap="outerHTML swap:0.1s"
-			>
-				delete
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke-width="1.5"
-					stroke="currentColor"
-					with="24"
-					height="24"
+			<p class="card-actions justify-end">
+				<button
+					class="btn btn-error btn-outline"
+					hx-delete={ "/todos/" + t.UID }
+					hx-target="closest article"
+					hx-swap="outerHTML swap:0.1s"
 				>
-					<path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"></path>
-				</svg>
-			</button>
-			<button
-				class="contrast outlined"
-				hx-post={ "/todos/" + t.ID + "/duplicate" }
-				hx-target="#todos"
-				hx-swap="beforeend settle:0.1s"
-			>
-				duplicate
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke-width="1.5"
-					stroke="currentColor"
-					width="24"
-					height="24"
+					delete
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke-width="1.5"
+						stroke="currentColor"
+						with="24"
+						height="24"
+					>
+						<path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"></path>
+					</svg>
+				</button>
+				<button
+					class="btn btn-primary"
+					hx-post={ "/todos/" + t.UID + "/duplicate" }
+					hx-target="#todos"
+					hx-swap="beforeend settle:0.1s"
 				>
-					<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75"></path>
-				</svg>
-			</button>
-		</p>
+					duplicate
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke-width="1.5"
+						stroke="currentColor"
+						width="24"
+						height="24"
+					>
+						<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75"></path>
+					</svg>
+				</button>
+			</p>
+		</div>
 	</article>
 }
 
@@ -113,6 +122,7 @@ templ TodosList(tds []database.Todo) {
 	<section
 		id="todos"
 		role="list"
+		class="flex flex-col gap-6 mx-auto max-w-3xl"
 		hx-get="/todos/fragment/list"
 		hx-trigger="fetchTodos from:body"
 		hx-swap="outerHTML"
@@ -148,15 +158,4 @@ templ TodosFooter(left string, filter string) {
 			</span>
 		</nav>
 	</footer>
-}
-
-templ TodosPage(todos []database.Todo, left string, filter string, theme string) {
-	@view.PicoBasePage(theme) {
-		@view.PicoBackToHome("Back to home", "/")
-		<section>
-			@TodoCreateForm()
-			@TodosList(todos)
-			@TodosFooter(left, filter)
-		</section>
-	}
 }

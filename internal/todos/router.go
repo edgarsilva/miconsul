@@ -34,6 +34,10 @@ func (r *Router) RegisterRoutes(s *server.Server) {
 	api.Get("", r.handleApiTodos)
 
 	// Test routes
-	api.Post("/N/:n", r.handleCreateNTodos)
+	api.Post("/N/:n/user/:userID", r.handleCreateNTodos)
 	api.Get("/count", r.handleCountTodos)
+	r.Get("/api/echo/:str", r.handleEcho)
+	r.Get("/api/echo-str", r.handleEcho)
+	r.Get("/api/users", r.handleGetUsers)
+	r.Post("/api/users/:n", r.handleMakeUsers)
 }
