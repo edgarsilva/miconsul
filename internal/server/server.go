@@ -24,7 +24,7 @@ type Server struct {
 	DB           *database.Database
 }
 
-func New() *Server {
+func New(db *database.Database) *Server {
 	fiberApp := fiber.New()
 
 	// Initialize logger middleware config
@@ -51,12 +51,11 @@ func New() *Server {
 	// Serve static files
 	fiberApp.Static("/", "./public")
 
-	server := &Server{
+	return &Server{
 		App:          fiberApp,
 		SessionStore: sessionStore,
-		DB:           database.NewDatabase(),
+		DB:           db,
 	}
-	return server
 }
 
 // RegisterRouter registers a router Routes and exposes the endpoints on the server.

@@ -5,11 +5,11 @@ all: build
 
 build:
 	@echo "Building..."
-	@go build -o cmd/app/main cmd/app/main.go
+	@go build -o main main.go
 
 # Run the application
 run:
-	@go run cmd/app/main.go
+	@go run main.go
 
 # Create DB container
 docker-run:
@@ -37,7 +37,7 @@ test:
 # Clean the binary
 clean:
 	@echo "Cleaning..."
-	@rm -f cmd/app/main
+	@rm main
 
 # Live Reload
 watch:
