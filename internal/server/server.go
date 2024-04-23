@@ -2,11 +2,13 @@
 package server
 
 import (
-	"fiber-blueprint/internal/database"
 	"fmt"
+	"os"
+	"rtx-blog/internal/database"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/encryptcookie"
 	"github.com/gofiber/fiber/v2/middleware/etag"
 	"github.com/gofiber/fiber/v2/middleware/favicon"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -29,8 +31,8 @@ func New(db *database.Database) *Server {
 
 	// Initialize logger middleware config
 	fiberApp.Use(logger.New())
-	// Initialize CORS wit config
 
+	// Initialize CORS wit config
 	fiberApp.Use(cors.New())
 
 	// Initialize default config
@@ -38,6 +40,11 @@ func New(db *database.Database) *Server {
 
 	// Initialize request ID middleware config
 	fiberApp.Use(requestid.New())
+
+	// Makes Cookies encrypted
+	fiberApp.Use(encryptcookie.New(encryptcookie.Config{
+		Key: os.Getenv("COOKIE_SECRET"),
+	}))
 
 	// Or extend your config for customization
 	fiberApp.Use(favicon.New(favicon.Config{
@@ -63,6 +70,11 @@ func (s *Server) RegisterRouter(r router) {
 	r.RegisterRoutes(s)
 }
 
+// RegisterRouter registers a router Routes and exposes the endpoints on the server.
+func (s *Server) RegisterRoutes(r router) {
+	s.RegisterRouter(r)
+}
+
 // Listen starts the server on the specified port.
 func (s *Server) Listen(port string) error {
 	return s.App.Listen(fmt.Sprintf(":%v", port))
@@ -70,6 +82,15 @@ func (s *Server) Listen(port string) error {
 
 func (s *Server) session(c *fiber.Ctx) (*session.Session, error) {
 	return s.SessionStore.Get(c)
+}
+
+func (s *Server) SessionDestroy(c *fiber.Ctx) {
+	sess, err := s.session(c)
+	if err != nil {
+		return
+	}
+
+	_ = sess.Destroy()
 }
 
 // SessionGet gets a session value by key, or returns the default value.

@@ -1,7 +1,7 @@
-package handlers
+package home
 
 import (
-	"fiber-blueprint/internal/server"
+	"rtx-blog/internal/server"
 )
 
 type service struct {

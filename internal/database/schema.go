@@ -1,7 +1,7 @@
 package database
 
 import (
-	"fiber-blueprint/internal/xid"
+	"rtx-blog/internal/xid"
 	"time"
 
 	"gorm.io/gorm"
@@ -10,33 +10,33 @@ import (
 type ModelBase struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	UID       string `gorm:"uniqueIndex;type:string;not null"`
+	UID       string `gorm:"uniqueIndex;default:null;not null"`
 	ID        uint   `gorm:"primarykey"`
 }
 
 type User struct {
-	gorm.Model
-	ModelBase
 	Name     string
-	Email    string
-	Password string
+	Email    string `gorm:"uniqueIndex;default:null;not null"`
+	Role     string `gorm:"index;default:null;not null"`
+	Password string `json:"-"`
 
 	// Has many
 	Todos    []Todo
 	Posts    []Post
 	Comments []Comment
+
+	ModelBase
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
-	u.UID = xid.NewConcat("usr")
+	u.UID = xid.New("usr")
 	return
 }
 
 type Todo struct {
-	ModelBase
 	Title     string
 	Body      string
-	Content   string
+	Content   string `gorm:"default:null;not null"`
 	Priority  string
 	Completed bool
 	CreatedAt time.Time `gorm:"index:,sort:desc"`
@@ -44,15 +44,16 @@ type Todo struct {
 	// Belongs to
 	UserID string `gorm:"index;default:null;not null"`
 	User   User
+
+	ModelBase
 }
 
 func (t *Todo) BeforeCreate(tx *gorm.DB) (err error) {
-	t.UID = xid.NewConcat("tdo")
+	t.UID = xid.New("tdo")
 	return
 }
 
 type Post struct {
-	ModelBase
 	Title     string
 	Content   string
 	CreatedAt time.Time `gorm:"index:,sort:desc"`
@@ -64,35 +65,37 @@ type Post struct {
 
 	// Has many
 	Comments []Comment
+
+	ModelBase
 }
 
 func (p *Post) BeforeCreate(tx *gorm.DB) (err error) {
-	p.UID = xid.NewConcat("pst")
+	p.UID = xid.New("pst")
 	return
 }
 
 type Comment struct {
-	ModelBase
 	Content string
 
 	// Belongs to
-	PostID string
+	PostID string `gorm:"index;default:null;not null"`
 	Post   Post
 
 	UserID string `gorm:"index;default:null;not null"`
 	User   User
+
+	ModelBase
 }
 
 func (c *Comment) BeforeCreate(tx *gorm.DB) (err error) {
-	c.UID = xid.NewConcat("cmt")
+	c.UID = xid.New("cmt")
 	return
 }
 
 type PurchaseOrder struct {
-	ModelBase
 	extID    string
-	Amount   int
-	Quantity int
+	Amount   uint
+	Quantity uint
 
 	// Belongs to
 	UserID string `gorm:"index;default:null;not null"`
@@ -100,18 +103,19 @@ type PurchaseOrder struct {
 
 	// Has many
 	LineItems []LineItem
+
+	ModelBase
 }
 
 func (po *PurchaseOrder) BeforeCreate(tx *gorm.DB) (err error) {
-	po.UID = xid.NewConcat("por")
+	po.UID = xid.New("por")
 	return
 }
 
 type LineItem struct {
-	ModelBase
 	extID    string
-	Amount   int
-	Quantity int
+	Amount   uint
+	Quantity uint
 
 	// Belongs to
 	UserID string `gorm:"index;default:null;not null"`
@@ -119,9 +123,11 @@ type LineItem struct {
 
 	PurchaseOrderID string
 	PurchaseOrder   PurchaseOrder
+
+	ModelBase
 }
 
 func (li *LineItem) BeforeCreate(tx *gorm.DB) (err error) {
-	li.UID = xid.NewConcat("lni")
+	li.UID = xid.New("lni")
 	return
 }

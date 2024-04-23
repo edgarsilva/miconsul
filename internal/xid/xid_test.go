@@ -22,7 +22,7 @@ func BenchmarkNewXID(b *testing.B) {
 
 func BenchmarkNewConcat(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		_ = NewConcat("tdo")
+		_ = New("tdo")
 	}
 }
 

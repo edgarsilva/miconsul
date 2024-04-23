@@ -10,7 +10,7 @@ testdata_dir = "testdata"
 # Array of commands to run before each build
 pre_cmd = ['bunx tailwindcss -i ./styles/global.css -o ./public/global.css', 'templ generate']
 # Just plain old shell command. You could use `make` as well.
-cmd = "go build -o ./tmp/main main.go"
+cmd = "go build -o ./tmp/main cmd/app/main.go"
 # Array of commands to run after ^C
 post_cmd = []
 # Binary file yields from `cmd`.

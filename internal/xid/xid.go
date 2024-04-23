@@ -14,12 +14,12 @@ const (
 	length   = 23
 )
 
-func New(prefix string) string {
+func NewWithSB(prefix string) string {
 	id := xid.New()
 	return prefixID(prefix, id.String())
 }
 
-func NewConcat(prefix string) string {
+func New(prefix string) string {
 	id := xid.New()
 	return concatStr(prefix, id.String())
 }

@@ -5,11 +5,11 @@ all: build
 
 build:
 	@echo "Building..."
-	@go build -o main main.go
+	@go build -o bin/main cmd/app/main.go
 
 # Run the application
 run:
-	@go run main.go
+	@go run cmd/app/main.go
 
 # Create DB container
 docker-run:
@@ -29,10 +29,14 @@ docker-down:
 		docker-compose down; \
 	fi
 
-# Test the application
+# Test the application (integration)
 test:
 	@echo "Testing..."
 	@go test ./tests -v
+
+unit-test:
+	@echo "Testing..."
+	@go test ./internal/...
 
 # Clean the binary
 clean:

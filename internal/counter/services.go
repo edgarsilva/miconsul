@@ -1,4 +1,4 @@
-package theme
+package counter
 
 import (
 	"rtx-blog/internal/server"

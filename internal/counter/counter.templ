@@ -1,6 +1,9 @@
-package views
+package counter
 
-import "strconv"
+import (
+	"strconv"
+	"rtx-blog/internal/views"
+)
 
 templ Button(label string, path string) {
 	<button
@@ -14,13 +17,13 @@ templ Button(label string, path string) {
 	</button>
 }
 
-templ Counter(count int64) {
-	<dl id="counter" class="mt-16 overflow-hidden rounded-2xl text-center">
+templ CounterDisplay(count int64) {
+	<section id="counter" class="mt-16 overflow-hidden rounded-2xl text-center">
 		<div class="flex flex-col bg-white/5 p-8">
 			<dt class="text-sm font-semibold leading-6 text-gray-300">and counting</dt>
 			<dd class="order-first text-3xl font-semibold tracking-tight text-white">{ strconv.FormatInt(count, 10) }</dd>
 		</div>
-	</dl>
+	</section>
 }
 
 templ CounterContainer(count int64) {
@@ -30,7 +33,7 @@ templ CounterContainer(count int64) {
 				class="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-white sm:text-4xl"
 			>Golang in server memory Counter</h2>
 			<p class="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-300">
-				@Counter(count)
+				@CounterDisplay(count)
 			</p>
 			<div class="mt-10 flex items-center justify-center gap-x-6">
 				@Button("+ Increment", "/counter/increment")
@@ -41,8 +44,8 @@ templ CounterContainer(count int64) {
 }
 
 templ CounterPage(count int64) {
-	@BasePage("dark") {
-		@BackToHome("Back to home", "/")
+	@views.BasePage("dark") {
+		@views.BackToHome("Back to home", "/")
 		@CounterContainer(count)
 	}
 }

@@ -1,10 +1,10 @@
 package tests
 
 import (
-	"fiber-blueprint/internal/counter"
-	"fiber-blueprint/internal/server"
 	"io"
 	"net/http"
+	"rtx-blog/internal/counter"
+	"rtx-blog/internal/server"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
@@ -16,8 +16,7 @@ func TestHandler(t *testing.T) {
 
 	// Inject the Fiber app into the server
 	s := &server.Server{App: fiberApp}
-
-	rc := &counter.Router{Server: s}
+	rc := counter.NewService(s)
 
 	// Define a route in the Fiber app
 	fiberApp.Get("/", rc.HandlePage)
@@ -41,7 +40,6 @@ func TestHandler(t *testing.T) {
 
 	expected := "{\"message\":\"Hello World\"}"
 	body, err := io.ReadAll(resp.Body)
-
 	if err != nil {
 		t.Fatalf("error reading response body. Err: %v", err)
 	}

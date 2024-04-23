@@ -1,7 +1,11 @@
-package views
+package home
 
-templ LandingPage(theme string) {
-	@BasePage(theme) {
+import (
+	"rtx-blog/internal/views"
+)
+
+templ HomePage(theme string) {
+	@views.BasePage(theme) {
 		@Posts()
 		@LogoCloud()
 	}
@@ -53,7 +57,7 @@ templ Post(name, desc, href, avatar, img string) {
 }
 
 templ Posts() {
-	<section class="">
+	<section class="" aria-label="posts">
 		<hgroup>
 			<h2 class="">From the Go blog</h2>
 			<small class="">Coding examples, different tests and notes.</small>

@@ -1,13 +1,13 @@
 package todos
 
 import (
-	"fiber-blueprint/internal/database"
-	"fiber-blueprint/internal/view"
+	"rtx-blog/internal/database"
+	"rtx-blog/internal/views"
 )
 
 templ TodosPage(todos []database.Todo, left string, filter string, theme string) {
-	@view.BasePage(theme) {
-		@view.BackToHome("Back to home", "/")
+	@views.BasePage(theme) {
+		@views.BackToHome("Back to home", "/")
 		<section class="mt-16">
 			@TodoCreateForm()
 			@TodosList(todos)
@@ -19,15 +19,15 @@ templ TodosPage(todos []database.Todo, left string, filter string, theme string)
 templ TodoCreateForm() {
 	<form hx-post="/todos" hx-swap="beforeend" hx-target="#todos" class="mb-6 flex">
 		<fieldset class="join mx-auto w-full max-w-3xl drop-shadow-xl">
-      <input
-        id="todo"
-        name="todo"
-        type="text"
-        placeholder="What needs to be done?"
-        aria-label="Todo"
-        placeholder="What needs to be done?"
-        class="input input-bordered w-full join-item"
-      />
+			<input
+				id="todo"
+				name="todo"
+				type="text"
+				placeholder="What needs to be done?"
+				aria-label="Todo"
+				placeholder="What needs to be done?"
+				class="input input-bordered w-full join-item"
+			/>
 			<button class="btn btn-primary join-item" type="button">Create</button>
 		</fieldset>
 	</form>
@@ -36,7 +36,7 @@ templ TodoCreateForm() {
 templ TodoCheckbox(t database.Todo) {
 	<input
 		id={ t.UID }
-    class="checkbox checkbox-md"
+		class="checkbox checkbox-md"
 		name={ "todo[" + t.UID + "]" }
 		type="checkbox"
 		if t.Completed {
@@ -48,13 +48,13 @@ templ TodoCheckbox(t database.Todo) {
 		hx-target="closest hgroup"
 		hx-swap="outerHTML swap:0.1s"
 	/>
-  <span class="text-lg">
-    if t.Completed {
-      <s>{ t.Title }</s>
-    } else {
-      { t.Title }
-    }
-  </span>
+	<span class="text-lg">
+		if t.Completed {
+			<s>{ t.Title }</s>
+		} else {
+			{ t.Title }
+		}
+	</span>
 }
 
 templ TodoTitle(t database.Todo) {

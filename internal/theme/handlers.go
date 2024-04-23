@@ -1,7 +1,7 @@
 package theme
 
 import (
-	"fiber-blueprint/internal/views"
+	"rtx-blog/internal/views"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -16,5 +16,5 @@ func (s *service) HandleThemeChange(c *fiber.Ctx) error {
 	}
 
 	// return c.SendStatus(fiber.StatusNoContent)
-	return views.Render(c, views.Icon(theme))
+	return views.Render(c, views.ThemeIcon(theme))
 }

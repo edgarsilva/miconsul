@@ -12,7 +12,7 @@ templ BasePage(theme string) {
 			<script src="https://unpkg.com/htmx.org@1.9.9" integrity="sha384-QFjmbokDn2DjBjq+fM+8LUIVrAgqcNW2s0PjAxHETgRn9l4fvX31ZxDxvwQnyMOX" crossorigin="anonymous"></script>
 		</head>
 		<body>
-			<div class="container mx-auto">
+			<div class="root container mx-auto">
 				@Header(theme)
 				<main>
 					{ children... }

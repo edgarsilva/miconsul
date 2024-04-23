@@ -1,11 +1,22 @@
 package todos
 
 import (
-	"fiber-blueprint/internal/database"
+	"rtx-blog/internal/database"
+	"rtx-blog/internal/server"
 	"strings"
 )
 
-func fetchTodos(db *database.Database, filter string) []database.Todo {
+type service struct {
+	*server.Server
+}
+
+func NewService(s *server.Server) service {
+	return service{
+		Server: s,
+	}
+}
+
+func fetchByFilter(db *database.Database, filter string) []database.Todo {
 	todos := []database.Todo{}
 
 	switch {
@@ -20,4 +31,15 @@ func fetchTodos(db *database.Database, filter string) []database.Todo {
 	}
 
 	return todos
+}
+
+func fetchPendingCount(db *database.Database) int {
+	var (
+		allCount       int64
+		completedCount int64
+	)
+	db.Model(&database.Todo{}).Count(&allCount)
+	db.Model(&database.Todo{}).Where("completed = ?", true).Count(&completedCount)
+
+	return int(allCount - completedCount)
 }
