@@ -1,7 +1,7 @@
 package home
 
 import (
-	"rtx-blog/internal/server"
+	"github.com/edgarsilva/go-scaffold/internal/server"
 )
 
 type service struct {

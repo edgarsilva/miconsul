@@ -4,7 +4,8 @@ package server
 import (
 	"fmt"
 	"os"
-	"rtx-blog/internal/database"
+
+	"github.com/edgarsilva/go-scaffold/internal/database"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"

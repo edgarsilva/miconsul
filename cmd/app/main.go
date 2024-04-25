@@ -2,9 +2,9 @@ package main
 
 import (
 	"os"
-	"rtx-blog/internal/database"
-	"rtx-blog/internal/routes"
-	"rtx-blog/internal/server"
+	"github.com/edgarsilva/go-scaffold/internal/database"
+	"github.com/edgarsilva/go-scaffold/internal/routes"
+	"github.com/edgarsilva/go-scaffold/internal/server"
 
 	"github.com/joho/godotenv"
 )

@@ -1,11 +1,11 @@
 package home
 
 import (
-	"rtx-blog/internal/views"
+	"github.com/edgarsilva/go-scaffold/internal/views"
 )
 
-templ HomePage(theme string) {
-	@views.BasePage(theme) {
+templ HomePage(props views.Props) {
+	@views.Layout(props) {
 		@Posts()
 		@LogoCloud()
 	}

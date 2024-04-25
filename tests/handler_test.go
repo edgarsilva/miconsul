@@ -3,8 +3,8 @@ package tests
 import (
 	"io"
 	"net/http"
-	"rtx-blog/internal/counter"
-	"rtx-blog/internal/server"
+	"github.com/edgarsilva/go-scaffold/internal/counter"
+	"github.com/edgarsilva/go-scaffold/internal/server"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"

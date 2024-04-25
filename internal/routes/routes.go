@@ -1,12 +1,12 @@
 package routes
 
 import (
-	"rtx-blog/internal/auth"
-	"rtx-blog/internal/counter"
-	"rtx-blog/internal/home"
-	"rtx-blog/internal/server"
-	"rtx-blog/internal/theme"
-	"rtx-blog/internal/todos"
+	"github.com/edgarsilva/go-scaffold/internal/auth"
+	"github.com/edgarsilva/go-scaffold/internal/counter"
+	"github.com/edgarsilva/go-scaffold/internal/home"
+	"github.com/edgarsilva/go-scaffold/internal/server"
+	"github.com/edgarsilva/go-scaffold/internal/theme"
+	"github.com/edgarsilva/go-scaffold/internal/todos"
 )
 
 type Router struct {
@@ -28,15 +28,17 @@ func (r *Router) RegisterRoutes(s *server.Server) {
 }
 
 func AuthRoutes(s *server.Server) {
-	c := auth.NewService(s)
+	a := auth.NewService(s)
 
-	g := c.Group("/auth")
+	a.Get("/login", a.HandleLoginPage)
+	a.Post("/login", a.HandleLogin)
+	a.Get("/logout", a.HandleLogout)
+	a.Delete("/logout", a.HandleLogout)
+	a.Post("/signup", a.HandleSignup)
 
-	g.Post("/signup", c.HandleSignup)
-	g.Post("/login", c.HandleLogin)
-	g.Delete("/logout", c.HandleLogout)
-	g.Get("/protected", auth.OnlyAuthenticated, c.HandleShowUser)
-	g.Post("/valid", auth.OnlyAuthenticated, c.HandleValidate)
+	g := a.Group("/auth")
+	g.Get("/protected", auth.OnlyAuthenticated, a.HandleShowUser)
+	g.Post("/valid", auth.OnlyAuthenticated, a.HandleValidate)
 }
 
 func HomeRoutes(s *server.Server) {

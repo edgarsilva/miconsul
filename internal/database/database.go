@@ -44,7 +44,7 @@ func New(dbPath string) *Database {
 	// Migrate the schema
 	db.AutoMigrate(
 		&User{},
-		// &Todo{},
+		&Todo{},
 		&Post{},
 		&Comment{},
 		// &PurchaseOrder{},

@@ -1,8 +1,9 @@
 package database
 
 import (
-	"rtx-blog/internal/xid"
 	"time"
+
+	"github.com/edgarsilva/go-scaffold/internal/xid"
 
 	"gorm.io/gorm"
 )
@@ -14,11 +15,21 @@ type ModelBase struct {
 	ID        uint   `gorm:"primarykey"`
 }
 
+type UserRole string
+
+const (
+	UserRoleAdmin UserRole = "admin"
+	UserRoleUser  UserRole = "user"
+	UserRoleGuest UserRole = "guest"
+	UserRoleAnon  UserRole = "anon"
+	UserRoleTest  UserRole = "test"
+)
+
 type User struct {
 	Name     string
-	Email    string `gorm:"uniqueIndex;default:null;not null"`
-	Role     string `gorm:"index;default:null;not null"`
-	Password string `json:"-"`
+	Email    string   `gorm:"uniqueIndex;default:null;not null"`
+	Role     UserRole `gorm:"index;default:null;not null;type:string"`
+	Password string   `json:"-"`
 
 	// Has many
 	Todos    []Todo
@@ -34,15 +45,12 @@ func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 type Todo struct {
-	Title     string
-	Body      string
 	Content   string `gorm:"default:null;not null"`
-	Priority  string
 	Completed bool
 	CreatedAt time.Time `gorm:"index:,sort:desc"`
 
 	// Belongs to
-	UserID string `gorm:"index;default:null;not null"`
+	UserID uint `gorm:"index;default:null;not null"`
 	User   User
 
 	ModelBase
@@ -60,7 +68,7 @@ type Post struct {
 	UpdatedAt time.Time
 
 	// Belongs to
-	UserID string `gorm:"index;default:null;not null"`
+	UserID uint `gorm:"index;default:null;not null"`
 	User   User
 
 	// Has many
@@ -81,7 +89,7 @@ type Comment struct {
 	PostID string `gorm:"index;default:null;not null"`
 	Post   Post
 
-	UserID string `gorm:"index;default:null;not null"`
+	UserID uint `gorm:"index;default:null;not null"`
 	User   User
 
 	ModelBase
@@ -98,7 +106,7 @@ type PurchaseOrder struct {
 	Quantity uint
 
 	// Belongs to
-	UserID string `gorm:"index;default:null;not null"`
+	UserID uint `gorm:"index;default:null;not null"`
 	User   User
 
 	// Has many
@@ -118,7 +126,7 @@ type LineItem struct {
 	Quantity uint
 
 	// Belongs to
-	UserID string `gorm:"index;default:null;not null"`
+	UserID uint `gorm:"index;default:null;not null"`
 	User   User
 
 	PurchaseOrderID string

@@ -2,8 +2,15 @@ package counter
 
 import (
 	"strconv"
-	"rtx-blog/internal/views"
+	"github.com/edgarsilva/go-scaffold/internal/views"
 )
+
+templ CounterPage(props views.Props, count int64) {
+	@views.Layout(props) {
+		@views.BackToHome("Back to home", "/")
+		@CounterContainer(count)
+	}
+}
 
 templ Button(label string, path string) {
 	<button
@@ -41,11 +48,4 @@ templ CounterContainer(count int64) {
 			</div>
 		</div>
 	</div>
-}
-
-templ CounterPage(count int64) {
-	@views.BasePage("dark") {
-		@views.BackToHome("Back to home", "/")
-		@CounterContainer(count)
-	}
 }

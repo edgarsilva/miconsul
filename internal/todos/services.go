@@ -1,9 +1,10 @@
 package todos
 
 import (
-	"rtx-blog/internal/database"
-	"rtx-blog/internal/server"
 	"strings"
+
+	"github.com/edgarsilva/go-scaffold/internal/database"
+	"github.com/edgarsilva/go-scaffold/internal/server"
 )
 
 type service struct {

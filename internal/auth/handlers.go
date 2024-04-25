@@ -1,22 +1,38 @@
 package auth
 
 import (
+	"errors"
 	"fmt"
 	"os"
-	"rtx-blog/internal/database"
 	"time"
+
+	"github.com/edgarsilva/go-scaffold/internal/database"
+	"github.com/edgarsilva/go-scaffold/internal/views"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
+// HandleLoginPage returns the login page html
+// GET: /login
+func (s *service) HandleLoginPage(c *fiber.Ctx) error {
+	props := loginProps{}
+	return views.Render(c, LoginPage(props))
+}
+
 // HandleSignup creates a new user if email and password are valid
 // POST: /auth/signup
 func (s *service) HandleSignup(c *fiber.Ctx) error {
 	email, password, err := bodyParams(c)
 	if err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).SendString("incorrect email or password")
+		// return c.Status(fiber.StatusUnprocessableEntity).SendString("incorrect email or password")
+		props := loginProps{
+			email: email,
+			error: errors.New("incorrect email or password"),
+		}
+
+		return views.Render(c, LoginPage(props))
 	}
 
 	if err := s.signup(email, password); err != nil {
@@ -28,22 +44,27 @@ func (s *service) HandleSignup(c *fiber.Ctx) error {
 
 // HandleLogin compares hash and password and sets the user Auth session cookie
 // if the email & password combination are valid
-//
 // POST: /auth/login
 func (s *service) HandleLogin(c *fiber.Ctx) error {
 	email, password, err := bodyParams(c)
+	props := loginProps{
+		email: email,
+	}
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).SendString("incorrect email or password")
+		props.error = errors.New("email or password missing")
+		return views.Render(c, LoginPage(props))
 	}
 
 	user, err := s.fetchUser(email)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).SendString("incorrect email or password")
+		props.error = errors.New("incorrect email or password")
+		return views.Render(c, LoginPage(props))
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).SendString("incorrect email or password")
+		props.error = errors.New("incorrect email or password")
+		return views.Render(c, LoginPage(props))
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
@@ -53,13 +74,14 @@ func (s *service) HandleLogin(c *fiber.Ctx) error {
 	})
 	tokenStr, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).SendString("incorrect email or password")
+		props.error = errors.New("incorrect email or password")
+		return views.Render(c, LoginPage(props))
 	}
 
 	c.Cookie(newCookie("Auth", user.UID, time.Minute*5))
 	c.Cookie(newCookie("JWT", tokenStr, time.Minute*5))
 
-	return c.JSON(user)
+	return c.Redirect("/todos")
 }
 
 // HandleValidate validates the uses auth session is still valid
@@ -68,6 +90,11 @@ func (s *service) HandleLogin(c *fiber.Ctx) error {
 func (s *service) HandleLogout(c *fiber.Ctx) error {
 	s.SessionDestroy(c)
 	invalidateCookies(c)
+
+	if c.Get("HX-Request") == "true" {
+		c.Set("HX-Redirect", "/")
+		return c.SendStatus(fiber.StatusTemporaryRedirect)
+	}
 
 	return c.Redirect("/")
 }

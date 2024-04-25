@@ -3,8 +3,9 @@ package auth
 import (
 	"errors"
 	"fmt"
-	"rtx-blog/internal/database"
-	"rtx-blog/internal/server"
+
+	"github.com/edgarsilva/go-scaffold/internal/database"
+	"github.com/edgarsilva/go-scaffold/internal/server"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -57,7 +58,7 @@ func (s service) createUser(email string, password string) (database.User, error
 	user := database.User{
 		Email:    email,
 		Password: password,
-		Role:     "user",
+		Role:     database.UserRoleUser,
 	}
 	result := s.DB.Create(&user) // pass pointer of data to Create
 	if result.Error != nil {

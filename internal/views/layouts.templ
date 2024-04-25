@@ -1,8 +1,8 @@
 package views
 
-templ BasePage(theme string) {
+templ BasePage() {
 	<!DOCTYPE html>
-	<html data-theme={ theme } x-ref="html">
+	<html data-theme="cmyk" x-ref="html" class="h-full">
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -11,13 +11,29 @@ templ BasePage(theme string) {
 			<link href="/global.css" rel="stylesheet"/>
 			<script src="https://unpkg.com/htmx.org@1.9.9" integrity="sha384-QFjmbokDn2DjBjq+fM+8LUIVrAgqcNW2s0PjAxHETgRn9l4fvX31ZxDxvwQnyMOX" crossorigin="anonymous"></script>
 		</head>
-		<body>
-			<div class="root container mx-auto">
-				@Header(theme)
-				<main>
-					{ children... }
-				</main>
-			</div>
+		<body class="h-full">
+			{ children... }
 		</body>
 	</html>
+}
+
+templ Layout(props Props) {
+	@BasePage() {
+		<div class="root container mx-auto">
+			<main>
+				@Header(props)
+				{ children... }
+			</main>
+		</div>
+	}
+}
+
+templ FullLayout() {
+	@BasePage() {
+		<div class="root h-full">
+			<main class="h-full">
+				{ children... }
+			</main>
+		</div>
+	}
 }

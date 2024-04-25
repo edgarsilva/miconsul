@@ -1,13 +1,13 @@
 package theme
 
 import (
-	"rtx-blog/internal/views"
+	"github.com/edgarsilva/go-scaffold/internal/views"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 func (s *service) HandleThemeChange(c *fiber.Ctx) error {
-	theme := c.Query("theme", "light")
+	theme := c.Query("theme", "night")
 
 	if theme == "light" {
 		s.SessionSet(c, "theme", "light")

@@ -1,8 +1,9 @@
 package counter
 
 import (
-	"rtx-blog/internal/views"
 	"strconv"
+
+	"github.com/edgarsilva/go-scaffold/internal/views"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -27,7 +28,7 @@ func (s *service) HandlePage(c *fiber.Ctx) error {
 	cnt := s.sessionCountVal(c)
 	s.SessionSet(c, "cnt", strconv.FormatInt(cnt, 10))
 
-	return views.Render(c, CounterPage(int64(cnt)))
+	return views.Render(c, CounterPage(views.Props{}, int64(cnt)))
 }
 
 // Utils

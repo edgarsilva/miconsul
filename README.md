@@ -1,4 +1,4 @@
-# Project rtx-blog
+# Project github.com/edgarsilva/go-scaffold
 
 One Paragraph of project description goes here
 

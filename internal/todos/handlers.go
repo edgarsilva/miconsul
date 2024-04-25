@@ -1,9 +1,10 @@
 package todos
 
 import (
-	"rtx-blog/internal/database"
-	"rtx-blog/internal/views"
 	"strconv"
+
+	"github.com/edgarsilva/go-scaffold/internal/database"
+	"github.com/edgarsilva/go-scaffold/internal/views"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -28,7 +29,13 @@ func (s *service) HandleTodos(c *fiber.Ctx) error {
 	tds = fetchByFilter(s.DB, filter)
 	pendingCount = fetchPendingCount(s.DB)
 
-	return views.Render(c, TodosPage(tds, strconv.Itoa(pendingCount), filter, theme))
+	props := todosProps{
+		todos:  tds,
+		left:   strconv.Itoa(pendingCount),
+		filter: filter,
+		theme:  theme,
+	}
+	return views.Render(c, TodosPage(props))
 }
 
 // GET: /todos.html - Get filtered todos.
@@ -49,13 +56,10 @@ func (s *service) HandleFilteredTodos(c *fiber.Ctx) error {
 
 func (s *service) HandleCreateTodo(c *fiber.Ctx) error {
 	t := database.Todo{
-		Title:     "",
-		Body:      "",
-		Priority:  "High",
+		Content:   c.FormValue("todo"),
+		UserID:    1,
 		Completed: false,
 	}
-
-	t.Title = c.FormValue("title")
 	res := s.DB.Create(&t)
 
 	if res.Error != nil {
@@ -121,7 +125,7 @@ func (s *service) HandleCheckTodo(c *fiber.Ctx) error {
 	t.Completed = true
 	s.DB.Save(&t)
 
-	return views.Render(c, TodoTitle(t))
+	return views.Render(c, TodoContent(t))
 }
 
 func (s *service) HandleUncheckTodo(c *fiber.Ctx) error {
@@ -139,7 +143,7 @@ func (s *service) HandleUncheckTodo(c *fiber.Ctx) error {
 
 	c.Set("HX-Trigger", "refreshFooter")
 
-	return views.Render(c, TodoTitle(t))
+	return views.Render(c, TodoContent(t))
 }
 
 // Fragments
@@ -189,10 +193,10 @@ func (s *service) HandleApiTodos(c *fiber.Ctx) error {
 		Name string `json:"name"`
 	}
 	var tds []struct {
-		ID     string `json:"id"`
-		Title  string `json:"title"`
-		UserID string `json:"user_id"`
-		User   User   `json:"user"`
+		ID      string `json:"id"`
+		Content string `json:"content"`
+		UserID  uint   `json:"user_id"`
+		User    User   `json:"user"`
 	}
 
 	s.DB.
@@ -200,7 +204,7 @@ func (s *service) HandleApiTodos(c *fiber.Ctx) error {
 		Preload("User", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "name")
 		}).
-		Select("id, title, user_id").
+		Select("id, content, user_id").
 		Where("user_id != ''").
 		Order("created_at desc").
 		Offset((page - 1) * pageSize).
@@ -241,9 +245,13 @@ func (s *service) HandleCountTodos(c *fiber.Ctx) error {
 // GET: /api/todos/count
 func (s *service) HandleCreateNTodos(c *fiber.Ctx) error {
 	n, err := strconv.Atoi(c.Params("n"))
-	userID := c.Params("userID")
 	if err != nil {
 		n = 1000
+	}
+
+	userID, err := strconv.Atoi(c.Params("userID"))
+	if err != nil {
+		return c.SendStatus(fiber.StatusUnprocessableEntity)
 	}
 
 	todos := []database.Todo{}
@@ -251,10 +259,8 @@ func (s *service) HandleCreateNTodos(c *fiber.Ctx) error {
 	// var sb strings.Builder
 	for i := 1; i <= n; i++ {
 		todos = append(todos, database.Todo{
-			Title:     "title " + strconv.Itoa(i),
-			Body:      "body" + strconv.Itoa(i),
-			Priority:  "High",
-			UserID:    userID,
+			Content:   "content " + strconv.Itoa(i),
+			UserID:    uint(userID),
 			Completed: false,
 		})
 	}
