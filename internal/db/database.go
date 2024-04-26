@@ -1,4 +1,4 @@
-package database
+package db
 
 import (
 	// libsql "github.com/edgarsilva/gorm-libsql"
@@ -32,7 +32,7 @@ func New(dbPath string) *Database {
 	// dsn := "root:mysql@tcp(127.0.0.1:3306)/app?charset=utf8mb4&parseTime=True&loc=Local"
 	// db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 
-	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
+	DB, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
 		Logger:                 newLogger,
 		SkipDefaultTransaction: true,
 		PrepareStmt:            true,
@@ -42,7 +42,7 @@ func New(dbPath string) *Database {
 	}
 
 	// Migrate the schema
-	db.AutoMigrate(
+	DB.AutoMigrate(
 		&User{},
 		&Todo{},
 		&Post{},
@@ -52,6 +52,6 @@ func New(dbPath string) *Database {
 	)
 
 	return &Database{
-		DB: db,
+		DB: DB,
 	}
 }

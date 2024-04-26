@@ -1,25 +1,16 @@
-package todos
+package views
 
 import (
-	"github.com/edgarsilva/go-scaffold/internal/database"
-	"github.com/edgarsilva/go-scaffold/internal/views"
+	"github.com/edgarsilva/go-scaffold/internal/db"
 )
 
-type todosProps struct {
-	todos  []database.Todo
-	left   string
-	filter string
-	theme  string
-	views.Props
-}
-
-templ TodosPage(props todosProps) {
-	@views.Layout(props.Props) {
-		@views.BackToHome("Back to home", "/")
+templ TodosPage(todos []db.Todo, count, pending int, filter string, layoutProps layoutProps) {
+	@Layout(layoutProps) {
+		@BackToHome("Back to home", "/")
 		<section class="mt-16">
 			@TodoCreateForm()
-			@TodosList(props.todos)
-			@TodosFooter(props.left, props.filter)
+			@TodosList(todos)
+			@TodosFooter(string(pending), filter)
 		</section>
 	}
 }
@@ -41,7 +32,7 @@ templ TodoCreateForm() {
 	</form>
 }
 
-templ TodoCheckbox(t database.Todo) {
+templ TodoCheckbox(t db.Todo) {
 	<input
 		id={ t.UID }
 		class="checkbox checkbox-md"
@@ -65,7 +56,7 @@ templ TodoCheckbox(t database.Todo) {
 	</span>
 }
 
-templ TodoContent(t database.Todo) {
+templ TodoContent(t db.Todo) {
 	<hgroup class="form-control">
 		<label class="flex items-center gap-4">
 			@TodoCheckbox(t)
@@ -73,7 +64,7 @@ templ TodoContent(t database.Todo) {
 	</hgroup>
 }
 
-templ TodoCard(t database.Todo) {
+templ TodoCard(t db.Todo) {
 	<article class="card bg-base-100 shadow-xl w-full mx-auto border border-neutral-100">
 		<div class="card-body">
 			<div class="absolute right-8">
@@ -125,7 +116,7 @@ templ TodoCard(t database.Todo) {
 	</article>
 }
 
-templ TodosList(todos []database.Todo) {
+templ TodosList(todos []db.Todo) {
 	<section
 		id="todos"
 		role="list"

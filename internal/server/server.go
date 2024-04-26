@@ -2,11 +2,11 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
-	"github.com/edgarsilva/go-scaffold/internal/database"
-
+	"github.com/edgarsilva/go-scaffold/internal/db"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/encryptcookie"
@@ -24,10 +24,10 @@ type router interface {
 type Server struct {
 	*fiber.App
 	SessionStore *session.Store
-	DB           *database.Database
+	DB           *db.Database
 }
 
-func New(db *database.Database) *Server {
+func New(db *db.Database) *Server {
 	fiberApp := fiber.New()
 
 	// Initialize logger middleware config
@@ -64,6 +64,35 @@ func New(db *database.Database) *Server {
 		SessionStore: sessionStore,
 		DB:           db,
 	}
+}
+
+// CurrentUser returns currently logged-in(or not) user from fiber Req Ctx
+// cookies
+func (s *Server) CurrentUser(c *fiber.Ctx) (currentUser, error) {
+	type Cookies struct {
+		Auth string `cookie:"Auth"`
+		// JWT  string `cookie:"JWT"`
+	}
+
+	user := db.User{}
+	cookies := Cookies{}
+	if err := c.CookieParser(&cookies); err != nil {
+		return currentUser{User: &user}, errors.New("failed to parse Auth cookie")
+	}
+
+	if cookies.Auth == "" {
+		return currentUser{User: &user}, errors.New("no UID found in Auth cookie")
+	}
+
+	result := s.DB.Where("uid = ?", cookies.Auth).Take(&user)
+	if result.Error != nil {
+		return currentUser{User: &user}, errors.New("user NOT FOUND for UID in Auth cookie")
+	}
+
+	cu := currentUser{
+		User: &user,
+	}
+	return cu, nil
 }
 
 // RegisterRouter registers a router Routes and exposes the endpoints on the server.

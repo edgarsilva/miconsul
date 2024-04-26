@@ -1,11 +1,7 @@
-package home
+package views
 
-import (
-	"github.com/edgarsilva/go-scaffold/internal/views"
-)
-
-templ HomePage(props views.Props) {
-	@views.Layout(props) {
+templ HomePage(props layoutProps) {
+	@Layout(props) {
 		@Posts()
 		@LogoCloud()
 	}

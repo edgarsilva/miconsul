@@ -8,12 +8,22 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+func (s *service) HandlePage(c *fiber.Ctx) error {
+	count := s.sessionCountVal(c)
+	s.SessionSet(c, "cnt", strconv.FormatInt(count, 10))
+
+	theme := s.SessionGet(c, "theme", "light")
+	cu, _ := s.CurrentUser(c)
+	layoutProps, _ := views.NewLayoutProps(cu, views.WithTheme(theme))
+	return views.Render(c, views.CounterPage(count, layoutProps))
+}
+
 func (s *service) HandleIncrement(c *fiber.Ctx) error {
 	cnt := s.sessionCountVal(c)
 	cnt++
 	s.SessionSet(c, "cnt", strconv.FormatInt(cnt, 10))
 
-	return views.Render(c, CounterContainer(int64(cnt)))
+	return views.Render(c, views.CounterContainer(int64(cnt)))
 }
 
 func (s *service) HandleDecrement(c *fiber.Ctx) error {
@@ -21,14 +31,7 @@ func (s *service) HandleDecrement(c *fiber.Ctx) error {
 	cnt--
 	s.SessionSet(c, "cnt", strconv.FormatInt(cnt, 10))
 
-	return views.Render(c, CounterContainer(int64(cnt)))
-}
-
-func (s *service) HandlePage(c *fiber.Ctx) error {
-	cnt := s.sessionCountVal(c)
-	s.SessionSet(c, "cnt", strconv.FormatInt(cnt, 10))
-
-	return views.Render(c, CounterPage(views.Props{}, int64(cnt)))
+	return views.Render(c, views.CounterContainer(int64(cnt)))
 }
 
 // Utils

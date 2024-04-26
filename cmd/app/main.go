@@ -2,7 +2,8 @@ package main
 
 import (
 	"os"
-	"github.com/edgarsilva/go-scaffold/internal/database"
+
+	"github.com/edgarsilva/go-scaffold/internal/db"
 	"github.com/edgarsilva/go-scaffold/internal/routes"
 	"github.com/edgarsilva/go-scaffold/internal/server"
 
@@ -12,8 +13,8 @@ import (
 func main() {
 	godotenv.Load(".env")
 
-	db := database.New(os.Getenv("DB_PATH"))
-	s := server.New(db)
+	DB := db.New(os.Getenv("DB_PATH"))
+	s := server.New(DB)
 
 	appRoutes := routes.New()
 	s.RegisterRoutes(&appRoutes)

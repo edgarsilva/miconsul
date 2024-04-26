@@ -1,18 +1,17 @@
-package counter
+package views
 
 import (
 	"strconv"
-	"github.com/edgarsilva/go-scaffold/internal/views"
 )
 
-templ CounterPage(props views.Props, count int64) {
-	@views.Layout(props) {
-		@views.BackToHome("Back to home", "/")
+templ CounterPage(count int64, layoutProps layoutProps) {
+	@Layout(layoutProps) {
+		@BackToHome("Back to home", "/")
 		@CounterContainer(count)
 	}
 }
 
-templ Button(label string, path string) {
+templ CounterButton(label string, path string) {
 	<button
 		class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
 		hx-put={ path }
@@ -43,8 +42,8 @@ templ CounterContainer(count int64) {
 				@CounterDisplay(count)
 			</p>
 			<div class="mt-10 flex items-center justify-center gap-x-6">
-				@Button("+ Increment", "/counter/increment")
-				@Button("- Decrement", "/counter/decrement")
+				@CounterButton("+ Increment", "/counter/increment")
+				@CounterButton("- Decrement", "/counter/decrement")
 			</div>
 		</div>
 	</div>

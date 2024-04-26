@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/edgarsilva/go-scaffold/internal/database"
+	"github.com/edgarsilva/go-scaffold/internal/db"
 	"github.com/edgarsilva/go-scaffold/internal/server"
 
 	"golang.org/x/crypto/bcrypt"
@@ -45,7 +45,7 @@ func (s service) signup(email string, password string) error {
 
 // IsEmailValidForSignup returns nil if valid, otherwise returns an error
 func (s service) isEmailValidForSignup(email string) error {
-	user := database.User{Email: email}
+	user := db.User{Email: email}
 	if result := s.DB.Where(user, "Email").Take(&user); result.RowsAffected != 0 {
 		return errors.New("email already exists")
 	}
@@ -54,23 +54,23 @@ func (s service) isEmailValidForSignup(email string) error {
 }
 
 // createUser creates a new row in the users table
-func (s service) createUser(email string, password string) (database.User, error) {
-	user := database.User{
+func (s service) createUser(email string, password string) (db.User, error) {
+	user := db.User{
 		Email:    email,
 		Password: password,
-		Role:     database.UserRoleUser,
+		Role:     db.UserRoleUser,
 	}
 	result := s.DB.Create(&user) // pass pointer of data to Create
 	if result.Error != nil {
-		return database.User{}, fmt.Errorf("failed to write user row to the DB: %q", result.Error)
+		return db.User{}, fmt.Errorf("failed to write user row to the DB: %q", result.Error)
 	}
 
 	return user, nil
 }
 
 // fetchUser returns a User by email
-func (s service) fetchUser(email string) (database.User, error) {
-	user := database.User{Email: email}
+func (s service) fetchUser(email string) (db.User, error) {
+	user := db.User{Email: email}
 	s.DB.Where(user, "Email").Take(&user)
 	if user.ID == 0 {
 		return user, errors.New("user not found")

@@ -33,7 +33,7 @@ templ ThemeIcon(theme string) {
 	</label>
 }
 
-templ Header(props Props) {
+templ Header(props layoutProps) {
 	<header class="pb-4 pt-2">
 		<nav class="navbar bg-base-100 shadow-xl rounded-box border border-neutral-100">
 			<div class="flex-none">
@@ -45,7 +45,7 @@ templ Header(props Props) {
 				<a class="btn btn-ghost text-xl">Ripplebase</a>
 			</div>
 			<ul class="menu menu-horizontal px-1">
-				if len(props.CurrentUser.UID) > 0 {
+				if props.CurrentUser.IsLoggedIn() {
 					<li><a href="/logout">Logout</a></li>
 				} else {
 					<li><a href="/login">Login</a></li>
