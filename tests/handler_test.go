@@ -3,9 +3,10 @@ package tests
 import (
 	"io"
 	"net/http"
-	"github.com/edgarsilva/go-scaffold/internal/counter"
-	"github.com/edgarsilva/go-scaffold/internal/server"
 	"testing"
+
+	"github.com/edgarsilva/go-scaffold/internal/server"
+	"github.com/edgarsilva/go-scaffold/internal/services/counter"
 
 	"github.com/gofiber/fiber/v2"
 )
