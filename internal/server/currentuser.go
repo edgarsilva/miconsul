@@ -1,9 +1,9 @@
 package server
 
-import "github.com/edgarsilva/go-scaffold/internal/db"
+import "github.com/edgarsilva/go-scaffold/internal/database"
 
 type currentUser struct {
-	*db.User
+	*database.User
 	token string
 }
 

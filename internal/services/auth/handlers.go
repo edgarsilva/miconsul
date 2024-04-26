@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/edgarsilva/go-scaffold/internal/db"
+	"github.com/edgarsilva/go-scaffold/internal/database"
 	"github.com/edgarsilva/go-scaffold/internal/views"
 
 	"github.com/gofiber/fiber/v2"
@@ -17,6 +17,7 @@ import (
 // GET: /login
 func (s *service) HandleLoginPage(c *fiber.Ctx) error {
 	cu, _ := s.CurrentUser(c)
+
 	if cu.IsLoggedIn() {
 		return c.Redirect("/todos")
 	}
@@ -115,7 +116,7 @@ func (s *service) HandleValidate(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusOK)
 }
 
-// HandleShowUser returns a JSON db.User if the session is valid
+// HandleShowUser returns a JSON database.User if the session is valid
 // GET: /auth/show
 func (s *service) HandleShowUser(c *fiber.Ctx) error {
 	uid := c.Locals("userID")
@@ -127,12 +128,12 @@ func (s *service) HandleShowUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusForbidden).SendString("Forbidden")
 	}
 
-	var user db.User
+	var user database.User
 	if result := s.DB.Where("uid = ?", uid).Take(&user); result.Error != nil {
 		return c.Status(fiber.StatusForbidden).SendString("Forbidden")
 	}
 
-	res := struct{ User db.User }{
+	res := struct{ User database.User }{
 		User: user,
 	}
 

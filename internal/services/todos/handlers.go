@@ -3,7 +3,7 @@ package todos
 import (
 	"strconv"
 
-	"github.com/edgarsilva/go-scaffold/internal/db"
+	"github.com/edgarsilva/go-scaffold/internal/database"
 	"github.com/edgarsilva/go-scaffold/internal/views"
 
 	"github.com/gofiber/fiber/v2"
@@ -15,7 +15,7 @@ import (
 func (s *service) HandleTodos(c *fiber.Ctx) error {
 	var (
 		filter  = c.Query("filter")
-		todos   []db.Todo
+		todos   []database.Todo
 		pending int
 		count   int
 		theme   string
@@ -48,8 +48,8 @@ func (s *service) HandleFilteredTodos(c *fiber.Ctx) error {
 		completedCount int64
 	)
 
-	s.DB.Model(&db.Todo{}).Count(&allCount)
-	s.DB.Model(&db.Todo{}).Where("completed = ?", true).Count(&completedCount)
+	s.DB.Model(&database.Todo{}).Count(&allCount)
+	s.DB.Model(&database.Todo{}).Where("completed = ?", true).Count(&completedCount)
 
 	c.Set("HX-Trigger", "fetchTodos")
 
@@ -57,7 +57,7 @@ func (s *service) HandleFilteredTodos(c *fiber.Ctx) error {
 }
 
 func (s *service) HandleCreateTodo(c *fiber.Ctx) error {
-	t := db.Todo{
+	t := database.Todo{
 		Content:   c.FormValue("todo"),
 		UserID:    1,
 		Completed: false,
@@ -77,8 +77,8 @@ func (s *service) HandleCreateTodo(c *fiber.Ctx) error {
 func (s *service) HandleDuplicateTodo(c *fiber.Ctx) error {
 	var (
 		id  = c.Params("id")
-		src db.Todo
-		dup db.Todo
+		src database.Todo
+		dup database.Todo
 	)
 
 	src.UID = id
@@ -100,7 +100,7 @@ func (s *service) HandleDuplicateTodo(c *fiber.Ctx) error {
 func (s *service) HandleDeleteTodo(c *fiber.Ctx) error {
 	var (
 		uid  = c.Params("id")
-		todo db.Todo
+		todo database.Todo
 	)
 
 	todo.UID = uid
@@ -115,7 +115,7 @@ func (s *service) HandleDeleteTodo(c *fiber.Ctx) error {
 func (s *service) HandleCheckTodo(c *fiber.Ctx) error {
 	var (
 		id = c.Params("id")
-		t  db.Todo
+		t  database.Todo
 	)
 
 	if res := s.DB.First(&t, "uid = ?", id); res.Error != nil {
@@ -133,7 +133,7 @@ func (s *service) HandleCheckTodo(c *fiber.Ctx) error {
 func (s *service) HandleUncheckTodo(c *fiber.Ctx) error {
 	var (
 		id = c.Params("id")
-		t  db.Todo
+		t  database.Todo
 	)
 
 	if res := s.DB.First(&t, "uid = ?", id); res.Error != nil {
@@ -155,8 +155,8 @@ func (s *service) HandleFooterFragment(c *fiber.Ctx) error {
 		allCount       int64
 		completedCount int64
 	)
-	s.DB.Model(&db.Todo{}).Count(&allCount)
-	s.DB.Model(&db.Todo{}).Where("completed = ?", true).Count(&completedCount)
+	s.DB.Model(&database.Todo{}).Count(&allCount)
+	s.DB.Model(&database.Todo{}).Where("completed = ?", true).Count(&completedCount)
 
 	return views.Render(c, views.TodosFooter(strconv.Itoa(int(allCount-completedCount)), filter))
 }
@@ -164,12 +164,12 @@ func (s *service) HandleFooterFragment(c *fiber.Ctx) error {
 func (s *service) HandleTodosFragment(c *fiber.Ctx) error {
 	var (
 		filter = c.Query("filter")
-		tds    []db.Todo
+		tds    []database.Todo
 		left   int64
 	)
 
 	tds = fetchByFilter(s.DB, filter)
-	s.DB.Model(&db.Todo{}).Where("completed = ?", false).Count(&left)
+	s.DB.Model(&database.Todo{}).Where("completed = ?", false).Count(&left)
 
 	return views.Render(c, views.TodosList(tds))
 }
@@ -189,7 +189,7 @@ func (s *service) HandleApiTodos(c *fiber.Ctx) error {
 		pageSize = 10
 	}
 
-	// var tds []db.Todo
+	// var tds []database.Todo
 	type APIUser struct {
 		ID   string `json:"id"`
 		Name string `json:"name"`
@@ -202,9 +202,9 @@ func (s *service) HandleApiTodos(c *fiber.Ctx) error {
 	}
 
 	s.DB.
-		Model(&db.Todo{}).
-		Preload("User", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id", "name")
+		Model(&database.Todo{}).
+		Preload("User", func(DB *gorm.DB) *gorm.DB {
+			return DB.Select("id", "name")
 		}).
 		Select("id, content, user_id").
 		Where("user_id != ''").
@@ -219,14 +219,14 @@ func (s *service) HandleApiTodos(c *fiber.Ctx) error {
 // handleApiUsers returns all users as JSON
 // GET: /api/todos - Get all todos
 func (s *service) HandleGetUsers(c *fiber.Ctx) error {
-	var users []db.User
+	var users []database.User
 
 	s.DB.
-		Model(&db.User{}).
+		Model(&database.User{}).
 		Limit(10).
 		Find(&users)
 
-	res := struct{ Users []db.User }{
+	res := struct{ Users []database.User }{
 		Users: users,
 	}
 	return c.Status(fiber.StatusOK).JSON(res)
@@ -235,7 +235,7 @@ func (s *service) HandleGetUsers(c *fiber.Ctx) error {
 // GET: /api/todos/Count - Count all todos
 func (s *service) HandleCountTodos(c *fiber.Ctx) error {
 	var count int64
-	s.DB.Model(&db.Todo{}).Count(&count)
+	s.DB.Model(&database.Todo{}).Count(&count)
 	res := struct {
 		Count int64 `json:"count"`
 	}{Count: count}
@@ -256,11 +256,11 @@ func (s *service) HandleCreateNTodos(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusUnprocessableEntity)
 	}
 
-	todos := []db.Todo{}
+	todos := []database.Todo{}
 
 	// var sb strings.Builder
 	for i := 1; i <= n; i++ {
-		todos = append(todos, db.Todo{
+		todos = append(todos, database.Todo{
 			Content:   "content " + strconv.Itoa(i),
 			UserID:    uint(userID),
 			Completed: false,
@@ -293,9 +293,9 @@ func (s *service) HandleMakeUsers(c *fiber.Ctx) error {
 		n = 10
 	}
 
-	var users []db.User
+	var users []database.User
 	for i := 0; i <= n; i++ {
-		users = append(users, db.User{
+		users = append(users, database.User{
 			Name:  faker.Name().Name(),
 			Email: faker.Internet().Email(),
 		})

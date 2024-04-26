@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/edgarsilva/go-scaffold/internal/db"
+	"github.com/edgarsilva/go-scaffold/internal/database"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/encryptcookie"
@@ -24,10 +24,10 @@ type router interface {
 type Server struct {
 	*fiber.App
 	SessionStore *session.Store
-	DB           *db.Database
+	DB           *database.Database
 }
 
-func New(db *db.Database) *Server {
+func New(db *database.Database) *Server {
 	fiberApp := fiber.New()
 
 	// Initialize logger middleware config
@@ -74,7 +74,7 @@ func (s *Server) CurrentUser(c *fiber.Ctx) (currentUser, error) {
 		// JWT  string `cookie:"JWT"`
 	}
 
-	user := db.User{}
+	user := database.User{}
 	cookies := Cookies{}
 	if err := c.CookieParser(&cookies); err != nil {
 		return currentUser{User: &user}, errors.New("failed to parse Auth cookie")

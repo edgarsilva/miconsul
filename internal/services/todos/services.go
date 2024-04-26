@@ -3,7 +3,7 @@ package todos
 import (
 	"strings"
 
-	"github.com/edgarsilva/go-scaffold/internal/db"
+	"github.com/edgarsilva/go-scaffold/internal/database"
 	"github.com/edgarsilva/go-scaffold/internal/server"
 )
 
@@ -17,8 +17,8 @@ func NewService(s *server.Server) service {
 	}
 }
 
-func fetchByFilter(DB *db.Database, filter string) []db.Todo {
-	todos := []db.Todo{}
+func fetchByFilter(DB *database.Database, filter string) []database.Todo {
+	todos := []database.Todo{}
 
 	switch {
 	case strings.EqualFold(filter, "all"):
@@ -34,13 +34,13 @@ func fetchByFilter(DB *db.Database, filter string) []db.Todo {
 	return todos
 }
 
-func fetchPendingCount(DB *db.Database) int {
+func fetchPendingCount(DB *database.Database) int {
 	var (
 		allCount       int64
 		completedCount int64
 	)
-	DB.Model(&db.Todo{}).Count(&allCount)
-	DB.Model(&db.Todo{}).Where("completed = ?", true).Count(&completedCount)
+	DB.Model(&database.Todo{}).Count(&allCount)
+	DB.Model(&database.Todo{}).Where("completed = ?", true).Count(&completedCount)
 
 	return int(allCount - completedCount)
 }
