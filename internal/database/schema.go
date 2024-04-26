@@ -30,6 +30,7 @@ type User struct {
 	Email    string   `gorm:"uniqueIndex;default:null;not null"`
 	Role     UserRole `gorm:"index;default:null;not null;type:string"`
 	Password string   `json:"-"`
+	Theme    string
 
 	// Has many
 	Todos    []Todo
