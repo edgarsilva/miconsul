@@ -5,46 +5,28 @@ all: build
 
 build:
 	@echo "Building..."
-	@go build -o bin/main cmd/app/main.go
+	@go build -o bin/app cmd/app/main.go
 
 # Run the application
 run:
 	@go run cmd/app/main.go
 
-# Create DB container
-docker-run:
-	@if docker compose up 2>/dev/null; then \
-		: ; \
-	else \
-		echo "Falling back to Docker Compose V1"; \
-		docker-compose up; \
-	fi
-
-# Shutdown DB container
-docker-down:
-	@if docker compose down 2>/dev/null; then \
-		: ; \
-	else \
-		echo "Falling back to Docker Compose V1"; \
-		docker-compose down; \
-	fi
-
 # Test the application (integration)
-test:
+test-int:
 	@echo "Testing..."
 	@go test ./tests -v
 
-unit-test:
+test-unit:
 	@echo "Testing..."
 	@go test ./internal/...
 
 # Clean the binary
 clean:
 	@echo "Cleaning..."
-	@rm main
+	@rm bin/*
 
 # Live Reload
-watch:
+develop:
 	@if command -v air > /dev/null; then \
 	    air; \
 	    echo "Watching...";\
