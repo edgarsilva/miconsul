@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	"github.com/edgarsilva/go-scaffold/internal/database"
-	"github.com/edgarsilva/go-scaffold/internal/views"
+	"github.com/edgarsilva/go-scaffold/internal/view"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -37,12 +37,12 @@ func (s *service) HandleTodos(c *fiber.Ctx) error {
 		return c.Redirect("/login")
 	}
 
-	layoutProps, err := views.NewLayoutProps(views.WithCurrentUser(cu), views.WithTheme(theme))
+	layoutProps, err := view.NewLayoutProps(view.WithCurrentUser(cu), view.WithTheme(theme))
 	if err != nil {
 		return c.Redirect("/login")
 	}
 
-	return views.Render(c, views.TodosPage(todos, count, pending, filter, layoutProps))
+	return view.Render(c, view.TodosPage(todos, count, pending, filter, layoutProps))
 }
 
 // GET: /todos.html - Get filtered todos.
@@ -58,7 +58,7 @@ func (s *service) HandleFilteredTodos(c *fiber.Ctx) error {
 
 	c.Set("HX-Trigger", "fetchTodos")
 
-	return views.Render(c, views.TodosFooter(strconv.Itoa(int(allCount-completedCount)), filter))
+	return view.Render(c, view.TodosFooter(strconv.Itoa(int(allCount-completedCount)), filter))
 }
 
 func (s *service) HandleCreateTodo(c *fiber.Ctx) error {
@@ -75,7 +75,7 @@ func (s *service) HandleCreateTodo(c *fiber.Ctx) error {
 
 	c.Set("HX-Trigger", "refreshFooter")
 
-	return views.Render(c, views.TodoCard(t))
+	return view.Render(c, view.TodoCard(t))
 }
 
 // POST: /todos/:id/duplicate.html - Duplicates a todo
@@ -98,7 +98,7 @@ func (s *service) HandleDuplicateTodo(c *fiber.Ctx) error {
 
 	c.Set("HX-Trigger", "refreshFooter")
 
-	return views.Render(c, views.TodoCard(dup))
+	return view.Render(c, view.TodoCard(dup))
 }
 
 // DELETE: /todos/:id.html - Delete a todo
@@ -132,7 +132,7 @@ func (s *service) HandleCheckTodo(c *fiber.Ctx) error {
 	t.Completed = true
 	s.DB.Save(&t)
 
-	return views.Render(c, views.TodoContent(t))
+	return view.Render(c, view.TodoContent(t))
 }
 
 func (s *service) HandleUncheckTodo(c *fiber.Ctx) error {
@@ -150,7 +150,7 @@ func (s *service) HandleUncheckTodo(c *fiber.Ctx) error {
 
 	c.Set("HX-Trigger", "refreshFooter")
 
-	return views.Render(c, views.TodoContent(t))
+	return view.Render(c, view.TodoContent(t))
 }
 
 // Fragments
@@ -163,7 +163,7 @@ func (s *service) HandleFooterFragment(c *fiber.Ctx) error {
 	s.DB.Model(&database.Todo{}).Count(&allCount)
 	s.DB.Model(&database.Todo{}).Where("completed = ?", true).Count(&completedCount)
 
-	return views.Render(c, views.TodosFooter(strconv.Itoa(int(allCount-completedCount)), filter))
+	return view.Render(c, view.TodosFooter(strconv.Itoa(int(allCount-completedCount)), filter))
 }
 
 func (s *service) HandleTodosFragment(c *fiber.Ctx) error {
@@ -176,7 +176,7 @@ func (s *service) HandleTodosFragment(c *fiber.Ctx) error {
 	tds = fetchByFilter(s.DB, filter)
 	s.DB.Model(&database.Todo{}).Where("completed = ?", false).Count(&left)
 
-	return views.Render(c, views.TodosList(tds))
+	return view.Render(c, view.TodosList(tds))
 }
 
 // API: /api/todos

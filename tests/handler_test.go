@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/edgarsilva/go-scaffold/internal/server"
-	"github.com/edgarsilva/go-scaffold/internal/services/counter"
+	"github.com/edgarsilva/go-scaffold/internal/service/counter"
 
 	"github.com/gofiber/fiber/v2"
 )

@@ -2,11 +2,11 @@ package routes
 
 import (
 	"github.com/edgarsilva/go-scaffold/internal/server"
-	"github.com/edgarsilva/go-scaffold/internal/services/auth"
-	"github.com/edgarsilva/go-scaffold/internal/services/counter"
-	"github.com/edgarsilva/go-scaffold/internal/services/home"
-	"github.com/edgarsilva/go-scaffold/internal/services/theme"
-	"github.com/edgarsilva/go-scaffold/internal/services/todos"
+	"github.com/edgarsilva/go-scaffold/internal/service/auth"
+	"github.com/edgarsilva/go-scaffold/internal/service/counter"
+	"github.com/edgarsilva/go-scaffold/internal/service/home"
+	"github.com/edgarsilva/go-scaffold/internal/service/theme"
+	"github.com/edgarsilva/go-scaffold/internal/service/todos"
 )
 
 type Router struct {

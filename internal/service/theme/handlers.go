@@ -1,7 +1,7 @@
 package theme
 
 import (
-	"github.com/edgarsilva/go-scaffold/internal/views"
+	"github.com/edgarsilva/go-scaffold/internal/view"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -16,5 +16,5 @@ func (s *service) HandleThemeChange(c *fiber.Ctx) error {
 	}
 
 	// return c.SendStatus(fiber.StatusNoContent)
-	return views.Render(c, views.ThemeIcon(theme))
+	return view.Render(c, view.ThemeIcon(theme))
 }

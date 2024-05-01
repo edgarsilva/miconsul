@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/edgarsilva/go-scaffold/internal/database"
-	"github.com/edgarsilva/go-scaffold/internal/views"
+	"github.com/edgarsilva/go-scaffold/internal/view"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -70,10 +70,10 @@ func (s *service) HandleSignup(c *fiber.Ctx) error {
 	email, password, err := bodyParams(c)
 	if err != nil {
 		theme := s.SessionGet(c, "theme", "light")
-		layoutProps, _ := views.NewLayoutProps(views.WithTheme(theme))
+		layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme))
 		email := c.Query("email")
 
-		return views.Render(c, views.LoginPage(email, err, layoutProps))
+		return view.Render(c, view.LoginPage(email, err, layoutProps))
 	}
 
 	if err := s.signup(email, password); err != nil {
