@@ -13,8 +13,7 @@ func (s *service) HandlePage(c *fiber.Ctx) error {
 	s.SessionSet(c, "cnt", strconv.FormatInt(count, 10))
 
 	theme := s.SessionGet(c, "theme", "light")
-	cu, _ := s.CurrentUser(c)
-	layoutProps, _ := views.NewLayoutProps(cu, views.WithTheme(theme))
+	layoutProps, _ := views.NewLayoutProps(views.WithTheme(theme))
 	return views.Render(c, views.CounterPage(count, layoutProps))
 }
 

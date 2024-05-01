@@ -16,10 +16,10 @@ type layoutProps struct {
 	Locale string
 }
 
-func NewLayoutProps(currentUser CurrentUser, props ...Prop) (layoutProps, error) {
+func NewLayoutProps(props ...Prop) (layoutProps, error) {
 	layoutProps := layoutProps{
 		Theme:       "light",
-		CurrentUser: currentUser,
+		CurrentUser: new(DummyUser),
 	}
 
 	for _, prop := range props {
@@ -33,6 +33,18 @@ func NewLayoutProps(currentUser CurrentUser, props ...Prop) (layoutProps, error)
 }
 
 type Prop func(layoutProps *layoutProps) error
+
+func WithCurrentUser(cu CurrentUser) Prop {
+	return func(props *layoutProps) error {
+		if cu == nil {
+			return errors.New("current user must exist, you are passing 'nil' or an emtpy interface")
+		}
+
+		props.CurrentUser = cu
+
+		return nil
+	}
+}
 
 func WithTheme(theme string) Prop {
 	return func(props *layoutProps) error {

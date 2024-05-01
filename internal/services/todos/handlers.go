@@ -32,11 +32,16 @@ func (s *service) HandleTodos(c *fiber.Ctx) error {
 	pending = fetchPendingCount(s.DB)
 	count = 0
 
-	cu, _ := s.CurrentUser(c)
-	layoutProps, err := views.NewLayoutProps(cu, views.WithTheme(theme))
+	cu, err := s.CurrentUser(c)
 	if err != nil {
 		return c.Redirect("/login")
 	}
+
+	layoutProps, err := views.NewLayoutProps(views.WithCurrentUser(cu), views.WithTheme(theme))
+	if err != nil {
+		return c.Redirect("/login")
+	}
+
 	return views.Render(c, views.TodosPage(todos, count, pending, filter, layoutProps))
 }
 

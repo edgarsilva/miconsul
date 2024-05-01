@@ -70,8 +70,7 @@ func (s *service) HandleSignup(c *fiber.Ctx) error {
 	email, password, err := bodyParams(c)
 	if err != nil {
 		theme := s.SessionGet(c, "theme", "light")
-		cu, _ := s.CurrentUser(c)
-		layoutProps, _ := views.NewLayoutProps(cu, views.WithTheme(theme))
+		layoutProps, _ := views.NewLayoutProps(views.WithTheme(theme))
 		email := c.Query("email")
 
 		return views.Render(c, views.LoginPage(email, err, layoutProps))
