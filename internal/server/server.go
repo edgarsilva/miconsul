@@ -69,7 +69,10 @@ func New(db *database.Database) *Server {
 // CurrentUser returns currently logged-in(or anon) user by User.UID from fiber.Locals("uid")
 func (s *Server) CurrentUser(c *fiber.Ctx) (currentUser, error) {
 	user := database.User{}
-	uid := c.Locals("uid", "")
+	uid := c.Locals("uid")
+	if uid == "" {
+		uid = c.Cookies("Auth", "")
+	}
 	result := s.DB.Where("uid = ?", uid).Take(&user)
 	if result.Error != nil {
 		return currentUser{User: &user}, errors.New("user NOT FOUND with SUB in JWT token")

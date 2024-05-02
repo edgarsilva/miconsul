@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/asaskevich/govalidator"
 	"github.com/edgarsilva/go-scaffold/internal/database"
 	"github.com/edgarsilva/go-scaffold/internal/server"
 	"github.com/gofiber/fiber/v2"
@@ -49,9 +50,31 @@ func (s service) signup(email string, password string) error {
 
 // IsEmailValidForSignup returns nil if valid, otherwise returns an error
 func (s service) isEmailValidForSignup(email string) error {
+	validEmail := govalidator.IsEmail(email)
+	if !validEmail {
+		return errors.New("email address is invalid")
+	}
+
 	user := database.User{Email: email}
 	if result := s.DB.Where(user, "Email").Take(&user); result.RowsAffected != 0 {
 		return errors.New("email already exists")
+	}
+
+	return nil
+}
+
+// IsPasswordValidForSignup returns nil if valid, otherwise returns an error
+func (s service) IsPasswordValidForSignup(pwd string) error {
+	if len(pwd) < 8 {
+		return errors.New("password is too short")
+	}
+
+	if strings.ContainsAny(pwd, "1234567890") {
+		return errors.New("password must contain at least 1 digit (1234567890)")
+	}
+
+	if strings.ContainsAny(pwd, "!@#$%^&*()") {
+		return errors.New("password must contain at least 1 special character (!@#$%^&*())")
 	}
 
 	return nil

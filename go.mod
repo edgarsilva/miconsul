@@ -4,6 +4,7 @@ go 1.21.4
 
 require (
 	github.com/a-h/templ v0.2.476
+	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/gofiber/fiber/v2 v2.51.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/joho/godotenv v1.5.1

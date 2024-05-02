@@ -59,7 +59,7 @@ func TodosRoutes(s *server.Server) {
 	t := todos.NewService(s)
 
 	// Pages
-	g := t.Group("/todos")
+	g := t.Group("/todos", auth.MaybeAuthenticate(t))
 	g.Get("/", t.HandleTodos)
 	g.Get("/filtered", t.HandleFilteredTodos)
 

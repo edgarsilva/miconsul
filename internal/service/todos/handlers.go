@@ -13,36 +13,27 @@ import (
 
 // GET: /todos.html - Get all todos paginated.
 func (s *service) HandleTodos(c *fiber.Ctx) error {
-	var (
-		filter  = c.Query("filter")
-		todos   []database.Todo
-		pending int
-		count   int
-		theme   string
-		cu      view.CurrentUser
-		err     error
-	)
-
-	cu, err = s.CurrentUser(c)
+	cu, err := s.CurrentUser(c)
 	if err != nil {
 		return c.Redirect("/login")
 	}
 
+	theme := s.SessionGet(c, "theme", "light")
 	layoutProps, err := view.NewLayoutProps(view.WithCurrentUser(cu), view.WithTheme(theme))
 	if err != nil {
 		return c.Redirect("/login")
 	}
 
-	theme = s.SessionGet(c, "theme", "light")
 	if theme == "light" {
 		s.SessionSet(c, "theme", "light")
 	} else {
 		s.SessionSet(c, "theme", "dark")
 	}
 
-	todos = fetchByFilter(s.DB, filter)
-	pending = fetchPendingCount(s.DB)
-	count = 0
+	filter := c.Query("filter")
+	todos := fetchByFilter(s.DB, filter)
+	pending := fetchPendingCount(s.DB)
+	count := 0
 
 	return view.Render(c, view.TodosPage(todos, count, pending, filter, layoutProps))
 }
@@ -85,7 +76,6 @@ func (s *service) HandleDuplicateTodo(c *fiber.Ctx) error {
 	var (
 		id  = c.Params("id")
 		src database.Todo
-		dup database.Todo
 	)
 
 	src.UID = id
@@ -94,7 +84,7 @@ func (s *service) HandleDuplicateTodo(c *fiber.Ctx) error {
 		return c.SendString("")
 	}
 
-	dup = src
+	dup := src
 	dup.UID = ""
 	s.DB.Create(&dup)
 

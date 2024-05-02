@@ -86,7 +86,7 @@ func (s *service) HandleSignup(c *fiber.Ctx) error {
 	}
 
 	if err := s.signup(email, password); err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).SendString("failed to signup user")
+		return c.Status(fiber.StatusUnprocessableEntity).SendString(err.Error())
 	}
 
 	return c.SendStatus(fiber.StatusOK)
@@ -123,7 +123,7 @@ func (s *service) HandleValidate(c *fiber.Ctx) error {
 //
 // GET: /auth/show
 func (s *service) HandleShowUser(c *fiber.Ctx) error {
-	uid := c.Locals("userID")
+	uid := c.Locals("uid")
 	if uid == nil {
 		return c.Status(fiber.StatusForbidden).SendString("Forbidden")
 	}
