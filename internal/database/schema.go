@@ -46,15 +46,12 @@ func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 type Todo struct {
-	Content   string `gorm:"default:null;not null"`
-	Completed bool
 	CreatedAt time.Time `gorm:"index:,sort:desc"`
-
-	// Belongs to
-	UserID uint `gorm:"index;default:null;not null"`
-	User   User
-
+	Content   string    `gorm:"default:null;not null"`
+	User      User      // Belongs to User
 	ModelBase
+	UserID    uint `gorm:"index;default:null;not null"`
+	Completed bool
 }
 
 func (t *Todo) BeforeCreate(tx *gorm.DB) (err error) {
@@ -63,19 +60,14 @@ func (t *Todo) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 type Post struct {
-	Title     string
-	Content   string
 	CreatedAt time.Time `gorm:"index:,sort:desc"`
 	UpdatedAt time.Time
-
-	// Belongs to
-	UserID uint `gorm:"index;default:null;not null"`
-	User   User
-
-	// Has many
-	Comments []Comment
-
+	Title     string
+	Content   string
+	User      User
 	ModelBase
+	Comments []Comment
+	UserID   uint `gorm:"index;default:null;not null"`
 }
 
 func (p *Post) BeforeCreate(tx *gorm.DB) (err error) {
@@ -85,15 +77,11 @@ func (p *Post) BeforeCreate(tx *gorm.DB) (err error) {
 
 type Comment struct {
 	Content string
-
-	// Belongs to
-	PostID string `gorm:"index;default:null;not null"`
-	Post   Post
-
-	UserID uint `gorm:"index;default:null;not null"`
-	User   User
-
+	PostID  string `gorm:"index;default:null;not null"`
+	User    User   // Belongs to User
 	ModelBase
+	Post   Post // Belongs to Post
+	UserID uint `gorm:"index;default:null;not null"`
 }
 
 func (c *Comment) BeforeCreate(tx *gorm.DB) (err error) {
@@ -102,18 +90,13 @@ func (c *Comment) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 type PurchaseOrder struct {
-	extID    string
-	Amount   uint
-	Quantity uint
-
-	// Belongs to
-	UserID uint `gorm:"index;default:null;not null"`
-	User   User
-
-	// Has many
-	LineItems []LineItem
-
 	ModelBase
+	extID     string
+	User      User
+	LineItems []LineItem // Has many LineItems
+	Amount    uint
+	Quantity  uint
+	UserID    uint `gorm:"index;default:null;not null"`
 }
 
 func (po *PurchaseOrder) BeforeCreate(tx *gorm.DB) (err error) {
@@ -122,18 +105,14 @@ func (po *PurchaseOrder) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 type LineItem struct {
-	extID    string
-	Amount   uint
-	Quantity uint
-
-	// Belongs to
-	UserID uint `gorm:"index;default:null;not null"`
-	User   User
-
+	extID           string
 	PurchaseOrderID string
-	PurchaseOrder   PurchaseOrder
-
+	User            User // Belongs to User
 	ModelBase
+	PurchaseOrder PurchaseOrder // Belongs to PurchaseOrder
+	Amount        uint
+	Quantity      uint
+	UserID        uint `gorm:"index;default:null;not null"`
 }
 
 func (li *LineItem) BeforeCreate(tx *gorm.DB) (err error) {
