@@ -19,7 +19,19 @@ func (s *service) HandleTodos(c *fiber.Ctx) error {
 		pending int
 		count   int
 		theme   string
+		cu      view.CurrentUser
+		err     error
 	)
+
+	cu, err = s.CurrentUser(c)
+	if err != nil {
+		return c.Redirect("/login")
+	}
+
+	layoutProps, err := view.NewLayoutProps(view.WithCurrentUser(cu), view.WithTheme(theme))
+	if err != nil {
+		return c.Redirect("/login")
+	}
 
 	theme = s.SessionGet(c, "theme", "light")
 	if theme == "light" {
@@ -31,16 +43,6 @@ func (s *service) HandleTodos(c *fiber.Ctx) error {
 	todos = fetchByFilter(s.DB, filter)
 	pending = fetchPendingCount(s.DB)
 	count = 0
-
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return c.Redirect("/login")
-	}
-
-	layoutProps, err := view.NewLayoutProps(view.WithCurrentUser(cu), view.WithTheme(theme))
-	if err != nil {
-		return c.Redirect("/login")
-	}
 
 	return view.Render(c, view.TodosPage(todos, count, pending, filter, layoutProps))
 }

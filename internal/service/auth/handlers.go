@@ -14,6 +14,7 @@ import (
 )
 
 // HandleLoginPage returns the login page html
+//
 // GET: /login
 func (s *service) HandleLoginPage(c *fiber.Ctx) error {
 	cu, _ := s.CurrentUser(c)
@@ -27,44 +28,52 @@ func (s *service) HandleLoginPage(c *fiber.Ctx) error {
 
 // HandleLogin compares hash and password and sets the user Auth session cookie
 // if the email & password combination are valid
+//
 // POST: /auth/login
 func (s *service) HandleLogin(c *fiber.Ctx) error {
 	email, password, err := bodyParams(c)
+	respErr := errors.New("incorrect email and password combination")
 	if err != nil {
-		err := errors.New("email or password missing")
-		return s.RenderLoginPage(c, err)
+		return s.RenderLoginPage(c, respErr)
 	}
 
 	user, err := s.fetchUser(email)
 	if err != nil {
-		err := errors.New("incorrect email or password")
-		return s.RenderLoginPage(c, err)
+		return s.RenderLoginPage(c, respErr)
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		err := errors.New("incorrect email or password")
-		return s.RenderLoginPage(c, err)
+		return s.RenderLoginPage(c, respErr)
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
-		"sub": user.Email,
-		"uid": user.UID,
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
-	})
-	tokenStr, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-	if err != nil {
-		err := errors.New("incorrect email or password")
-		return s.RenderLoginPage(c, err)
+	switch c.Accepts("text/plain", "text/html", "application/json") {
+	case "text/html":
+		c.Cookie(newCookie("Auth", user.UID, time.Hour*24))
+		return c.Redirect("/todos")
+	case "application/json":
+		token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
+			"sub": user.Email,
+			"uid": user.UID,
+			"exp": time.Now().Add(time.Hour * 24).Unix(),
+		})
+		tokenStr, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+		if err != nil {
+			return s.RenderLoginPage(c, err)
+		}
+		c.Cookie(newCookie("JWT", tokenStr, time.Minute*5))
+		resp := map[string]string{
+			"token": tokenStr,
+		}
+		return c.JSON(resp)
+	default:
+		c.Cookie(newCookie("Auth", user.UID, time.Hour*24))
+		return c.SendString("Login Successful")
 	}
-
-	c.Cookie(newCookie("Auth", user.UID, time.Minute*5))
-	c.Cookie(newCookie("JWT", tokenStr, time.Minute*5))
-
-	return c.Redirect("/todos")
 }
 
 // HandleSignup creates a new user if email and password are valid
+//
 // POST: /auth/signup
 func (s *service) HandleSignup(c *fiber.Ctx) error {
 	email, password, err := bodyParams(c)
@@ -102,20 +111,16 @@ func (s *service) HandleLogout(c *fiber.Ctx) error {
 //
 // POST: /auth/validate
 func (s *service) HandleValidate(c *fiber.Ctx) error {
-	type Cookies struct {
-		Auth string `cookie:"Auth"`
-		JWT  string `cookie:"JWT"`
-	}
-
-	cookies := Cookies{}
-	if err := c.CookieParser(&cookies); err != nil {
-		return c.Status(fiber.StatusUnauthorized).SendString("Can't Authenticate")
+	_, err := s.CurrentUser(c)
+	if err != nil {
+		return c.SendStatus(fiber.StatusUnauthorized)
 	}
 
 	return c.SendStatus(fiber.StatusOK)
 }
 
 // HandleShowUser returns a JSON database.User if the session is valid
+//
 // GET: /auth/show
 func (s *service) HandleShowUser(c *fiber.Ctx) error {
 	uid := c.Locals("userID")

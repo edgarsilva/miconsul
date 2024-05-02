@@ -1,6 +1,8 @@
 package view
 
-import "errors"
+import (
+	"errors"
+)
 
 type CurrentUser interface {
 	IsLoggedIn() bool

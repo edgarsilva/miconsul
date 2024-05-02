@@ -36,9 +36,9 @@ func AuthRoutes(s *server.Server) {
 	a.Delete("/logout", a.HandleLogout)
 	a.Post("/signup", a.HandleSignup)
 
-	g := a.Group("/auth")
-	g.Get("/protected", auth.OnlyAuthenticated, a.HandleShowUser)
-	g.Post("/valid", auth.OnlyAuthenticated, a.HandleValidate)
+	g := a.Group("/api/auth")
+	g.Get("/protected", auth.MustAuthenticate(a), a.HandleShowUser)
+	g.Post("/validate", auth.MustAuthenticate(a), a.HandleValidate)
 }
 
 func HomeRoutes(s *server.Server) {

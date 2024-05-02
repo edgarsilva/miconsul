@@ -2,11 +2,14 @@ package server
 
 import "github.com/edgarsilva/go-scaffold/internal/database"
 
+// AuthUser is the representation of the currently logged in user AKA
+// CurrentUser
 type currentUser struct {
 	*database.User
 	token string
 }
 
+// IsLoggedIn returns true if user can be authenticated and found in the DB
 func (cu currentUser) IsLoggedIn() bool {
 	if cu.User == nil {
 		return false
@@ -45,4 +48,8 @@ func (cu currentUser) JWT() string {
 	}
 
 	return cu.token
+}
+
+func (cu currentUser) Token() string {
+	return cu.JWT()
 }

@@ -1,29 +1,32 @@
 package auth
 
 import (
+	"github.com/edgarsilva/go-scaffold/internal/database"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/log"
 )
 
-func OnlyAuthenticated(c *fiber.Ctx) error {
-	log.Info("Inside Auth Middleware")
+type MWService interface {
+	DBClient() *database.Database
+}
 
-	type Cookies struct {
-		Auth string `cookie:"Auth"`
-		JWT  string `cookie:"JWT"`
+func MustAuthenticate(s MWService) func(c *fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
+		cu, err := Authenticate(s.DBClient(), c)
+		if err != nil {
+			switch c.Accepts("text/plain", "application/json", "text/html") {
+			case "text/plain", "application/json":
+				return c.SendStatus(fiber.StatusUnauthorized)
+			case "text/html":
+				return c.Redirect("/login")
+			default:
+				return c.Redirect("/login")
+			}
+		}
+
+		token := c.Cookies("JWT", "")
+		c.Locals("uid", cu.UID)
+		c.Locals("JWT", token)
+
+		return c.Next()
 	}
-
-	cookies := Cookies{}
-	if err := c.CookieParser(&cookies); err != nil {
-		return c.SendStatus(fiber.StatusUnauthorized)
-	}
-
-	if cookies.Auth == "" && cookies.JWT == "" {
-		return c.SendStatus(fiber.StatusUnauthorized)
-	}
-
-	c.Locals("userID", cookies.Auth)
-	c.Locals("JWT", cookies.JWT)
-
-	return c.Next()
 }

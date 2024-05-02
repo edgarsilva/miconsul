@@ -66,43 +66,27 @@ func New(db *database.Database) *Server {
 	}
 }
 
-// CurrentUser returns currently logged-in(or not) user from fiber Req Ctx
-// cookies
+// CurrentUser returns currently logged-in(or anon) user by User.UID from fiber.Locals("uid")
 func (s *Server) CurrentUser(c *fiber.Ctx) (currentUser, error) {
-	type Cookies struct {
-		Auth string `cookie:"Auth"`
-		// JWT  string `cookie:"JWT"`
-	}
-
 	user := database.User{}
-	cookies := Cookies{}
-	if err := c.CookieParser(&cookies); err != nil {
-		return currentUser{User: &user}, errors.New("failed to parse Auth cookie")
-	}
-
-	if cookies.Auth == "" {
-		return currentUser{User: &user}, errors.New("no UID found in Auth cookie")
-	}
-
-	result := s.DB.Where("uid = ?", cookies.Auth).Take(&user)
+	uid := c.Locals("uid", "")
+	result := s.DB.Where("uid = ?", uid).Take(&user)
 	if result.Error != nil {
-		return currentUser{User: &user}, errors.New("user NOT FOUND for UID in Auth cookie")
+		return currentUser{User: &user}, errors.New("user NOT FOUND with SUB in JWT token")
 	}
-
 	cu := currentUser{
 		User: &user,
 	}
 	return cu, nil
 }
 
-// RegisterRouter registers a router Routes and exposes the endpoints on the server.
-func (s *Server) RegisterRouter(r router) {
-	r.RegisterRoutes(s)
+func (s *Server) DBClient() *database.Database {
+	return s.DB
 }
 
-// RegisterRouter registers a router Routes and exposes the endpoints on the server.
+// RegisterRoutes registers a router Routes and exposes the endpoints on the server.
 func (s *Server) RegisterRoutes(r router) {
-	s.RegisterRouter(r)
+	r.RegisterRoutes(s)
 }
 
 // Listen starts the server on the specified port.
