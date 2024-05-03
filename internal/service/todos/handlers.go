@@ -31,27 +31,29 @@ func (s *service) HandleTodos(c *fiber.Ctx) error {
 	}
 
 	filter := c.Query("filter")
-	todos := fetchByFilter(s.DB, filter)
-	pending := fetchPendingCount(s.DB)
-	count := 0
+	todos := s.fetchByFilter(filter)
+	pending := s.pendingTodosCount()
+	count := s.todosCount()
 
 	return view.Render(c, view.TodosPage(todos, count, pending, filter, layoutProps))
 }
 
-// GET: /todos.html - Get filtered todos.
-func (s *service) HandleFilteredTodos(c *fiber.Ctx) error {
+// GET: /todos.html - Get filter todos.
+func (s *service) HandleFilterTodos(c *fiber.Ctx) error {
 	var (
 		filter         = c.Query("filter")
-		allCount       int64
-		completedCount int64
+		allCount       int
+		completedCount int
+		pendingCount   int
 	)
-
-	s.DB.Model(&database.Todo{}).Count(&allCount)
-	s.DB.Model(&database.Todo{}).Where("completed = ?", true).Count(&completedCount)
 
 	c.Set("HX-Trigger", "fetchTodos")
 
-	return view.Render(c, view.TodosFooter(strconv.Itoa(int(allCount-completedCount)), filter))
+	allCount = s.todosCount()
+	completedCount = s.completedCount()
+	pendingCount = allCount - completedCount
+
+	return view.Render(c, view.TodosFooter(allCount, pendingCount, filter))
 }
 
 func (s *service) HandleCreateTodo(c *fiber.Ctx) error {
@@ -149,13 +151,16 @@ func (s *service) HandleUncheckTodo(c *fiber.Ctx) error {
 func (s *service) HandleFooterFragment(c *fiber.Ctx) error {
 	var (
 		filter         = c.Query("filter")
-		allCount       int64
-		completedCount int64
+		allCount       int
+		completedCount int
+		pendingCount   int
 	)
-	s.DB.Model(&database.Todo{}).Count(&allCount)
-	s.DB.Model(&database.Todo{}).Where("completed = ?", true).Count(&completedCount)
 
-	return view.Render(c, view.TodosFooter(strconv.Itoa(int(allCount-completedCount)), filter))
+	allCount = s.todosCount()
+	completedCount = s.completedCount()
+	pendingCount = allCount - completedCount
+
+	return view.Render(c, view.TodosFooter(allCount, pendingCount, filter))
 }
 
 func (s *service) HandleTodosFragment(c *fiber.Ctx) error {
@@ -165,7 +170,7 @@ func (s *service) HandleTodosFragment(c *fiber.Ctx) error {
 		left   int64
 	)
 
-	tds = fetchByFilter(s.DB, filter)
+	tds = s.fetchByFilter(filter)
 	s.DB.Model(&database.Todo{}).Where("completed = ?", false).Count(&left)
 
 	return view.Render(c, view.TodosList(tds))
@@ -255,7 +260,6 @@ func (s *service) HandleCreateNTodos(c *fiber.Ctx) error {
 
 	todos := []database.Todo{}
 
-	// var sb strings.Builder
 	for i := 1; i <= n; i++ {
 		todos = append(todos, database.Todo{
 			Content:   "content " + strconv.Itoa(i),

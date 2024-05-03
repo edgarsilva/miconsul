@@ -61,7 +61,7 @@ func TodosRoutes(s *server.Server) {
 	// Pages
 	g := t.Group("/todos", auth.MaybeAuthenticate(t))
 	g.Get("/", t.HandleTodos)
-	g.Get("/filtered", t.HandleFilteredTodos)
+	g.Get("/filter", t.HandleFilterTodos)
 
 	g.Post("", t.HandleCreateTodo)
 	g.Post("/:id/duplicate", t.HandleDuplicateTodo)

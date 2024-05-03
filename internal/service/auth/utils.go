@@ -9,14 +9,15 @@ import (
 )
 
 // bodyParams extracts email and password from the request form values
-func bodyParams(c *fiber.Ctx) (email, password string, err error) {
+func bodyParams(c *fiber.Ctx) (email, password string, rememberMe bool, err error) {
 	email = c.FormValue("email", "")
 	password = c.FormValue("password", "")
+	rememberMe = c.FormValue("remember_me", "") != ""
 	if email == "" || password == "" {
-		return email, password, fmt.Errorf("couldn't parse email or password from body: %q", err)
+		return email, password, false, fmt.Errorf("couldn't parse email or password from body: %q", err)
 	}
 
-	return email, password, nil
+	return email, password, rememberMe, nil
 }
 
 // newCookie creates a new cookie and returns a pointer to the cookie

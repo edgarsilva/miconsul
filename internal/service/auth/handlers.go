@@ -29,9 +29,9 @@ func (s *service) HandleLoginPage(c *fiber.Ctx) error {
 // HandleLogin compares hash and password and sets the user Auth session cookie
 // if the email & password combination are valid
 //
-// POST: /auth/login
+// POST: /login
 func (s *service) HandleLogin(c *fiber.Ctx) error {
-	email, password, err := bodyParams(c)
+	email, password, rememberMe, err := bodyParams(c)
 	respErr := errors.New("incorrect email and password combination")
 	if err != nil {
 		return s.RenderLoginPage(c, respErr)
@@ -47,9 +47,13 @@ func (s *service) HandleLogin(c *fiber.Ctx) error {
 		return s.RenderLoginPage(c, respErr)
 	}
 
+	validFor := time.Duration(24)
+	if rememberMe {
+		validFor *= 7
+	}
 	switch c.Accepts("text/plain", "text/html", "application/json") {
 	case "text/html":
-		c.Cookie(newCookie("Auth", user.UID, time.Hour*24))
+		c.Cookie(newCookie("Auth", user.UID, time.Hour*validFor))
 		return c.Redirect("/todos")
 	case "application/json":
 		token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
@@ -61,7 +65,7 @@ func (s *service) HandleLogin(c *fiber.Ctx) error {
 		if err != nil {
 			return s.RenderLoginPage(c, err)
 		}
-		c.Cookie(newCookie("JWT", tokenStr, time.Minute*5))
+		c.Cookie(newCookie("JWT", tokenStr, time.Hour*24))
 		resp := map[string]string{
 			"token": tokenStr,
 		}
@@ -74,9 +78,9 @@ func (s *service) HandleLogin(c *fiber.Ctx) error {
 
 // HandleSignup creates a new user if email and password are valid
 //
-// POST: /auth/signup
+// POST: /signup
 func (s *service) HandleSignup(c *fiber.Ctx) error {
-	email, password, err := bodyParams(c)
+	email, password, _, err := bodyParams(c)
 	if err != nil {
 		theme := s.SessionGet(c, "theme", "light")
 		layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme))
@@ -92,9 +96,10 @@ func (s *service) HandleSignup(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusOK)
 }
 
-// HandleValidate validates the uses auth session is still valid
+// HandleLogout calles sessionDestroy and invalidateCookies then redirects to
+// /login
 //
-// POST: /auth/validate
+// DELETE: /logout
 func (s *service) HandleLogout(c *fiber.Ctx) error {
 	s.SessionDestroy(c)
 	invalidateCookies(c)
