@@ -7,7 +7,10 @@ import (
 )
 
 func (s *service) HandleRoot(c *fiber.Ctx) error {
-	theme := s.SessionGet(c, "theme", "cmky")
+	theme := c.Query("theme", "")
+	if theme == "" {
+		theme = s.SessionGet(c, "theme", "")
+	}
 	props, _ := view.NewLayoutProps(view.WithTheme(theme))
 	return view.Render(c, view.HomePage(props))
 }

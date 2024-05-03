@@ -8,7 +8,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
-	"syreclabs.com/go/faker"
 )
 
 // GET: /todos.html - Get all todos paginated.
@@ -68,7 +67,7 @@ func (s *service) HandleCreateTodo(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	c.Set("HX-Trigger", "refreshFooter")
+	c.Set("HX-Trigger", "syncFooter")
 
 	return view.Render(c, view.TodoCard(t))
 }
@@ -90,7 +89,7 @@ func (s *service) HandleDuplicateTodo(c *fiber.Ctx) error {
 	dup.UID = ""
 	s.DB.Create(&dup)
 
-	c.Set("HX-Trigger", "refreshFooter")
+	c.Set("HX-Trigger", "syncFooter")
 
 	return view.Render(c, view.TodoCard(dup))
 }
@@ -105,7 +104,7 @@ func (s *service) HandleDeleteTodo(c *fiber.Ctx) error {
 	todo.UID = uid
 	s.DB.Delete(&todo, "uid = ?", uid)
 
-	c.Set("HX-Trigger", "refreshFooter")
+	c.Set("HX-Trigger", "syncFooter")
 	c.SendStatus(fiber.StatusOK)
 
 	return c.SendString("")
@@ -121,7 +120,7 @@ func (s *service) HandleCheckTodo(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusMethodNotAllowed)
 	}
 
-	c.Set("HX-Trigger", "refreshFooter")
+	c.Set("HX-Trigger", "syncFooter")
 
 	t.Completed = true
 	s.DB.Save(&t)
@@ -142,7 +141,7 @@ func (s *service) HandleUncheckTodo(c *fiber.Ctx) error {
 	t.Completed = false
 	s.DB.Save(&t)
 
-	c.Set("HX-Trigger", "refreshFooter")
+	c.Set("HX-Trigger", "syncFooter")
 
 	return view.Render(c, view.TodoContent(t))
 }
@@ -218,22 +217,6 @@ func (s *service) HandleApiTodos(c *fiber.Ctx) error {
 	return c.JSON(tds)
 }
 
-// handleApiUsers returns all users as JSON
-// GET: /api/todos - Get all todos
-func (s *service) HandleGetUsers(c *fiber.Ctx) error {
-	var users []database.User
-
-	s.DB.
-		Model(&database.User{}).
-		Limit(10).
-		Find(&users)
-
-	res := struct{ Users []database.User }{
-		Users: users,
-	}
-	return c.Status(fiber.StatusOK).JSON(res)
-}
-
 // GET: /api/todos/Count - Count all todos
 func (s *service) HandleCountTodos(c *fiber.Ctx) error {
 	var count int64
@@ -269,40 +252,6 @@ func (s *service) HandleCreateNTodos(c *fiber.Ctx) error {
 	}
 
 	res := s.DB.CreateInBatches(&todos, 2000)
-	if err := res.Error; err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).SendString("Unprocessable entity")
-	}
-
-	return c.SendStatus(fiber.StatusOK)
-}
-
-func (s *service) HandleEcho(c *fiber.Ctx) error {
-	str := c.Params("str")
-
-	return c.SendString(str)
-}
-
-func (s *service) HandleEchoQuery(c *fiber.Ctx) error {
-	str := c.Query("str")
-
-	return c.SendString(str)
-}
-
-func (s *service) HandleMakeUsers(c *fiber.Ctx) error {
-	n, err := strconv.Atoi(c.Params("n"))
-	if err != nil {
-		n = 10
-	}
-
-	var users []database.User
-	for i := 0; i <= n; i++ {
-		users = append(users, database.User{
-			Name:  faker.Name().Name(),
-			Email: faker.Internet().Email(),
-		})
-	}
-
-	res := s.DB.Create(&users)
 	if err := res.Error; err != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).SendString("Unprocessable entity")
 	}

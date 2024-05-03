@@ -7,6 +7,7 @@ import (
 	"github.com/edgarsilva/go-scaffold/internal/service/home"
 	"github.com/edgarsilva/go-scaffold/internal/service/theme"
 	"github.com/edgarsilva/go-scaffold/internal/service/todos"
+	"github.com/edgarsilva/go-scaffold/internal/service/users"
 )
 
 type Router struct {
@@ -21,6 +22,7 @@ func (r *Router) RegisterRoutes(s *server.Server) {
 	r.Server = s
 
 	AuthRoutes(s)
+	UsersRoutes(s)
 	HomeRoutes(s)
 	ThemeRoutes(s)
 	TodosRoutes(s)
@@ -30,6 +32,7 @@ func (r *Router) RegisterRoutes(s *server.Server) {
 func AuthRoutes(s *server.Server) {
 	a := auth.NewService(s)
 
+	// Test
 	a.Get("/login", a.HandleLoginPage)
 	a.Post("/login", a.HandleLogin)
 	a.Get("/logout", a.HandleLogout)
@@ -55,6 +58,22 @@ func ThemeRoutes(s *server.Server) {
 	g.Get("", t.HandleThemeChange)
 }
 
+func UsersRoutes(s *server.Server) {
+	u := users.NewService(s)
+
+	// Pages
+	g := u.Group("/users", auth.MustAuthenticate(u))
+	g.Get("/", u.HandleUsersPage)
+
+	// Fragments
+	// g.Get("/fragment/footer", u.HandleFooterFragment)
+	// g.Get("/fragment/list", u.HandleTodosFragment)
+
+	// API
+	api := u.Group("/api/users")
+	api.Get("", u.HandleAPIUsers)
+}
+
 func TodosRoutes(s *server.Server) {
 	t := todos.NewService(s)
 
@@ -76,14 +95,6 @@ func TodosRoutes(s *server.Server) {
 	// API
 	api := t.Group("/api/todos")
 	api.Get("", t.HandleApiTodos)
-
-	// Test routes
-	api.Post("/N/:n/user/:userID", t.HandleCreateNTodos)
-	api.Get("/count", t.HandleCountTodos)
-	t.Get("/api/echo/:str", t.HandleEcho)
-	t.Get("/api/echo-str", t.HandleEcho)
-	t.Get("/api/users", t.HandleGetUsers)
-	t.Post("/api/users/:n", t.HandleMakeUsers)
 }
 
 func CounterRoutes(s *server.Server) {

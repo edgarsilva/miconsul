@@ -1,0 +1,16 @@
+package view
+
+import (
+	"github.com/edgarsilva/go-scaffold/internal/database"
+)
+
+templ UsersIndexPage(todos []database.Todo, count, pending int, filter string, layoutProps layoutProps) {
+	@Layout(layoutProps) {
+		@BackToHome("Back to home", "/")
+		<section class="mt-16">
+			// @TodoCreateForm()
+			// @TodosList(todos)
+			// @TodosFooter(count, pending, filter)
+		</section>
+	}
+}

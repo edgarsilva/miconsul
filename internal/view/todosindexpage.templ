@@ -136,13 +136,11 @@ templ TodosFooter(all, pending int, filter string) {
 	<footer
 		class="container flex justify-center py-8"
 		hx-get="/todos/fragment/footer"
-		hx-trigger="refreshFooter from:body"
+		hx-trigger="syncFooter from:body"
 		hx-swap="outerHTML"
+		hx-target="closest footer"
 	>
-		<ul
-			class="menu bg-base-200 lg:menu-horizontal rounded-box"
-			hx-target="closest footer"
-		>
+		<ul class="menu bg-base-200 lg:menu-horizontal rounded-box">
 			<li class="">
 				<a
 					href="/todos?filter=all"
