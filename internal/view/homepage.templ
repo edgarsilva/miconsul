@@ -2,32 +2,41 @@ package view
 
 templ HomePage(props layoutProps) {
 	@Layout(props) {
-		@Hero()
-		@Posts()
-		@LogoCloud()
+		<div id="content" class="px-4 lg:px-0">
+			@Hero()
+			@NewArticles()
+			@FeaturedArticle(
+				"Todos",
+				"Todos App",
+				"/todos",
+				"/images/avatar2.jpg",
+				"/images/asset7.jpg",
+			)
+			@TopArticles()
+		</div>
 	}
 }
 
 templ Hero() {
-	<div class="mx-auto">
-		<div class="px-2 pb-18 flex flex-col lg:flex-row p-2">
-			<div class="relative w-full lg:w-1/3">
+	<div class="pb-8 py-4 lg:mx-auto lg:pb-12">
+		<div class="pb-6 flex flex-col lg:flex-row lg:pb-10">
+			<div class="relative w-full shadow-xl rounded-xl overflow-clip lg:w-1/3">
 				<img
-					class="aspect-[3/2] w-full bg-gray-50 object-cover object-center lg:aspect-[3/4] lg:h-full rounded-xl"
+					class="aspect-[3/2] w-full bg-gray-50 object-cover object-center lg:aspect-[3/4] lg:h-full"
 					src="https://images.unsplash.com/photo-1498758536662-35b82cd15e29?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2102&q=80"
 					alt=""
 				/>
 			</div>
-			<div class="mx-auto max-w-3xl flex flex-col justify-center">
-				<div class="hidden sm:flex">
+			<div class="mx-auto mt-8 px-0 max-w-3xl flex flex-col justify-center lg:px-4 lg:mt-0">
+				<div class="flex">
 					<div class="relative badge badge-md badge-outline badge-secondary p-3">
-						Anim aute id magna aliqua ad ad non deserunt sunt.
+						Hi there, welcome aboard! 🤖
 						<a href="#" class="link link-primary px-2 whitespace-nowrap font-semibold">
-							<span class="" aria-hidden="true"></span>Read more <span aria-hidden="true">&rarr;</span>
+							Read more
 						</a>
 					</div>
 				</div>
-				<h1 class="mt-1 text-4xl font-black tracking-tight sm:text-7xl">Data to enrich your online business</h1>
+				<h1 class="mt-1 text-4xl font-black tracking-tight sm:text-7xl">Software Developer, Programmer, Engineer by trade</h1>
 				<p class="mt-6 text-lg leading-8">Anim aute id magna aliqua ad ad non deserunt sunt. Qui irure qui lorem cupidatat commodo. Elit sunt amet fugiat veniam occaecat fugiat aliqua.</p>
 				<div class="mt-6 flex items-center gap-x-4">
 					<a href="#" class="btn btn-circle btn-outline">
@@ -56,105 +65,143 @@ templ Hero() {
 				</div>
 			</div>
 		</div>
+		<div class="divider"></div>
 	</div>
 }
 
-templ Post(name, desc, href, avatar, img string) {
-	<article>
-		<section class="md:grid md:grid-cols-3 gap-4">
-			<figure class="rounded-xl overflow-hidden">
-				<img
-					class="w-full h-full object-cover"
-					src={ img }
-					alt=""
-				/>
-			</figure>
-			<section class="mb-0 flex flex-col col-span-2">
-				<hgroup>
-					<h3>
-						<a href={ templ.SafeURL(href) }>
-							{ name }
-						</a>
-					</h3>
-					<small>{ desc }</small>
-				</hgroup>
-				<p>
-					Illo sint voluptas. Error voluptates culpa eligendi. Hic vel totam vitae illo. Non aliquid explicabo necessitatibus unde. Sed exercitationem placeat consectetur nulla deserunt vel iusto corrupti dicta laboris incididunt.
-				</p>
-				<footer class="flex gap-4 mt-auto">
-					<figure>
-						<img
-							class="w-16 h-16 rounded-full"
-							src={ avatar }
-							alt=""
-						/>
-					</figure>
-					<figcaption class="font-medium">
-						<kbd>
-							Edgar Silva
-						</kbd>
-						<div>
-							Sr. Software Engineer
-							<time datetime="2020-03-16" class="">Mar 16, 2020</time>
-						</div>
-					</figcaption>
-				</footer>
-			</section>
-		</section>
+templ FeaturedArticle(name, desc, href, avatar, src string) {
+	<article class="hidden card card-side rounded-xl bg-base-200 p-8 border border-base-300 mb-16 shadow-inner lg:flex">
+		<div class="overflow-clip shadow-lg rounded-xl aspect-[3/2] lg:w-1/2">
+			<img class="object-cover object-center h-full w-full" src={ src } alt="Album"/>
+		</div>
+		<div class="card-body lg:w-1/2">
+			<span class="badge badge-accent">Featured Article</span>
+			<h2 class="card-title text-6xl font-black">New Blog Article is released!</h2>
+			<p>
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+			</p>
+			<div class="card-actions justify-start">
+				<button class="btn btn-lg btn-primary font-bold text-2xl">Read more</button>
+			</div>
+		</div>
+	</article>
+	<article class="card rounded-xl bg-base-200 p-8 border border-base-300 mb-16 shadow-inner lg:hidden">
+		<div class="absolute w-full h-full overflow-clip shadow-lg rounded-xl -ml-8 -mt-8">
+			<img class="object-cover object-center h-full w-full" src={ src } alt="Album"/>
+		</div>
+		<div class="card-body w-full text-neutral-100 z-10 glass rounded-xl">
+			<span class="badge badge-accent">Featured Article</span>
+			<h2 class="card-title text-6xl font-black">New Blog Article is released!</h2>
+			<p>
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+			</p>
+			<div class="card-actions justify-start pt-8">
+				<button class="btn btn-lg btn-primary font-bold text-2xl">Read more</button>
+			</div>
+		</div>
 	</article>
 }
 
-templ Posts() {
-	<section class="" aria-label="posts">
-		<hgroup>
-			<h2 class="">From the Go blog</h2>
-			<small class="">Coding examples, different tests and notes.</small>
-		</hgroup>
-		<div class="">
-			@Post(
+templ Article(name, desc, href, avatar, src string) {
+	<article class="p-4 card rounded-xl bg-base-200 border border-base-300 shadow-inner lg:card-side lg:p-8">
+		<div class="overflow-hidden shadow-xl rounded-xl aspect-[4/3] lg:w-1/3">
+			<img class="object-cover object-center w-full h-full" src={ src } alt="Album"/>
+		</div>
+		<div class="card-body lg:w-2/3 pl-0 px-0 pb-2 lg:px-8 lg:pb-8">
+			<span class="badge badge-outline">Programming - Jan/01/2024</span>
+			<h2 class="card-title">New album is released!</h2>
+			<p>
+				Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+			</p>
+			<div class="card-actions justify-start">
+				<a class="link link-secondary">Listen</a>
+			</div>
+		</div>
+	</article>
+}
+
+templ NewArticles() {
+	<section class="mb-12" aria-label="articles">
+		<h2 class="mb-8 text-5xl font-black tracking-tight">Recent Articles</h2>
+		<div class="grid grid-cols-1 gap-12 lg:p-0 lg:grid-cols-2 lg:gap-8 ">
+			@Article(
 				"Counter",
 				"Simple in memory counter",
 				"/counter",
 				"/images/avatar.jpg",
-				"/images/counter.png",
+				"/images/asset1.jpg",
 			)
-			@Post(
-				"Todos",
-				"Todos App",
-				"/todos",
-				"/images/avatar2.jpg",
-				"/images/counter.png",
-			)
-			@Post(
+			@Article(
 				"Shorty",
 				"Shorten URL",
 				"/shorty",
 				"/images/avatar3.jpg",
-				"/images/counter.png",
+				"/images/asset2.jpg",
+			)
+			@Article(
+				"Shorty",
+				"Shorten URL",
+				"/shorty",
+				"/images/avatar3.jpg",
+				"/images/asset3.jpg",
+			)
+			@Article(
+				"Shorty",
+				"Shorten URL",
+				"/shorty",
+				"/images/avatar3.jpg",
+				"/images/asset4.jpg",
+			)
+			@Article(
+				"Todos",
+				"Todos App",
+				"/todos",
+				"/images/avatar2.jpg",
+				"/images/asset5.jpg",
+			)
+			@Article(
+				"Todos",
+				"Todos App",
+				"/todos",
+				"/images/avatar2.jpg",
+				"/images/asset6.jpg",
 			)
 		</div>
 	</section>
 }
 
-templ LogoCloud() {
-	<footer class="grid bg-zinc-800 p-4 rounded-xl grid-cols-3">
-		<div class="bg-white/10 backdrop-blur-md rounded-xl p-2">
-			<img class="" src="https://tailwindui.com/img/logos/158x48/transistor-logo-white.svg" alt="Transistor" width="158" height="48"/>
+templ TopArticles() {
+	<section class="mb-12" aria-label="articles">
+		<h2 class="mb-8 text-5xl font-black tracking-tight">Top Articles</h2>
+		<div class="grid grid-cols-1 gap-12 lg:p-0 lg:grid-cols-2 lg:gap-8 ">
+			@Article(
+				"Shorty",
+				"Shorten URL",
+				"/shorty",
+				"/images/avatar3.jpg",
+				"/images/asset9.jpg",
+			)
+			@Article(
+				"Shorty",
+				"Shorten URL",
+				"/shorty",
+				"/images/avatar3.jpg",
+				"/images/asset8.jpg",
+			)
+			@Article(
+				"Todos",
+				"Todos App",
+				"/todos",
+				"/images/avatar2.jpg",
+				"/images/asset7.jpg",
+			)
+			@Article(
+				"Todos",
+				"Todos App",
+				"/todos",
+				"/images/avatar2.jpg",
+				"/images/asset6.jpg",
+			)
 		</div>
-		<div class="bg-white/10 backdrop-blur-md rounded-xl p-2">
-			<img class="" src="https://tailwindui.com/img/logos/158x48/reform-logo-white.svg" alt="Reform" width="158" height="48"/>
-		</div>
-		<div class="bg-white/10 backdrop-blur-md rounded-xl p-2">
-			<img class="" src="https://tailwindui.com/img/logos/158x48/tuple-logo-white.svg" alt="Tuple" width="158" height="48"/>
-		</div>
-		<div class="bg-white/10 backdrop-blur-md rounded-xl p-2">
-			<img class="" src="https://tailwindui.com/img/logos/158x48/laravel-logo-white.svg" alt="Laravel" width="158" height="48"/>
-		</div>
-		<div class="bg-white/10 backdrop-blur-md rounded-xl p-2">
-			<img class="" src="https://tailwindui.com/img/logos/158x48/savvycal-logo-white.svg" alt="SavvyCal" width="158" height="48"/>
-		</div>
-		<div class="bg-white/10 backdrop-blur-md rounded-xl p-2">
-			<img class="" src="https://tailwindui.com/img/logos/158x48/statamic-logo-white.svg" alt="Statamic" width="158" height="48"/>
-		</div>
-	</footer>
+	</section>
 }
