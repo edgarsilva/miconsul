@@ -71,11 +71,11 @@ func (s service) signupIsPasswordValid(pwd string) error {
 	}
 
 	if strings.ContainsAny(pwd, "1234567890") {
-		return errors.New("password must contain at least 1 digit (1234567890)")
+		return errors.New("password must contain at least 1 digit e.g. one of '1234567890'")
 	}
 
 	if strings.ContainsAny(pwd, "!@#$%^&*()") {
-		return errors.New("password must contain at least 1 special character (!@#$%^&*())")
+		return errors.New("password must contain at least 1 special character e.g. one of !@#$%^&*()")
 	}
 
 	return nil

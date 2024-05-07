@@ -68,15 +68,22 @@ func New(db *database.Database) *Server {
 
 // CurrentUser returns currently logged-in(or anon) user by User.UID from fiber.Locals("uid")
 func (s *Server) CurrentUser(c *fiber.Ctx) (currentUser, error) {
-	user := database.User{}
 	uid := c.Locals("uid")
+	uid, ok := uid.(string)
+	if !ok {
+		uid = ""
+	}
+
 	if uid == "" {
 		uid = c.Cookies("Auth", "")
 	}
+
+	user := database.User{}
 	result := s.DB.Where("uid = ?", uid).Take(&user)
 	if result.Error != nil {
 		return currentUser{User: &user}, errors.New("user NOT FOUND with SUB in JWT token")
 	}
+
 	cu := currentUser{
 		User: &user,
 	}
@@ -111,25 +118,23 @@ func (s *Server) SessionDestroy(c *fiber.Ctx) {
 }
 
 // SessionGet gets a session value by key, or returns the default value.
-func (s *Server) SessionGet(c *fiber.Ctx, k string, d string) string {
+func (s *Server) SessionGet(c *fiber.Ctx, key string, defaultVal string) string {
 	sess, err := s.session(c)
 	if err != nil {
-		return ""
+		return defaultVal
 	}
 
-	v := sess.Get(k)
-
-	if v == nil {
-		v = d
+	val := sess.Get(key)
+	if val == nil {
+		return defaultVal
 	}
 
-	vStr, ok := v.(string)
-
+	valStr, ok := val.(string)
 	if !ok {
-		vStr = d
+		return defaultVal
 	}
 
-	return vStr
+	return valStr
 }
 
 // SessionSet sets a session value.
@@ -147,4 +152,21 @@ func (s *Server) SessionSet(c *fiber.Ctx, k string, v string) error {
 	}
 
 	return nil
+}
+
+// SessionUITheme returns the user UI theme (light|dark) from the session or query
+// url param
+func (s *Server) SessionUITheme(c *fiber.Ctx) string {
+	theme := c.Query("theme", "")
+	if theme == "" {
+		theme = s.SessionGet(c, "theme", "light")
+	}
+
+	if theme == "light" {
+		s.SessionSet(c, "theme", "light")
+	} else {
+		s.SessionSet(c, "theme", "dark")
+	}
+
+	return theme
 }

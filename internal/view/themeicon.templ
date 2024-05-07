@@ -14,7 +14,7 @@ templ ThemeIcon(theme string) {
 			hx-push-url="?theme=light"
 		}
 		hx-trigger="change"
-		hx-swap="none"
+		hx-swap="outerHTML swap:0.300s"
 	>
 		<!-- this hidden checkbox controls the theme -->
 		<input

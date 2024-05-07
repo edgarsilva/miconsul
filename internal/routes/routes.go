@@ -54,8 +54,10 @@ func AuthRoutes(s *server.Server) {
 func BlogRoutes(s *server.Server) {
 	b := blog.NewService(s)
 
-	g := s.Group("/")
-	g.Get("", b.HandleRoot)
+	b.Get("/", b.HandleBlogPage)
+
+	g := s.Group("/blog")
+	g.Get("", b.HandleBlogPage)
 }
 
 func ThemeRoutes(s *server.Server) {

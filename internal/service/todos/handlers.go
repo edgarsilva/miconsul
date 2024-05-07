@@ -17,16 +17,11 @@ func (s *service) HandleTodos(c *fiber.Ctx) error {
 		return c.Redirect("/login")
 	}
 
-	theme := s.SessionGet(c, "theme", "light")
+	theme := s.SessionUITheme(c)
+
 	layoutProps, err := view.NewLayoutProps(view.WithCurrentUser(cu), view.WithTheme(theme))
 	if err != nil {
 		return c.Redirect("/login")
-	}
-
-	if theme == "light" {
-		s.SessionSet(c, "theme", "light")
-	} else {
-		s.SessionSet(c, "theme", "dark")
 	}
 
 	filter := c.Query("filter")
