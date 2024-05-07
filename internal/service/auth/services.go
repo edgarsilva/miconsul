@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/edgarsilva/go-scaffold/internal/database"
@@ -31,7 +32,7 @@ func (s service) signup(email string, password string) error {
 		return errors.New("incorrect email or password")
 	}
 
-	if err := s.isEmailValidForSignup(email); err != nil {
+	if err := s.signupIsEmailValid(email); err != nil {
 		return err
 	}
 
@@ -40,7 +41,7 @@ func (s service) signup(email string, password string) error {
 		return fmt.Errorf("failed to generate password hash: %q", err)
 	}
 
-	_, err = s.createUser(email, string(pwd))
+	_, err = s.userCreate(email, string(pwd))
 	if err != nil {
 		return err
 	}
@@ -49,7 +50,7 @@ func (s service) signup(email string, password string) error {
 }
 
 // IsEmailValidForSignup returns nil if valid, otherwise returns an error
-func (s service) isEmailValidForSignup(email string) error {
+func (s service) signupIsEmailValid(email string) error {
 	validEmail := govalidator.IsEmail(email)
 	if !validEmail {
 		return errors.New("email address is invalid")
@@ -63,8 +64,8 @@ func (s service) isEmailValidForSignup(email string) error {
 	return nil
 }
 
-// IsPasswordValidForSignup returns nil if valid, otherwise returns an error
-func (s service) IsPasswordValidForSignup(pwd string) error {
+// signupIsPasswordValid returns nil if valid, otherwise returns an error
+func (s service) signupIsPasswordValid(pwd string) error {
 	if len(pwd) < 8 {
 		return errors.New("password is too short")
 	}
@@ -80,8 +81,8 @@ func (s service) IsPasswordValidForSignup(pwd string) error {
 	return nil
 }
 
-// createUser creates a new row in the users table
-func (s service) createUser(email string, password string) (database.User, error) {
+// userCreate creates a new row in the users table
+func (s service) userCreate(email string, password string) (database.User, error) {
 	user := database.User{
 		Email:    email,
 		Password: password,
@@ -95,12 +96,37 @@ func (s service) createUser(email string, password string) (database.User, error
 	return user, nil
 }
 
-// fetchUser returns a User by email
-func (s service) fetchUser(email string) (database.User, error) {
+// userFetch returns a User by email
+func (s service) userFetch(email string) (database.User, error) {
 	user := database.User{Email: email}
 	s.DB.Where(user, "Email").Take(&user)
 	if user.ID == 0 {
 		return user, errors.New("user not found")
+	}
+
+	return user, nil
+}
+
+// userUpdatePassword updates a user password
+func (s service) userUpdatePassword(email, password, token string) (database.User, error) {
+	pwd, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	if err != nil {
+		return database.User{}, errors.New("failed to update password")
+	}
+
+	user := database.User{
+		Email:    email,
+		Password: string(pwd),
+	}
+
+	result := s.DB.
+		Model(&user).
+		Select("Password", "ResetToken", "ResetTokenExpiresAt").
+		Where("email = ? AND reset_token = ? AND reset_token_expires_at > ?", email, token, time.Now()).
+		Updates(&user)
+	fmt.Println("RowsAffected ---->", result.RowsAffected, email, password, token, time.Now())
+	if result.Error != nil || result.RowsAffected != 1 {
+		return database.User{}, errors.New("failed to update password")
 	}
 
 	return user, nil
@@ -171,4 +197,17 @@ func AuthenticateWithJWT(DB *database.Database, tokenStr string) (database.User,
 	}
 
 	return user, nil
+}
+
+func (s service) resetPasswordVerifyToken(email, token string) error {
+	user := database.User{}
+	result := s.DB.
+		Select("id").
+		Where("email = ? AND reset_token != '' AND reset_token IS NOT null AND reset_token = ? AND reset_token_expires_at > ?", email, token, time.Now()).
+		Take(&user)
+	if result.Error != nil {
+		return errors.New("password reset token not found or expired")
+	}
+
+	return nil
 }

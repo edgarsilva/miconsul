@@ -1,4 +1,4 @@
-package home
+package blog
 
 import (
 	"github.com/edgarsilva/go-scaffold/internal/view"
@@ -12,5 +12,5 @@ func (s *service) HandleRoot(c *fiber.Ctx) error {
 		theme = s.SessionGet(c, "theme", "")
 	}
 	props, _ := view.NewLayoutProps(view.WithTheme(theme))
-	return view.Render(c, view.HomePage(props))
+	return view.Render(c, view.BlogPage(props))
 }

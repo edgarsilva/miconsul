@@ -3,8 +3,8 @@ package routes
 import (
 	"github.com/edgarsilva/go-scaffold/internal/server"
 	"github.com/edgarsilva/go-scaffold/internal/service/auth"
+	"github.com/edgarsilva/go-scaffold/internal/service/blog"
 	"github.com/edgarsilva/go-scaffold/internal/service/counter"
-	"github.com/edgarsilva/go-scaffold/internal/service/home"
 	"github.com/edgarsilva/go-scaffold/internal/service/theme"
 	"github.com/edgarsilva/go-scaffold/internal/service/todos"
 	"github.com/edgarsilva/go-scaffold/internal/service/users"
@@ -23,7 +23,7 @@ func (r *Router) RegisterRoutes(s *server.Server) {
 
 	AuthRoutes(s)
 	UsersRoutes(s)
-	HomeRoutes(s)
+	BlogRoutes(s)
 	ThemeRoutes(s)
 	TodosRoutes(s)
 	CounterRoutes(s)
@@ -32,23 +32,30 @@ func (r *Router) RegisterRoutes(s *server.Server) {
 func AuthRoutes(s *server.Server) {
 	a := auth.NewService(s)
 
-	// Test
+	// Root
 	a.Get("/login", a.HandleLoginPage)
 	a.Post("/login", a.HandleLogin)
 	a.Get("/logout", a.HandleLogout)
 	a.Delete("/logout", a.HandleLogout)
 	a.Post("/signup", a.HandleSignup)
+	a.Get("/resetpassword", a.HandleResetPasswordPage)
+	a.Post("/resetpassword/send", a.HandleResetPasswordSend)
+	a.Get("/resetpassword/change/:token", a.HandleResetPasswordChange)
+	a.Post("/resetpassword/change", a.HandleResetPasswordUpdate)
 
+	// Auth service
+
+	// API
 	g := a.Group("/api/auth")
 	g.Get("/protected", auth.MustAuthenticate(a), a.HandleShowUser)
 	g.Post("/validate", auth.MustAuthenticate(a), a.HandleValidate)
 }
 
-func HomeRoutes(s *server.Server) {
-	h := home.NewService(s)
+func BlogRoutes(s *server.Server) {
+	b := blog.NewService(s)
 
 	g := s.Group("/")
-	g.Get("", h.HandleRoot)
+	g.Get("", b.HandleRoot)
 }
 
 func ThemeRoutes(s *server.Server) {

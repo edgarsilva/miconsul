@@ -1,4 +1,4 @@
-package home
+package blog
 
 import (
 	"github.com/edgarsilva/go-scaffold/internal/server"

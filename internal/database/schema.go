@@ -3,7 +3,7 @@ package database
 import (
 	"time"
 
-	"github.com/edgarsilva/go-scaffold/internal/xid"
+	"github.com/edgarsilva/go-scaffold/internal/lib/xid"
 
 	"gorm.io/gorm"
 )
@@ -26,11 +26,13 @@ const (
 )
 
 type User struct {
-	Name     string
-	Email    string   `gorm:"uniqueIndex;default:null;not null"`
-	Role     UserRole `gorm:"index;default:null;not null;type:string"`
-	Password string   `json:"-"`
-	Theme    string
+	Name                string
+	Email               string   `gorm:"uniqueIndex;default:null;not null"`
+	Role                UserRole `gorm:"index;default:null;not null;type:string"`
+	Password            string   `json:"-"`
+	Theme               string
+	ResetToken          string
+	ResetTokenExpiresAt time.Time
 
 	// Has many
 	Todos    []Todo

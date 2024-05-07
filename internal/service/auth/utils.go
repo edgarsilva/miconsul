@@ -1,6 +1,9 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -37,4 +40,38 @@ func invalidateCookies(c *fiber.Ctx) {
 	c.ClearCookie("Auth", "JWT")
 	c.Cookie(newCookie("Auth", "", time.Hour*0))
 	c.Cookie(newCookie("JWT", "", time.Hour*0))
+}
+
+// resetPasswordEmailParam returns the email address string from either
+// FormValue, URLParam or Query in that order of existance
+func resetPasswordEmailParam(c *fiber.Ctx) (string, error) {
+	email := c.FormValue("email", "")
+	if email != "" {
+		return email, nil
+	}
+
+	email = c.Params("email", "")
+	if email != "" {
+		return email, nil
+	}
+
+	email = c.Query("email", "")
+	if email != "" {
+		return email, nil
+	}
+
+	err := errors.New("email can't be blank")
+	return "", err
+}
+
+func resetPasswordGenToken() (string, error) {
+	return randHexToken(32)
+}
+
+func randHexToken(n int) (string, error) {
+	bytes := make([]byte, n)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
 }
