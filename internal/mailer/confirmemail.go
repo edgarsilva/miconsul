@@ -10,14 +10,14 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
-func ResetPasswordSendToken(email, token string) error {
+func ConfirmEmailSend(email, token string) error {
 	m := gomail.NewMessage()
 	m.SetHeader("From", os.Getenv("EMAIL_SENDER"))
 	m.SetHeader("To", "edgarsilva.dev@gmail.com")
 	// m.SetAddressHeader("Cc", "dan@example.com", "Dan")
 	m.SetHeader("Subject", "Ripplebase: Reset Your Password!")
 
-	url := "http://localhost:8080/resetpassword/change/" + token
+	url := "http://localhost:8080/confirmemail/confirm/" + token
 	emailHTML := bytes.Buffer{}
 	if err := ResetPasswordEmail(email, url).Render(context.Background(), &emailHTML); err != nil {
 		return errors.New("couldn't create HTML from templ comp to send email")

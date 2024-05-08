@@ -45,8 +45,10 @@ func New(dbPath string) *Database {
 	DB.AutoMigrate(
 		&User{},
 		&Todo{},
-		&Post{},
+		&Article{},
 		&Comment{},
+		// &Journal|Logbook TODO: Logbook to log extraneous events (No 20k Datatog bill)
+		// &I18n TODO: Internationalization in the DB or just plain text file?
 		// &PurchaseOrder{},
 		// &LineItem{},
 	)

@@ -26,20 +26,18 @@ const (
 )
 
 type User struct {
+	ResetTokenExpiresAt time.Time
 	Name                string
 	Email               string   `gorm:"uniqueIndex;default:null;not null"`
 	Role                UserRole `gorm:"index;default:null;not null;type:string"`
 	Password            string   `json:"-"`
 	Theme               string
 	ResetToken          string
-	ResetTokenExpiresAt time.Time
-
-	// Has many
-	Todos    []Todo
-	Posts    []Post
-	Comments []Comment
-
 	ModelBase
+	Todos          []Todo
+	Articles       []Article
+	Comments       []Comment
+	confirmedEmail bool
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
@@ -50,8 +48,8 @@ func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 type Todo struct {
 	CreatedAt time.Time `gorm:"index:,sort:desc"`
 	Content   string    `gorm:"default:null;not null"`
-	User      User      // Belongs to User
 	ModelBase
+	User      User
 	UserID    uint `gorm:"index;default:null;not null"`
 	Completed bool
 }
@@ -61,29 +59,29 @@ func (t *Todo) BeforeCreate(tx *gorm.DB) (err error) {
 	return
 }
 
-type Post struct {
+type Article struct {
 	CreatedAt time.Time `gorm:"index:,sort:desc"`
 	UpdatedAt time.Time
 	Title     string
 	Content   string
-	User      User
 	ModelBase
 	Comments []Comment
+	User     User
 	UserID   uint `gorm:"index;default:null;not null"`
 }
 
-func (p *Post) BeforeCreate(tx *gorm.DB) (err error) {
-	p.UID = xid.New("pst")
+func (a *Article) BeforeCreate(tx *gorm.DB) (err error) {
+	a.UID = xid.New("pst")
 	return
 }
 
 type Comment struct {
-	Content string
-	PostID  string `gorm:"index;default:null;not null"`
-	User    User   // Belongs to User
+	Content   string
+	ArticleID string `gorm:"index;default:null;not null"`
+	User      User   // Belongs to User
 	ModelBase
-	Post   Post // Belongs to Post
-	UserID uint `gorm:"index;default:null;not null"`
+	Article Article // Belongs to Article
+	UserID  uint    `gorm:"index;default:null;not null"`
 }
 
 func (c *Comment) BeforeCreate(tx *gorm.DB) (err error) {
@@ -92,10 +90,10 @@ func (c *Comment) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 type PurchaseOrder struct {
+	extID string
 	ModelBase
-	extID     string
+	LineItems []LineItem
 	User      User
-	LineItems []LineItem // Has many LineItems
 	Amount    uint
 	Quantity  uint
 	UserID    uint `gorm:"index;default:null;not null"`

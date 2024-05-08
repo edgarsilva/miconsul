@@ -3080,6 +3080,10 @@ html {
   overflow: clip;
 }
 
+.overflow-visible {
+  overflow: visible;
+}
+
 .whitespace-nowrap {
   white-space: nowrap;
 }
@@ -3127,6 +3131,11 @@ html {
   border-color: rgb(245 245 245 / var(--tw-border-opacity));
 }
 
+.border-neutral-200 {
+  --tw-border-opacity: 1;
+  border-color: rgb(229 229 229 / var(--tw-border-opacity));
+}
+
 .bg-base-100 {
   --tw-bg-opacity: 1;
   background-color: var(--fallback-b1,oklch(var(--b1)/var(--tw-bg-opacity)));
@@ -3170,10 +3179,6 @@ html {
 
 .stroke-info {
   stroke: var(--fallback-in,oklch(var(--in)/1));
-}
-
-.stroke-red-500 {
-  stroke: #ef4444;
 }
 
 .object-cover {
@@ -3256,6 +3261,11 @@ html {
 .py-4 {
   padding-top: 1rem;
   padding-bottom: 1rem;
+}
+
+.py-6 {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
 }
 
 .py-8 {
@@ -3383,11 +3393,6 @@ html {
   color: rgb(245 245 245 / var(--tw-text-opacity));
 }
 
-.text-red-600 {
-  --tw-text-opacity: 1;
-  color: rgb(220 38 38 / var(--tw-text-opacity));
-}
-
 .text-white {
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity));
@@ -3437,11 +3442,6 @@ html {
 
 .outline-4 {
   outline-width: 4px;
-}
-
-.drop-shadow-xl {
-  --tw-drop-shadow: drop-shadow(0 20px 13px rgb(0 0 0 / 0.03)) drop-shadow(0 8px 5px rgb(0 0 0 / 0.08));
-  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
 }
 
 .filter {

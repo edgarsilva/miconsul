@@ -1,0 +1,19 @@
+package mailer
+
+templ EmailWrapper() {
+	<!DOCTYPE html>
+	<html>
+		<head>
+			<style type="text/css">
+        p{
+          font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+          font-size:18px;
+          margin:0
+        }
+      </style>
+		</head>
+		<body>
+			{ children... }
+		</body>
+	</html>
+}

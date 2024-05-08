@@ -1,0 +1,16 @@
+package mailer
+
+templ ConfirmEmail(username, resetURL string) {
+	@EmailWrapper() {
+		<p>
+			Hello
+			<b>{ username }</b>
+			<br/>
+			<br/>
+			<span>Confirm your email by cliking on link below:</span>
+			<br/>
+			<br/>
+			<a href={ templ.URL(resetURL) }><b>Reset My Password</b></a>!
+		</p>
+	}
+}

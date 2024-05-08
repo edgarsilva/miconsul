@@ -33,7 +33,7 @@ func (s *service) HandleLoginPage(c *fiber.Ctx) error {
 //
 // POST: /login
 func (s *service) HandleLogin(c *fiber.Ctx) error {
-	email, password, rememberMe, err := bodyParams(c)
+	email, password, err := authParams(c)
 	respErr := errors.New("incorrect email and password combination")
 	if err != nil {
 		return s.RenderLoginPage(c, respErr)
@@ -50,6 +50,7 @@ func (s *service) HandleLogin(c *fiber.Ctx) error {
 	}
 
 	validFor := time.Duration(24)
+	rememberMe := c.FormValue("remember_me", "") != ""
 	if rememberMe {
 		validFor *= 7
 	}
@@ -78,24 +79,45 @@ func (s *service) HandleLogin(c *fiber.Ctx) error {
 	}
 }
 
+// HandleSignupPage returns the Signup form page html
+//
+// GET: /login
+func (s *service) HandleSignupPage(c *fiber.Ctx) error {
+	cu, _ := s.CurrentUser(c)
+
+	if cu.IsLoggedIn() {
+		return c.Redirect("/todos")
+	}
+
+	theme := s.SessionUITheme(c)
+	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme))
+
+	return view.Render(c, view.SignupPage("", nil, layoutProps))
+}
+
 // HandleSignup creates a new user if email and password are valid
 //
 // POST: /signup
 func (s *service) HandleSignup(c *fiber.Ctx) error {
-	email, password, _, err := bodyParams(c)
-	if err != nil {
-		theme := s.SessionGet(c, "theme", "light")
-		layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme))
-		email := c.Query("email")
+	theme := s.SessionUITheme(c)
+	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme))
 
-		return view.Render(c, view.LoginPage(email, err, layoutProps))
+	email, password, err := authParams(c)
+	if err != nil {
+		return view.Render(c, view.SignupPage(email, err, layoutProps))
+	}
+
+	confirm := c.FormValue("confirm", "")
+	if confirm == "" || password != confirm {
+		err := errors.New("passwords don't match")
+		return view.Render(c, view.SignupPage(email, err, layoutProps))
 	}
 
 	if err := s.signup(email, password); err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).SendString(err.Error())
+		return view.Render(c, view.SignupPage(email, err, layoutProps))
 	}
 
-	return c.SendStatus(fiber.StatusOK)
+	return c.Redirect("/login")
 }
 
 // HandleLogout calles sessionDestroy and invalidateCookies then redirects to
@@ -166,17 +188,12 @@ func (s *service) HandleResetPasswordSend(c *fiber.Ctx) error {
 //
 // GET: /resetpassword/change/:token
 func (s *service) HandleResetPasswordChange(c *fiber.Ctx) error {
-	email, err := resetPasswordEmailParam(c)
-	if err != nil {
-		return c.Redirect("/resetpassword?msg=email can't be blank")
-	}
-
 	token := c.Params("token", "")
 	if token == "" {
 		return c.Redirect("/resetpassword?msg=token can't be blank")
 	}
 
-	err = s.resetPasswordVerifyToken(email, token)
+	email, err := s.resetPasswordVerifyToken(token)
 	if err != nil {
 		return c.Redirect("/resetpassword?msg=invalid email or token")
 	}
@@ -207,7 +224,7 @@ func (s *service) HandleResetPasswordUpdate(c *fiber.Ctx) error {
 		return c.Redirect("/resetpassword?msg=something went wrong with the nonce, try again!")
 	}
 
-	err = s.resetPasswordVerifyToken(email, token)
+	_, err = s.resetPasswordVerifyToken(token)
 	if err != nil {
 		return c.Redirect("/resetpassword?msg=seems like your token has expired, try again!")
 	}

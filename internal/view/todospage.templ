@@ -18,7 +18,7 @@ templ TodosPage(todos []database.Todo, count, pending int, filter string, layout
 
 templ TodoCreateForm() {
 	<form hx-post="/todos" hx-swap="beforeend" hx-target="#todos" class="mb-6 flex">
-		<fieldset class="join mx-auto w-full max-w-3xl drop-shadow-xl">
+		<fieldset class="join mx-auto w-full max-w-3xl shadow-lg">
 			<input
 				id="todo"
 				name="todo"
@@ -66,7 +66,7 @@ templ TodoContent(t database.Todo) {
 }
 
 templ TodoCard(t database.Todo) {
-	<article class="card bg-base-100 shadow-xl w-full mx-auto border border-neutral-100">
+	<article class="card w-full mx-auto shadow-lg border border-neutral-200">
 		<div class="card-body">
 			<div class="absolute right-8">
 				<span class="badge badge-lg badge-info">High</span>
@@ -140,7 +140,7 @@ templ TodosFooter(all, pending int, filter string) {
 		hx-swap="outerHTML"
 		hx-target="closest footer"
 	>
-		<ul class="menu bg-base-200 lg:menu-horizontal rounded-box">
+		<ul class="menu bg-base-200 lg:menu-horizontal rounded-box shadow-xl">
 			<li class="">
 				<a
 					href="/todos?filter=all"

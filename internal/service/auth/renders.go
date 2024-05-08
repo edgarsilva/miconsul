@@ -6,7 +6,7 @@ import (
 )
 
 func (s *service) RenderLoginPage(c *fiber.Ctx, error error) error {
-	theme := s.SessionGet(c, "theme", "light")
+	theme := s.SessionUITheme(c)
 	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme))
 	email := c.Query("email")
 

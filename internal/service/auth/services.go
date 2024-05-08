@@ -28,22 +28,22 @@ func NewService(s *server.Server) service {
 
 // Signup creates a new user record if req.body Email & Password are valid
 func (s service) signup(email string, password string) error {
-	if email == "" || password == "" {
-		return errors.New("incorrect email or password")
+	if err := s.signupIsEmailValid(email); err != nil {
+		return err
 	}
 
-	if err := s.signupIsEmailValid(email); err != nil {
+	if err := s.signupIsPasswordValid(password); err != nil {
 		return err
 	}
 
 	pwd, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
-		return fmt.Errorf("failed to generate password hash: %q", err)
+		return errors.New("failed to save email or password, try again")
 	}
 
 	_, err = s.userCreate(email, string(pwd))
 	if err != nil {
-		return err
+		return errors.New("failed to save email or password, try again")
 	}
 
 	return nil
@@ -71,11 +71,11 @@ func (s service) signupIsPasswordValid(pwd string) error {
 	}
 
 	if strings.ContainsAny(pwd, "1234567890") {
-		return errors.New("password must contain at least 1 digit e.g. one of '1234567890'")
+		return errors.New("password must contain at least 1 digit (numbers from 0 to 9)")
 	}
 
 	if strings.ContainsAny(pwd, "!@#$%^&*()") {
-		return errors.New("password must contain at least 1 special character e.g. one of !@#$%^&*()")
+		return errors.New("password must contain at least 1 special character e.g. !@#$%^&*")
 	}
 
 	return nil
@@ -90,7 +90,8 @@ func (s service) userCreate(email string, password string) (database.User, error
 	}
 	result := s.DB.Create(&user) // pass pointer of data to Create
 	if result.Error != nil {
-		return database.User{}, fmt.Errorf("failed to write user row to the DB: %q", result.Error)
+		err := errors.New("faild to save email or password, try again")
+		return database.User{}, err
 	}
 
 	return user, nil
@@ -199,15 +200,15 @@ func AuthenticateWithJWT(DB *database.Database, tokenStr string) (database.User,
 	return user, nil
 }
 
-func (s service) resetPasswordVerifyToken(email, token string) error {
+func (s service) resetPasswordVerifyToken(token string) (email string, err error) {
 	user := database.User{}
 	result := s.DB.
-		Select("id").
-		Where("email = ? AND reset_token != '' AND reset_token IS NOT null AND reset_token = ? AND reset_token_expires_at > ?", email, token, time.Now()).
+		Select("id, uid, email").
+		Where("reset_token != '' AND reset_token IS NOT null AND reset_token = ? AND reset_token_expires_at > ?", token, time.Now()).
 		Take(&user)
 	if result.Error != nil {
-		return errors.New("password reset token not found or expired")
+		return "", errors.New("password reset token not found or expired")
 	}
 
-	return nil
+	return user.Email, nil
 }

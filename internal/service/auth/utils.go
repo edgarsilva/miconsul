@@ -4,23 +4,22 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-// bodyParams extracts email and password from the request form values
-func bodyParams(c *fiber.Ctx) (email, password string, rememberMe bool, err error) {
+// authParams extracts email and password from the request form values
+func authParams(c *fiber.Ctx) (email, password string, err error) {
 	email = c.FormValue("email", "")
 	password = c.FormValue("password", "")
-	rememberMe = c.FormValue("remember_me", "") != ""
 	if email == "" || password == "" {
-		return email, password, false, fmt.Errorf("couldn't parse email or password from body: %q", err)
+		err = errors.New("email and password can't be blank")
+		return email, password, err
 	}
 
-	return email, password, rememberMe, nil
+	return email, password, nil
 }
 
 // newCookie creates a new cookie and returns a pointer to the cookie

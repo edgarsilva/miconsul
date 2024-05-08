@@ -1,13 +1,13 @@
 package view
 
-templ LoginPage(email string, err error, layoutProps layoutProps) {
+templ SignupPage(email string, err error, layoutProps layoutProps) {
 	@FullLayout() {
 		<div class="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8 bg-base-200">
 			<div class="absolute top-4 right-4">
 				@ThemeIcon(layoutProps.Theme)
 			</div>
 			<div class="pt-10 card glass bg-base-100 shadow-lg w-full sm:max-w-[480px] sm:mx-auto">
-				<div class="flex justify-center overflow-visible">
+				<div class="flex justify-center">
 					<div
 						class="w-28 rounded-lg overflow-clip shadow-xl"
 					>
@@ -16,10 +16,10 @@ templ LoginPage(email string, err error, layoutProps layoutProps) {
 				</div>
 				<div class="card-body">
 					<h2 class="card-title">
-						Sign in to your account
+						Create a new account
 						<div class="badge badge-secondary">INC</div>
 					</h2>
-					<form class="space-y-6" action="/login" method="POST">
+					<form class="space-y-6" action="/signup" method="POST">
 						<label class="input input-bordered flex items-center gap-2">
 							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
 								<path d="M3 4a2 2 0 0 0-2 2v1.161l8.441 4.221a1.25 1.25 0 0 0 1.118 0L19 7.162V6a2 2 0 0 0-2-2H3Z"></path>
@@ -33,6 +33,12 @@ templ LoginPage(email string, err error, layoutProps layoutProps) {
 							</svg>
 							<input name="password" type="password" class="grow" placeholder="Password" value=""/>
 						</label>
+						<label class="input input-bordered flex items-center gap-2">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+								<path fill-rule="evenodd" d="M9.661 2.237a.531.531 0 0 1 .678 0 11.947 11.947 0 0 0 7.078 2.749.5.5 0 0 1 .479.425c.069.52.104 1.05.104 1.59 0 5.162-3.26 9.563-7.834 11.256a.48.48 0 0 1-.332 0C5.26 16.564 2 12.163 2 7c0-.538.035-1.069.104-1.589a.5.5 0 0 1 .48-.425 11.947 11.947 0 0 0 7.077-2.75Zm4.196 5.954a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd"></path>
+							</svg>
+							<input name="confirm" type="password" class="grow" placeholder="Confirm Password" value=""/>
+						</label>
 						<div class="flex items-center justify-between">
 							<div class="flex items-center">
 								<input
@@ -44,8 +50,8 @@ templ LoginPage(email string, err error, layoutProps layoutProps) {
 								/>
 								<label for="remember_me" class="ml-3 block text-sm leading-6 text-gray-900">Remember me</label>
 							</div>
-							<div class="text-sm leading-6">
-								<a href="/resetpassword" class="link link-secondary link-hover font-semibold underline-offset-2">Forgot password?</a>
+							<div class="text-sm leading-6 ml-auto">
+								<a href="/login" class="link link-secondary link-hover font-semibold underline-offset-2">Login instead</a>
 							</div>
 						</div>
 						if err != nil {
@@ -55,12 +61,12 @@ templ LoginPage(email string, err error, layoutProps layoutProps) {
 							</div>
 						}
 						<div>
-							<button type="submit" class="btn btn-primary btn-block">Sign in</button>
+							<button type="submit" class="btn btn-primary btn-block">Sign up</button>
 						</div>
 					</form>
-					<div class="divider py-6">Or continue with</div>
+					<div class="divider">Or continue with</div>
 					<div>
-						<div class="grid grid-cols-2 gap-4">
+						<div class="mt-6 grid grid-cols-2 gap-4">
 							<a href="#" class="btn">
 								<svg class="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
 									<path d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z" fill="#EA4335"></path>

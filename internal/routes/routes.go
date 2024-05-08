@@ -35,8 +35,8 @@ func AuthRoutes(s *server.Server) {
 	// Root
 	a.Get("/login", a.HandleLoginPage)
 	a.Post("/login", a.HandleLogin)
-	a.Get("/logout", a.HandleLogout)
-	a.Delete("/logout", a.HandleLogout)
+	a.All("/logout", a.HandleLogout)
+	a.Get("/signup", a.HandleSignupPage)
 	a.Post("/signup", a.HandleSignup)
 	a.Get("/resetpassword", a.HandleResetPasswordPage)
 	a.Post("/resetpassword/send", a.HandleResetPasswordSend)

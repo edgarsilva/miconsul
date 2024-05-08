@@ -25,6 +25,8 @@ using Go, SQLite with GORM, Templ with HTMX and DaisyUI/TailwindCSS:
 
 - [x] Working Login Page
 - [x] Reset Password Functionality
+- [ ] Simple Signup page
+
 - [ ] Running Somewhere other than the dev machine
 
 ## Getting Started
