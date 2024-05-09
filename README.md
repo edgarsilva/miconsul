@@ -14,19 +14,28 @@ using Go, SQLite with GORM, Templ with HTMX and DaisyUI/TailwindCSS:
 ### Ongoing
 - [ ] README and Go Env Setup/Updates
 
-### V0 (1day)
+### V0 (7day)
 
-- [x] Simple Login page
-- [x] Simple Email/Password endpoints
+[21/Apr/24]
+- [x] Basic project setup
+
+[24/Apr/24] - [01/May/24]
+- [x] Login page
+- [x] Email/Password endpoints
 - [x] Reset Password Functionality
 
-
-### V1 (7 days)
-
+[02/May/24] - [07/May/24]
 - [x] Working Login Page
 - [x] Reset Password Functionality
-- [ ] Simple Signup page
+- [X] Signup page
 
+[08/May/24]
+- [] Confirm email Functionality
+
+
+### V1 (7day)
+
+[13/May/24] - [18/May/24]
 - [ ] Running Somewhere other than the dev machine
 
 ## Getting Started

@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	mrand "math/rand"
 	"os"
 	"time"
 
@@ -73,4 +74,14 @@ func randHexToken(n int) (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(bytes), nil
+}
+
+func randStringRunes(n int) string {
+	letterRunes := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letterRunes[mrand.Intn(len(letterRunes))]
+	}
+
+	return string(b)
 }

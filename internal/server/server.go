@@ -13,6 +13,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/etag"
 	"github.com/gofiber/fiber/v2/middleware/favicon"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/monitor"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/gofiber/fiber/v2/middleware/session"
 )
@@ -46,6 +47,9 @@ func New(db *database.Database) *Server {
 	fiberApp.Use(encryptcookie.New(encryptcookie.Config{
 		Key: os.Getenv("COOKIE_SECRET"),
 	}))
+
+	// Initialize default config (Assign the middleware to /metrics)
+	fiberApp.Get("/metrics", monitor.New())
 
 	// Or extend your config for customization
 	fiberApp.Use(favicon.New(favicon.Config{
@@ -168,5 +172,6 @@ func (s *Server) SessionUITheme(c *fiber.Ctx) string {
 		s.SessionSet(c, "theme", "dark")
 	}
 
+	fmt.Println("UITheme ----->", theme)
 	return theme
 }

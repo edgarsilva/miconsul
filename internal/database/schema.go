@@ -26,18 +26,19 @@ const (
 )
 
 type User struct {
-	ResetTokenExpiresAt time.Time
-	Name                string
-	Email               string   `gorm:"uniqueIndex;default:null;not null"`
-	Role                UserRole `gorm:"index;default:null;not null;type:string"`
-	Password            string   `json:"-"`
-	Theme               string
-	ResetToken          string
+	ConfirmEmailExpiresAt time.Time
+	ResetTokenExpiresAt   time.Time
+	Name                  string
+	Email                 string   `gorm:"uniqueIndex;default:null;not null"`
+	Role                  UserRole `gorm:"index;default:null;not null;type:string"`
+	Password              string   `json:"-"`
+	Theme                 string
+	ResetToken            string
+	ConfirmEmailToken     string
 	ModelBase
-	Todos          []Todo
-	Articles       []Article
-	Comments       []Comment
-	confirmedEmail bool
+	Todos    []Todo
+	Articles []Article
+	Comments []Comment
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {

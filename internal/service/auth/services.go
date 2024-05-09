@@ -2,13 +2,13 @@ package auth
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/edgarsilva/go-scaffold/internal/database"
+	"github.com/edgarsilva/go-scaffold/internal/mailer"
 	"github.com/edgarsilva/go-scaffold/internal/server"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -32,19 +32,26 @@ func (s service) signup(email string, password string) error {
 		return err
 	}
 
-	if err := s.signupIsPasswordValid(password); err != nil {
-		return err
-	}
+	// if err := s.signupIsPasswordValid(password); err != nil {
+	// 	return err
+	// }
 
 	pwd, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
 		return errors.New("failed to save email or password, try again")
 	}
 
-	_, err = s.userCreate(email, string(pwd))
+	token, err := resetPasswordGenToken()
+	if err != nil {
+		token = randStringRunes(32)
+	}
+
+	_, err = s.userCreate(email, string(pwd), token)
 	if err != nil {
 		return errors.New("failed to save email or password, try again")
 	}
+
+	go mailer.ConfirmEmail(email, token)
 
 	return nil
 }
@@ -82,11 +89,12 @@ func (s service) signupIsPasswordValid(pwd string) error {
 }
 
 // userCreate creates a new row in the users table
-func (s service) userCreate(email string, password string) (database.User, error) {
+func (s service) userCreate(email, password, token string) (database.User, error) {
 	user := database.User{
-		Email:    email,
-		Password: password,
-		Role:     database.UserRoleUser,
+		Email:             email,
+		Password:          password,
+		ConfirmEmailToken: token,
+		Role:              database.UserRoleUser,
 	}
 	result := s.DB.Create(&user) // pass pointer of data to Create
 	if result.Error != nil {
@@ -125,7 +133,6 @@ func (s service) userUpdatePassword(email, password, token string) (database.Use
 		Select("Password", "ResetToken", "ResetTokenExpiresAt").
 		Where("email = ? AND reset_token = ? AND reset_token_expires_at > ?", email, token, time.Now()).
 		Updates(&user)
-	fmt.Println("RowsAffected ---->", result.RowsAffected, email, password, token, time.Now())
 	if result.Error != nil || result.RowsAffected != 1 {
 		return database.User{}, errors.New("failed to update password")
 	}

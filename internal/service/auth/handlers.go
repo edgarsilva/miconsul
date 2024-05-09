@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
@@ -20,12 +21,15 @@ import (
 // GET: /login
 func (s *service) HandleLoginPage(c *fiber.Ctx) error {
 	cu, _ := s.CurrentUser(c)
-
 	if cu.IsLoggedIn() {
 		return c.Redirect("/todos")
 	}
 
-	return s.RenderLoginPage(c, nil)
+	theme := s.SessionUITheme(c)
+	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme))
+	email := c.Query("email", "")
+	msg := c.Query("msg", "")
+	return view.Render(c, view.LoginPage(email, msg, nil, layoutProps))
 }
 
 // HandleLogin compares hash and password and sets the user Auth session cookie
@@ -33,20 +37,28 @@ func (s *service) HandleLoginPage(c *fiber.Ctx) error {
 //
 // POST: /login
 func (s *service) HandleLogin(c *fiber.Ctx) error {
-	email, password, err := authParams(c)
+	theme := s.SessionUITheme(c)
+	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme))
 	respErr := errors.New("incorrect email and password combination")
+
+	email, password, err := authParams(c)
 	if err != nil {
-		return s.RenderLoginPage(c, respErr)
+		return view.Render(c, view.LoginPage(email, "", respErr, layoutProps))
 	}
 
 	user, err := s.userFetch(email)
 	if err != nil {
-		return s.RenderLoginPage(c, respErr)
+		return view.Render(c, view.LoginPage(email, "", respErr, layoutProps))
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return s.RenderLoginPage(c, respErr)
+		return view.Render(c, view.LoginPage(email, "", respErr, layoutProps))
+	}
+
+	if user.ConfirmEmailToken != "" {
+		err := errors.New("email pending confirmation, check your inbox")
+		return view.Render(c, view.LoginPage(email, "", err, layoutProps))
 	}
 
 	validFor := time.Duration(24)
@@ -66,7 +78,7 @@ func (s *service) HandleLogin(c *fiber.Ctx) error {
 		})
 		tokenStr, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 		if err != nil {
-			return s.RenderLoginPage(c, err)
+			return view.Render(c, view.LoginPage(email, "", err, layoutProps))
 		}
 		c.Cookie(newCookie("JWT", tokenStr, time.Hour*24))
 		resp := map[string]string{
@@ -74,14 +86,14 @@ func (s *service) HandleLogin(c *fiber.Ctx) error {
 		}
 		return c.JSON(resp)
 	default:
-		c.Cookie(newCookie("Auth", user.UID, time.Hour*24))
-		return c.SendString("Login Successful")
+		c.Cookie(newCookie("Auth", user.UID, time.Hour*validFor))
+		return c.SendString("Login successful")
 	}
 }
 
 // HandleSignupPage returns the Signup form page html
 //
-// GET: /login
+// GET: /signup
 func (s *service) HandleSignupPage(c *fiber.Ctx) error {
 	cu, _ := s.CurrentUser(c)
 
@@ -118,6 +130,32 @@ func (s *service) HandleSignup(c *fiber.Ctx) error {
 	}
 
 	return c.Redirect("/login")
+}
+
+// HandleEmailConfirmation creates a new user if email and password are valid
+//
+// POST: /signup/confirmemail
+func (s *service) HandleSignupConfirmEmail(c *fiber.Ctx) error {
+	token := c.Params("token", "")
+	if token == "" {
+		return c.Redirect("/login?msg=unable to confirm email, try signup again")
+	}
+
+	fmt.Println("token ---->", token)
+	user := database.User{}
+	err := s.DB.Model(&database.User{}).Select("id, email, confirm_email_token").Where("confirm_email_token = ?", token).Take(&user).Error
+	if err != nil {
+		layoutProps, _ := view.NewLayoutProps()
+		errView := errors.New("email confirmation not found")
+		return view.Render(c, view.LoginPage("", "", errView, layoutProps))
+	}
+
+	s.DB.
+		Model(&user).
+		Where("confirm_email_token = ?", token).
+		Update("ConfirmEmailToken", "")
+
+	return c.Redirect("/login?msg=Email confirmed, you should be able to login now")
 }
 
 // HandleLogout calles sessionDestroy and invalidateCookies then redirects to
