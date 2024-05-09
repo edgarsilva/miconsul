@@ -216,7 +216,7 @@ func (s *service) HandleResetPasswordSend(c *fiber.Ctx) error {
 	user.ResetTokenExpiresAt = time.Now().Add(time.Hour * 1)
 	s.DB.Model(&user).Select("ResetToken", "ResetTokenExpiresAt").Updates(&user)
 
-	go mailer.ResetPasswordSendToken(email, token)
+	go mailer.ResetPassword(email, token)
 
 	return view.Render(c, view.ResetPasswordPage(email, "", "check your email for a reset password link", nil, layoutProps))
 }
