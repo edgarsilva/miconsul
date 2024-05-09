@@ -1,13 +1,13 @@
 package view
 
 import (
-	"github.com/edgarsilva/go-scaffold/internal/database"
+	"github.com/edgarsilva/go-scaffold/internal/model"
 	"strconv"
 )
 
-templ TodosPage(todos []database.Todo, count, pending int, filter string, layoutProps layoutProps) {
+templ PageTodos(todos []model.Todo, count, pending int, filter string, layoutProps layoutProps) {
 	@Layout(layoutProps) {
-		@BackToHome("Back to home", "/")
+		@CmpBackBtn("Back to home", "/")
 		<section class="mt-16">
 			@TodoCreateForm()
 			@TodosList(todos)
@@ -33,7 +33,7 @@ templ TodoCreateForm() {
 	</form>
 }
 
-templ TodoCheckbox(t database.Todo) {
+templ TodoCheckbox(t model.Todo) {
 	<input
 		id={ t.UID }
 		class="checkbox checkbox-md"
@@ -57,7 +57,7 @@ templ TodoCheckbox(t database.Todo) {
 	</span>
 }
 
-templ TodoContent(t database.Todo) {
+templ TodoContent(t model.Todo) {
 	<hgroup class="form-control">
 		<label class="flex items-center gap-4">
 			@TodoCheckbox(t)
@@ -65,7 +65,7 @@ templ TodoContent(t database.Todo) {
 	</hgroup>
 }
 
-templ TodoCard(t database.Todo) {
+templ TodoCard(t model.Todo) {
 	<article class="card w-full mx-auto shadow-lg border border-neutral-200">
 		<div class="card-body">
 			<div class="absolute right-8">
@@ -117,7 +117,7 @@ templ TodoCard(t database.Todo) {
 	</article>
 }
 
-templ TodosList(todos []database.Todo) {
+templ TodosList(todos []model.Todo) {
 	<section
 		id="todos"
 		role="list"

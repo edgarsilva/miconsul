@@ -1,6 +1,6 @@
 package view
 
-templ Header(props layoutProps) {
+templ CmpHeader(props layoutProps) {
 	<header class="py-2 px-4 mb-4 border-b-2">
 		<nav class="navbar">
 			<div class="navbar-start">
@@ -10,7 +10,7 @@ templ Header(props layoutProps) {
 					</button>
 				</div>
 				<div class="flex-1">
-					<a class="btn btn-ghost text-xl">Ripplebase</a>
+					<a class="btn btn-ghost text-xl">Scaffold</a>
 				</div>
 			</div>
 			<div class="hidden navbar-center md:flex">
@@ -25,7 +25,7 @@ templ Header(props layoutProps) {
 					<a class="btn btn-ghost" href="/login">Login</a>
 				}
 				<div class="flex-none px-1">
-					@ThemeIcon(props.Theme)
+					@CmpThemeIcon(props.Theme)
 				</div>
 			</div>
 		</nav>

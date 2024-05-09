@@ -9,6 +9,7 @@ import (
 	"github.com/asaskevich/govalidator"
 	"github.com/edgarsilva/go-scaffold/internal/database"
 	"github.com/edgarsilva/go-scaffold/internal/mailer"
+	"github.com/edgarsilva/go-scaffold/internal/model"
 	"github.com/edgarsilva/go-scaffold/internal/server"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -41,10 +42,7 @@ func (s service) signup(email string, password string) error {
 		return errors.New("failed to save email or password, try again")
 	}
 
-	token, err := resetPasswordGenToken()
-	if err != nil {
-		token = randStringRunes(32)
-	}
+	token := randToken()
 
 	_, err = s.userCreate(email, string(pwd), token)
 	if err != nil {
@@ -63,7 +61,7 @@ func (s service) signupIsEmailValid(email string) error {
 		return errors.New("email address is invalid")
 	}
 
-	user := database.User{Email: email}
+	user := model.User{Email: email}
 	if result := s.DB.Where(user, "Email").Take(&user); result.RowsAffected != 0 {
 		return errors.New("email already exists")
 	}
@@ -89,25 +87,27 @@ func (s service) signupIsPasswordValid(pwd string) error {
 }
 
 // userCreate creates a new row in the users table
-func (s service) userCreate(email, password, token string) (database.User, error) {
-	user := database.User{
-		Email:             email,
-		Password:          password,
-		ConfirmEmailToken: token,
-		Role:              database.UserRoleUser,
+func (s service) userCreate(email, password, token string) (model.User, error) {
+	user := model.User{
+		Email:                 email,
+		Password:              password,
+		ConfirmEmailToken:     token,
+		ConfirmEmailExpiresAt: time.Now().Add(time.Hour * 1),
+		Role:                  model.UserRoleUser,
 	}
+
 	result := s.DB.Create(&user) // pass pointer of data to Create
 	if result.Error != nil {
 		err := errors.New("faild to save email or password, try again")
-		return database.User{}, err
+		return model.User{}, err
 	}
 
 	return user, nil
 }
 
 // userFetch returns a User by email
-func (s service) userFetch(email string) (database.User, error) {
-	user := database.User{Email: email}
+func (s service) userFetch(email string) (model.User, error) {
+	user := model.User{Email: email}
 	s.DB.Where(user, "Email").Take(&user)
 	if user.ID == 0 {
 		return user, errors.New("user not found")
@@ -117,13 +117,13 @@ func (s service) userFetch(email string) (database.User, error) {
 }
 
 // userUpdatePassword updates a user password
-func (s service) userUpdatePassword(email, password, token string) (database.User, error) {
+func (s service) userUpdatePassword(email, password, token string) (model.User, error) {
 	pwd, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
-		return database.User{}, errors.New("failed to update password")
+		return model.User{}, errors.New("failed to update password")
 	}
 
-	user := database.User{
+	user := model.User{
 		Email:    email,
 		Password: string(pwd),
 	}
@@ -134,7 +134,7 @@ func (s service) userUpdatePassword(email, password, token string) (database.Use
 		Where("email = ? AND reset_token = ? AND reset_token_expires_at > ?", email, token, time.Now()).
 		Updates(&user)
 	if result.Error != nil || result.RowsAffected != 1 {
-		return database.User{}, errors.New("failed to update password")
+		return model.User{}, errors.New("failed to update password")
 	}
 
 	return user, nil
@@ -142,7 +142,7 @@ func (s service) userUpdatePassword(email, password, token string) (database.Use
 
 // CurrentUser returns currently logged-in(or not) user from fiber Req Ctx
 // cookies
-func Authenticate(DB *database.Database, c *fiber.Ctx) (database.User, error) {
+func Authenticate(DB *database.Database, c *fiber.Ctx) (model.User, error) {
 	uid := c.Cookies("Auth", "")
 	user, err := AuthenticateWithUID(DB, uid)
 	if err == nil {
@@ -161,8 +161,8 @@ func Authenticate(DB *database.Database, c *fiber.Ctx) (database.User, error) {
 	return user, errors.New("invalid authentication, both methods are missing [Auth, JWT]")
 }
 
-func AuthenticateWithUID(DB *database.Database, uid string) (database.User, error) {
-	user := database.User{}
+func AuthenticateWithUID(DB *database.Database, uid string) (model.User, error) {
+	user := model.User{}
 	if uid == "" {
 		return user, errors.New("user UID is blank")
 	}
@@ -175,8 +175,8 @@ func AuthenticateWithUID(DB *database.Database, uid string) (database.User, erro
 	return user, nil
 }
 
-func AuthenticateWithJWT(DB *database.Database, tokenStr string) (database.User, error) {
-	user := database.User{}
+func AuthenticateWithJWT(DB *database.Database, tokenStr string) (model.User, error) {
+	user := model.User{}
 	if tokenStr == "" {
 		return user, errors.New("JWT token is blank")
 	}
@@ -208,7 +208,7 @@ func AuthenticateWithJWT(DB *database.Database, tokenStr string) (database.User,
 }
 
 func (s service) resetPasswordVerifyToken(token string) (email string, err error) {
-	user := database.User{}
+	user := model.User{}
 	result := s.DB.
 		Select("id, uid, email").
 		Where("reset_token != '' AND reset_token IS NOT null AND reset_token = ? AND reset_token_expires_at > ?", token, time.Now()).

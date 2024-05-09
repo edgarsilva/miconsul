@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/edgarsilva/go-scaffold/internal/database"
+	"github.com/edgarsilva/go-scaffold/internal/model"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/encryptcookie"
@@ -82,7 +83,7 @@ func (s *Server) CurrentUser(c *fiber.Ctx) (currentUser, error) {
 		uid = c.Cookies("Auth", "")
 	}
 
-	user := database.User{}
+	user := model.User{}
 	result := s.DB.Where("uid = ?", uid).Take(&user)
 	if result.Error != nil {
 		return currentUser{User: &user}, errors.New("user NOT FOUND with SUB in JWT token")

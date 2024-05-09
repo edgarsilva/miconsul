@@ -4,14 +4,14 @@ templ SignupPage(email string, err error, layoutProps layoutProps) {
 	@LayoutAuth() {
 		<div class="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8 bg-base-200">
 			<div class="absolute top-4 right-4">
-				@ThemeIcon(layoutProps.Theme)
+				@CmpThemeIcon(layoutProps.Theme)
 			</div>
 			<div class="pt-10 card glass bg-base-100 shadow-lg w-full sm:max-w-[480px] sm:mx-auto">
 				<div class="flex justify-center">
 					<div
 						class="w-28 rounded-lg overflow-clip shadow-xl"
 					>
-						@Logo()
+						@CmpLogo()
 					</div>
 				</div>
 				<div class="card-body">

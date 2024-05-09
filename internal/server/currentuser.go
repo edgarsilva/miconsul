@@ -1,11 +1,11 @@
 package server
 
-import "github.com/edgarsilva/go-scaffold/internal/database"
+import "github.com/edgarsilva/go-scaffold/internal/model"
 
 // AuthUser is the representation of the currently logged in user AKA
 // CurrentUser
 type currentUser struct {
-	*database.User
+	*model.User
 	token string
 }
 

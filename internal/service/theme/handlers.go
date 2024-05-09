@@ -9,5 +9,5 @@ import (
 func (s *service) HandleThemeChange(c *fiber.Ctx) error {
 	theme := s.SessionUITheme(c)
 
-	return view.Render(c, view.ThemeIcon(theme))
+	return view.Render(c, view.CmpThemeIcon(theme))
 }

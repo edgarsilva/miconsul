@@ -14,5 +14,5 @@ func (s *service) HandleBlogPage(c *fiber.Ctx) error {
 
 	cu, _ := s.CurrentUser(c)
 	layoutProps, _ := view.NewLayoutProps(view.WithCurrentUser(cu), view.WithTheme(theme))
-	return view.Render(c, view.BlogPage(layoutProps))
+	return view.Render(c, view.PageBlog(layoutProps))
 }

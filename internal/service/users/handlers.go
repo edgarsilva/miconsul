@@ -3,8 +3,7 @@ package users
 import (
 	"strconv"
 
-	"github.com/edgarsilva/go-scaffold/internal/database"
-
+	"github.com/edgarsilva/go-scaffold/internal/model"
 	"github.com/gofiber/fiber/v2"
 	"syreclabs.com/go/faker"
 )
@@ -37,14 +36,14 @@ func (s *service) HandleUsersPage(c *fiber.Ctx) error {
 //
 // GET: /api/todos - Get all todos
 func (s *service) HandleGetUsers(c *fiber.Ctx) error {
-	var users []database.User
+	var users []model.User
 
 	s.DB.
-		Model(&database.User{}).
+		Model(&model.User{}).
 		Limit(10).
 		Find(&users)
 
-	res := struct{ Users []database.User }{
+	res := struct{ Users []model.User }{
 		Users: users,
 	}
 
@@ -57,9 +56,9 @@ func (s *service) HandleMakeUsers(c *fiber.Ctx) error {
 		n = 10
 	}
 
-	var users []database.User
+	var users []model.User
 	for i := 0; i <= n; i++ {
-		users = append(users, database.User{
+		users = append(users, model.User{
 			Name:  faker.Name().Name(),
 			Email: faker.Internet().Email(),
 		})
@@ -78,14 +77,14 @@ func (s *service) HandleMakeUsers(c *fiber.Ctx) error {
 // handleAPIUsers returns all users as JSON
 // GET: /api/todos - Get all todos
 func (s *service) HandleAPIUsers(c *fiber.Ctx) error {
-	var users []database.User
+	var users []model.User
 
 	s.DB.
-		Model(&database.User{}).
+		Model(&model.User{}).
 		Limit(10).
 		Find(&users)
 
-	res := struct{ Users []database.User }{
+	res := struct{ Users []model.User }{
 		Users: users,
 	}
 	return c.Status(fiber.StatusOK).JSON(res)

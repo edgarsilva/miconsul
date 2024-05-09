@@ -2,13 +2,12 @@ package auth
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"time"
 
-	"github.com/edgarsilva/go-scaffold/internal/database"
 	"github.com/edgarsilva/go-scaffold/internal/lib/xid"
 	"github.com/edgarsilva/go-scaffold/internal/mailer"
+	"github.com/edgarsilva/go-scaffold/internal/model"
 	"github.com/edgarsilva/go-scaffold/internal/view"
 
 	"github.com/gofiber/fiber/v2"
@@ -138,22 +137,29 @@ func (s *service) HandleSignup(c *fiber.Ctx) error {
 func (s *service) HandleSignupConfirmEmail(c *fiber.Ctx) error {
 	token := c.Params("token", "")
 	if token == "" {
-		return c.Redirect("/login?msg=unable to confirm email, try signup again")
+		return c.Redirect("/login?msg=unable to confirm email, try login instead")
 	}
 
-	fmt.Println("token ---->", token)
-	user := database.User{}
-	err := s.DB.Model(&database.User{}).Select("id, email, confirm_email_token").Where("confirm_email_token = ?", token).Take(&user).Error
+	user := model.User{}
+	err := s.DB.
+		Model(&model.User{}).
+		Select("id, email, confirm_email_token").
+		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
+		Take(&user).Error
 	if err != nil {
-		layoutProps, _ := view.NewLayoutProps()
-		errView := errors.New("email confirmation not found")
-		return view.Render(c, view.LoginPage("", "", errView, layoutProps))
+		token := randToken()
+		mailer.ConfirmEmail(user.Email, token)
+		return c.Redirect("/login?msg=unable to confirm email, your token might be expired, we've re-send the confirm email")
 	}
 
-	s.DB.
+	result := s.DB.
 		Model(&user).
-		Where("confirm_email_token = ?", token).
-		Update("ConfirmEmailToken", "")
+		Select("ConfirmEmailToken", "ConfirmEmailExpiresAt").
+		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
+		Updates(&model.User{})
+	if result.Error != nil {
+		return c.Redirect("/login?msg=Email confirmed, you should be able to login now")
+	}
 
 	return c.Redirect("/login?msg=Email confirmed, you should be able to login now")
 }
@@ -174,10 +180,10 @@ func (s *service) HandleLogout(c *fiber.Ctx) error {
 	return c.Redirect("/")
 }
 
-// HandleResetPasswordPage renders the HTML reset password page/form
+// HandlePageResetPassword renders the HTML reset password page/form
 //
 // GET: /resetpassword
-func (s *service) HandleResetPasswordPage(c *fiber.Ctx) error {
+func (s *service) HandlePageResetPassword(c *fiber.Ctx) error {
 	layoutProps, _ := view.NewLayoutProps()
 
 	msg := s.SessionGet(c, "msg", "")
@@ -185,29 +191,29 @@ func (s *service) HandleResetPasswordPage(c *fiber.Ctx) error {
 		msg = c.Query("msg", "")
 	}
 
-	return view.Render(c, view.ResetPasswordPage("", msg, "", nil, layoutProps))
+	return view.Render(c, view.PageResetPassword("", msg, "", nil, layoutProps))
 }
 
 // HandleResetPasswordForm sends a new reset password link to the email provided
 // as query param, url param or body param
 //
 // POST: /resetpassword
-func (s *service) HandleResetPasswordSend(c *fiber.Ctx) error {
+func (s *service) HandleResetPassword(c *fiber.Ctx) error {
 	layoutProps, _ := view.NewLayoutProps()
 	email, err := resetPasswordEmailParam(c)
 	if err != nil {
 		errView := errors.New("email can't be blank")
-		return view.Render(c, view.ResetPasswordPage(email, "", "", errView, layoutProps))
+		return view.Render(c, view.PageResetPassword(email, "", "", errView, layoutProps))
 	}
 
-	user := database.User{}
-	err = s.DB.Model(&database.User{}).Select("id, email").Where("email = ?", email).Take(&user).Error
+	user := model.User{}
+	err = s.DB.Model(&model.User{}).Select("id, email").Where("email = ?", email).Take(&user).Error
 	if err != nil {
 		errView := errors.New("user not found with that email")
-		return view.Render(c, view.ResetPasswordPage(email, "", "", errView, layoutProps))
+		return view.Render(c, view.PageResetPassword(email, "", "", errView, layoutProps))
 	}
 
-	token, err := resetPasswordGenToken()
+	token, err := resetPasswordToken()
 	if err != nil {
 		return c.Redirect("/resetpassword")
 	}
@@ -218,7 +224,7 @@ func (s *service) HandleResetPasswordSend(c *fiber.Ctx) error {
 
 	go mailer.ResetPassword(email, token)
 
-	return view.Render(c, view.ResetPasswordPage(email, "", "check your email for a reset password link", nil, layoutProps))
+	return view.Render(c, view.PageResetPassword(email, "", "check your email for a reset password link", nil, layoutProps))
 }
 
 // HandleResetPasswordChange renders the change password form if toke/email
@@ -300,7 +306,7 @@ func (s *service) HandleValidate(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusOK)
 }
 
-// HandleShowUser returns a JSON database.User if the session is valid
+// HandleShowUser returns a JSON model.User if the session is valid
 //
 // GET: /auth/show
 func (s *service) HandleShowUser(c *fiber.Ctx) error {
@@ -313,12 +319,12 @@ func (s *service) HandleShowUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusForbidden).SendString("Forbidden")
 	}
 
-	var user database.User
+	var user model.User
 	if result := s.DB.Where("uid = ?", uid).Take(&user); result.Error != nil {
 		return c.Status(fiber.StatusForbidden).SendString("Forbidden")
 	}
 
-	res := struct{ User database.User }{
+	res := struct{ User model.User }{
 		User: user,
 	}
 

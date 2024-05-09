@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/edgarsilva/go-scaffold/internal/model"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -43,10 +44,10 @@ func New(dbPath string) *Database {
 
 	// Migrate the schema
 	DB.AutoMigrate(
-		&User{},
-		&Todo{},
-		&Article{},
-		&Comment{},
+		&model.User{},
+		&model.Todo{},
+		&model.Article{},
+		&model.Comment{},
 		// &Journal|Logbook TODO: Logbook to log extraneous events (No 20k Datatog bill)
 		// &I18n TODO: Internationalization in the DB or just plain text file?
 		// &PurchaseOrder{},

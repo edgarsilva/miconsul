@@ -1,6 +1,6 @@
 package view
 
-templ HTMLPageWrapper() {
+templ WrapperHTMLPage() {
 	<!DOCTYPE html>
 	<html data-theme="cmyk" x-ref="html" class="h-full">
 		<head>
@@ -19,31 +19,31 @@ templ HTMLPageWrapper() {
 }
 
 templ Layout(props layoutProps) {
-	@HTMLPageWrapper() {
+	@WrapperHTMLPage() {
 		<main class="root h-full flex flex-col">
-			@Header(props)
+			@CmpHeader(props)
 			<div class="container mx-auto">
 				{ children... }
 			</div>
 			<div class="mt-auto">
-				@Footer(props)
+				@CmpFooter(props)
 			</div>
 		</main>
 	}
 }
 
 templ LayoutContainer(props layoutProps) {
-	@HTMLPageWrapper() {
+	@WrapperHTMLPage() {
 		<main class="root container mx-auto">
-			@Header(props)
+			@CmpHeader(props)
 			{ children... }
-			@Footer(props)
+			@CmpFooter(props)
 		</main>
 	}
 }
 
 templ LayoutAuth() {
-	@HTMLPageWrapper() {
+	@WrapperHTMLPage() {
 		<main class="root h-full">
 			{ children... }
 		</main>

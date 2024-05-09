@@ -64,8 +64,17 @@ func resetPasswordEmailParam(c *fiber.Ctx) (string, error) {
 	return "", err
 }
 
-func resetPasswordGenToken() (string, error) {
+func resetPasswordToken() (string, error) {
 	return randHexToken(32)
+}
+
+func randToken() string {
+	token, err := randHexToken(32)
+	if err != nil {
+		return randStringRunes(32)
+	}
+
+	return token
 }
 
 func randHexToken(n int) (string, error) {

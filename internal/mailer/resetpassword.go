@@ -15,7 +15,7 @@ func ResetPassword(email, token string) error {
 	m.SetHeader("From", os.Getenv("EMAIL_SENDER"))
 	m.SetHeader("To", "edgarsilva.dev@gmail.com")
 	// m.SetAddressHeader("Cc", "dan@example.com", "Dan")
-	m.SetHeader("Subject", "Ripplebase: Reset Your Password!")
+	m.SetHeader("Subject", "Scaffold: Reset Your Password!")
 
 	url := "http://localhost:8080/resetpassword/change/" + token
 	emailHTML := bytes.Buffer{}

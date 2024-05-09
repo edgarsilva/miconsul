@@ -30,8 +30,11 @@ using Go, SQLite with GORM, Templ with HTMX and DaisyUI/TailwindCSS:
 - [X] Signup page
 
 [08/May/24]
-- [] Confirm email Functionality
+- [X] Confirm email Functionality
 
+[09/May/24]
+- [ ] Fix Schema Ids to use XID
+- [ ] Add Chinnok sample DB
 
 ### V1 (7day)
 

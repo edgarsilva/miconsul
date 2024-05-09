@@ -3,7 +3,7 @@ package todos
 import (
 	"strings"
 
-	"github.com/edgarsilva/go-scaffold/internal/database"
+	"github.com/edgarsilva/go-scaffold/internal/model"
 	"github.com/edgarsilva/go-scaffold/internal/server"
 )
 
@@ -17,8 +17,8 @@ func NewService(s *server.Server) service {
 	}
 }
 
-func (s service) fetchByFilter(filter string) []database.Todo {
-	todos := []database.Todo{}
+func (s service) fetchByFilter(filter string) []model.Todo {
+	todos := []model.Todo{}
 
 	switch {
 	case strings.EqualFold(filter, "all"):
@@ -39,8 +39,8 @@ func (s service) pendingTodosCount() int {
 		allCount       int64
 		completedCount int64
 	)
-	s.DB.Model(&database.Todo{}).Count(&allCount)
-	s.DB.Model(&database.Todo{}).Where("completed = ?", true).Count(&completedCount)
+	s.DB.Model(&model.Todo{}).Count(&allCount)
+	s.DB.Model(&model.Todo{}).Where("completed = ?", true).Count(&completedCount)
 
 	return int(allCount - completedCount)
 }
@@ -48,13 +48,13 @@ func (s service) pendingTodosCount() int {
 func (s service) todosCount() int {
 	var allCount int64
 
-	s.DB.Model(&database.Todo{}).Count(&allCount)
+	s.DB.Model(&model.Todo{}).Count(&allCount)
 	return int(allCount)
 }
 
 func (s service) completedCount() int {
 	var completedCount int64
 
-	s.DB.Model(&database.Todo{}).Where("completed = ?", true).Count(&completedCount)
+	s.DB.Model(&model.Todo{}).Where("completed = ?", true).Count(&completedCount)
 	return int(completedCount)
 }

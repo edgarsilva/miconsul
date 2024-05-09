@@ -6,7 +6,7 @@ import (
 
 templ CounterPage(count int64, layoutProps layoutProps) {
 	@Layout(layoutProps) {
-		@BackToHome("Back to home", "/")
+		@CmpBackBtn("Back to home", "/")
 		@CounterContainer(count)
 	}
 }
