@@ -15,7 +15,7 @@ func ConfirmEmail(email, token string) error {
 	m.SetHeader("From", os.Getenv("EMAIL_SENDER"))
 	m.SetHeader("To", "edgarsilva.dev@gmail.com")
 	// m.SetAddressHeader("Cc", "dan@example.com", "Dan")
-	m.SetHeader("Subject", "Scaffold: Reset Your Password!")
+	m.SetHeader("Subject", "Scaffold: Confirm your email!")
 
 	url := "http://localhost:8080/signup/confirm/" + token
 	emailHTML := bytes.Buffer{}

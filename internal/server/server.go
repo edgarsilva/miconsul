@@ -71,28 +71,25 @@ func New(db *database.Database) *Server {
 	}
 }
 
-// CurrentUser returns currently logged-in(or anon) user by User.UID from fiber.Locals("uid")
-func (s *Server) CurrentUser(c *fiber.Ctx) (currentUser, error) {
-	uid := c.Locals("uid")
-	uid, ok := uid.(string)
+// CurrentUser returns currently logged-in(or anon) user by User.ID from fiber.Locals("id")
+func (s *Server) CurrentUser(c *fiber.Ctx) (model.User, error) {
+	id := c.Locals("uid")
+	id, ok := id.(string)
 	if !ok {
-		uid = ""
+		id = ""
 	}
 
-	if uid == "" {
-		uid = c.Cookies("Auth", "")
+	if id == "" {
+		id = c.Cookies("Auth", "")
 	}
 
 	user := model.User{}
-	result := s.DB.Where("uid = ?", uid).Take(&user)
+	result := s.DB.Where("id = ?", id).Take(&user)
 	if result.Error != nil {
-		return currentUser{User: &user}, errors.New("user NOT FOUND with SUB in JWT token")
+		return user, errors.New("user NOT FOUND with SUB in JWT token")
 	}
 
-	cu := currentUser{
-		User: &user,
-	}
-	return cu, nil
+	return user, nil
 }
 
 func (s *Server) DBClient() *database.Database {
@@ -146,14 +143,13 @@ func (s *Server) SessionGet(c *fiber.Ctx, key string, defaultVal string) string 
 func (s *Server) SessionSet(c *fiber.Ctx, k string, v string) error {
 	sess, err := s.session(c)
 	if err != nil {
-		fmt.Println("error saving session:", err)
 		return err
 	}
 
 	sess.Set(k, v)
 
 	if err := sess.Save(); err != nil {
-		fmt.Println("error saving session:", err)
+		return err
 	}
 
 	return nil
@@ -173,6 +169,5 @@ func (s *Server) SessionUITheme(c *fiber.Ctx) string {
 		s.SessionSet(c, "theme", "dark")
 	}
 
-	fmt.Println("UITheme ----->", theme)
 	return theme
 }

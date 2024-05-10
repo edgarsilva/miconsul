@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
@@ -67,12 +68,12 @@ func (s *service) HandleLogin(c *fiber.Ctx) error {
 	}
 	switch c.Accepts("text/plain", "text/html", "application/json") {
 	case "text/html":
-		c.Cookie(newCookie("Auth", user.UID, time.Hour*validFor))
+		c.Cookie(newCookie("Auth", user.ID, time.Hour*validFor))
 		return c.Redirect("/todos")
 	case "application/json":
 		token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 			"sub": user.Email,
-			"uid": user.UID,
+			"uid": user.ID,
 			"exp": time.Now().Add(time.Hour * 24).Unix(),
 		})
 		tokenStr, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
@@ -85,7 +86,7 @@ func (s *service) HandleLogin(c *fiber.Ctx) error {
 		}
 		return c.JSON(resp)
 	default:
-		c.Cookie(newCookie("Auth", user.UID, time.Hour*validFor))
+		c.Cookie(newCookie("Auth", user.ID, time.Hour*validFor))
 		return c.SendString("Login successful")
 	}
 }
@@ -100,10 +101,15 @@ func (s *service) HandleSignupPage(c *fiber.Ctx) error {
 		return c.Redirect("/todos")
 	}
 
+	msg := c.Query("msg", "")
+	err := errors.New(msg)
+	if msg == "" {
+		err = nil
+	}
 	theme := s.SessionUITheme(c)
 	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme))
 
-	return view.Render(c, view.SignupPage("", nil, layoutProps))
+	return view.Render(c, view.SignupPage("", err, layoutProps))
 }
 
 // HandleSignup creates a new user if email and password are valid
@@ -112,7 +118,6 @@ func (s *service) HandleSignupPage(c *fiber.Ctx) error {
 func (s *service) HandleSignup(c *fiber.Ctx) error {
 	theme := s.SessionUITheme(c)
 	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme))
-
 	email, password, err := authParams(c)
 	if err != nil {
 		return view.Render(c, view.SignupPage(email, err, layoutProps))
@@ -124,11 +129,19 @@ func (s *service) HandleSignup(c *fiber.Ctx) error {
 		return view.Render(c, view.SignupPage(email, err, layoutProps))
 	}
 
+	err = s.userPendingConfirmation(email)
+	if err != nil {
+		token := randToken()
+		s.userUpdateConfirmToken(email, token)
+		go mailer.ConfirmEmail(email, token)
+		return c.Redirect("/login?msg=check your inbox, we'll re-send a confirmation link")
+	}
+
 	if err := s.signup(email, password); err != nil {
 		return view.Render(c, view.SignupPage(email, err, layoutProps))
 	}
 
-	return c.Redirect("/login")
+	return c.Redirect("/login?msg=check your inbox to confirm your email")
 }
 
 // HandleEmailConfirmation creates a new user if email and password are valid
@@ -147,9 +160,7 @@ func (s *service) HandleSignupConfirmEmail(c *fiber.Ctx) error {
 		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
 		Take(&user).Error
 	if err != nil {
-		token := randToken()
-		mailer.ConfirmEmail(user.Email, token)
-		return c.Redirect("/login?msg=unable to confirm email, your token might be expired, we've re-send the confirm email")
+		return c.Redirect("/login?msg=we couldn't verify your account, pls try again")
 	}
 
 	result := s.DB.
@@ -161,6 +172,7 @@ func (s *service) HandleSignupConfirmEmail(c *fiber.Ctx) error {
 		return c.Redirect("/login?msg=Email confirmed, you should be able to login now")
 	}
 
+	c.Cookie(newCookie("Auth", user.ID, time.Hour*24))
 	return c.Redirect("/login?msg=Email confirmed, you should be able to login now")
 }
 
@@ -207,7 +219,7 @@ func (s *service) HandleResetPassword(c *fiber.Ctx) error {
 	}
 
 	user := model.User{}
-	err = s.DB.Model(&model.User{}).Select("id, email").Where("email = ?", email).Take(&user).Error
+	err = s.DB.Model(&model.User{}).Select("id", "name").Where("email = ?", email).Take(&user).Error
 	if err != nil {
 		errView := errors.New("user not found with that email")
 		return view.Render(c, view.PageResetPassword(email, "", "", errView, layoutProps))
@@ -218,6 +230,7 @@ func (s *service) HandleResetPassword(c *fiber.Ctx) error {
 		return c.Redirect("/resetpassword")
 	}
 
+	fmt.Println("Test USER ->", user)
 	user.ResetToken = token
 	user.ResetTokenExpiresAt = time.Now().Add(time.Hour * 1)
 	s.DB.Model(&user).Select("ResetToken", "ResetTokenExpiresAt").Updates(&user)
@@ -310,17 +323,17 @@ func (s *service) HandleValidate(c *fiber.Ctx) error {
 //
 // GET: /auth/show
 func (s *service) HandleShowUser(c *fiber.Ctx) error {
-	uid := c.Locals("uid")
-	if uid == nil {
+	id := c.Locals("uid")
+	if id == nil {
 		return c.Status(fiber.StatusForbidden).SendString("Forbidden")
 	}
 
-	if len(uid.(string)) == 0 {
+	if len(id.(string)) == 0 {
 		return c.Status(fiber.StatusForbidden).SendString("Forbidden")
 	}
 
 	var user model.User
-	if result := s.DB.Where("uid = ?", uid).Take(&user); result.Error != nil {
+	if result := s.DB.Where("id = ?", id).Take(&user); result.Error != nil {
 		return c.Status(fiber.StatusForbidden).SendString("Forbidden")
 	}
 

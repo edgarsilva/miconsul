@@ -10,7 +10,26 @@ templ WrapperHTMLPage() {
 			<title>Todos</title>
 			<link href="/global.css" rel="stylesheet"/>
 			<script src="https://unpkg.com/htmx.org@1.9.9" integrity="sha384-QFjmbokDn2DjBjq+fM+8LUIVrAgqcNW2s0PjAxHETgRn9l4fvX31ZxDxvwQnyMOX" crossorigin="anonymous"></script>
-			<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+		</head>
+		<body class="h-full">
+			{ children... }
+		</body>
+	</html>
+}
+
+templ WrapperHTMLWithApexCharts() {
+	<!DOCTYPE html>
+	<html data-theme="cmyk" x-ref="html" class="h-full">
+		<head>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<meta name="color-scheme" content="light dark"/>
+			<title>Todos</title>
+			<link href="/global.css" rel="stylesheet"/>
+			<script src="https://unpkg.com/htmx.org@1.9.9" integrity="sha384-QFjmbokDn2DjBjq+fM+8LUIVrAgqcNW2s0PjAxHETgRn9l4fvX31ZxDxvwQnyMOX" crossorigin="anonymous"></script>
+			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+			<script defer src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 		</head>
 		<body class="h-full">
 			{ children... }

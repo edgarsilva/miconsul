@@ -6,7 +6,7 @@ import (
 
 templ UsersIndexPage(todos []model.Todo, count, pending int, filter string, layoutProps layoutProps) {
 	@Layout(layoutProps) {
-		@CmpBackBtn("Back to home", "/")
+		@CmpBtnBack("Back to home", "/")
 		<section class="mt-16">
 			// @TodoCreateForm()
 			// @TodosList(todos)

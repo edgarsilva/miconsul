@@ -15,3 +15,6 @@ ul li.htmx-swapping {
 ul li.htmx-added {
   opacity: 0;
 }
+
+/* Alpine.JS */
+[x-cloak] { display: none }

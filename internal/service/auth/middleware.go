@@ -24,7 +24,7 @@ func MustAuthenticate(s MWService) func(c *fiber.Ctx) error {
 		}
 
 		token := c.Cookies("JWT", "")
-		c.Locals("uid", cu.UID)
+		c.Locals("uid", cu.ID)
 		c.Locals("JWT", token)
 
 		return c.Next()
@@ -35,7 +35,7 @@ func MaybeAuthenticate(s MWService) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		cu, _ := Authenticate(s.DBClient(), c)
 		token := c.Cookies("JWT", "")
-		c.Locals("uid", cu.UID)
+		c.Locals("uid", cu.ID)
 		c.Locals("JWT", token)
 
 		return c.Next()

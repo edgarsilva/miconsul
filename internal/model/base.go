@@ -10,11 +10,10 @@ import (
 type ModelBase struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	UID       string `gorm:"uniqueIndex;default:null;not null"`
-	ID        uint   `gorm:"primarykey"`
+	ID        string `gorm:"primarykey;default:null;not null"`
 }
 
 func (mb *ModelBase) BeforeCreate(tx *gorm.DB) (err error) {
-	mb.UID = xid.New("bas")
+	mb.ID = xid.New("___")
 	return nil
 }

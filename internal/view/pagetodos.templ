@@ -7,7 +7,7 @@ import (
 
 templ PageTodos(todos []model.Todo, count, pending int, filter string, layoutProps layoutProps) {
 	@Layout(layoutProps) {
-		@CmpBackBtn("Back to home", "/")
+		@CmpBtnBack("Back to home", "/")
 		<section class="mt-16">
 			@TodoCreateForm()
 			@TodosList(todos)
@@ -35,15 +35,15 @@ templ TodoCreateForm() {
 
 templ TodoCheckbox(t model.Todo) {
 	<input
-		id={ t.UID }
+		id={ t.ID }
 		class="checkbox checkbox-md"
-		name={ "todo[" + t.UID + "]" }
+		name={ "todo[" + t.ID + "]" }
 		type="checkbox"
 		if t.Completed {
 			checked
-			hx-patch={ "/todos/" + t.UID + "/uncheck" }
+			hx-patch={ "/todos/" + t.ID + "/uncheck" }
 		} else {
-			hx-patch={ "/todos/" + t.UID + "/check" }
+			hx-patch={ "/todos/" + t.ID + "/check" }
 		}
 		hx-target="closest hgroup"
 		hx-swap="outerHTML swap:0.1s"
@@ -70,13 +70,13 @@ templ TodoCard(t model.Todo) {
 		<div class="card-body">
 			<div class="absolute right-8">
 				<span class="badge badge-lg badge-info">High</span>
-				<span class="badge badge-lg">ID: { t.UID }</span>
+				<span class="badge badge-lg">ID: { t.ID }</span>
 			</div>
 			@TodoContent(t)
 			<p class="card-actions justify-end">
 				<button
 					class="btn btn-error btn-outline"
-					hx-delete={ "/todos/" + t.UID }
+					hx-delete={ "/todos/" + t.ID }
 					hx-target="closest article"
 					hx-swap="outerHTML swap:0.1s"
 				>
@@ -95,7 +95,7 @@ templ TodoCard(t model.Todo) {
 				</button>
 				<button
 					class="btn btn-primary"
-					hx-post={ "/todos/" + t.UID + "/duplicate" }
+					hx-post={ "/todos/" + t.ID + "/duplicate" }
 					hx-target="#todos"
 					hx-swap="beforeend settle:0.1s"
 				>

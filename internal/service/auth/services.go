@@ -63,7 +63,7 @@ func (s service) signupIsEmailValid(email string) error {
 
 	user := model.User{Email: email}
 	if result := s.DB.Where(user, "Email").Take(&user); result.RowsAffected != 0 {
-		return errors.New("email already exists")
+		return errors.New("email already exists, try login instead")
 	}
 
 	return nil
@@ -109,7 +109,7 @@ func (s service) userCreate(email, password, token string) (model.User, error) {
 func (s service) userFetch(email string) (model.User, error) {
 	user := model.User{Email: email}
 	s.DB.Where(user, "Email").Take(&user)
-	if user.ID == 0 {
+	if user.ID == "" {
 		return user, errors.New("user not found")
 	}
 
@@ -132,12 +132,44 @@ func (s service) userUpdatePassword(email, password, token string) (model.User, 
 		Model(&user).
 		Select("Password", "ResetToken", "ResetTokenExpiresAt").
 		Where("email = ? AND reset_token = ? AND reset_token_expires_at > ?", email, token, time.Now()).
+		Limit(1).
 		Updates(&user)
 	if result.Error != nil || result.RowsAffected != 1 {
 		return model.User{}, errors.New("failed to update password")
 	}
 
 	return user, nil
+}
+
+func (s service) userUpdateConfirmToken(email, token string) error {
+	user := model.User{
+		ConfirmEmailToken:     token,
+		ConfirmEmailExpiresAt: time.Now().Add(time.Hour * 24),
+	}
+	result := s.DB.
+		Model(&user).
+		Select("ConfirmEmailToken", "ConfirmEmailExpiresAt").
+		Where("email = ?", email).
+		Limit(1).
+		Updates(&user)
+	if result.Error != nil || result.RowsAffected != 1 {
+		return errors.New("failed to update confirm token")
+	}
+
+	return nil
+}
+
+func (s service) userPendingConfirmation(email string) error {
+	user := model.User{}
+	result := s.DB.
+		Select("id, email, confirm_email_token").
+		Where("email = ? AND confirm_email_token IS NOT null AND confirm_email_token != ''", email).
+		Take(&user)
+	if result.Error == nil || user.ID != "" { // If a row/record exists it means confirmation is pending and we should re-send
+		return errors.New("user pending confirmation")
+	}
+
+	return nil
 }
 
 // CurrentUser returns currently logged-in(or not) user from fiber Req Ctx
@@ -167,9 +199,9 @@ func AuthenticateWithUID(DB *database.Database, uid string) (model.User, error) 
 		return user, errors.New("user UID is blank")
 	}
 
-	result := DB.Where("uid = ?", uid).Take(&user)
+	result := DB.Where("id = ?", uid).Take(&user)
 	if result.Error != nil {
-		return user, errors.New("user NOT FOUND with UID found in Auth cookie")
+		return user, errors.New("user NOT FOUND with ID in Auth cookie")
 	}
 
 	return user, nil
@@ -199,7 +231,7 @@ func AuthenticateWithJWT(DB *database.Database, tokenStr string) (model.User, er
 		return user, errors.New("JWT token claims can't be parsed")
 	}
 
-	result := DB.Where("uid = ?", claims["uid"]).Take(&user)
+	result := DB.Where("id = ?", claims["uid"]).Take(&user)
 	if result.Error != nil {
 		return user, errors.New("user NOT FOUND with UID in JWT token")
 	}
@@ -210,7 +242,7 @@ func AuthenticateWithJWT(DB *database.Database, tokenStr string) (model.User, er
 func (s service) resetPasswordVerifyToken(token string) (email string, err error) {
 	user := model.User{}
 	result := s.DB.
-		Select("id, uid, email").
+		Select("id, email").
 		Where("reset_token != '' AND reset_token IS NOT null AND reset_token = ? AND reset_token_expires_at > ?", token, time.Now()).
 		Take(&user)
 	if result.Error != nil {

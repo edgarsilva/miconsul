@@ -6,6 +6,7 @@ import (
 )
 
 type LineItem struct {
+	UserID          string `gorm:"index;default:null;not null"`
 	extID           string
 	PurchaseOrderID string
 	User            User // Belongs to User
@@ -13,10 +14,9 @@ type LineItem struct {
 	PurchaseOrder PurchaseOrder // Belongs to PurchaseOrder
 	Amount        uint
 	Quantity      uint
-	UserID        uint `gorm:"index;default:null;not null"`
 }
 
-func (li LineItem) BeforeCreate(tx *gorm.DB) (err error) {
-	li.UID = xid.New("cmt")
+func (li *LineItem) BeforeCreate(tx *gorm.DB) (err error) {
+	li.ID = xid.New("lit")
 	return nil
 }

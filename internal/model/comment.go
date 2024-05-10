@@ -6,15 +6,15 @@ import (
 )
 
 type Comment struct {
-	Content   string
+	UserID    string `gorm:"index;default:null;not null"`
 	ArticleID string `gorm:"index;default:null;not null"`
-	User      User   // Belongs to User
+	Content   string
+	User      User // Belongs to User
 	ModelBase
 	Article Article // Belongs to Article
-	UserID  uint    `gorm:"index;default:null;not null"`
 }
 
-func (c Comment) BeforeCreate(tx *gorm.DB) (err error) {
-	c.UID = xid.New("cmt")
+func (c *Comment) BeforeCreate(tx *gorm.DB) (err error) {
+	c.ID = xid.New("cmt")
 	return nil
 }

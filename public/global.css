@@ -2449,6 +2449,11 @@ html {
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
+.swap-flip {
+  transform-style: preserve-3d;
+  perspective: 16em;
+}
+
 .swap-flip .swap-on,
 .swap-flip .swap-indeterminate,
 .swap-flip input:indeterminate ~ .swap-on {
@@ -3004,6 +3009,10 @@ html {
   flex-grow: 1;
 }
 
+.cursor-pointer {
+  cursor: pointer;
+}
+
 .grid-flow-col {
   grid-auto-flow: column;
 }
@@ -3381,6 +3390,11 @@ html {
   color: var(--fallback-bc,oklch(var(--bc)/var(--tw-text-opacity)));
 }
 
+.text-error {
+  --tw-text-opacity: 1;
+  color: var(--fallback-er,oklch(var(--er)/var(--tw-text-opacity)));
+}
+
 .text-gray-300 {
   --tw-text-opacity: 1;
   color: rgb(209 213 219 / var(--tw-text-opacity));
@@ -3407,6 +3421,12 @@ html {
 
 .opacity-70 {
   opacity: 0.7;
+}
+
+.shadow {
+  --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
 
 .shadow-2xl {
@@ -3470,6 +3490,12 @@ ul li.htmx-swapping {
 
 ul li.htmx-added {
   opacity: 0;
+}
+
+/* Alpine.JS */
+
+[x-cloak] {
+  display: none
 }
 
 @media (min-width: 1024px) {

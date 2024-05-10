@@ -6,16 +6,16 @@ import (
 )
 
 type PurchaseOrder struct {
-	extID string
+	extID  string
+	UserID string `gorm:"index;default:null;not null"`
 	ModelBase
 	LineItems []LineItem
 	User      User
 	Amount    uint
 	Quantity  uint
-	UserID    uint `gorm:"index;default:null;not null"`
 }
 
-func (po PurchaseOrder) BeforeCreate(tx *gorm.DB) (err error) {
-	po.UID = xid.New("cmt")
+func (po *PurchaseOrder) BeforeCreate(tx *gorm.DB) (err error) {
+	po.ID = xid.New("por")
 	return nil
 }

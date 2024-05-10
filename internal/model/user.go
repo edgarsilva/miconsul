@@ -33,7 +33,11 @@ type User struct {
 	Comments []Comment
 }
 
-func (u User) BeforeCreate(tx *gorm.DB) (err error) {
-	u.UID = xid.New("usr")
+func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
+	u.ID = xid.New("usr")
 	return nil
+}
+
+func (u User) IsLoggedIn() bool {
+	return u.ID != ""
 }

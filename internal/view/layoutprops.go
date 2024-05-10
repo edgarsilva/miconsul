@@ -6,10 +6,6 @@ import (
 
 type CurrentUser interface {
 	IsLoggedIn() bool
-	ID() uint
-	UID() string
-	Email() string
-	JWT() string
 }
 
 type layoutProps struct {

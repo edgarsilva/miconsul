@@ -10,15 +10,15 @@ import (
 type Article struct {
 	CreatedAt time.Time `gorm:"index:,sort:desc"`
 	UpdatedAt time.Time
+	UserID    string `gorm:"index;default:null;not null"`
 	Title     string
 	Content   string
 	ModelBase
 	Comments []Comment
 	User     User
-	UserID   uint `gorm:"index;default:null;not null"`
 }
 
-func (t Article) BeforeCreate(tx *gorm.DB) (err error) {
-	t.UID = xid.New("tdo")
+func (t *Article) BeforeCreate(tx *gorm.DB) (err error) {
+	t.ID = xid.New("art")
 	return nil
 }

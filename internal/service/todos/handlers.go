@@ -50,21 +50,27 @@ func (s *service) HandleFilterTodos(c *fiber.Ctx) error {
 	return view.Render(c, view.TodosFooter(allCount, pendingCount, filter))
 }
 
+// HandleCreateTodo adds a new todo for the CurrentUser to the DB
 func (s *service) HandleCreateTodo(c *fiber.Ctx) error {
-	t := model.Todo{
+	cu, err := s.CurrentUser(c)
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	todo := model.Todo{
 		Content:   c.FormValue("todo"),
-		UserID:    1,
+		UserID:    cu.ID,
 		Completed: false,
 	}
-	res := s.DB.Create(&t)
 
-	if res.Error != nil {
+	result := s.DB.Model(&todo).Create(&todo)
+	if result.Error != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
 	c.Set("HX-Trigger", "syncFooter")
 
-	return view.Render(c, view.TodoCard(t))
+	return view.Render(c, view.TodoCard(todo))
 }
 
 // POST: /todos/:id/duplicate.html - Duplicates a todo
@@ -74,14 +80,14 @@ func (s *service) HandleDuplicateTodo(c *fiber.Ctx) error {
 		src model.Todo
 	)
 
-	src.UID = id
+	src.ID = id
 	if res := s.DB.First(&src); res.Error != nil {
 		c.SendStatus(fiber.StatusMethodNotAllowed)
 		return c.SendString("")
 	}
 
 	dup := src
-	dup.UID = ""
+	dup.ID = ""
 	s.DB.Create(&dup)
 
 	c.Set("HX-Trigger", "syncFooter")
@@ -92,12 +98,12 @@ func (s *service) HandleDuplicateTodo(c *fiber.Ctx) error {
 // DELETE: /todos/:id.html - Delete a todo
 func (s *service) HandleDeleteTodo(c *fiber.Ctx) error {
 	var (
-		uid  = c.Params("id")
+		id   = c.Params("id")
 		todo model.Todo
 	)
 
-	todo.UID = uid
-	s.DB.Delete(&todo, "uid = ?", uid)
+	todo.ID = id
+	s.DB.Delete(&todo, "id = ?", id)
 
 	c.Set("HX-Trigger", "syncFooter")
 	c.SendStatus(fiber.StatusOK)
@@ -111,7 +117,7 @@ func (s *service) HandleCheckTodo(c *fiber.Ctx) error {
 		t  model.Todo
 	)
 
-	if res := s.DB.First(&t, "uid = ?", id); res.Error != nil {
+	if res := s.DB.First(&t, "id = ?", id); res.Error != nil {
 		return c.SendStatus(fiber.StatusMethodNotAllowed)
 	}
 
@@ -129,7 +135,7 @@ func (s *service) HandleUncheckTodo(c *fiber.Ctx) error {
 		t  model.Todo
 	)
 
-	if res := s.DB.First(&t, "uid = ?", id); res.Error != nil {
+	if res := s.DB.First(&t, "id = ?", id); res.Error != nil {
 		return c.SendStatus(fiber.StatusMethodNotAllowed)
 	}
 
@@ -231,7 +237,7 @@ func (s *service) HandleCreateNTodos(c *fiber.Ctx) error {
 		n = 1000
 	}
 
-	userID, err := strconv.Atoi(c.Params("userID"))
+	userID := c.Params("userID", "")
 	if err != nil {
 		return c.SendStatus(fiber.StatusUnprocessableEntity)
 	}
@@ -241,7 +247,7 @@ func (s *service) HandleCreateNTodos(c *fiber.Ctx) error {
 	for i := 1; i <= n; i++ {
 		todos = append(todos, model.Todo{
 			Content:   "content " + strconv.Itoa(i),
-			UserID:    uint(userID),
+			UserID:    userID,
 			Completed: false,
 		})
 	}
