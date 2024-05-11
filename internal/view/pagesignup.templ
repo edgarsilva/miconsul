@@ -20,47 +20,16 @@ templ SignupPage(email string, err error, layoutProps layoutProps) {
 						<div class="badge badge-secondary">INC</div>
 					</h2>
 					<form class="space-y-6" action="/signup" method="POST">
-						<label class="input input-bordered flex items-center gap-2">
-							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-								<path d="M3 4a2 2 0 0 0-2 2v1.161l8.441 4.221a1.25 1.25 0 0 0 1.118 0L19 7.162V6a2 2 0 0 0-2-2H3Z"></path>
-								<path d="m19 8.839-7.77 3.885a2.75 2.75 0 0 1-2.46 0L1 8.839V14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.839Z"></path>
-							</svg>
-							<input name="email" type="text" class="grow" placeholder="Email" value={ email }/>
-						</label>
-						<label class="input input-bordered flex items-center gap-2">
-							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-								<path fill-rule="evenodd" d="M8 7a5 5 0 1 1 3.61 4.804l-1.903 1.903A1 1 0 0 1 9 14H8v1a1 1 0 0 1-1 1H6v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-2a1 1 0 0 1 .293-.707L8.196 8.39A5.002 5.002 0 0 1 8 7Zm5-3a.75.75 0 0 0 0 1.5A1.5 1.5 0 0 1 14.5 7 .75.75 0 0 0 16 7a3 3 0 0 0-3-3Z" clip-rule="evenodd"></path>
-							</svg>
-							<input name="password" type="password" class="grow" placeholder="Password" value=""/>
-						</label>
-						<label class="input input-bordered flex items-center gap-2">
-							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-								<path fill-rule="evenodd" d="M9.661 2.237a.531.531 0 0 1 .678 0 11.947 11.947 0 0 0 7.078 2.749.5.5 0 0 1 .479.425c.069.52.104 1.05.104 1.59 0 5.162-3.26 9.563-7.834 11.256a.48.48 0 0 1-.332 0C5.26 16.564 2 12.163 2 7c0-.538.035-1.069.104-1.589a.5.5 0 0 1 .48-.425 11.947 11.947 0 0 0 7.077-2.75Zm4.196 5.954a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd"></path>
-							</svg>
-							<input name="confirm" type="password" class="grow" placeholder="Confirm Password" value=""/>
-						</label>
-						<div class="flex items-center justify-between">
-							<div class="flex items-center">
-								<input
-									id="remember_me"
-									name="remember_me"
-									value="true"
-									type="checkbox"
-									class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-								/>
-								<label for="remember_me" class="ml-3 block text-sm leading-6 text-gray-900">Remember me</label>
-							</div>
-							<div class="text-sm leading-6 ml-auto">
-								<a href="/login" class="link link-secondary link-hover font-semibold underline-offset-2">Login instead</a>
-							</div>
-						</div>
+						@CmpInputEmail(email)
+						@CmpInputPassword("")
+						@CmpInputConfirmPassword("")
 						if err != nil {
-							<div role="alert" class="alert shadow-lg text-error">
+							<div role="alert" class="alert shadow-lg text-error mt-4">
 								<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
 								<span>{ err.Error() }</span>
 							</div>
 						}
-						<div>
+						<div class="pt-8">
 							<button type="submit" class="btn btn-primary btn-block">Sign up</button>
 						</div>
 					</form>
@@ -88,8 +57,8 @@ templ SignupPage(email string, err error, layoutProps layoutProps) {
 			</div>
 			<div>
 				<p class="mt-10 text-center text-sm">
-					Not a member?
-					<a href="/signup" class="ml-1 link link-info link-hover font-semibold leading-6">Signup for an account</a>
+					Already a member?
+					<a href="/login" class="link link-secondary link-hover font-semibold underline-offset-2">Login instead</a>
 				</p>
 			</div>
 		</div>
