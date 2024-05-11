@@ -34,12 +34,12 @@ func newCookie(name, value string, validFor time.Duration) *fiber.Cookie {
 	}
 }
 
-// invalidateCookies sets Auth & JWT cookies to blank "" and expires them
+// invalidateSessionCookies blanks session cookies and expires them
 // time.Hour*0
-func invalidateCookies(c *fiber.Ctx) {
+func invalidateSessionCookies(c *fiber.Ctx) {
 	c.ClearCookie("Auth", "JWT")
 	c.Cookie(newCookie("Auth", "", time.Hour*0))
-	c.Cookie(newCookie("JWT", "", time.Hour*0))
+	// c.Cookie(newCookie("JWT", "", time.Hour*0))
 }
 
 // resetPasswordEmailParam returns the email address string from either

@@ -79,6 +79,7 @@ func (s *Server) CurrentUser(c *fiber.Ctx) (model.User, error) {
 		id = ""
 	}
 
+	// If no id in locals (No Authenticate middleware), try the cookie
 	if id == "" {
 		id = c.Cookies("Auth", "")
 	}
@@ -86,7 +87,7 @@ func (s *Server) CurrentUser(c *fiber.Ctx) (model.User, error) {
 	user := model.User{}
 	result := s.DB.Where("id = ?", id).Take(&user)
 	if result.Error != nil {
-		return user, errors.New("user NOT FOUND with SUB in JWT token")
+		return user, errors.New("unable to authenticate user")
 	}
 
 	return user, nil

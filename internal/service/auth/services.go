@@ -172,28 +172,23 @@ func (s service) userPendingConfirmation(email string) error {
 	return nil
 }
 
-// CurrentUser returns currently logged-in(or not) user from fiber Req Ctx
+// Authenticate an user based on Req Ctx Cookie 'Auth'
 // cookies
 func Authenticate(DB *database.Database, c *fiber.Ctx) (model.User, error) {
 	uid := c.Cookies("Auth", "")
-	user, err := AuthenticateWithUID(DB, uid)
+	if uid == "" {
+		uid = strings.TrimPrefix(c.Get("Authorization", ""), "Bearer ")
+	}
+
+	user, err := authenticateWithUID(DB, uid)
 	if err == nil {
 		return user, nil
 	}
 
-	tokenStr := c.Cookies("JWT", "")
-	if tokenStr == "" {
-		tokenStr = strings.TrimPrefix(c.Get("Authorization", ""), "Bearer ")
-	}
-	user, err = AuthenticateWithJWT(DB, tokenStr)
-	if err == nil {
-		return user, nil
-	}
-
-	return user, errors.New("invalid authentication, both methods are missing [Auth, JWT]")
+	return user, errors.New("failed to authenticate user")
 }
 
-func AuthenticateWithUID(DB *database.Database, uid string) (model.User, error) {
+func authenticateWithUID(DB *database.Database, uid string) (model.User, error) {
 	user := model.User{}
 	if uid == "" {
 		return user, errors.New("user UID is blank")
@@ -207,31 +202,18 @@ func AuthenticateWithUID(DB *database.Database, uid string) (model.User, error) 
 	return user, nil
 }
 
-func AuthenticateWithJWT(DB *database.Database, tokenStr string) (model.User, error) {
+func authenticateWithJWT(DB *database.Database, tokenStr string) (model.User, error) {
 	user := model.User{}
 	if tokenStr == "" {
 		return user, errors.New("JWT token is blank")
 	}
 
-	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		// Don't forget to validate the algorithm is what you expect:
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return user, errors.New("JWT token can't be parsed")
-		}
-
-		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
-		return []byte(os.Getenv("JWT_SECRET")), nil
-	})
+	uid, err := JWTValidateToken(tokenStr)
 	if err != nil {
-		return user, errors.New("JWT token can't be parsed")
+		return user, errors.New("failed to validase JWT token")
 	}
 
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return user, errors.New("JWT token claims can't be parsed")
-	}
-
-	result := DB.Where("id = ?", claims["uid"]).Take(&user)
+	result := DB.Where("id = ?", uid).Take(&user)
 	if result.Error != nil {
 		return user, errors.New("user NOT FOUND with UID in JWT token")
 	}
@@ -250,4 +232,48 @@ func (s service) resetPasswordVerifyToken(token string) (email string, err error
 	}
 
 	return user.Email, nil
+}
+
+// JWTCreateToken returns a JWT token string for the sub and uid, optionally error
+func JWTCreateToken(sub, uid string) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
+		"sub": sub,
+		"uid": uid,
+		"exp": time.Now().Add(time.Hour * 24).Unix(),
+	})
+	tokenStr, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenStr, nil
+}
+
+// JWTValidateToken returns the uid string from the JWT claims if valid, and an
+// error if not valid or able to parse the token
+func JWTValidateToken(tokenStr string) (uid string, err error) {
+	tokenJWT, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		// Don't forget to validate the algorithm is what you expect:
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return "", errors.New("JWT token can't be parsed")
+		}
+
+		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
+		return []byte(os.Getenv("JWT_SECRET")), nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	claims, ok := tokenJWT.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", errors.New("JWT token claims can't be parsed")
+	}
+
+	uid, ok = claims["uid"].(string)
+	if !ok || uid == "" {
+		return "", errors.New("uid not found in token claims")
+	}
+
+	return uid, nil
 }

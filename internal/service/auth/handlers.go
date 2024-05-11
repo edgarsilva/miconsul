@@ -3,7 +3,6 @@ package auth
 import (
 	"errors"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/edgarsilva/go-scaffold/internal/lib/xid"
@@ -12,7 +11,6 @@ import (
 	"github.com/edgarsilva/go-scaffold/internal/view"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -71,23 +69,11 @@ func (s *service) HandleLogin(c *fiber.Ctx) error {
 		c.Cookie(newCookie("Auth", user.ID, time.Hour*validFor))
 		return c.Redirect("/todos")
 	case "application/json":
-		token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
-			"sub": user.Email,
-			"uid": user.ID,
-			"exp": time.Now().Add(time.Hour * 24).Unix(),
-		})
-		tokenStr, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-		if err != nil {
-			return view.Render(c, view.LoginPage(email, "", err, layoutProps))
-		}
-		c.Cookie(newCookie("JWT", tokenStr, time.Hour*24))
-		resp := map[string]string{
-			"token": tokenStr,
-		}
-		return c.JSON(resp)
+		// TODO: HandleLogin maybe accept JWT for application/json
+		return c.SendStatus(fiber.StatusServiceUnavailable)
 	default:
 		c.Cookie(newCookie("Auth", user.ID, time.Hour*validFor))
-		return c.SendString("Login successful")
+		return c.SendStatus(fiber.StatusOK)
 	}
 }
 
@@ -182,7 +168,7 @@ func (s *service) HandleSignupConfirmEmail(c *fiber.Ctx) error {
 // DELETE: /logout
 func (s *service) HandleLogout(c *fiber.Ctx) error {
 	s.SessionDestroy(c)
-	invalidateCookies(c)
+	invalidateSessionCookies(c)
 
 	if c.Get("HX-Request") == "true" {
 		c.Set("HX-Redirect", "/")

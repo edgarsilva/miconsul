@@ -15,7 +15,7 @@ func MustAuthenticate(s MWService) func(c *fiber.Ctx) error {
 		if err != nil {
 			switch c.Accepts("text/plain", "application/json", "text/html") {
 			case "text/plain", "application/json":
-				return c.SendStatus(fiber.StatusUnauthorized)
+				return c.SendStatus(fiber.StatusServiceUnavailable)
 			case "text/html":
 				return c.Redirect("/login")
 			default:
@@ -23,10 +23,7 @@ func MustAuthenticate(s MWService) func(c *fiber.Ctx) error {
 			}
 		}
 
-		token := c.Cookies("JWT", "")
 		c.Locals("uid", cu.ID)
-		c.Locals("JWT", token)
-
 		return c.Next()
 	}
 }
@@ -34,9 +31,7 @@ func MustAuthenticate(s MWService) func(c *fiber.Ctx) error {
 func MaybeAuthenticate(s MWService) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		cu, _ := Authenticate(s.DBClient(), c)
-		token := c.Cookies("JWT", "")
 		c.Locals("uid", cu.ID)
-		c.Locals("JWT", token)
 
 		return c.Next()
 	}
