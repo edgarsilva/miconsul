@@ -1,6 +1,6 @@
 package view
 
-templ WrapperHTMLPage() {
+templ HTMLPage() {
 	<!DOCTYPE html>
 	<html data-theme="cmyk" x-ref="html" class="h-full">
 		<head>
@@ -18,7 +18,7 @@ templ WrapperHTMLPage() {
 	</html>
 }
 
-templ WrapperHTMLWithApexCharts() {
+templ HTMLPageWithApexCharts() {
 	<!DOCTYPE html>
 	<html data-theme="cmyk" x-ref="html" class="h-full">
 		<head>
@@ -37,34 +37,46 @@ templ WrapperHTMLWithApexCharts() {
 	</html>
 }
 
-templ Layout(props layoutProps) {
-	@WrapperHTMLPage() {
-		<main class="root h-full flex flex-col">
+templ LayoutDashboard(props layoutProps) {
+	@HTMLPage() {
+		<div class="root h-full flex flex-col bg-base-200">
 			@CmpHeader(props)
-			<div class="container mx-auto">
-				{ children... }
-			</div>
+			{ children... }
 			<div class="mt-auto">
 				@CmpFooter(props)
 			</div>
-		</main>
+		</div>
+	}
+}
+
+templ Layout(props layoutProps) {
+	@HTMLPage() {
+		<div class="root h-full flex flex-col bg-base-200">
+			@CmpHeader(props)
+			<main class="container mx-auto">
+				{ children... }
+			</main>
+			<div class="mt-auto">
+				@CmpFooter(props)
+			</div>
+		</div>
 	}
 }
 
 templ LayoutContainer(props layoutProps) {
-	@WrapperHTMLPage() {
-		<main class="root container mx-auto">
+	@HTMLPage() {
+		<div class="root container mx-auto">
 			@CmpHeader(props)
 			{ children... }
 			@CmpFooter(props)
-		</main>
+		</div>
 	}
 }
 
 templ LayoutAuth() {
-	@WrapperHTMLPage() {
-		<main class="root h-full">
+	@HTMLPage() {
+		<div class="root h-full">
 			{ children... }
-		</main>
+		</div>
 	}
 }

@@ -1,8 +1,8 @@
 package view
 
 templ CmpHeader(props layoutProps) {
-	<header class="py-2 px-4 mb-4 border-b-2">
-		<nav class="navbar">
+	<header class="py-2 px-4 mb-4 bg-base-100 shadow-sm">
+		<nav class="navbar rounded-lg">
 			<div class="navbar-start">
 				<div class="flex-none">
 					<button class="btn btn-square btn-ghost">
@@ -10,13 +10,13 @@ templ CmpHeader(props layoutProps) {
 					</button>
 				</div>
 				<div class="flex-1">
-					<a class="btn btn-ghost text-xl">Scaffold</a>
+					<a class="btn btn-ghost text-xl">miconsul</a>
 				</div>
 			</div>
 			<div class="hidden navbar-center md:flex">
-				<a class="btn btn-ghost text-lg">Home</a>
-				<a class="btn btn-ghost text-lg">Articles</a>
-				<a class="btn btn-ghost text-lg">About</a>
+				<a class="btn btn-ghost text-lg">Clinics</a>
+				<a class="btn btn-ghost text-lg">Patients</a>
+				<a class="btn btn-ghost text-lg">Expense/Revenue</a>
 			</div>
 			<div class="navbar-end">
 				if props.CurrentUser.IsLoggedIn() {

@@ -17,4 +17,4 @@ ul li.htmx-added {
 }
 
 /* Alpine.JS */
-[x-cloak] { display: none }
+[x-cloak] { display: none !important; }

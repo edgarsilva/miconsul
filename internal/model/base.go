@@ -17,3 +17,12 @@ func (mb *ModelBase) BeforeCreate(tx *gorm.DB) (err error) {
 	mb.ID = xid.New("___")
 	return nil
 }
+
+type AddressBase struct {
+	Line1   string
+	Line2   string
+	City    string
+	State   string
+	Country string
+	Zip     string
+}

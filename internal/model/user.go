@@ -28,9 +28,9 @@ type User struct {
 	ResetToken            string
 	ConfirmEmailToken     string
 	ModelBase
-	Todos    []Todo
-	Articles []Article
-	Comments []Comment
+	Todos []Todo
+	// Articles []Article
+	// Comments []Comment
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {

@@ -1,0 +1,390 @@
+package view
+
+import (
+	"slices"
+)
+
+templ PageDashboard(props layoutProps) {
+	@LayoutDashboard(props) {
+		<main id="content" class="px-4 container mx-auto">
+			@DashboardStats()
+			@MainSection()
+		</main>
+	}
+}
+
+templ DashboardStats() {
+	<div>
+		<h3 class="sr-only">Statistics</h3>
+		<dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+			<div class="relative overflow-hidden rounded-xl bg-base-100 px-4 pb-12 pt-5 shadow-md sm:px-6 sm:pt-6">
+				<dt>
+					<div class="absolute rounded-md bg-primary p-3">
+						<svg class="h-6 w-6 text-base-100" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"></path>
+						</svg>
+					</div>
+					<p class="ml-16 truncate text-sm font-medium text-base-content">
+						Patients
+					</p>
+				</dt>
+				<dd class="ml-16 flex items-baseline pb-6 sm:pb-7">
+					<p class="text-2xl font-semibold text-base-content">71</p>
+					<p class="ml-2 flex items-baseline text-sm font-semibold text-success">
+						<svg class="h-5 w-5 flex-shrink-0 self-center text-success" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+							<path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clip-rule="evenodd"></path>
+						</svg>
+						<span class="sr-only">Increased by </span>
+						122
+					</p>
+					<div class="absolute inset-x-0 bottom-0 bg-base-200 px-4 py-4 sm:px-6">
+						<div class="text-sm">
+							<a href="#" class="font-medium link link-primary link-hover">View all<span class="sr-only">Patients</span></a>
+						</div>
+					</div>
+				</dd>
+			</div>
+			<div class="relative overflow-hidden rounded-lg bg-base-100 px-4 pb-12 pt-5 shadow-md sm:px-6 sm:pt-6">
+				<dt>
+					<div class="absolute rounded-md bg-indigo-500 p-3">
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-base-100">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"></path>
+						</svg>
+					</div>
+					<p
+						class="ml-16 truncate text-sm font-medium text-base-content"
+					>Appointments</p>
+				</dt>
+				<dd class="ml-16 flex items-baseline pb-6 sm:pb-7">
+					<p class="text-2xl font-semibold text-base-content">58</p>
+					<p class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
+						<svg class="h-5 w-5 flex-shrink-0 self-center text-green-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+							<path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clip-rule="evenodd"></path>
+						</svg>
+						<span class="sr-only">Increased by </span>
+						5.4%
+					</p>
+					<div class="absolute inset-x-0 bottom-0 bg-base-200 px-4 py-4 sm:px-6">
+						<div class="text-sm">
+							<a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">View all<span class="sr-only">Avg. Open Rate stats</span></a>
+						</div>
+					</div>
+				</dd>
+			</div>
+			<div class="relative overflow-hidden rounded-lg bg-base-100 px-4 pb-12 pt-5 shadow-md sm:px-6 sm:pt-6">
+				<dt>
+					<div class="absolute rounded-md bg-indigo-500 p-3">
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"></path>
+						</svg>
+					</div>
+					<p class="ml-16 truncate text-sm font-medium text-base-content">Revenue this month</p>
+				</dt>
+				<dd class="ml-16 flex items-baseline pb-6 sm:pb-7">
+					<p class="text-2xl font-semibold text-base-content">24500</p>
+					<p class="ml-2 flex items-baseline text-sm font-semibold text-red-600">
+						<svg class="h-5 w-5 flex-shrink-0 self-center text-red-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+							<path fill-rule="evenodd" d="M10 3a.75.75 0 01.75.75v10.638l3.96-4.158a.75.75 0 111.08 1.04l-5.25 5.5a.75.75 0 01-1.08 0l-5.25-5.5a.75.75 0 111.08-1.04l3.96 4.158V3.75A.75.75 0 0110 3z" clip-rule="evenodd"></path>
+						</svg>
+						<span class="sr-only">Decreased by </span>
+						3.2%
+					</p>
+					<div class="absolute inset-x-0 bottom-0 bg-base-200 px-4 py-4 sm:px-6">
+						<div class="text-sm">
+							<a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">View all<span class="sr-only">Avg. Click Rate stats</span></a>
+						</div>
+					</div>
+				</dd>
+			</div>
+		</dl>
+	</div>
+}
+
+templ MainSection() {
+	<div class="grid grid-cols-3 gap-4 mt-8">
+		<section
+			class="col-span-2"
+		>
+			@Appointments()
+		</section>
+		<section
+			class="col-span-1"
+		>
+			@Clinic()
+		</section>
+	</div>
+}
+
+templ Appointments() {
+	<section
+		class="col-span-2 flex flex-col rounded-xl bg-base-100 p-8 gap-4 shadow-md"
+	>
+		<h3 class="font-semibold text-lg">Next appointments</h3>
+		<ol class="divide-y divide-base-200 text-sm leading-6 lg:col-span-7 xl:col-span-8">
+			<li class="relative flex space-x-6 py-6 xl:static">
+				<img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="h-14 w-14 flex-none rounded-full"/>
+				<div class="flex-auto">
+					<h3 class="pr-10 font-semibold text-base-content xl:pr-0">Leslie Alexander</h3>
+					<dl class="mt-2 flex flex-col text-neutral xl:flex-row">
+						<div class="flex items-start space-x-3">
+							<dt class="mt-0.5">
+								<span class="sr-only">Date</span>
+								<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+									<path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clip-rule="evenodd"></path>
+								</svg>
+							</dt>
+							<dd>
+								<time datetime="2022-01-10T17:00">Jan 10th, 2022 at 5:00 PM</time>
+							</dd>
+						</div>
+						<div class="mt-2 flex items-center space-x-3 xl:ml-3.5 xl:mt-0 xl:border-l xl:border-base-300 xl:border-opacity-50 xl:pl-3.5">
+							<dt class="mt-0.5">
+								<span class="sr-only">Location</span>
+								<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+									<path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clip-rule="evenodd"></path>
+								</svg>
+							</dt>
+							<dd>Meraki</dd>
+							<span class="mt-0.5 badge badge-neutral">pending</span>
+						</div>
+					</dl>
+				</div>
+				@AppointmentActions()
+			</li>
+			<li class="relative flex space-x-6 py-6 xl:static">
+				<img src="https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="h-14 w-14 flex-none rounded-full"/>
+				<div class="flex-auto">
+					<h3 class="pr-10 font-semibold text-base-400 xl:pr-0">Michael Foster</h3>
+					<dl class="mt-2 flex flex-col text-base-400 xl:flex-row">
+						<div class="flex items-start space-x-3">
+							<dt class="mt-0.5">
+								<span class="sr-only">Date</span>
+								<svg class="h-5 w-5 text-base-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+									<path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clip-rule="evenodd"></path>
+								</svg>
+								<svg
+									class="w-5 h-5 mt-1 text-info"
+									xmlns="http://www.w3.org/2000/svg"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke-width="1.5"
+									stroke="currentColor"
+								>
+									<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3"></path>
+								</svg>
+							</dt>
+							<dd class="flex flex-col">
+								<time class="line-through opacity-50" datetime="2022-01-12T15:00">Jan 12th, 2022 at 3:00 PM</time>
+								<time class="font-semibold text-info" datetime="2022-01-12T15:00">Jan 21th, 2022 at 3:00 PM</time>
+							</dd>
+						</div>
+						<div class="mt-2 flex items-start space-x-3 xl:ml-3.5 xl:mt-0 xl:border-l xl:border-base-300 xl:border-opacity-50 xl:pl-3.5">
+							<dt class="mt-0.5">
+								<span class="sr-only">Location</span>
+								<svg class="h-5 w-5 text-base-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+									<path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clip-rule="evenodd"></path>
+								</svg>
+							</dt>
+							<dd>Meraki</dd>
+							<span class="mt-0.5 badge badge-info">reschedule</span>
+						</div>
+					</dl>
+				</div>
+				@AppointmentActions()
+			</li>
+			<li class="relative flex space-x-6 py-6 xl:static">
+				<img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="h-14 w-14 flex-none rounded-full"/>
+				<div class="flex-auto">
+					<h3 class="pr-10 font-semibold xl:pr-0">Dries Vincent</h3>
+					<dl class="mt-2 flex flex-col xl:flex-row">
+						<div class="flex items-start space-x-3">
+							<dt class="mt-0.5">
+								<span class="sr-only">Date</span>
+								<svg class="h-5 w-5 text-success" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+									<path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clip-rule="evenodd"></path>
+								</svg>
+							</dt>
+							<dd class="font-semibold text-success">
+								<time datetime="2022-01-12T17:00">January 12th, 2022 at 5:00 PM</time>
+							</dd>
+						</div>
+						<div class="mt-2 flex items-start space-x-3 xl:ml-3.5 xl:mt-0 xl:border-l xl:border-gray-400 xl:border-opacity-50 xl:pl-3.5">
+							<dt class="mt-0.5">
+								<span class="sr-only">Location</span>
+								<svg class="h-5 w-5 text-base-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+									<path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clip-rule="evenodd"></path>
+								</svg>
+							</dt>
+							<dd>Tu Psicologa</dd>
+							<span class="mt-0.5 badge badge-success">confirmed</span>
+						</div>
+					</dl>
+				</div>
+				@AppointmentActions()
+			</li>
+			<li class="relative flex space-x-6 py-6 xl:static">
+				<img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="h-14 w-14 flex-none rounded-full"/>
+				<div class="flex-auto">
+					<h3 class="pr-10 font-semibold xl:pr-0">Lindsay Walton</h3>
+					<dl class="mt-2 flex flex-col text-base-400 xl:flex-row">
+						<div class="flex items-start space-x-3">
+							<dt class="mt-0.5">
+								<span class="sr-only">Date</span>
+								<svg class="h-5 w-5 text-warning" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+									<path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clip-rule="evenodd"></path>
+								</svg>
+							</dt>
+							<dd class="font-semibold text-warning line-through"><time datetime="2022-01-14T10:00">January 14th, 2022 at 10:00 AM</time></dd>
+						</div>
+						<div class="mt-2 flex items-start space-x-3 xl:ml-3.5 xl:mt-0 xl:border-l xl:border-base-300 xl:border-opacity-50 xl:pl-3.5">
+							<dt class="mt-0.5">
+								<span class="sr-only">Location</span>
+								<svg class="h-5 w-5 text-base-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+									<path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clip-rule="evenodd"></path>
+								</svg>
+							</dt>
+							<dd>Meraki</dd>
+							<span class="mt-0.5 badge badge-warning">canceled</span>
+						</div>
+					</dl>
+				</div>
+				@AppointmentActions("cancel")
+			</li>
+			<li class="relative flex items-center space-x-6 py-6 xl:static">
+				<img
+					src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+					alt=""
+					class="h-14 w-14 flex-none rounded-full"
+				/>
+				<div class="flex-auto">
+					<h3 class="pr-10 font-semibold xl:pr-0">Courtney Henry</h3>
+					<dl class="mt-2 flex flex-col text-base-400 xl:flex-row">
+						<div class="flex items-start space-x-3">
+							<dt class="mt-0.5">
+								<span class="sr-only">Date</span>
+								<svg class="h-5 w-5 text-base-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+									<path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clip-rule="evenodd"></path>
+								</svg>
+								<svg
+									class="w-5 h-5 mt-1 text-info"
+									xmlns="http://www.w3.org/2000/svg"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke-width="1.5"
+									stroke="currentColor"
+								>
+									<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3"></path>
+								</svg>
+							</dt>
+							<dd class="flex flex-col">
+								<time datetime="2022-01-12T15:00">Jan 12th, 2022 at 3:00 PM</time>
+								<time class="font-semibold text-info" datetime="2022-01-12T15:00">Jan 21th, 2022 at 3:00 PM</time>
+							</dd>
+						</div>
+						<div class="mt-2 flex items-start space-x-3 xl:ml-3.5 xl:mt-0 xl:border-l xl:border-base-400 xl:border-opacity-50 xl:pl-3.5">
+							<dt class="mt-0.5">
+								<span class="sr-only">Location</span>
+								<svg class="h-5 w-5 text-base-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+									<path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clip-rule="evenodd"></path>
+								</svg>
+							</dt>
+							<dd>Tu Psicologa</dd>
+							<span class="mt-0.5 badge badge-info">reschedule</span>
+						</div>
+					</dl>
+				</div>
+				@AppointmentActions()
+			</li>
+		</ol>
+	</section>
+}
+
+templ AppointmentActions(buttons ...string) {
+	<div class="flex gap-2 items-center">
+		if !slices.Contains(buttons, "reschedule") {
+			<button class="btn btn-outline btn-primary">
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"></path>
+				</svg>
+				Reschedule
+			</button>
+		}
+		if !slices.Contains(buttons, "cancel") {
+			<button class="btn btn-outline btn-secondary">
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+					<path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"></path>
+				</svg>
+				Cancel
+			</button>
+		}
+	</div>
+}
+
+templ Clinic() {
+	<div class="rounded-xl bg-base-100 p-4 gap-4 shadow-md ring-1 ring-gray-900/5 text-gray-500">
+		<dl class="flex flex-wrap ">
+			<div class="flex items-center w-full pl-6 gap-2">
+				<div class="avatar">
+					<div class="w-16 rounded-xl border">
+						<img src="/images/meraki.jpg"/>
+					</div>
+				</div>
+				<h3 class="sr-only text-xl leading-6">
+					Meraki Clinic
+				</h3>
+				<button class="ml-auto btn btn-ghost">
+					Today
+					<div class="badge badge-secondary">5</div>
+				</button>
+			</div>
+			<div class="mt-2 flex w-full flex-none gap-x-4 border-t border-gray-900/5 px-6 pt-6">
+				<dt class="flex-none">
+					<span class="sr-only">Name</span>
+					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"></path>
+					</svg>
+				</dt>
+				<dd class="text-sm font-medium leading-6">
+					Meraki centro de bienestar
+				</dd>
+			</div>
+			<div class="mt-4 flex w-full flex-none gap-x-4 px-6">
+				<dt class="flex-none">
+					<span class="sr-only">Address</span>
+					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path>
+						<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"></path>
+					</svg>
+				</dt>
+				<dd class="text-sm leading-6">
+					Miguel de la Madrid Hurtado #164
+				</dd>
+			</div>
+			<div class="mt-4 flex w-full flex-none gap-x-4 px-6">
+				<dt class="flex-none">
+					<span class="sr-only">Phone</span>
+					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z"></path>
+					</svg>
+				</dt>
+				<dd class="text-sm leading-6 ">
+					312 132 1139
+				</dd>
+			</div>
+			<div class="mt-4 flex w-full flex-none gap-x-4 px-6">
+				<dt class="flex-none">
+					<span class="sr-only">Email</span>
+					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"></path>
+					</svg>
+				</dt>
+				<dd class="text-sm leading-6 ">
+					exito.merakicolima@gmail.com
+				</dd>
+			</div>
+		</dl>
+		<div class="mt-6 border-t border-gray-900/5 px-6 pt-4">
+			<a href="#" class="btn btn-ghost font-semibold leading-6 -ml-4">Edit</a>
+		</div>
+	</div>
+}

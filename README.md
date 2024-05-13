@@ -33,10 +33,16 @@ using Go, SQLite with GORM, Templ with HTMX and DaisyUI/TailwindCSS:
 - [X] Confirm email Functionality
 
 [09/May/24]
-- [ ] Fix Schema Ids to use XID
-- [ ] Add Chinnok sample DB
+- [X] Fix Schema Ids to use XID
+
+[10/May/24]
+- [ ] Add ERD for Miconsul sample DB 
+
 
 ### V1 (7day)
+
+[11/May/24]
+- Add Models for Miconsul V1
 
 [13/May/24] - [18/May/24]
 - [ ] Running Somewhere other than the dev machine

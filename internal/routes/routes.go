@@ -5,6 +5,7 @@ import (
 	"github.com/edgarsilva/go-scaffold/internal/service/auth"
 	"github.com/edgarsilva/go-scaffold/internal/service/blog"
 	"github.com/edgarsilva/go-scaffold/internal/service/counter"
+	"github.com/edgarsilva/go-scaffold/internal/service/dashboard"
 	"github.com/edgarsilva/go-scaffold/internal/service/theme"
 	"github.com/edgarsilva/go-scaffold/internal/service/todos"
 	"github.com/edgarsilva/go-scaffold/internal/service/users"
@@ -22,6 +23,7 @@ func (r *Router) RegisterRoutes(s *server.Server) {
 	r.Server = s
 
 	AuthRoutes(s)
+	DashbordhRoudes(s)
 	UsersRoutes(s)
 	BlogRoutes(s)
 	ThemeRoutes(s)
@@ -52,10 +54,17 @@ func AuthRoutes(s *server.Server) {
 	g.Post("/validate", auth.MustAuthenticate(a), a.HandleValidate)
 }
 
+func DashbordhRoudes(s *server.Server) {
+	d := dashboard.NewService(s)
+
+	d.Get("/", d.HandleDashboardPage)
+
+	g := s.Group("/dashboard")
+	g.Get("", d.HandleDashboardPage)
+}
+
 func BlogRoutes(s *server.Server) {
 	b := blog.NewService(s)
-
-	b.Get("/", b.HandleBlogPage)
 
 	g := s.Group("/blog")
 	g.Get("", b.HandleBlogPage)
