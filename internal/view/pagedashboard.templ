@@ -97,13 +97,13 @@ templ DashboardStats() {
 templ MainGrid() {
 	<div class="grid grid-cols-3 gap-5 mt-8">
 		<section
-			class="col-span-2"
+			class="col-span-3 lg:col-span-2 order-2 lg:order-1"
 		>
 			@Appointments()
 			@LatestTransactions()
 		</section>
 		<section
-			class="col-span-1 flex flex-col gap-8"
+			class="col-span-3 lg:col-span-1 order-1 lg:order-2 flex flex-col gap-8"
 		>
 			@Clinic()
 			@Feed()
@@ -115,7 +115,30 @@ templ Appointments() {
 	<section
 		class="col-span-2 flex flex-col rounded-xl border border-base-content/10 bg-base-100 p-8 gap-4 shadow-md"
 	>
-		<h3 class="font-semibold text-lg">Next appointments</h3>
+		<div class="relative flex items-center justify-between">
+			<h3 class="font-semibold text-lg">Appointments</h3>
+			<details class="absolute right-0 dropdown lg:hidden">
+				<summary class="btn btn-square btn-ghost">
+					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"></path>
+					</svg>
+				</summary>
+				<ul class="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
+					<li><a href="#" class="text-gray-500 hover:text-gray-700 rounded-md px-3 py-2 text-sm font-medium">Next 5</a></li>
+					<li><a href="#" class="text-gray-500 hover:text-gray-700 rounded-md px-3 py-2 text-sm font-medium">Today</a></li>
+					<li><a href="#" class="bg-gray-100 text-gray-700 rounded-md px-3 py-2 text-sm font-medium" aria-current="page">This week</a></li>
+					<li><a href="#" class="text-gray-500 hover:text-gray-700 rounded-md px-3 py-2 text-sm font-medium">This month</a></li>
+				</ul>
+			</details>
+			<div class="hidden lg:block">
+				<nav class="flex gap-2" aria-label="Tabs">
+					<a href="#" class="text-gray-500 hover:text-gray-700 rounded-md px-3 py-2 text-sm font-medium">Next 5</a>
+					<a href="#" class="text-gray-500 hover:text-gray-700 rounded-md px-3 py-2 text-sm font-medium">Today</a>
+					<a href="#" class="bg-gray-100 text-gray-700 rounded-md px-3 py-2 text-sm font-medium" aria-current="page">This week</a>
+					<a href="#" class="text-gray-500 hover:text-gray-700 rounded-md px-3 py-2 text-sm font-medium">This month</a>
+				</nav>
+			</div>
+		</div>
 		<ol class="divide-y divide-base-content-10 text-sm leading-6">
 			<li class="relative flex space-x-6 py-6 xl:static">
 				<img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="h-14 w-14 flex-none rounded-full"/>
@@ -296,7 +319,7 @@ templ Appointments() {
 }
 
 templ AppointmentActions(buttons ...string) {
-	<div class="flex gap-2 items-center">
+	<div class="hidden gap-2 items-center lg:flex">
 		if !slices.Contains(buttons, "reschedule") {
 			<button class="btn btn-outline btn-primary">
 				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -380,7 +403,7 @@ templ Clinic() {
 			</div>
 		</dl>
 		<div class="flex flex-row items-center mt-6 border-t border-base-content/10 pt-4">
-			<a href="#" class="link link-hover font-semibold">Edit</a>
+			<a href="#" class="link link-hover font-semibold">View</a>
 			<ul class="ml-auto flex gap-2">
 				<li>
 					<a class="rounded-full bg-base-100">
@@ -393,7 +416,8 @@ templ Clinic() {
 							height="100"
 							viewBox="0 0 48 48"
 						>
-							<path fill="#039be5" d="M24 5A19 19 0 1 0 24 43A19 19 0 1 0 24 5Z"></path><path fill="#fff" d="M26.572,29.036h4.917l0.772-4.995h-5.69v-2.73c0-2.075,0.678-3.915,2.619-3.915h3.119v-4.359c-0.548-0.074-1.707-0.236-3.897-0.236c-4.573,0-7.254,2.415-7.254,7.917v3.323h-4.701v4.995h4.701v13.729C22.089,42.905,23.032,43,24,43c0.875,0,1.729-0.08,2.572-0.194V29.036z"></path>
+							<path fill="#039be5" d="M24 5A19 19 0 1 0 24 43A19 19 0 1 0 24 5Z"></path>
+							<path fill="#fff" d="M26.572,29.036h4.917l0.772-4.995h-5.69v-2.73c0-2.075,0.678-3.915,2.619-3.915h3.119v-4.359c-0.548-0.074-1.707-0.236-3.897-0.236c-4.573,0-7.254,2.415-7.254,7.917v3.323h-4.701v4.995h4.701v13.729C22.089,42.905,23.032,43,24,43c0.875,0,1.729-0.08,2.572-0.194V29.036z"></path>
 						</svg>
 					</a>
 				</li>
@@ -438,7 +462,11 @@ templ Clinic() {
 							height="100"
 							viewBox="0 0 48 48"
 						>
-							<path fill="#fff" d="M4.868,43.303l2.694-9.835C5.9,30.59,5.026,27.324,5.027,23.979C5.032,13.514,13.548,5,24.014,5c5.079,0.002,9.845,1.979,13.43,5.566c3.584,3.588,5.558,8.356,5.556,13.428c-0.004,10.465-8.522,18.98-18.986,18.98c-0.001,0,0,0,0,0h-0.008c-3.177-0.001-6.3-0.798-9.073-2.311L4.868,43.303z"></path><path fill="#fff" d="M4.868,43.803c-0.132,0-0.26-0.052-0.355-0.148c-0.125-0.127-0.174-0.312-0.127-0.483l2.639-9.636c-1.636-2.906-2.499-6.206-2.497-9.556C4.532,13.238,13.273,4.5,24.014,4.5c5.21,0.002,10.105,2.031,13.784,5.713c3.679,3.683,5.704,8.577,5.702,13.781c-0.004,10.741-8.746,19.48-19.486,19.48c-3.189-0.001-6.344-0.788-9.144-2.277l-9.875,2.589C4.953,43.798,4.911,43.803,4.868,43.803z"></path><path fill="#cfd8dc" d="M24.014,5c5.079,0.002,9.845,1.979,13.43,5.566c3.584,3.588,5.558,8.356,5.556,13.428c-0.004,10.465-8.522,18.98-18.986,18.98h-0.008c-3.177-0.001-6.3-0.798-9.073-2.311L4.868,43.303l2.694-9.835C5.9,30.59,5.026,27.324,5.027,23.979C5.032,13.514,13.548,5,24.014,5 M24.014,42.974C24.014,42.974,24.014,42.974,24.014,42.974C24.014,42.974,24.014,42.974,24.014,42.974 M24.014,42.974C24.014,42.974,24.014,42.974,24.014,42.974C24.014,42.974,24.014,42.974,24.014,42.974 M24.014,4C24.014,4,24.014,4,24.014,4C12.998,4,4.032,12.962,4.027,23.979c-0.001,3.367,0.849,6.685,2.461,9.622l-2.585,9.439c-0.094,0.345,0.002,0.713,0.254,0.967c0.19,0.192,0.447,0.297,0.711,0.297c0.085,0,0.17-0.011,0.254-0.033l9.687-2.54c2.828,1.468,5.998,2.243,9.197,2.244c11.024,0,19.99-8.963,19.995-19.98c0.002-5.339-2.075-10.359-5.848-14.135C34.378,6.083,29.357,4.002,24.014,4L24.014,4z"></path><path fill="#40c351" d="M35.176,12.832c-2.98-2.982-6.941-4.625-11.157-4.626c-8.704,0-15.783,7.076-15.787,15.774c-0.001,2.981,0.833,5.883,2.413,8.396l0.376,0.597l-1.595,5.821l5.973-1.566l0.577,0.342c2.422,1.438,5.2,2.198,8.032,2.199h0.006c8.698,0,15.777-7.077,15.78-15.776C39.795,19.778,38.156,15.814,35.176,12.832z"></path><path fill="#fff" fill-rule="evenodd" d="M19.268,16.045c-0.355-0.79-0.729-0.806-1.068-0.82c-0.277-0.012-0.593-0.011-0.909-0.011c-0.316,0-0.83,0.119-1.265,0.594c-0.435,0.475-1.661,1.622-1.661,3.956c0,2.334,1.7,4.59,1.937,4.906c0.237,0.316,3.282,5.259,8.104,7.161c4.007,1.58,4.823,1.266,5.693,1.187c0.87-0.079,2.807-1.147,3.202-2.255c0.395-1.108,0.395-2.057,0.277-2.255c-0.119-0.198-0.435-0.316-0.909-0.554s-2.807-1.385-3.242-1.543c-0.435-0.158-0.751-0.237-1.068,0.238c-0.316,0.474-1.225,1.543-1.502,1.859c-0.277,0.317-0.554,0.357-1.028,0.119c-0.474-0.238-2.002-0.738-3.815-2.354c-1.41-1.257-2.362-2.81-2.639-3.285c-0.277-0.474-0.03-0.731,0.208-0.968c0.213-0.213,0.474-0.554,0.712-0.831c0.237-0.277,0.316-0.475,0.474-0.791c0.158-0.317,0.079-0.594-0.04-0.831C20.612,19.329,19.69,16.983,19.268,16.045z" clip-rule="evenodd"></path>
+							<path fill="#40c351" d="M4.868,43.303l2.694-9.835C5.9,30.59,5.026,27.324,5.027,23.979C5.032,13.514,13.548,5,24.014,5c5.079,0.002,9.845,1.979,13.43,5.566c3.584,3.588,5.558,8.356,5.556,13.428c-0.004,10.465-8.522,18.98-18.986,18.98c-0.001,0,0,0,0,0h-0.008c-3.177-0.001-6.3-0.798-9.073-2.311L4.868,43.303z"></path>
+							<path fill="#40c351" d="M4.868,43.803c-0.132,0-0.26-0.052-0.355-0.148c-0.125-0.127-0.174-0.312-0.127-0.483l2.639-9.636c-1.636-2.906-2.499-6.206-2.497-9.556C4.532,13.238,13.273,4.5,24.014,4.5c5.21,0.002,10.105,2.031,13.784,5.713c3.679,3.683,5.704,8.577,5.702,13.781c-0.004,10.741-8.746,19.48-19.486,19.48c-3.189-0.001-6.344-0.788-9.144-2.277l-9.875,2.589C4.953,43.798,4.911,43.803,4.868,43.803z"></path>
+							<path fill="#40c351" d="M24.014,5c5.079,0.002,9.845,1.979,13.43,5.566c3.584,3.588,5.558,8.356,5.556,13.428c-0.004,10.465-8.522,18.98-18.986,18.98h-0.008c-3.177-0.001-6.3-0.798-9.073-2.311L4.868,43.303l2.694-9.835C5.9,30.59,5.026,27.324,5.027,23.979C5.032,13.514,13.548,5,24.014,5 M24.014,42.974C24.014,42.974,24.014,42.974,24.014,42.974C24.014,42.974,24.014,42.974,24.014,42.974 M24.014,42.974C24.014,42.974,24.014,42.974,24.014,42.974C24.014,42.974,24.014,42.974,24.014,42.974 M24.014,4C24.014,4,24.014,4,24.014,4C12.998,4,4.032,12.962,4.027,23.979c-0.001,3.367,0.849,6.685,2.461,9.622l-2.585,9.439c-0.094,0.345,0.002,0.713,0.254,0.967c0.19,0.192,0.447,0.297,0.711,0.297c0.085,0,0.17-0.011,0.254-0.033l9.687-2.54c2.828,1.468,5.998,2.243,9.197,2.244c11.024,0,19.99-8.963,19.995-19.98c0.002-5.339-2.075-10.359-5.848-14.135C34.378,6.083,29.357,4.002,24.014,4L24.014,4z"></path>
+							<path fill="#40c351" d="M35.176,12.832c-2.98-2.982-6.941-4.625-11.157-4.626c-8.704,0-15.783,7.076-15.787,15.774c-0.001,2.981,0.833,5.883,2.413,8.396l0.376,0.597l-1.595,5.821l5.973-1.566l0.577,0.342c2.422,1.438,5.2,2.198,8.032,2.199h0.006c8.698,0,15.777-7.077,15.78-15.776C39.795,19.778,38.156,15.814,35.176,12.832z"></path>
+							<path fill="#fff" fill-rule="evenodd" d="M19.268,16.045c-0.355-0.79-0.729-0.806-1.068-0.82c-0.277-0.012-0.593-0.011-0.909-0.011c-0.316,0-0.83,0.119-1.265,0.594c-0.435,0.475-1.661,1.622-1.661,3.956c0,2.334,1.7,4.59,1.937,4.906c0.237,0.316,3.282,5.259,8.104,7.161c4.007,1.58,4.823,1.266,5.693,1.187c0.87-0.079,2.807-1.147,3.202-2.255c0.395-1.108,0.395-2.057,0.277-2.255c-0.119-0.198-0.435-0.316-0.909-0.554s-2.807-1.385-3.242-1.543c-0.435-0.158-0.751-0.237-1.068,0.238c-0.316,0.474-1.225,1.543-1.502,1.859c-0.277,0.317-0.554,0.357-1.028,0.119c-0.474-0.238-2.002-0.738-3.815-2.354c-1.41-1.257-2.362-2.81-2.639-3.285c-0.277-0.474-0.03-0.731,0.208-0.968c0.213-0.213,0.474-0.554,0.712-0.831c0.237-0.277,0.316-0.475,0.474-0.791c0.158-0.317,0.079-0.594-0.04-0.831C20.612,19.329,19.69,16.983,19.268,16.045z" clip-rule="evenodd"></path>
 						</svg>
 					</a>
 				</li>
@@ -448,7 +476,7 @@ templ Clinic() {
 }
 
 templ LatestTransactions() {
-	<ul role="list" class="mt-8 grid grid-cols-1 gap-x-4 gap-y-8 md:grid-cols-3 xl:gap-x-6">
+	<ul role="list" class="mt-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-4 gap-y-8 lg:gap-x-6">
 		<li class="overflow-hidden rounded-xl border border-base-content/10 bg-base-100 shadow-md">
 			<div class="flex items-center gap-x-4 border-b border-base-content/10 p-4 py-6">
 				<img
@@ -574,68 +602,68 @@ templ Feed() {
 		<ul role="list" class="space-y-6">
 			<li class="relative flex gap-x-4">
 				<div class="absolute left-0 top-0 flex w-6 justify-center -bottom-6">
-					<div class="w-px bg-gray-200"></div>
+					<div class="w-px bg-base-content/10"></div>
 				</div>
-				<div class="relative flex h-6 w-6 flex-none items-center justify-center bg-white">
-					<div class="h-1.5 w-1.5 rounded-full bg-gray-100 ring-1 ring-gray-300"></div>
+				<div class="relative flex h-6 w-6 flex-none items-center justify-center bg-base-100">
+					<div class="h-1.5 w-1.5 rounded-full bg-base-100 ring-1 ring-gray-300"></div>
 				</div>
-				<p class="flex-auto py-0.5 text-xs leading-5 text-gray-500"><span class="font-medium text-gray-900">Chelsea Hagon</span> created the invoice.</p>
-				<time datetime="2023-01-23T10:32" class="flex-none py-0.5 text-xs leading-5 text-gray-500">7d ago</time>
+				<p class="flex-auto py-0.5 text-xs leading-5 text-base-content/60"><span class="font-medium text-base-content">Chelsea Hagon</span> created the invoice.</p>
+				<time datetime="2023-01-23T10:32" class="flex-none py-0.5 text-xs leading-5 text-base-content/60">7d ago</time>
 			</li>
 			<li class="relative flex gap-x-4">
 				<div class="absolute left-0 top-0 flex w-6 justify-center -bottom-6">
-					<div class="w-px bg-gray-200"></div>
+					<div class="w-px bg-base-content/10"></div>
 				</div>
-				<div class="relative flex h-6 w-6 flex-none items-center justify-center bg-white">
-					<div class="h-1.5 w-1.5 rounded-full bg-gray-100 ring-1 ring-gray-300"></div>
+				<div class="relative flex h-6 w-6 flex-none items-center justify-center bg-base-100">
+					<div class="h-1.5 w-1.5 rounded-full bg-base-100 ring-1 ring-gray-300"></div>
 				</div>
-				<p class="flex-auto py-0.5 text-xs leading-5 text-gray-500"><span class="font-medium text-gray-900">Chelsea Hagon</span> edited the invoice.</p>
-				<time datetime="2023-01-23T11:03" class="flex-none py-0.5 text-xs leading-5 text-gray-500">6d ago</time>
+				<p class="flex-auto py-0.5 text-xs leading-5 text-base-content/60"><span class="font-medium text-base-content">Chelsea Hagon</span> edited the invoice.</p>
+				<time datetime="2023-01-23T11:03" class="flex-none py-0.5 text-xs leading-5 text-base-content/60">6d ago</time>
 			</li>
 			<li class="relative flex gap-x-4">
 				<div class="absolute left-0 top-0 flex w-6 justify-center -bottom-6">
-					<div class="w-px bg-gray-200"></div>
+					<div class="w-px bg-base-content/10"></div>
 				</div>
-				<div class="relative flex h-6 w-6 flex-none items-center justify-center bg-white">
-					<div class="h-1.5 w-1.5 rounded-full bg-gray-100 ring-1 ring-gray-300"></div>
+				<div class="relative flex h-6 w-6 flex-none items-center justify-center bg-base-100">
+					<div class="h-1.5 w-1.5 rounded-full bg-base-100 ring-1 ring-gray-300"></div>
 				</div>
-				<p class="flex-auto py-0.5 text-xs leading-5 text-gray-500"><span class="font-medium text-gray-900">Chelsea Hagon</span> sent the invoice.</p>
-				<time datetime="2023-01-23T11:24" class="flex-none py-0.5 text-xs leading-5 text-gray-500">6d ago</time>
+				<p class="flex-auto py-0.5 text-xs leading-5 text-base-content/60"><span class="font-medium text-base-content">Chelsea Hagon</span> sent the invoice.</p>
+				<time datetime="2023-01-23T11:24" class="flex-none py-0.5 text-xs leading-5 text-base-content/60">6d ago</time>
 			</li>
 			<li class="relative flex gap-x-4">
 				<div class="absolute left-0 top-0 flex w-6 justify-center -bottom-6">
-					<div class="w-px bg-gray-200"></div>
+					<div class="w-px bg-base-content/10"></div>
 				</div>
 				<img src="https://images.unsplash.com/photo-1550525811-e5869dd03032?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="relative mt-3 h-6 w-6 flex-none rounded-full bg-gray-50"/>
 				<div class="flex-auto rounded-md p-2 border-y border-base-content/10">
 					<div class="flex justify-between gap-x-4">
-						<div class="py-0.5 text-xs leading-5 text-gray-500"><span class="font-medium text-gray-900">Chelsea Hagon</span> commented</div>
-						<time datetime="2023-01-23T15:56" class="flex-none py-0.5 text-xs leading-5 text-gray-500">3d ago</time>
+						<div class="py-0.5 text-xs leading-5 text-base-content/60"><span class="font-medium text-base-content ">Chelsea Hagon</span> commented</div>
+						<time datetime="2023-01-23T15:56" class="flex-none py-0.5 text-xs leading-5 text-base-content/60">3d ago</time>
 					</div>
-					<p class="text-sm leading-6 text-gray-500">Called client, they reassured me the invoice would be paid by the 25th.</p>
+					<p class="text-sm leading-6 text-base-content/60">Called client, they reassured me the invoice would be paid by the 25th.</p>
 				</div>
 			</li>
 			<li class="relative flex gap-x-4">
 				<div class="absolute left-0 top-0 flex w-6 justify-center -bottom-6">
-					<div class="w-px bg-gray-200"></div>
+					<div class="w-px bg-base-content/10"></div>
 				</div>
-				<div class="relative flex h-6 w-6 flex-none items-center justify-center bg-white">
-					<div class="h-1.5 w-1.5 rounded-full bg-gray-100 ring-1 ring-gray-300"></div>
+				<div class="relative flex h-6 w-6 flex-none items-center justify-center bg-base-100">
+					<div class="h-1.5 w-1.5 rounded-full bg-base-100 ring-1 ring-gray-300"></div>
 				</div>
-				<p class="flex-auto py-0.5 text-xs leading-5 text-gray-500"><span class="font-medium text-gray-900">Alex Curren</span> viewed the invoice.</p>
-				<time datetime="2023-01-24T09:12" class="flex-none py-0.5 text-xs leading-5 text-gray-500">2d ago</time>
+				<p class="flex-auto py-0.5 text-xs leading-5 text-base-content/60"><span class="font-medium text-base-content">Alex Curren</span> viewed the invoice.</p>
+				<time datetime="2023-01-24T09:12" class="flex-none py-0.5 text-xs leading-5 text-base-content/60">2d ago</time>
 			</li>
 			<li class="relative flex gap-x-4">
 				<div class="absolute left-0 top-0 flex w-6 justify-center h-6">
-					<div class="w-px bg-gray-200"></div>
+					<div class="w-px bg-base-content/10"></div>
 				</div>
-				<div class="relative flex h-6 w-6 flex-none items-center justify-center bg-white">
-					<svg class="h-6 w-6 text-indigo-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+				<div class="relative flex h-6 w-6 flex-none items-center justify-center bg-base-100">
+					<svg class="h-6 w-6 text-primary" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
 						<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd"></path>
 					</svg>
 				</div>
-				<p class="flex-auto py-0.5 text-xs leading-5 text-gray-500"><span class="font-medium text-gray-900">Alex Curren</span> paid the invoice.</p>
-				<time datetime="2023-01-24T09:20" class="flex-none py-0.5 text-xs leading-5 text-gray-500">1d ago</time>
+				<p class="flex-auto py-0.5 text-xs leading-5 text-base-content/60 "><span class="font-medium text-base-content">Alex Curren</span> paid the invoice.</p>
+				<time datetime="2023-01-24T09:20" class="flex-none py-0.5 text-xs leading-5 text-base-content">1d ago</time>
 			</li>
 		</ul>
 	</div>
