@@ -12,12 +12,11 @@ module.exports = {
         cmyk: {
           ...require("daisyui/src/theming/themes")["cmyk"],
           "base-200": "#f5f5f5",
-          "base-300": "#d4d4d4",
-          "base-400": "#737373",
-        },
+        }
       },
       "dracula",
       "night",
+      "pastel",
     ],
   },
   // plugins: [require("@tailwindcss/forms")],
