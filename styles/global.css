@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+
+/* Custom classes*/
+.app-card {
+  @apply relative bg-base-100 shadow-md rounded-xl border border-base-content/10 p-4 md:p-6
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100svh;
+  @apply relative flex flex-col bg-base-200
+}
+
 /* HTMX transitions*/
 ul li {
   opacity: 1;

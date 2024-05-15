@@ -5,7 +5,7 @@ import (
 )
 
 templ PageDashboard(props layoutProps) {
-	@LayoutDashboard(props) {
+	@Layout(props) {
 		<main id="content" class="px-4 container mx-auto">
 			@DashboardStats()
 			@MainGrid()
@@ -17,7 +17,7 @@ templ DashboardStats() {
 	<div>
 		<h3 class="sr-only">Statistics</h3>
 		<dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-			<div class="relative overflow-hidden rounded-xl border border-base-content/10 bg-base-100 p-4 shadow-md md:p-6">
+			<div class="app-card">
 				<dt>
 					<div class="absolute rounded-xl bg-primary p-3">
 						<svg class="h-6 w-6 text-base-100" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
@@ -42,7 +42,7 @@ templ DashboardStats() {
 					</div>
 				</dd>
 			</div>
-			<div class="relative overflow-hidden rounded-xl border border-base-content/10 bg-base-100 p-4 shadow-md md:p-6">
+			<div class="app-card">
 				<dt>
 					<div class="absolute rounded-xl bg-secondary p-3">
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-secondary-content">
@@ -67,7 +67,7 @@ templ DashboardStats() {
 					</div>
 				</dd>
 			</div>
-			<div class="relative overflow-hidden rounded-xl border border-base-content/10 bg-base-100 p-4 shadow-md md:p-6">
+			<div class="app-card">
 				<dt>
 					<div class="absolute rounded-xl bg-accent p-3">
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-accent-content">
@@ -95,7 +95,7 @@ templ DashboardStats() {
 }
 
 templ MainGrid() {
-	<div class="grid grid-cols-3 gap-5 mt-8">
+	<div class="flex-1 grid grid-cols-3 gap-5 mt-8">
 		<section
 			class="col-span-3 lg:col-span-2 order-2 lg:order-1"
 		>
@@ -112,11 +112,9 @@ templ MainGrid() {
 }
 
 templ Appointments() {
-	<section
-		class="col-span-2 flex flex-col rounded-xl border border-base-content/10 bg-base-100 p-8 gap-4 shadow-md"
-	>
+	<section class="app-card col-span-2 flex flex-col gap-4">
 		<div class="relative flex items-center justify-between">
-			<h3 class="font-semibold text-lg">Appointments</h3>
+			<h3 class="font-semibold text-xl">Appointments</h3>
 			<details class="absolute right-0 dropdown lg:hidden">
 				<summary class="btn btn-square btn-ghost">
 					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -340,23 +338,20 @@ templ AppointmentActions(buttons ...string) {
 }
 
 templ Clinic() {
-	<div class="rounded-xl bg-base-100 p-8 pb-4 gap-4 shadow-md ring-1 ring-base-content/10 text-base-content">
-		<dl class="flex flex-wrap ">
-			<div class="flex items-center w-full gap-2">
-				<div class="avatar">
-					<div class="w-16 rounded-xl border">
+	<div class="app-card">
+		<div class="relative flex flex-wrap">
+			<div class="flex items-center w-full gap-2 justify-between mb-6">
+				<h3 class="font-semibold text-xl leading-6 indicator pr-6">
+					Meraki Clinic
+					<div class="badge badge-secondary indicator-item">5</div>
+				</h3>
+				<div class="avatar shadow-md rounded-xl overflow-hidden absolute right-0 top-0 -mr-10 -mt-10 border border-base-content/10">
+					<div class="w-20">
 						<img src="/images/meraki.jpg"/>
 					</div>
 				</div>
-				<h3 class="sr-only text-xl leading-6">
-					Meraki Clinic
-				</h3>
-				<button class="ml-auto btn btn-ghost">
-					Today
-					<div class="badge badge-secondary">5</div>
-				</button>
 			</div>
-			<div class="mt-2 flex w-full flex-none gap-x-4 border-t border-base-content/10 pt-6">
+			<div class="mt-2 flex w-full flex-none gap-x-4">
 				<dt class="flex-none">
 					<span class="sr-only">Name</span>
 					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -401,8 +396,8 @@ templ Clinic() {
 					exito.merakicolima@gmail.com
 				</dd>
 			</div>
-		</dl>
-		<div class="flex flex-row items-center mt-6 border-t border-base-content/10 pt-4">
+		</div>
+		<div class="flex flex-row items-center mt-6 pt-6">
 			<a href="#" class="link link-hover font-semibold">View</a>
 			<ul class="ml-auto flex gap-2">
 				<li>
@@ -477,8 +472,8 @@ templ Clinic() {
 
 templ LatestTransactions() {
 	<ul role="list" class="mt-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-4 gap-y-8 lg:gap-x-6">
-		<li class="overflow-hidden rounded-xl border border-base-content/10 bg-base-100 shadow-md">
-			<div class="flex items-center gap-x-4 border-b border-base-content/10 p-4 py-6">
+		<li class="app-card">
+			<div class="flex items-center gap-x-4 pb-4">
 				<img
 					src="/images/tupsicologa.webp"
 					alt="Tuple"
@@ -501,7 +496,7 @@ templ LatestTransactions() {
 					</button>
 				</div>
 			</div>
-			<dl class="divide-y divide-base-content/10 p-4 text-sm leading-6">
+			<dl class="divide-y divide-base-content/10 text-sm leading-6">
 				<div class="flex justify-between gap-x-4 py-3">
 					<dt class="text-base-400">Last invoice</dt>
 					<dd class="text-base-400"><time datetime="2022-12-13">December 13, 2022</time></dd>
@@ -515,8 +510,8 @@ templ LatestTransactions() {
 				</div>
 			</dl>
 		</li>
-		<li class="overflow-hidden rounded-xl border border-base-content/10 bg-base-100 shadow-md">
-			<div class="flex items-center gap-x-4 border-b border-base-content/10 p-4 py-6">
+		<li class="app-card">
+			<div class="flex items-center gap-x-4 pb-4">
 				<img
 					src="/images/meraki.jpg"
 					alt="Meraki"
@@ -539,7 +534,7 @@ templ LatestTransactions() {
 					</button>
 				</div>
 			</div>
-			<dl class="divide-y divide-base-content/10 p-4 text-sm leading-6">
+			<dl class="divide-y divide-base-content/10 text-sm leading-6">
 				<div class="flex justify-between gap-x-4 py-3">
 					<dt class="text-base-400">Last invoice</dt>
 					<dd class="text-base-400"><time datetime="2022-12-13">December 13, 2022</time></dd>
@@ -553,8 +548,8 @@ templ LatestTransactions() {
 				</div>
 			</dl>
 		</li>
-		<li class="overflow-hidden rounded-xl border border-base-content/10 bg-base-100 shadow-md">
-			<div class="flex items-center gap-x-4 border-b border-base-content/10 p-4 py-6">
+		<li class="app-card">
+			<div class="flex items-center gap-x-4 pb-4">
 				<img
 					src="/images/meraki.jpg"
 					alt="Meraki"
@@ -579,7 +574,7 @@ templ LatestTransactions() {
 					</button>
 				</div>
 			</div>
-			<dl class="divide-y divide-base-content/10 p-4 text-sm leading-6">
+			<dl class="divide-y divide-base-content/10 text-sm leading-6">
 				<div class="flex justify-between gap-x-4 py-3">
 					<dt class="text-base-400">Last invoice</dt>
 					<dd class="text-base-400"><time datetime="2022-12-13">December 13, 2022</time></dd>
@@ -598,7 +593,7 @@ templ LatestTransactions() {
 
 templ Feed() {
 	<div class="rounded-xl bg-base-100 p-6 gap-4 shadow-md ring-1 ring-base-content/10 text-base-content">
-		<h3 class="font-semibold text-xl mb-4 pb-2 border-b border-base-content/10">My feed</h3>
+		<h3 class="font-semibold text-xl mb-6">My feed</h3>
 		<ul role="list" class="space-y-6">
 			<li class="relative flex gap-x-4">
 				<div class="absolute left-0 top-0 flex w-6 justify-center -bottom-6">

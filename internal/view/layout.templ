@@ -2,7 +2,7 @@ package view
 
 templ HTMLPage() {
 	<!DOCTYPE html>
-	<html data-theme="cmyk" x-ref="html" class="h-full">
+	<html data-theme="cmyk" x-ref="html">
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -12,7 +12,7 @@ templ HTMLPage() {
 			<script src="https://unpkg.com/htmx.org@1.9.9" integrity="sha384-QFjmbokDn2DjBjq+fM+8LUIVrAgqcNW2s0PjAxHETgRn9l4fvX31ZxDxvwQnyMOX" crossorigin="anonymous"></script>
 			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 		</head>
-		<body class="h-full">
+		<body class="flex-grow">
 			{ children... }
 		</body>
 	</html>
@@ -20,7 +20,7 @@ templ HTMLPage() {
 
 templ HTMLPageWithApexCharts() {
 	<!DOCTYPE html>
-	<html data-theme="cmyk" x-ref="html" class="h-full">
+	<html data-theme="cmyk" x-ref="html">
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -31,43 +31,19 @@ templ HTMLPageWithApexCharts() {
 			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 			<script defer src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 		</head>
-		<body class="h-full">
+		<body>
 			{ children... }
 		</body>
 	</html>
 }
 
-templ LayoutDashboard(props layoutProps) {
-	@HTMLPage() {
-		<div class="root h-full flex flex-col bg-base-200">
-			@CmpHeader(props)
-			{ children... }
-			<div class="mt-auto">
-				@CmpFooter(props)
-			</div>
-		</div>
-	}
-}
-
 templ Layout(props layoutProps) {
 	@HTMLPage() {
-		<div class="root h-full flex flex-col bg-base-200">
+		<div id="root">
 			@CmpHeader(props)
-			<main class="container mx-auto">
+			<main id="main" class="grow flex flex-col">
 				{ children... }
 			</main>
-			<div class="mt-auto">
-				@CmpFooter(props)
-			</div>
-		</div>
-	}
-}
-
-templ LayoutContainer(props layoutProps) {
-	@HTMLPage() {
-		<div class="root container mx-auto">
-			@CmpHeader(props)
-			{ children... }
 			@CmpFooter(props)
 		</div>
 	}
@@ -75,7 +51,7 @@ templ LayoutContainer(props layoutProps) {
 
 templ LayoutAuth() {
 	@HTMLPage() {
-		<div class="root h-full">
+		<div id="root" class="flex flex-col justify-center py-12 sm:px-6 lg:px-8">
 			{ children... }
 		</div>
 	}

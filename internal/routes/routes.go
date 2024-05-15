@@ -6,6 +6,7 @@ import (
 	"github.com/edgarsilva/go-scaffold/internal/service/blog"
 	"github.com/edgarsilva/go-scaffold/internal/service/counter"
 	"github.com/edgarsilva/go-scaffold/internal/service/dashboard"
+	"github.com/edgarsilva/go-scaffold/internal/service/patients"
 	"github.com/edgarsilva/go-scaffold/internal/service/theme"
 	"github.com/edgarsilva/go-scaffold/internal/service/todos"
 	"github.com/edgarsilva/go-scaffold/internal/service/users"
@@ -25,6 +26,7 @@ func (r *Router) RegisterRoutes(s *server.Server) {
 	AuthRoutes(s)
 	DashbordhRoudes(s)
 	UsersRoutes(s)
+	PatientsRoutes(s)
 	BlogRoutes(s)
 	ThemeRoutes(s)
 	TodosRoutes(s)
@@ -91,6 +93,23 @@ func UsersRoutes(s *server.Server) {
 	// API
 	api := u.Group("/api/users")
 	api.Get("", u.HandleAPIUsers)
+}
+
+func PatientsRoutes(s *server.Server) {
+	p := patients.NewService(s)
+
+	// Pages
+	g := p.Group("/patients/:id?")
+	g.Get("/", p.HandlePatientsPage)
+	// g.Get("/:id", p.HandlePatientsPage)
+
+	// Fragments
+	// g.Get("/fragment/footer", u.HandleFooterFragment)
+	// g.Get("/fragment/list", u.HandleTodosFragment)
+
+	// API
+	// api := p.Group("/api/patients")
+	// api.Get("", p.HandleAPIPatients)
 }
 
 func TodosRoutes(s *server.Server) {
