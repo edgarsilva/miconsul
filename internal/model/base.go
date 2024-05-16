@@ -18,11 +18,19 @@ func (mb *ModelBase) BeforeCreate(tx *gorm.DB) (err error) {
 	return nil
 }
 
-type AddressBase struct {
-	Line1   string
-	Line2   string
-	City    string
-	State   string
-	Country string
-	Zip     string
+type Address struct {
+	Line1   string `form:"addressLine1"`
+	Line2   string `form:"addressLine2"`
+	City    string `form:"addressCity"`
+	State   string `form:"addressState"`
+	Country string `form:"addressCountry"`
+	Zip     string `form:"addressZipCode"`
+}
+
+type SocialMedia struct {
+	Whatsapp  string `form:"whatsapp"`
+	Telegram  string `form:"telegram"`
+	Messenger string `form:"messenger"`
+	Instagram string `form:"instagram"`
+	Facebook  string `form:"facebook"`
 }

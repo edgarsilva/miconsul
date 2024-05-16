@@ -2,6 +2,8 @@ package view
 
 import (
 	"errors"
+
+	"github.com/edgarsilva/go-scaffold/internal/localize"
 )
 
 type CurrentUser interface {
@@ -14,8 +16,13 @@ type layoutProps struct {
 	Locale string
 }
 
+type Prop func(layoutProps *layoutProps) error
+
+var locales = localize.New("es-MX", "en-US")
+
 func NewLayoutProps(props ...Prop) (layoutProps, error) {
 	layoutProps := layoutProps{
+		Locale:      "es-MX",
 		Theme:       "light",
 		CurrentUser: new(DummyUser),
 	}
@@ -30,7 +37,9 @@ func NewLayoutProps(props ...Prop) (layoutProps, error) {
 	return layoutProps, nil
 }
 
-type Prop func(layoutProps *layoutProps) error
+func l(lang, key string) string {
+	return locales.GetWithLocale(lang, key)
+}
 
 func WithCurrentUser(cu CurrentUser) Prop {
 	return func(props *layoutProps) error {
@@ -55,6 +64,18 @@ func WithTheme(theme string) Prop {
 		}
 
 		props.Theme = theme
+
+		return nil
+	}
+}
+
+func WithLocale(lang string) Prop {
+	return func(props *layoutProps) error {
+		if lang == "" {
+			lang = "es-MX"
+		}
+
+		props.Locale = lang
 
 		return nil
 	}

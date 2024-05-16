@@ -8,7 +8,11 @@ testdata_dir = "testdata"
 
 [build]
 # Array of commands to run before each build
-pre_cmd = ['bunx tailwindcss -i ./styles/global.css -o ./public/global.css', 'templ generate']
+pre_cmd = [
+	"go-localize -input locales -output internal/localize",
+	"bunx tailwindcss -i ./styles/global.css -o ./public/global.css",
+	"templ generate",
+]
 # Just plain old shell command. You could use `make` as well.
 cmd = "go build -o ./tmp/main cmd/app/main.go"
 # Array of commands to run after ^C
@@ -21,9 +25,22 @@ full_bin = ""
 # Add additional arguments when running binary (bin/full_bin). Will run './tmp/main hello world'.
 args_bin = []
 # Watch these filename extensions.
-include_ext = ["go", "html", "tmpl", "templ", "html"]
+include_ext = ["go", "html", "tmpl", "templ", "html", "toml"]
 # Ignore these filename extensions or directories.
-exclude_dir = ["assets", "tmp", "vendor", "frontend/node_modules", "testdata", "static", "public", "node_modules", "coverage"]
+exclude_dir = [
+	"assets",
+	"tmp",
+	"bin",
+	"docs",
+	"store",
+	"frontend/node_modules",
+	"testdata",
+	"static",
+	"public",
+	"node_modules",
+	"coverage",
+	"internal/localize",
+]
 # Watch these directories if you specified.
 include_dir = []
 # Watch these files.

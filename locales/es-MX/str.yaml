@@ -1,0 +1,13 @@
+clinics: "Consultorios"
+appointments: "Citas"
+patients: "Pacientes"
+exp_rev: "Gastos/Ganancias"
+login: "Iniciar sesion"
+logout: "Cerrar sesion"
+signup: "Registrate"
+back: "Regresar"
+last_appointment: "Ultima cita"
+appointment_today: "Cita Hoy"
+
+#_login = "Hello my name is {{.name}}"
+#_hello_firstname_lastname = "Hello {{.firstname}} {{.lastname}}"

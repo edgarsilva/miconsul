@@ -13,17 +13,17 @@ type Appointment struct {
 	OcurredAt  time.Time
 	NoShowAt   time.Time
 	ModelBase
-	ExtID        string
-	UserID       string `gorm:"index;default:null;not null"`
+	Observations string
 	ClinicID     string `gorm:"index;default:null;not null"`
 	PatientID    string `gorm:"index;default:null;not null"`
 	Summary      string
-	Observations string
+	ExtID        string
 	Conclusions  string
 	Hashtags     string
+	UserID       string `gorm:"index;default:null;not null"`
 	Clinic       Clinic
-	Patient      Patient
 	User         User
+	Patient      Patient
 	BookedMonth  int
 	BookedMinute int
 	BookedHour   int

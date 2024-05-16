@@ -6,14 +6,14 @@ import (
 )
 
 type Clinic struct {
-	ExtID string
-	Name  string `gorm:"default:null;not null"`
-	AddressBase
-	Email        string
-	Phone        string `gorm:"default:null;not null"`
-	InstagramURL string
-	FacebookURL  string
-	UserID       string `gorm:"index;default:null;not null"`
+	ExtID      string
+	ProfilePic string
+	Name       string `gorm:"default:null;not null"`
+	Email      string
+	Phone      string
+	UserID     string `gorm:"index;default:null;not null"`
+	Address
+	SocialMedia
 	ModelBase
 	User User
 }

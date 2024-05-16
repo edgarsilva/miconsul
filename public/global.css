@@ -3335,6 +3335,14 @@ html {
   bottom: -1.5rem;
 }
 
+.-right-2 {
+  right: -0.5rem;
+}
+
+.-top-2 {
+  top: -0.5rem;
+}
+
 .-top-px {
   top: -1px;
 }
@@ -3420,14 +3428,6 @@ html {
   margin-left: -2rem;
 }
 
-.-mr-10 {
-  margin-right: -2.5rem;
-}
-
-.-mt-10 {
-  margin-top: -2.5rem;
-}
-
 .-mt-8 {
   margin-top: -2rem;
 }
@@ -3438,6 +3438,10 @@ html {
 
 .mb-16 {
   margin-bottom: 4rem;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
 }
 
 .mb-6 {
@@ -3462,6 +3466,10 @@ html {
 
 .ml-auto {
   margin-left: auto;
+}
+
+.mr-2 {
+  margin-right: 0.5rem;
 }
 
 .mt-0 {
@@ -3520,6 +3528,10 @@ html {
   display: flex;
 }
 
+.inline-flex {
+  display: inline-flex;
+}
+
 .grid {
   display: grid;
 }
@@ -3556,6 +3568,10 @@ html {
   height: 3.5rem;
 }
 
+.h-2 {
+  height: 0.5rem;
+}
+
 .h-5 {
   height: 1.25rem;
 }
@@ -3590,6 +3606,10 @@ html {
 
 .w-14 {
   width: 3.5rem;
+}
+
+.w-2 {
+  width: 0.5rem;
 }
 
 .w-20 {
@@ -3672,6 +3692,17 @@ html {
   flex-grow: 1;
 }
 
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.animate-ping {
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
 .cursor-pointer {
   cursor: pointer;
 }
@@ -3730,6 +3761,10 @@ html {
 
 .justify-between {
   justify-content: space-between;
+}
+
+.gap-1 {
+  gap: 0.25rem;
 }
 
 .gap-12 {
@@ -3827,11 +3862,6 @@ html {
 
 .divide-base-content\/10 > :not([hidden]) ~ :not([hidden]) {
   border-color: var(--fallback-bc,oklch(var(--bc)/0.1));
-}
-
-.divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
-  --tw-divide-opacity: 1;
-  border-color: rgb(243 244 246 / var(--tw-divide-opacity));
 }
 
 .self-center {
@@ -3942,8 +3972,21 @@ html {
   background-color: var(--fallback-b2,oklch(var(--b2)/var(--tw-bg-opacity)));
 }
 
+.bg-base-200\/75 {
+  background-color: var(--fallback-b2,oklch(var(--b2)/0.75));
+}
+
 .bg-base-content\/10 {
   background-color: var(--fallback-bc,oklch(var(--bc)/0.1));
+}
+
+.bg-base-content\/60 {
+  background-color: var(--fallback-bc,oklch(var(--bc)/0.6));
+}
+
+.bg-emerald-400 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(52 211 153 / var(--tw-bg-opacity));
 }
 
 .bg-emerald-500 {
@@ -4138,6 +4181,10 @@ html {
   padding-bottom: 2rem;
 }
 
+.pb-0 {
+  padding-bottom: 0px;
+}
+
 .pb-2 {
   padding-bottom: 0.5rem;
 }
@@ -4160,6 +4207,10 @@ html {
 
 .pl-1 {
   padding-left: 0.25rem;
+}
+
+.pl-4 {
+  padding-left: 1rem;
 }
 
 .pr-10 {
@@ -4277,16 +4328,6 @@ html {
   color: var(--fallback-ac,oklch(var(--ac)/var(--tw-text-opacity)));
 }
 
-.text-base-100 {
-  --tw-text-opacity: 1;
-  color: var(--fallback-b1,oklch(var(--b1)/var(--tw-text-opacity)));
-}
-
-.text-base-300 {
-  --tw-text-opacity: 1;
-  color: var(--fallback-b3,oklch(var(--b3)/var(--tw-text-opacity)));
-}
-
 .text-base-content {
   --tw-text-opacity: 1;
   color: var(--fallback-bc,oklch(var(--bc)/var(--tw-text-opacity)));
@@ -4304,11 +4345,6 @@ html {
 .text-gray-300 {
   --tw-text-opacity: 1;
   color: rgb(209 213 219 / var(--tw-text-opacity));
-}
-
-.text-gray-400 {
-  --tw-text-opacity: 1;
-  color: rgb(156 163 175 / var(--tw-text-opacity));
 }
 
 .text-gray-500 {
@@ -4376,6 +4412,10 @@ html {
 
 .opacity-50 {
   opacity: 0.5;
+}
+
+.opacity-90 {
+  opacity: 0.9;
 }
 
 .shadow {
@@ -4492,6 +4532,21 @@ html {
   background-color: var(--fallback-b2,oklch(var(--b2)/var(--tw-bg-opacity)))
 }
 
+*::-webkit-scrollbar {
+  width: .75rem !important;
+}
+
+*::-webkit-scrollbar-thumb {
+  --tw-bg-opacity: 1 !important;
+  background-color: #6b7280aa !important;
+  border-radius: .5rem !important;
+}
+
+*::-webkit-scrollbar-track {
+  --tw-bg-opacity: 1 !important;
+  background-color: #e5e5e5dd !important;
+}
+
 /* HTMX transitions*/
 
 ul li {
@@ -4578,6 +4633,10 @@ ul li.htmx-added {
   --tw-scale-x: 1.05;
   --tw-scale-y: 1.05;
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.hover\:bg-base-200\/75:hover {
+  background-color: var(--fallback-b2,oklch(var(--b2)/0.75));
 }
 
 .hover\:bg-gray-100:hover {
@@ -4707,6 +4766,10 @@ ul li.htmx-added {
   .sm\:py-32 {
     padding-top: 8rem;
     padding-bottom: 8rem;
+  }
+
+  .sm\:pl-0 {
+    padding-left: 0px;
   }
 
   .sm\:text-4xl {

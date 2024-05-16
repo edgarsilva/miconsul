@@ -1,0 +1,6 @@
+login: "Iniciar sesion"
+logout: "Cerrar sesion"
+signup: "Registrate"
+back: "Regresar"
+new_patient: "Agregar nuevo"
+view_appointments: "Ver citas"

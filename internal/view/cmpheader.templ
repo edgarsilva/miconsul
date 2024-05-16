@@ -1,27 +1,35 @@
 package view
 
-templ CmpHeader(props layoutProps) {
-	<header id="header" class="mb-8 bg-base-100 border-y border-base-content/10 shadow-md">
+templ CmpHeader(lp layoutProps) {
+	<header id="header" class="relative mb-8 bg-base-100 border-y border-base-content/10 shadow-md">
 		<nav id="navbar" class="navbar rounded-lg p-4">
 			<div class="navbar-start">
 				<div class="flex-1">
-					<a class="btn btn-ghost text-xl">miconsul</a>
+					<a class="relative btn btn-ghost text-xl">
+						<div class="avatar overflow-hidden">
+							<div class="h-10">
+								<img class="" src="/images/labcoat64.png"/>
+							</div>
+						</div>
+						miconsul
+					</a>
 				</div>
 			</div>
 			<div class="navbar-end flex items-center">
 				<div class="hidden md:flex">
-					<a class="btn btn-ghost text-sm">Clinics</a>
-					<a class="btn btn-ghost text-sm">Patients</a>
-					<a class="btn btn-ghost text-sm">Expense/Revenue</a>
+					<a href="/clinics" class="btn btn-ghost text-sm">{ l(lp.Locale, "nav.clinics") }</a>
+					<a href="/appointments" class="btn btn-ghost text-sm">{ l(lp.Locale, "nav.appointments") }</a>
+					<a href="/patients" class="btn btn-ghost text-sm">{ l(lp.Locale, "nav.patients") }</a>
+					<a href="/transactions" class="btn btn-ghost text-sm">{ l(lp.Locale, "nav.exp_rev") }</a>
 					<div class="divider divider-horizontal"></div>
-					if props.CurrentUser.IsLoggedIn() {
-						<a class="btn btn-ghost" href="/logout">Logout</a>
+					if lp.CurrentUser.IsLoggedIn() {
+						<a class="btn btn-ghost" href="/logout">{ l(lp.Locale, "btn.logout") }</a>
 					} else {
-						<a class="btn btn-ghost" href="/login">Login</a>
+						<a class="btn btn-ghost" href="/login">{ l(lp.Locale, "btn.login") }</a>
 					}
 				</div>
 				<div class="flex-none px-1">
-					@CmpBtnTheme(props.Theme)
+					@CmpBtnTheme(lp.Theme)
 				</div>
 				<div class="md:hidden divider divider-horizontal"></div>
 				<div class="md:hidden flex-none">

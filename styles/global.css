@@ -14,6 +14,19 @@
   @apply relative flex flex-col bg-base-200
 }
 
+*::-webkit-scrollbar {
+    width: .75rem !important;
+}
+*::-webkit-scrollbar-thumb {
+    --tw-bg-opacity: 1 !important;
+    background-color: #6b7280aa !important;
+    border-radius: .5rem !important;
+}
+*::-webkit-scrollbar-track {
+    --tw-bg-opacity: 1 !important;
+    background-color: #e5e5e5dd !important;
+}
+
 /* HTMX transitions*/
 ul li {
   opacity: 1;

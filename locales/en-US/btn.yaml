@@ -1,0 +1,6 @@
+login: "Login"
+logout: "Logout"
+signup: "Signup"
+back: "Back"
+new_patient: "Add new"
+view_appointments: "View appointments"

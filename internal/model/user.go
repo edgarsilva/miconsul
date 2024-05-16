@@ -20,6 +20,8 @@ const (
 type User struct {
 	ConfirmEmailExpiresAt time.Time
 	ResetTokenExpiresAt   time.Time
+	ExtID                 string
+	ProfilePic            string
 	Name                  string
 	Email                 string   `gorm:"uniqueIndex;default:null;not null"`
 	Role                  UserRole `gorm:"index;default:null;not null;type:string"`

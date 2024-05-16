@@ -4,9 +4,10 @@ import (
 	"github.com/edgarsilva/go-scaffold/internal/server"
 	"github.com/edgarsilva/go-scaffold/internal/service/auth"
 	"github.com/edgarsilva/go-scaffold/internal/service/blog"
+	"github.com/edgarsilva/go-scaffold/internal/service/clinics"
 	"github.com/edgarsilva/go-scaffold/internal/service/counter"
 	"github.com/edgarsilva/go-scaffold/internal/service/dashboard"
-	"github.com/edgarsilva/go-scaffold/internal/service/patients"
+	"github.com/edgarsilva/go-scaffold/internal/service/patient"
 	"github.com/edgarsilva/go-scaffold/internal/service/theme"
 	"github.com/edgarsilva/go-scaffold/internal/service/todos"
 	"github.com/edgarsilva/go-scaffold/internal/service/users"
@@ -24,9 +25,10 @@ func (r *Router) RegisterRoutes(s *server.Server) {
 	r.Server = s
 
 	AuthRoutes(s)
-	DashbordhRoudes(s)
+	DashbordhRoutes(s)
 	UsersRoutes(s)
-	PatientsRoutes(s)
+	ClinicsRoutes(s)
+	PatientRoutes(s)
 	BlogRoutes(s)
 	ThemeRoutes(s)
 	TodosRoutes(s)
@@ -56,27 +58,13 @@ func AuthRoutes(s *server.Server) {
 	g.Post("/validate", auth.MustAuthenticate(a), a.HandleValidate)
 }
 
-func DashbordhRoudes(s *server.Server) {
+func DashbordhRoutes(s *server.Server) {
 	d := dashboard.NewService(s)
 
-	d.Get("/", d.HandleDashboardPage)
+	d.Get("/", auth.MustAuthenticate(d), d.HandleDashboardPage)
 
-	g := s.Group("/dashboard")
+	g := s.Group("/dashboard", auth.MustAuthenticate(d))
 	g.Get("", d.HandleDashboardPage)
-}
-
-func BlogRoutes(s *server.Server) {
-	b := blog.NewService(s)
-
-	g := s.Group("/blog")
-	g.Get("", b.HandleBlogPage)
-}
-
-func ThemeRoutes(s *server.Server) {
-	t := theme.NewService(s)
-
-	g := s.Group("/api/theme")
-	g.Get("", t.HandleThemeChange)
 }
 
 func UsersRoutes(s *server.Server) {
@@ -95,8 +83,28 @@ func UsersRoutes(s *server.Server) {
 	api.Get("", u.HandleAPIUsers)
 }
 
-func PatientsRoutes(s *server.Server) {
-	p := patients.NewService(s)
+func ClinicsRoutes(s *server.Server) {
+	c := clinics.NewService(s)
+
+	// Pages
+	g := c.Group("/clinics")
+	g.Get("/", c.HandleClinicsPage)
+	g.Get("/new", c.HandleClinicsPage)
+	g.Get("/:id", c.HandleClinicsPage)
+
+	g.Post("/", c.HandleCreateClinic)
+
+	// Fragments
+	// g.Get("/fragment/footer", u.HandleFooterFragment)
+	// g.Get("/fragment/list", u.HandleTodosFragment)
+
+	// API
+	// api := p.Group("/api/patients")
+	// api.Get("", p.HandleAPIPatients)
+}
+
+func PatientRoutes(s *server.Server) {
+	p := patient.NewService(s)
 
 	// Pages
 	g := p.Group("/patients/:id?")
@@ -110,6 +118,20 @@ func PatientsRoutes(s *server.Server) {
 	// API
 	// api := p.Group("/api/patients")
 	// api.Get("", p.HandleAPIPatients)
+}
+
+func BlogRoutes(s *server.Server) {
+	b := blog.NewService(s)
+
+	g := s.Group("/blog")
+	g.Get("", b.HandleBlogPage)
+}
+
+func ThemeRoutes(s *server.Server) {
+	t := theme.NewService(s)
+
+	g := s.Group("/api/theme")
+	g.Get("", t.HandleThemeChange)
 }
 
 func TodosRoutes(s *server.Server) {

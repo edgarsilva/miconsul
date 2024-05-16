@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/edgarsilva/go-scaffold/internal/database"
+	"github.com/edgarsilva/go-scaffold/internal/localize"
 	"github.com/edgarsilva/go-scaffold/internal/model"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -27,9 +28,10 @@ type Server struct {
 	*fiber.App
 	SessionStore *session.Store
 	DB           *database.Database
+	LC           *localize.Localizer
 }
 
-func New(db *database.Database) *Server {
+func New(db *database.Database, locales *localize.Localizer) *Server {
 	fiberApp := fiber.New()
 
 	// Initialize logger middleware config
@@ -60,6 +62,9 @@ func New(db *database.Database) *Server {
 
 	// Initialize session middleware config
 	sessionStore := session.New()
+	fiberApp.Use(LocaleLang(sessionStore))
+
+	// Adds req language to the session
 
 	// Serve static files
 	fiberApp.Static("/", "./public")
@@ -68,6 +73,7 @@ func New(db *database.Database) *Server {
 		App:          fiberApp,
 		SessionStore: sessionStore,
 		DB:           db,
+		LC:           locales,
 	}
 }
 
@@ -171,4 +177,20 @@ func (s *Server) SessionUITheme(c *fiber.Ctx) string {
 	}
 
 	return theme
+}
+
+// SessionLang returns the user language from header Accepts-Language or session
+func (s *Server) SessionLang(c *fiber.Ctx) string {
+	lang := s.SessionGet(c, "lang", "")
+	if lang != "" {
+		return lang
+	}
+
+	lang, ok := c.Locals("lang").(string)
+	if !ok || lang == "" {
+		lang = "es-MX"
+	}
+
+	s.SessionSet(c, "lang", lang)
+	return lang
 }

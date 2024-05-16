@@ -4,131 +4,132 @@ import (
 	"github.com/edgarsilva/go-scaffold/internal/model"
 )
 
-templ PatientsPage(patients []model.Patient, patient model.Patient, layoutProps layoutProps) {
-	@Layout(layoutProps) {
-		<div class="px-4 lg:px-8">
-			@CmpBtnBack("back", "/patients")
-		</div>
+templ PatientsPage(patients []model.Patient, patient model.Patient, lp layoutProps) {
+	@Layout(lp) {
 		if patient.ID != "" {
+			<div class="px-4 lg:px-8">
+				@CmpBtnBack(l(lp.Locale, "btn.back"), "/patients")
+			</div>
 			<section class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
+				<h1 class="px-4 sm:px-0 font-bold text-2xl pb-0 w-full">New Patient</h1>
 				@PatientProfile(patient)
 			</section>
 		} else {
+			<div class="px-4 lg:px-8">
+				@CmpBtnBack(l(lp.Locale, "btn.back"), "/")
+			</div>
 			<section class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 				<div class="relative lg:-translate-y-16 xl:-translate-y-32">
-					<h1 class="px-4 sm:px-0 font-bold text-2xl pb-4 w-full">Patients</h1>
-					@PatientsList(patients)
+					<hgroup class="flex justify-between items-center pb-4 pl-4 sm:pl-0">
+						<h1 class="font-bold text-2xl">{ l(lp.Locale, "str.patients") }</h1>
+						<a href="/patients/new" class="btn btn-primary btn-sm" hx-get="/patients/new" hx-select="#main" hx-target="closest main#main">
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z"></path>
+							</svg>
+							{ l(lp.Locale, "btn.new_patient") }
+						</a>
+					</hgroup>
+					@PatientsList(patients, lp)
 				</div>
 			</section>
 		}
 	}
 }
 
-templ PatientsList(patients []model.Patient) {
-	<ul role="list" class="divide-y divide-gray-100 overflow-hidden bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
-		<li class="relative flex justify-between gap-x-6 px-4 py-5 hover:bg-gray-50 sm:px-6">
-			<div class="flex min-w-0 gap-x-4">
-				<img class="h-12 w-12 flex-none rounded-full bg-gray-50" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt=""/>
-				<div class="min-w-0 flex-auto">
-					<p class="text-sm font-semibold leading-6 text-gray-900">
-						<a href="/patients/1">
+templ PatientsList(patients []model.Patient, lp layoutProps) {
+	<ul role="list" class="app-card divide-y divide-base-content/10 overflow-hidden px-4 py-2">
+		if (len(patients) > 0) {
+			@PatientLi(patients[0], lp)
+		} else {
+			@PatientLi(model.Patient{}, lp)
+		}
+		<li class="relative flex justify-between gap-x-6 px-2 py-4 hover:bg-base-200/75">
+			<div class="flex items-center min-w-0 gap-x-4">
+				<img class="h-12 w-12 flex-none rounded-full bg-base-200/75" src="https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt=""/>
+				<div class="min-w-0">
+					<p class="font-semibold text-base-content">
+						<a class="flex items-center gap-2" href="#">
 							<span class="absolute inset-x-0 -top-px bottom-0"></span>
-							Leslie Alexander
-						</a>
-					</p>
-					<p class="mt-1 flex text-xs leading-5 text-gray-500">
-						<a href="mailto:leslie.alexander@example.com" class="relative truncate hover:underline">leslie.alexander@example.com</a>
-					</p>
-				</div>
-			</div>
-			<div class="flex shrink-0 items-center gap-x-4">
-				<div class="hidden sm:flex sm:flex-col sm:items-end">
-					<p class="text-sm leading-6 text-gray-900">Co-Founder / CEO</p>
-					<p class="mt-1 text-xs leading-5 text-gray-500">Last seen <time datetime="2023-01-23T13:23Z">3h ago</time></p>
-				</div>
-				<svg class="h-5 w-5 flex-none text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-					<path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"></path>
-				</svg>
-			</div>
-		</li>
-		<li class="relative flex justify-between gap-x-6 px-4 py-5 hover:bg-gray-50 sm:px-6">
-			<div class="flex min-w-0 gap-x-4">
-				<img class="h-12 w-12 flex-none rounded-full bg-gray-50" src="https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt=""/>
-				<div class="min-w-0 flex-auto">
-					<p class="text-sm font-semibold leading-6 text-gray-900">
-						<a href="#">
-							<span class="absolute inset-x-0 -top-px bottom-0"></span>
+							<span class="relative inline-flex h-2 w-2">
+								<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-90"></span>
+								<span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+							</span>
 							Michael Foster
 						</a>
 					</p>
-					<p class="mt-1 flex text-xs leading-5 text-gray-500">
+					<p class="flex text-xs text-base-content/60">
 						<a href="mailto:michael.foster@example.com" class="relative truncate hover:underline">michael.foster@example.com</a>
 					</p>
 				</div>
 			</div>
 			<div class="flex shrink-0 items-center gap-x-4">
 				<div class="hidden sm:flex sm:flex-col sm:items-end">
-					<p class="text-sm leading-6 text-gray-900">Co-Founder / CTO</p>
-					<p class="mt-1 text-xs leading-5 text-gray-500">Last seen <time datetime="2023-01-23T13:23Z">3h ago</time></p>
+					<div class="flex gap-1 z-10 mb-2">
+						<button class="btn btn-sm">
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+								<path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"></path>
+							</svg>
+						</button>
+						<button class="btn btn-sm">
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+								<path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"></path>
+							</svg>
+						</button>
+					</div>
+					<p class="mt-1 text-xs leading-5 text-base-content/60">
+						<span class="badge badge-success badge-sm mr-2">{ l(lp.Locale, "str.appointment_today") }</span>
+						Last seen <time datetime="2023-01-23T13:23Z">3h ago</time>
+					</p>
 				</div>
-				<svg class="h-5 w-5 flex-none text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-					<path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"></path>
-				</svg>
 			</div>
 		</li>
-		<li class="relative flex justify-between gap-x-6 px-4 py-5 hover:bg-gray-50 sm:px-6">
+		<li class="relative flex justify-between gap-x-6 px-2 py-4 hover:bg-base-200/75">
 			<div class="flex min-w-0 gap-x-4">
-				<img class="h-12 w-12 flex-none rounded-full bg-gray-50" src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt=""/>
+				<img class="h-12 w-12 flex-none rounded-full bg-base-content/60" src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt=""/>
 				<div class="min-w-0 flex-auto">
-					<p class="text-sm font-semibold leading-6 text-gray-900">
+					<p class="text-sm font-semibold leading-6">
 						<a href="#">
 							<span class="absolute inset-x-0 -top-px bottom-0"></span>
 							Dries Vincent
 						</a>
 					</p>
-					<p class="mt-1 flex text-xs leading-5 text-gray-500">
+					<p class="mt-1 flex text-xs leading-5 text-base-content/60">
 						<a href="mailto:dries.vincent@example.com" class="relative truncate hover:underline">dries.vincent@example.com</a>
 					</p>
 				</div>
 			</div>
 			<div class="flex shrink-0 items-center gap-x-4">
 				<div class="hidden sm:flex sm:flex-col sm:items-end">
-					<p class="text-sm leading-6 text-gray-900">Business Relations</p>
+					<p class="text-sm leading-6">Business Relations</p>
 					<div class="mt-1 flex items-center gap-x-1.5">
 						<div class="flex-none rounded-full bg-emerald-500/20 p-1">
 							<div class="h-1.5 w-1.5 rounded-full bg-emerald-500"></div>
 						</div>
-						<p class="text-xs leading-5 text-gray-500">Online</p>
+						<p class="text-xs leading-5 text-base-content/60">Online</p>
 					</div>
 				</div>
-				<svg class="h-5 w-5 flex-none text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-					<path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"></path>
-				</svg>
 			</div>
 		</li>
-		<li class="relative flex justify-between gap-x-6 px-4 py-5 hover:bg-gray-50 sm:px-6">
+		<li class="relative flex justify-between gap-x-6 px-2 py-4 hover:bg-base-200/75">
 			<div class="flex min-w-0 gap-x-4">
-				<img class="h-12 w-12 flex-none rounded-full bg-gray-50" src="https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt=""/>
+				<img class="h-12 w-12 flex-none rounded-full bg-base-200/75" src="https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt=""/>
 				<div class="min-w-0 flex-auto">
-					<p class="text-sm font-semibold leading-6 text-gray-900">
+					<p class="text-sm font-semibold leading-6">
 						<a href="#">
 							<span class="absolute inset-x-0 -top-px bottom-0"></span>
 							Lindsay Walton
 						</a>
 					</p>
-					<p class="mt-1 flex text-xs leading-5 text-gray-500">
+					<p class="mt-1 flex text-xs leading-5 text-base-content/60">
 						<a href="mailto:lindsay.walton@example.com" class="relative truncate hover:underline">lindsay.walton@example.com</a>
 					</p>
 				</div>
 			</div>
 			<div class="flex shrink-0 items-center gap-x-4">
 				<div class="hidden sm:flex sm:flex-col sm:items-end">
-					<p class="text-sm leading-6 text-gray-900">Front-end Developer</p>
+					<p class="text-sm leading-6">Front-end Developer</p>
 					<p class="mt-1 text-xs leading-5 text-gray-500">Last seen <time datetime="2023-01-23T13:23Z">3h ago</time></p>
 				</div>
-				<svg class="h-5 w-5 flex-none text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-					<path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"></path>
-				</svg>
 			</div>
 		</li>
 		<li class="relative flex justify-between gap-x-6 px-4 py-5 hover:bg-gray-50 sm:px-6">
@@ -151,9 +152,6 @@ templ PatientsList(patients []model.Patient) {
 					<p class="text-sm leading-6 text-gray-900">Designer</p>
 					<p class="mt-1 text-xs leading-5 text-gray-500">Last seen <time datetime="2023-01-23T13:23Z">3h ago</time></p>
 				</div>
-				<svg class="h-5 w-5 flex-none text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-					<path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"></path>
-				</svg>
 			</div>
 		</li>
 		<li class="relative flex justify-between gap-x-6 px-4 py-5 hover:bg-gray-50 sm:px-6">
@@ -181,9 +179,6 @@ templ PatientsList(patients []model.Patient) {
 						<p class="text-xs leading-5 text-gray-500">Online</p>
 					</div>
 				</div>
-				<svg class="h-5 w-5 flex-none text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-					<path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"></path>
-				</svg>
 			</div>
 		</li>
 	</ul>
@@ -202,7 +197,7 @@ templ PatientProfile(patient model.Patient) {
 						<div class="col-span-full">
 							<label for="photo" class="block text-sm font-medium leading-6">Photo</label>
 							<div class="mt-2 flex items-center gap-x-3">
-								<svg class="h-12 w-12 text-base-300" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+								<svg class="h-12 w-12 text-base-content/60" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
 									<path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0021.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 003.065 7.097A9.716 9.716 0 0012 21.75a9.716 9.716 0 006.685-2.653zm-12.54-1.285A7.486 7.486 0 0112 15a7.486 7.486 0 015.855 2.812A8.224 8.224 0 0112 20.25a8.224 8.224 0 01-5.855-2.438zM15.75 9a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" clip-rule="evenodd"></path>
 								</svg>
 								<button type="button" class="btn btn-ghost btn-sm">Change</button>
@@ -211,13 +206,13 @@ templ PatientProfile(patient model.Patient) {
 						<div class="sm:col-span-3">
 							<label for="first-name" class="block text-sm font-medium leading-6">First name</label>
 							<div class="mt-2">
-								<input type="text" name="first-name" id="first-name" autocomplete="given-name" class="input input-bordered block w-full"/>
+								<input type="text" name="firstName" id="first-name" autocomplete="given-name" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-3">
 							<label for="last-name" class="block text-sm font-medium leading-6 text-base-content">Last name</label>
 							<div class="mt-2">
-								<input type="text" name="last-name" id="last-name" autocomplete="family-name" class="input input-bordered block w-full"/>
+								<input type="text" name="lastName" id="last-name" autocomplete="family-name" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-4">
@@ -242,13 +237,13 @@ templ PatientProfile(patient model.Patient) {
 							<label for="cover-photo" class="block text-sm font-medium leading-6">Cover photo</label>
 							<div class="mt-2 flex justify-center rounded-lg border border-dashed border-base-content/25 px-6 py-10">
 								<div class="text-center">
-									<svg class="mx-auto h-12 w-12 text-base-300" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+									<svg class="mx-auto h-12 w-12 text-base-content/60" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
 										<path fill-rule="evenodd" d="M1.5 6a2.25 2.25 0 012.25-2.25h16.5A2.25 2.25 0 0122.5 6v12a2.25 2.25 0 01-2.25 2.25H3.75A2.25 2.25 0 011.5 18V6zM3 16.06V18c0 .414.336.75.75.75h16.5A.75.75 0 0021 18v-1.94l-2.69-2.689a1.5 1.5 0 00-2.12 0l-.88.879.97.97a.75.75 0 11-1.06 1.06l-5.16-5.159a1.5 1.5 0 00-2.12 0L3 16.061zm10.125-7.81a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0z" clip-rule="evenodd"></path>
 									</svg>
 									<div class="mt-4 flex text-sm leading-6 text-base-content/60">
 										<label for="file-upload" class="relative link link-primary font-semibold leading-6">
 											<span>Upload a file</span>
-											<input id="file-upload" name="file-upload" type="file" class="sr-only"/>
+											<input id="file-upload" name="profilePic" type="file" class="sr-only"/>
 										</label>
 										<p class="pl-1">or drag and drop</p>
 									</div>
@@ -285,7 +280,7 @@ templ PatientProfile(patient model.Patient) {
 						<div class="col-span-full">
 							<label for="street-address" class="block text-sm font-medium leading-6">Street address</label>
 							<div class="mt-2">
-								<input type="text" name="street-address" id="street-address" autocomplete="street-address" class="input input-bordered block w-full"/>
+								<input type="text" name="addressLine1" id="street-address" autocomplete="street-address" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-2 sm:col-start-1">
@@ -297,13 +292,13 @@ templ PatientProfile(patient model.Patient) {
 						<div class="sm:col-span-2">
 							<label for="region" class="block text-sm font-medium leading-6">State / Province</label>
 							<div class="mt-2">
-								<input type="text" name="region" id="region" autocomplete="address-level1" class="input input-bordered block w-full"/>
+								<input type="text" name="state" id="region" autocomplete="address-level1" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-2">
 							<label for="postal-code" class="block text-sm font-medium leading-6">ZIP / Postal code</label>
 							<div class="mt-2">
-								<input type="text" name="postal-code" id="postal-code" autocomplete="postal-code" class="input input-bordered block w-full"/>
+								<input type="text" name="zipCode" id="postal-code" autocomplete="postal-code" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 					</div>
@@ -354,56 +349,48 @@ templ PatientProfile(patient model.Patient) {
 						<fieldset>
 							<legend class="text-sm font-semibold leading-6">Send notifications about</legend>
 							<div class="mt-6 space-y-6">
-								<div class="relative flex gap-x-3">
-									<div class="flex h-6 items-center">
-										<input name="create_apnt" type="checkbox" checked="checked" class="checkbox checkbox-secondary"/>
-									</div>
+								<label class="relative flex gap-x-3">
+									<input name="notifyAbout" value="creation" type="checkbox" checked="checked" class="checkbox"/>
 									<div class="text-sm leading-6">
-										<label for="create_apnt" class="font-medium">Create/Cancel appointments</label>
+										<span class="font-medium">Create/Cancel appointments</span>
 										<p class="text-base-content/60">Notify when a new appointment is created or canceled.</p>
 									</div>
-								</div>
-								<div class="relative flex gap-x-3">
-									<div class="flex h-6 items-center">
-										<input name="update_apnt" type="checkbox" checked="checked" class="checkbox checkbox-secondary"/>
-									</div>
+								</label>
+								<label class="relative flex gap-x-3">
+									<input name="notifyAbout" value="updates" type="checkbox" checked="checked" class="checkbox"/>
 									<div class="text-sm leading-6">
-										<label for="update_apnt" class="font-medium">Any updates</label>
+										<span class="font-medium">Any updates</span>
 										<p class="text-base-content/60">Notify on any appointment updates.</p>
 									</div>
-								</div>
+								</label>
 							</div>
 						</fieldset>
 						<fieldset>
 							<legend class="text-sm font-semibold leading-6">Send notifications on:</legend>
 							<div class="mt-6 space-y-6">
 								<label class="flex items-center gap-x-3 text-sm font-medium leading-6">
-									<input
-										name="medium"
-										type="checkbox"
-										class="checkbox checkbox-primary"
-									/>
+									<input name="medium" value="email" type="checkbox" class="checkbox checkbox-secondary"/>
 									Email
 									<figure aria-lable="whatsapp icon" class="h-6 w-6">
 										@IconColorGmail()
 									</figure>
 								</label>
 								<label class="flex items-center gap-x-3 text-sm font-medium leading-6">
-									<input name="medium" type="checkbox" class="checkbox checkbox-primary"/>
+									<input name="medium" value="whatsapp" type="checkbox" class="checkbox checkbox-secondary"/>
 									Whatsapp
 									<figure aria-lable="whatsapp icon" class="h-6 w-6">
 										@IconColorWhatsapp()
 									</figure>
 								</label>
 								<label class="flex items-center gap-x-3 text-sm font-medium leading-6">
-									<input name="medium" type="checkbox" class="checkbox checkbox-primary"/>
+									<input name="medium" value="telegram" type="checkbox" class="checkbox checkbox-primary"/>
 									Telegram
 									<figure aria-lable="whatsapp icon" class="h-6 w-6">
 										@IconColorTelegram()
 									</figure>
 								</label>
 								<label class="flex items-center gap-x-3 text-sm font-medium leading-6">
-									<input name="medium" type="checkbox" class="checkbox checkbox-primary"/>
+									<input name="medium" value="messenger" type="checkbox" class="checkbox checkbox-primary"/>
 									Messenger
 									<figure aria-lable="whatsapp icon" class="h-6 w-6">
 										@IconColorMessenger()
@@ -420,4 +407,43 @@ templ PatientProfile(patient model.Patient) {
 			</form>
 		</div>
 	</div>
+}
+
+templ PatientLi(patients model.Patient, lp layoutProps) {
+	<li class="relative flex justify-between items-center gap-x-6 px-2 py-2 hover:bg-base-200/75">
+		<div class="flex items-center min-w-0 gap-x-4">
+			<img class="h-12 w-12 flex-none rounded-full bg-base-200/75" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt=""/>
+			<div class="min-w-0">
+				<p class="font-semibold text-base-content">
+					<a href="/patients/1" hx-get="/patients/1" hx-select-oob="#main">
+						<span class="absolute inset-x-0 -top-px bottom-0"></span>
+						Leslie Alexander
+					</a>
+				</p>
+				<p class="flex text-xs text-base-content/60">
+					<a href="mailto:leslie.alexander@example.com" class="relative truncate hover:underline">leslie.alexander@example.com</a>
+				</p>
+			</div>
+		</div>
+		<div class="flex shrink-0 items-center gap-x-4">
+			<div class="hidden sm:flex sm:flex-col sm:items-end">
+				<div class="flex gap-1 z-10 mb-2">
+					<button class="btn btn-sm">
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+							<path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"></path>
+						</svg>
+					</button>
+					<button class="btn btn-sm">
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+							<path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"></path>
+						</svg>
+					</button>
+				</div>
+				<p class="text-xs leading-5 text-base-content/60">
+					{ l(lp.Locale, "str.last_appointment") }
+					<time datetime="2022-01-10T17:00">10/Ago/2022 5:00 PM</time>
+				</p>
+			</div>
+		</div>
+	</li>
 }
