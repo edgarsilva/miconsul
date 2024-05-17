@@ -10,27 +10,23 @@ import (
 //
 // GET: /patients
 func (s *service) HandlePatientsPage(c *fiber.Ctx) error {
-	// cu, err := s.CurrentUser(c)
-	// if err != nil {
-	// 	return c.Redirect("/login")
-	// }
-
-	theme := s.SessionUITheme(c)
-	layoutProps, err := view.NewLayoutProps(view.WithTheme(theme))
+	cu, err := s.CurrentUser(c)
 	if err != nil {
 		return c.Redirect("/login")
 	}
 
 	id := c.Params("id", "")
-	patientProfile := model.Patient{}
-	patientProfile.ID = id
-	if id != "" {
-		s.DB.Model(&model.Patient{}).First(&patientProfile)
+	patient := model.Patient{}
+	patient.ID = id
+	if id != "" && id != "new" {
+		s.DB.Model(&model.Patient{}).First(&patient)
 	}
 	patients := []model.Patient{}
 	s.DB.Model(&model.Patient{}).Find(&patients)
 
-	return view.Render(c, view.PatientsPage(patients, patientProfile, layoutProps))
+	theme := s.SessionUITheme(c)
+	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme), view.WithCurrentUser(cu))
+	return view.Render(c, view.PatientsPage(patients, patient, layoutProps))
 }
 
 // HandleCreatePatient inserts a new clinic record for the given user
@@ -39,33 +35,50 @@ func (s *service) HandlePatientsPage(c *fiber.Ctx) error {
 func (s *service) HandleCreatePatient(c *fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		c.Redirect("/login")
+		return c.Redirect("/login")
 	}
 
-	clinic := model.Patient{
-		ExtID:     "ext-01",
-		FirstName: "Matias",
-		LastName:  "Mateo",
-		Email:     "matmat@gmail.com",
-		Phone:     "312-110-12345",
-		UserID:    cu.ID,
-		Address: model.Address{
-			Line1:   "Ave. De La Paz 123",
-			Line2:   "",
-			City:    "Colima",
-			State:   "Colima",
-			Country: "Mexico",
-			Zip:     "28500",
-		},
+	patient := model.Patient{
+		UserID: cu.ID,
 	}
+	c.BodyParser(&patient)
 
-	res := s.DB.Create(&clinic)
+	theme := s.SessionUITheme(c)
+	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme), view.WithCurrentUser(cu))
+
+	res := s.DB.Create(&patient)
 	if err := res.Error; err != nil {
-		return c.SendString("Errors found" + err.Error())
+		return view.Render(c, view.PatientsPage([]model.Patient{}, patient, layoutProps))
 	}
 
 	patients := []model.Patient{}
 	s.DB.Model(&model.Patient{}).Find(&patients)
 
-	return c.JSON(clinic)
+	return view.Render(c, view.PatientsPage(patients, patient, layoutProps))
+}
+
+// HandleDeletePatient deletes a patient record from the DB
+//
+// DELETE: /patients/:id
+func (s *service) HandleDeletePatient(c *fiber.Ctx) error {
+	cu, err := s.CurrentUser(c)
+	if err != nil {
+		return c.Redirect("/login")
+	}
+
+	patientID := c.Params("ID", "")
+	if patientID == "" {
+		return c.Redirect("/patients?msg=can't delete without an id")
+	}
+
+	patient := model.Patient{
+		UserID: cu.ID,
+	}
+
+	res := s.DB.Where("id = ? AND user_id = ?", patientID, cu.ID).Delete(&patient)
+	if err := res.Error; err != nil {
+		return c.Redirect("/patients?msg=failed to delete that patient")
+	}
+
+	return c.Redirect("/patients")
 }

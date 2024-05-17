@@ -30,6 +30,10 @@ type User struct {
 	ResetToken            string
 	ConfirmEmailToken     string
 	ModelBase
+	Clinics      []Clinic
+	Patients     []Patient
+	Appointments []Appointment
+
 	Todos []Todo
 	// Articles []Article
 	// Comments []Comment

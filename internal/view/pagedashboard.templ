@@ -4,28 +4,40 @@ import (
 	"slices"
 )
 
-templ PageDashboard(props layoutProps) {
-	@Layout(props) {
+templ PageDashboard(lp layoutProps) {
+	@Layout(lp) {
 		<main id="content" class="px-4 container mx-auto">
-			@DashboardStats()
-			@MainGrid()
+			@DashboardStats(lp)
+			<div class="flex-1 grid grid-cols-3 gap-5 mt-8">
+				<section
+					class="col-span-3 lg:col-span-2 order-2 lg:order-1"
+				>
+					@Appointments(lp)
+				</section>
+				<section
+					class="col-span-3 lg:col-span-1 order-1 lg:order-2 flex flex-col gap-8"
+				>
+					@Clinic()
+					@Feed()
+				</section>
+			</div>
 		</main>
 	}
 }
 
-templ DashboardStats() {
+templ DashboardStats(lp layoutProps) {
 	<div>
-		<h3 class="sr-only">Statistics</h3>
+		<h3 class="sr-only">{ l(lp.Locale, "str.stats") }</h3>
 		<dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-			<div class="app-card">
+			<div class="app-card relative">
 				<dt>
-					<div class="absolute rounded-xl bg-primary p-3">
-						<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-							<path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"></path>
-						</svg>
+					<div class="avatar overflow-hidden absolute mt-1 ml-1">
+						<div class="h-10">
+							<img class="w-full object-contain" src="/images/patients.png"/>
+						</div>
 					</div>
 					<p class="ml-16 truncate text-sm font-medium text-base-content">
-						Patients
+						{ l(lp.Locale, "str.patients") }
 					</p>
 				</dt>
 				<dd class="ml-16 flex items-baseline">
@@ -34,24 +46,24 @@ templ DashboardStats() {
 						<svg class="h-5 w-5 flex-shrink-0 self-center text-success" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
 							<path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clip-rule="evenodd"></path>
 						</svg>
-						<span class="sr-only">Increased by </span>
+						<span class="sr-only">{ l(lp.Locale, "str.increased_by") }</span>
 						122
 					</p>
 					<div class="ml-auto">
-						<a href="#" class="font-medium link link-hover">View all<span class="sr-only">Patients</span></a>
+						<a href="#" class="font-medium link link-hover">{ l(lp.Locale, "btn.view_all") }<span class="sr-only">{ l(lp.Locale, "str.patients") }</span></a>
 					</div>
 				</dd>
 			</div>
 			<div class="app-card">
 				<dt>
-					<div class="absolute rounded-xl bg-secondary p-3">
-						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-secondary-content">
-							<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"></path>
-						</svg>
+					<div class="avatar overflow-hidden absolute mt-1 ml-1">
+						<div class="h-10">
+							<img class="" src="/images/timeline.png"/>
+						</div>
 					</div>
 					<p
 						class="ml-16 truncate text-sm font-medium text-base-content"
-					>Appointments</p>
+					>{ l(lp.Locale, "str.appointments") }</p>
 				</dt>
 				<dd class="ml-16 flex items-baseline">
 					<p class="text-2xl font-semibold text-base-content">58</p>
@@ -59,22 +71,22 @@ templ DashboardStats() {
 						<svg class="h-5 w-5 flex-shrink-0 self-center text-success" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
 							<path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clip-rule="evenodd"></path>
 						</svg>
-						<span class="sr-only">Increased by </span>
+						<span class="sr-only">{ l(lp.Locale, "str.increased_by") }</span>
 						5.4%
 					</p>
 					<div class="ml-auto">
-						<a href="#" class="font-medium link link-hover">View all<span class="sr-only">Patients</span></a>
+						<a href="#" class="font-medium link link-hover">{ l(lp.Locale, "btn.view_all") }<span class="sr-only">{ l(lp.Locale, "str.all_appointmens") }</span></a>
 					</div>
 				</dd>
 			</div>
 			<div class="app-card">
 				<dt>
-					<div class="absolute rounded-xl bg-accent p-3">
-						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-accent-content">
-							<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"></path>
-						</svg>
+					<div class="avatar overflow-hidden absolute mt-1 ml-1">
+						<div class="h-10">
+							<img class="" src="/images/funds.png"/>
+						</div>
 					</div>
-					<p class="ml-16 truncate text-sm font-medium text-base-content">Revenue this month</p>
+					<p class="ml-16 truncate text-sm font-medium text-base-content">{ l(lp.Locale, "str.revenue_month") }</p>
 				</dt>
 				<dd class="ml-16 flex items-baseline">
 					<p class="text-2xl font-semibold text-base-content">24500</p>
@@ -82,11 +94,11 @@ templ DashboardStats() {
 						<svg class="h-5 w-5 flex-shrink-0 self-center text-error" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
 							<path fill-rule="evenodd" d="M10 3a.75.75 0 01.75.75v10.638l3.96-4.158a.75.75 0 111.08 1.04l-5.25 5.5a.75.75 0 01-1.08 0l-5.25-5.5a.75.75 0 111.08-1.04l3.96 4.158V3.75A.75.75 0 0110 3z" clip-rule="evenodd"></path>
 						</svg>
-						<span class="sr-only">Decreased by </span>
+						<span class="sr-only">{ l(lp.Locale, "str.decreased_by") }</span>
 						3.2%
 					</p>
 					<div class="ml-auto">
-						<a href="#" class="font-medium link link-hover">View all<span class="sr-only">Patients</span></a>
+						<a href="#" class="font-medium link link-hover">{ l(lp.Locale, "btn.view_all") }<span class="sr-only">{ l(lp.Locale, "str.all_revenue") }</span></a>
 					</div>
 				</dd>
 			</div>
@@ -94,27 +106,10 @@ templ DashboardStats() {
 	</div>
 }
 
-templ MainGrid() {
-	<div class="flex-1 grid grid-cols-3 gap-5 mt-8">
-		<section
-			class="col-span-3 lg:col-span-2 order-2 lg:order-1"
-		>
-			@Appointments()
-			@LatestTransactions()
-		</section>
-		<section
-			class="col-span-3 lg:col-span-1 order-1 lg:order-2 flex flex-col gap-8"
-		>
-			@Clinic()
-			@Feed()
-		</section>
-	</div>
-}
-
-templ Appointments() {
+templ Appointments(lp layoutProps) {
 	<section class="app-card col-span-2 flex flex-col gap-4">
 		<div class="relative flex items-center justify-between">
-			<h3 class="font-semibold text-xl">Appointments</h3>
+			<h3 class="font-semibold text-xl">{ l(lp.Locale, "str.appointments") }</h3>
 			<details class="absolute right-0 dropdown lg:hidden">
 				<summary class="btn btn-square btn-ghost">
 					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -122,18 +117,18 @@ templ Appointments() {
 					</svg>
 				</summary>
 				<ul class="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
-					<li><a href="#" class="text-gray-500 hover:text-gray-700 rounded-md px-3 py-2 text-sm font-medium">Next 5</a></li>
-					<li><a href="#" class="text-gray-500 hover:text-gray-700 rounded-md px-3 py-2 text-sm font-medium">Today</a></li>
-					<li><a href="#" class="bg-gray-100 text-gray-700 rounded-md px-3 py-2 text-sm font-medium" aria-current="page">This week</a></li>
-					<li><a href="#" class="text-gray-500 hover:text-gray-700 rounded-md px-3 py-2 text-sm font-medium">This month</a></li>
+					<li><a href="#" class="text-gray-500 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium">{ l(lp.Locale, "nav.next_5") }</a></li>
+					<li><a href="#" class="text-gray-500 hover:text-gray-700 rounded-md px-3 py-2 text-sm font-medium">{ l(lp.Locale, "nav.today") }</a></li>
+					<li><a href="#" class="bg-gray-100 text-gray-700 rounded-md px-3 py-2 text-sm font-medium" aria-current="page">{ l(lp.Locale, "nav.this_week") }</a></li>
+					<li><a href="#" class="text-gray-500 hover:text-gray-700 rounded-md px-3 py-2 text-sm font-medium">{ l(lp.Locale, "nav.this_month") }</a></li>
 				</ul>
 			</details>
 			<div class="hidden lg:block">
 				<nav class="flex gap-2" aria-label="Tabs">
-					<a href="#" class="text-gray-500 hover:text-gray-700 rounded-md px-3 py-2 text-sm font-medium">Next 5</a>
-					<a href="#" class="text-gray-500 hover:text-gray-700 rounded-md px-3 py-2 text-sm font-medium">Today</a>
-					<a href="#" class="bg-gray-100 text-gray-700 rounded-md px-3 py-2 text-sm font-medium" aria-current="page">This week</a>
-					<a href="#" class="text-gray-500 hover:text-gray-700 rounded-md px-3 py-2 text-sm font-medium">This month</a>
+					<a href="#" class="text-gray-500 hover:text-gray-700 rounded-md px-3 py-2 text-sm font-medium">{ l(lp.Locale, "nav.next_5") }</a>
+					<a href="#" class="text-gray-500 hover:text-gray-700 rounded-md px-3 py-2 text-sm font-medium">{ l(lp.Locale, "nav.today") }</a>
+					<a href="#" class="bg-gray-100 text-gray-700 rounded-md px-3 py-2 text-sm font-medium" aria-current="page">{ l(lp.Locale, "nav.this_week") }</a>
+					<a href="#" class="text-gray-500 hover:text-gray-700 rounded-md px-3 py-2 text-sm font-medium">{ l(lp.Locale, "nav.this_month") }</a>
 				</nav>
 			</div>
 		</div>
@@ -145,7 +140,7 @@ templ Appointments() {
 					<dl class="mt-2 flex flex-col text-base-content xl:flex-row">
 						<div class="flex items-start space-x-3">
 							<dt class="mt-0.5">
-								<span class="sr-only">Date</span>
+								<span class="sr-only">{ l(lp.Locale, "str.date") }</span>
 								<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
 									<path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clip-rule="evenodd"></path>
 								</svg>
@@ -156,17 +151,19 @@ templ Appointments() {
 						</div>
 						<div class="mt-2 flex items-center space-x-3 xl:ml-3.5 xl:mt-0 xl:border-l xl:border-base-300 xl:border-opacity-50 xl:pl-3.5">
 							<dt class="mt-0.5">
-								<span class="sr-only">Location</span>
+								<span class="sr-only">{ l(lp.Locale, "str.location") }</span>
 								<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
 									<path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clip-rule="evenodd"></path>
 								</svg>
 							</dt>
 							<dd>Meraki</dd>
-							<span class="mt-0.5 badge badge-neutral">pending</span>
+							<span class="mt-0.5 badge badge-neutral">
+								{ l(lp.Locale, "str.pending") }
+							</span>
 						</div>
 					</dl>
 				</div>
-				@AppointmentActions()
+				@AppointmentActions(lp)
 			</li>
 			<li class="relative flex items-center space-x-6 py-6 xl:static">
 				<img src="https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="h-14 w-14 flex-none rounded-full"/>
@@ -197,17 +194,17 @@ templ Appointments() {
 						</div>
 						<div class="mt-2 flex items-start space-x-3 xl:ml-3.5 xl:mt-0 xl:border-l xl:border-base-300 xl:border-opacity-50 xl:pl-3.5">
 							<dt class="mt-0.5">
-								<span class="sr-only">Location</span>
+								<span class="sr-only">{ l(lp.Locale, "str.location") }</span>
 								<svg class="h-5 w-5 text-base-content" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
 									<path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clip-rule="evenodd"></path>
 								</svg>
 							</dt>
 							<dd>Meraki</dd>
-							<span class="mt-0.5 badge badge-info">reschedule</span>
+							<span class="mt-0.5 badge badge-info">{ l(lp.Locale, "str.reschedule") }</span>
 						</div>
 					</dl>
 				</div>
-				@AppointmentActions()
+				@AppointmentActions(lp)
 			</li>
 			<li class="relative flex items-center space-x-6 py-6 xl:static">
 				<img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="h-14 w-14 flex-none rounded-full"/>
@@ -237,7 +234,7 @@ templ Appointments() {
 						</div>
 					</dl>
 				</div>
-				@AppointmentActions()
+				@AppointmentActions(lp)
 			</li>
 			<li class="relative flex space-x-6 py-6 xl:static">
 				<img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="h-14 w-14 flex-none rounded-full"/>
@@ -265,7 +262,7 @@ templ Appointments() {
 						</div>
 					</dl>
 				</div>
-				@AppointmentActions("cancel")
+				@AppointmentActions(lp, "cancel")
 			</li>
 			<li class="relative flex items-center space-x-6 py-6 xl:static">
 				<img
@@ -310,20 +307,20 @@ templ Appointments() {
 						</div>
 					</dl>
 				</div>
-				@AppointmentActions()
+				@AppointmentActions(lp)
 			</li>
 		</ol>
 	</section>
 }
 
-templ AppointmentActions(buttons ...string) {
+templ AppointmentActions(lp layoutProps, buttons ...string) {
 	<div class="hidden gap-2 items-center lg:flex">
 		if !slices.Contains(buttons, "reschedule") {
 			<button class="btn btn-outline btn-primary">
 				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
 					<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"></path>
 				</svg>
-				Reschedule
+				{ l(lp.Locale, "btn.reschedule") }
 			</button>
 		}
 		if !slices.Contains(buttons, "cancel") {
@@ -331,7 +328,7 @@ templ AppointmentActions(buttons ...string) {
 				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
 					<path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"></path>
 				</svg>
-				Cancel
+				{ l(lp.Locale, "btn.cancel") }
 			</button>
 		}
 	</div>

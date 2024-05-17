@@ -107,8 +107,13 @@ func PatientRoutes(s *server.Server) {
 	p := patient.NewService(s)
 
 	// Pages
-	g := p.Group("/patients/:id?")
+	g := p.Group("/patients", auth.MustAuthenticate(s))
 	g.Get("/", p.HandlePatientsPage)
+	g.Get("/:id", p.HandlePatientsPage)
+
+	g.Post("/", p.HandleCreatePatient)
+	g.Post("/:id/delete", p.HandleDeletePatient)
+	g.Delete("/:id", p.HandleDeletePatient)
 	// g.Get("/:id", p.HandlePatientsPage)
 
 	// Fragments

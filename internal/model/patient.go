@@ -6,7 +6,7 @@ import (
 )
 
 type Patient struct {
-	ExtID      string ``
+	ExtID      string
 	ProfilePic string
 	FirstName  string `gorm:"default:null;not null" form:"firstName"`
 	LastName   string `gorm:"default:null;not null" form:"lastName"`
@@ -23,7 +23,7 @@ type Patient struct {
 }
 
 func (p *Patient) BeforeCreate(tx *gorm.DB) (err error) {
-	p.ID = xid.New("patn")
+	p.ID = xid.New("ptnt")
 	return nil
 }
 

@@ -3,17 +3,15 @@ package view
 templ CmpHeader(lp layoutProps) {
 	<header id="header" class="relative mb-8 bg-base-100 border-y border-base-content/10 shadow-md">
 		<nav id="navbar" class="navbar rounded-lg p-4">
-			<div class="navbar-start">
-				<div class="flex-1">
-					<a class="relative btn btn-ghost text-xl">
-						<div class="avatar overflow-hidden">
-							<div class="h-10">
-								<img class="" src="/images/labcoat64.png"/>
-							</div>
+			<div class="navbar-start self-stretch">
+				<a href="/" class="relative px-2 rounded-xl self-stretch flex items-center text-xl font-semibold hover:ring hover:ring-secondary/35 hover:bg-secondary/10 active:ring">
+					<div class="avatar overflow-hidden mr-2">
+						<div class="h-10">
+							<img class="" src="/images/labcoat64.png"/>
 						</div>
-						miconsul
-					</a>
-				</div>
+					</div>
+					miconsul
+				</a>
 			</div>
 			<div class="navbar-end flex items-center">
 				<div class="hidden md:flex">
