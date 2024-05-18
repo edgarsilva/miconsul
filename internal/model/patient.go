@@ -6,20 +6,23 @@ import (
 )
 
 type Patient struct {
-	ExtID      string
-	ProfilePic string
-	FirstName  string `gorm:"default:null;not null" form:"firstName"`
-	LastName   string `gorm:"default:null;not null" form:"lastName"`
-	Username   string
-	Phone      string `form:"phone"`
-	Email      string `form:"email"`
-	ocupation  string `form:"ocupation"`
-	UserID     string `gorm:"index;default:null;not null"`
 	Address
 	SocialMedia
 	ModelBase
-	User User
-	Age  int `form:"age"`
+	ExtID               string
+	Email               string `form:"email"`
+	Phone               string `form:"phone"`
+	Ocupation           string `form:"ocupation"`
+	UserID              string `gorm:"index;default:null;not null"`
+	LastName            string `gorm:"default:null;not null" form:"lastName"`
+	FirstName           string `gorm:"default:null;not null" form:"firstName"`
+	ProfilePic          string
+	FamilyHistory       string `form:"familyHistory"`
+	MedicalBackground   string `form:"medicalBackground"`
+	Notes               string `form:"notes"`
+	User                User
+	Age                 int  `form:"age"`
+	EnableNotifications bool `form:"enableNotifications"`
 }
 
 func (p *Patient) BeforeCreate(tx *gorm.DB) (err error) {
