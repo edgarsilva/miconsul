@@ -8,14 +8,10 @@ import (
 )
 
 type ModelBase struct {
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	ID        string `gorm:"primarykey;default:null;not null" form:"id"`
-}
-
-func (mb *ModelBase) BeforeCreate(tx *gorm.DB) (err error) {
-	mb.ID = xid.New("____")
-	return nil
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	fieldErrors map[string]string `gorm:"-:all"`
+	ID          string            `gorm:"primarykey;default:null;not null" form:"id"`
 }
 
 type Address struct {
@@ -33,6 +29,42 @@ type SocialMedia struct {
 	Messenger string `form:"messenger"`
 	Instagram string `form:"instagram"`
 	Facebook  string `form:"facebook"`
+}
+
+func (mb *ModelBase) BeforeCreate(tx *gorm.DB) error {
+	mb.ID = xid.New("____")
+	return nil
+}
+
+func (mb *ModelBase) IsValid() error {
+	mb.fieldErrors = make(map[string]string)
+	return nil
+}
+
+func (c *ModelBase) FieldErrors() map[string]string {
+	if c.fieldErrors == nil {
+		c.fieldErrors = make(map[string]string)
+	}
+
+	return c.fieldErrors
+}
+
+// FieldError returns the error associated to a field, defined by key
+func (mb *ModelBase) FieldError(key string) string {
+	if len(mb.fieldErrors) == 0 {
+		return ""
+	}
+
+	return mb.fieldErrors[key]
+}
+
+// SetFieldError sets an error for a field, defined by key
+func (c *ModelBase) SetFieldError(key, errStr string) {
+	if c.fieldErrors == nil {
+		c.fieldErrors = make(map[string]string)
+	}
+
+	c.fieldErrors[key] = errStr
 }
 
 type Country struct {

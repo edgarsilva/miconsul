@@ -23,6 +23,10 @@ type Patient struct {
 	User                User
 	Age                 int  `form:"age"`
 	EnableNotifications bool `form:"enableNotifications"`
+	ViaEmail            bool `form:"viaEmail"`
+	ViaWhatsapp         bool `form:"viaWhatsapp"`
+	ViaMessenger        bool `form:"viaMessenger"`
+	ViaTelegram         bool `form:"viaTelegram"`
 }
 
 func (p *Patient) BeforeCreate(tx *gorm.DB) (err error) {
