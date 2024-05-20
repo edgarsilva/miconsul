@@ -44,17 +44,18 @@ func (s *service) HandleCreatePatient(c *fiber.Ctx) error {
 	c.BodyParser(&patient)
 
 	res := s.DB.Create(&patient)
-	if err := res.Error; err != nil {
-		return c.Redirect("/patients?err=failed to create patient")
-	}
+	if !s.IsHTMX(c) {
+		if err := res.Error; err != nil {
+			return c.Redirect("/patients?err=failed to create patient")
+		}
 
-	isHTMX := c.Get("HX-Request", "") // will be a string 'true' for HTMX requests
-	if isHTMX == "" {
-		return c.Redirect("/patients/" + patient.ID)
+		isHTMX := c.Get("HX-Request", "") // will be a string 'true' for HTMX requests
+		if isHTMX == "" {
+			return c.Redirect("/patients/" + patient.ID)
+		}
 	}
 
 	c.Set("HX-Push-Url", "/patients/"+patient.ID)
-
 	theme := s.SessionUITheme(c)
 	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme), view.WithCurrentUser(cu))
 	return view.Render(c, view.PatientsPage([]model.Patient{}, patient, layoutProps))

@@ -215,7 +215,7 @@ templ PatientLi(patient model.Patient, lp layoutProps) {
 				</div>
 			} else {
 				<div class="avatar placeholder">
-					<div class="bg-base-200 text-base-content rounded-full w-12">
+					<div class="bg-neutral text-neutral-content rounded-full w-12">
 						<span class="text-xl">{ patient.FirstName[0:1] + patient.LastName[0:1] }</span>
 					</div>
 				</div>
@@ -241,8 +241,8 @@ templ PatientLi(patient model.Patient, lp layoutProps) {
 			<div class="hidden sm:flex sm:flex-col sm:items-end">
 				<div class="flex gap-1 z-10 mb-2">
 					<a
-						href={ templ.URL("/appointments?patientId=" + patient.ID) }
 						class="btn btn-sm btn-circle"
+						href={ templ.URL("/appointments?patientId=" + patient.ID) }
 					>
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
 							<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"></path>
@@ -322,19 +322,46 @@ templ PatientProfile(patient model.Patient, lp layoutProps) {
 						<div class="sm:col-span-3">
 							<label for="first-name" class="block text-sm font-medium leading-6">{ l(lp.Locale, "str.first_name") }</label>
 							<div class="mt-2">
-								<input type="text" name="firstName" value={ patient.FirstName } id="first_name" autocomplete="given-name" class="input input-bordered block w-full"/>
+								<input required type="text" name="firstName" value={ patient.FirstName } id="first_name" autocomplete="given-name" class="input input-bordered block w-full"/>
+								if patient.FieldError("firstName") != "" {
+									<div class="label">
+										<span class="label-text-alt text-error">{ patient.FieldError("firstName") }</span>
+									</div>
+								}
 							</div>
 						</div>
 						<div class="sm:col-span-3">
 							<label for="last-name" class="block text-sm font-medium leading-6 text-base-content">{ l(lp.Locale, "str.last_name") }</label>
 							<div class="mt-2">
-								<input type="text" name="lastName" value={ patient.LastName } id="last_name" autocomplete="family-name" class="input input-bordered block w-full"/>
+								<input required type="text" name="lastName" value={ patient.LastName } id="last_name" autocomplete="family-name" class="input input-bordered block w-full"/>
+								if patient.FieldError("lastName") != "" {
+									<div class="label">
+										<span class="label-text-alt text-error">{ patient.FieldError("lastName") }</span>
+									</div>
+								}
+							</div>
+						</div>
+						<div class="sm:col-span-4">
+							<label for="phone" class="block text-sm font-medium leading-6 text-base-content">{ l(lp.Locale, "str.phone") }</label>
+							<div class="mt-2">
+								whatsapp
+								<input required type="tel" name="phone" value={ patient.Phone } id="phone" autocomplete="tel" class="input input-bordered block w-full"/>
+								if patient.FieldError("phone") != "" {
+									<div class="label">
+										<span class="label-text-alt text-error">{ patient.FieldError("phone") }</span>
+									</div>
+								}
 							</div>
 						</div>
 						<div class="sm:col-span-4">
 							<label for="email" class="block text-sm font-medium leading-6 text-base-content">{ l(lp.Locale, "str.email_address") }</label>
 							<div class="mt-2">
 								<input type="email" name="email" value={ patient.Email } id="email" autocomplete="email" class="input input-bordered block w-full"/>
+								if patient.FieldError("email") != "" {
+									<div class="label">
+										<span class="label-text-alt text-error">{ patient.FieldError("email") }</span>
+									</div>
+								}
 							</div>
 						</div>
 						<div class="sm:col-span-4">
@@ -348,7 +375,7 @@ templ PatientProfile(patient model.Patient, lp layoutProps) {
 							</div>
 						</div>
 						<div class="sm:col-span-4">
-							<label for="email" class="block text-sm font-medium leading-6 text-base-content">{ l(lp.Locale, "str.ocupation") }</label>
+							<label for="ocupation" class="block text-sm font-medium leading-6 text-base-content">{ l(lp.Locale, "str.ocupation") }</label>
 							<div class="mt-2">
 								<input type="text" name="ocupation" value={ patient.Ocupation } id="ocupation" autocomplete="ocupation" class="input input-bordered block w-full"/>
 							</div>
@@ -412,16 +439,16 @@ templ PatientProfile(patient model.Patient, lp layoutProps) {
 								<input type="text" name="addressZipCode" value={ patient.Address.Zip } id="address_zip_code" autocomplete="postal-code" class="input input-bordered block w-full"/>
 							</div>
 						</div>
-					</div>
-					<div class="sm:col-span-4">
-						<label for="country" class="block text-sm font-medium leading-6 text-base-content">{ l(lp.Locale, "str.address_country") }</label>
-						<div class="mt-2">
-							<select id="country" name="addressCountry" autocomplete="country-name" class="select select-bordered block w-full">
-								@CountryOption("none", "none", patient.Country)
-								@CountryOption("Mexico", "Mexico", patient.Country)
-								@CountryOption("United States", "United States", patient.Country)
-								@CountryOption("Canada", "Canada", patient.Country)
-							</select>
+						<div class="sm:col-span-4">
+							<label for="country" class="block text-sm font-medium leading-6 text-base-content">{ l(lp.Locale, "str.address_country") }</label>
+							<div class="mt-2">
+								<select id="country" name="addressCountry" autocomplete="country-name" class="select select-bordered block w-full">
+									@CountryOption("none", "none", patient.Country)
+									@CountryOption("Mexico", "Mexico", patient.Country)
+									@CountryOption("United States", "United States", patient.Country)
+									@CountryOption("Canada", "Canada", patient.Country)
+								</select>
+							</div>
 						</div>
 					</div>
 				</div>

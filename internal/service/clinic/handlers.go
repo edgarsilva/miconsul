@@ -47,18 +47,18 @@ func (s *service) HandleCreateClinic(c *fiber.Ctx) error {
 	c.BodyParser(&clinic)
 
 	result := s.DB.Create(&clinic)
-	isHTMX := c.Get("HX-Request", "") // will be a string 'true' for HTMX requests
-	if isHTMX != "" {
-		c.Set("HX-Push-Url", "/clinics/"+clinic.ID)
-		theme := s.SessionUITheme(c)
-		layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme), view.WithCurrentUser(cu))
-		return view.Render(c, view.ClinicsPage([]model.Clinic{}, clinic, layoutProps))
+	if !s.IsHTMX(c) {
+		if err := result.Error; err != nil {
+			return c.Redirect("/clinics?err=failed to create Clinic", fiber.StatusSeeOther)
+		}
+
+		return c.Redirect("/clinics/"+clinic.ID, fiber.StatusSeeOther)
 	}
 
-	if err := result.Error; err != nil {
-		return c.Redirect("/clinics?err=failed to create Clinic", fiber.StatusSeeOther)
-	}
-	return c.Redirect("/clinics/"+clinic.ID, fiber.StatusSeeOther)
+	c.Set("HX-Push-Url", "/clinics/"+clinic.ID)
+	theme := s.SessionUITheme(c)
+	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme), view.WithCurrentUser(cu))
+	return view.Render(c, view.ClinicsPage([]model.Clinic{}, clinic, layoutProps))
 }
 
 func (s *service) HandleCreateMockClinic(c *fiber.Ctx) error {

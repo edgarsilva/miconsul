@@ -194,3 +194,9 @@ func (s *Server) SessionLang(c *fiber.Ctx) string {
 	s.SessionSet(c, "lang", lang)
 	return lang
 }
+
+// IsHTMX returns true if the request was initiated by HTMX
+func (s *Server) IsHTMX(c *fiber.Ctx) bool {
+	isHTMX := c.Get("HX-Request", "") // will be a string 'true' for HTMX requests
+	return isHTMX == "true"
+}

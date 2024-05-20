@@ -1,6 +1,8 @@
 package model
 
 import (
+	"errors"
+
 	"github.com/edgarsilva/go-scaffold/internal/lib/xid"
 	"gorm.io/gorm"
 )
@@ -29,8 +31,37 @@ type Patient struct {
 	ViaTelegram         bool `form:"viaTelegram"`
 }
 
-func (p *Patient) BeforeCreate(tx *gorm.DB) (err error) {
+func (p *Patient) BeforeCreate(tx *gorm.DB) error {
+	err := p.IsValid()
+	if err != nil {
+		return err
+	}
+
 	p.ID = xid.New("ptnt")
+	return nil
+}
+
+func (p *Patient) IsValid() error {
+	if len(p.FirstName) == 0 {
+		p.SetFieldError("firstName", "First Name can't be blank")
+	}
+
+	if len(p.FirstName) == 0 {
+		p.SetFieldError("lastName", "Last Name can't be blank")
+	}
+
+	if p.Age <= 0 {
+		p.SetFieldError("age", "Age Name can't be blank")
+	}
+
+	if len(p.Phone) == 0 {
+		p.SetFieldError("phone", "Phone can't be blank")
+	}
+
+	if len(p.FieldErrors()) > 0 {
+		return errors.New("can't save invalid data")
+	}
+
 	return nil
 }
 
