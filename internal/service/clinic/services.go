@@ -1,4 +1,4 @@
-package clinics
+package clinic
 
 import (
 	"github.com/edgarsilva/go-scaffold/internal/server"

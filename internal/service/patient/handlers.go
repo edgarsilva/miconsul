@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// handlePatientsPage renders the patients page HTML
+// HandlePatientsPage renders the patients page HTML
 //
 // GET: /patients
 func (s *service) HandlePatientsPage(c *fiber.Ctx) error {
@@ -48,13 +48,22 @@ func (s *service) HandleCreatePatient(c *fiber.Ctx) error {
 		return c.Redirect("/patients?err=failed to create patient")
 	}
 
-	return c.Redirect("/patients?msg=failed to create patient")
+	isHTMX := c.Get("HX-Request", "") // will be a string 'true' for HTMX requests
+	if isHTMX == "" {
+		return c.Redirect("/patients/" + patient.ID)
+	}
+
+	c.Set("HX-Push-Url", "/patients/"+patient.ID)
+
+	theme := s.SessionUITheme(c)
+	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme), view.WithCurrentUser(cu))
+	return view.Render(c, view.PatientsPage([]model.Patient{}, patient, layoutProps))
 }
 
 // HandleUpdatePatient updates a patient record for the CurrentUser
 //
 // PATCH: /patients/:id
-// POST: /patients/:id/update
+// POST: /patients/:id/patch
 func (s *service) HandleUpdatePatient(c *fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
@@ -78,6 +87,11 @@ func (s *service) HandleUpdatePatient(c *fiber.Ctx) error {
 	res := s.DB.Where("id = ? AND user_id = ?", patientID, cu.ID).Updates(&patient)
 	if err := res.Error; err != nil {
 		return c.Redirect("/patients?err=failed to update patient")
+	}
+
+	isHTMX := c.Get("HX-Request", "") // will be a string 'true' for HTMX requests
+	if isHTMX == "" {
+		return c.Redirect("/patients/" + patient.ID)
 	}
 
 	return c.Redirect("/patients/"+patientID, fiber.StatusSeeOther)
@@ -107,8 +121,8 @@ func (s *service) HandleDeletePatient(c *fiber.Ctx) error {
 		return c.Redirect("/patients?msg=failed to delete that patient", fiber.StatusSeeOther)
 	}
 
-	isHTMX := c.Get("HX-Request", "")
-	if isHTMX != "123" {
+	isHTMX := c.Get("HX-Request", "") // will be a string 'true' for HTMX requests
+	if isHTMX == "" {
 		return c.Redirect("/patients", fiber.StatusSeeOther)
 	}
 

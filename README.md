@@ -35,8 +35,11 @@ using Go, SQLite with GORM, Templ with HTMX and DaisyUI/TailwindCSS:
 [09/May/24]
 - [X] Fix Schema Ids to use XID
 
-[10/May/24]
-- [ ] Add ERD for Miconsul sample DB 
+[10/May/24 - 17/May/24]
+- [X] Add ERD for Miconsul sample DB 
+- [X] Patients index page
+- [X] Patients Create/Update Form
+- [X] HTMX integration
 
 
 ### V1 (7day)

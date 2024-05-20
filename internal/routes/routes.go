@@ -4,7 +4,7 @@ import (
 	"github.com/edgarsilva/go-scaffold/internal/server"
 	"github.com/edgarsilva/go-scaffold/internal/service/auth"
 	"github.com/edgarsilva/go-scaffold/internal/service/blog"
-	"github.com/edgarsilva/go-scaffold/internal/service/clinics"
+	"github.com/edgarsilva/go-scaffold/internal/service/clinic"
 	"github.com/edgarsilva/go-scaffold/internal/service/counter"
 	"github.com/edgarsilva/go-scaffold/internal/service/dashboard"
 	"github.com/edgarsilva/go-scaffold/internal/service/patient"
@@ -84,16 +84,20 @@ func UsersRoutes(s *server.Server) {
 }
 
 func ClinicsRoutes(s *server.Server) {
-	c := clinics.NewService(s)
+	c := clinic.NewService(s)
 
 	// Pages
 	g := c.Group("/clinics")
 	g.Get("/", c.HandleClinicsPage)
-	g.Get("/new", c.HandleClinicsPage)
 	g.Get("/:id", c.HandleClinicsPage)
 
 	g.Post("/", c.HandleCreateClinic)
 
+	g.Post("/:id/patch", c.HandleUpdateClinic)
+	g.Patch("/:id", c.HandleUpdateClinic)
+
+	g.Post("/:id/delete", c.HandleDeleteClinic)
+	g.Delete("/:id", c.HandleDeleteClinic)
 	// Fragments
 	// g.Get("/fragment/footer", u.HandleFooterFragment)
 	// g.Get("/fragment/list", u.HandleTodosFragment)
