@@ -16,6 +16,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/favicon"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/monitor"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/gofiber/fiber/v2/middleware/session"
 )
@@ -36,6 +37,10 @@ func New(db *database.Database, locales *localize.Localizer) *Server {
 
 	// Initialize logger middleware config
 	fiberApp.Use(logger.New())
+
+	// Initialize recover middleware to catch panics that might
+	// stop the application
+	fiberApp.Use(recover.New())
 
 	// Initialize CORS wit config
 	fiberApp.Use(cors.New())
@@ -67,7 +72,7 @@ func New(db *database.Database, locales *localize.Localizer) *Server {
 	// Adds req language to the session
 
 	// Serve static files
-	fiberApp.Static("/", "./public")
+	fiberApp.Static("/public", "./public")
 
 	return &Server{
 		App:          fiberApp,

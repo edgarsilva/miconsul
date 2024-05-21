@@ -27,6 +27,10 @@
     background-color: #e5e5e5dd !important;
 }
 
+input[type="search"]::-webkit-search-cancel-button {
+  @apply grayscale opacity-35
+}
+
 /* HTMX transitions*/
 ul li {
   opacity: 1;
@@ -41,12 +45,12 @@ ul li.htmx-added {
   opacity: 0;
 }
 
-.saving-indicator{
+.htmx-indicator{
     opacity:0;
     transition: opacity 500ms ease-in;
 }
 
-.htmx-request .saving-indicator {
+.htmx-request .htmx-indicator {
     opacity: 0.75
 }
 

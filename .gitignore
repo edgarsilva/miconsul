@@ -34,3 +34,6 @@ node_modules
 # Don't include DB Store
 store/**/*.*
 
+# Don't include tmp/dev/test uploades
+public/assets/profile_pics
+

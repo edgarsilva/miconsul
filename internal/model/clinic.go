@@ -10,15 +10,17 @@ import (
 type Clinic struct {
 	ExtID      string
 	CoverPic   string
-	ProfilePic string
-	Name       string `gorm:"default:null;not null"`
-	Email      string `form:"email"`
-	Phone      string `form:"phone"`
-	UserID     string `gorm:"index;default:null;not null"`
+	ProfilePic string         `form:"profilePic"`
+	Name       string         `gorm:"default:null;not null"`
+	Email      string         `form:"email"`
+	Phone      string         `form:"phone"`
+	UserID     string         `gorm:"index;default:null;not null"`
+	DeletedAt  gorm.DeletedAt `gorm:"index"`
 	Address
 	SocialMedia
 	ModelBase
-	User User
+	User     User
+	favorite bool
 }
 
 func (c *Clinic) BeforeCreate(tx *gorm.DB) error {
@@ -44,4 +46,16 @@ func (c *Clinic) IsValid() error {
 	}
 
 	return nil
+}
+
+func (c Clinic) AvatarPic() string {
+	return c.ProfilePic
+}
+
+func (c Clinic) Initials() string {
+	if len(c.Name) < 2 {
+		return "CL"
+	}
+
+	return string([]rune(c.Name)[0:2])
 }

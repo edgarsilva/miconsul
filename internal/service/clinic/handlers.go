@@ -1,12 +1,9 @@
 package clinic
 
 import (
-	"strconv"
-
 	"github.com/edgarsilva/go-scaffold/internal/model"
 	"github.com/edgarsilva/go-scaffold/internal/view"
 	"github.com/gofiber/fiber/v2"
-	"syreclabs.com/go/faker"
 )
 
 // HandleClinicsPage renders the clinics page HTML
@@ -47,6 +44,12 @@ func (s *service) HandleCreateClinic(c *fiber.Ctx) error {
 	c.BodyParser(&clinic)
 
 	result := s.DB.Create(&clinic)
+	if err := result.Error; err == nil {
+		path, err := SaveProfilePicToDisk(c, clinic)
+		if err == nil {
+			clinic.ProfilePic = path
+		}
+	}
 	if !s.IsHTMX(c) {
 		if err := result.Error; err != nil {
 			return c.Redirect("/clinics?err=failed to create Clinic", fiber.StatusSeeOther)
@@ -59,28 +62,6 @@ func (s *service) HandleCreateClinic(c *fiber.Ctx) error {
 	theme := s.SessionUITheme(c)
 	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme), view.WithCurrentUser(cu))
 	return view.Render(c, view.ClinicsPage([]model.Clinic{}, clinic, layoutProps))
-}
-
-func (s *service) HandleCreateMockClinic(c *fiber.Ctx) error {
-	n, err := strconv.Atoi(c.Params("n"))
-	if err != nil {
-		n = 10
-	}
-
-	var users []model.User
-	for i := 0; i <= n; i++ {
-		users = append(users, model.User{
-			Name:  faker.Name().Name(),
-			Email: faker.Internet().Email(),
-		})
-	}
-
-	res := s.DB.Create(&users)
-	if err := res.Error; err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).SendString("Unprocessable entity")
-	}
-
-	return c.SendStatus(fiber.StatusOK)
 }
 
 // HandleUpdateClinic updates a clinic record for the CurrentUser
@@ -106,6 +87,10 @@ func (s *service) HandleUpdateClinic(c *fiber.Ctx) error {
 		UserID: cu.ID,
 	}
 	c.BodyParser(&clinic)
+	path, err := SaveProfilePicToDisk(c, clinic)
+	if err == nil {
+		clinic.ProfilePic = path
+	}
 
 	res := s.DB.Where("id = ? AND user_id = ?", clinicID, cu.ID).Updates(&clinic)
 	if err := res.Error; err != nil {
@@ -151,4 +136,29 @@ func (s *service) HandleDeleteClinic(c *fiber.Ctx) error {
 
 	c.Set("HX-Location", "/clinics")
 	return c.SendStatus(fiber.StatusOK)
+}
+
+// HandleClinicSearch searches patients and returns an HTML fragment to be
+// replacesd in the HTMX active search
+//
+// POST: /clinics/search
+func (s *service) HandleClinicSearch(c *fiber.Ctx) error {
+	cu, err := s.CurrentUser(c)
+	if err != nil {
+		return c.Redirect("/login")
+	}
+
+	queryStr := c.FormValue("query", "")
+	clinics := []model.Clinic{}
+
+	query := s.DB.Model(&cu)
+	if queryStr != "" {
+		query = query.Where("name LIKE ?", "%"+queryStr+"%")
+	}
+	query.Limit(5).Association("Clinics").Find(&clinics)
+
+	// time.Sleep(time.Second * 2)
+	theme := s.SessionUITheme(c)
+	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme), view.WithCurrentUser(cu))
+	return view.Render(c, view.ClinicSearchResults(clinics, layoutProps))
 }

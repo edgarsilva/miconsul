@@ -2,6 +2,7 @@ package routes
 
 import (
 	"github.com/edgarsilva/go-scaffold/internal/server"
+	"github.com/edgarsilva/go-scaffold/internal/service/appointment"
 	"github.com/edgarsilva/go-scaffold/internal/service/auth"
 	"github.com/edgarsilva/go-scaffold/internal/service/blog"
 	"github.com/edgarsilva/go-scaffold/internal/service/clinic"
@@ -33,6 +34,7 @@ func (r *Router) RegisterRoutes(s *server.Server) {
 	ThemeRoutes(s)
 	TodosRoutes(s)
 	CounterRoutes(s)
+	AppointmentRoutes(s)
 }
 
 func AuthRoutes(s *server.Server) {
@@ -91,6 +93,8 @@ func ClinicsRoutes(s *server.Server) {
 	g.Get("/", c.HandleClinicsPage)
 	g.Get("/:id", c.HandleClinicsPage)
 
+	g.Post("/search", c.HandleClinicSearch)
+
 	g.Post("/", c.HandleCreateClinic)
 
 	g.Post("/:id/patch", c.HandleUpdateClinic)
@@ -114,13 +118,43 @@ func PatientRoutes(s *server.Server) {
 	g.Get("/", p.HandlePatientsPage)
 	g.Get("/:id", p.HandlePatientsPage)
 
+	g.Post("/search", p.HandlePatientSearch)
+
 	g.Post("/", p.HandleCreatePatient)
 
 	g.Post("/:id/patch", p.HandleUpdatePatient)
 	g.Patch("/:id", p.HandleUpdatePatient)
+	g.Patch("/:id/removepic", p.HandleRemovePic)
 
 	g.Post("/:id/delete", p.HandleDeletePatient)
 	g.Delete("/:id", p.HandleDeletePatient)
+
+	// g.Get("/:id", p.HandlePatientsPage)
+
+	// Fragments
+	// g.Get("/fragment/footer", u.HandleFooterFragment)
+	// g.Get("/fragment/list", u.HandleTodosFragment)
+
+	// API
+	// api := p.Group("/api/patients")
+	// api.Get("", p.HandleAPIPatients)
+}
+
+func AppointmentRoutes(s *server.Server) {
+	p := appointment.NewService(s)
+
+	g := p.Group("/appointments", auth.MustAuthenticate(s))
+	g.Get("/", p.HandleAppointmentsPage)
+	g.Get("/:id", p.HandleAppointmentsPage)
+
+	g.Post("/", p.HandleCreateAppointment)
+
+	g.Post("/:id/patch", p.HandleUpdateAppointment)
+	g.Patch("/:id", p.HandleUpdateAppointment)
+
+	g.Post("/:id/delete", p.HandleDeleteAppointment)
+	g.Delete("/:id", p.HandleDeleteAppointment)
+
 	// g.Get("/:id", p.HandlePatientsPage)
 
 	// Fragments

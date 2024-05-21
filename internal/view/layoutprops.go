@@ -14,11 +14,15 @@ type layoutProps struct {
 	CurrentUser
 	Theme  string
 	Locale string
+	ErrMsg string
 }
 
 type Prop func(layoutProps *layoutProps) error
 
-var locales = localize.New("es-MX", "en-US")
+var (
+	phoneRegex = "^[\\+]?[(]?[0-9]{3}[)]?[-\\s\\.]?[0-9]{3}[-\\s\\.]?[0-9]{4,6}$"
+	locales    = localize.New("es-MX", "en-US")
+)
 
 func NewLayoutProps(props ...Prop) (layoutProps, error) {
 	layoutProps := layoutProps{

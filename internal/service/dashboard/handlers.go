@@ -14,5 +14,5 @@ func (s *service) HandleDashboardPage(c *fiber.Ctx) error {
 
 	cu, _ := s.CurrentUser(c)
 	layoutProps, _ := view.NewLayoutProps(view.WithCurrentUser(cu), view.WithTheme(theme))
-	return view.Render(c, view.PageDashboard(layoutProps))
+	return view.Render(c, view.DashboardPage(layoutProps))
 }

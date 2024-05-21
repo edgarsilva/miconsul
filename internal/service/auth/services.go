@@ -165,7 +165,7 @@ func (s service) userPendingConfirmation(email string) error {
 		Select("id, email, confirm_email_token").
 		Where("email = ? AND confirm_email_token IS NOT null AND confirm_email_token != ''", email).
 		Take(&user)
-	if result.Error == nil || user.ID != "" { // If a row/record exists it means confirmation is pending and we should re-send
+	if result.RowsAffected != 0 || user.ID != "" { // If a row/record exists it means confirmation is pending and we should re-send
 		return errors.New("user pending confirmation")
 	}
 
@@ -191,7 +191,7 @@ func Authenticate(DB *database.Database, c *fiber.Ctx) (model.User, error) {
 func authenticateWithUID(DB *database.Database, uid string) (model.User, error) {
 	user := model.User{}
 	if uid == "" {
-		return user, errors.New("user UID is blank")
+		return user, errors.New("user ID is blank")
 	}
 
 	result := DB.Where("id = ?", uid).Take(&user)

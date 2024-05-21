@@ -72,7 +72,7 @@ templ ClinicLi(clinic model.Clinic, lp layoutProps) {
 			} else {
 				<div class="avatar placeholder">
 					<div class="bg-neutral text-neutral-content rounded-full w-12">
-						<span class="text-xl">{ clinic.Name[0:1] }</span>
+						<span class="text-xl">{ clinic.Initials() }</span>
 					</div>
 				</div>
 			}
@@ -167,18 +167,34 @@ templ ClinicProfile(clinic model.Clinic, lp layoutProps) {
 				<div class="px-4 py-6 sm:p-8">
 					<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
 						<div class="col-span-full">
-							<label for="photo" class="block text-sm font-medium leading-6">{ l(lp.Locale, "str.profile_pic") }</label>
+							<label for="profile_pic" class="block text-sm font-medium leading-6">{ l(lp.Locale, "str.profile_pic") }</label>
 							<div class="mt-2 flex items-center gap-x-3">
-								<svg class="h-12 w-12 text-base-content/60" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-									<path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0021.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 003.065 7.097A9.716 9.716 0 0012 21.75a9.716 9.716 0 006.685-2.653zm-12.54-1.285A7.486 7.486 0 0112 15a7.486 7.486 0 015.855 2.812A8.224 8.224 0 0112 20.25a8.224 8.224 0 01-5.855-2.438zM15.75 9a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" clip-rule="evenodd"></path>
-								</svg>
-								<button type="button" class="btn btn-ghost btn-sm">{ l(lp.Locale, "str.change") }</button>
+								if clinic.ProfilePic != "" {
+									<div class="avatar">
+										<div class="w-12 rounded-full">
+											<img src={ string(templ.URL(clinic.ProfilePic)) }/>
+										</div>
+									</div>
+								} else {
+									<div class="avatar placeholder">
+										<div class="bg-neutral text-neutral-content rounded-full w-12">
+											<span class="text-xl">{ clinic.Initials() }</span>
+										</div>
+									</div>
+								}
+								<input
+									id="profile_pic"
+									name="profilePic"
+									type="file"
+									class="file-input file-input-bordered w-full file-input-primary"
+									accept="image/*"
+								/>
 							</div>
 						</div>
-						<div class="sm:col-span-3">
-							<label for="first-name" class="block text-sm font-medium leading-6">{ l(lp.Locale, "str.clinic_name") }</label>
+						<div class="sm:col-span-4">
+							<label for="name" class="block text-sm font-medium leading-6">{ l(lp.Locale, "str.clinic_name") }</label>
 							<div class="mt-2 form-control">
-								<input required type="text" name="Name" value={ clinic.Name } id="name" autocomplete="organization" class="input input-bordered block w-full"/>
+								<input required min="2" type="text" name="name" value={ clinic.Name } id="name" autocomplete="organization" class="input input-bordered block w-full"/>
 								if clinic.FieldError("name") != "" {
 									<div class="label">
 										<span class="label-text-alt text-error">{ clinic.FieldError("name") }</span>
@@ -324,6 +340,7 @@ templ ClinicForm(clinic model.Clinic, lp layoutProps) {
 	<form
 		class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2"
 		method="POST"
+		enctype="multipart/form-data"
 		if clinic.ID != "" && clinic.ID != "new" {
 			hx-patch={ "/clinics/" + clinic.ID }
 			action={ templ.URL("/clinics/" + clinic.ID + "/patch") }
@@ -335,9 +352,7 @@ templ ClinicForm(clinic model.Clinic, lp layoutProps) {
 		hx-select="#clinic_profile_cont"
 		hx-swap="outerHTML"
 	>
-		<span class="absolute badge badge-success badge-sm p-2 top-2 right-2 saving-indicator">
-			<span class="loading loading-ring loading-sm"></span>
-		</span>
+		<span class="absolute top-2 right-2 loading loading-ring loading-sm htmx-indicator"></span>
 		{ children... }
 	</form>
 }
