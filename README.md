@@ -12,47 +12,63 @@ using Go, SQLite with GORM, Templ with HTMX and DaisyUI/TailwindCSS:
 ## Release Milestones
 
 ### Ongoing
+
 - [ ] README and Go Env Setup/Updates
 
 ### V0 (7day)
 
 [21/Apr/24]
+
 - [x] Basic project setup
 
 [24/Apr/24] - [01/May/24]
+
 - [x] Login page
 - [x] Email/Password endpoints
 - [x] Reset Password Functionality
 
 [02/May/24] - [07/May/24]
+
 - [x] Working Login Page
 - [x] Reset Password Functionality
 - [X] Signup page
 
 [08/May/24]
+
 - [X] Confirm email Functionality
 
 [09/May/24]
+
 - [X] Fix Schema Ids to use XID
 
 [10/May/24 - 17/May/24]
-- [X] Add ERD for Miconsul sample DB 
+
+- [X] Add ERD for Miconsul sample DB
 - [X] Patients index page
 - [X] Patients Create/Update Form
 - [X] HTMX integration
 
+[18/May/24 - 22/May/24]
+
+- Clinics views and endpoints
+- Appointments views and endpoints
+- Basic Toast and notifications
 
 ### V1 (7day)
 
 [11/May/24]
+
 - Add Models for Miconsul V1
 
 [13/May/24] - [18/May/24]
+
 - [ ] Running Somewhere other than the dev machine
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+These instructions will get you a copy of the project up and running on your
+local machine for development and testing purposes. See deployment for notes on
+how to deploy the project on a live system.
 
 ## MakeFile
 

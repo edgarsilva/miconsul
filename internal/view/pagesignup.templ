@@ -1,9 +1,9 @@
 package view
 
-templ SignupPage(email string, err error, layoutProps layoutProps) {
-	@LayoutAuth() {
+templ SignupPage(email string, err error, lp layoutProps) {
+	@LayoutAuth(lp) {
 		<div class="absolute top-4 right-4">
-			@CmpBtnTheme(layoutProps.Theme)
+			@CmpBtnTheme(lp.Theme)
 		</div>
 		<div class="pt-10 card glass bg-base-100 shadow-lg w-full sm:max-w-[480px] sm:mx-auto">
 			<div class="flex justify-center">

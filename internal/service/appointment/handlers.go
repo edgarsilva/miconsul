@@ -1,9 +1,10 @@
 package appointment
 
 import (
-	"fmt"
+	"time"
 
 	"github.com/edgarsilva/go-scaffold/internal/model"
+	"github.com/edgarsilva/go-scaffold/internal/util"
 	"github.com/edgarsilva/go-scaffold/internal/view"
 	"github.com/gofiber/fiber/v2"
 )
@@ -24,11 +25,71 @@ func (s *service) HandleAppointmentsPage(c *fiber.Ctx) error {
 		s.DB.Model(&model.Appointment{}).First(&appointment)
 	}
 	appointments := []model.Appointment{}
-	s.DB.Model(&cu).Association("Appointments").Find(&appointments)
+	s.DB.Model(&cu).
+		Where("booked_at > ?", util.Bod(time.Now())).
+		Preload("Clinic").
+		Preload("Patient").
+		Association("Appointments").
+		Find(&appointments)
 
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme), view.WithCurrentUser(cu))
+	toast := c.Query("toast", "")
+	layoutProps, _ := view.NewLayoutProps(
+		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, ""),
+	)
 	return view.Render(c, view.AppointmentsPage(appointments, appointment, layoutProps))
+}
+
+// HandleStartAppointmentPage renders the appointments page HTML
+//
+// GET: /appointments/:id/start
+func (s *service) HandleAppointmentStartPage(c *fiber.Ctx) error {
+	cu, err := s.CurrentUser(c)
+	if err != nil {
+		return c.Redirect("/login")
+	}
+
+	id := c.Params("id", "")
+	appointment := model.Appointment{
+		UserID: cu.ID,
+	}
+	s.DB.Model(&appointment).Preload("Patient").Take(&appointment)
+	if id == "" || appointment.ID == "" {
+		c.Set("HX-Redirect", "/appointments?toast=The appointment does not exist&level=warning")
+		return c.Redirect("/appointments?toast=The appointment does not exist&level=warning", fiber.StatusSeeOther)
+	}
+
+	theme := s.SessionUITheme(c)
+	toast := c.Query("toast", "")
+	layoutProps, _ := view.NewLayoutProps(
+		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, ""),
+	)
+	return view.Render(c, view.AppointmentStartPage(appointment, layoutProps))
+}
+
+// HandleStartAppointmentPage renders the appointments page HTML
+//
+// GET: /appointments/:id/start
+func (s *service) HandleAppointmentEndPage(c *fiber.Ctx) error {
+	cu, err := s.CurrentUser(c)
+	if err != nil {
+		return c.Redirect("/login")
+	}
+
+	id := c.Params("id", "")
+	appointment := model.Appointment{}
+	appointment.ID = id
+	if id != "" {
+		c.Set("HX-Redirect", "/appointments?toast=The appointment does not exist&level=warning")
+		return c.Redirect("/appointments?toast=The appointment does not exist&level=warning", fiber.StatusSeeOther)
+	}
+
+	theme := s.SessionUITheme(c)
+	toast := c.Query("toast", "")
+	layoutProps, _ := view.NewLayoutProps(
+		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, ""),
+	)
+	return view.Render(c, view.AppointmentStartPage(appointment, layoutProps))
 }
 
 // HandleCreateAppointment inserts a new appointment record for the CurrentUser
@@ -40,14 +101,17 @@ func (s *service) HandleCreateAppointment(c *fiber.Ctx) error {
 		return c.Redirect("/login")
 	}
 
+	bookedAtFV := c.FormValue("bookedAt", "")
+	bookedAt, err := time.Parse(view.FormTimeFormat, bookedAtFV)
+	if err != nil {
+		bookedAt = time.Now()
+	}
+
 	appointment := model.Appointment{
-		UserID: cu.ID,
+		UserID:   cu.ID,
+		BookedAt: bookedAt,
 	}
 	c.BodyParser(&appointment)
-	fmt.Println("-------------------->")
-	fmt.Printf("-------------------->%#v", appointment.ClinicID)
-	fmt.Printf("-------------------->%#v", appointment.PatientID)
-	fmt.Println("-------------------->")
 
 	result := s.DB.Create(&appointment)
 
@@ -59,10 +123,8 @@ func (s *service) HandleCreateAppointment(c *fiber.Ctx) error {
 		return c.Redirect("/appointments/" + appointment.ID)
 	}
 
-	c.Set("HX-Push-Url", "/appointments/"+appointment.ID)
-	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme), view.WithCurrentUser(cu))
-	return view.Render(c, view.AppointmentsPage([]model.Appointment{}, appointment, layoutProps))
+	c.Set("HX-Redirect", "/appointments?toast=New appointment created")
+	return c.SendStatus(fiber.StatusOK)
 }
 
 // HandleUpdateAppointment updates a appointment record for the CurrentUser

@@ -1,0 +1,40 @@
+package view
+
+import (
+	"strings"
+)
+
+type Avatarable interface {
+	AvatarPic() string
+	Initials() string
+}
+
+templ CmpAvatar(avatar Avatarable, classname ...string) {
+	if avatar.AvatarPic() != "" {
+		<div class="avatar">
+			<div class={ "w-12 rounded-full " + strings.Join(classname, " ") }>
+				<img src={ string(templ.URL(avatar.AvatarPic())) }/>
+			</div>
+		</div>
+	} else {
+		<div class="avatar placeholder">
+			<div class="bg-neutral text-neutral-content rounded-full w-12">
+				<span class="text-xl">{ avatar.Initials() }</span>
+			</div>
+		</div>
+	}
+}
+
+templ CmpProfilePic(avatar Avatarable) {
+	if avatar.AvatarPic() != "" {
+		<div class="avatar w-full h-full rounded-xl overflow-clip">
+			<img src={ string(templ.URL(avatar.AvatarPic())) }/>
+		</div>
+	} else {
+		<div class="avatar w-full h-full">
+			<div class="bg-neutral text-neutral-content rounded-full w-12">
+				<span class="text-xl">{ avatar.Initials() }</span>
+			</div>
+		</div>
+	}
+}

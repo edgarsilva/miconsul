@@ -10,11 +10,19 @@ type CurrentUser interface {
 	IsLoggedIn() bool
 }
 
+// Toast notification required
+type Toast struct {
+	Msg   string
+	Sub   string
+	Level string
+}
+
 type layoutProps struct {
 	CurrentUser
 	Theme  string
 	Locale string
-	ErrMsg string
+	Flash  string
+	Toast  Toast
 }
 
 type Prop func(layoutProps *layoutProps) error
@@ -26,9 +34,10 @@ var (
 
 func NewLayoutProps(props ...Prop) (layoutProps, error) {
 	layoutProps := layoutProps{
+		CurrentUser: new(DummyUser),
 		Locale:      "es-MX",
 		Theme:       "light",
-		CurrentUser: new(DummyUser),
+		Toast:       Toast{},
 	}
 
 	for _, prop := range props {
@@ -80,6 +89,25 @@ func WithLocale(lang string) Prop {
 		}
 
 		props.Locale = lang
+
+		return nil
+	}
+}
+
+func WithToast(msg, sub string) Prop {
+	return func(props *layoutProps) error {
+		props.Toast = Toast{
+			Msg: msg,
+			Sub: sub,
+		}
+
+		return nil
+	}
+}
+
+func WithFlash(flash string) Prop {
+	return func(props *layoutProps) error {
+		props.Flash = flash
 
 		return nil
 	}

@@ -1,0 +1,198 @@
+package view
+
+import (
+	"strconv"
+
+	"github.com/edgarsilva/go-scaffold/internal/model"
+)
+
+templ AppointmentStartPage(appointment model.Appointment, lp layoutProps) {
+	@Layout(lp) {
+		<div class="px-4 lg:px-8">
+			@CmpBtnBack(l(lp.Locale, "btn.back"), "/appointments")
+		</div>
+		<section id="appointment_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
+			@AppointmentStart(appointment, lp)
+		</section>
+	}
+}
+
+templ PatientCard(patient model.Patient, lp layoutProps) {
+	<div>
+		<hgroup
+			class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
+			hx-boost="true"
+		>
+			<h1 class="font-bold text-2xl">{ l(lp.Locale, "str.patient") }</h1>
+			<a
+				href="/patients/new"
+				class="btn btn-primary btn-sm"
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"></path>
+				</svg>
+				{ l(lp.Locale, "btn.appointments") }
+			</a>
+		</hgroup>
+		<section class="grid grid-cols-6 app-card">
+			<div class="col-span-full flex flex-col gap-10 sm:flex-row">
+				<figure class="aspect-[4/5] w-52 flex-none rounded-2xl object-cover">
+					@CmpProfilePic(patient)
+				</figure>
+				<div class="max-w-xl flex-auto">
+					<a href="/appointments" class="link link-hover">
+						<hgroup class="leading-5 font-semibold flex">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke-width="1.5"
+								stroke="currentColor"
+								class="w-5 h-5 mr-1"
+							>
+								<path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"></path>
+							</svg>
+							<h3>
+								{ l(lp.Locale, "str.last_appointment") }
+								<time datetime="2022-01-10T17:00">10/Ago/2022 5:00 PM</time>
+							</h3>
+						</hgroup>
+					</a>
+					<div class="mt-4 text-base leading-7 text-base-content/60">
+						<h3 class="text-base-content text-sm font-semibold">Summary</h3>
+						<blockquote class="mb-4">
+							Ultricies massa malesuada viverra cras lobortis. Tempor orci hac ligula dapibus mauris sit ut eu. Eget turpis urna maecenas cras. Nisl dictum.
+						</blockquote>
+						<h3 class="text-base-content text-sm font-semibold">Notes</h3>
+						<blockquote class="mb-4">
+							Ultricies massa malesuada viverra cras lobortis. Tempor orci hac ligula dapibus mauris sit ut eu. Eget turpis urna maecenas cras. Nisl dictum.
+						</blockquote>
+					</div>
+					<ul class="flex divide-x divide-base-content/10 pt-2">
+						<li class="font-semibold tracking-tight pr-2">{ patient.Name() }</li>
+						<li class="text-base-content/50 px-2">{ l(lp.Locale, "str.age") + ": " + strconv.Itoa(patient.Age) }</li>
+						<li class="text-base-content/50 px-2">{ l(lp.Locale, "str.ocupation") + ": " + patient.Ocupation }</li>
+					</ul>
+				</div>
+			</div>
+		</section>
+	</div>
+}
+
+templ CmpRadioStatusBadge() {
+	<div class="flex gap-4 items-center p-2">
+		<input type="radio" id="info" name="rating-1" class="peer/info sr-only" value="1"/>
+		<label for="info" class="badge border-info text-info bg-transparent gap-2 peer-checked/info:badge-info badge-lg">
+			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 stroke-current">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+			</svg>
+			Rescheduled
+		</label>
+		<input type="radio" id="success" name="rating-1" class="peer/success sr-only" value="2"/>
+		<label for="success" class="badge border-success text-success bg-transparent gap-2 peer-checked/success:badge-success badge-lg">
+			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 stroke-current">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+			</svg>
+			Confirmed
+		</label>
+		<input type="radio" id="warning" name="rating-1" class="peer/warning sr-only" value="2"/>
+		<label for="warning" class="badge border-warning text-warning bg-transparent gap-2 peer-checked/warning:badge-warning badge-lg">
+			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 stroke-current">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+			</svg>
+			Canceled
+		</label>
+		<input type="radio" id="neutral" name="rating-1" class="peer/neutral sr-only" value="2"/>
+		<label for="neutral" class="badge border-neutral text-neutral bg-transparent gap-2 peer-checked/neutral:badge-neutral badge-lg">
+			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 stroke-current">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+			</svg>
+			Closed
+		</label>
+		<label class="badge border-secondary text-secondary bg-transparent gap-2 has-[:checked]:badge-secondary badge-lg">
+			<input type="radio" id="t1" name="rating-1" class="sr-only" value="2"/>
+			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 stroke-current">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+			</svg>
+			Sent
+		</label>
+	</div>
+}
+
+templ AppointmentStart(appointment model.Appointment, lp layoutProps) {
+	@AppointmentForm(appointment, lp) {
+		<div class="space-y-10 ">
+			@PatientCard(appointment.Patient, lp)
+			<div class="pt-8 gap-x-8 gap-y-8">
+				<hgroup
+					class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
+					hx-boost="true"
+				>
+					<h1 class="font-bold text-2xl">{ l(lp.Locale, "str.current_session") }</h1>
+					<a
+						href="/patients/new"
+						class="btn btn-primary btn-sm"
+					>
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z"></path>
+						</svg>
+						{ l(lp.Locale, "btn.new_patient") }
+					</a>
+				</hgroup>
+				<section class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
+					<input type="hidden" name="id" value={ appointment.ID } id="mb_appointment_id"/>
+					<div class="px-4 py-6 sm:p-8">
+						<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+							<div class="col-span-full">
+								<label for="website" class="block text-sm font-medium leading-6">{ l(lp.Locale, "str.observations") }</label>
+								<div class="mt-2">
+									<textarea
+										name="observations"
+										class="textarea textarea-bordered w-full block"
+										placeholder={ l(lp.Locale, "str.family_history_ph") }
+									>{ appointment.Observations }</textarea>
+								</div>
+							</div>
+							<div class="col-span-full">
+								<label for="website" class="block text-sm font-medium leading-6">{ l(lp.Locale, "str.conclusions") }</label>
+								<div class="mt-2">
+									<textarea
+										name="conclusions"
+										class="textarea textarea-bordered w-full block"
+										placeholder={ l(lp.Locale, "str.background_ph") }
+									>{ appointment.Conclusions }</textarea>
+								</div>
+							</div>
+							<div class="col-span-full">
+								<label for="about" class="block text-sm font-medium leading-6">{ l(lp.Locale, "str.summary") }</label>
+								<div class="mt-2">
+									<textarea
+										name="summary"
+										class="textarea textarea-bordered w-full block"
+										placeholder={ l(lp.Locale, "str.summary_ph") }
+									>
+										{ appointment.Summary }
+									</textarea>
+								</div>
+							</div>
+							<div class="col-span-full">
+								<label for="website" class="block text-sm font-medium leading-6">{ l(lp.Locale, "str.notes") }</label>
+								<div class="mt-2">
+									<textarea
+										name="notes"
+										class="textarea textarea-bordered w-full block"
+										placeholder={ l(lp.Locale, "str.notes_ph") }
+									>{ appointment.Notes }</textarea>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="flex items-center justify-end gap-x-6 border-t border-base-content/10 px-4 py-4 sm:px-8">
+						<button type="button" class="btn btn-ghost">{ l(lp.Locale, "btn.cancel") }</button>
+						<button type="submit" class="btn btn-primary">{ l(lp.Locale, "btn.save") }</button>
+					</div>
+				</section>
+			</div>
+		</div>
+	}
+}

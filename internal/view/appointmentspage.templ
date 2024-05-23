@@ -24,9 +24,9 @@ templ AppointmentsPage(appointments []model.Appointment, appointment model.Appoi
 			<div class="px-4 lg:px-8">
 				@CmpBtnBack(l(lp.Locale, "btn.back"), "/")
 			</div>
-			<section class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
+			<section class="grow flex flex-col px-0 sm:px-4 py-8 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 				<div
-					class="relative lg:-translate-y-16 xl:-translate-y-32"
+					class="relative"
 				>
 					<hgroup
 						class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
@@ -44,7 +44,7 @@ templ AppointmentsPage(appointments []model.Appointment, appointment model.Appoi
 						</a>
 					</hgroup>
 					if (len(appointments) > 0) {
-						@AppointmentsList(appointments, lp)
+						@AppointmentsList(appointments, false, lp)
 					} else {
 						@AppointmentsEmptyList(lp)
 					}
@@ -54,11 +54,15 @@ templ AppointmentsPage(appointments []model.Appointment, appointment model.Appoi
 	}
 }
 
-templ AppointmentsList(appointments []model.Appointment, lp layoutProps) {
-	<section class="app-card col-span-2 flex flex-col gap-4">
-		<div class="relative flex items-center justify-between">
-			<h3 class="font-semibold text-xl">{ l(lp.Locale, "str.appointments") }</h3>
-			<details class="absolute right-0 dropdown lg:hidden">
+templ AppointmentsList(appointments []model.Appointment, showTitle bool, lp layoutProps) {
+	<section class="app-card col-span-2 flex flex-col pt-4">
+		<div class="relative hidden items-center justify-between border-b border-base-coentent/10 pb-2 sr-only">
+			<h3 class="font-semibold text-xl">
+				if showTitle {
+					{ l(lp.Locale, "str.appointments") }
+				}
+			</h3>
+			<details class="absolute right-0 dropdown lg:hidden ">
 				<summary class="btn btn-square btn-ghost">
 					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
 						<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"></path>
@@ -80,205 +84,57 @@ templ AppointmentsList(appointments []model.Appointment, lp layoutProps) {
 				</nav>
 			</div>
 		</div>
-		<ol class="divide-y divide-base-content-10 text-sm leading-6">
+		<ul class="divide-y divide-base-content-10 text-sm leading-6">
 			for _, appointment := range appointments {
 				@AppointmentLi(appointment, lp)
 			}
-			<li class="relative flex space-x-6 py-6 xl:static">
-				<img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="h-14 w-14 flex-none rounded-full"/>
-				<div class="flex-auto">
-					<h3 class="pr-10 font-semibold text-base-content xl:pr-0">Leslie Alexander</h3>
-					<dl class="mt-2 flex flex-col text-base-content xl:flex-row">
-						<div class="flex items-start space-x-3">
-							<dt class="mt-0.5">
-								<span class="sr-only">{ l(lp.Locale, "str.date") }</span>
-								<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-									<path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clip-rule="evenodd"></path>
-								</svg>
-							</dt>
-							<dd>
-								<time datetime="2022-01-10T17:00">Jan 10th, 2022 at 5:00 PM</time>
-							</dd>
-						</div>
-						<div class="mt-2 flex items-center space-x-3 xl:ml-3.5 xl:mt-0 xl:border-l xl:border-base-300 xl:border-opacity-50 xl:pl-3.5">
-							<dt class="mt-0.5">
-								<span class="sr-only">{ l(lp.Locale, "str.location") }</span>
-								<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-									<path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clip-rule="evenodd"></path>
-								</svg>
-							</dt>
-							<dd>Meraki</dd>
-							<span class="mt-0.5 badge badge-neutral">
-								{ l(lp.Locale, "str.pending") }
-							</span>
-						</div>
-					</dl>
-				</div>
-				@AppointmentActions(lp)
-			</li>
-			<li class="relative flex items-center space-x-6 py-6 xl:static">
-				<img src="https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="h-14 w-14 flex-none rounded-full"/>
-				<div class="flex-auto">
-					<h3 class="pr-10 font-semibold text-base-content xl:pr-0">Michael Foster</h3>
-					<dl class="mt-2 flex flex-col text-base-content xl:flex-row">
-						<div class="flex items-start space-x-3">
-							<dt class="mt-0.5">
-								<span class="sr-only">Date</span>
-								<svg class="h-5 w-5 text-base-content" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-									<path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clip-rule="evenodd"></path>
-								</svg>
-								<svg
-									class="w-5 h-5 mt-1 text-info"
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-									stroke-width="1.5"
-									stroke="currentColor"
-								>
-									<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3"></path>
-								</svg>
-							</dt>
-							<dd class="flex flex-col">
-								<time class="line-through opacity-50" datetime="2022-01-12T15:00">Jan 12th, 2022 at 3:00 PM</time>
-								<time class="font-semibold text-info" datetime="2022-01-12T15:00">Jan 21th, 2022 at 3:00 PM</time>
-							</dd>
-						</div>
-						<div class="mt-2 flex items-start space-x-3 xl:ml-3.5 xl:mt-0 xl:border-l xl:border-base-300 xl:border-opacity-50 xl:pl-3.5">
-							<dt class="mt-0.5">
-								<span class="sr-only">{ l(lp.Locale, "str.location") }</span>
-								<svg class="h-5 w-5 text-base-content" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-									<path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clip-rule="evenodd"></path>
-								</svg>
-							</dt>
-							<dd>Meraki</dd>
-							<span class="mt-0.5 badge badge-info">{ l(lp.Locale, "str.reschedule") }</span>
-						</div>
-					</dl>
-				</div>
-				@AppointmentActions(lp)
-			</li>
-			<li class="relative flex items-center space-x-6 py-6 xl:static">
-				<img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="h-14 w-14 flex-none rounded-full"/>
-				<div class="flex-auto">
-					<h3 class="pr-10 font-semibold xl:pr-0">Dries Vincent</h3>
-					<dl class="mt-2 flex flex-col xl:flex-row">
-						<div class="flex items-start space-x-3">
-							<dt class="mt-0.5">
-								<span class="sr-only">Date</span>
-								<svg class="h-5 w-5 text-success" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-									<path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clip-rule="evenodd"></path>
-								</svg>
-							</dt>
-							<dd class="font-semibold text-success">
-								<time datetime="2022-01-12T17:00">January 12th, 2022 at 5:00 PM</time>
-							</dd>
-						</div>
-						<div class="mt-2 flex items-start space-x-3 xl:ml-3.5 xl:mt-0 xl:border-l xl:border-gray-400 xl:border-opacity-50 xl:pl-3.5">
-							<dt class="mt-0.5">
-								<span class="sr-only">Location</span>
-								<svg class="h-5 w-5 text-base-content" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-									<path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clip-rule="evenodd"></path>
-								</svg>
-							</dt>
-							<dd>Tu Psicologa</dd>
-							<span class="mt-0.5 badge badge-success">confirmed</span>
-						</div>
-					</dl>
-				</div>
-				@AppointmentActions(lp)
-			</li>
-			<li class="relative flex space-x-6 py-6 xl:static">
-				<img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="h-14 w-14 flex-none rounded-full"/>
-				<div class="flex-auto">
-					<h3 class="pr-10 font-semibold xl:pr-0">Lindsay Walton</h3>
-					<dl class="mt-2 flex flex-col text-base-content xl:flex-row">
-						<div class="flex items-start space-x-3">
-							<dt class="mt-0.5">
-								<span class="sr-only">Date</span>
-								<svg class="h-5 w-5 text-warning" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-									<path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clip-rule="evenodd"></path>
-								</svg>
-							</dt>
-							<dd class="font-semibold text-warning line-through"><time datetime="2022-01-14T10:00">January 14th, 2022 at 10:00 AM</time></dd>
-						</div>
-						<div class="mt-2 flex items-start space-x-3 xl:ml-3.5 xl:mt-0 xl:border-l xl:border-base-300 xl:border-opacity-50 xl:pl-3.5">
-							<dt class="mt-0.5">
-								<span class="sr-only">Location</span>
-								<svg class="h-5 w-5 text-base-content" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-									<path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clip-rule="evenodd"></path>
-								</svg>
-							</dt>
-							<dd>Meraki</dd>
-							<span class="mt-0.5 badge badge-warning">canceled</span>
-						</div>
-					</dl>
-				</div>
-				@AppointmentActions(lp, "cancel")
-			</li>
-			<li class="relative flex items-center space-x-6 py-6 xl:static">
-				<img
-					src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-					alt=""
-					class="h-14 w-14 flex-none rounded-full"
-				/>
-				<div class="flex-auto">
-					<h3 class="pr-10 font-semibold xl:pr-0">Courtney Henry</h3>
-					<dl class="mt-2 flex flex-col text-base-content xl:flex-row">
-						<div class="flex items-start space-x-3">
-							<dt class="mt-0.5">
-								<span class="sr-only">Date</span>
-								<svg class="h-5 w-5 text-base-content" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-									<path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clip-rule="evenodd"></path>
-								</svg>
-								<svg
-									class="w-5 h-5 mt-1 text-info"
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-									stroke-width="1.5"
-									stroke="currentColor"
-								>
-									<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3"></path>
-								</svg>
-							</dt>
-							<dd class="flex flex-col">
-								<time datetime="2022-01-12T15:00">Jan 12th, 2022 at 3:00 PM</time>
-								<time class="font-semibold text-info" datetime="2022-01-12T15:00">Jan 21th, 2022 at 3:00 PM</time>
-							</dd>
-						</div>
-						<div class="mt-2 flex items-start space-x-3 xl:ml-3.5 xl:mt-0 xl:border-l xl:border-base-400 xl:border-opacity-50 xl:pl-3.5">
-							<dt class="mt-0.5">
-								<span class="sr-only">Location</span>
-								<svg class="h-5 w-5 text-base-content" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-									<path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clip-rule="evenodd"></path>
-								</svg>
-							</dt>
-							<dd>Tu Psicologa</dd>
-							<span class="mt-0.5 badge badge-info">reschedule</span>
-						</div>
-					</dl>
-				</div>
-				@AppointmentActions(lp)
-			</li>
-		</ol>
+		</ul>
 	</section>
 }
 
 templ AppointmentLi(appointment model.Appointment, lp layoutProps) {
-	<li class="relative flex space-x-6 py-6 xl:static">
-		<img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="h-14 w-14 flex-none rounded-full"/>
+	<li class="relative flex space-x-4 py-4 xl:static">
+		<figure aria-label="patient picture" class="h-14 w-14 flex-none rounded-full">
+			@CmpAvatar(appointment.Patient, "w-14 h-14")
+		</figure>
 		<div class="flex-auto">
-			<h3 class="pr-10 font-semibold text-base-content xl:pr-0">Leslie Alexander</h3>
+			<a
+				href={ templ.URL("/appointments/" + appointment.ID + "/start") }
+				class="flex items-center gap-4"
+			>
+				<h3 class="pr-10 font-semibold text-base-content xl:pr-0">
+					{ appointment.Patient.Name() }
+				</h3>
+				<span class="text-base-content/50">
+					(
+					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 inline-block">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z"></path>
+					</svg>
+					{ appointment.Patient.Phone }
+					)
+				</span>
+			</a>
 			<dl class="mt-2 flex flex-col text-base-content xl:flex-row">
-				<div class="flex items-start space-x-3">
+				<div class="flex items-start space-x-3 text-base-content/50">
 					<dt class="mt-0.5">
 						<span class="sr-only">{ l(lp.Locale, "str.date") }</span>
-						<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-							<path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clip-rule="evenodd"></path>
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" clars="w-5 h-5">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"></path>
+						</svg>
+						<svg
+							class="w-5 h-5 mt-1 text-info"
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke-width="1.5"
+							stroke="currentColor"
+						>
+							<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3"></path>
 						</svg>
 					</dt>
-					<dd>
-						<time datetime="2022-01-10T17:00">Jan 10th, 2022 at 5:00 PM</time>
+					<dd class="flex flex-col">
+						<time datetime={ appointment.BookedAt.Format(FormTimeFormat) }>{ appointment.BookedAt.Format(ViewTimeFormat) }</time>
+						<time class="font-semibold text-info" datetime="2022-01-12T15:00">Jan 21th, 2022 at 3:00 PM</time>
 					</dd>
 				</div>
 				<div class="mt-2 flex items-center space-x-3 xl:ml-3.5 xl:mt-0 xl:border-l xl:border-base-300 xl:border-opacity-50 xl:pl-3.5">
@@ -288,22 +144,39 @@ templ AppointmentLi(appointment model.Appointment, lp layoutProps) {
 							<path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clip-rule="evenodd"></path>
 						</svg>
 					</dt>
-					<dd>Meraki</dd>
+					<dd>{ appointment.Clinic.Name }</dd>
 					<span class="mt-0.5 badge badge-neutral">
 						{ l(lp.Locale, "str.pending") }
 					</span>
 				</div>
 			</dl>
 		</div>
-		@AppointmentActions(lp)
+		@AppointmentActions(appointment, lp)
 	</li>
+}
+
+templ AppointmentActions(appointment model.Appointment, lp layoutProps) {
+	<div class="hidden gap-2 items-center lg:flex">
+		<a href={ templ.URL("/appointments/" + appointment.ID + "/start") } class="btn btn-outline btn-primary">
+			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+				<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"></path>
+			</svg>
+			{ l(lp.Locale, "btn.open") }
+		</a>
+		<a href={ templ.URL("/appointments/" + appointment.ID + "/reschedule") } class="btn btn-outline btn-secondary">
+			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+				<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"></path>
+			</svg>
+			{ l(lp.Locale, "btn.reschedule") }
+		</a>
+	</div>
 }
 
 templ AppointmentsEmptyList(lp layoutProps) {
 	<div class="app-card flex">
 		<a href="/appointments/new" class="relative block w-full rounded-lg border-2 border-dashed border-base-content/30 p-12 text-center hover:border-base-content/40 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
 			<svg
-				class="mx-auto w-12 h-12 text-base-content/60"
+				class="mx-auto w-12 h-12 text-base-content/50"
 				xmlns="http://www.w3.org/2000/svg"
 				fill="none"
 				viewBox="0 0 24 24"
@@ -317,123 +190,26 @@ templ AppointmentsEmptyList(lp layoutProps) {
 	</div>
 }
 
-templ AppointmentDetails(appointment model.Appointment, lp layoutProps) {
-	@AppointmentForm(appointment, lp) {
-		<div class="space-y-10 divide-y divide-base-content/10">
-			<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
-				<div class="px-4 sm:px-0">
-					<h2 class="text-base font-semibold leading-7">{ l(lp.Locale, "str.last_session") }</h2>
-					<p class="mt-1 text-sm leading-6 text-base-content/60">{ l(lp.Locale, "str.last_session_desc") }</p>
-				</div>
-				<section class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
-					<input type="hidden" name="id" value={ appointment.ID } id="address_appointment_id"/>
-					<div class="px-4 py-6 sm:p-8">
-						<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-							<div class="col-span-full">
-								<label for="about" class="block text-sm font-medium leading-6">{ l(lp.Locale, "str.summary") }</label>
-								<div class="mt-2">
-									<p
-										class="textarea textarea-bordered w-full block bg-base-200/50 h-20 resize-y overflow-auto"
-									>
-										{ appointment.Summary }
-									</p>
-								</div>
-							</div>
-							<div class="col-span-full">
-								<label for="website" class="block text-sm font-medium leading-6">{ l(lp.Locale, "str.notes") }</label>
-								<div class="mt-2">
-									<p
-										class="textarea textarea-bordered w-full block bg-base-200/50 h-20 resize-y overflow-auto"
-									>{ appointment.Notes }</p>
-								</div>
-							</div>
-						</div>
-					</div>
-				</section>
-			</div>
-			<div class="grid grid-cols-1 pt-8 gap-x-8 gap-y-8 md:grid-cols-3">
-				<div class="px-4 sm:px-0">
-					<h2 class="text-base font-semibold leading-7">{ l(lp.Locale, "str.current_session") }</h2>
-					<p class="mt-1 text-sm leading-6 text-base-content/60">{ l(lp.Locale, "str.medical_profile_desc") }</p>
-				</div>
-				<section class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
-					<input type="hidden" name="id" value={ appointment.ID } id="mb_appointment_id"/>
-					<div class="px-4 py-6 sm:p-8">
-						<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-							<div class="col-span-full">
-								<label for="website" class="block text-sm font-medium leading-6">{ l(lp.Locale, "str.observations") }</label>
-								<div class="mt-2">
-									<textarea
-										name="observations"
-										class="textarea textarea-bordered w-full block"
-										placeholder={ l(lp.Locale, "str.family_history_ph") }
-									>{ appointment.Observations }</textarea>
-								</div>
-							</div>
-							<div class="col-span-full">
-								<label for="website" class="block text-sm font-medium leading-6">{ l(lp.Locale, "str.conclusions") }</label>
-								<div class="mt-2">
-									<textarea
-										name="conclusions"
-										class="textarea textarea-bordered w-full block"
-										placeholder={ l(lp.Locale, "str.background_ph") }
-									>{ appointment.Conclusions }</textarea>
-								</div>
-							</div>
-							<div class="col-span-full">
-								<label for="website" class="block text-sm font-medium leading-6">{ l(lp.Locale, "str.notes") }</label>
-								<div class="mt-2">
-									<textarea
-										name="notes"
-										class="textarea textarea-bordered w-full block"
-										placeholder={ l(lp.Locale, "str.background_ph") }
-									>{ appointment.Notes }</textarea>
-								</div>
-							</div>
-							<div class="col-span-full">
-								<label for="about" class="block text-sm font-medium leading-6">{ l(lp.Locale, "str.summary") }</label>
-								<div class="mt-2">
-									<textarea
-										name="summary"
-										class="textarea textarea-bordered w-full block"
-										placeholder={ l(lp.Locale, "str.notes_ph") }
-									>
-										{ appointment.Summary }
-									</textarea>
-								</div>
-							</div>
-						</div>
-					</div>
-					<div class="flex items-center justify-end gap-x-6 border-t border-base-content/10 px-4 py-4 sm:px-8">
-						<button type="button" class="btn btn-ghost">{ l(lp.Locale, "btn.cancel") }</button>
-						<button type="submit" class="btn btn-primary">{ l(lp.Locale, "btn.save") }</button>
-					</div>
-				</section>
-			</div>
-		</div>
-	}
-}
-
 templ AppointmentNew(appointment model.Appointment, lp layoutProps) {
 	<div id="appointment_profile" class="space-y-10 divide-y divide-base-content/10">
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
 				<h2 class="text-base font-semibold leading-7">{ l(lp.Locale, "str.apnt_step_1") }</h2>
-				<p class="mt-1 text-sm leading-6 text-base-content/60">{ l(lp.Locale, "str.apnt_step_1_desc") }</p>
+				<p class="mt-1 text-sm leading-6 text-base-content/50">{ l(lp.Locale, "str.apnt_step_1_desc") }</p>
 			</div>
 			@ClinicSearch(lp)
 		</div>
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
 				<h2 class="text-base font-semibold leading-7">{ l(lp.Locale, "str.apnt_step_2") }</h2>
-				<p class="mt-1 text-sm leading-6 text-base-content/60">{ l(lp.Locale, "str.apnt_step_2_desc") }</p>
+				<p class="mt-1 text-sm leading-6 text-base-content/50">{ l(lp.Locale, "str.apnt_step_2_desc") }</p>
 			</div>
 			@PatientSearch(lp)
 		</div>
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
 				<h2 class="text-base font-semibold leading-7">{ l(lp.Locale, "str.apnt_step_3") }</h2>
-				<p class="mt-1 text-sm leading-6 text-base-content/60">{ l(lp.Locale, "str.apnt_step_3_desc") }</p>
+				<p class="mt-1 text-sm leading-6 text-base-content/50">{ l(lp.Locale, "str.apnt_step_3_desc") }</p>
 			</div>
 			<section class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
 				@AppointmentForm(appointment, lp) {
@@ -443,10 +219,21 @@ templ AppointmentNew(appointment model.Appointment, lp layoutProps) {
 							<div class="sm:col-span-4">
 								<label for="street-address" class="block text-sm font-medium leading-6">{ l(lp.Locale, "str.booked_at") }</label>
 								<div class="mt-2">
-									<input required type="datetime-local" name="bookedAt" value={ appointment.BookedAt.Format(time.RFC822) } id="booked_at" class="input input-bordered block w-full"/>
+									<input
+										required
+										type="datetime-local"
+										name="bookedAt"
+										if appointment.BookedAt.IsZero() {
+											value={ time.Now().Format("2006-01-02T15:04") }
+										} else {
+											value={ appointment.BookedAt.Format("2006-01-02T15:04") }
+										}
+										id="booked_at"
+										class="input input-bordered block w-full"
+									/>
 								</div>
 							</div>
-							<div class="sm:col-span-4">
+							<div class="sm:col-span-3">
 								<label for="duration" class="block text-sm font-medium leading-6 text-base-content">{ l(lp.Locale, "str.duration") }</label>
 								<div class="mt-2">
 									<input
@@ -460,6 +247,26 @@ templ AppointmentNew(appointment model.Appointment, lp layoutProps) {
 											value="1"
 										} else {
 											value={ strconv.Itoa(appointment.Duration) }
+										}
+										class="input input-bordered block w-full"
+									/>
+								</div>
+							</div>
+							<div class="sm:col-span-3">
+								<label for="cost" class="block text-sm font-medium leading-6 text-base-content">{ l(lp.Locale, "str.cost") }</label>
+								<div class="mt-2">
+									<input
+										required
+										type="number"
+										id="cost"
+										name="cost"
+										min="1"
+										max="120"
+										step="0.01"
+										if appointment.Cost == 0 {
+											value="0.00"
+										} else {
+											value={ appointment.CostValue() }
 										}
 										class="input input-bordered block w-full"
 									/>

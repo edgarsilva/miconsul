@@ -141,19 +141,21 @@ func PatientRoutes(s *server.Server) {
 }
 
 func AppointmentRoutes(s *server.Server) {
-	p := appointment.NewService(s)
+	a := appointment.NewService(s)
 
-	g := p.Group("/appointments", auth.MustAuthenticate(s))
-	g.Get("/", p.HandleAppointmentsPage)
-	g.Get("/:id", p.HandleAppointmentsPage)
+	g := a.Group("/appointments", auth.MustAuthenticate(s))
+	g.Get("/", a.HandleAppointmentsPage)
+	g.Get("/:id", a.HandleAppointmentsPage)
+	g.Get("/:id/start", a.HandleAppointmentStartPage)
+	g.Get("/:id/end", a.HandleAppointmentEndPage)
 
-	g.Post("/", p.HandleCreateAppointment)
+	g.Post("/", a.HandleCreateAppointment)
 
-	g.Post("/:id/patch", p.HandleUpdateAppointment)
-	g.Patch("/:id", p.HandleUpdateAppointment)
+	g.Post("/:id/patch", a.HandleUpdateAppointment)
+	g.Patch("/:id", a.HandleUpdateAppointment)
 
-	g.Post("/:id/delete", p.HandleDeleteAppointment)
-	g.Delete("/:id", p.HandleDeleteAppointment)
+	g.Post("/:id/delete", a.HandleDeleteAppointment)
+	g.Delete("/:id", a.HandleDeleteAppointment)
 
 	// g.Get("/:id", p.HandlePatientsPage)
 

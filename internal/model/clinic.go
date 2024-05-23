@@ -8,19 +8,19 @@ import (
 )
 
 type Clinic struct {
+	UserID     string `gorm:"index;default:null;not null"`
 	ExtID      string
 	CoverPic   string
 	ProfilePic string         `form:"profilePic"`
-	Name       string         `gorm:"default:null;not null"`
+	Name       string         `gorm:"default:null;not null" form:"name"`
 	Email      string         `form:"email"`
 	Phone      string         `form:"phone"`
-	UserID     string         `gorm:"index;default:null;not null"`
 	DeletedAt  gorm.DeletedAt `gorm:"index"`
 	Address
 	SocialMedia
 	ModelBase
 	User     User
-	favorite bool
+	Favorite bool `form:"favorite"`
 }
 
 func (c *Clinic) BeforeCreate(tx *gorm.DB) error {

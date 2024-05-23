@@ -31,6 +31,31 @@ input[type="search"]::-webkit-search-cancel-button {
   @apply grayscale opacity-35
 }
 
+/* Toast */
+.toast-enter {
+  @apply transform ease-out duration-300 transition
+}
+
+.toast-enter.toast-enter-start {
+  @apply translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2
+}
+
+.toast-enter.toast-enter-end {
+  @apply translate-y-0 opacity-100 sm:translate-x-0
+}
+
+.toast-leaving {
+  @apply transition ease-in duration-100
+}
+
+.toast-leaving.toast-leaving-start {
+  @apply opacity-100
+}
+
+.toast-leaving.toast-leaving-start {
+  @apply opacity-0
+}
+
 /* HTMX transitions*/
 ul li {
   opacity: 1;

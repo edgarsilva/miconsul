@@ -1,6 +1,7 @@
 package dashboard
 
 import (
+	"github.com/edgarsilva/go-scaffold/internal/model"
 	"github.com/edgarsilva/go-scaffold/internal/view"
 
 	"github.com/gofiber/fiber/v2"
@@ -10,9 +11,19 @@ import (
 //
 // GET: /blog
 func (s *service) HandleDashboardPage(c *fiber.Ctx) error {
-	theme := s.SessionUITheme(c)
+	cu, err := s.CurrentUser(c)
+	if err != nil {
+		return c.Redirect("/login")
+	}
 
-	cu, _ := s.CurrentUser(c)
-	layoutProps, _ := view.NewLayoutProps(view.WithCurrentUser(cu), view.WithTheme(theme))
-	return view.Render(c, view.DashboardPage(layoutProps))
+	appointments := []model.Appointment{}
+	s.DB.Model(&cu).
+		Preload("Clinic").
+		Preload("Patient").
+		Association("Appointments").
+		Find(&appointments)
+
+	theme := s.SessionUITheme(c)
+	lp, _ := view.NewLayoutProps(view.WithCurrentUser(cu), view.WithTheme(theme))
+	return view.Render(c, view.DashboardPage(appointments, lp))
 }

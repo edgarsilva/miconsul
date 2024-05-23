@@ -1,6 +1,7 @@
 package model
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/edgarsilva/go-scaffold/internal/lib/xid"
@@ -8,16 +9,13 @@ import (
 )
 
 type Appointment struct {
-	BookedAt      time.Time      `gorm:"bookedAt"`
-	OcurredAt     time.Time      `gorm:"occurredAt"`
-	DeliveredAt   time.Time      `gorm:"deliveredAt"`
-	ServedAt      time.Time      `gorm:"servedAt"`
-	ConfirmedAt   time.Time      `gorm:"confirmedAt"`
-	AcceptedAt    time.Time      `gorm:"acceptedAt"`
-	CanceledAt    time.Time      `gorm:"canceledAt"`
-	NoShowAt      time.Time      `gorm:"noShowAt"`
-	RescheduledAt time.Time      `gorm:"rescheduledAt"`
-	DeletedAt     gorm.DeletedAt `gorm:"index"`
+	BookedAt      time.Time      `gorm:"index;default:null;not null"`
+	ConfirmedAt   time.Time      `gorm:"index;default:null"`
+	CanceledAt    time.Time      `gorm:"index;default:null"`
+	RescheduledAt time.Time      `gorm:"index;default:null"`
+	AcceptedAt    time.Time      `gorm:"index;default:null"`
+	NoShowAt      time.Time      `gorm:"index;default:null"`
+	DeletedAt     gorm.DeletedAt `form:"index"`
 	ModelBase
 	Summary      string `form:"summary"`
 	Observations string `form:"observations"`
@@ -31,17 +29,17 @@ type Appointment struct {
 	Clinic       Clinic
 	User         User
 	Patient      Patient
+	Duration     int `form:"duration"`
+	Cost         int `form:"cost"`
 	BookedMonth  int
 	BookedMinute int
 	BookedHour   int
 	BookedDay    int
 	BookedYear   int
-	Duration     int `form:"duration"`
-	Notified     bool
-	Served       bool
 	Confirmed    bool
-	Accepted     bool
 	Canceled     bool
+	Rescheduled  bool
+	Accepted     bool
 	NoShow       bool
 }
 
@@ -50,10 +48,8 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
-func (a *Appointment) IsCanceled(tx *gorm.DB) bool {
-	return a.CanceledAt.IsZero()
-}
+func (a *Appointment) CostValue() string {
+	v := strconv.FormatFloat(float64(a.Cost/10), 'f', 1, 32)
 
-func (a *Appointment) DidHappen(tx *gorm.DB) bool {
-	return !a.OcurredAt.IsZero()
+	return v
 }

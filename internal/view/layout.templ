@@ -1,6 +1,6 @@
 package view
 
-templ HTMLPage() {
+templ HTMLPage(lp layoutProps) {
 	<!DOCTYPE html>
 	<html data-theme="cmyk" x-ref="html">
 		<head>
@@ -14,6 +14,7 @@ templ HTMLPage() {
 		</head>
 		<body class="flex-grow">
 			{ children... }
+			@GlobalToastRegion(lp)
 		</body>
 	</html>
 }
@@ -37,20 +38,20 @@ templ HTMLPageWithApexCharts() {
 	</html>
 }
 
-templ Layout(props layoutProps) {
-	@HTMLPage() {
+templ Layout(lp layoutProps) {
+	@HTMLPage(lp) {
 		<div id="root">
-			@CmpHeader(props)
+			@CmpHeader(lp)
 			<main id="main" class="grow flex flex-col">
 				{ children... }
 			</main>
-			@CmpFooter(props)
+			@CmpFooter(lp)
 		</div>
 	}
 }
 
-templ LayoutAuth() {
-	@HTMLPage() {
+templ LayoutAuth(lp layoutProps) {
+	@HTMLPage(lp) {
 		<div id="root" class="flex flex-col justify-center py-12 sm:px-6 lg:px-8">
 			{ children... }
 		</div>
