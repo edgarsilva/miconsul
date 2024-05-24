@@ -77,16 +77,16 @@ templ AppointmentsList(appointments []model.Appointment, showTitle bool, lp layo
 			<div class="lg:block">
 				<nav class="flex gap-2" aria-label="Tabs">
 					<a
-						href="/appointments?timeframe=day"
-						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/15 text-secondary-content", lp.Query["timeframe"] == "day") }
+						href={ templ.URL(lp.Path + "?timeframe=day") }
+						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/35 text-secondary-content", lp.Query["timeframe"] == "day") }
 					>{ l(lp.Locale, "nav.my_day") }</a>
 					<a
-						href="/appointments?timeframe=week"
+						href={ templ.URL(lp.Path + "?timeframe=week") }
 						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/15 text-secondary-content", lp.Query["timeframe"] == "week") }
 						aria-current="page"
 					>{ l(lp.Locale, "nav.my_week") }</a>
 					<a
-						href="/appointments?timeframe=month"
+						href={ templ.URL(lp.Path + "?timeframe=month") }
 						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/15 text-secondary-content", lp.Query["timeframe"] == "month") }
 					>{ l(lp.Locale, "nav.my_month") }</a>
 				</nav>
@@ -98,6 +98,24 @@ templ AppointmentsList(appointments []model.Appointment, showTitle bool, lp layo
 			}
 		</ul>
 	</section>
+}
+
+templ AppointmentsTimeframe(path, lp layoutProps) {
+	<nav class="flex gap-2" aria-label="Tabs">
+		<a
+			href="/appointments?timeframe=day"
+			class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/35 text-secondary-content", lp.Query["timeframe"] == "day") }
+		>{ l(lp.Locale, "nav.my_day") }</a>
+		<a
+			href="/appointments?timeframe=week"
+			class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/15 text-secondary-content", lp.Query["timeframe"] == "week") }
+			aria-current="page"
+		>{ l(lp.Locale, "nav.my_week") }</a>
+		<a
+			href="/appointments?timeframe=month"
+			class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/15 text-secondary-content", lp.Query["timeframe"] == "month") }
+		>{ l(lp.Locale, "nav.my_month") }</a>
+	</nav>
 }
 
 templ AppointmentLi(appointment model.Appointment, lp layoutProps) {

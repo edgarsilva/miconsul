@@ -1,7 +1,10 @@
 package dashboard
 
 import (
+	"time"
+
 	"github.com/edgarsilva/go-scaffold/internal/model"
+	"github.com/edgarsilva/go-scaffold/internal/util"
 	"github.com/edgarsilva/go-scaffold/internal/view"
 
 	"github.com/gofiber/fiber/v2"
@@ -17,10 +20,23 @@ func (s *service) HandleDashboardPage(c *fiber.Ctx) error {
 	}
 
 	appointments := []model.Appointment{}
-	s.DB.Model(&cu).
-		Preload("Clinic").
+	query := s.DB.Model(model.Appointment{}).Where("user_id = ?", cu.ID)
+
+	timeframe := c.Query("timeframe", "")
+	switch timeframe {
+	case "day":
+		query.Scopes(model.AppointmentsBookedToday)
+	case "week":
+		query.Scopes(model.AppointmentsBookedThisWeek)
+	case "month":
+		query.Scopes(model.AppointmentsBookedThisMonth)
+	default:
+		query.Where("booked_at > ?", util.BoD(time.Now()))
+	}
+
+	query.Preload("Clinic").
 		Preload("Patient").
-		Association("Appointments").
+		Limit(10).
 		Find(&appointments)
 
 	theme := s.SessionUITheme(c)

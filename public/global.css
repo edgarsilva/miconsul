@@ -4639,6 +4639,10 @@ html {
   background-color: var(--fallback-s,oklch(var(--s)/0.15));
 }
 
+.bg-secondary\/35 {
+  background-color: var(--fallback-s,oklch(var(--s)/0.35));
+}
+
 .bg-success {
   --tw-bg-opacity: 1;
   background-color: var(--fallback-su,oklch(var(--su)/var(--tw-bg-opacity)));

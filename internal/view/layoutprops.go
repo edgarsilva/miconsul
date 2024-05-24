@@ -25,7 +25,7 @@ type layoutProps struct {
 	Flash     string
 	Toast     Toast
 	Timeframe string
-	Hash      string
+	Path      string
 	Query     map[string]string
 }
 
@@ -40,6 +40,7 @@ func NewLayoutProps(c *fiber.Ctx, props ...Prop) (layoutProps, error) {
 	layoutProps := layoutProps{
 		CurrentUser: new(DummyUser),
 		Query:       c.Queries(),
+		Path:        c.Path(),
 		Locale:      "es-MX",
 		Theme:       "light",
 		Toast:       Toast{},
