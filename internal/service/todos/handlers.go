@@ -19,7 +19,7 @@ func (s *service) HandleTodos(c *fiber.Ctx) error {
 
 	theme := s.SessionUITheme(c)
 
-	layoutProps, err := view.NewLayoutProps(view.WithCurrentUser(cu), view.WithTheme(theme))
+	layoutProps, err := view.NewLayoutProps(c, view.WithCurrentUser(cu), view.WithTheme(theme))
 	if err != nil {
 		return c.Redirect("/login")
 	}

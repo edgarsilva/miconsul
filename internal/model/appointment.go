@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/edgarsilva/go-scaffold/internal/lib/xid"
+	"github.com/edgarsilva/go-scaffold/internal/util"
 	"gorm.io/gorm"
 )
 
@@ -22,7 +23,7 @@ const (
 )
 
 type Appointment struct {
-	BookedAt      time.Time      `gorm:"index;default:null;not null"`
+	BookedAt      time.Time      `gorm:"index;default:null;not null" form:"-"`
 	SentAt        time.Time      `gorm:"index;default:null"`
 	ViewedAt      time.Time      `gorm:"index;default:null"`
 	ConfirmedAt   time.Time      `gorm:"index;default:null"`
@@ -48,7 +49,7 @@ type Appointment struct {
 	User         User
 	Patient      Patient
 	Duration     int `form:"duration"`
-	Cost         int `form:"cost"`
+	Cost         int `form:"-"`
 	BookedMonth  int
 	BookedMinute int
 	BookedHour   int
@@ -56,13 +57,32 @@ type Appointment struct {
 	BookedYear   int
 }
 
-func (a *Appointment) IDGen(tx *gorm.DB) error {
+func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	a.ID = xid.New("apnt")
 	return nil
 }
 
-func (a *Appointment) CostValue() string {
-	v := strconv.FormatFloat(float64(a.Cost/10), 'f', 1, 32)
+func (a *Appointment) InputCostValue() string {
+	v := strconv.FormatFloat(float64(a.Cost/100), 'f', 1, 32)
 
 	return v
+}
+
+func AppointmentsBookedToday(db *gorm.DB) *gorm.DB {
+	t := util.BoD(time.Now())
+
+	return db.Where("booked_at > ?", t).Where("booked_at < ?", t.Add(time.Hour*24))
+}
+
+func AppointmentsBookedThisWeek(db *gorm.DB) *gorm.DB {
+	t := util.BoW(time.Now())
+
+	return db.Where("booked_at > ?", t).Where("booked_at < ?", t.Add(time.Hour*24*7))
+}
+
+func AppointmentsBookedThisMonth(db *gorm.DB) *gorm.DB {
+	t := util.BoM(time.Now())
+	dinm := util.DaysInMonth(t.Month(), t.Year())
+
+	return db.Where("booked_at > ?", t).Where("booked_at < ?", t.Add(time.Hour*24*dinm))
 }

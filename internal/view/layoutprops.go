@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/edgarsilva/go-scaffold/internal/localize"
+	"github.com/gofiber/fiber/v2"
 )
 
 type CurrentUser interface {
@@ -19,10 +20,13 @@ type Toast struct {
 
 type layoutProps struct {
 	CurrentUser
-	Theme  string
-	Locale string
-	Flash  string
-	Toast  Toast
+	Theme     string
+	Locale    string
+	Flash     string
+	Toast     Toast
+	Timeframe string
+	Hash      string
+	Query     map[string]string
 }
 
 type Prop func(layoutProps *layoutProps) error
@@ -32,9 +36,10 @@ var (
 	locales    = localize.New("es-MX", "en-US")
 )
 
-func NewLayoutProps(props ...Prop) (layoutProps, error) {
+func NewLayoutProps(c *fiber.Ctx, props ...Prop) (layoutProps, error) {
 	layoutProps := layoutProps{
 		CurrentUser: new(DummyUser),
+		Query:       c.Queries(),
 		Locale:      "es-MX",
 		Theme:       "light",
 		Toast:       Toast{},

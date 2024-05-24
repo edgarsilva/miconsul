@@ -25,7 +25,7 @@ func (s *service) HandleClinicsPage(c *fiber.Ctx) error {
 	s.DB.Model(&model.Clinic{}).Find(&clinics)
 
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme), view.WithCurrentUser(cu))
+	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
 	return view.Render(c, view.ClinicsPage(clinics, clinic, layoutProps))
 }
 
@@ -60,7 +60,7 @@ func (s *service) HandleCreateClinic(c *fiber.Ctx) error {
 
 	c.Set("HX-Push-Url", "/clinics/"+clinic.ID)
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme), view.WithCurrentUser(cu))
+	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
 	return view.Render(c, view.ClinicsPage([]model.Clinic{}, clinic, layoutProps))
 }
 
@@ -159,6 +159,6 @@ func (s *service) HandleClinicSearch(c *fiber.Ctx) error {
 
 	// time.Sleep(time.Second * 2)
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme), view.WithCurrentUser(cu))
+	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
 	return view.Render(c, view.ClinicSearchResults(clinics, layoutProps))
 }

@@ -56,29 +56,39 @@ templ AppointmentsPage(appointments []model.Appointment, appointment model.Appoi
 
 templ AppointmentsList(appointments []model.Appointment, showTitle bool, lp layoutProps) {
 	<section class="app-card col-span-2 flex flex-col pt-4">
-		<div class="relative items-center flex justify-between border-b border-base-coentent/10 pb-2">
+		<div class="relative items-center flex justify-between border-b border-base-coentent/10 pb-2" hx-boost="true">
 			<h3 class="font-semibold text-xl">
 				if showTitle {
 					{ l(lp.Locale, "str.appointments") }
 				}
 			</h3>
-			<details class="absolute right-0 dropdown lg:hidden ">
+			<details class="absolute right-0 dropdown hidden ">
 				<summary class="btn btn-square btn-ghost">
 					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
 						<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"></path>
 					</svg>
 				</summary>
 				<ul class="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
-					<li><a href="#" class="text-gray-500 hover:text-gray-700 rounded-md px-3 py-2 text-sm font-medium">{ l(lp.Locale, "nav.today") }</a></li>
-					<li><a href="#" class="bg-gray-100 text-gray-700 rounded-md px-3 py-2 text-sm font-medium" aria-current="page">{ l(lp.Locale, "nav.this_week") }</a></li>
-					<li><a href="#" class="text-gray-500 hover:text-gray-700 rounded-md px-3 py-2 text-sm font-medium">{ l(lp.Locale, "nav.this_month") }</a></li>
+					<li><a href="#" class="text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium">{ l(lp.Locale, "nav.my_day") }</a></li>
+					<li><a href="#" class="bg-base-100 text-base-content/70 rounded-md px-3 py-2 text-sm font-medium" aria-current="page">{ l(lp.Locale, "nav.my_week") }</a></li>
+					<li><a href="#" class="text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium">{ l(lp.Locale, "nav.my_month") }</a></li>
 				</ul>
 			</details>
 			<div class="lg:block">
 				<nav class="flex gap-2" aria-label="Tabs">
-					<a href="#" class="text-gray-500 hover:text-gray-700 rounded-md px-3 py-2 text-sm font-medium">{ l(lp.Locale, "nav.today") }</a>
-					<a href="#" class="bg-gray-100 text-gray-700 rounded-md px-3 py-2 text-sm font-medium" aria-current="page">{ l(lp.Locale, "nav.this_week") }</a>
-					<a href="#" class="text-gray-500 hover:text-gray-700 rounded-md px-3 py-2 text-sm font-medium">{ l(lp.Locale, "nav.this_month") }</a>
+					<a
+						href="/appointments?timeframe=day"
+						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/15 text-secondary-content", lp.Query["timeframe"] == "day") }
+					>{ l(lp.Locale, "nav.my_day") }</a>
+					<a
+						href="/appointments?timeframe=week"
+						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/15 text-secondary-content", lp.Query["timeframe"] == "week") }
+						aria-current="page"
+					>{ l(lp.Locale, "nav.my_week") }</a>
+					<a
+						href="/appointments?timeframe=month"
+						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/15 text-secondary-content", lp.Query["timeframe"] == "month") }
+					>{ l(lp.Locale, "nav.my_month") }</a>
 				</nav>
 			</div>
 		</div>
@@ -173,7 +183,7 @@ templ AppointmentActions(appointment model.Appointment, lp layoutProps) {
 			</svg>
 			{ l(lp.Locale, "btn.open") }
 		</a>
-		<a href={ templ.URL("/appointments/" + appointment.ID + "/reschedule") } class="btn btn-outline btn-secondary">
+		<a href={ templ.URL("/appointments/" + appointment.ID) } class="btn btn-outline btn-secondary">
 			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
 				<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"></path>
 			</svg>
@@ -271,12 +281,12 @@ templ AppointmentNew(appointment model.Appointment, lp layoutProps) {
 										id="cost"
 										name="cost"
 										min="1"
-										max="120"
+										max="100000"
 										step="0.01"
 										if appointment.Cost == 0 {
 											value="0.00"
 										} else {
-											value={ appointment.CostValue() }
+											value={ appointment.InputCostValue() }
 										}
 										class="input input-bordered block w-full"
 									/>

@@ -1,6 +1,7 @@
 package appointment
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/edgarsilva/go-scaffold/internal/model"
@@ -27,17 +28,27 @@ func (s *service) HandleAppointmentsPage(c *fiber.Ctx) error {
 	}
 
 	appointments := []model.Appointment{}
-	query := s.DB.Model(&cu).
-		Where("booked_at > ?", util.Bod(time.Now()))
+	query := s.DB.Model(model.Appointment{}).Where("user_id = ?", cu.ID)
+
+	timeframe := c.Query("timeframe", "")
+	switch timeframe {
+	case "day":
+		query.Scopes(model.AppointmentsBookedToday)
+	case "week":
+		query.Scopes(model.AppointmentsBookedThisWeek)
+	case "month":
+		query.Scopes(model.AppointmentsBookedThisMonth)
+	default:
+		query.Where("booked_at > ?", util.BoD(time.Now()))
+	}
 
 	query.Preload("Clinic").
 		Preload("Patient").
-		Association("Appointments").
 		Find(&appointments)
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "")
-	layoutProps, _ := view.NewLayoutProps(
+	layoutProps, _ := view.NewLayoutProps(c, 
 		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, ""),
 	)
 
@@ -75,7 +86,7 @@ func (s *service) HandleAppointmentBeginPage(c *fiber.Ctx) error {
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "")
-	layoutProps, _ := view.NewLayoutProps(
+	layoutProps, _ := view.NewLayoutProps(c, 
 		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, ""),
 	)
 	return view.Render(c, view.AppointmentBeginPage(appointment, layoutProps))
@@ -130,26 +141,39 @@ func (s *service) HandleCreateAppointment(c *fiber.Ctx) error {
 		return c.Redirect("/login")
 	}
 
-	bookedAtFV := c.FormValue("bookedAt", "")
-	bookedAt, err := time.Parse(view.FormTimeFormat, bookedAtFV)
+	bookedAtValue := c.FormValue("bookedAt", "")
+	bookedAt, err := time.Parse(view.FormTimeFormat, bookedAtValue)
 	if err != nil {
 		bookedAt = time.Now()
+	}
+
+	costValue := c.FormValue("cost", "")
+	cost := 0
+	if costValue != "" {
+		costf, _ := strconv.ParseFloat(costValue, 64)
+		cost = int(costf * 100)
 	}
 
 	appointment := model.Appointment{
 		UserID:   cu.ID,
 		BookedAt: bookedAt,
+		Cost:     cost,
 	}
 	c.BodyParser(&appointment)
 
 	result := s.DB.Create(&appointment)
-
-	if !s.IsHTMX(c) {
-		if err := result.Error; err != nil {
-			return c.Redirect("/appointments?err=failed to create appointment")
+	if err := result.Error; err != nil {
+		redirectPath := "/appointments?toast=failed to create appointment&level=error"
+		if !s.IsHTMX(c) {
+			return c.Redirect(redirectPath)
 		}
 
-		return c.Redirect("/appointments/" + appointment.ID)
+		c.Set("HX-Location", redirectPath)
+		return c.SendStatus(fiber.StatusUnprocessableEntity)
+	}
+
+	if !s.IsHTMX(c) {
+		return c.Redirect("/appointments?toast=New appointment created")
 	}
 
 	c.Set("HX-Location", "/appointments?toast=New appointment created")
@@ -175,22 +199,43 @@ func (s *service) HandleUpdateAppointment(c *fiber.Ctx) error {
 		return c.Redirect("/appointments?msg=can't update without an id", fiber.StatusSeeOther)
 	}
 
+	bookedAtStr := c.FormValue("bookedAt", "")
+	bookedAt, err := time.Parse(view.FormTimeFormat, bookedAtStr)
+	if err != nil {
+		bookedAt = time.Now()
+	}
+
+	costValue := c.FormValue("cost", "")
+	cost := 0
+	if costValue != "" {
+		costf, _ := strconv.ParseFloat(costValue, 64)
+		cost = int(costf * 100)
+	}
+
 	appointment := model.Appointment{
-		UserID: cu.ID,
+		UserID:   cu.ID,
+		BookedAt: bookedAt,
+		Cost:     cost,
 	}
 	c.BodyParser(&appointment)
 
-	res := s.DB.Where("id = ? AND user_id = ?", appointmentID, cu.ID).Updates(&appointment)
-	if err := res.Error; err != nil {
-		return c.Redirect("/appointments?err=failed to update appointment")
+	result := s.DB.Where("id = ? AND user_id = ?", appointmentID, cu.ID).Updates(&appointment)
+	if err := result.Error; err != nil {
+		redirectPath := "/appointments/" + appointment.ID + "?toast=failed to update appointment&level=error"
+		if !s.IsHTMX(c) {
+			return c.Redirect(redirectPath)
+		}
+
+		c.Set("HX-Location", redirectPath)
+		return c.SendStatus(fiber.StatusUnprocessableEntity)
 	}
 
-	isHTMX := c.Get("HX-Request", "") // will be a string 'true' for HTMX requests
-	if isHTMX == "" {
-		return c.Redirect("/appointments/" + appointment.ID)
+	if !s.IsHTMX(c) {
+		return c.Redirect("/appointments?toast=Appointment saved")
 	}
 
-	return c.Redirect("/appointments/"+appointmentID, fiber.StatusSeeOther)
+	c.Set("HX-Location", "/appointments?toast=Appointment saved")
+	return c.SendStatus(fiber.StatusOK)
 }
 
 // HandleDeleteAppointment deletes a appointment record from the DB

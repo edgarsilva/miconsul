@@ -27,7 +27,7 @@ func (s *service) HandlePatientsPage(c *fiber.Ctx) error {
 	s.DB.Model(&cu).Association("Patients").Find(&patients)
 
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme), view.WithCurrentUser(cu))
+	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
 	return view.Render(c, view.PatientsPage(patients, patient, layoutProps))
 }
 
@@ -65,7 +65,7 @@ func (s *service) HandleCreatePatient(c *fiber.Ctx) error {
 
 	c.Set("HX-Push-Url", "/patients/"+patient.ID)
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme), view.WithCurrentUser(cu))
+	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
 	return view.Render(c, view.PatientsPage([]model.Patient{}, patient, layoutProps))
 }
 
@@ -146,7 +146,7 @@ func (s *service) HandleRemovePic(c *fiber.Ctx) error {
 	}
 
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme), view.WithCurrentUser(cu))
+	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
 	return view.Render(c, view.PatientsPage([]model.Patient{}, patient, layoutProps))
 }
 
@@ -204,6 +204,6 @@ func (s *service) HandlePatientSearch(c *fiber.Ctx) error {
 
 	// time.Sleep(time.Second * 2)
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme), view.WithCurrentUser(cu))
+	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
 	return view.Render(c, view.PatientSearchResults(patients, layoutProps))
 }

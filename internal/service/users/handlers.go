@@ -18,7 +18,7 @@ func (s *service) HandleUsersPage(c *fiber.Ctx) error {
 	// }
 
 	theme := s.SessionGet(c, "theme", "light")
-	// layoutProps, err := view.NewLayoutProps(view.WithCurrentUser(cu), view.WithTheme(theme))
+	// layoutProps, err := view.NewLayoutProps(c, view.WithCurrentUser(cu), view.WithTheme(theme))
 	// if err != nil {
 	// 	return c.Redirect("/login")
 	// }

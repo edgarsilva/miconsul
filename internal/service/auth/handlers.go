@@ -24,7 +24,7 @@ func (s *service) HandleLoginPage(c *fiber.Ctx) error {
 	}
 
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme))
+	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme))
 	email := c.Query("email", "")
 	msg := c.Query("msg", "")
 	return view.Render(c, view.LoginPage(email, msg, nil, layoutProps))
@@ -36,7 +36,7 @@ func (s *service) HandleLoginPage(c *fiber.Ctx) error {
 // POST: /login
 func (s *service) HandleLogin(c *fiber.Ctx) error {
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme))
+	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme))
 	respErr := errors.New("incorrect email and password combination")
 
 	email, password, err := authParams(c)
@@ -93,7 +93,7 @@ func (s *service) HandleSignupPage(c *fiber.Ctx) error {
 		err = nil
 	}
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme))
+	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme))
 
 	return view.Render(c, view.SignupPage("", err, layoutProps))
 }
@@ -103,7 +103,7 @@ func (s *service) HandleSignupPage(c *fiber.Ctx) error {
 // POST: /signup
 func (s *service) HandleSignup(c *fiber.Ctx) error {
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(view.WithTheme(theme))
+	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme))
 	email, password, err := authParams(c)
 	if err != nil {
 		return view.Render(c, view.SignupPage(email, err, layoutProps))
@@ -182,7 +182,7 @@ func (s *service) HandleLogout(c *fiber.Ctx) error {
 //
 // GET: /resetpassword
 func (s *service) HandlePageResetPassword(c *fiber.Ctx) error {
-	layoutProps, _ := view.NewLayoutProps()
+	layoutProps, _ := view.NewLayoutProps(c, )
 
 	msg := s.SessionGet(c, "msg", "")
 	if msg == "" {
@@ -197,7 +197,7 @@ func (s *service) HandlePageResetPassword(c *fiber.Ctx) error {
 //
 // POST: /resetpassword
 func (s *service) HandleResetPassword(c *fiber.Ctx) error {
-	layoutProps, _ := view.NewLayoutProps()
+	layoutProps, _ := view.NewLayoutProps(c, )
 	email, err := resetPasswordEmailParam(c)
 	if err != nil {
 		errView := errors.New("email can't be blank")
@@ -243,7 +243,7 @@ func (s *service) HandleResetPasswordChange(c *fiber.Ctx) error {
 
 	nonce := xid.New("rpnnce")
 	s.SessionSet(c, "nonce", nonce)
-	layoutProps, _ := view.NewLayoutProps()
+	layoutProps, _ := view.NewLayoutProps(c, )
 	return view.Render(c, view.ResetPasswordChangePage(email, token, nonce, nil, layoutProps))
 }
 
@@ -272,7 +272,7 @@ func (s *service) HandleResetPasswordUpdate(c *fiber.Ctx) error {
 		return c.Redirect("/resetpassword?msg=seems like your token has expired, try again!")
 	}
 
-	layoutProps, _ := view.NewLayoutProps()
+	layoutProps, _ := view.NewLayoutProps(c, )
 	password := c.FormValue("password", "")
 	if password == "" {
 		err := errors.New("password can't be blank")

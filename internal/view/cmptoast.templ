@@ -28,7 +28,7 @@ func LevelClasses(level string) string {
 templ CmpToast(msg, sub, level string) {
 	<div
 		class="pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg bg-base-100 shadow-lg ring-1 ring-black ring-opacity-5"
-		x-init="$nextTick(() => { open = true; setTimeout(() => open = false, 5000); setTimeout(() => $el.remove(), 10000) })"
+		x-init="$nextTick(() => { open = true; setTimeout(() => open = false, 3000); setTimeout(() => $el.remove(), 5000) })"
 		x-data="{open: false}"
 		x-show="open"
 		x-transition:enter="transform ease-out duration-300 transition"
