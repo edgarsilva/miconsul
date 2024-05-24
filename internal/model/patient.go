@@ -24,6 +24,7 @@ type Patient struct {
 	Notes               string         `form:"notes"`
 	DeletedAt           gorm.DeletedAt `gorm:"index"`
 	User                User
+	Appointments        []Appointment
 	Age                 int  `form:"age"`
 	EnableNotifications bool `form:"enableNotifications"`
 	ViaEmail            bool `form:"viaEmail"`

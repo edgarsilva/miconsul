@@ -146,8 +146,8 @@ func AppointmentRoutes(s *server.Server) {
 	g := a.Group("/appointments", auth.MustAuthenticate(s))
 	g.Get("/", a.HandleAppointmentsPage)
 	g.Get("/:id", a.HandleAppointmentsPage)
-	g.Get("/:id/start", a.HandleAppointmentStartPage)
-	g.Get("/:id/end", a.HandleAppointmentEndPage)
+	g.Get("/:id/Begin", a.HandleAppointmentBeginPage)
+	g.Post("/:id/done", a.HandleAppointmentDonePage)
 
 	g.Post("/", a.HandleCreateAppointment)
 

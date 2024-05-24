@@ -440,11 +440,15 @@ templ PatientProfile(patient model.Patient, lp layoutProps) {
 							<legend class="text-sm font-semibold leading-6">{ l(lp.Locale, "str.notifications_about") }</legend>
 							<div class="mt-6 space-y-6">
 								<label class="relative flex gap-x-3">
-									if patient.EnableNotifications {
-										<input name="enableNotifications" value="1" type="checkbox" checked="checked" class="checkbox"/>
-									} else {
-										<input name="enableNotifications" value="1" type="checkbox" class="checkbox"/>
-									}
+									<input
+										name="enableNotifications"
+										value="1"
+										type="checkbox"
+										class="checkbox"
+										if patient.EnableNotifications {
+											checked
+										}
+									/>
 									<div class="text-sm leading-6">
 										<span class="font-medium">{ l(lp.Locale, "str.notifications_appointment_lifecycle") }</span>
 										<p class="text-base-content/60">{ l(lp.Locale, "str.notifications_appointment_lifecycle_desc") }</p>

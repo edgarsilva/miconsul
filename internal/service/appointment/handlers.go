@@ -7,6 +7,7 @@ import (
 	"github.com/edgarsilva/go-scaffold/internal/util"
 	"github.com/edgarsilva/go-scaffold/internal/view"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 // HandleAppointmentsPage renders the appointments page HTML
@@ -24,10 +25,12 @@ func (s *service) HandleAppointmentsPage(c *fiber.Ctx) error {
 	if id != "" && id != "new" {
 		s.DB.Model(&model.Appointment{}).First(&appointment)
 	}
+
 	appointments := []model.Appointment{}
-	s.DB.Model(&cu).
-		Where("booked_at > ?", util.Bod(time.Now())).
-		Preload("Clinic").
+	query := s.DB.Model(&cu).
+		Where("booked_at > ?", util.Bod(time.Now()))
+
+	query.Preload("Clinic").
 		Preload("Patient").
 		Association("Appointments").
 		Find(&appointments)
@@ -37,13 +40,14 @@ func (s *service) HandleAppointmentsPage(c *fiber.Ctx) error {
 	layoutProps, _ := view.NewLayoutProps(
 		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, ""),
 	)
+
 	return view.Render(c, view.AppointmentsPage(appointments, appointment, layoutProps))
 }
 
-// HandleStartAppointmentPage renders the appointments page HTML
+// HandleBeginAppointmentPage renders the appointments page HTML
 //
-// GET: /appointments/:id/start
-func (s *service) HandleAppointmentStartPage(c *fiber.Ctx) error {
+// GET: /appointments/:id/begin
+func (s *service) HandleAppointmentBeginPage(c *fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
 		return c.Redirect("/login")
@@ -53,43 +57,68 @@ func (s *service) HandleAppointmentStartPage(c *fiber.Ctx) error {
 	appointment := model.Appointment{
 		UserID: cu.ID,
 	}
-	s.DB.Model(&appointment).Preload("Patient").Take(&appointment)
+	s.DB.Model(&appointment).Where("id = ?", id).Take(&appointment)
 	if id == "" || appointment.ID == "" {
-		c.Set("HX-Redirect", "/appointments?toast=The appointment does not exist&level=warning")
+		c.Set("HX-Location", "/appointments?toast=The appointment does not exist&level=warning")
 		return c.Redirect("/appointments?toast=The appointment does not exist&level=warning", fiber.StatusSeeOther)
 	}
+
+	patient := model.Patient{
+		UserID: cu.ID,
+	}
+	patient.ID = appointment.PatientID
+	s.DB.Model(patient).Preload("Appointments", func(tx *gorm.DB) *gorm.DB {
+		return tx.Limit(1).Order("booked_at desc")
+	}).Take(&patient)
+
+	appointment.Patient = patient
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "")
 	layoutProps, _ := view.NewLayoutProps(
 		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, ""),
 	)
-	return view.Render(c, view.AppointmentStartPage(appointment, layoutProps))
+	return view.Render(c, view.AppointmentBeginPage(appointment, layoutProps))
 }
 
-// HandleStartAppointmentPage renders the appointments page HTML
+// HandleBeginAppointmentPage renders the appointments page HTML
 //
-// GET: /appointments/:id/start
-func (s *service) HandleAppointmentEndPage(c *fiber.Ctx) error {
+// GET: /appointments/:id/Begin
+func (s *service) HandleAppointmentDonePage(c *fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
 		return c.Redirect("/login")
 	}
 
-	id := c.Params("id", "")
-	appointment := model.Appointment{}
-	appointment.ID = id
-	if id != "" {
-		c.Set("HX-Redirect", "/appointments?toast=The appointment does not exist&level=warning")
-		return c.Redirect("/appointments?toast=The appointment does not exist&level=warning", fiber.StatusSeeOther)
+	appointmentID := c.Params("ID", "")
+	if appointmentID == "" {
+		appointmentID = c.FormValue("id", "")
 	}
 
-	theme := s.SessionUITheme(c)
-	toast := c.Query("toast", "")
-	layoutProps, _ := view.NewLayoutProps(
-		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, ""),
-	)
-	return view.Render(c, view.AppointmentStartPage(appointment, layoutProps))
+	if appointmentID == "" {
+		redirectPath := "/appointments?toast=Can't find that appointment&level=error"
+		c.Set("HX-Location", redirectPath)
+		return c.Redirect(redirectPath, fiber.StatusSeeOther)
+	}
+
+	appointment := model.Appointment{
+		UserID: cu.ID,
+	}
+	c.BodyParser(&appointment)
+
+	res := s.DB.Where("id = ? AND user_id = ?", appointmentID, cu.ID).Updates(&appointment)
+	if err := res.Error; err != nil {
+		redirectPath := "/appointments?toast=Failed to update appointment&level=error"
+		c.Set("HX-Location", redirectPath)
+		return c.Redirect(redirectPath, fiber.StatusSeeOther)
+	}
+
+	if !s.IsHTMX(c) {
+		return c.Redirect("/appointments", fiber.StatusSeeOther)
+	}
+
+	c.Set("HX-Location", "/appointments")
+	return c.SendStatus(fiber.StatusOK)
 }
 
 // HandleCreateAppointment inserts a new appointment record for the CurrentUser
@@ -123,7 +152,7 @@ func (s *service) HandleCreateAppointment(c *fiber.Ctx) error {
 		return c.Redirect("/appointments/" + appointment.ID)
 	}
 
-	c.Set("HX-Redirect", "/appointments?toast=New appointment created")
+	c.Set("HX-Location", "/appointments?toast=New appointment created")
 	return c.SendStatus(fiber.StatusOK)
 }
 

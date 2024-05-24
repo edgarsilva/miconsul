@@ -1984,13 +1984,13 @@ html {
   border-color: var(--fallback-b1,oklch(var(--b1)/var(--tw-border-opacity)));
 }
 
-.badge-neutral {
+.badge-primary {
   --tw-border-opacity: 1;
-  border-color: var(--fallback-n,oklch(var(--n)/var(--tw-border-opacity)));
+  border-color: var(--fallback-p,oklch(var(--p)/var(--tw-border-opacity)));
   --tw-bg-opacity: 1;
-  background-color: var(--fallback-n,oklch(var(--n)/var(--tw-bg-opacity)));
+  background-color: var(--fallback-p,oklch(var(--p)/var(--tw-bg-opacity)));
   --tw-text-opacity: 1;
-  color: var(--fallback-nc,oklch(var(--nc)/var(--tw-text-opacity)));
+  color: var(--fallback-pc,oklch(var(--pc)/var(--tw-text-opacity)));
 }
 
 .badge-secondary {
@@ -2027,12 +2027,29 @@ html {
   color: var(--fallback-suc,oklch(var(--suc)/var(--tw-text-opacity)));
 }
 
+.badge-warning {
+  border-color: transparent;
+  --tw-bg-opacity: 1;
+  background-color: var(--fallback-wa,oklch(var(--wa)/var(--tw-bg-opacity)));
+  --tw-text-opacity: 1;
+  color: var(--fallback-wac,oklch(var(--wac)/var(--tw-text-opacity)));
+}
+
 .badge-error {
   border-color: transparent;
   --tw-bg-opacity: 1;
   background-color: var(--fallback-er,oklch(var(--er)/var(--tw-bg-opacity)));
   --tw-text-opacity: 1;
   color: var(--fallback-erc,oklch(var(--erc)/var(--tw-text-opacity)));
+}
+
+.badge-ghost {
+  --tw-border-opacity: 1;
+  border-color: var(--fallback-b2,oklch(var(--b2)/var(--tw-border-opacity)));
+  --tw-bg-opacity: 1;
+  background-color: var(--fallback-b2,oklch(var(--b2)/var(--tw-bg-opacity)));
+  --tw-text-opacity: 1;
+  color: var(--fallback-bc,oklch(var(--bc)/var(--tw-text-opacity)));
 }
 
 .badge-outline {
@@ -4555,11 +4572,6 @@ html {
   border-color: rgb(229 229 229 / var(--tw-border-opacity));
 }
 
-.border-secondary {
-  --tw-border-opacity: 1;
-  border-color: var(--fallback-s,oklch(var(--s)/var(--tw-border-opacity)));
-}
-
 .border-success {
   --tw-border-opacity: 1;
   border-color: var(--fallback-su,oklch(var(--su)/var(--tw-border-opacity)));
@@ -5057,11 +5069,6 @@ html {
   color: rgb(239 68 68 / var(--tw-text-opacity));
 }
 
-.text-secondary {
-  --tw-text-opacity: 1;
-  color: var(--fallback-s,oklch(var(--s)/var(--tw-text-opacity)));
-}
-
 .text-success {
   --tw-text-opacity: 1;
   color: var(--fallback-su,oklch(var(--su)/var(--tw-text-opacity)));
@@ -5158,6 +5165,10 @@ html {
   box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
 }
 
+.ring-base-content\/15 {
+  --tw-ring-color: var(--fallback-bc,oklch(var(--bc)/0.15));
+}
+
 .ring-black {
   --tw-ring-opacity: 1;
   --tw-ring-color: rgb(0 0 0 / var(--tw-ring-opacity));
@@ -5218,7 +5229,6 @@ html {
 
 .app-card {
   position: relative;
-  border-radius: 0.75rem;
   --tw-bg-opacity: 1;
   background-color: var(--fallback-b1,oklch(var(--b1)/var(--tw-bg-opacity)));
   padding: 1rem;
@@ -5226,6 +5236,12 @@ html {
   --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color);
   box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
   --tw-ring-color: var(--fallback-bc,oklch(var(--bc)/0.1));
+}
+
+@media (min-width: 640px) {
+  .app-card {
+    border-radius: 0.75rem;
+  }
 }
 
 @media (min-width: 768px) {
@@ -5347,7 +5363,7 @@ ul li.htmx-added {
   display: none !important;
 }
 
-.peer\/neutral:checked ~ .peer-checked\/neutral\:badge-neutral {
+.has-\[\:checked\]\:badge-neutral:has(:checked) {
   --tw-border-opacity: 1;
   border-color: var(--fallback-n,oklch(var(--n)/var(--tw-border-opacity)));
   --tw-bg-opacity: 1;
@@ -5356,7 +5372,7 @@ ul li.htmx-added {
   color: var(--fallback-nc,oklch(var(--nc)/var(--tw-text-opacity)));
 }
 
-.peer\/info:checked ~ .peer-checked\/info\:badge-info {
+.has-\[\:checked\]\:badge-info:has(:checked) {
   border-color: transparent;
   --tw-bg-opacity: 1;
   background-color: var(--fallback-in,oklch(var(--in)/var(--tw-bg-opacity)));
@@ -5364,7 +5380,7 @@ ul li.htmx-added {
   color: var(--fallback-inc,oklch(var(--inc)/var(--tw-text-opacity)));
 }
 
-.peer\/success:checked ~ .peer-checked\/success\:badge-success {
+.has-\[\:checked\]\:badge-success:has(:checked) {
   border-color: transparent;
   --tw-bg-opacity: 1;
   background-color: var(--fallback-su,oklch(var(--su)/var(--tw-bg-opacity)));
@@ -5372,7 +5388,7 @@ ul li.htmx-added {
   color: var(--fallback-suc,oklch(var(--suc)/var(--tw-text-opacity)));
 }
 
-.peer\/warning:checked ~ .peer-checked\/warning\:badge-warning {
+.has-\[\:checked\]\:badge-warning:has(:checked) {
   border-color: transparent;
   --tw-bg-opacity: 1;
   background-color: var(--fallback-wa,oklch(var(--wa)/var(--tw-bg-opacity)));
@@ -5380,38 +5396,24 @@ ul li.htmx-added {
   color: var(--fallback-wac,oklch(var(--wac)/var(--tw-text-opacity)));
 }
 
-.peer\/neutral:checked ~ .peer-checked\/neutral\:badge-neutral.badge-outline {
+.has-\[\:checked\]\:badge-neutral:has(:checked).badge-outline {
   --tw-text-opacity: 1;
   color: var(--fallback-n,oklch(var(--n)/var(--tw-text-opacity)));
 }
 
-.peer\/info:checked ~ .peer-checked\/info\:badge-info.badge-outline {
+.has-\[\:checked\]\:badge-info:has(:checked).badge-outline {
   --tw-text-opacity: 1;
   color: var(--fallback-in,oklch(var(--in)/var(--tw-text-opacity)));
 }
 
-.peer\/success:checked ~ .peer-checked\/success\:badge-success.badge-outline {
+.has-\[\:checked\]\:badge-success:has(:checked).badge-outline {
   --tw-text-opacity: 1;
   color: var(--fallback-su,oklch(var(--su)/var(--tw-text-opacity)));
 }
 
-.peer\/warning:checked ~ .peer-checked\/warning\:badge-warning.badge-outline {
+.has-\[\:checked\]\:badge-warning:has(:checked).badge-outline {
   --tw-text-opacity: 1;
   color: var(--fallback-wa,oklch(var(--wa)/var(--tw-text-opacity)));
-}
-
-.has-\[\:checked\]\:badge-secondary:has(:checked) {
-  --tw-border-opacity: 1;
-  border-color: var(--fallback-s,oklch(var(--s)/var(--tw-border-opacity)));
-  --tw-bg-opacity: 1;
-  background-color: var(--fallback-s,oklch(var(--s)/var(--tw-bg-opacity)));
-  --tw-text-opacity: 1;
-  color: var(--fallback-sc,oklch(var(--sc)/var(--tw-text-opacity)));
-}
-
-.has-\[\:checked\]\:badge-secondary:has(:checked).badge-outline {
-  --tw-text-opacity: 1;
-  color: var(--fallback-s,oklch(var(--s)/var(--tw-text-opacity)));
 }
 
 @media (min-width: 1024px) {
@@ -5496,10 +5498,6 @@ ul li.htmx-added {
 
 .hover\:bg-secondary\/10:hover {
   background-color: var(--fallback-s,oklch(var(--s)/0.1));
-}
-
-.hover\:text-base-content\/70:hover {
-  color: var(--fallback-bc,oklch(var(--bc)/0.7));
 }
 
 .hover\:text-gray-700:hover {
