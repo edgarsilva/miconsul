@@ -7,20 +7,10 @@ import (
 )
 
 templ AppointmentsPage(appointments []model.Appointment, appointment model.Appointment, lp layoutProps) {
-	@Layout(lp) {
-		if appointment.ID != "" {
-			<div class="px-4 lg:px-8">
-				@CmpBtnBack(l(lp.Locale, "btn.back"), "/appointments")
-			</div>
-			<section id="appointment_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
-				if appointment.ID == "" || appointment.ID == "new" {
-					<h1 class="px-4 sm:px-0 font-bold text-2xl pb-0 w-full">{ l(lp.Locale, "str.new_appointment") }</h1>
-				} else {
-					<h1 class="px-4 sm:px-0 font-bold text-2xl pb-0 w-full">{ l(lp.Locale, "str.edit_appointment") }</h1>
-				}
-				@AppointmentNew(appointment, lp)
-			</section>
-		} else {
+	if appointment.ID != "" {
+		@AppointmentFormPage(appointment, lp)
+	} else {
+		@Layout(lp) {
 			<div class="px-4 lg:px-8">
 				@CmpBtnBack(l(lp.Locale, "btn.back"), "/")
 			</div>
@@ -43,23 +33,43 @@ templ AppointmentsPage(appointments []model.Appointment, appointment model.Appoi
 							{ l(lp.Locale, "btn.new") }
 						</a>
 					</hgroup>
-					if (len(appointments) > 0) {
-						@AppointmentsList(appointments, false, lp)
-					} else {
-						@AppointmentsEmptyList(lp)
-					}
+					@AppointmentsList(appointments, false, lp)
 				</div>
 			</section>
 		}
 	}
 }
 
+templ AppointmentFormPage(appointment model.Appointment, lp layoutProps) {
+	@Layout(lp) {
+		<div class="px-4 lg:px-8">
+			@CmpBtnBack(l(lp.Locale, "btn.back"), "/appointments")
+		</div>
+		<section id="appointment_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
+			if appointment.ID == "" || appointment.ID == "new" {
+				<h1 class="px-4 sm:px-0 font-bold text-2xl pb-0 w-full">{ l(lp.Locale, "str.new_appointment") }</h1>
+			} else {
+				<h1 class="px-4 sm:px-0 font-bold text-2xl pb-0 w-full">{ l(lp.Locale, "str.edit_appointment") }</h1>
+			}
+			@AppointmentNew(appointment, lp)
+		</section>
+	}
+}
+
 templ AppointmentsList(appointments []model.Appointment, showTitle bool, lp layoutProps) {
 	<section class="app-card col-span-2 flex flex-col pt-4">
 		<div class="relative items-center flex justify-between border-b border-base-coentent/10 pb-2" hx-boost="true">
-			<h3 class="font-semibold text-xl">
+			<h3 class="font-semibold text-xl flex items-center gap-4">
 				if showTitle {
 					{ l(lp.Locale, "str.appointments") }
+				}
+				if lp.Query("patientId", "") != "" {
+					<a href={ templ.URL(lp.Path() + QueryParamsStr(lp, "patientId=")) } class="badge badge-secondary badge-outline gap-2 hover:bg-secondary hover:text-secondary-content">
+						if patient, ok := lp.Locals("patient").(model.Patient); ok {
+							{ patient.Email }
+						}
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="inline-block w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+					</a>
 				}
 			</h3>
 			<details class="absolute right-0 dropdown hidden ">
@@ -69,34 +79,38 @@ templ AppointmentsList(appointments []model.Appointment, showTitle bool, lp layo
 					</svg>
 				</summary>
 				<ul class="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
-					<li><a href="#" class="text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium">{ l(lp.Locale, "nav.my_day") }</a></li>
-					<li><a href="#" class="bg-base-100 text-base-content/70 rounded-md px-3 py-2 text-sm font-medium" aria-current="page">{ l(lp.Locale, "nav.my_week") }</a></li>
-					<li><a href="#" class="text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium">{ l(lp.Locale, "nav.my_month") }</a></li>
+					<li><a href="#" class="text-base-content/50 hover:text-base-content/80 rounded-md px-3 py-2 text-sm font-medium">{ l(lp.Locale, "nav.my_day") }</a></li>
+					<li><a href="#" class="bg-base-100 text-base-content/80 rounded-md px-3 py-2 text-sm font-medium" aria-current="page">{ l(lp.Locale, "nav.my_week") }</a></li>
+					<li><a href="#" class="text-base-content/50 hover:text-base-content/80 rounded-md px-3 py-2 text-sm font-medium">{ l(lp.Locale, "nav.my_month") }</a></li>
 				</ul>
 			</details>
 			<div class="lg:block">
 				<nav class="flex gap-2" aria-label="Tabs">
 					<a
-						href={ templ.URL(lp.Path + "?timeframe=day") }
-						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/35 text-secondary-content", lp.Query["timeframe"] == "day") }
+						href={ templ.URL(lp.Path() + QueryParamsStr(lp, "timeframe=day")) }
+						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/35 text-secondary-content", lp.Query("timeframe") == "day") }
 					>{ l(lp.Locale, "nav.my_day") }</a>
 					<a
-						href={ templ.URL(lp.Path + "?timeframe=week") }
-						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/15 text-secondary-content", lp.Query["timeframe"] == "week") }
+						href={ templ.URL(lp.Path() + QueryParamsStr(lp, "timeframe=week")) }
+						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/15 text-secondary-content", lp.Query("timeframe") == "week") }
 						aria-current="page"
 					>{ l(lp.Locale, "nav.my_week") }</a>
 					<a
-						href={ templ.URL(lp.Path + "?timeframe=month") }
-						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/15 text-secondary-content", lp.Query["timeframe"] == "month") }
+						href={ templ.URL(lp.Path() + QueryParamsStr(lp, "timeframe=month")) }
+						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/15 text-secondary-content", lp.Query("timeframe") == "month") }
 					>{ l(lp.Locale, "nav.my_month") }</a>
 				</nav>
 			</div>
 		</div>
-		<ul class="divide-y divide-base-content-10 text-sm leading-6">
-			for _, appointment := range appointments {
-				@AppointmentLi(appointment, lp)
-			}
-		</ul>
+		if (len(appointments) > 0) {
+			<ul class="divide-y divide-base-content-10 text-sm leading-6" hx-boost="true">
+				for _, appointment := range appointments {
+					@AppointmentLi(appointment, lp)
+				}
+			</ul>
+		} else {
+			@AppointmentsEmptyList(lp)
+		}
 	</section>
 }
 
@@ -104,16 +118,16 @@ templ AppointmentsTimeframe(path, lp layoutProps) {
 	<nav class="flex gap-2" aria-label="Tabs">
 		<a
 			href="/appointments?timeframe=day"
-			class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/35 text-secondary-content", lp.Query["timeframe"] == "day") }
+			class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/35 text-secondary-content", lp.Query("timeframe") == "day") }
 		>{ l(lp.Locale, "nav.my_day") }</a>
 		<a
 			href="/appointments?timeframe=week"
-			class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/15 text-secondary-content", lp.Query["timeframe"] == "week") }
+			class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/15 text-secondary-content", lp.Query("timeframe") == "week") }
 			aria-current="page"
 		>{ l(lp.Locale, "nav.my_week") }</a>
 		<a
 			href="/appointments?timeframe=month"
-			class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/15 text-secondary-content", lp.Query["timeframe"] == "month") }
+			class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/15 text-secondary-content", lp.Query("timeframe") == "month") }
 		>{ l(lp.Locale, "nav.my_month") }</a>
 	</nav>
 }
@@ -123,9 +137,9 @@ templ AppointmentLi(appointment model.Appointment, lp layoutProps) {
 		<figure aria-label="patient picture" class="h-14 w-14 flex-none rounded-full">
 			@CmpAvatar(appointment.Patient, "w-14 h-14")
 		</figure>
-		<div class="flex-auto hx-boost">
+		<div class="flex-auto">
 			<hgroup class="flex items-center gap-2">
-				<a href={ templ.URL("/patients/" + appointment.PatientID) } class="link link-hover">
+				<a href={ templ.URL("/appointments" + QueryParamsStr(lp, "patientId="+appointment.PatientID)) } class="link link-hover">
 					<h3 class="pr-10 font-semibold text-base-content xl:pr-0">
 						{ appointment.Patient.Name() }
 					</h3>
@@ -183,7 +197,7 @@ templ AppointmentLi(appointment model.Appointment, lp layoutProps) {
 					<dd>
 						{ appointment.Clinic.Name }
 						<span class="ml-2">
-							@CmpBadgeStatus(appointment.Status)
+							@CmpBadgeStatus(appointment.Status, lp)
 						</span>
 					</dd>
 				</div>
@@ -205,25 +219,17 @@ templ AppointmentActions(appointment model.Appointment, lp layoutProps) {
 			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
 				<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"></path>
 			</svg>
-			{ l(lp.Locale, "btn.reschedule") }
+			{ l(lp.Locale, "btn.change") }
 		</a>
 	</div>
 }
 
 templ AppointmentsEmptyList(lp layoutProps) {
-	<div class="app-card flex">
-		<a href="/appointments/new" class="relative block w-full rounded-lg border-2 border-dashed border-base-content/30 p-12 text-center hover:border-base-content/40 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-			<svg
-				class="mx-auto w-12 h-12 text-base-content/50"
-				xmlns="http://www.w3.org/2000/svg"
-				fill="none"
-				viewBox="0 0 24 24"
-				stroke-width="1.5"
-				stroke="currentColor"
-			>
-				<path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z"></path>
-			</svg>
+	<div class="flex mt-4">
+		<a href="/appointments/new" class="relative block w-full rounded-lg border-2 border-dashed border-base-content/10 p-12 text-center hover:border-base-content/30 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+			@IconHeroOutlineCalendar("mx-auto w-12 h-12 text-base-content/30")
 			<span class="mt-2 block text-sm font-semibold">{ l(lp.Locale, "str.create_new_appointment") }</span>
+			<p class="mt-1 text-sm text-base-content/40">No se encontraron citas.</p>
 		</a>
 	</div>
 }
@@ -361,7 +367,9 @@ templ ClinicSearch(lp layoutProps) {
 				hx-indicator=".htmx-indicator"
 			/>
 		</label>
-		@ClinicSearchResults([]model.Clinic{}, lp)
+		<div class="max-h-72 overflow-y-auto pr-2 -mr-2">
+			@ClinicSearchResults([]model.Clinic{}, lp)
+		</div>
 	</section>
 }
 
@@ -427,7 +435,9 @@ templ PatientSearch(lp layoutProps) {
 				hx-indicator=".htmx-indicator"
 			/>
 		</label>
-		@PatientSearchResults([]model.Patient{}, lp)
+		<div class="max-h-64 overflow-y-auto pr-2 -mr-2">
+			@PatientSearchResults([]model.Patient{}, lp)
+		</div>
 	</section>
 }
 

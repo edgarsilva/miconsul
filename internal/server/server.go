@@ -90,7 +90,7 @@ func (s *Server) CurrentUser(c *fiber.Ctx) (model.User, error) {
 		id = ""
 	}
 
-	// If no id in locals (No Authenticate middleware), try the cookie
+	// If no id in locals (No Authenticate middleware used), try the cookie
 	if id == "" {
 		id = c.Cookies("Auth", "")
 	}

@@ -1,6 +1,8 @@
 package view
 
 import (
+	"strings"
+
 	"github.com/a-h/templ"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
@@ -20,4 +22,27 @@ func Render(c *fiber.Ctx, component templ.Component, options ...func(*templ.Comp
 
 	handler := adaptor.HTTPHandler(componentHandler)
 	return handler(c)
+}
+
+func QueryParamsStr(lp layoutProps, params ...string) string {
+	queryParams := lp.Queries()
+
+	for _, param := range params {
+		kv := strings.Split(param, "=")
+		if len(kv) < 2 {
+			continue
+		}
+		key, val := kv[0], kv[1]
+		queryParams[key] = val
+	}
+
+	tokens := make([]string, 0, len(queryParams))
+	for k, v := range queryParams {
+		if v == "" {
+			continue
+		}
+		tokens = append(tokens, k+"="+v)
+	}
+
+	return "?" + strings.Join(tokens, "&")
 }

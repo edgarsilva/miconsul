@@ -5,51 +5,65 @@ import (
 	"strconv"
 )
 
-templ PatientsPage(patients []model.Patient, patient model.Patient, lp layoutProps) {
+templ PatientsPage(patients []model.Patient, lp layoutProps) {
 	@Layout(lp) {
-		if patient.ID != "" {
-			<div class="px-4 lg:px-8">
-				@CmpBtnBack(l(lp.Locale, "btn.back"), "/patients")
-			</div>
-			<section id="patient_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
-				if patient.ID == "" || patient.ID == "new" {
-					<h1 class="px-4 sm:px-0 font-bold text-2xl pb-0 w-full">{ l(lp.Locale, "str.new_patient") }</h1>
-				} else {
-					<h1 class="px-4 sm:px-0 font-bold text-2xl pb-0 w-full">{ l(lp.Locale, "str.edit_patient") }</h1>
-				}
-				@PatientProfile(patient, lp)
-			</section>
-		} else {
-			<div class="px-4 lg:px-8">
-				@CmpBtnBack(l(lp.Locale, "btn.back"), "/")
-			</div>
-			<section class="grow flex flex-col px-0 sm:px-4 py-8 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
-				<div
-					class="relative"
+		<div class="px-4 lg:px-8">
+			@CmpBtnBack(l(lp.Locale, "btn.back"), "/")
+		</div>
+		<section class="grow flex flex-col px-0 sm:px-4 py-8 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
+			<div
+				class="relative"
+			>
+				<hgroup
+					class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
+					hx-boost="true"
 				>
-					<hgroup
-						class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
-						hx-boost="true"
+					<h1 class="font-bold text-2xl">{ l(lp.Locale, "str.patients") }</h1>
+					<a
+						href="/patients/new"
+						class="btn btn-primary btn-sm"
 					>
-						<h1 class="font-bold text-2xl">{ l(lp.Locale, "str.patients") }</h1>
-						<a
-							href="/patients/new"
-							class="btn btn-primary btn-sm"
-						>
-							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-								<path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z"></path>
-							</svg>
-							{ l(lp.Locale, "btn.new_patient") }
-						</a>
-					</hgroup>
-					if (len(patients) > 0) {
-						@PatientsList(patients, lp)
-					} else {
-						@PatientsEmptyList(lp)
-					}
-				</div>
-			</section>
-		}
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z"></path>
+						</svg>
+						{ l(lp.Locale, "btn.new_patient") }
+					</a>
+				</hgroup>
+				if (len(patients) > 0) {
+					@PatientsList(patients, lp)
+				} else {
+					@PatientsEmptyList(lp)
+				}
+			</div>
+		</section>
+	}
+}
+
+templ PatientFormPage(patient model.Patient, lp layoutProps) {
+	@Layout(lp) {
+		<div class="px-4 lg:px-8">
+			@CmpBtnBack(l(lp.Locale, "btn.back"), "/patients")
+		</div>
+		<section id="patient_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
+			<hgroup
+				class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
+				hx-boost="true"
+			>
+				if patient.ID == "" || patient.ID == "new" {
+					<h1 class="font-bold text-2xl">{ l(lp.Locale, "str.new_patient") }</h1>
+				} else {
+					<h1 class="font-bold text-2xl">{ l(lp.Locale, "str.edit_patient") }</h1>
+				}
+				<a
+					href={ templ.URL("/appointments?patientId=" + patient.ID) }
+					class="btn btn-primary btn-sm"
+				>
+					@IconHeroOutlineCalendar("")
+					{ l(lp.Locale, "btn.appointments") }
+				</a>
+			</hgroup>
+			@PatientProfile(patient, lp)
+		</section>
 	}
 }
 
@@ -184,7 +198,7 @@ templ PatientsEmptyList(lp layoutProps) {
 
 templ PatientProfile(patient model.Patient, lp layoutProps) {
 	<div id="patient_profile" class="space-y-10 divide-y divide-base-content/10">
-		<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
+		<div class="grid grid-cols-1 gap-x-8 gap-y-8 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
 				<h2 class="text-base font-semibold leading-7">{ l(lp.Locale, "str.personal_info") }</h2>
 				<p class="mt-1 text-sm leading-6 text-base-content/60">{ l(lp.Locale, "str.personal_info_desc") }</p>
@@ -321,7 +335,6 @@ templ PatientProfile(patient model.Patient, lp layoutProps) {
 					</div>
 				</div>
 				<div class="flex items-center justify-end gap-x-6 border-t border-base-content/10 px-4 py-4 sm:px-8">
-					<button type="button" class="btn btn-ghost">{ l(lp.Locale, "btn.cancel") }</button>
 					<button type="submit" class="btn btn-primary">{ l(lp.Locale, "btn.save") }</button>
 				</div>
 			}
@@ -373,7 +386,6 @@ templ PatientProfile(patient model.Patient, lp layoutProps) {
 					</div>
 				</div>
 				<div class="flex items-center justify-end gap-x-6 border-t border-base-content/10 px-4 py-4 sm:px-8">
-					<button type="button" class="btn btn-ghost">{ l(lp.Locale, "btn.cancel") }</button>
 					<button type="submit" class="btn btn-primary">{ l(lp.Locale, "btn.save") }</button>
 				</div>
 			}
@@ -422,7 +434,6 @@ templ PatientProfile(patient model.Patient, lp layoutProps) {
 					</div>
 				</div>
 				<div class="flex items-center justify-end gap-x-6 border-t border-base-content/10 px-4 py-4 sm:px-8">
-					<button type="button" class="btn btn-ghost">{ l(lp.Locale, "btn.cancel") }</button>
 					<button type="submit" class="btn btn-primary">{ l(lp.Locale, "btn.save") }</button>
 				</div>
 			}
@@ -524,7 +535,6 @@ templ PatientProfile(patient model.Patient, lp layoutProps) {
 					</div>
 				</div>
 				<div class="flex items-center justify-end gap-x-6 border-t border-base/content/10 px-4 py-4 sm:px-8">
-					<button type="button" class="btn btn-ghost">{ l(lp.Locale, "btn.cancel") }</button>
 					<button type="submit" class="btn btn-primary">{ l(lp.Locale, "btn.save") }</button>
 				</div>
 			}

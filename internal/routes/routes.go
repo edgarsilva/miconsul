@@ -116,7 +116,7 @@ func PatientRoutes(s *server.Server) {
 
 	g := p.Group("/patients", auth.MustAuthenticate(s))
 	g.Get("/", p.HandlePatientsPage)
-	g.Get("/:id", p.HandlePatientsPage)
+	g.Get("/:id", p.HandlePatientFormPage)
 
 	g.Post("/search", p.HandlePatientSearch)
 

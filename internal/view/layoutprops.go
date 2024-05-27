@@ -20,13 +20,11 @@ type Toast struct {
 
 type layoutProps struct {
 	CurrentUser
-	Theme     string
+	*fiber.Ctx
 	Locale    string
-	Flash     string
-	Toast     Toast
+	Theme     string
 	Timeframe string
-	Path      string
-	Query     map[string]string
+	Toast     Toast
 }
 
 type Prop func(layoutProps *layoutProps) error
@@ -38,12 +36,15 @@ var (
 
 func NewLayoutProps(c *fiber.Ctx, props ...Prop) (layoutProps, error) {
 	layoutProps := layoutProps{
+		Ctx:         c,
 		CurrentUser: new(DummyUser),
-		Query:       c.Queries(),
-		Path:        c.Path(),
 		Locale:      "es-MX",
 		Theme:       "light",
-		Toast:       Toast{},
+		Toast: Toast{
+			Msg:   c.Query("toast", ""),
+			Sub:   c.Query("sub", ""),
+			Level: c.Query("level", ""),
+		},
 	}
 
 	for _, prop := range props {
@@ -100,20 +101,21 @@ func WithLocale(lang string) Prop {
 	}
 }
 
-func WithToast(msg, sub string) Prop {
+// WithToast sets up a notification toast to be rendered by the base layout
+// views
+//
+// # Note: you can also pass thist 3 params as querpyParams in redirects
+//
+//   - toast: main text,
+//   - sub: optional subtitle,
+//   - level: alert level, one of success, error, warning or info (defaults to info)
+func WithToast(toast, sub, level string) Prop {
 	return func(props *layoutProps) error {
 		props.Toast = Toast{
-			Msg: msg,
-			Sub: sub,
+			Msg:   toast,
+			Sub:   sub,
+			Level: level,
 		}
-
-		return nil
-	}
-}
-
-func WithFlash(flash string) Prop {
-	return func(props *layoutProps) error {
-		props.Flash = flash
 
 		return nil
 	}

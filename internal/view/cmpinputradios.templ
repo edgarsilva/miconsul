@@ -1,34 +1,56 @@
 package view
 
-templ CmpRadioStatusBadge() {
-	<div class="flex gap-4 items-center p-2">
-		<label class="badge border-info text-info bg-transparent gap-2 badge-lg has-[:checked]:badge-info">
-			<input type="radio" name="status" value="rescheduled" class="sr-only"/>
-			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 stroke-current">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-			</svg>
-			Rescheduled
-		</label>
-		<label class="badge border-success text-success bg-transparent gap-2 badge-lg has-[:checked]:badge-success">
-			<input type="radio" name="status" value="confirmed" class="sr-only"/>
-			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 stroke-current">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-			</svg>
+import "github.com/edgarsilva/go-scaffold/internal/model"
+
+templ CmpInputRadioApntStatus(status model.AppointmentStatus) {
+	<div class="flex gap-4 items-center p-2 flex-wrap">
+		<label class="badge border-success text-success bg-transparent gap-2 has-[:checked]:badge-success py-4 px-2">
+			<input
+				type="radio"
+				name="status"
+				value={ string(model.ApntStatusConfirmed) }
+				class="radio radio-sm"
+				if status == model.ApntStatusConfirmed {
+					checked
+				}
+			/>
 			Confirmed
 		</label>
-		<label class="badge border-warning text-warning bg-transparent gap-2 badge-lg has-[:checked]:badge-warning ">
-			<input type="radio" name="status" value="canceled" class="sr-only"/>
-			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 stroke-current">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-			</svg>
-			Canceled
-		</label>
-		<label class="badge border-neutral text-neutral bg-transparent gap-2 badge-lg has-[:checked]:badge-neutral ">
-			<input type="radio" name="status" value="done" class="sr-only"/>
-			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-4 h-4 stroke-current">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-			</svg>
+		<label class="badge border-neutral text-neutral bg-transparent gap-2 has-[:checked]:badge-neutral py-4 px-2">
+			<input
+				type="radio"
+				name="status"
+				value={ string(model.ApntStatusDone) }
+				class="radio radio-sm"
+				if status == model.ApntStatusDone {
+					checked
+				}
+			/>
 			Done
+		</label>
+		<label class="badge border-info text-info bg-transparent gap-2 has-[:checked]:badge-info py-4 px-2">
+			<input
+				type="radio"
+				name="status"
+				value={ string(model.ApntStatusRescheduled) }
+				class="radio radio-sm"
+				if status == model.ApntStatusRescheduled {
+					checked
+				}
+			/>
+			Rescheduled
+		</label>
+		<label class="badge border-warning text-warning bg-transparent gap-2 has-[:checked]:badge-warning py-4 px-2">
+			<input
+				type="radio"
+				name="status"
+				value={ string(model.ApntStatusCanceled) }
+				class="radio radio-sm"
+				if status == model.ApntStatusCanceled {
+					checked
+				}
+			/>
+			Canceled
 		</label>
 	</div>
 }

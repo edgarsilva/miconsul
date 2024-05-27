@@ -1,8 +1,6 @@
 package patient
 
 import (
-	"fmt"
-
 	"github.com/edgarsilva/go-scaffold/internal/model"
 	"github.com/edgarsilva/go-scaffold/internal/view"
 	"github.com/gofiber/fiber/v2"
@@ -17,18 +15,46 @@ func (s *service) HandlePatientsPage(c *fiber.Ctx) error {
 		return c.Redirect("/login")
 	}
 
+	theme := s.SessionUITheme(c)
+	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+
 	id := c.Params("id", "")
 	patient := model.Patient{}
 	patient.ID = id
 	if id != "" && id != "new" {
 		s.DB.Model(&model.Patient{}).First(&patient)
+		return view.Render(c, view.PatientFormPage(patient, layoutProps))
 	}
+
 	patients := []model.Patient{}
 	s.DB.Model(&cu).Association("Patients").Find(&patients)
+	return view.Render(c, view.PatientsPage(patients, layoutProps))
+}
+
+// HandlePatientFormPage renders the patients page HTML
+//
+// GET: /patients/:id
+func (s *service) HandlePatientFormPage(c *fiber.Ctx) error {
+	cu, err := s.CurrentUser(c)
+	if err != nil {
+		return c.Redirect("/login")
+	}
 
 	theme := s.SessionUITheme(c)
 	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
-	return view.Render(c, view.PatientsPage(patients, patient, layoutProps))
+
+	id := c.Params("id", "")
+	if id == "" {
+		return c.Redirect("/patients?toast=That user does not exist")
+	}
+
+	patient := model.Patient{}
+	if id != "new" {
+		patient.ID = id
+		s.DB.Model(&model.Patient{}).First(&patient)
+	}
+
+	return view.Render(c, view.PatientFormPage(patient, layoutProps))
 }
 
 // HandleCreatePatient inserts a new patient record for the CurrentUser
@@ -50,23 +76,29 @@ func (s *service) HandleCreatePatient(c *fiber.Ctx) error {
 		path, err := SaveProfilePicToDisk(c, patient)
 		if err == nil {
 			patient.ProfilePic = path
-		} else {
-			fmt.Println("Error ---->", err)
+		}
+	}
+
+	if err := result.Error; err != nil {
+		redirectPath := "/patients/new?toast=Failed to create new patient&level=error"
+		if !s.IsHTMX(c) {
+			return c.Redirect(redirectPath)
 		}
 	}
 
 	if !s.IsHTMX(c) {
-		if err := result.Error; err != nil {
-			return c.Redirect("/patients?err=failed to create patient")
-		}
-
 		return c.Redirect("/patients/" + patient.ID)
 	}
 
 	c.Set("HX-Push-Url", "/patients/"+patient.ID)
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
-	return view.Render(c, view.PatientsPage([]model.Patient{}, patient, layoutProps))
+	layoutProps, _ := view.NewLayoutProps(
+		c,
+		view.WithTheme(theme),
+		view.WithCurrentUser(cu),
+		view.WithToast("New patient created", "", ""),
+	)
+	return view.Render(c, view.PatientFormPage(patient, layoutProps))
 }
 
 // HandleUpdatePatient updates a patient record for the CurrentUser
@@ -95,21 +127,25 @@ func (s *service) HandleUpdatePatient(c *fiber.Ctx) error {
 	path, err := SaveProfilePicToDisk(c, patient)
 	if err == nil {
 		patient.ProfilePic = path
-	} else {
-		fmt.Println("Error ---->", err)
 	}
 
 	res := s.DB.Where("id = ? AND user_id = ?", patientID, cu.ID).Updates(&patient)
 	if err := res.Error; err != nil {
-		return c.Redirect("/patients?err=failed to update patient")
+		redirectPath := "/patients?err=failed to update patient&level=error"
+		if !s.IsHTMX(c) {
+			return c.Redirect(redirectPath)
+		}
+
+		c.Set("HX-Location", redirectPath)
+		return c.SendStatus(fiber.StatusUnprocessableEntity)
 	}
 
-	isHTMX := c.Get("HX-Request", "") // will be a string 'true' for HTMX requests
-	if isHTMX == "" {
-		return c.Redirect("/patients/" + patient.ID)
+	if !s.IsHTMX(c) {
+		return c.Redirect("/patients/"+patientID, fiber.StatusSeeOther)
 	}
 
-	return c.Redirect("/patients/"+patientID, fiber.StatusSeeOther)
+	c.Set("HX-Location", "/patients/"+patientID+"?toast=Patient changes saved&level=success")
+	return c.SendStatus(fiber.StatusOK)
 }
 
 // HandleRemovePic removes the ProfilePic from the patient
@@ -147,7 +183,7 @@ func (s *service) HandleRemovePic(c *fiber.Ctx) error {
 
 	theme := s.SessionUITheme(c)
 	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
-	return view.Render(c, view.PatientsPage([]model.Patient{}, patient, layoutProps))
+	return view.Render(c, view.PatientFormPage(patient, layoutProps))
 }
 
 // HandleDeletePatient deletes a patient record from the DB

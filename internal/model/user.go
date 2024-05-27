@@ -10,11 +10,11 @@ import (
 type UserRole string
 
 const (
-	UserRoleAdmin AppointmentStatus = "admin"
-	UserRoleUser  AppointmentStatus = "user"
-	UserRoleGuest AppointmentStatus = "guest"
-	UserRoleAnon  AppointmentStatus = "anon"
-	UserRoleTest  AppointmentStatus = "test"
+	UserRoleAdmin UserRole = "admin"
+	UserRoleUser  UserRole = "user"
+	UserRoleGuest UserRole = "guest"
+	UserRoleAnon  UserRole = "anon"
+	UserRoleTest  UserRole = "test"
 )
 
 type User struct {
@@ -23,9 +23,9 @@ type User struct {
 	ExtID                 string
 	ProfilePic            string
 	Name                  string
-	Email                 string            `gorm:"uniqueIndex;default:null;not null"`
-	Role                  AppointmentStatus `gorm:"index;default:null;not null;type:string"`
-	Password              string            `json:"-"`
+	Email                 string   `gorm:"uniqueIndex;default:null;not null"`
+	Role                  UserRole `gorm:"index;default:null;not null;type:string"`
+	Password              string   `json:"-"`
 	Theme                 string
 	ResetToken            string
 	ConfirmEmailToken     string

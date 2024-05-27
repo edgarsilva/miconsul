@@ -28,28 +28,41 @@ func (s *service) HandleAppointmentsPage(c *fiber.Ctx) error {
 	}
 
 	appointments := []model.Appointment{}
-	query := s.DB.Model(model.Appointment{}).Where("user_id = ?", cu.ID)
+	dbquery := s.DB.Model(model.Appointment{}).Where("user_id = ?", cu.ID)
+
+	patient := model.Patient{
+		UserID: cu.ID,
+	}
+	patientID := c.Query("patientId", "")
+	if patientID != "" {
+		patient.ID = patientID
+		result := s.DB.Model(&patient).Take(&patient)
+		if result.RowsAffected == 1 {
+			c.Locals("patient", patient)
+			dbquery.Where("patient_id", patientID)
+		}
+	}
 
 	timeframe := c.Query("timeframe", "")
 	switch timeframe {
 	case "day":
-		query.Scopes(model.AppointmentsBookedToday)
+		dbquery.Scopes(model.AppointmentsBookedToday)
 	case "week":
-		query.Scopes(model.AppointmentsBookedThisWeek)
+		dbquery.Scopes(model.AppointmentsBookedThisWeek)
 	case "month":
-		query.Scopes(model.AppointmentsBookedThisMonth)
+		dbquery.Scopes(model.AppointmentsBookedThisMonth)
 	default:
-		query.Where("booked_at > ?", util.BoD(time.Now()))
+		dbquery.Where("booked_at > ?", util.BoD(time.Now()))
 	}
 
-	query.Preload("Clinic").
+	dbquery.Preload("Clinic").
 		Preload("Patient").
 		Find(&appointments)
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "")
-	layoutProps, _ := view.NewLayoutProps(c, 
-		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, ""),
+	layoutProps, _ := view.NewLayoutProps(c,
+		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, "", ""),
 	)
 
 	return view.Render(c, view.AppointmentsPage(appointments, appointment, layoutProps))
@@ -86,8 +99,8 @@ func (s *service) HandleAppointmentBeginPage(c *fiber.Ctx) error {
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "")
-	layoutProps, _ := view.NewLayoutProps(c, 
-		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, ""),
+	layoutProps, _ := view.NewLayoutProps(c,
+		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, "", ""),
 	)
 	return view.Render(c, view.AppointmentBeginPage(appointment, layoutProps))
 }
@@ -238,11 +251,43 @@ func (s *service) HandleUpdateAppointment(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusOK)
 }
 
-// HandleDeleteAppointment deletes a appointment record from the DB
+// HandleAppointmentDelete deletes a appointment record from the DB
 //
 // DELETE: /appointments/:id
 // POST: /appointments/:id/delete
 func (s *service) HandleDeleteAppointment(c *fiber.Ctx) error {
+	cu, err := s.CurrentUser(c)
+	if err != nil {
+		return c.Redirect("/login", fiber.StatusSeeOther)
+	}
+
+	appointmentID := c.Params("ID", "")
+	if appointmentID == "" {
+		return c.Redirect("/appointments?msg=can't delete without an id", fiber.StatusSeeOther)
+	}
+
+	appointment := model.Appointment{
+		UserID: cu.ID,
+	}
+
+	res := s.DB.Where("id = ? AND user_id = ?", appointmentID, cu.ID).Delete(&appointment)
+	if err := res.Error; err != nil {
+		return c.Redirect("/appointments?msg=failed to delete that appointment", fiber.StatusSeeOther)
+	}
+
+	isHTMX := c.Get("HX-Request", "") // will be a string 'true' for HTMX requests
+	if isHTMX == "" {
+		return c.Redirect("/appointments", fiber.StatusSeeOther)
+	}
+
+	c.Set("HX-Location", "/appointments")
+	return c.SendStatus(fiber.StatusOK)
+}
+
+// HandleAppointmentCancel cancels an appointment
+//
+// POST: /appointments/:id/cancel
+func (s *service) HandleAppointmentCancel(c *fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
 		return c.Redirect("/login", fiber.StatusSeeOther)
