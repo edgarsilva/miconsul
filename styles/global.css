@@ -15,16 +15,17 @@
 }
 
 *::-webkit-scrollbar {
-    width: .75rem !important;
+    width: .5rem !important;
 }
 *::-webkit-scrollbar-thumb {
     --tw-bg-opacity: 1 !important;
-    background-color: #6b7280aa !important;
+    background-color: #6b728070 !important;
     border-radius: .5rem !important;
 }
 *::-webkit-scrollbar-track {
     --tw-bg-opacity: 1 !important;
-    background-color: #e5e5e5dd !important;
+    background-color: #e5e5e5d0 !important;
+    border-radius: .5rem !important;
 }
 
 input[type="search"]::-webkit-search-cancel-button {
