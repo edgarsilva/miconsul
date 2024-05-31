@@ -34,6 +34,10 @@ var (
 	locales    = localize.New("es-MX", "en-US")
 )
 
+func l(lang, key string) string {
+	return locales.GetWithLocale(lang, key)
+}
+
 func NewLayoutProps(c *fiber.Ctx, props ...Prop) (layoutProps, error) {
 	layoutProps := layoutProps{
 		Ctx:         c,
@@ -55,10 +59,6 @@ func NewLayoutProps(c *fiber.Ctx, props ...Prop) (layoutProps, error) {
 	}
 
 	return layoutProps, nil
-}
-
-func l(lang, key string) string {
-	return locales.GetWithLocale(lang, key)
 }
 
 func WithCurrentUser(cu CurrentUser) Prop {

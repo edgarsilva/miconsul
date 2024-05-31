@@ -25,11 +25,11 @@ func (s *service) HandleDashboardPage(c *fiber.Ctx) error {
 	timeframe := c.Query("timeframe", "")
 	switch timeframe {
 	case "day":
-		query.Scopes(model.AppointmentsBookedToday)
+		query.Scopes(model.AppointmentBookedToday)
 	case "week":
-		query.Scopes(model.AppointmentsBookedThisWeek)
+		query.Scopes(model.AppointmentBookedThisWeek)
 	case "month":
-		query.Scopes(model.AppointmentsBookedThisMonth)
+		query.Scopes(model.AppointmentBookedThisMonth)
 	default:
 		query.Where("booked_at > ?", util.BoD(time.Now()))
 	}

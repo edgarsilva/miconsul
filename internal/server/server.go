@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/edgarsilva/go-scaffold/internal/backgroundjob"
 	"github.com/edgarsilva/go-scaffold/internal/database"
 	"github.com/edgarsilva/go-scaffold/internal/localize"
 	"github.com/edgarsilva/go-scaffold/internal/model"
@@ -19,6 +20,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/gofiber/fiber/v2/middleware/session"
+	"github.com/panjf2000/ants/v2"
 )
 
 type router interface {
@@ -27,12 +29,15 @@ type router interface {
 
 type Server struct {
 	*fiber.App
+	// WorkerPool that handles Background Goroutines
+	BGJob        *backgroundjob.Sched
+	WP           *ants.Pool
 	SessionStore *session.Store
 	DB           *database.Database
 	LC           *localize.Localizer
 }
 
-func New(db *database.Database, locales *localize.Localizer) *Server {
+func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjob *backgroundjob.Sched) *Server {
 	fiberApp := fiber.New()
 
 	// Initialize logger middleware config
@@ -77,6 +82,8 @@ func New(db *database.Database, locales *localize.Localizer) *Server {
 	return &Server{
 		App:          fiberApp,
 		SessionStore: sessionStore,
+		BGJob:        bgjob,
+		WP:           wp,
 		DB:           db,
 		LC:           locales,
 	}
@@ -204,4 +211,8 @@ func (s *Server) SessionLang(c *fiber.Ctx) string {
 func (s *Server) IsHTMX(c *fiber.Ctx) bool {
 	isHTMX := c.Get("HX-Request", "") // will be a string 'true' for HTMX requests
 	return isHTMX == "true"
+}
+
+func (s *Server) l(lang, key string) string {
+	return s.LC.GetWithLocale(lang, key)
 }

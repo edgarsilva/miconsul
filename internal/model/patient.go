@@ -11,26 +11,22 @@ type Patient struct {
 	Address
 	SocialMedia
 	ModelBase
-	ExtID               string
-	Email               string         `form:"email"`
-	Phone               string         `form:"phone"`
-	Ocupation           string         `form:"ocupation"`
-	UserID              string         `gorm:"index;default:null;not null"`
-	LastName            string         `gorm:"default:null;not null" form:"lastName"`
-	FirstName           string         `gorm:"default:null;not null" form:"firstName"`
-	ProfilePic          string         `form:"profilePic"`
-	FamilyHistory       string         `form:"familyHistory"`
-	MedicalBackground   string         `form:"medicalBackground"`
-	Notes               string         `form:"notes"`
-	DeletedAt           gorm.DeletedAt `gorm:"index"`
-	User                User
-	Appointments        []Appointment
-	Age                 int  `form:"age"`
-	EnableNotifications bool `form:"enableNotifications"`
-	ViaEmail            bool `form:"viaEmail"`
-	ViaWhatsapp         bool `form:"viaWhatsapp"`
-	ViaMessenger        bool `form:"viaMessenger"`
-	ViaTelegram         bool `form:"viaTelegram"`
+	ExtID             string
+	Email             string         `form:"email"`
+	Phone             string         `form:"phone"`
+	Ocupation         string         `form:"ocupation"`
+	UserID            string         `gorm:"index;default:null;not null"`
+	LastName          string         `gorm:"default:null;not null" form:"lastName"`
+	FirstName         string         `gorm:"default:null;not null" form:"firstName"`
+	ProfilePic        string         `form:"profilePic"`
+	FamilyHistory     string         `form:"familyHistory"`
+	MedicalBackground string         `form:"medicalBackground"`
+	Notes             string         `form:"notes"`
+	DeletedAt         gorm.DeletedAt `gorm:"index"`
+	User              User
+	Appointments      []Appointment
+	Age               int `form:"age"`
+	NotificationFlags
 }
 
 func (p *Patient) BeforeCreate(tx *gorm.DB) error {

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"os"
 
-	"github.com/gofiber/fiber/v2/log"
 	"gopkg.in/gomail.v2"
 )
 
@@ -28,8 +27,7 @@ func ConfirmEmail(email, token string) error {
 
 	// Send Email
 	if err := d.DialAndSend(m); err != nil {
-		log.Error("impossible to send email", err)
-		return errors.New("impossible to send email")
+		return err
 	}
 
 	return nil

@@ -332,11 +332,14 @@ templ AppointmentNew(appointment model.Appointment, lp layoutProps) {
 							</div>
 						</div>
 					</div>
-					<div class="flex items-center justify-end gap-x-6 border-t border-base-content/10 px-4 py-4 sm:px-8">
-						<button type="button" class="btn btn-ghost">{ l(lp.Locale, "btn.cancel") }</button>
-						<button type="submit" class="btn btn-primary">{ l(lp.Locale, "btn.save") }</button>
-					</div>
 				}
+				<div class="flex items-center justify-end gap-x-6 border-t border-base-content/10 px-4 py-4 sm:px-8">
+					<button
+						form="new_appointment"
+						type="submit"
+						class="btn btn-primary"
+					>{ l(lp.Locale, "btn.save") }</button>
+				</div>
 			</section>
 		</div>
 	</div>
@@ -362,7 +365,7 @@ templ ClinicSearch(lp layoutProps) {
 				name="query"
 				placeholder={ l(lp.Locale, "str.search_clinics") }
 				hx-post="/clinics/search"
-				hx-trigger="input changed delay:500ms, search, load"
+				hx-trigger="input changed delay:300ms, search, load"
 				hx-target="#clinic_search_results"
 				hx-indicator=".htmx-indicator"
 			/>
@@ -430,7 +433,7 @@ templ PatientSearch(lp layoutProps) {
 				name="query"
 				placeholder={ l(lp.Locale, "str.search_patients") }
 				hx-post="/patients/search"
-				hx-trigger="input changed delay:500ms, search, load"
+				hx-trigger="input changed delay:300ms, search, load"
 				hx-target="#patient_search_results"
 				hx-indicator=".htmx-indicator"
 			/>

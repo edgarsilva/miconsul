@@ -48,9 +48,9 @@ func AuthRoutes(s *server.Server) {
 	a.Post("/signup", a.HandleSignup)
 	a.Get("/signup/confirm/:token", a.HandleSignupConfirmEmail)
 	a.Get("/resetpassword", a.HandlePageResetPassword)
-	a.Post("/resetpassword/send", a.HandleResetPassword)
+	a.Post("/resetpassword", a.HandleResetPassword)
 	a.Get("/resetpassword/change/:token", a.HandleResetPasswordChange)
-	a.Post("/resetpassword/change", a.HandleResetPasswordUpdate)
+	a.Post("/resetpassword/change/:token", a.HandleResetPasswordUpdate)
 
 	// Auth service
 
@@ -116,6 +116,7 @@ func PatientRoutes(s *server.Server) {
 
 	g := p.Group("/patients", auth.MustAuthenticate(s))
 	g.Get("/", p.HandlePatientsPage)
+	g.Get("/makeaton", p.HandleMockManyPatients)
 	g.Get("/:id", p.HandlePatientFormPage)
 
 	g.Post("/search", p.HandlePatientSearch)
@@ -147,7 +148,8 @@ func AppointmentRoutes(s *server.Server) {
 	g.Get("/", a.HandleAppointmentsPage)
 	g.Get("/:id", a.HandleAppointmentsPage)
 	g.Get("/:id/Begin", a.HandleAppointmentBeginPage)
-	g.Post("/:id/done", a.HandleAppointmentDonePage)
+	g.Post("/:id/done", a.HandleAppointmentDone)
+	g.Post("/:id/cancel", a.HandleAppointmentCancel)
 
 	g.Post("/", a.HandleCreateAppointment)
 

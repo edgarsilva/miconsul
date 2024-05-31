@@ -54,19 +54,25 @@ templ PatientCard(patient model.Patient, lp layoutProps) {
 							</svg>
 							<h3>
 								{ l(lp.Locale, "str.last_appointment") }
-								<time datetime="2022-01-10T17:00">10/Ago/2022 5:00 PM</time>
+								if len(patient.Appointments) > 0 {
+									<time datetime={ patient.Appointments[0].BookedAt.Format(FormTimeFormat) }>{ patient.Appointments[0].BookedAt.Format(ViewTimeFormat) }</time>
+								}
 							</h3>
 						</hgroup>
 					</a>
 					<div class="mt-4 text-base leading-7 text-base-content/60">
-						<h3 class="text-base-content text-sm font-semibold">Summary</h3>
-						<blockquote class="mb-4">
-							Ultricies massa malesuada viverra cras lobortis. Tempor orci hac ligula dapibus mauris sit ut eu. Eget turpis urna maecenas cras. Nisl dictum.
-						</blockquote>
-						<h3 class="text-base-content text-sm font-semibold">Notes</h3>
-						<blockquote class="mb-4">
-							Ultricies massa malesuada viverra cras lobortis. Tempor orci hac ligula dapibus mauris sit ut eu. Eget turpis urna maecenas cras. Nisl dictum.
-						</blockquote>
+						if len(patient.Appointments) > 0 {
+							<h3 class="text-base-content text-sm font-semibold">Summary</h3>
+							<blockquote class="mb-4">
+								{ patient.Appointments[0].Summary }
+							</blockquote>
+							<h3 class="text-base-content text-sm font-semibold">Notes</h3>
+							<blockquote class="mb-4">
+								{ patient.Appointments[0].Notes }
+							</blockquote>
+						} else {
+							<h3 class="text-base-content/30 text-md font-semibold">{ l(lp.Locale, "str.no_prev_apnt") }</h3>
+						}
 					</div>
 					<ul class="flex divide-x divide-base-content/10 pt-2">
 						<li class="font-semibold tracking-tight pr-2">{ patient.Name() }</li>
@@ -80,24 +86,27 @@ templ PatientCard(patient model.Patient, lp layoutProps) {
 }
 
 templ AppointmentBegin(appointment model.Appointment, lp layoutProps) {
-	<form
-		id="new_appointment"
-		method="POST"
-		action={ templ.URL("/appointments/" + appointment.ID + "/done") }
-		hx-post={ "/appointments/" + appointment.ID + "/done" }
-	>
-		<span class="absolute top-2 right-2 loading loading-ring text-primary loading-md htmx-indicator"></span>
-		<div class="space-y-10 ">
-			@PatientCard(appointment.Patient, lp)
-			<div class="pt-8 gap-x-8 gap-y-8">
-				<hgroup
-					class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
+	<span class="absolute top-2 right-2 loading loading-ring text-primary loading-md htmx-indicator"></span>
+	<div class="space-y-10 ">
+		@PatientCard(appointment.Patient, lp)
+		<div class="pt-8 gap-x-8 gap-y-8">
+			<hgroup
+				class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
+			>
+				<h1 class="font-bold text-2xl">{ l(lp.Locale, "str.current_session") }</h1>
+			</hgroup>
+			<section class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
+				<input type="hidden" name="id" value={ appointment.ID } id="mb_appointment_id"/>
+				<input type="hidden" name="status" value="done" id="mb_appointment_id"/>
+				<div class="flex justify-end p-4 pb-0 text-base-content/50">
+					<time datetime={ appointment.BookedAt.Format(FormTimeFormat) }>{ appointment.BookedAt.Format(ViewTimeFormat) }</time>
+				</div>
+				<form
+					id="patch_appointment"
+					method="POST"
+					action={ templ.URL("/appointments/" + appointment.ID + "/done") }
+					hx-post={ "/appointments/" + appointment.ID + "/done" }
 				>
-					<h1 class="font-bold text-2xl">{ l(lp.Locale, "str.current_session") }</h1>
-				</hgroup>
-				<section class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
-					<input type="hidden" name="id" value={ appointment.ID } id="mb_appointment_id"/>
-					<input type="hidden" name="status" value="done" id="mb_appointment_id"/>
 					<div class="px-4 py-6 sm:p-8">
 						<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
 							<div class="col-span-full">
@@ -141,17 +150,28 @@ templ AppointmentBegin(appointment model.Appointment, lp layoutProps) {
 										name="notes"
 										class="textarea textarea-bordered w-full block"
 										placeholder={ l(lp.Locale, "str.notes_ph") }
-									>{ appointment.Notes }</textarea>
+									>1234{ appointment.Notes }</textarea>
 								</div>
 							</div>
 						</div>
 					</div>
-					<div class="flex items-center justify-end gap-x-6 border-t border-base-content/10 px-4 py-4 sm:px-8">
-						<button type="button" class="btn btn-ghost">{ l(lp.Locale, "btn.cancel") }</button>
-						<button type="submit" class="btn btn-primary">{ l(lp.Locale, "btn.save") }</button>
-					</div>
-				</section>
-			</div>
+				</form>
+				<div class="flex items-center justify-end gap-x-6 border-t border-base-content/10 px-4 py-4 sm:px-8">
+					<form
+						id="cancel_appointment"
+						method="POST"
+						action={ templ.URL("/appointments/" + appointment.ID + "/cancel") }
+						hx-post={ "/appointments/" + appointment.ID + "/cancel" }
+						hx-confirm={ l(lp.Locale, "str.are_you_sure") }
+					>
+						<button
+							type="submit"
+							class="btn btn-ghost"
+						>{ l(lp.Locale, "btn.cancel") } testi</button>
+					</form>
+					<button form="patch_appointment" type="submit" class="btn btn-primary">{ l(lp.Locale, "btn.save") }</button>
+				</div>
+			</section>
 		</div>
-	</form>
+	</div>
 }

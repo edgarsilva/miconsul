@@ -31,6 +31,14 @@ type SocialMedia struct {
 	Facebook  string `form:"facebook"`
 }
 
+type NotificationFlags struct {
+	EnableNotifications bool `form:"enableNotifications"`
+	ViaEmail            bool `form:"viaEmail"`
+	ViaWhatsapp         bool `form:"viaWhatsapp"`
+	ViaMessenger        bool `form:"viaMessenger"`
+	ViaTelegram         bool `form:"viaTelegram"`
+}
+
 func (mb *ModelBase) BeforeCreate(tx *gorm.DB) error {
 	mb.ID = xid.New("____")
 	return nil
@@ -101,4 +109,30 @@ func countries() []Country {
 	}
 
 	return c
+}
+
+// GlobalFTS adds the necessary joins to do a Global full text search on the
+// global_fts table, as well as the order clause to rank the results.
+//
+// You can use it with any model that saves to the global_fts table (usually
+// handle by the DB with triggers).
+//
+//	// you can use it with your model like so:
+//	s.DB.
+//		Model(model.Patient{}).
+//		Scopes(model.GlobalFTS(queryStr)).
+//		.Find(&patients)
+//
+//	// the scope adds this snippet:
+//	db.
+//		 Joins("INNER JOIN global_fts ON gid = id").
+//		 Where("global_fts MATCH ?", "\""+term+"\" * ").
+//		 Order("bm25(global_fts, 0, 1, 2, 3)")
+func GlobalFTS(term string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.
+			Joins("INNER JOIN global_fts ON gid = id").
+			Where("global_fts MATCH ?", "\""+term+"\" * ").
+			Order("bm25(global_fts, 0, 1, 2, 3)")
+	}
 }

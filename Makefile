@@ -10,7 +10,7 @@ build:
 	@echo "🛕 Generating Templ files..."
 	@templ generate
 	@echo "🤖 go build..."
-	@go build -o bin/app cmd/app/main.go
+	@go build -tags fts5 -o bin/app cmd/app/main.go
 
 # Run the application
 run:
@@ -20,7 +20,7 @@ run:
 	@echo "🛕 Generating Templ files..."
 	@templ generate
 	@echo "🤖 go run..."
-	@go run cmd/app/main.go
+	@go run cmd/app/main.go -tags fts5
 
 # Test the application (integration)
 test-integration:
@@ -36,7 +36,7 @@ clean:
 	@echo "Cleaning..."
 	@rm bin/*
 
-# Live Reload
+# Live Reload <- not hot reload on the browser
 dev:
 	@if command -v air > /dev/null; then \
 	    air; \

@@ -24,7 +24,7 @@ func New(dbPath string) *Database {
 			LogLevel:                  logger.Info,            // Log level
 			IgnoreRecordNotFoundError: true,                   // Ignore ErrRecordNotFound error for logger
 			ParameterizedQueries:      true,                   // Don't include params in the SQL log
-			Colorful:                  true,                   // Disable color
+			Colorful:                  true,                   // Enable/Disable color
 		},
 	)
 
@@ -46,10 +46,10 @@ func New(dbPath string) *Database {
 	DB.AutoMigrate(
 		&model.User{},
 		&model.Todo{},
-		&model.Article{},
-		&model.Comment{},
 		&model.Clinic{},
 		&model.Patient{},
+		&model.FeedEvent{},
+		&model.Alert{},
 		&model.Appointment{},
 		// &Journal|Logbook TODO: Logbook to log extraneous events (No 20k Datatog bill)
 		// &I18n TODO: Internationalization in the DB or just plain text file?

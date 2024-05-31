@@ -67,7 +67,7 @@ func (s *service) HandleLogin(c *fiber.Ctx) error {
 	switch c.Accepts("text/plain", "text/html", "application/json") {
 	case "text/html":
 		c.Cookie(newCookie("Auth", user.ID, time.Hour*validFor))
-		return c.Redirect("/todos")
+		return c.Redirect("/")
 	case "application/json":
 		// TODO: HandleLogin maybe accept JWT for application/json
 		return c.SendStatus(fiber.StatusServiceUnavailable)
@@ -182,7 +182,7 @@ func (s *service) HandleLogout(c *fiber.Ctx) error {
 //
 // GET: /resetpassword
 func (s *service) HandlePageResetPassword(c *fiber.Ctx) error {
-	layoutProps, _ := view.NewLayoutProps(c, )
+	layoutProps, _ := view.NewLayoutProps(c)
 
 	msg := s.SessionGet(c, "msg", "")
 	if msg == "" {
@@ -197,7 +197,7 @@ func (s *service) HandlePageResetPassword(c *fiber.Ctx) error {
 //
 // POST: /resetpassword
 func (s *service) HandleResetPassword(c *fiber.Ctx) error {
-	layoutProps, _ := view.NewLayoutProps(c, )
+	layoutProps, _ := view.NewLayoutProps(c)
 	email, err := resetPasswordEmailParam(c)
 	if err != nil {
 		errView := errors.New("email can't be blank")
@@ -243,7 +243,7 @@ func (s *service) HandleResetPasswordChange(c *fiber.Ctx) error {
 
 	nonce := xid.New("rpnnce")
 	s.SessionSet(c, "nonce", nonce)
-	layoutProps, _ := view.NewLayoutProps(c, )
+	layoutProps, _ := view.NewLayoutProps(c)
 	return view.Render(c, view.ResetPasswordChangePage(email, token, nonce, nil, layoutProps))
 }
 
@@ -272,7 +272,7 @@ func (s *service) HandleResetPasswordUpdate(c *fiber.Ctx) error {
 		return c.Redirect("/resetpassword?msg=seems like your token has expired, try again!")
 	}
 
-	layoutProps, _ := view.NewLayoutProps(c, )
+	layoutProps, _ := view.NewLayoutProps(c)
 	password := c.FormValue("password", "")
 	if password == "" {
 		err := errors.New("password can't be blank")

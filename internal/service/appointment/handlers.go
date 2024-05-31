@@ -46,17 +46,18 @@ func (s *service) HandleAppointmentsPage(c *fiber.Ctx) error {
 	timeframe := c.Query("timeframe", "")
 	switch timeframe {
 	case "day":
-		dbquery.Scopes(model.AppointmentsBookedToday)
+		dbquery.Scopes(model.AppointmentBookedToday)
 	case "week":
-		dbquery.Scopes(model.AppointmentsBookedThisWeek)
+		dbquery.Scopes(model.AppointmentBookedThisWeek)
 	case "month":
-		dbquery.Scopes(model.AppointmentsBookedThisMonth)
+		dbquery.Scopes(model.AppointmentBookedThisMonth)
 	default:
 		dbquery.Where("booked_at > ?", util.BoD(time.Now()))
 	}
 
 	dbquery.Preload("Clinic").
 		Preload("Patient").
+		Order("booked_at desc").
 		Find(&appointments)
 
 	theme := s.SessionUITheme(c)
@@ -92,7 +93,7 @@ func (s *service) HandleAppointmentBeginPage(c *fiber.Ctx) error {
 	}
 	patient.ID = appointment.PatientID
 	s.DB.Model(patient).Preload("Appointments", func(tx *gorm.DB) *gorm.DB {
-		return tx.Limit(1).Order("booked_at desc")
+		return tx.Limit(1).Where("status = ?", model.ApntStatusDone).Order("booked_at desc")
 	}).Take(&patient)
 
 	appointment.Patient = patient
@@ -103,46 +104,6 @@ func (s *service) HandleAppointmentBeginPage(c *fiber.Ctx) error {
 		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, "", ""),
 	)
 	return view.Render(c, view.AppointmentBeginPage(appointment, layoutProps))
-}
-
-// HandleBeginAppointmentPage renders the appointments page HTML
-//
-// GET: /appointments/:id/Begin
-func (s *service) HandleAppointmentDonePage(c *fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return c.Redirect("/login")
-	}
-
-	appointmentID := c.Params("ID", "")
-	if appointmentID == "" {
-		appointmentID = c.FormValue("id", "")
-	}
-
-	if appointmentID == "" {
-		redirectPath := "/appointments?toast=Can't find that appointment&level=error"
-		c.Set("HX-Location", redirectPath)
-		return c.Redirect(redirectPath, fiber.StatusSeeOther)
-	}
-
-	appointment := model.Appointment{
-		UserID: cu.ID,
-	}
-	c.BodyParser(&appointment)
-
-	res := s.DB.Where("id = ? AND user_id = ?", appointmentID, cu.ID).Updates(&appointment)
-	if err := res.Error; err != nil {
-		redirectPath := "/appointments?toast=Failed to update appointment&level=error"
-		c.Set("HX-Location", redirectPath)
-		return c.Redirect(redirectPath, fiber.StatusSeeOther)
-	}
-
-	if !s.IsHTMX(c) {
-		return c.Redirect("/appointments", fiber.StatusSeeOther)
-	}
-
-	c.Set("HX-Location", "/appointments")
-	return c.SendStatus(fiber.StatusOK)
 }
 
 // HandleCreateAppointment inserts a new appointment record for the CurrentUser
@@ -168,9 +129,14 @@ func (s *service) HandleCreateAppointment(c *fiber.Ctx) error {
 	}
 
 	appointment := model.Appointment{
-		UserID:   cu.ID,
-		BookedAt: bookedAt,
-		Cost:     cost,
+		UserID:       cu.ID,
+		BookedAt:     bookedAt,
+		BookedYear:   bookedAt.Year(),
+		BookedMonth:  int(bookedAt.Month()),
+		BookedDay:    bookedAt.Day(),
+		BookedHour:   bookedAt.Hour(),
+		BookedMinute: bookedAt.Minute(),
+		Cost:         cost,
 	}
 	c.BodyParser(&appointment)
 
@@ -184,6 +150,9 @@ func (s *service) HandleCreateAppointment(c *fiber.Ctx) error {
 		c.Set("HX-Location", redirectPath)
 		return c.SendStatus(fiber.StatusUnprocessableEntity)
 	}
+
+	s.DB.Model(&appointment).Preload("Clinic").Preload("Patient").Take(&appointment)
+	s.SendBookedAlert(appointment)
 
 	if !s.IsHTMX(c) {
 		return c.Redirect("/appointments?toast=New appointment created")
@@ -251,32 +220,39 @@ func (s *service) HandleUpdateAppointment(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusOK)
 }
 
-// HandleAppointmentDelete deletes a appointment record from the DB
+// HandleBeginAppointmentPage renders the appointments page HTML
 //
-// DELETE: /appointments/:id
-// POST: /appointments/:id/delete
-func (s *service) HandleDeleteAppointment(c *fiber.Ctx) error {
+// GET: /appointments/:id/Begin
+func (s *service) HandleAppointmentDone(c *fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect("/login", fiber.StatusSeeOther)
+		return c.Redirect("/login")
 	}
 
 	appointmentID := c.Params("ID", "")
 	if appointmentID == "" {
-		return c.Redirect("/appointments?msg=can't delete without an id", fiber.StatusSeeOther)
+		appointmentID = c.FormValue("id", "")
+	}
+
+	if appointmentID == "" {
+		redirectPath := "/appointments?toast=Can't find that appointment&level=error"
+		c.Set("HX-Location", redirectPath)
+		return c.Redirect(redirectPath, fiber.StatusSeeOther)
 	}
 
 	appointment := model.Appointment{
 		UserID: cu.ID,
 	}
+	c.BodyParser(&appointment)
 
-	res := s.DB.Where("id = ? AND user_id = ?", appointmentID, cu.ID).Delete(&appointment)
+	res := s.DB.Where("id = ? AND user_id = ?", appointmentID, cu.ID).Updates(&appointment)
 	if err := res.Error; err != nil {
-		return c.Redirect("/appointments?msg=failed to delete that appointment", fiber.StatusSeeOther)
+		redirectPath := "/appointments?toast=Failed to update appointment&level=error"
+		c.Set("HX-Location", redirectPath)
+		return c.Redirect(redirectPath, fiber.StatusSeeOther)
 	}
 
-	isHTMX := c.Get("HX-Request", "") // will be a string 'true' for HTMX requests
-	if isHTMX == "" {
+	if !s.IsHTMX(c) {
 		return c.Redirect("/appointments", fiber.StatusSeeOther)
 	}
 
@@ -288,6 +264,55 @@ func (s *service) HandleDeleteAppointment(c *fiber.Ctx) error {
 //
 // POST: /appointments/:id/cancel
 func (s *service) HandleAppointmentCancel(c *fiber.Ctx) error {
+	cu, err := s.CurrentUser(c)
+	if err != nil {
+		return c.Redirect("/login")
+	}
+
+	appointmentID := c.Params("ID", "")
+	if appointmentID == "" {
+		appointmentID = c.FormValue("id", "")
+	}
+
+	if appointmentID == "" {
+		redirectPath := "/appointments?toast=Can't find that appointment&level=error"
+		if !s.IsHTMX(c) {
+			return c.Redirect(redirectPath, fiber.StatusSeeOther)
+		}
+
+		c.Set("HX-Location", redirectPath)
+		return c.SendStatus(fiber.StatusNotFound)
+	}
+
+	appointment := model.Appointment{
+		UserID:     cu.ID,
+		Status:     model.ApntStatusCanceled,
+		CanceledAt: time.Now(),
+	}
+	res := s.DB.Where("id = ? AND user_id = ?", appointmentID, cu.ID).Updates(&appointment)
+	if err := res.Error; err != nil {
+		redirectPath := "/appointments?toast=Failed to update appointment&level=error"
+		if !s.IsHTMX(c) {
+			return c.Redirect(redirectPath, fiber.StatusSeeOther)
+		}
+
+		c.Set("HX-Location", redirectPath)
+		return c.SendStatus(fiber.StatusUnprocessableEntity)
+	}
+
+	if !s.IsHTMX(c) {
+		return c.Redirect("/appointments", fiber.StatusSeeOther)
+	}
+
+	c.Set("HX-Location", "/appointments")
+	return c.SendStatus(fiber.StatusOK)
+}
+
+// HandleAppointmentDelete deletes a appointment record from the DB
+//
+// DELETE: /appointments/:id
+// POST: /appointments/:id/delete
+func (s *service) HandleDeleteAppointment(c *fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
 		return c.Redirect("/login", fiber.StatusSeeOther)

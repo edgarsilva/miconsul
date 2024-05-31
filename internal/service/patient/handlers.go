@@ -1,9 +1,12 @@
 package patient
 
 import (
+	"strconv"
+
 	"github.com/edgarsilva/go-scaffold/internal/model"
 	"github.com/edgarsilva/go-scaffold/internal/view"
 	"github.com/gofiber/fiber/v2"
+	"syreclabs.com/go/faker"
 )
 
 // HandlePatientsPage renders the patients page HTML
@@ -27,7 +30,7 @@ func (s *service) HandlePatientsPage(c *fiber.Ctx) error {
 	}
 
 	patients := []model.Patient{}
-	s.DB.Model(&cu).Association("Patients").Find(&patients)
+	s.DB.Model(&cu).Limit(100).Association("Patients").Find(&patients)
 	return view.Render(c, view.PatientsPage(patients, layoutProps))
 }
 
@@ -232,14 +235,48 @@ func (s *service) HandlePatientSearch(c *fiber.Ctx) error {
 	queryStr := c.FormValue("query", "")
 	patients := []model.Patient{}
 
-	query := s.DB.Model(&cu)
+	dbquery := s.DB.Model(&cu)
 	if queryStr != "" {
-		query = query.Where("first_name LIKE ?", "%"+queryStr+"%")
+		dbquery.Scopes(model.GlobalFTS(queryStr))
+	} else {
+		dbquery.Order("created_at desc")
 	}
-	query.Limit(5).Association("Patients").Find(&patients)
+
+	dbquery.Limit(10).Association("Patients").Find(&patients)
 
 	// time.Sleep(time.Second * 2)
 	theme := s.SessionUITheme(c)
 	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
 	return view.Render(c, view.PatientSearchResults(patients, layoutProps))
+}
+
+func (s *service) HandleMockManyPatients(c *fiber.Ctx) error {
+	cu, err := s.CurrentUser(c)
+	if err != nil {
+		return c.Redirect("/login")
+	}
+
+	n, err := strconv.Atoi(c.Query("n", "100000"))
+	if err != nil {
+		n = 100000
+	}
+
+	var patients []model.Patient
+	for i := 0; i <= n; i++ {
+		patients = append(patients, model.Patient{
+			FirstName: faker.Name().FirstName(),
+			LastName:  faker.Name().LastName(),
+			Email:     faker.Internet().Email(),
+			Phone:     faker.PhoneNumber().CellPhone(),
+			Age:       25,
+			UserID:    cu.ID,
+		})
+	}
+
+	result := s.DB.CreateInBatches(&patients, 1000)
+	if err := result.Error; err != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).SendString("Unprocessable entity")
+	}
+
+	return c.SendString("Rowsaffected:" + strconv.Itoa(int(result.RowsAffected)))
 }

@@ -151,11 +151,13 @@ func (s *service) HandleClinicSearch(c *fiber.Ctx) error {
 	queryStr := c.FormValue("query", "")
 	clinics := []model.Clinic{}
 
-	query := s.DB.Model(&cu)
+	dbquery := s.DB.Model(&cu).Limit(5)
 	if queryStr != "" {
-		query = query.Where("name LIKE ?", "%"+queryStr+"%")
+		dbquery.Scopes(model.GlobalFTS(queryStr))
+	} else {
+		dbquery.Order("created_at desc")
 	}
-	query.Limit(5).Association("Clinics").Find(&clinics)
+	dbquery.Limit(5).Association("Clinics").Find(&clinics)
 
 	// time.Sleep(time.Second * 2)
 	theme := s.SessionUITheme(c)
