@@ -159,6 +159,10 @@ func AppointmentRoutes(s *server.Server) {
 	g.Post("/:id/delete", a.HandleDeleteAppointment)
 	g.Delete("/:id", a.HandleDeleteAppointment)
 
+	g.Get("/:id/patient/confirm/:token", a.HandlePatientConfirm)
+	g.Get("/:id/patient/changedate/:token", a.HandlePatientChangeDate)
+	g.Get("/:id/patient/cancel/:token", a.HandlePatientCancel)
+
 	// g.Get("/:id", p.HandlePatientsPage)
 
 	// Fragments

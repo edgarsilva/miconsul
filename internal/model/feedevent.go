@@ -10,16 +10,20 @@ import (
 type EventAction string
 
 const (
-	EventActionCreate  EventAction = "create"
-	EventActionReplace EventAction = "replace"
-	EventActionChange  EventAction = "change"
-	EventActionUpdate  EventAction = "update"
-	EventActionDelete  EventAction = "delete"
-	EventActionCancel  EventAction = "cancel"
-	EventActionSend    EventAction = "send"
+	EventActionCreated  EventAction = "created"
+	EventActionReplaced EventAction = "replaced"
+	EventActionUpdated  EventAction = "updated"
+	EventActionDeleted  EventAction = "deleted"
+	EventActionChanged  EventAction = "changed"
+	EventActionCanceled EventAction = "canceled"
+	EventActionSent     EventAction = "sent"
+	EventActionFailed   EventAction = "failed"
+	EventActionSuccess  EventAction = "success"
 )
 
 type FeedEvent struct {
+	extID             string `gorm:"index;default:null;not null"`
+	Name              string `gorm:"index;default:null;not null"`
 	Subject           string
 	SubjectID         string `gorm:"index:fe_subject_idx;default:null;not null"`
 	SubjectType       string `gorm:"index:fe_subject_idx;default:null;not null"`

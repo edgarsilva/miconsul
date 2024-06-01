@@ -55,7 +55,9 @@ func (s *service) SendBookedAlert(appointment model.Appointment) error {
 			return
 		}
 
-		s.DB.Model(&appointment).Update("BookedAlertSentAt", time.Now())
+		s.DB.Model(&model.Appointment{}).
+			Where("id = ?", appointment.ID).
+			Update("BookedAlertSentAt", time.Now())
 
 		alert := model.Alert{
 			Medium: model.AlertMediumEmail,
@@ -81,7 +83,9 @@ func (s *service) SendReminderAlert(appointment model.Appointment) error {
 			return
 		}
 
-		s.DB.Model(&appointment).Update("reminder_alert_sent_at", time.Now())
+		s.DB.Model(&model.Appointment{}).
+			Where("id = ?", appointment.ID).
+			Update("ReminderAlertSentAt", time.Now())
 
 		alert := model.Alert{
 			Medium: model.AlertMediumEmail,

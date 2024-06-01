@@ -1,9 +1,11 @@
 package appointment
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
+	"github.com/edgarsilva/go-scaffold/internal/lib/xid"
 	"github.com/edgarsilva/go-scaffold/internal/model"
 	"github.com/edgarsilva/go-scaffold/internal/util"
 	"github.com/edgarsilva/go-scaffold/internal/view"
@@ -129,6 +131,7 @@ func (s *service) HandleCreateAppointment(c *fiber.Ctx) error {
 	}
 
 	appointment := model.Appointment{
+		Token:        xid.New("tkn_"),
 		UserID:       cu.ID,
 		BookedAt:     bookedAt,
 		BookedYear:   bookedAt.Year(),
@@ -339,4 +342,83 @@ func (s *service) HandleDeleteAppointment(c *fiber.Ctx) error {
 
 	c.Set("HX-Location", "/appointments")
 	return c.SendStatus(fiber.StatusOK)
+}
+
+// HandlePatientConfirm lets a patient mark an appointment as confirmed
+//
+//	GET: /patient/:id/confirm/:token
+func (s *service) HandlePatientConfirm(c *fiber.Ctx) error {
+	appointmentID := c.Params("id", "")
+	token := c.Params("token", "")
+	if appointmentID == "" || token == "" {
+		return c.Redirect("/login?toast=Can't find that appointment&level=error")
+	}
+
+	fmt.Println("Handle HandlePatientConfirm:---------->")
+	appointment := model.Appointment{
+		// Token:       "",
+		ConfirmedAt: time.Now(),
+		Status:      model.ApntStatusConfirmed,
+	}
+	res := s.DB.Select("ConfirmedAt", "Status").Where("id = ? AND token = ?", appointmentID, token).Updates(&appointment)
+	if err := res.Error; err != nil {
+		redirectPath := "/login?toast=Failed to confirm appointment&level=error"
+		return c.Redirect(redirectPath, fiber.StatusSeeOther)
+	}
+
+	theme := s.SessionUITheme(c)
+	toast := c.Query("toast", "")
+	layoutProps, _ := view.NewLayoutProps(c,
+		view.WithTheme(theme), view.WithToast(toast, "", ""),
+	)
+	return view.Render(c, view.AppointmentConfirmPage(layoutProps))
+}
+
+// HandlePatientCancel lets a patient cancel an appointment
+//
+// GET: /patient/:id/cancel/:token
+func (s *service) HandlePatientCancel(c *fiber.Ctx) error {
+	appointmentID := c.Params("id", "")
+	token := c.Params("token", "")
+	if appointmentID == "" || token == "" {
+		return c.Redirect("/login?toast=Can't find that appointment&level=error")
+	}
+
+	appointment := model.Appointment{
+		Token:      "",
+		CanceledAt: time.Now(),
+		Status:     model.ApntStatusCanceled,
+	}
+	res := s.DB.Select("Token", "CanceledAt", "Status").Where("id = ? AND token = ?", appointmentID, token).Updates(&appointment)
+	if err := res.Error; err != nil {
+		redirectPath := "/login?toast=Failed to confirm appointment&level=error"
+		return c.Redirect(redirectPath, fiber.StatusSeeOther)
+	}
+
+	return c.SendString("A new date for your appointment has been requested.")
+}
+
+// HandlePatientChangeDate lets a patient mark an appointment as needs
+// to change the date
+//
+// GET: /patient/:id/changedate/:token
+func (s *service) HandlePatientChangeDate(c *fiber.Ctx) error {
+	appointmentID := c.Params("id", "")
+	token := c.Params("token", "")
+	if appointmentID == "" || token == "" {
+		return c.Redirect("/login?toast=Can't find that appointment&level=error")
+	}
+
+	appointment := model.Appointment{
+		Token:     "",
+		PendingAt: time.Now(),
+		Status:    model.ApntStatusPending,
+	}
+	res := s.DB.Select("Token", "PendingAt", "Status").Where("id = ? AND token = ?", appointmentID, token).Updates(&appointment)
+	if err := res.Error; err != nil {
+		redirectPath := "/login?toast=Failed to confirm appointment&level=error"
+		return c.Redirect(redirectPath, fiber.StatusSeeOther)
+	}
+
+	return c.SendString("A new date for your appointment has been requested.")
 }

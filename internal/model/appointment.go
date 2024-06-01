@@ -16,26 +16,29 @@ const (
 	ApntStatusConfirmed   AppointmentStatus = "confirmed"
 	ApntStatusDone        AppointmentStatus = "done"
 	ApntStatusCanceled    AppointmentStatus = "canceled"
+	ApntStatusPending     AppointmentStatus = "pending"
 	ApntStatusRescheduled AppointmentStatus = "rescheduled"
 )
 
 type Appointment struct {
 	BookedAt            time.Time      `gorm:"index;default:null;not null" form:"-"`
+	OldBookedAt         time.Time      `gorm:"index;default:null" form:"-"`
 	BookedAlertSentAt   time.Time      `gorm:"default:null"`
 	ReminderAlertSentAt time.Time      `gorm:"default:null"`
 	ViewedAt            time.Time      `gorm:"default:null"`
 	ConfirmedAt         time.Time      `gorm:"default:null"`
 	DoneAt              time.Time      `gorm:"default:null"`
 	CanceledAt          time.Time      `gorm:"default:null"`
+	PendingAt           time.Time      `gorm:"default:null"`
 	RescheduledAt       time.Time      `gorm:"default:null"`
-	AcceptedAt          time.Time      `gorm:"default:null"`
 	DeletedAt           gorm.DeletedAt `gorm:"index"`
 	ModelBase
+	ExtID        string            `form:"extId"`
+	Token        string            `form:"-"`
 	Summary      string            `form:"summary"`
 	Observations string            `form:"observations"`
 	Conclusions  string            `form:"conclusions"`
 	Notes        string            `form:"notes"`
-	ExtID        string            `form:"extId"`
 	Hashtags     string            `form:"hashtags"`
 	UserID       string            `gorm:"index;default:null;not null"`
 	ClinicID     string            `gorm:"index;default:null;not null" form:"clinicId"`

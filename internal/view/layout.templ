@@ -57,3 +57,11 @@ templ LayoutAuth(lp layoutProps) {
 		</div>
 	}
 }
+
+templ LayoutPrimary(lp layoutProps) {
+	@HTMLPage(lp) {
+		<div id="root" class="flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-primary">
+			{ children... }
+		</div>
+	}
+}

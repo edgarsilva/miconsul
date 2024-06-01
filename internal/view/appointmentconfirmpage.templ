@@ -1,0 +1,47 @@
+package view
+
+templ AppointmentConfirmPage(lp layoutProps) {
+	@LayoutPrimary(lp) {
+		<div class="absolute top-4 right-4">
+			@CmpBtnTheme(lp.Theme)
+		</div>
+		<div class="pt-10 card shadow w-full bg-primary sm:max-w-4xl sm:mx-auto">
+			<div class="px-6 py-24 sm:px-6 sm:py-20 lg:px-8">
+				<div class="mx-auto max-w-2xl text-center">
+					<h2 class="text-3xl font-bold tracking-tight text-primary-content sm:text-4xl">
+						{ l(lp.Locale, "str.appointment_confirmed") }
+					</h2>
+					<p class="mx-auto mt-6 max-w-xl text-lg leading-8 text-primary-content/90">Incididunt sint fugiat pariatur cupidatat consectetur sit cillum anim id veniam aliqua proident excepteur commodo do ea.</p>
+					<div class="mt-10 flex items-center justify-center gap-x-6">
+						<a href="#" class="btn btn-secondary">Get started</a>
+						<a href="#" class="link link-hover font-semibold">Learn more <span aria-hidden="true">→</span></a>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+}
+
+templ AppointmentCancelPage(lp layoutProps) {
+	@LayoutPrimary(lp) {
+		<div class="absolute top-4 right-4">
+			@CmpBtnTheme(lp.Theme)
+		</div>
+		<div class="pt-10 card shadow w-full bg-primary sm:max-w-4xl sm:mx-auto">
+			<div class="px-6 py-24 sm:px-6 sm:py-20 lg:px-8">
+				<div class="mx-auto max-w-2xl text-center">
+					<h2 class="text-3xl font-bold tracking-tight text-primary-content sm:text-4xl">
+						{ l(lp.Locale, "str.cancel_appointment_confirmation") }
+					</h2>
+					<p class="mx-auto mt-6 max-w-xl text-lg leading-8 text-primary-content/90">Incididunt sint fugiat pariatur cupidatat consectetur sit cillum anim id veniam aliqua proident excepteur commodo do ea.</p>
+					<div class="mt-10 flex items-center justify-center gap-x-6">
+						<a href="#" class="btn btn-secondary">{ l(lp.Locale, "str.yes_cancel_my_appointment") }</a>
+						<!--
+						<a href="#" class="link link-hover font-semibold">Learn more <span aria-hidden="true">→</span></a>
+            -->
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+}
