@@ -5921,6 +5921,14 @@ ul li.htmx-added {
     grid-column: span 2 / span 2;
   }
 
+  .lg\:col-start-3 {
+    grid-column-start: 3;
+  }
+
+  .lg\:row-end-1 {
+    grid-row-end: 1;
+  }
+
   .lg\:mx-auto {
     margin-left: auto;
     margin-right: auto;

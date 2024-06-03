@@ -384,18 +384,28 @@ func (s *service) HandlePatientCancel(c *fiber.Ctx) error {
 		return c.Redirect("/login?toast=Can't find that appointment&level=error")
 	}
 
-	appointment := model.Appointment{
-		Token:      "",
+	appointment := model.Appointment{}
+	appointmentUpds := model.Appointment{
+		// Token:      "",
 		CanceledAt: time.Now(),
 		Status:     model.ApntStatusCanceled,
 	}
-	res := s.DB.Select("Token", "CanceledAt", "Status").Where("id = ? AND token = ?", appointmentID, token).Updates(&appointment)
+	s.DB.Preload("Clinic").Where("id = ? AND token = ?", appointmentID, token).Take(&appointment)
+	res := s.DB.
+		Select("CanceledAt", "Status").
+		Where("id = ? AND token = ?", appointmentID, token).
+		Updates(&appointmentUpds)
 	if err := res.Error; err != nil {
 		redirectPath := "/login?toast=Failed to confirm appointment&level=error"
 		return c.Redirect(redirectPath, fiber.StatusSeeOther)
 	}
 
-	return c.SendString("A new date for your appointment has been requested.")
+	theme := s.SessionUITheme(c)
+	toast := c.Query("toast", "some toast")
+	layoutProps, _ := view.NewLayoutProps(c,
+		view.WithTheme(theme), view.WithToast(toast, "", ""),
+	)
+	return view.Render(c, view.AppointmentCancelPage(appointment, layoutProps))
 }
 
 // HandlePatientChangeDate lets a patient mark an appointment as needs
