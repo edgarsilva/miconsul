@@ -2,6 +2,7 @@ package database
 
 import (
 	// libsql "github.com/edgarsilva/gorm-libsql"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -33,6 +34,7 @@ func New(dbPath string) *Database {
 	// dsn := "root:mysql@tcp(127.0.0.1:3306)/app?charset=utf8mb4&parseTime=True&loc=Local"
 	// db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 
+	fmt.Println("----------------> DBBADH ->", dbPath)
 	DB, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
 		Logger:                 newLogger,
 		SkipDefaultTransaction: true,
