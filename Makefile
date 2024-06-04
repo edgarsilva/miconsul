@@ -7,6 +7,7 @@ install/deps:
 	@echo "📦 Installing OS deps"
 	@echo "🤐 Installing unzip and tar"
 	sudo apt-get install unzip tar
+	make install
 
 install:
 	@echo "📦 Installing dependencies"
