@@ -17,7 +17,10 @@ install:
 	~/.bun/bin/bun install tailwindcss -d
 	@echo "🛕 installing Templ"
 	go install github.com/a-h/templ/cmd/templ@latest
+	@echo "⚠️ ⚠️ ⚠️ Paths start⚠️ ⚠️ ⚠️ "
 	ls -l
+	ls -l bin
+	@echo "⚠️ ⚠️ ⚠️ Paths end⚠️ ⚠️ ⚠️ "
 
 build:
 	@echo "📦 Building"
