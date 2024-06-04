@@ -8,7 +8,7 @@ install/deps:
 	@echo "🤐 Installing unzip and tar"
 	sudo apt-get install -y --no-install-recommends unzip tar
 	export GOPATH="/root/go"
-	export GOBIN="/root/go/BIN"
+	export GOBIN="/root/go/bin"
 	make install
 
 install:
