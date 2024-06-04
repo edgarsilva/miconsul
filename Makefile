@@ -3,6 +3,15 @@
 # Build the application
 all: build
 
+install:
+	@echo "📦 Installing dependencies"
+	@echo "🥐 Installing bun (for tailwindcss)"
+	curl -fsSL https://bun.sh/install | bash
+	@echo "🌬️ Installing TailwindCSS plugins"
+	bun install tailwindcss -d
+	@echo "🛕 installing Templ"
+	go install github.com/a-h/templ/cmd/templ@latest
+
 build:
 	@echo "📦 Building"
 	@echo "🌬️ Generating Tailwind CSS styles..."
@@ -11,6 +20,11 @@ build:
 	@templ generate
 	@echo "🤖 go build..."
 	@go build -tags fts5 -o bin/app cmd/app/main.go
+
+# Run the application
+start:
+	@echo "👟 Starting the app..."
+	@bin/app
 
 # Run the application
 run:

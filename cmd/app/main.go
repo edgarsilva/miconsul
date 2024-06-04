@@ -21,7 +21,7 @@ func main() {
 	db := database.New(os.Getenv("DB_PATH"))
 	wp, err := workerpool.New(10)
 	if err != nil {
-		log.Panic(err.Error())
+		log.Panic("Failed to start workerpool", err.Error())
 	}
 
 	bgj, shutdown := backgroundjob.New()
@@ -39,6 +39,6 @@ func main() {
 
 	err = s.Listen(port) // <-- this is a blocking call
 	if err != nil {
-		panic("cannot start server")
+		log.Panic("Failed to start server:", err.Error())
 	}
 }
