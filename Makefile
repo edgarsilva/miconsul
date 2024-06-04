@@ -20,6 +20,7 @@ install:
 	@echo "⚠️ ⚠️ ⚠️ Paths start ⚠️ ⚠️ ⚠️ "
 	ls -l
 	ls -l bin
+	@echo ${GOPATH}
 	go env
 	@echo "⚠️ ⚠️ ⚠️ Paths end ⚠️ ⚠️ ⚠️ "
 
@@ -28,7 +29,7 @@ build:
 	@echo "🌬️ Generating Tailwind CSS styles..."
 	~/.bun/bin/bunx tailwindcss -i ./styles/global.css -o ./public/global.css
 	@echo "🛕 Generating Templ files..."
-	./bin/templ generate
+	/root/go/bin/templ generate
 	@echo "🤖 go build..."
 	go build -tags fts5 -o bin/app cmd/app/main.go
 
