@@ -6,7 +6,7 @@ all: build
 install/deps:
 	@echo "📦 Installing OS deps"
 	@echo "🤐 Installing unzip and tar"
-	sudo apt-get install unzip tar
+	sudo apt-get install -y --no-install-recommends unzip tar
 	make install
 
 install:
