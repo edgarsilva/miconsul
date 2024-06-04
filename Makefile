@@ -7,6 +7,8 @@ install/deps:
 	@echo "📦 Installing OS deps"
 	@echo "🤐 Installing unzip and tar"
 	sudo apt-get install -y --no-install-recommends unzip tar
+	export GOPATH="/root/go"
+	export GOBIN="/root/go/BIN"
 	make install
 
 install:
@@ -17,19 +19,13 @@ install:
 	~/.bun/bin/bun install tailwindcss -d
 	@echo "🛕 installing Templ"
 	go install github.com/a-h/templ/cmd/templ@latest
-	@echo "⚠️ ⚠️ ⚠️ Paths start ⚠️ ⚠️ ⚠️ "
-	ls -l
-	ls -l bin
-	@echo ${GOPATH}
-	go env
-	@echo "⚠️ ⚠️ ⚠️ Paths end ⚠️ ⚠️ ⚠️ "
 
 build:
 	@echo "📦 Building"
 	@echo "🌬️ Generating Tailwind CSS styles..."
 	~/.bun/bin/bunx tailwindcss -i ./styles/global.css -o ./public/global.css
 	@echo "🛕 Generating Templ files..."
-	/root/go/bin/templ generate
+	${GOBIN}/templ generate
 	@echo "🤖 go build..."
 	go build -tags fts5 -o bin/app cmd/app/main.go
 
@@ -44,7 +40,7 @@ run:
 	@echo "🌬️ Generating Tailwind CSS styles..."
 	~/.bun/bin/bunx tailwindcss -i ./styles/global.css -o ./public/global.css
 	@echo "🛕 Generating Templ files..."
-	templ generate
+	${GOBIN}/templ generate
 	@echo "🤖 go run..."
 	go run cmd/app/main.go -tags fts5
 
