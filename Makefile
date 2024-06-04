@@ -13,6 +13,8 @@ install:
 	@echo "📦 Installing dependencies"
 	@echo "🥐 Installing bun (for tailwindcss)"
 	curl -fsSL https://bun.sh/install | bash
+	@echo "🔁 Reloading ~/.bashrc"
+	source /root/.bashrc
 	@echo "🌬️ Installing TailwindCSS plugins"
 	bun install tailwindcss -d
 	@echo "🛕 installing Templ"
