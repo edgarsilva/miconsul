@@ -17,13 +17,16 @@ install:
 	~/.bun/bin/bun install tailwindcss -d
 	@echo "🛕 installing Templ"
 	go install github.com/a-h/templ/cmd/templ@latest
+	ls -l ${GOBIN}
 
 build:
 	@echo "📦 Building"
 	@echo "🌬️ Generating Tailwind CSS styles..."
 	~/.bun/bin/bunx tailwindcss -i ./styles/global.css -o ./public/global.css
 	@echo "🛕 Generating Templ files..."
-	templ generate
+	@echo ${GOBIN}
+	@echo ${GOPATH}
+	${GOBIN}/templ generate
 	@echo "🤖 go build..."
 	go build -tags fts5 -o bin/app cmd/app/main.go
 
