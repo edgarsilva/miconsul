@@ -7,8 +7,10 @@ install/deps:
 	@echo "📦 Installing OS deps"
 	@echo "🤐 Installing unzip and tar"
 	sudo apt-get install -y --no-install-recommends unzip tar
+	sudo apt-get install -y build-essential libsqlite3-dev
 	export GOPATH="/root/go"
 	export GOBIN="/root/go/bin"
+	export CGO_ENABLED=1
 	make install
 
 install:
