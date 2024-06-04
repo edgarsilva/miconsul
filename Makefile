@@ -3,6 +3,11 @@
 # Build the application
 all: build
 
+install/deps:
+	@echo "📦 Installing OS deps"
+	@echo "🤐 Installing unzip and tar"
+	sudo apt-get install unzip tar
+
 install:
 	@echo "📦 Installing dependencies"
 	@echo "🥐 Installing bun (for tailwindcss)"
@@ -15,40 +20,40 @@ install:
 build:
 	@echo "📦 Building"
 	@echo "🌬️ Generating Tailwind CSS styles..."
-	@bunx tailwindcss -i ./styles/global.css -o ./public/global.css
+	bunx tailwindcss -i ./styles/global.css -o ./public/global.css
 	@echo "🛕 Generating Templ files..."
-	@templ generate
+	templ generate
 	@echo "🤖 go build..."
-	@go build -tags fts5 -o bin/app cmd/app/main.go
+	go build -tags fts5 -o bin/app cmd/app/main.go
 
 # Run the application
 start:
 	@echo "👟 Starting the app..."
-	@bin/app
+	bin/app
 
 # Run the application
 run:
 	@echo "👟 Running app..."
 	@echo "🌬️ Generating Tailwind CSS styles..."
-	@bunx tailwindcss -i ./styles/global.css -o ./public/global.css
+	bunx tailwindcss -i ./styles/global.css -o ./public/global.css
 	@echo "🛕 Generating Templ files..."
-	@templ generate
+	templ generate
 	@echo "🤖 go run..."
-	@go run cmd/app/main.go -tags fts5
+	go run cmd/app/main.go -tags fts5
 
 # Test the application (integration)
 test-integration:
 	@echo "Testing..."
-	@go test ./tests -v
+	go test ./tests -v
 
 test-unit:
 	@echo "Testing..."
-	@go test ./internal/...
+	go test ./internal/...
 
 # Clean the binary
 clean:
 	@echo "Cleaning..."
-	@rm bin/*
+	rm bin/*
 
 # Live Reload <- not hot reload on the browser
 dev:
