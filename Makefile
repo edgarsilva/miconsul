@@ -21,7 +21,7 @@ install:
 build:
 	@echo "📦 Building"
 	@echo "🌬️ Generating Tailwind CSS styles..."
-	bunx tailwindcss -i ./styles/global.css -o ./public/global.css
+	~/.bun/bin/bunx tailwindcss -i ./styles/global.css -o ./public/global.css
 	@echo "🛕 Generating Templ files..."
 	templ generate
 	@echo "🤖 go build..."
@@ -36,7 +36,7 @@ start:
 run:
 	@echo "👟 Running app..."
 	@echo "🌬️ Generating Tailwind CSS styles..."
-	bunx tailwindcss -i ./styles/global.css -o ./public/global.css
+	~/.bun/bin/bunx tailwindcss -i ./styles/global.css -o ./public/global.css
 	@echo "🛕 Generating Templ files..."
 	templ generate
 	@echo "🤖 go run..."
