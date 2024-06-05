@@ -29,7 +29,7 @@ install:
 build:
 	@echo "📦 Building"
 	@echo "🌬️ Generating Tailwind CSS styles..."
-	~/.bun/bin/bunx tailwindcss -i ./styles/global.css -o ./public/global.css
+	~/.bun/bin/bunx tailwindcss -i ./styles/global.css -o ./public/global.css --minify
 	@echo "🛕 Generating Templ files..."
 	${GOPATH}/bin/templ generate
 	@echo "🤖 go build..."
@@ -42,7 +42,7 @@ start:
 run:
 	@echo "👟 Running app..."
 	@echo "🌬️ Generating Tailwind CSS styles..."
-	~/.bun/bin/bunx tailwindcss -i ./styles/global.css -o ./public/global.css
+	~/.bun/bin/bunx tailwindcss -i ./styles/global.css -o ./public/global.css --minify
 	@echo "🛕 Generating Templ files..."
 	${GOPATH}/bin/templ generate
 	@echo "🤖 go run..."

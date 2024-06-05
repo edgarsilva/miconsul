@@ -15,6 +15,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/encryptcookie"
 	"github.com/gofiber/fiber/v2/middleware/etag"
 	"github.com/gofiber/fiber/v2/middleware/favicon"
+	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/monitor"
 	"github.com/gofiber/fiber/v2/middleware/recover"
@@ -69,6 +70,9 @@ func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjo
 		File: "./public/favicon.ico",
 		URL:  "/favicon.ico",
 	}))
+
+	// Add healthcheck endpoints /livez /readyz
+	fiberApp.Use(healthcheck.New())
 
 	// Initialize session middleware config
 	sessionStore := session.New()
