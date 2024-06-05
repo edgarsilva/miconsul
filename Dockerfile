@@ -4,7 +4,7 @@ FROM golang:1.22
 WORKDIR /app
 
 RUN apt-get update
-RUN apt-get install -y unzip tar
+RUN apt-get install -y unzip tar curl wget
 
 RUN echo "🥐 Installing bun (for tailwindcss)"
 RUN curl -fsSL https://bun.sh/install | bash
