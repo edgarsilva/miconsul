@@ -6,12 +6,13 @@ WORKDIR /app
 RUN apt-get update
 RUN apt-get install -y unzip tar
 
-
 RUN echo "🥐 Installing bun (for tailwindcss)"
 RUN curl -fsSL https://bun.sh/install | bash
 
 RUN echo "🌬️ Installing TailwindCSS plugins"
-RUN ~/.bun/bin/bun install tailwindcss -d
+RUN ~/.bun/bin/bun add -D tailwindcss
+RUN ~/.bun/bin/bun add -D daisyui@latest
+RUN ~/.bun/bin/bun add -D @tailwindcss/typography
 
 RUN echo "🛕 installing Templ"
 RUN go install github.com/a-h/templ/cmd/templ@latest

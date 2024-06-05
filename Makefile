@@ -1,6 +1,3 @@
-# Simple Makefile for a Go project
-
-# Build the application
 all: build
 
 docker/build:
@@ -23,7 +20,9 @@ install:
 	@echo "🥐 Installing bun (for tailwindcss)"
 	curl -fsSL https://bun.sh/install | bash
 	@echo "🌬️ Installing TailwindCSS plugins"
-	~/.bun/bin/bun install tailwindcss -d
+	~/.bun/bin/bun add -D tailwindcss
+	~/.bun/bin/bun add -D daisyui@latest
+	~/.bun/bin/bun add -D @tailwindcss/typography
 	@echo "🛕 installing Templ"
 	go install github.com/a-h/templ/cmd/templ@latest
 
@@ -36,12 +35,10 @@ build:
 	@echo "🤖 go build..."
 	go build -tags fts5 -o bin/app cmd/app/main.go
 
-# Run the application
 start:
 	@echo "👟 Starting the app..."
 	bin/app
 
-# Run the application
 run:
 	@echo "👟 Running app..."
 	@echo "🌬️ Generating Tailwind CSS styles..."
@@ -51,21 +48,7 @@ run:
 	@echo "🤖 go run..."
 	go run cmd/app/main.go -tags fts5
 
-# Test the application (integration)
-test-integration:
-	@echo "Testing..."
-	go test ./tests -v
-
-test-unit:
-	@echo "Testing..."
-	go test ./internal/...
-
-# Clean the binary
-clean:
-	@echo "Cleaning..."
-	rm bin/*
-
-# Live Reload <- not hot reload on the browser only of the server
+# Local development with Live Reload <- not hot reload on the browser only of the server
 dev:
 	@if command -v air > /dev/null; then \
 	    air; \
@@ -82,4 +65,14 @@ dev:
 	    fi; \
 	fi
 
-.PHONY: all build run test clean
+test:
+	@echo "Testing unit"
+	go test ./internal/...
+	@echo "Testing integration"
+	go test ./tests -v
+
+clean:
+	@echo "Cleaning..."
+	rm bin/*
+
+.PHONY: all install build start run test clean
