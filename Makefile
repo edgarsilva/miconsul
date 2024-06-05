@@ -2,14 +2,21 @@
 
 # Build the application
 all: build
-export CGO_ENABLED := 1
 
-install/deps:
-	@echo "📦 Installing OS deps"
-	@echo "🤐 Installing unzip and tar"
-	sudo apt-get install -y --no-install-recommends unzip tar
-	sudo apt-get install -y build-essential libsqlite3-dev
-	make install
+docker/build:
+	docker build . -t go-containerized:latest
+
+docker/run:
+	docker run -e PORT=3050 -p 3050:3050 --name miconsul-app go-containerized:latest
+
+docker/start:
+	docker start miconsul-app
+
+docker/stop:
+	docker stop miconsul-app
+
+docker/clean:
+	docker container rm miconsul-app
 
 install:
 	@echo "📦 Installing dependencies"
@@ -25,10 +32,8 @@ build:
 	@echo "🌬️ Generating Tailwind CSS styles..."
 	~/.bun/bin/bunx tailwindcss -i ./styles/global.css -o ./public/global.css
 	@echo "🛕 Generating Templ files..."
-	${GOBIN}/templ generate
+	${GOPATH}/bin/templ generate
 	@echo "🤖 go build..."
-	@echo "IS CGO_ENABLED:"
-	@echo ${CGO_ENABLED}
 	go build -tags fts5 -o bin/app cmd/app/main.go
 
 # Run the application
@@ -42,7 +47,7 @@ run:
 	@echo "🌬️ Generating Tailwind CSS styles..."
 	~/.bun/bin/bunx tailwindcss -i ./styles/global.css -o ./public/global.css
 	@echo "🛕 Generating Templ files..."
-	${GOBIN}/templ generate
+	${GOPATH}/bin/templ generate
 	@echo "🤖 go run..."
 	go run cmd/app/main.go -tags fts5
 
@@ -60,7 +65,7 @@ clean:
 	@echo "Cleaning..."
 	rm bin/*
 
-# Live Reload <- not hot reload on the browser
+# Live Reload <- not hot reload on the browser only of the server
 dev:
 	@if command -v air > /dev/null; then \
 	    air; \

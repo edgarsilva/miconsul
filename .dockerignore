@@ -1,0 +1,23 @@
+# Git and Docker
+.git/
+Dockerfile
+contrib/
+docs/
+
+# Vendors
+node_modules/
+vendor/
+
+# Binaries and plugins
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# SQLite DB and similar file-stores/embedded-db
+store/

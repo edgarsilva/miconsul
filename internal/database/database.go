@@ -2,7 +2,7 @@ package database
 
 import (
 	// libsql "github.com/edgarsilva/gorm-libsql"
-	"fmt"
+
 	"log"
 	"os"
 	"time"
@@ -13,13 +13,15 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+const DBOpts = "?cache=shared&mode=rwc&_journal_mode=WAL&_foreign_keys=true"
+
 type Database struct {
 	*gorm.DB
 }
 
-func New(dbPath string) *Database {
+func New(DBPath string) *Database {
 	newLogger := logger.New(
-		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		log.New(os.Stdout, "\r\n", log.LstdFlags),
 		logger.Config{
 			SlowThreshold:             time.Millisecond * 100, // Slow SQL threshold
 			LogLevel:                  logger.Info,            // Log level
@@ -29,13 +31,7 @@ func New(dbPath string) *Database {
 		},
 	)
 
-	// db, err := gorm.Open(libsql.Open("turso-embed.db", dbURL, authToken), &gorm.Config{})
-	// refer https://github.com/go-sql-driver/mysql#dsn-data-source-name for details
-	// dsn := "root:mysql@tcp(127.0.0.1:3306)/app?charset=utf8mb4&parseTime=True&loc=Local"
-	// db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
-
-	fmt.Println("----------------> DBBADH ->", dbPath)
-	DB, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
+	DB, err := gorm.Open(sqlite.Open(DBPath+DBOpts), &gorm.Config{
 		Logger:                 newLogger,
 		SkipDefaultTransaction: true,
 		PrepareStmt:            true,
