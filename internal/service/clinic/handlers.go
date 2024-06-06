@@ -1,9 +1,14 @@
 package clinic
 
 import (
+	"strconv"
+
+	"github.com/edgarsilva/go-scaffold/internal/lib/xid"
 	"github.com/edgarsilva/go-scaffold/internal/model"
+	"github.com/edgarsilva/go-scaffold/internal/util"
 	"github.com/edgarsilva/go-scaffold/internal/view"
 	"github.com/gofiber/fiber/v2"
+	"syreclabs.com/go/faker"
 )
 
 // HandleClinicsPage renders the clinics page HTML
@@ -22,7 +27,7 @@ func (s *service) HandleClinicsPage(c *fiber.Ctx) error {
 		s.DB.Model(&model.Clinic{}).First(&clinic)
 	}
 	clinics := []model.Clinic{}
-	s.DB.Model(&model.Clinic{}).Find(&clinics)
+	s.DB.Model(&model.Clinic{}).Limit(25).Find(&clinics)
 
 	theme := s.SessionUITheme(c)
 	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
@@ -157,10 +162,42 @@ func (s *service) HandleClinicSearch(c *fiber.Ctx) error {
 	} else {
 		dbquery.Order("created_at desc")
 	}
-	dbquery.Limit(5).Association("Clinics").Find(&clinics)
+	dbquery.Limit(10).Association("Clinics").Find(&clinics)
 
 	// time.Sleep(time.Second * 2)
 	theme := s.SessionUITheme(c)
 	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
 	return view.Render(c, view.ClinicSearchResults(clinics, layoutProps))
+}
+
+func (s *service) HandleMockManyClinics(c *fiber.Ctx) error {
+	cu, err := s.CurrentUser(c)
+	if err != nil {
+		return c.Redirect("/login")
+	}
+
+	n, err := strconv.Atoi(c.Query("n", "100000"))
+	if err != nil {
+		n = 100000
+	}
+
+	var clinics []model.Clinic
+	for i := 0; i <= n; i++ {
+		ExtID := xid.New("prav")
+		clinics = append(clinics, model.Clinic{
+			ExtID:      ExtID,
+			ProfilePic: util.DicebearShapeAvatarURL(ExtID),
+			Name:       faker.Company().Name(),
+			Email:      faker.Internet().Email(),
+			Phone:      faker.PhoneNumber().CellPhone(),
+			UserID:     cu.ID,
+		})
+	}
+
+	result := s.DB.CreateInBatches(&clinics, 1000)
+	if err := result.Error; err != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).SendString("Unprocessable entity")
+	}
+
+	return c.SendString("Rowsaffected:" + strconv.Itoa(int(result.RowsAffected)))
 }

@@ -3,7 +3,9 @@ package patient
 import (
 	"strconv"
 
+	"github.com/edgarsilva/go-scaffold/internal/lib/xid"
 	"github.com/edgarsilva/go-scaffold/internal/model"
+	"github.com/edgarsilva/go-scaffold/internal/util"
 	"github.com/edgarsilva/go-scaffold/internal/view"
 	"github.com/gofiber/fiber/v2"
 	"syreclabs.com/go/faker"
@@ -30,7 +32,7 @@ func (s *service) HandlePatientsPage(c *fiber.Ctx) error {
 	}
 
 	patients := []model.Patient{}
-	s.DB.Model(&cu).Limit(100).Association("Patients").Find(&patients)
+	s.DB.Model(&cu).Limit(25).Association("Patients").Find(&patients)
 	return view.Render(c, view.PatientsPage(patients, layoutProps))
 }
 
@@ -263,13 +265,16 @@ func (s *service) HandleMockManyPatients(c *fiber.Ctx) error {
 
 	var patients []model.Patient
 	for i := 0; i <= n; i++ {
+		ExtID := xid.New("prav")
 		patients = append(patients, model.Patient{
-			FirstName: faker.Name().FirstName(),
-			LastName:  faker.Name().LastName(),
-			Email:     faker.Internet().Email(),
-			Phone:     faker.PhoneNumber().CellPhone(),
-			Age:       25,
-			UserID:    cu.ID,
+			ExtID:      ExtID,
+			ProfilePic: util.PravatarURL(ExtID),
+			FirstName:  faker.Name().FirstName(),
+			LastName:   faker.Name().LastName(),
+			Email:      faker.Internet().Email(),
+			Phone:      faker.PhoneNumber().CellPhone(),
+			Age:        25,
+			UserID:     cu.ID,
 		})
 	}
 
