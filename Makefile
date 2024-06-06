@@ -4,7 +4,7 @@ docker/build:
 	docker build . -t go-containerized:latest
 
 docker/run:
-	docker run -e PORT=3050 -p 3050:3050 --name miconsul-app go-containerized:latest
+	docker run -e PORT=3000 -p 3000:3000 --name miconsul-app go-containerized:latest
 
 docker/start:
 	docker start miconsul-app
