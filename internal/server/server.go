@@ -97,13 +97,8 @@ func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjo
 func (s *Server) CurrentUser(c *fiber.Ctx) (model.User, error) {
 	id := c.Locals("uid")
 	id, ok := id.(string)
-	if !ok {
-		id = ""
-	}
-
-	// If no id in locals (No Authenticate middleware used), try the cookie
-	if id == "" {
-		id = c.Cookies("Auth", "")
+	if !ok || id == "" {
+		return model.User{}, nil
 	}
 
 	user := model.User{}

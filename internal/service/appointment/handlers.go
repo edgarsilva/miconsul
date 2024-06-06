@@ -1,7 +1,6 @@
 package appointment
 
 import (
-	"fmt"
 	"strconv"
 	"time"
 
@@ -354,7 +353,6 @@ func (s *service) HandlePatientConfirm(c *fiber.Ctx) error {
 		return c.Redirect("/login?toast=Can't find that appointment&level=error")
 	}
 
-	fmt.Println("Handle HandlePatientConfirm:---------->")
 	appointment := model.Appointment{
 		// Token:       "",
 		ConfirmedAt: time.Now(),

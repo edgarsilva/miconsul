@@ -180,7 +180,8 @@ func Authenticate(DB *database.Database, c *fiber.Ctx) (model.User, error) {
 		uid = strings.TrimPrefix(c.Get("Authorization", ""), "Bearer ")
 	}
 
-	user, err := authenticateWithUID(DB, uid)
+	// user, err := authenticateWithUID(DB, uid)
+	user, err := authenticateWithJWT(DB, uid)
 	if err == nil {
 		return user, nil
 	}

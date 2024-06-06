@@ -65,15 +65,16 @@ func (s *service) HandleLogin(c *fiber.Ctx) error {
 		validFor *= 7
 	}
 	switch c.Accepts("text/plain", "text/html", "application/json") {
-	case "text/html":
-		c.Cookie(newCookie("Auth", user.ID, time.Hour*validFor))
-		return c.Redirect("/")
 	case "application/json":
 		// TODO: HandleLogin maybe accept JWT for application/json
 		return c.SendStatus(fiber.StatusServiceUnavailable)
 	default:
-		c.Cookie(newCookie("Auth", user.ID, time.Hour*validFor))
-		return c.SendStatus(fiber.StatusOK)
+		jwt, err := JWTCreateToken(user.Email, user.ID)
+		if err != nil {
+			return c.Redirect("/?msg=Failed to login, please try again")
+		}
+		c.Cookie(newCookie("Auth", jwt, time.Hour*validFor))
+		return c.Redirect("/")
 	}
 }
 
@@ -158,7 +159,12 @@ func (s *service) HandleSignupConfirmEmail(c *fiber.Ctx) error {
 		return c.Redirect("/login?msg=Email confirmed, you should be able to login now")
 	}
 
-	c.Cookie(newCookie("Auth", user.ID, time.Hour*24))
+	jwt, err := JWTCreateToken(user.Email, user.ID)
+	if err != nil {
+		return c.Redirect("/login?msg=Email confirmed, you should be able to login now")
+	}
+
+	c.Cookie(newCookie("Auth", jwt, time.Hour*24))
 	return c.Redirect("/login?msg=Email confirmed, you should be able to login now")
 }
 

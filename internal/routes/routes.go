@@ -89,7 +89,7 @@ func ClinicsRoutes(s *server.Server) {
 	c := clinic.NewService(s)
 
 	// Pages
-	g := c.Group("/clinics")
+	g := c.Group("/clinics", auth.MustAuthenticate(c))
 	g.Get("/", c.HandleClinicsPage)
 	g.Get("/:id", c.HandleClinicsPage)
 
@@ -114,7 +114,7 @@ func ClinicsRoutes(s *server.Server) {
 func PatientRoutes(s *server.Server) {
 	p := patient.NewService(s)
 
-	g := p.Group("/patients", auth.MustAuthenticate(s))
+	g := p.Group("/patients", auth.MustAuthenticate(p))
 	g.Get("/", p.HandlePatientsPage)
 	g.Get("/makeaton", p.HandleMockManyPatients)
 	g.Get("/:id", p.HandlePatientFormPage)
