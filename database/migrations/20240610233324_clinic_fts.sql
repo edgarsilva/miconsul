@@ -14,10 +14,10 @@ CREATE TRIGGER IF NOT EXISTS trgr_insert_clinics_on_gfts
 BEGIN
   INSERT INTO global_fts (gid, "primary", "secondary", "tertiary")
   VALUES (
-      id,
-      name as "primary",
-      phone || ' ' || email as "secondary",
-      ext_id as "tertiary"
+      new.id,
+      new.name,
+      new.phone || ' ' || new.email,
+      new.ext_id
   );
 END;
 
@@ -26,19 +26,18 @@ CREATE TRIGGER IF NOT EXISTS trgr_update_clinics_on_gfts
 BEGIN
   UPDATE global_fts
   SET
-      id,
-      name as "primary",
-      phone || ' ' || email as "secondary",
-      ext_id as "tertiary"
+      "primary" = new.name,
+      "secondary" = new.phone || ' ' || new.email,
+      "tertiary" = new.ext_id
   WHERE gid = NEW.id;
-END
+END;
 
 CREATE TRIGGER IF NOT EXISTS trgr_delete_clinics_on_gfts
   AFTER DELETE on clinics
 BEGIN
   DELETE FROM global_fts
   WHERE gid = OLD.id;
-END
+END;
 -- +goose StatementEnd
 
 -- +goose Down

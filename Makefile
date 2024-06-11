@@ -80,8 +80,25 @@ clean:
 	@echo "Cleaning..."
 	rm bin/*
 
-migrate/create:
-	goose create $(name) sql
+db/create:
+	touch database/app.sqlite
+
+db/reset:
+	@read -p "Do you want to reset the DB (you'll loose all data)? [y/n] " choice; \
+	if [ "$$choice" != "y" ] && [ "$$choice" != "Y" ]; then \
+		echo "Exiting..."; \
+		exit 1; \
+	else \
+		rm database/*.sqlite*; \
+	fi; \
+
+db/dump-schema:
+	sqlite3 database/app.sqlite '.schema' > ./database/schema.sql
+
+db/setup:
+	db/reset
+	db/create
+	migrate/up
 
 migrate/up:
 	goose up
@@ -89,22 +106,11 @@ migrate/up:
 migrate/down:
 	goose down
 
-migrate/resetdb:
-	read -p "Do you want to reset the DB (you'll loose all data)? [Y/n] " choice; \
-	if [ "$$choice" != "n" ] && [ "$$choice" != "N" ]; then \
-		rm database/*.sqlite*
-	else \
-		echo "You chose not to install air. Exiting..."; \
-		exit 1; \
-	fi;
-
 migrate/status:
 	goose status
 
 migrate/redo:
 	goose redo
 
-db/dump-schema:
-	sqlite3 database/app.sqlite '.schema' > ./database/schema.sql
 
 .PHONY: all install build start run test clean dev

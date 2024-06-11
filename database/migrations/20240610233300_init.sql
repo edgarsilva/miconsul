@@ -12,11 +12,74 @@ CREATE TABLE IF NOT EXISTS "comments"  (`user_id` text NOT NULL DEFAULT null,`ar
 CREATE INDEX `idx_comments_user_id` ON `comments`(`user_id`);
 CREATE INDEX `idx_comments_article_id` ON `comments`(`article_id`);
 
-CREATE TABLE IF NOT EXISTS "clinics"  (`ext_id` text,`name` text NOT NULL DEFAULT null,`line1` text,`line2` text,`city` text,`state` text,`country` text,`zip` text,`email` text,`phone` text NOT NULL DEFAULT null,`instagram_url` text,`facebook_url` text,`user_id` text NOT NULL DEFAULT null,`created_at` datetime,`updated_at` datetime,`id` text NOT NULL DEFAULT null,`whatsapp` text,`telegram` text,`instagram` text,`facebook` text,`messenger` text,`profile_pic` text, `cover_pic` text, `deleted_at` datetime, `favorite` numeric,PRIMARY KEY (`id`),CONSTRAINT `fk_clinics_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`),CONSTRAINT `fk_users_clinics` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`));
+CREATE TABLE IF NOT EXISTS "clinics"  (
+  `ext_id` text,
+  `name` text NOT NULL DEFAULT null,
+  `line1` text,
+  `line2` text,
+  `city` text,
+  `state` text,
+  `country` text,
+  `zip` text,
+  `email` text,
+  `phone` text NOT NULL DEFAULT null,
+  `instagram_url` text,
+  `facebook_url` text,
+  `user_id` text NOT NULL DEFAULT null,
+  `created_at` datetime,
+  `updated_at` datetime,
+  `id` text NOT NULL DEFAULT null,
+  `whatsapp` text,
+  `telegram` text,
+  `instagram` text,
+  `facebook` text,
+  `messenger` text,
+  `profile_pic` text,
+  `cover_pic` text,
+  `deleted_at` datetime,
+  `favorite` numeric,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_clinics_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`),
+  CONSTRAINT `fk_users_clinics` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`));
 CREATE INDEX `idx_clinics_user_id` ON `clinics`(`user_id`);
 CREATE INDEX `idx_clinics_deleted_at` ON `clinics`(`deleted_at`);
 
-CREATE TABLE IF NOT EXISTS "patients"  (`ext_id` text,`email` text,`phone` text NOT NULL DEFAULT null,`facebook_url` text,`profile_url` text,`user_id` text NOT NULL DEFAULT null,`created_at` datetime,`updated_at` datetime,`id` text NOT NULL DEFAULT null,`line1` text,`line2` text,`city` text,`state` text,`country` text,`zip` text,`facebook_handle` text,`whatsapp_handle` text,`telegram_handle` text,`age` integer,`profile_pic` text,`whatsapp` text,`telegram` text,`messenger` text,`instagram` text,`facebook` text,`first_name` text NOT NULL DEFAULT null,`last_name` text NOT NULL DEFAULT null,`username` text,`pass` text, `ocupation` text, `enable_notifications` numeric, `family_history` text, `medical_background` text, `notes` text, `via_email` numeric, `via_whatsapp` numeric, `via_messenger` numeric, `via_telegram` numeric, `deleted_at` datetime,PRIMARY KEY (`id`),CONSTRAINT `fk_patients_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`),CONSTRAINT `fk_users_patients` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`));
+CREATE TABLE IF NOT EXISTS "patients"  (
+  `ext_id` text,
+  `email` text,
+  `phone` text NOT NULL DEFAULT null,
+  `facebook_url` text,
+  `profile_url` text,
+  `user_id` text NOT NULL DEFAULT null,
+  `created_at` datetime,`updated_at` datetime,
+  `id` text NOT NULL DEFAULT null,
+  `line1` text,`line2` text,
+  `city` text,`state` text,
+  `country` text,`zip` text,
+  `first_name` text NOT NULL DEFAULT null,
+  `last_name` text NOT NULL DEFAULT null,
+  `age` integer,
+  `profile_pic` text,
+  `facebook` text,
+  `whatsapp` text,
+  `telegram` text,
+  `messenger` text,
+  `instagram` text,
+  `username` text,
+  `pass` text,
+  `ocupation` text,
+  `enable_notifications` numeric,
+  `family_history` text,
+  `medical_background` text,
+  `notes` text,
+  `via_email` numeric,
+  `via_whatsapp` numeric,
+  `via_messenger` numeric,
+  `via_telegram` numeric,
+  `deleted_at` datetime,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_patients_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`),
+  CONSTRAINT `fk_users_patients` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`));
 CREATE INDEX `idx_patients_user_id` ON `patients`(`user_id`);
 CREATE INDEX `idx_patients_deleted_at` ON `patients`(`deleted_at`);
 
