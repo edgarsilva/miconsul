@@ -23,6 +23,9 @@ RUN go mod download && go mod verify
 
 COPY ./ .
 
+# Run migrations
+RUN make migrate/up
+
 # Build
 RUN make build
 
