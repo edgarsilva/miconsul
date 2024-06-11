@@ -101,16 +101,15 @@ db/setup:
 	migrate/up
 
 migrate/up:
-	goose up
+	${GOPATH}/bin/goose up
 
 migrate/down:
-	goose down
+	${GOPATH}/bin/goose down
 
 migrate/status:
-	goose status
+	${GOPATH}/bin/goose status
 
 migrate/redo:
-	goose redo
-
+	${GOPATH}/bin/goose redo
 
 .PHONY: all install build start run test clean dev
