@@ -31,22 +31,22 @@ using Go, SQLite with GORM, Templ with HTMX and DaisyUI/TailwindCSS:
 
 - [x] Working Login Page
 - [x] Reset Password Functionality
-- [X] Signup page
+- [x] Signup page
 
 [08/May/24]
 
-- [X] Confirm email Functionality
+- [x] Confirm email Functionality
 
 [09/May/24]
 
-- [X] Fix Schema Ids to use XID
+- [x] Fix Schema Ids to use XID
 
 [10/May/24 - 17/May/24]
 
-- [X] Add ERD for Miconsul sample DB
-- [X] Patients index page
-- [X] Patients Create/Update Form
-- [X] HTMX integration
+- [x] Add ERD for Miconsul sample DB
+- [x] Patients index page
+- [x] Patients Create/Update Form
+- [x] HTMX integration
 
 [18/May/24 - 22/May/24]
 
@@ -54,7 +54,23 @@ using Go, SQLite with GORM, Templ with HTMX and DaisyUI/TailwindCSS:
 - Appointments views and endpoints
 - Basic Toast and notifications
 
-### V1 (7day)
+[23/May/24 - 31/May/24]
+
+- Added patient actions and emails
+
+[01/Jun/24 - 06/Jun/24]
+
+- Initial Deployment using coolify
+- Make updates and Docker file
+
+[10/Jun/24 - 11/Jun/24]
+
+- Hostinger backup for coolify
+- Minio install for Litestream
+- Sep up Goose migrations
+- Getting ready for V1
+
+### V1
 
 [11/May/24]
 

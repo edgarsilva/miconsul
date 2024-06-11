@@ -41,7 +41,7 @@ func AuthRoutes(s *server.Server) {
 	a := auth.NewService(s)
 
 	// Root
-	a.Get("/login", a.HandleLoginPage)
+	a.Get("/login", auth.MaybeAuthenticate(a), a.HandleLoginPage)
 	a.Post("/login", a.HandleLogin)
 	a.All("/logout", a.HandleLogout)
 	a.Get("/signup", a.HandleSignupPage)
@@ -91,7 +91,7 @@ func ClinicsRoutes(s *server.Server) {
 	// Pages
 	g := c.Group("/clinics", auth.MustAuthenticate(c))
 	g.Get("/", c.HandleClinicsPage)
-	g.Get("/makeaton", c.HandleMockManyClinics)
+	g.Get("/makeaton", auth.MustBeAdmin(c), c.HandleMockManyClinics)
 	g.Get("/:id", c.HandleClinicsPage)
 
 	g.Post("/search", c.HandleClinicSearch)
@@ -103,6 +103,7 @@ func ClinicsRoutes(s *server.Server) {
 
 	g.Post("/:id/delete", c.HandleDeleteClinic)
 	g.Delete("/:id", c.HandleDeleteClinic)
+
 	// Fragments
 	// g.Get("/fragment/footer", u.HandleFooterFragment)
 	// g.Get("/fragment/list", u.HandleTodosFragment)
@@ -117,7 +118,7 @@ func PatientRoutes(s *server.Server) {
 
 	g := p.Group("/patients", auth.MustAuthenticate(p))
 	g.Get("/", p.HandlePatientsPage)
-	g.Get("/makeaton", p.HandleMockManyPatients)
+	g.Get("/makeaton", auth.MustBeAdmin(p), p.HandleMockManyPatients)
 	g.Get("/:id", p.HandlePatientFormPage)
 
 	g.Post("/search", p.HandlePatientSearch)

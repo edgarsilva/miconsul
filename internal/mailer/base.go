@@ -1,6 +1,11 @@
 package mailer
 
-import "github.com/edgarsilva/go-scaffold/internal/localize"
+import (
+	"os"
+	"strings"
+
+	"github.com/edgarsilva/go-scaffold/internal/localize"
+)
 
 const fontFamily = "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\""
 
@@ -13,4 +18,15 @@ const (
 
 func l(lang, key string) string {
 	return locales.GetWithLocale(lang, key)
+}
+
+func dialerUsername() string {
+	return os.Getenv("EMAIL_SENDER")
+}
+
+func dialerPassword() string {
+	pwd := os.Getenv("EMAIL_SECRET")
+	pwd = strings.Trim(pwd, "\"")
+
+	return pwd
 }

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"github.com/edgarsilva/go-scaffold/internal/database"
+	"github.com/edgarsilva/go-scaffold/internal/model"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -24,6 +25,24 @@ func MustAuthenticate(s MWService) func(c *fiber.Ctx) error {
 		}
 
 		c.Locals("uid", cu.ID)
+		return c.Next()
+	}
+}
+
+func MustBeAdmin(s MWService) func(c *fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
+		cu, err := Authenticate(s.DBClient(), c)
+		if err != nil || cu.Role != model.UserRoleAdmin {
+			switch c.Accepts("text/plain", "application/json", "text/html") {
+			case "text/plain", "application/json":
+				return c.SendStatus(fiber.StatusServiceUnavailable)
+			case "text/html":
+				return c.Redirect("/login")
+			default:
+				return c.Redirect("/login")
+			}
+		}
+
 		return c.Next()
 	}
 }

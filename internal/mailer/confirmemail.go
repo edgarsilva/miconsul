@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 
 	"gopkg.in/gomail.v2"
 )
@@ -25,9 +24,7 @@ func ConfirmEmail(email, token string) error {
 	}
 	m.SetBody("text/html", emailHTML.String())
 
-	emailsecret := os.Getenv("EMAIL_SECRET")
-	emailsecret = strings.Trim(emailsecret, "\"")
-	dialer := gomail.NewDialer("smtp.gmail.com", 587, os.Getenv("EMAIL_SENDER"), emailsecret)
+	dialer := gomail.NewDialer("smtp.gmail.com", 587, dialerUsername(), dialerPassword())
 
 	// Send Email
 	if err := dialer.DialAndSend(m); err != nil {

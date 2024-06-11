@@ -20,7 +20,7 @@ import (
 func (s *service) HandleLoginPage(c *fiber.Ctx) error {
 	cu, _ := s.CurrentUser(c)
 	if cu.IsLoggedIn() {
-		return c.Redirect("/todos")
+		return c.Redirect("/")
 	}
 
 	theme := s.SessionUITheme(c)
