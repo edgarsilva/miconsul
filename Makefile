@@ -41,6 +41,9 @@ build:
 	go build -tags fts5 -o bin/app main.go
 
 start:
+	@echo "🪿 running migrations with goose"
+	make migrate/up
+	@echo ""
 	@echo "👟 Starting the app..."
 	bin/app
 

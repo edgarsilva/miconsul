@@ -24,17 +24,6 @@ COPY ./ .
 RUN echo "🌬️ Installing TailwindCSS plugins"
 RUN ~/.bun/bin/bun install
 
-# Run migrations
-RUN echo "🪿 running migrations with goose"
-RUN echo "GOOSE_DRIVER"
-RUN echo $GOOSE_DRIVER
-RUN echo "GOOSE_DBSTRING"
-RUN echo $GOOSE_DBSTRING
-RUN echo "GOOSE_MIGRATION_DIR"
-RUN echo $GOOSE_MIGRATION_DIR
-RUN ls -lh $GOOSE_DBSTRING
-RUN make migrate/up
-
 # Build
 RUN make build
 

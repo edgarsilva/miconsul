@@ -39,18 +39,6 @@ func New(DBPath string) *Database {
 		panic("failed to connect database")
 	}
 
-	// Migrate the schema
-	// DB.AutoMigrate(
-	// &model.User{},
-	// &model.Todo{},
-	// &model.Clinic{},
-	// &model.Patient{},
-	// &model.FeedEvent{},
-	// &model.Appointment{},
-	// &model.Alert{},
-	// &Journal|Logbook  TODO: Logbook to log extraneous events (No 20k USD Datatog bill)
-	// )
-
 	return &Database{
 		DB: DB,
 	}
