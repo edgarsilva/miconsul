@@ -12,11 +12,11 @@ import (
 func ConfirmEmail(email, token string) error {
 	m := gomail.NewMessage()
 	m.SetHeader("From", os.Getenv("EMAIL_SENDER"))
-	m.SetHeader("To", "edgarsilva.dev@gmail.com")
+	m.SetHeader("To", email)
 	// m.SetAddressHeader("Cc", "dan@example.com", "Dan")
-	m.SetHeader("Subject", "Scaffold: Confirm your email!")
+	m.SetHeader("Subject", "Scaffold: Confirm your email to login to Miconsul!")
 
-	url := "http://localhost:8080/signup/confirm/" + token
+	url := "https://" + os.Getenv("APP_DOMAIN") + "/signup/confirm/" + token
 	emailHTML := bytes.Buffer{}
 	if err := ConfirmEmailTpl(email, url).Render(context.Background(), &emailHTML); err != nil {
 		return errors.New("couldn't create HTML from templ comp to send email")

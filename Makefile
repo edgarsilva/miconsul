@@ -1,4 +1,9 @@
-all: build
+ifneq (,$(wildcard ./.env))
+    include .env
+    export
+endif
+
+all: install build
 
 docker/build:
 	docker build . -t go-containerized:latest
@@ -33,7 +38,7 @@ build:
 	@echo "🛕 Generating Templ files..."
 	${GOPATH}/bin/templ generate
 	@echo "🤖 go build..."
-	go build -tags fts5 -o bin/app cmd/app/main.go
+	go build -tags fts5 -o bin/app main.go
 
 start:
 	@echo "👟 Starting the app..."
@@ -46,7 +51,7 @@ run:
 	@echo "🛕 Generating Templ files..."
 	${GOPATH}/bin/templ generate
 	@echo "🤖 go run..."
-	go run cmd/app/main.go -tags fts5
+	go run main.go -tags fts5
 
 # Local development with Live Reload <- not hot reload on the browser only of the server
 dev:
@@ -75,4 +80,31 @@ clean:
 	@echo "Cleaning..."
 	rm bin/*
 
-.PHONY: all install build start run test clean
+migrate/create:
+	goose create $(name) sql
+
+migrate/up:
+	goose up
+
+migrate/down:
+	goose down
+
+migrate/resetdb:
+	read -p "Do you want to reset the DB (you'll loose all data)? [Y/n] " choice; \
+	if [ "$$choice" != "n" ] && [ "$$choice" != "N" ]; then \
+		rm database/*.sqlite*
+	else \
+		echo "You chose not to install air. Exiting..."; \
+		exit 1; \
+	fi;
+
+migrate/status:
+	goose status
+
+migrate/redo:
+	goose redo
+
+db/dump-schema:
+	sqlite3 database/app.sqlite '.schema' > ./database/schema.sql
+
+.PHONY: all install build start run test clean dev
