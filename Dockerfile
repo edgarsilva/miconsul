@@ -10,12 +10,13 @@ RUN echo "🥐 Installing bun (for tailwindcss)"
 RUN curl -fsSL https://bun.sh/install | bash
 
 RUN echo "🌬️ Installing TailwindCSS plugins"
-RUN ~/.bun/bin/bun add -D tailwindcss
-RUN ~/.bun/bin/bun add -D daisyui@latest
-RUN ~/.bun/bin/bun add -D @tailwindcss/typography
+RUN ~/.bun/bin/bun install
 
 RUN echo "🛕 installing Templ"
 RUN go install github.com/a-h/templ/cmd/templ@latest
+
+RUN echo "🪿 installing goose"
+RUN go install github.com/pressly/goose/v3/cmd/goose@latest
 
 # Download Go modules
 COPY go.mod go.sum ./
