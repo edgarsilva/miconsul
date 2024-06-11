@@ -39,33 +39,30 @@ type Server struct {
 }
 
 func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjob *backgroundjob.Sched) *Server {
+	// Initialize session middleware config
+	sessionStore := session.New()
+
 	fiberApp := fiber.New()
 
-	// Initialize logger middleware config
 	fiberApp.Use(logger.New())
 
 	// Initialize recover middleware to catch panics that might
 	// stop the application
 	fiberApp.Use(recover.New())
 
-	// Initialize CORS wit config
 	fiberApp.Use(cors.New())
 
-	// Initialize default config
 	fiberApp.Use(etag.New())
 
-	// Initialize request ID middleware config
 	fiberApp.Use(requestid.New())
 
-	// Makes Cookies encrypted
 	fiberApp.Use(encryptcookie.New(encryptcookie.Config{
 		Key: os.Getenv("COOKIE_SECRET"),
 	}))
 
-	// Initialize default config (Assign the middleware to /metrics)
+	// Initialize default monitor (Assign the middleware to /metrics)
 	fiberApp.Get("/metrics", monitor.New())
 
-	// Or extend your config for customization
 	fiberApp.Use(favicon.New(favicon.Config{
 		File: "./public/favicon.ico",
 		URL:  "/favicon.ico",
@@ -74,13 +71,9 @@ func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjo
 	// Add healthcheck endpoints /livez /readyz
 	fiberApp.Use(healthcheck.New())
 
-	// Initialize session middleware config
-	sessionStore := session.New()
+	// Adds req language to the session adds local("lang")
 	fiberApp.Use(LocaleLang(sessionStore))
 
-	// Adds req language to the session
-
-	// Serve static files
 	fiberApp.Static("/public", "./public")
 
 	return &Server{
