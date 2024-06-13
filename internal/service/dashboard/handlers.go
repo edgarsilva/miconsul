@@ -3,8 +3,8 @@ package dashboard
 import (
 	"time"
 
+	"github.com/edgarsilva/go-scaffold/internal/common"
 	"github.com/edgarsilva/go-scaffold/internal/model"
-	"github.com/edgarsilva/go-scaffold/internal/util"
 	"github.com/edgarsilva/go-scaffold/internal/view"
 
 	"github.com/gofiber/fiber/v2"
@@ -31,7 +31,7 @@ func (s *service) HandleDashboardPage(c *fiber.Ctx) error {
 	case "month":
 		query.Scopes(model.AppointmentBookedThisMonth)
 	default:
-		query.Where("booked_at > ?", util.BoD(time.Now()))
+		query.Where("booked_at > ?", common.BoD(time.Now()))
 	}
 
 	query.Preload("Clinic").
@@ -41,5 +41,6 @@ func (s *service) HandleDashboardPage(c *fiber.Ctx) error {
 
 	theme := s.SessionUITheme(c)
 	lp, _ := view.NewLayoutProps(c, view.WithCurrentUser(cu), view.WithTheme(theme))
-	return view.Render(c, view.DashboardPage(appointments, lp))
+	stats := s.CalcDashboardStats()
+	return view.Render(c, view.DashboardPage(stats, appointments, lp))
 }

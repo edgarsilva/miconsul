@@ -24,7 +24,7 @@ func Render(c *fiber.Ctx, component templ.Component, options ...func(*templ.Comp
 	return handler(c)
 }
 
-func QueryParamsStr(lp layoutProps, params ...string) string {
+func QueryParamsStr(lp LayoutProps, params ...string) string {
 	queryParams := lp.Queries()
 
 	for _, param := range params {

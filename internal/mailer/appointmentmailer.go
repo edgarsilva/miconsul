@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"os"
 
 	"github.com/edgarsilva/go-scaffold/internal/model"
@@ -14,7 +13,6 @@ import (
 func SendAppointmentBookedEmail(appointment model.Appointment) error {
 	m := gomail.NewMessage()
 	m.SetHeader("From", os.Getenv("EMAIL_SENDER"))
-	fmt.Println("To:", appointment.Patient.Email)
 	m.SetHeader("To", appointment.Patient.Email)
 	m.SetAddressHeader("Bcc", "edgarsilva.dev@gmail.com", "edgarsilva")
 	m.SetHeader("Subject", "Miconsul:"+l("es-MX", "email.confirm_appointment_title"))
@@ -25,14 +23,7 @@ func SendAppointmentBookedEmail(appointment model.Appointment) error {
 	}
 	m.SetBody("text/html", emailHTML.String())
 
-	// cwd, err := os.Getwd()
-	// if err != nil {
-	// return err
-	// }
-	// log.Info("sent CWD ->", cwd)
-	// m.Attach(cwd + "/public/images/ripple-pic.jpg")
-
-	d := gomail.NewDialer("smtp.gmail.com", 587, os.Getenv("EMAIL_SENDER"), os.Getenv("EMAIL_SECRET"))
+	d := gomail.NewDialer("smtp.gmail.com", 587, dialerUsername(), dialerPassword())
 
 	// Send Email
 	if err := d.DialAndSend(m); err != nil {
@@ -55,14 +46,7 @@ func SendAppointmentReminderEmail(appointment model.Appointment) error {
 	}
 	m.SetBody("text/html", emailHTML.String())
 
-	// cwd, err := os.Getwd()
-	// if err != nil {
-	// return err
-	// }
-	// log.Info("sent CWD ->", cwd)
-	// m.Attach(cwd + "/public/images/ripple-pic.jpg")
-
-	d := gomail.NewDialer("smtp.gmail.com", 587, os.Getenv("EMAIL_SENDER"), os.Getenv("EMAIL_SECRET"))
+	d := gomail.NewDialer("smtp.gmail.com", 587, dialerUsername(), dialerPassword())
 
 	// Send Email
 	if err := d.DialAndSend(m); err != nil {

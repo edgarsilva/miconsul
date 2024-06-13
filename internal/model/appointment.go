@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/edgarsilva/go-scaffold/internal/common"
 	"github.com/edgarsilva/go-scaffold/internal/lib/xid"
-	"github.com/edgarsilva/go-scaffold/internal/util"
 	"gorm.io/gorm"
 )
 
@@ -96,20 +96,20 @@ func AppointmentWithPendingAlerts(db *gorm.DB) *gorm.DB {
 }
 
 func AppointmentBookedToday(db *gorm.DB) *gorm.DB {
-	t := util.BoD(time.Now())
+	t := common.BoD(time.Now())
 
 	return db.Where("booked_at > ?", t).Where("booked_at < ?", t.Add(time.Hour*24))
 }
 
 func AppointmentBookedThisWeek(db *gorm.DB) *gorm.DB {
-	t := util.BoW(time.Now())
+	t := common.BoW(time.Now())
 
 	return db.Where("booked_at > ?", t).Where("booked_at < ?", t.Add(time.Hour*24*7))
 }
 
 func AppointmentBookedThisMonth(db *gorm.DB) *gorm.DB {
-	t := util.BoM(time.Now())
-	dinm := util.DaysInMonth(t.Month(), t.Year())
+	t := common.BoM(time.Now())
+	dinm := common.DaysInMonth(t.Month(), t.Year())
 
 	return db.Where("booked_at > ?", t).Where("booked_at < ?", t.Add(time.Hour*24*dinm))
 }

@@ -21,10 +21,9 @@ RUN go mod download && go mod verify
 
 COPY ./ .
 
+# Build
 RUN echo "🌬️ Installing TailwindCSS plugins"
 RUN ~/.bun/bin/bun install
-
-# Build
 RUN make build
 
 # Start

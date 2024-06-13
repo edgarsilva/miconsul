@@ -3,9 +3,9 @@ package patient
 import (
 	"strconv"
 
+	"github.com/edgarsilva/go-scaffold/internal/common"
 	"github.com/edgarsilva/go-scaffold/internal/lib/xid"
 	"github.com/edgarsilva/go-scaffold/internal/model"
-	"github.com/edgarsilva/go-scaffold/internal/util"
 	"github.com/edgarsilva/go-scaffold/internal/view"
 	"github.com/gofiber/fiber/v2"
 	"syreclabs.com/go/faker"
@@ -21,19 +21,19 @@ func (s *service) HandlePatientsPage(c *fiber.Ctx) error {
 	}
 
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	LayoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
 
 	id := c.Params("id", "")
 	patient := model.Patient{}
 	patient.ID = id
 	if id != "" && id != "new" {
 		s.DB.Model(&model.Patient{}).First(&patient)
-		return view.Render(c, view.PatientFormPage(patient, layoutProps))
+		return view.Render(c, view.PatientFormPage(patient, LayoutProps))
 	}
 
 	patients := []model.Patient{}
 	s.DB.Model(&cu).Limit(25).Association("Patients").Find(&patients)
-	return view.Render(c, view.PatientsPage(patients, layoutProps))
+	return view.Render(c, view.PatientsPage(patients, LayoutProps))
 }
 
 // HandlePatientFormPage renders the patients page HTML
@@ -46,7 +46,7 @@ func (s *service) HandlePatientFormPage(c *fiber.Ctx) error {
 	}
 
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	LayoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
 
 	id := c.Params("id", "")
 	if id == "" {
@@ -59,7 +59,7 @@ func (s *service) HandlePatientFormPage(c *fiber.Ctx) error {
 		s.DB.Model(&model.Patient{}).First(&patient)
 	}
 
-	return view.Render(c, view.PatientFormPage(patient, layoutProps))
+	return view.Render(c, view.PatientFormPage(patient, LayoutProps))
 }
 
 // HandleCreatePatient inserts a new patient record for the CurrentUser
@@ -97,13 +97,13 @@ func (s *service) HandleCreatePatient(c *fiber.Ctx) error {
 
 	c.Set("HX-Push-Url", "/patients/"+patient.ID)
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(
+	LayoutProps, _ := view.NewLayoutProps(
 		c,
 		view.WithTheme(theme),
 		view.WithCurrentUser(cu),
 		view.WithToast("New patient created", "", ""),
 	)
-	return view.Render(c, view.PatientFormPage(patient, layoutProps))
+	return view.Render(c, view.PatientFormPage(patient, LayoutProps))
 }
 
 // HandleUpdatePatient updates a patient record for the CurrentUser
@@ -187,8 +187,8 @@ func (s *service) HandleRemovePic(c *fiber.Ctx) error {
 	}
 
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
-	return view.Render(c, view.PatientFormPage(patient, layoutProps))
+	LayoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	return view.Render(c, view.PatientFormPage(patient, LayoutProps))
 }
 
 // HandleDeletePatient deletes a patient record from the DB
@@ -248,8 +248,8 @@ func (s *service) HandlePatientSearch(c *fiber.Ctx) error {
 
 	// time.Sleep(time.Second * 2)
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
-	return view.Render(c, view.PatientSearchResults(patients, layoutProps))
+	LayoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	return view.Render(c, view.PatientSearchResults(patients, LayoutProps))
 }
 
 func (s *service) HandleMockManyPatients(c *fiber.Ctx) error {
@@ -268,7 +268,7 @@ func (s *service) HandleMockManyPatients(c *fiber.Ctx) error {
 		ExtID := xid.New("prav")
 		patients = append(patients, model.Patient{
 			ExtID:      ExtID,
-			ProfilePic: util.PravatarURL(ExtID),
+			ProfilePic: common.PravatarURL(ExtID),
 			FirstName:  faker.Name().FirstName(),
 			LastName:   faker.Name().LastName(),
 			Email:      faker.Internet().Email(),

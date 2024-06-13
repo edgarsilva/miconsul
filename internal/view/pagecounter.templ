@@ -4,8 +4,8 @@ import (
 	"strconv"
 )
 
-templ CounterPage(count int64, layoutProps layoutProps) {
-	@Layout(layoutProps) {
+templ CounterPage(count int64, LayoutProps LayoutProps) {
+	@Layout(LayoutProps) {
 		@CmpBtnBack("Back to home", "/")
 		@CounterContainer(count)
 	}

@@ -24,10 +24,10 @@ func (s *service) HandleLoginPage(c *fiber.Ctx) error {
 	}
 
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme))
+	LayoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme))
 	email := c.Query("email", "")
 	msg := c.Query("msg", "")
-	return view.Render(c, view.LoginPage(email, msg, nil, layoutProps))
+	return view.Render(c, view.LoginPage(email, msg, nil, LayoutProps))
 }
 
 // HandleLogin compares hash and password and sets the user Auth session cookie
@@ -36,27 +36,27 @@ func (s *service) HandleLoginPage(c *fiber.Ctx) error {
 // POST: /login
 func (s *service) HandleLogin(c *fiber.Ctx) error {
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme))
+	LayoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme))
 	respErr := errors.New("incorrect email and password combination")
 
 	email, password, err := authParams(c)
 	if err != nil {
-		return view.Render(c, view.LoginPage(email, "", respErr, layoutProps))
+		return view.Render(c, view.LoginPage(email, "", respErr, LayoutProps))
 	}
 
 	user, err := s.userFetch(email)
 	if err != nil {
-		return view.Render(c, view.LoginPage(email, "", respErr, layoutProps))
+		return view.Render(c, view.LoginPage(email, "", respErr, LayoutProps))
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return view.Render(c, view.LoginPage(email, "", respErr, layoutProps))
+		return view.Render(c, view.LoginPage(email, "", respErr, LayoutProps))
 	}
 
 	if user.ConfirmEmailToken != "" {
 		err := errors.New("email pending confirmation, check your inbox")
-		return view.Render(c, view.LoginPage(email, "", err, layoutProps))
+		return view.Render(c, view.LoginPage(email, "", err, LayoutProps))
 	}
 
 	validFor := time.Duration(24)
@@ -64,6 +64,7 @@ func (s *service) HandleLogin(c *fiber.Ctx) error {
 	if rememberMe {
 		validFor *= 7
 	}
+
 	switch c.Accepts("text/plain", "text/html", "application/json") {
 	case "application/json":
 		// TODO: HandleLogin maybe accept JWT for application/json
@@ -74,7 +75,7 @@ func (s *service) HandleLogin(c *fiber.Ctx) error {
 			return c.Redirect("/?msg=Failed to login, please try again")
 		}
 		c.Cookie(newCookie("Auth", jwt, time.Hour*validFor))
-		return c.Redirect("/")
+		return c.Redirect("/?timeframe=day")
 	}
 }
 
@@ -94,9 +95,9 @@ func (s *service) HandleSignupPage(c *fiber.Ctx) error {
 		err = nil
 	}
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme))
+	LayoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme))
 
-	return view.Render(c, view.SignupPage("", err, layoutProps))
+	return view.Render(c, view.SignupPage("", err, LayoutProps))
 }
 
 // HandleSignup creates a new user if email and password are valid
@@ -104,16 +105,16 @@ func (s *service) HandleSignupPage(c *fiber.Ctx) error {
 // POST: /signup
 func (s *service) HandleSignup(c *fiber.Ctx) error {
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme))
+	LayoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme))
 	email, password, err := authParams(c)
 	if err != nil {
-		return view.Render(c, view.SignupPage(email, err, layoutProps))
+		return view.Render(c, view.SignupPage(email, err, LayoutProps))
 	}
 
 	confirm := c.FormValue("confirm", "")
 	if confirm == "" || password != confirm {
 		err := errors.New("passwords don't match")
-		return view.Render(c, view.SignupPage(email, err, layoutProps))
+		return view.Render(c, view.SignupPage(email, err, LayoutProps))
 	}
 
 	err = s.userPendingConfirmation(email)
@@ -125,7 +126,7 @@ func (s *service) HandleSignup(c *fiber.Ctx) error {
 	}
 
 	if err := s.signup(email, password); err != nil {
-		return view.Render(c, view.SignupPage(email, err, layoutProps))
+		return view.Render(c, view.SignupPage(email, err, LayoutProps))
 	}
 
 	return c.Redirect("/login?msg=check your inbox to confirm your email")
@@ -188,14 +189,14 @@ func (s *service) HandleLogout(c *fiber.Ctx) error {
 //
 // GET: /resetpassword
 func (s *service) HandlePageResetPassword(c *fiber.Ctx) error {
-	layoutProps, _ := view.NewLayoutProps(c)
+	LayoutProps, _ := view.NewLayoutProps(c)
 
 	msg := s.SessionGet(c, "msg", "")
 	if msg == "" {
 		msg = c.Query("msg", "")
 	}
 
-	return view.Render(c, view.PageResetPassword("", msg, "", nil, layoutProps))
+	return view.Render(c, view.PageResetPassword("", msg, "", nil, LayoutProps))
 }
 
 // HandleResetPasswordForm sends a new reset password link to the email provided
@@ -203,18 +204,18 @@ func (s *service) HandlePageResetPassword(c *fiber.Ctx) error {
 //
 // POST: /resetpassword
 func (s *service) HandleResetPassword(c *fiber.Ctx) error {
-	layoutProps, _ := view.NewLayoutProps(c)
+	LayoutProps, _ := view.NewLayoutProps(c)
 	email, err := resetPasswordEmailParam(c)
 	if err != nil {
 		errView := errors.New("email can't be blank")
-		return view.Render(c, view.PageResetPassword(email, "", "", errView, layoutProps))
+		return view.Render(c, view.PageResetPassword(email, "", "", errView, LayoutProps))
 	}
 
 	user := model.User{}
 	err = s.DB.Model(&model.User{}).Select("id", "name").Where("email = ?", email).Take(&user).Error
 	if err != nil {
 		errView := errors.New("user not found with that email")
-		return view.Render(c, view.PageResetPassword(email, "", "", errView, layoutProps))
+		return view.Render(c, view.PageResetPassword(email, "", "", errView, LayoutProps))
 	}
 
 	token, err := resetPasswordToken()
@@ -229,7 +230,7 @@ func (s *service) HandleResetPassword(c *fiber.Ctx) error {
 
 	go mailer.ResetPassword(email, token)
 
-	return view.Render(c, view.PageResetPassword(email, "", "check your email for a reset password link", nil, layoutProps))
+	return view.Render(c, view.PageResetPassword(email, "", "check your email for a reset password link", nil, LayoutProps))
 }
 
 // HandleResetPasswordChange renders the change password form if toke/email
@@ -249,8 +250,8 @@ func (s *service) HandleResetPasswordChange(c *fiber.Ctx) error {
 
 	nonce := xid.New("rpnnce")
 	s.SessionSet(c, "nonce", nonce)
-	layoutProps, _ := view.NewLayoutProps(c)
-	return view.Render(c, view.ResetPasswordChangePage(email, token, nonce, nil, layoutProps))
+	LayoutProps, _ := view.NewLayoutProps(c)
+	return view.Render(c, view.ResetPasswordChangePage(email, token, nonce, nil, LayoutProps))
 }
 
 // HandleResetPasswordUpdate updates the user password in the DB
@@ -278,17 +279,17 @@ func (s *service) HandleResetPasswordUpdate(c *fiber.Ctx) error {
 		return c.Redirect("/resetpassword?msg=seems like your token has expired, try again!")
 	}
 
-	layoutProps, _ := view.NewLayoutProps(c)
+	LayoutProps, _ := view.NewLayoutProps(c)
 	password := c.FormValue("password", "")
 	if password == "" {
 		err := errors.New("password can't be blank")
-		return view.Render(c, view.ResetPasswordChangePage(email, token, nonce, err, layoutProps))
+		return view.Render(c, view.ResetPasswordChangePage(email, token, nonce, err, LayoutProps))
 	}
 
 	confirm := c.FormValue("confirm", "")
 	if confirm == "" || password != confirm {
 		err := errors.New("passwords don't match")
-		return view.Render(c, view.ResetPasswordChangePage(email, token, nonce, err, layoutProps))
+		return view.Render(c, view.ResetPasswordChangePage(email, token, nonce, err, LayoutProps))
 	}
 
 	_, err = s.userUpdatePassword(email, password, token)

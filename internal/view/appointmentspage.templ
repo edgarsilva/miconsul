@@ -6,41 +6,37 @@ import (
 	"time"
 )
 
-templ AppointmentsPage(appointments []model.Appointment, appointment model.Appointment, lp layoutProps) {
-	if appointment.ID != "" {
-		@AppointmentFormPage(appointment, lp)
-	} else {
-		@Layout(lp) {
-			<div class="px-4 lg:px-8">
-				@CmpBtnBack(l(lp.Locale, "btn.back"), "/")
-			</div>
-			<section class="grow flex flex-col px-0 sm:px-4 py-8 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
-				<div
-					class="relative"
+templ AppointmentsPage(appointments []model.Appointment, lp LayoutProps) {
+	@Layout(lp) {
+		<div class="px-4 lg:px-8">
+			@CmpBtnBack(l(lp.Locale, "btn.back"), "/")
+		</div>
+		<section class="grow flex flex-col px-0 sm:px-4 py-8 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
+			<div
+				class="relative"
+			>
+				<hgroup
+					class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
+					hx-boost="true"
 				>
-					<hgroup
-						class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
-						hx-boost="true"
+					<h1 class="font-bold text-2xl">{ l(lp.Locale, "str.appointments") }</h1>
+					<a
+						href="/appointments/new"
+						class="btn btn-primary btn-sm"
 					>
-						<h1 class="font-bold text-2xl">{ l(lp.Locale, "str.appointments") }</h1>
-						<a
-							href="/appointments/new"
-							class="btn btn-primary btn-sm"
-						>
-							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-								<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"></path>
-							</svg>
-							{ l(lp.Locale, "btn.new") }
-						</a>
-					</hgroup>
-					@AppointmentsList(appointments, false, lp)
-				</div>
-			</section>
-		}
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"></path>
+						</svg>
+						{ l(lp.Locale, "btn.new") }
+					</a>
+				</hgroup>
+				@AppointmentsList(appointments, false, lp)
+			</div>
+		</section>
 	}
 }
 
-templ AppointmentFormPage(appointment model.Appointment, lp layoutProps) {
+templ AppointmentPage(appointment model.Appointment, patients []model.Patient, clinics []model.Clinic, lp LayoutProps) {
 	@Layout(lp) {
 		<div class="px-4 lg:px-8">
 			@CmpBtnBack(l(lp.Locale, "btn.back"), "/appointments")
@@ -51,12 +47,12 @@ templ AppointmentFormPage(appointment model.Appointment, lp layoutProps) {
 			} else {
 				<h1 class="px-4 sm:px-0 font-bold text-2xl pb-0 w-full">{ l(lp.Locale, "str.edit_appointment") }</h1>
 			}
-			@AppointmentNew(appointment, lp)
+			@AppointmentCont(lp, appointment, patients, clinics)
 		</section>
 	}
 }
 
-templ AppointmentsList(appointments []model.Appointment, showTitle bool, lp layoutProps) {
+templ AppointmentsList(appointments []model.Appointment, showTitle bool, lp LayoutProps) {
 	<section class="app-card col-span-2 flex flex-col pt-4">
 		<div class="relative items-center flex justify-between border-b border-base-coentent/10 pb-2" hx-boost="true">
 			<h3 class="font-semibold text-xl flex items-center gap-4">
@@ -114,7 +110,7 @@ templ AppointmentsList(appointments []model.Appointment, showTitle bool, lp layo
 	</section>
 }
 
-templ AppointmentsTimeframe(path, lp layoutProps) {
+templ AppointmentsTimeframe(path, lp LayoutProps) {
 	<nav class="flex gap-2" aria-label="Tabs">
 		<a
 			href="/appointments?timeframe=day"
@@ -132,7 +128,7 @@ templ AppointmentsTimeframe(path, lp layoutProps) {
 	</nav>
 }
 
-templ AppointmentLi(appointment model.Appointment, lp layoutProps) {
+templ AppointmentLi(appointment model.Appointment, lp LayoutProps) {
 	<li class="relative flex space-x-4 py-4 xl:static">
 		<figure aria-label="patient picture" class="h-14 w-14 flex-none rounded-full">
 			@CmpAvatar(appointment.Patient, "w-14 h-14")
@@ -207,7 +203,7 @@ templ AppointmentLi(appointment model.Appointment, lp layoutProps) {
 	</li>
 }
 
-templ AppointmentActions(appointment model.Appointment, lp layoutProps) {
+templ AppointmentActions(appointment model.Appointment, lp LayoutProps) {
 	<div class="hidden gap-2 items-center lg:flex">
 		<a href={ templ.URL("/appointments/" + appointment.ID + "/begin") } class="btn btn-outline btn-primary">
 			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -224,7 +220,7 @@ templ AppointmentActions(appointment model.Appointment, lp layoutProps) {
 	</div>
 }
 
-templ AppointmentsEmptyList(lp layoutProps) {
+templ AppointmentsEmptyList(lp LayoutProps) {
 	<div class="flex mt-4">
 		<a href="/appointments/new" class="relative block w-full rounded-lg border-2 border-dashed border-base-content/10 p-12 text-center hover:border-base-content/30 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
 			@IconHeroOutlineCalendar("mx-auto w-12 h-12 text-base-content/30")
@@ -234,21 +230,21 @@ templ AppointmentsEmptyList(lp layoutProps) {
 	</div>
 }
 
-templ AppointmentNew(appointment model.Appointment, lp layoutProps) {
+templ AppointmentCont(lp LayoutProps, appointment model.Appointment, patients []model.Patient, clinics []model.Clinic) {
 	<div id="appointment_profile" class="space-y-10 divide-y divide-base-content/10">
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
 				<h2 class="text-base font-semibold leading-7">{ l(lp.Locale, "str.apnt_step_1") }</h2>
 				<p class="mt-1 text-sm leading-6 text-base-content/50">{ l(lp.Locale, "str.apnt_step_1_desc") }</p>
 			</div>
-			@ClinicSearch(lp)
+			@ClinicSearch(lp, clinics)
 		</div>
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
 				<h2 class="text-base font-semibold leading-7">{ l(lp.Locale, "str.apnt_step_2") }</h2>
 				<p class="mt-1 text-sm leading-6 text-base-content/50">{ l(lp.Locale, "str.apnt_step_2_desc") }</p>
 			</div>
-			@PatientSearch(lp)
+			@PatientSearch(lp, patients)
 		</div>
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
@@ -345,7 +341,7 @@ templ AppointmentNew(appointment model.Appointment, lp layoutProps) {
 	</div>
 }
 
-templ ClinicSearch(lp layoutProps) {
+templ ClinicSearch(lp LayoutProps, clinics []model.Clinic) {
 	<section class="p-4 md:p-6 bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
 		<span class="absolute top-2 right-2 loading loading-ring text-primary loading-md htmx-indicator"></span>
 		<label class="relative input input-bordered rounded-full flex items-center gap-2 mb-4">
@@ -365,18 +361,18 @@ templ ClinicSearch(lp layoutProps) {
 				name="query"
 				placeholder={ l(lp.Locale, "str.search_clinics") }
 				hx-post="/clinics/search"
-				hx-trigger="input changed delay:300ms, search, load"
+				hx-trigger="input changed delay:300ms, search"
 				hx-target="#clinic_search_results"
 				hx-indicator=".htmx-indicator"
 			/>
 		</label>
 		<div class="max-h-72 overflow-y-auto pr-2 -mr-2">
-			@ClinicSearchResults([]model.Clinic{}, lp)
+			@ClinicSearchResults(clinics, lp)
 		</div>
 	</section>
 }
 
-templ ClinicSearchResults(clinics []model.Clinic, lp layoutProps) {
+templ ClinicSearchResults(clinics []model.Clinic, lp LayoutProps) {
 	<ul
 		id="clinic_search_results"
 		role="list"
@@ -413,7 +409,7 @@ templ ClinicSearchResults(clinics []model.Clinic, lp layoutProps) {
 	</ul>
 }
 
-templ PatientSearch(lp layoutProps) {
+templ PatientSearch(lp LayoutProps, patients []model.Patient) {
 	<section class="p-4 md:p-6 bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
 		<span class="absolute top-2 right-2 loading loading-ring text-primary loading-md htmx-indicator"></span>
 		<label class="relative input input-bordered rounded-full flex items-center gap-2 mb-4">
@@ -433,18 +429,18 @@ templ PatientSearch(lp layoutProps) {
 				name="query"
 				placeholder={ l(lp.Locale, "str.search_patients") }
 				hx-post="/patients/search"
-				hx-trigger="input changed delay:300ms, search, load"
+				hx-trigger="input changed delay:300ms, search"
 				hx-target="#patient_search_results"
 				hx-indicator=".htmx-indicator"
 			/>
 		</label>
 		<div class="max-h-64 overflow-y-auto pr-2 -mr-2">
-			@PatientSearchResults([]model.Patient{}, lp)
+			@PatientSearchResults(patients, lp)
 		</div>
 	</section>
 }
 
-templ PatientSearchResults(patients []model.Patient, lp layoutProps) {
+templ PatientSearchResults(patients []model.Patient, lp LayoutProps) {
 	<ul
 		id="patient_search_results"
 		role="list"
@@ -481,7 +477,7 @@ templ PatientSearchResults(patients []model.Patient, lp layoutProps) {
 	</ul>
 }
 
-templ AppointmentForm(appointment model.Appointment, lp layoutProps) {
+templ AppointmentForm(appointment model.Appointment, lp LayoutProps) {
 	<form
 		id="new_appointment"
 		method="POST"

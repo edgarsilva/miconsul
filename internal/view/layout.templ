@@ -1,6 +1,6 @@
 package view
 
-templ HTMLPage(lp layoutProps) {
+templ HTMLPage(lp LayoutProps) {
 	<!DOCTYPE html>
 	<html data-theme="cmyk" x-ref="html">
 		<head>
@@ -38,7 +38,7 @@ templ HTMLPageWithApexCharts() {
 	</html>
 }
 
-templ Layout(lp layoutProps) {
+templ Layout(lp LayoutProps) {
 	@HTMLPage(lp) {
 		<div id="root">
 			@CmpHeader(lp)
@@ -50,7 +50,7 @@ templ Layout(lp layoutProps) {
 	}
 }
 
-templ LayoutAuth(lp layoutProps) {
+templ LayoutAuth(lp LayoutProps) {
 	@HTMLPage(lp) {
 		<div id="root" class="flex flex-col justify-center py-12 sm:px-6 lg:px-8">
 			{ children... }
@@ -58,7 +58,7 @@ templ LayoutAuth(lp layoutProps) {
 	}
 }
 
-templ LayoutPrimary(lp layoutProps) {
+templ LayoutPrimary(lp LayoutProps) {
 	@HTMLPage(lp) {
 		<div id="root" class="flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-primary">
 			{ children... }

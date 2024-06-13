@@ -18,16 +18,25 @@ type Toast struct {
 	Level string
 }
 
-type layoutProps struct {
-	CurrentUser
+type Ctx struct {
 	*fiber.Ctx
+	CurrentUser
 	Locale    string
 	Theme     string
 	Timeframe string
 	Toast     Toast
 }
 
-type Prop func(layoutProps *layoutProps) error
+type LayoutProps struct {
+	*fiber.Ctx
+	CurrentUser
+	Locale    string
+	Theme     string
+	Timeframe string
+	Toast     Toast
+}
+
+type Prop func(LayoutProps *LayoutProps) error
 
 var (
 	phoneRegex = "^[\\+]?[(]?[0-9]{3}[)]?[-\\s\\.]?[0-9]{3}[-\\s\\.]?[0-9]{4,6}$"
@@ -38,8 +47,8 @@ func l(lang, key string) string {
 	return locales.GetWithLocale(lang, key)
 }
 
-func NewLayoutProps(c *fiber.Ctx, props ...Prop) (layoutProps, error) {
-	layoutProps := layoutProps{
+func NewLayoutProps(c *fiber.Ctx, props ...Prop) (LayoutProps, error) {
+	LayoutProps := LayoutProps{
 		Ctx:         c,
 		CurrentUser: new(DummyUser),
 		Locale:      "es-MX",
@@ -52,17 +61,17 @@ func NewLayoutProps(c *fiber.Ctx, props ...Prop) (layoutProps, error) {
 	}
 
 	for _, prop := range props {
-		err := prop(&layoutProps)
+		err := prop(&LayoutProps)
 		if err != nil {
-			return layoutProps, nil
+			return LayoutProps, nil
 		}
 	}
 
-	return layoutProps, nil
+	return LayoutProps, nil
 }
 
 func WithCurrentUser(cu CurrentUser) Prop {
-	return func(props *layoutProps) error {
+	return func(props *LayoutProps) error {
 		if cu == nil {
 			return errors.New("current user must exist, you might be passing an emtpy(nil) interface")
 		}
@@ -74,7 +83,7 @@ func WithCurrentUser(cu CurrentUser) Prop {
 }
 
 func WithTheme(theme string) Prop {
-	return func(props *layoutProps) error {
+	return func(props *LayoutProps) error {
 		if theme == "" {
 			return errors.New("theme can't be blank if you are trying to set it)")
 		}
@@ -90,7 +99,7 @@ func WithTheme(theme string) Prop {
 }
 
 func WithLocale(lang string) Prop {
-	return func(props *layoutProps) error {
+	return func(props *LayoutProps) error {
 		if lang == "" {
 			lang = "es-MX"
 		}
@@ -110,7 +119,7 @@ func WithLocale(lang string) Prop {
 //   - sub: optional subtitle,
 //   - level: alert level, one of success, error, warning or info (defaults to info)
 func WithToast(toast, sub, level string) Prop {
-	return func(props *layoutProps) error {
+	return func(props *LayoutProps) error {
 		props.Toast = Toast{
 			Msg:   toast,
 			Sub:   sub,

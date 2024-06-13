@@ -1,13 +1,25 @@
-package view
+package dashboard
 
 import (
 	"github.com/edgarsilva/go-scaffold/internal/model"
+	"github.com/edgarsilva/go-scaffold/internal/view"
+	"strconv"
 )
 
-templ DashboardPage(appointments []model.Appointment, lp layoutProps) {
+type Stat struct {
+	Total int
+	Diff  int
+}
+
+type Stats struct {
+	Patients     Stat
+	Appointments Stat
+}
+
+templ Page(stats Stats, appointments []model.Appointment, lp view.LayoutProps) {
 	@Layout(lp) {
 		<main id="content" class="px-4 container mx-auto">
-			@DashboardStats(lp)
+			@MonthTrends(stats, lp)
 			<div class="flex-1 grid grid-cols-3 gap-5 mt-8">
 				<section
 					class="col-span-3 lg:col-span-2 order-2 lg:order-1"
@@ -25,7 +37,7 @@ templ DashboardPage(appointments []model.Appointment, lp layoutProps) {
 	}
 }
 
-templ DashboardStats(lp layoutProps) {
+templ MonthTrends(stats DashboardStats, lp view.LayoutProps) {
 	<div>
 		<h3 class="sr-only">{ l(lp.Locale, "str.stats") }</h3>
 		<dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -41,13 +53,13 @@ templ DashboardStats(lp layoutProps) {
 					</p>
 				</dt>
 				<dd class="ml-16 flex items-baseline">
-					<p class="text-2xl font-semibold text-base-content">71</p>
+					<p class="text-2xl font-semibold text-base-content">{ strconv.Itoa(stats.Patients.Total) }</p>
 					<p class="ml-2 flex items-baseline text-sm font-semibold text-success">
 						<svg class="h-5 w-5 flex-shrink-0 self-center text-success" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
 							<path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clip-rule="evenodd"></path>
 						</svg>
 						<span class="sr-only">{ l(lp.Locale, "str.increased_by") }</span>
-						122
+						{ strconv.Itoa(stats.Patients.Diff) }
 					</p>
 					<div class="ml-auto">
 						<a href="#" class="font-medium link link-hover">{ l(lp.Locale, "btn.view_all") }<span class="sr-only">{ l(lp.Locale, "str.patients") }</span></a>
@@ -66,13 +78,16 @@ templ DashboardStats(lp layoutProps) {
 					>{ l(lp.Locale, "str.appointments") }</p>
 				</dt>
 				<dd class="ml-16 flex items-baseline">
-					<p class="text-2xl font-semibold text-base-content">58</p>
+					<p
+						class="text-2xl font-semibold
+          text-base-content"
+					>{ strconv.Itoa(stats.Appointments.Total) }</p>
 					<p class="ml-2 flex items-baseline text-sm font-semibold text-success">
 						<svg class="h-5 w-5 flex-shrink-0 self-center text-success" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
 							<path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clip-rule="evenodd"></path>
 						</svg>
 						<span class="sr-only">{ l(lp.Locale, "str.increased_by") }</span>
-						5.4%
+						{ strconv.Itoa(stats.Appointments.Diff) }
 					</p>
 					<div class="ml-auto">
 						<a href="#" class="font-medium link link-hover">{ l(lp.Locale, "btn.view_all") }<span class="sr-only">{ l(lp.Locale, "str.all_appointmens") }</span></a>

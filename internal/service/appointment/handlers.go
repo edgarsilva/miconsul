@@ -4,9 +4,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/edgarsilva/go-scaffold/internal/common"
 	"github.com/edgarsilva/go-scaffold/internal/lib/xid"
 	"github.com/edgarsilva/go-scaffold/internal/model"
-	"github.com/edgarsilva/go-scaffold/internal/util"
 	"github.com/edgarsilva/go-scaffold/internal/view"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -19,13 +19,6 @@ func (s *service) HandleAppointmentsPage(c *fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
 		return c.Redirect("/login")
-	}
-
-	id := c.Params("id", "")
-	appointment := model.Appointment{}
-	appointment.ID = id
-	if id != "" && id != "new" {
-		s.DB.Model(&model.Appointment{}).First(&appointment)
 	}
 
 	appointments := []model.Appointment{}
@@ -53,7 +46,7 @@ func (s *service) HandleAppointmentsPage(c *fiber.Ctx) error {
 	case "month":
 		dbquery.Scopes(model.AppointmentBookedThisMonth)
 	default:
-		dbquery.Where("booked_at > ?", util.BoD(time.Now()))
+		dbquery.Where("booked_at > ?", common.BoD(time.Now()))
 	}
 
 	dbquery.Preload("Clinic").
@@ -63,11 +56,42 @@ func (s *service) HandleAppointmentsPage(c *fiber.Ctx) error {
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "")
-	layoutProps, _ := view.NewLayoutProps(c,
+	LayoutProps, _ := view.NewLayoutProps(c,
 		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, "", ""),
 	)
 
-	return view.Render(c, view.AppointmentsPage(appointments, appointment, layoutProps))
+	return view.Render(c, view.AppointmentsPage(appointments, LayoutProps))
+}
+
+// HandleNewAppointmentPage renders the new appointments form page
+//
+// GET: /appointments/new
+func (s *service) HandleAppointmentPage(c *fiber.Ctx) error {
+	cu, err := s.CurrentUser(c)
+	if err != nil {
+		return c.Redirect("/login")
+	}
+
+	id := c.Params("id", "")
+	appointment := model.Appointment{}
+	appointment.ID = id
+	if id != "" && id != "new" {
+		s.DB.Model(&appointment).Where("id", id).Take(&appointment)
+	}
+
+	clinics := []model.Clinic{}
+	s.DB.Model(&cu).Order("created_at desc").Limit(10).Association("Clinics").Find(&clinics)
+
+	patients := []model.Patient{}
+	s.DB.Model(&cu).Order("created_at desc").Limit(10).Association("Patients").Find(&patients)
+
+	theme := s.SessionUITheme(c)
+	toast := c.Query("toast", "")
+	LayoutProps, _ := view.NewLayoutProps(c,
+		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, "", ""),
+	)
+
+	return view.Render(c, view.AppointmentPage(appointment, patients, clinics, LayoutProps))
 }
 
 // HandleBeginAppointmentPage renders the appointments page HTML
@@ -101,10 +125,10 @@ func (s *service) HandleAppointmentBeginPage(c *fiber.Ctx) error {
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "")
-	layoutProps, _ := view.NewLayoutProps(c,
+	LayoutProps, _ := view.NewLayoutProps(c,
 		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, "", ""),
 	)
-	return view.Render(c, view.AppointmentBeginPage(appointment, layoutProps))
+	return view.Render(c, view.AppointmentBeginPage(appointment, LayoutProps))
 }
 
 // HandleCreateAppointment inserts a new appointment record for the CurrentUser
@@ -366,10 +390,10 @@ func (s *service) HandlePatientConfirm(c *fiber.Ctx) error {
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "")
-	layoutProps, _ := view.NewLayoutProps(c,
+	LayoutProps, _ := view.NewLayoutProps(c,
 		view.WithTheme(theme), view.WithToast(toast, "", ""),
 	)
-	return view.Render(c, view.AppointmentConfirmPage(layoutProps))
+	return view.Render(c, view.AppointmentConfirmPage(LayoutProps))
 }
 
 // HandlePatientCancel lets a patient cancel an appointment
@@ -400,10 +424,10 @@ func (s *service) HandlePatientCancel(c *fiber.Ctx) error {
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "some toast")
-	layoutProps, _ := view.NewLayoutProps(c,
+	LayoutProps, _ := view.NewLayoutProps(c,
 		view.WithTheme(theme), view.WithToast(toast, "", ""),
 	)
-	return view.Render(c, view.AppointmentCancelPage(appointment, layoutProps))
+	return view.Render(c, view.AppointmentCancelPage(appointment, LayoutProps))
 }
 
 // HandlePatientChangeDate lets a patient mark an appointment as needs

@@ -50,25 +50,32 @@ using Go, SQLite with GORM, Templ with HTMX and DaisyUI/TailwindCSS:
 
 [18/May/24 - 22/May/24]
 
-- Clinics views and endpoints
-- Appointments views and endpoints
-- Basic Toast and notifications
+- [x] Clinics views and endpoints
+- [x] Appointments views and endpoints
+- [x] Basic Toast and notifications
 
 [23/May/24 - 31/May/24]
 
-- Added patient actions and emails
+- [x] Added patient actions and emails
 
 [01/Jun/24 - 06/Jun/24]
 
-- Initial Deployment using coolify
-- Make updates and Docker file
+- [x] Initial Deployment using coolify
+- [x] Make updates and Docker file
 
 [10/Jun/24 - 11/Jun/24]
 
-- Hostinger backup for coolify
-- Minio install for Litestream
-- Sep up Goose migrations
-- Getting ready for V1
+- [x] Hostinger backup for coolify
+- [x] Sep up Goose migrations
+- [x] Minio install for Litestream
+
+[12/Jun/24 - 14/Jun/24]
+
+- [ ] Appointment select day filtering by default
+- [ ] Appointment filtering by clinic
+- [ ] Appointment add clinic icon
+- [ ] Show favorite clinic in Dashboard
+- [ ] Getting ready for V1
 
 ### V1
 

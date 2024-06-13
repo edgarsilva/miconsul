@@ -6,7 +6,7 @@ import (
 	"github.com/edgarsilva/go-scaffold/internal/model"
 )
 
-templ AppointmentBeginPage(appointment model.Appointment, lp layoutProps) {
+templ AppointmentBeginPage(appointment model.Appointment, lp LayoutProps) {
 	@Layout(lp) {
 		<div class="px-4 lg:px-8">
 			@CmpBtnBack(l(lp.Locale, "btn.back"), "/appointments")
@@ -17,7 +17,7 @@ templ AppointmentBeginPage(appointment model.Appointment, lp layoutProps) {
 	}
 }
 
-templ PatientCard(patient model.Patient, lp layoutProps) {
+templ PatientCard(patient model.Patient, lp LayoutProps) {
 	<div>
 		<hgroup
 			class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
@@ -85,7 +85,7 @@ templ PatientCard(patient model.Patient, lp layoutProps) {
 	</div>
 }
 
-templ AppointmentBegin(appointment model.Appointment, lp layoutProps) {
+templ AppointmentBegin(appointment model.Appointment, lp LayoutProps) {
 	<span class="absolute top-2 right-2 loading loading-ring text-primary loading-md htmx-indicator"></span>
 	<div class="space-y-10 ">
 		@PatientCard(appointment.Patient, lp)

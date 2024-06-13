@@ -3,9 +3,9 @@ package clinic
 import (
 	"strconv"
 
+	"github.com/edgarsilva/go-scaffold/internal/common"
 	"github.com/edgarsilva/go-scaffold/internal/lib/xid"
 	"github.com/edgarsilva/go-scaffold/internal/model"
-	"github.com/edgarsilva/go-scaffold/internal/util"
 	"github.com/edgarsilva/go-scaffold/internal/view"
 	"github.com/gofiber/fiber/v2"
 	"syreclabs.com/go/faker"
@@ -30,8 +30,8 @@ func (s *service) HandleClinicsPage(c *fiber.Ctx) error {
 	s.DB.Model(&model.Clinic{}).Limit(25).Find(&clinics)
 
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
-	return view.Render(c, view.ClinicsPage(clinics, clinic, layoutProps))
+	LayoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	return view.Render(c, view.ClinicsPage(clinics, clinic, LayoutProps))
 }
 
 // HandleCreateClinic inserts a new clinic record for the given user
@@ -65,8 +65,8 @@ func (s *service) HandleCreateClinic(c *fiber.Ctx) error {
 
 	c.Set("HX-Push-Url", "/clinics/"+clinic.ID)
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
-	return view.Render(c, view.ClinicsPage([]model.Clinic{}, clinic, layoutProps))
+	LayoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	return view.Render(c, view.ClinicsPage([]model.Clinic{}, clinic, LayoutProps))
 }
 
 // HandleUpdateClinic updates a clinic record for the CurrentUser
@@ -166,8 +166,8 @@ func (s *service) HandleClinicSearch(c *fiber.Ctx) error {
 
 	// time.Sleep(time.Second * 2)
 	theme := s.SessionUITheme(c)
-	layoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
-	return view.Render(c, view.ClinicSearchResults(clinics, layoutProps))
+	LayoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	return view.Render(c, view.ClinicSearchResults(clinics, LayoutProps))
 }
 
 func (s *service) HandleMockManyClinics(c *fiber.Ctx) error {
@@ -186,7 +186,7 @@ func (s *service) HandleMockManyClinics(c *fiber.Ctx) error {
 		ExtID := xid.New("prav")
 		clinics = append(clinics, model.Clinic{
 			ExtID:      ExtID,
-			ProfilePic: util.DicebearShapeAvatarURL(ExtID),
+			ProfilePic: common.DicebearShapeAvatarURL(ExtID),
 			Name:       faker.Company().Name(),
 			Email:      faker.Internet().Email(),
 			Phone:      faker.PhoneNumber().CellPhone(),

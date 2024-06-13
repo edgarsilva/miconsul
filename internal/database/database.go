@@ -19,11 +19,17 @@ type Database struct {
 }
 
 func New(DBPath string) *Database {
+	loglevel := logger.Info
+
+	if os.Getenv("APP_ENV") == "production" {
+		loglevel = logger.Warn
+	}
+
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags),
 		logger.Config{
 			SlowThreshold:             time.Millisecond * 100, // Slow SQL threshold
-			LogLevel:                  logger.Info,            // Log level
+			LogLevel:                  loglevel,               // Log level
 			IgnoreRecordNotFoundError: true,                   // Ignore ErrRecordNotFound error for logger
 			ParameterizedQueries:      true,                   // Don't include params in the SQL log
 			Colorful:                  true,                   // Enable/Disable color
