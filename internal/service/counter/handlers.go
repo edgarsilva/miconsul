@@ -13,8 +13,8 @@ func (s *service) HandlePage(c *fiber.Ctx) error {
 	s.SessionSet(c, "cnt", strconv.FormatInt(count, 10))
 
 	theme := s.SessionGet(c, "theme", "light")
-	LayoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme))
-	return view.Render(c, view.CounterPage(count, LayoutProps))
+	vc, _ := view.NewCtx(c, view.WithTheme(theme))
+	return view.Render(c, view.CounterPage(count, vc))
 }
 
 func (s *service) HandleIncrement(c *fiber.Ctx) error {

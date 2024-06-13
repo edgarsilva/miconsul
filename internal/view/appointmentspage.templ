@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-templ AppointmentsPage(appointments []model.Appointment, lp LayoutProps) {
+templ AppointmentsPage(appointments []model.Appointment, lp *Ctx) {
 	@Layout(lp) {
 		<div class="px-4 lg:px-8">
 			@CmpBtnBack(l(lp.Locale, "btn.back"), "/")
@@ -36,7 +36,7 @@ templ AppointmentsPage(appointments []model.Appointment, lp LayoutProps) {
 	}
 }
 
-templ AppointmentPage(appointment model.Appointment, patients []model.Patient, clinics []model.Clinic, lp LayoutProps) {
+templ AppointmentPage(appointment model.Appointment, patients []model.Patient, clinics []model.Clinic, lp *Ctx) {
 	@Layout(lp) {
 		<div class="px-4 lg:px-8">
 			@CmpBtnBack(l(lp.Locale, "btn.back"), "/appointments")
@@ -52,7 +52,7 @@ templ AppointmentPage(appointment model.Appointment, patients []model.Patient, c
 	}
 }
 
-templ AppointmentsList(appointments []model.Appointment, showTitle bool, lp LayoutProps) {
+templ AppointmentsList(appointments []model.Appointment, showTitle bool, lp *Ctx) {
 	<section class="app-card col-span-2 flex flex-col pt-4">
 		<div class="relative items-center flex justify-between border-b border-base-coentent/10 pb-2" hx-boost="true">
 			<h3 class="font-semibold text-xl flex items-center gap-4">
@@ -110,7 +110,7 @@ templ AppointmentsList(appointments []model.Appointment, showTitle bool, lp Layo
 	</section>
 }
 
-templ AppointmentsTimeframe(path, lp LayoutProps) {
+templ AppointmentsTimeframe(path, lp *Ctx) {
 	<nav class="flex gap-2" aria-label="Tabs">
 		<a
 			href="/appointments?timeframe=day"
@@ -128,7 +128,7 @@ templ AppointmentsTimeframe(path, lp LayoutProps) {
 	</nav>
 }
 
-templ AppointmentLi(appointment model.Appointment, lp LayoutProps) {
+templ AppointmentLi(appointment model.Appointment, lp *Ctx) {
 	<li class="relative flex space-x-4 py-4 xl:static">
 		<figure aria-label="patient picture" class="h-14 w-14 flex-none rounded-full">
 			@CmpAvatar(appointment.Patient, "w-14 h-14")
@@ -203,7 +203,7 @@ templ AppointmentLi(appointment model.Appointment, lp LayoutProps) {
 	</li>
 }
 
-templ AppointmentActions(appointment model.Appointment, lp LayoutProps) {
+templ AppointmentActions(appointment model.Appointment, lp *Ctx) {
 	<div class="hidden gap-2 items-center lg:flex">
 		<a href={ templ.URL("/appointments/" + appointment.ID + "/begin") } class="btn btn-outline btn-primary">
 			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -220,7 +220,7 @@ templ AppointmentActions(appointment model.Appointment, lp LayoutProps) {
 	</div>
 }
 
-templ AppointmentsEmptyList(lp LayoutProps) {
+templ AppointmentsEmptyList(lp *Ctx) {
 	<div class="flex mt-4">
 		<a href="/appointments/new" class="relative block w-full rounded-lg border-2 border-dashed border-base-content/10 p-12 text-center hover:border-base-content/30 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
 			@IconHeroOutlineCalendar("mx-auto w-12 h-12 text-base-content/30")
@@ -230,7 +230,7 @@ templ AppointmentsEmptyList(lp LayoutProps) {
 	</div>
 }
 
-templ AppointmentCont(lp LayoutProps, appointment model.Appointment, patients []model.Patient, clinics []model.Clinic) {
+templ AppointmentCont(lp *Ctx, appointment model.Appointment, patients []model.Patient, clinics []model.Clinic) {
 	<div id="appointment_profile" class="space-y-10 divide-y divide-base-content/10">
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
@@ -341,7 +341,7 @@ templ AppointmentCont(lp LayoutProps, appointment model.Appointment, patients []
 	</div>
 }
 
-templ ClinicSearch(lp LayoutProps, clinics []model.Clinic) {
+templ ClinicSearch(lp *Ctx, clinics []model.Clinic) {
 	<section class="p-4 md:p-6 bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
 		<span class="absolute top-2 right-2 loading loading-ring text-primary loading-md htmx-indicator"></span>
 		<label class="relative input input-bordered rounded-full flex items-center gap-2 mb-4">
@@ -372,7 +372,7 @@ templ ClinicSearch(lp LayoutProps, clinics []model.Clinic) {
 	</section>
 }
 
-templ ClinicSearchResults(clinics []model.Clinic, lp LayoutProps) {
+templ ClinicSearchResults(clinics []model.Clinic, lp *Ctx) {
 	<ul
 		id="clinic_search_results"
 		role="list"
@@ -409,7 +409,7 @@ templ ClinicSearchResults(clinics []model.Clinic, lp LayoutProps) {
 	</ul>
 }
 
-templ PatientSearch(lp LayoutProps, patients []model.Patient) {
+templ PatientSearch(lp *Ctx, patients []model.Patient) {
 	<section class="p-4 md:p-6 bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
 		<span class="absolute top-2 right-2 loading loading-ring text-primary loading-md htmx-indicator"></span>
 		<label class="relative input input-bordered rounded-full flex items-center gap-2 mb-4">
@@ -440,7 +440,7 @@ templ PatientSearch(lp LayoutProps, patients []model.Patient) {
 	</section>
 }
 
-templ PatientSearchResults(patients []model.Patient, lp LayoutProps) {
+templ PatientSearchResults(patients []model.Patient, lp *Ctx) {
 	<ul
 		id="patient_search_results"
 		role="list"
@@ -477,7 +477,7 @@ templ PatientSearchResults(patients []model.Patient, lp LayoutProps) {
 	</ul>
 }
 
-templ AppointmentForm(appointment model.Appointment, lp LayoutProps) {
+templ AppointmentForm(appointment model.Appointment, lp *Ctx) {
 	<form
 		id="new_appointment"
 		method="POST"

@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-templ ClinicsPage(clinics []model.Clinic, clinic model.Clinic, lp LayoutProps) {
+templ ClinicsPage(clinics []model.Clinic, clinic model.Clinic, lp *Ctx) {
 	@Layout(lp) {
 		if clinic.ID != "" {
 			<div class="px-4 lg:px-8">
@@ -53,7 +53,7 @@ templ ClinicsPage(clinics []model.Clinic, clinic model.Clinic, lp LayoutProps) {
 	}
 }
 
-templ ClinicsList(clinics []model.Clinic, lp LayoutProps) {
+templ ClinicsList(clinics []model.Clinic, lp *Ctx) {
 	<ul id="clinics_list" role="list" class="app-card divide-y divide-base-content/10 overflow-hidden px-4 py-2">
 		for _, clinic := range clinics {
 			@ClinicLi(clinic, lp)
@@ -61,7 +61,7 @@ templ ClinicsList(clinics []model.Clinic, lp LayoutProps) {
 	</ul>
 }
 
-templ ClinicLi(clinic model.Clinic, lp LayoutProps) {
+templ ClinicLi(clinic model.Clinic, lp *Ctx) {
 	<li class="relative flex justify-between items-center gap-x-6 px-2 py-2 hover:bg-base-200/75">
 		<div class="flex items-center min-w-0 gap-x-4">
 			if clinic.ProfilePic != "" {
@@ -128,7 +128,7 @@ templ ClinicLi(clinic model.Clinic, lp LayoutProps) {
 	</li>
 }
 
-templ ClinicDeletForm(clinic model.Clinic, lp LayoutProps) {
+templ ClinicDeletForm(clinic model.Clinic, lp *Ctx) {
 	<form
 		method="POST"
 		action={ templ.URL("/clinics/"+clinic.ID) + "/delete" }
@@ -145,7 +145,7 @@ templ ClinicDeletForm(clinic model.Clinic, lp LayoutProps) {
 	</form>
 }
 
-templ ClinicsEmptyList(lp LayoutProps) {
+templ ClinicsEmptyList(lp *Ctx) {
 	<div class="app-card flex">
 		<a href="/clinics/new" class="relative block w-full rounded-lg border-2 border-dashed border-base-content/30 p-12 text-center hover:border-base-content/40 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
 			<svg
@@ -163,7 +163,7 @@ templ ClinicsEmptyList(lp LayoutProps) {
 	</div>
 }
 
-templ ClinicProfile(clinic model.Clinic, lp LayoutProps) {
+templ ClinicProfile(clinic model.Clinic, lp *Ctx) {
 	<div id="clinic_profile" class="space-y-10 divide-y divide-base-content/10">
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
@@ -350,7 +350,7 @@ templ ClinicProfile(clinic model.Clinic, lp LayoutProps) {
 	</div>
 }
 
-templ ClinicForm(clinic model.Clinic, lp LayoutProps) {
+templ ClinicForm(clinic model.Clinic, lp *Ctx) {
 	<form
 		class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2"
 		method="POST"

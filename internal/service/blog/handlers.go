@@ -13,6 +13,6 @@ func (s *service) HandleBlogPage(c *fiber.Ctx) error {
 	theme := s.SessionUITheme(c)
 
 	cu, _ := s.CurrentUser(c)
-	LayoutProps, _ := view.NewLayoutProps(c, view.WithCurrentUser(cu), view.WithTheme(theme))
-	return view.Render(c, view.PageBlog(LayoutProps))
+	vc, _ := view.NewCtx(c, view.WithCurrentUser(cu), view.WithTheme(theme))
+	return view.Render(c, view.PageBlog(vc))
 }

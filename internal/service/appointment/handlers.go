@@ -56,11 +56,11 @@ func (s *service) HandleAppointmentsPage(c *fiber.Ctx) error {
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "")
-	LayoutProps, _ := view.NewLayoutProps(c,
+	vc, _ := view.NewCtx(c,
 		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, "", ""),
 	)
 
-	return view.Render(c, view.AppointmentsPage(appointments, LayoutProps))
+	return view.Render(c, view.AppointmentsPage(appointments, vc))
 }
 
 // HandleNewAppointmentPage renders the new appointments form page
@@ -87,11 +87,11 @@ func (s *service) HandleAppointmentPage(c *fiber.Ctx) error {
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "")
-	LayoutProps, _ := view.NewLayoutProps(c,
+	vc, _ := view.NewCtx(c,
 		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, "", ""),
 	)
 
-	return view.Render(c, view.AppointmentPage(appointment, patients, clinics, LayoutProps))
+	return view.Render(c, view.AppointmentPage(appointment, patients, clinics, vc))
 }
 
 // HandleBeginAppointmentPage renders the appointments page HTML
@@ -125,10 +125,10 @@ func (s *service) HandleAppointmentBeginPage(c *fiber.Ctx) error {
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "")
-	LayoutProps, _ := view.NewLayoutProps(c,
+	vc, _ := view.NewCtx(c,
 		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, "", ""),
 	)
-	return view.Render(c, view.AppointmentBeginPage(appointment, LayoutProps))
+	return view.Render(c, view.AppointmentBeginPage(appointment, vc))
 }
 
 // HandleCreateAppointment inserts a new appointment record for the CurrentUser
@@ -390,10 +390,10 @@ func (s *service) HandlePatientConfirm(c *fiber.Ctx) error {
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "")
-	LayoutProps, _ := view.NewLayoutProps(c,
+	vc, _ := view.NewCtx(c,
 		view.WithTheme(theme), view.WithToast(toast, "", ""),
 	)
-	return view.Render(c, view.AppointmentConfirmPage(LayoutProps))
+	return view.Render(c, view.AppointmentConfirmPage(vc))
 }
 
 // HandlePatientCancel lets a patient cancel an appointment
@@ -424,10 +424,10 @@ func (s *service) HandlePatientCancel(c *fiber.Ctx) error {
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "some toast")
-	LayoutProps, _ := view.NewLayoutProps(c,
+	vc, _ := view.NewCtx(c,
 		view.WithTheme(theme), view.WithToast(toast, "", ""),
 	)
-	return view.Render(c, view.AppointmentCancelPage(appointment, LayoutProps))
+	return view.Render(c, view.AppointmentCancelPage(appointment, vc))
 }
 
 // HandlePatientChangeDate lets a patient mark an appointment as needs

@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-templ PatientsPage(patients []model.Patient, lp LayoutProps) {
+templ PatientsPage(patients []model.Patient, lp *Ctx) {
 	@Layout(lp) {
 		<div class="px-4 lg:px-8">
 			@CmpBtnBack(l(lp.Locale, "btn.back"), "/")
@@ -39,7 +39,7 @@ templ PatientsPage(patients []model.Patient, lp LayoutProps) {
 	}
 }
 
-templ PatientFormPage(patient model.Patient, lp LayoutProps) {
+templ PatientFormPage(patient model.Patient, lp *Ctx) {
 	@Layout(lp) {
 		<div class="px-4 lg:px-8">
 			@CmpBtnBack(l(lp.Locale, "btn.back"), "/patients")
@@ -67,7 +67,7 @@ templ PatientFormPage(patient model.Patient, lp LayoutProps) {
 	}
 }
 
-templ PatientsList(patients []model.Patient, lp LayoutProps) {
+templ PatientsList(patients []model.Patient, lp *Ctx) {
 	<ul id="patients_list" role="list" class="app-card divide-y divide-base-content/10 overflow-hidden px-4 py-2">
 		for _, patient := range patients {
 			@PatientLi(patient, lp)
@@ -117,7 +117,7 @@ templ PatientsList(patients []model.Patient, lp LayoutProps) {
 	</ul>
 }
 
-templ PatientLi(patient model.Patient, lp LayoutProps) {
+templ PatientLi(patient model.Patient, lp *Ctx) {
 	<li class="relative flex justify-between items-center gap-x-6 px-2 py-2 hover:bg-base-200/75">
 		<div class="flex items-center min-w-0 gap-x-4">
 			@CmpAvatar(patient)
@@ -161,7 +161,7 @@ templ PatientLi(patient model.Patient, lp LayoutProps) {
 	</li>
 }
 
-templ PatientDeleteForm(patient model.Patient, lp LayoutProps) {
+templ PatientDeleteForm(patient model.Patient, lp *Ctx) {
 	<form
 		method="POST"
 		action={ templ.URL("/patients/"+patient.ID) + "/delete" }
@@ -178,7 +178,7 @@ templ PatientDeleteForm(patient model.Patient, lp LayoutProps) {
 	</form>
 }
 
-templ PatientsEmptyList(lp LayoutProps) {
+templ PatientsEmptyList(lp *Ctx) {
 	<div class="app-card flex">
 		<a href="/patients/new" class="relative block w-full rounded-lg border-2 border-dashed border-base-content/30 p-12 text-center hover:border-base-content/40 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
 			<svg
@@ -196,7 +196,7 @@ templ PatientsEmptyList(lp LayoutProps) {
 	</div>
 }
 
-templ PatientProfile(patient model.Patient, lp LayoutProps) {
+templ PatientProfile(patient model.Patient, lp *Ctx) {
 	<div id="patient_profile" class="space-y-10 divide-y divide-base-content/10">
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
@@ -542,7 +542,7 @@ templ PatientProfile(patient model.Patient, lp LayoutProps) {
 	</div>
 }
 
-templ PatientForm(patient model.Patient, lp LayoutProps) {
+templ PatientForm(patient model.Patient, lp *Ctx) {
 	<form
 		class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2"
 		method="POST"

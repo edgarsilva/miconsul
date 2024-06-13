@@ -40,7 +40,7 @@ func (s *service) HandleDashboardPage(c *fiber.Ctx) error {
 		Find(&appointments)
 
 	theme := s.SessionUITheme(c)
-	lp, _ := view.NewLayoutProps(c, view.WithCurrentUser(cu), view.WithTheme(theme))
+	vc, _ := view.NewCtx(c, view.WithCurrentUser(cu), view.WithTheme(theme))
 	stats := s.CalcDashboardStats()
-	return view.Render(c, view.DashboardPage(stats, appointments, lp))
+	return view.Render(c, view.DashboardPage(vc, stats, appointments))
 }

@@ -21,19 +21,19 @@ func (s *service) HandlePatientsPage(c *fiber.Ctx) error {
 	}
 
 	theme := s.SessionUITheme(c)
-	LayoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
 
 	id := c.Params("id", "")
 	patient := model.Patient{}
 	patient.ID = id
 	if id != "" && id != "new" {
 		s.DB.Model(&model.Patient{}).First(&patient)
-		return view.Render(c, view.PatientFormPage(patient, LayoutProps))
+		return view.Render(c, view.PatientFormPage(patient, vc))
 	}
 
 	patients := []model.Patient{}
 	s.DB.Model(&cu).Limit(25).Association("Patients").Find(&patients)
-	return view.Render(c, view.PatientsPage(patients, LayoutProps))
+	return view.Render(c, view.PatientsPage(patients, vc))
 }
 
 // HandlePatientFormPage renders the patients page HTML
@@ -46,7 +46,7 @@ func (s *service) HandlePatientFormPage(c *fiber.Ctx) error {
 	}
 
 	theme := s.SessionUITheme(c)
-	LayoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
 
 	id := c.Params("id", "")
 	if id == "" {
@@ -59,7 +59,7 @@ func (s *service) HandlePatientFormPage(c *fiber.Ctx) error {
 		s.DB.Model(&model.Patient{}).First(&patient)
 	}
 
-	return view.Render(c, view.PatientFormPage(patient, LayoutProps))
+	return view.Render(c, view.PatientFormPage(patient, vc))
 }
 
 // HandleCreatePatient inserts a new patient record for the CurrentUser
@@ -97,13 +97,13 @@ func (s *service) HandleCreatePatient(c *fiber.Ctx) error {
 
 	c.Set("HX-Push-Url", "/patients/"+patient.ID)
 	theme := s.SessionUITheme(c)
-	LayoutProps, _ := view.NewLayoutProps(
+	vc, _ := view.NewCtx(
 		c,
 		view.WithTheme(theme),
 		view.WithCurrentUser(cu),
 		view.WithToast("New patient created", "", ""),
 	)
-	return view.Render(c, view.PatientFormPage(patient, LayoutProps))
+	return view.Render(c, view.PatientFormPage(patient, vc))
 }
 
 // HandleUpdatePatient updates a patient record for the CurrentUser
@@ -187,8 +187,8 @@ func (s *service) HandleRemovePic(c *fiber.Ctx) error {
 	}
 
 	theme := s.SessionUITheme(c)
-	LayoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
-	return view.Render(c, view.PatientFormPage(patient, LayoutProps))
+	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	return view.Render(c, view.PatientFormPage(patient, vc))
 }
 
 // HandleDeletePatient deletes a patient record from the DB
@@ -248,8 +248,8 @@ func (s *service) HandlePatientSearch(c *fiber.Ctx) error {
 
 	// time.Sleep(time.Second * 2)
 	theme := s.SessionUITheme(c)
-	LayoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
-	return view.Render(c, view.PatientSearchResults(patients, LayoutProps))
+	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	return view.Render(c, view.PatientSearchResults(patients, vc))
 }
 
 func (s *service) HandleMockManyPatients(c *fiber.Ctx) error {

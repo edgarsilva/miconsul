@@ -1,7 +1,7 @@
 package view
 
-templ PageBlog(props LayoutProps) {
-	@Layout(props) {
+templ PageBlog(lp *Ctx) {
+	@Layout(lp) {
 		<div id="content" class="px-4 lg:px-0">
 			@Hero()
 			@NewArticles()

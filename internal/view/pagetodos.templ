@@ -5,8 +5,8 @@ import (
 	"strconv"
 )
 
-templ PageTodos(todos []model.Todo, count, pending int, filter string, LayoutProps LayoutProps) {
-	@Layout(LayoutProps) {
+templ PageTodos(todos []model.Todo, count, pending int, filter string, lp *Ctx) {
+	@Layout(lp) {
 		@CmpBtnBack("Back to home", "/")
 		<section class="mt-16">
 			@TodoCreateForm()

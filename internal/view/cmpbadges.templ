@@ -2,7 +2,7 @@ package view
 
 import "github.com/edgarsilva/go-scaffold/internal/model"
 
-templ CmpBadgeStatus(status model.AppointmentStatus, lp LayoutProps) {
+templ CmpBadgeStatus(status model.AppointmentStatus, lp *Ctx) {
 	switch status {
 		case "viewed":
 			<div class="badge badge-secondary">

@@ -4,7 +4,7 @@ import (
 	"github.com/edgarsilva/go-scaffold/internal/model"
 )
 
-templ AppointmentConfirmPage(lp LayoutProps) {
+templ AppointmentConfirmPage(lp *Ctx) {
 	@LayoutPrimary(lp) {
 		<div class="absolute top-4 right-4">
 			@CmpBtnTheme(lp.Theme)
@@ -26,7 +26,7 @@ templ AppointmentConfirmPage(lp LayoutProps) {
 	}
 }
 
-templ AppointmentCancelPage(appointment model.Appointment, lp LayoutProps) {
+templ AppointmentCancelPage(appointment model.Appointment, lp *Ctx) {
 	@LayoutPrimary(lp) {
 		<div class="absolute top-4 right-4">
 			@CmpBtnTheme(lp.Theme)

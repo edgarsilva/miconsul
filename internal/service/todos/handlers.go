@@ -19,7 +19,7 @@ func (s *service) HandleTodos(c *fiber.Ctx) error {
 
 	theme := s.SessionUITheme(c)
 
-	LayoutProps, err := view.NewLayoutProps(c, view.WithCurrentUser(cu), view.WithTheme(theme))
+	Ctx, err := view.NewCtx(c, view.WithCurrentUser(cu), view.WithTheme(theme))
 	if err != nil {
 		return c.Redirect("/login")
 	}
@@ -29,7 +29,7 @@ func (s *service) HandleTodos(c *fiber.Ctx) error {
 	pending := s.pendingTodosCount()
 	count := s.todosCount()
 
-	return view.Render(c, view.PageTodos(todos, count, pending, filter, LayoutProps))
+	return view.Render(c, view.PageTodos(todos, count, pending, filter, Ctx))
 }
 
 // GET: /todos.html - Get filter todos.

@@ -30,8 +30,8 @@ func (s *service) HandleClinicsPage(c *fiber.Ctx) error {
 	s.DB.Model(&model.Clinic{}).Limit(25).Find(&clinics)
 
 	theme := s.SessionUITheme(c)
-	LayoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
-	return view.Render(c, view.ClinicsPage(clinics, clinic, LayoutProps))
+	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	return view.Render(c, view.ClinicsPage(clinics, clinic, vc))
 }
 
 // HandleCreateClinic inserts a new clinic record for the given user
@@ -65,8 +65,8 @@ func (s *service) HandleCreateClinic(c *fiber.Ctx) error {
 
 	c.Set("HX-Push-Url", "/clinics/"+clinic.ID)
 	theme := s.SessionUITheme(c)
-	LayoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
-	return view.Render(c, view.ClinicsPage([]model.Clinic{}, clinic, LayoutProps))
+	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	return view.Render(c, view.ClinicsPage([]model.Clinic{}, clinic, vc))
 }
 
 // HandleUpdateClinic updates a clinic record for the CurrentUser
@@ -166,8 +166,8 @@ func (s *service) HandleClinicSearch(c *fiber.Ctx) error {
 
 	// time.Sleep(time.Second * 2)
 	theme := s.SessionUITheme(c)
-	LayoutProps, _ := view.NewLayoutProps(c, view.WithTheme(theme), view.WithCurrentUser(cu))
-	return view.Render(c, view.ClinicSearchResults(clinics, LayoutProps))
+	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	return view.Render(c, view.ClinicSearchResults(clinics, vc))
 }
 
 func (s *service) HandleMockManyClinics(c *fiber.Ctx) error {
