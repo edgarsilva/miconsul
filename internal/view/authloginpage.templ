@@ -1,9 +1,9 @@
 package view
 
-templ LoginPage(email, msg string, err error, lp *Ctx) {
-	@LayoutAuth(lp) {
+templ LoginPage(email, msg string, err error, vc *Ctx) {
+	@LayoutAuth(vc) {
 		<div class="absolute top-4 right-4">
-			@CmpBtnTheme(lp.Theme)
+			@CmpBtnTheme(vc.Theme)
 		</div>
 		<div class="pt-10 card glass bg-base-100 shadow w-full sm:max-w-[480px] sm:mx-auto">
 			<div class="flex justify-center overflow-visible">

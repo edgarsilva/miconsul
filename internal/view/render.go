@@ -13,6 +13,8 @@ const (
 	ViewTimeFormat = "Mon 02/Jan/06 3:04 PM"
 )
 
+// Render renders Templ components in the Fiber app, a ctx might be passed to
+// avoid exesing prop drilling (or use the templ view.Ctx por dep injection)
 func Render(c *fiber.Ctx, component templ.Component, options ...func(*templ.ComponentHandler)) error {
 	componentHandler := templ.Handler(component)
 
@@ -24,8 +26,14 @@ func Render(c *fiber.Ctx, component templ.Component, options ...func(*templ.Comp
 	return handler(c)
 }
 
-func QueryParamsStr(lp *Ctx, params ...string) string {
-	queryParams := lp.Queries()
+// QueryParams returns the queryParams (AKA searchParams) in the
+// req ctx and appends (or updates) the params passed to it as
+// in the form "name=value"
+//
+//	e.g.
+//		QueryParams(vc, "timeframe=day", "clinic=myclinic")
+func QueryParams(vc *Ctx, params ...string) string {
+	queryParams := vc.Queries()
 
 	for _, param := range params {
 		kv := strings.Split(param, "=")

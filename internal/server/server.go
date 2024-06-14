@@ -2,7 +2,6 @@
 package server
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
@@ -88,19 +87,13 @@ func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjo
 
 // CurrentUser returns currently logged-in(or anon) user by User.ID from fiber.Locals("id")
 func (s *Server) CurrentUser(c *fiber.Ctx) (model.User, error) {
-	id := c.Locals("uid")
-	id, ok := id.(string)
-	if !ok || id == "" {
+	userI := c.Locals("current_user")
+	cu, ok := userI.(model.User)
+	if !ok {
 		return model.User{}, nil
 	}
 
-	user := model.User{}
-	result := s.DB.Where("id = ?", id).Take(&user)
-	if result.Error != nil {
-		return user, errors.New("unable to authenticate user")
-	}
-
-	return user, nil
+	return cu, nil
 }
 
 func (s *Server) DBClient() *database.Database {

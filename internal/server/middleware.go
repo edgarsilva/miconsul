@@ -17,7 +17,7 @@ func LocaleLang(st *session.Store) func(c *fiber.Ctx) error {
 			lang = "es-MX"
 		}
 
-		c.Locals(lang)
+		c.Locals("lang", lang)
 		sess, err := st.Get(c)
 		if err == nil {
 			sess.Set("lang", "es-MX")

@@ -8,8 +8,9 @@ import (
 )
 
 type Clinic struct {
+	ID         string `gorm:"primarykey;default:null;not null" form:"-"`
+	ExtID      string `gorm:"primarykey;default:null;" form:"-"`
 	UserID     string `gorm:"index;default:null;not null"`
-	ExtID      string
 	CoverPic   string
 	ProfilePic string         `form:"profilePic"`
 	Name       string         `gorm:"default:null;not null" form:"name"`

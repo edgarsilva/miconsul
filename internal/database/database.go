@@ -31,7 +31,7 @@ func New(DBPath string) *Database {
 			SlowThreshold:             time.Millisecond * 100, // Slow SQL threshold
 			LogLevel:                  loglevel,               // Log level
 			IgnoreRecordNotFoundError: true,                   // Ignore ErrRecordNotFound error for logger
-			ParameterizedQueries:      true,                   // Don't include params in the SQL log
+			ParameterizedQueries:      false,                  // Don't include params in the SQL log
 			Colorful:                  true,                   // Enable/Disable color
 		},
 	)

@@ -42,7 +42,7 @@ build:
 
 start:
 	@echo "🪿 running migrations with goose"
-	make migrate/up
+	make migrations/up
 	@echo ""
 	@echo "👟 Starting the app..."
 	bin/app
@@ -101,18 +101,22 @@ db/dump-schema:
 db/setup:
 	db/reset
 	db/create
-	migrate/up
+	migrations/up
 
-migrate/up:
+
+migrations/create:
+	${GOPATH}/bin/goose create ${name} sql
+
+migrations/up:
 	${GOPATH}/bin/goose up
 
-migrate/down:
+migrations/down:
 	${GOPATH}/bin/goose down
 
-migrate/status:
+migrations/status:
 	${GOPATH}/bin/goose status
 
-migrate/redo:
+migrations/redo:
 	${GOPATH}/bin/goose redo
 
 .PHONY: all install build start run test clean dev

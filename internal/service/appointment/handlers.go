@@ -4,7 +4,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/edgarsilva/go-scaffold/internal/common"
 	"github.com/edgarsilva/go-scaffold/internal/lib/xid"
 	"github.com/edgarsilva/go-scaffold/internal/model"
 	"github.com/edgarsilva/go-scaffold/internal/view"
@@ -21,38 +20,16 @@ func (s *service) HandleAppointmentsPage(c *fiber.Ctx) error {
 		return c.Redirect("/login")
 	}
 
-	appointments := []model.Appointment{}
-	dbquery := s.DB.Model(model.Appointment{}).Where("user_id = ?", cu.ID)
-
-	patient := model.Patient{
-		UserID: cu.ID,
-	}
 	patientID := c.Query("patientId", "")
-	if patientID != "" {
-		patient.ID = patientID
-		result := s.DB.Model(&patient).Take(&patient)
-		if result.RowsAffected == 1 {
-			c.Locals("patient", patient)
-			dbquery.Where("patient_id", patientID)
-		}
-	}
+	patient, _ := s.GetPatientByID(c, patientID)
+	c.Locals("patient", patient)
 
-	timeframe := c.Query("timeframe", "")
-	switch timeframe {
-	case "day":
-		dbquery.Scopes(model.AppointmentBookedToday)
-	case "week":
-		dbquery.Scopes(model.AppointmentBookedThisWeek)
-	case "month":
-		dbquery.Scopes(model.AppointmentBookedThisMonth)
-	default:
-		dbquery.Where("booked_at > ?", common.BoD(time.Now()))
-	}
+	clinicID := c.Query("clinicId", "")
+	clinic, _ := s.GetClinicByID(c, clinicID)
+	c.Locals("clinic", clinic)
 
-	dbquery.Preload("Clinic").
-		Preload("Patient").
-		Order("booked_at desc").
-		Find(&appointments)
+	timeframe := c.Query("timeframe", "day")
+	appointments, _ := s.GetAppointmentsBy(c, cu, patientID, clinicID, timeframe)
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "")
@@ -60,7 +37,7 @@ func (s *service) HandleAppointmentsPage(c *fiber.Ctx) error {
 		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, "", ""),
 	)
 
-	return view.Render(c, view.AppointmentsPage(appointments, vc))
+	return view.Render(c, view.AppointmentsPage(vc, appointments))
 }
 
 // HandleNewAppointmentPage renders the new appointments form page
@@ -91,7 +68,7 @@ func (s *service) HandleAppointmentPage(c *fiber.Ctx) error {
 		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, "", ""),
 	)
 
-	return view.Render(c, view.AppointmentPage(appointment, patients, clinics, vc))
+	return view.Render(c, view.AppointmentPage(vc, appointment, patients, clinics))
 }
 
 // HandleBeginAppointmentPage renders the appointments page HTML

@@ -17,13 +17,12 @@ func MustAuthenticate(s MWService) func(c *fiber.Ctx) error {
 			switch c.Accepts("text/plain", "application/json", "text/html") {
 			case "text/plain", "application/json":
 				return c.SendStatus(fiber.StatusServiceUnavailable)
-			case "text/html":
-				return c.Redirect("/login")
 			default:
 				return c.Redirect("/login")
 			}
 		}
 
+		c.Locals("current_user", cu)
 		c.Locals("uid", cu.ID)
 		return c.Next()
 	}
@@ -36,8 +35,6 @@ func MustBeAdmin(s MWService) func(c *fiber.Ctx) error {
 			switch c.Accepts("text/plain", "application/json", "text/html") {
 			case "text/plain", "application/json":
 				return c.SendStatus(fiber.StatusServiceUnavailable)
-			case "text/html":
-				return c.Redirect("/login")
 			default:
 				return c.Redirect("/login")
 			}
@@ -50,6 +47,7 @@ func MustBeAdmin(s MWService) func(c *fiber.Ctx) error {
 func MaybeAuthenticate(s MWService) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		cu, _ := Authenticate(s.DBClient(), c)
+		c.Locals("current_user", cu)
 		c.Locals("uid", cu.ID)
 
 		return c.Next()

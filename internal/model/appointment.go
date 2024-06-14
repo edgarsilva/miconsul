@@ -33,6 +33,7 @@ type Appointment struct {
 	RescheduledAt       time.Time      `gorm:"default:null"`
 	DeletedAt           gorm.DeletedAt `gorm:"index"`
 	ModelBase
+	ID           string            `gorm:"primarykey;default:null;not null"`
 	ExtID        string            `form:"extId"`
 	Token        string            `form:"-"`
 	Summary      string            `form:"summary"`
@@ -62,6 +63,7 @@ type Appointment struct {
 
 func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	a.ID = xid.New("apnt")
+
 	return nil
 }
 

@@ -2,31 +2,31 @@ package view
 
 import "github.com/edgarsilva/go-scaffold/internal/model"
 
-templ CmpBadgeStatus(status model.AppointmentStatus, lp *Ctx) {
+templ CmpBadgeStatus(status model.AppointmentStatus, vc *Ctx) {
 	switch status {
 		case "viewed":
 			<div class="badge badge-secondary">
-				{ l(lp.Locale, "str.viewed") }
+				{ l(vc.Locale, "str.viewed") }
 			</div>
 		case "confirmed":
 			<div class="badge badge-success">
-				{ l(lp.Locale, "str.confirmed") }
+				{ l(vc.Locale, "str.confirmed") }
 			</div>
 		case "done":
 			<div class="badge badge-primary">
-				{ l(lp.Locale, "str.done") }
+				{ l(vc.Locale, "str.done") }
 			</div>
 		case "rescheduled":
 			<div class="badge badge-info">
-				{ l(lp.Locale, "str.rescheduled") }
+				{ l(vc.Locale, "str.rescheduled") }
 			</div>
 		case "canceled":
 			<div class="badge badge-warning">
-				{ l(lp.Locale, "str.canceled") }
+				{ l(vc.Locale, "str.canceled") }
 			</div>
 		default:
 			<div class="badge badge-ghost ring-1 ring-base-content/15">
-				{ l(lp.Locale, "str.pending") }
+				{ l(vc.Locale, "str.pending") }
 			</div>
 	}
 }

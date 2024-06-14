@@ -1,6 +1,6 @@
 package view
 
-templ CmpHeader(lp *Ctx) {
+templ CmpHeader(vc *Ctx) {
 	<header id="header" class="relative mb-8 bg-base-100 border-y border-base-content/10" hx-boost="true">
 		<nav id="navbar" class="navbar rounded-lg p-4">
 			<div class="navbar-start self-stretch">
@@ -15,21 +15,21 @@ templ CmpHeader(lp *Ctx) {
 			</div>
 			<div class="navbar-end flex items-center">
 				<div class="hidden md:flex">
-					<a href="/appointments" class="btn btn-ghost text-sm">{ l(lp.Locale, "nav.appointments") }</a>
-					<a href="/clinics" class="btn btn-ghost text-sm">{ l(lp.Locale, "nav.clinics") }</a>
-					<a href="/patients" class="btn btn-ghost text-sm">{ l(lp.Locale, "nav.patients") }</a>
-					<div class="tooltip tooltip-bottom hidden" data-tip={ l(lp.Locale, "str.coming_soon") }>
-						<a href="#" class="btn btn-ghost text-sm text-base-content/35">{ l(lp.Locale, "nav.exp_rev") }</a>
+					<a href="/appointments?timeframe=day" class="btn btn-ghost text-sm">{ l(vc.Locale, "nav.appointments") }</a>
+					<a href="/clinics" class="btn btn-ghost text-sm">{ l(vc.Locale, "nav.clinics") }</a>
+					<a href="/patients" class="btn btn-ghost text-sm">{ l(vc.Locale, "nav.patients") }</a>
+					<div class="tooltip tooltip-bottom hidden" data-tip={ l(vc.Locale, "str.coming_soon") }>
+						<a href="#" class="btn btn-ghost text-sm text-base-content/35">{ l(vc.Locale, "nav.exp_rev") }</a>
 					</div>
 					<div class="divider divider-horizontal"></div>
-					if lp.CurrentUser.IsLoggedIn() {
-						<a class="btn btn-ghost" href="/logout">{ l(lp.Locale, "btn.logout") }</a>
+					if vc.CurrentUser.IsLoggedIn() {
+						<a class="btn btn-ghost" href="/logout">{ l(vc.Locale, "btn.logout") }</a>
 					} else {
-						<a class="btn btn-ghost" href="/login">{ l(lp.Locale, "btn.login") }</a>
+						<a class="btn btn-ghost" href="/login">{ l(vc.Locale, "btn.login") }</a>
 					}
 				</div>
 				<div class="flex-none px-1">
-					@CmpBtnTheme(lp.Theme)
+					@CmpBtnTheme(vc.Theme)
 				</div>
 				<div class="md:hidden divider divider-horizontal"></div>
 				<div class="md:hidden flex-none">

@@ -10,7 +10,7 @@ import (
 
 // Fixed consts used to validate the UID fields
 const (
-	alphabet = "0123456789abcdefghijklmnopqrstuv"
+	avchabet = "0123456789abcdefghijklmnopqrstuv"
 	length   = 20
 )
 
@@ -39,7 +39,7 @@ func Validate(prefix, id string) error {
 		return errors.Errorf("XID should be %d characters long", length)
 	}
 
-	if strings.Trim(id, alphabet) != "" {
+	if strings.Trim(id, avchabet) != "" {
 		return errors.Errorf("XID has invalid characters")
 	}
 

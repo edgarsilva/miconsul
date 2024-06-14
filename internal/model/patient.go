@@ -11,6 +11,7 @@ type Patient struct {
 	Address
 	SocialMedia
 	ModelBase
+	ID                string `gorm:"primarykey;default:null;not null"`
 	ExtID             string
 	Email             string         `form:"email"`
 	Phone             string         `form:"phone"`

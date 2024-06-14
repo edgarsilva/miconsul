@@ -1,6 +1,6 @@
 package view
 
-templ HTMLPage(lp *Ctx) {
+templ HTMLPage(vc *Ctx) {
 	<!DOCTYPE html>
 	<html data-theme="cmyk" x-ref="html">
 		<head>
@@ -10,11 +10,11 @@ templ HTMLPage(lp *Ctx) {
 			<title>Todos</title>
 			<link href="/public/global.css" rel="stylesheet"/>
 			<script src="https://unpkg.com/htmx.org@1.9.9" integrity="sha384-QFjmbokDn2DjBjq+fM+8LUIVrAgqcNW2s0PjAxHETgRn9l4fvX31ZxDxvwQnyMOX" crossorigin="anonymous"></script>
-			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+			<script defer src="https://cdn.jsdelivr.net/npm/avcinejs@3.x.x/dist/cdn.min.js"></script>
 		</head>
 		<body class="flex-grow">
 			{ children... }
-			@GlobalToastRegion(lp)
+			@GlobalToastRegion(vc)
 		</body>
 	</html>
 }
@@ -29,7 +29,7 @@ templ HTMLPageWithApexCharts() {
 			<title>Todos</title>
 			<link href="/public/global.css" rel="stylesheet"/>
 			<script src="https://unpkg.com/htmx.org@1.9.9" integrity="sha384-QFjmbokDn2DjBjq+fM+8LUIVrAgqcNW2s0PjAxHETgRn9l4fvX31ZxDxvwQnyMOX" crossorigin="anonymous"></script>
-			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+			<script defer src="https://cdn.jsdelivr.net/npm/avcinejs@3.x.x/dist/cdn.min.js"></script>
 			<script defer src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 		</head>
 		<body>
@@ -38,28 +38,28 @@ templ HTMLPageWithApexCharts() {
 	</html>
 }
 
-templ Layout(lp *Ctx) {
-	@HTMLPage(lp) {
+templ Layout(vc *Ctx) {
+	@HTMLPage(vc) {
 		<div id="root">
-			@CmpHeader(lp)
+			@CmpHeader(vc)
 			<main id="main" class="grow flex flex-col">
 				{ children... }
 			</main>
-			@CmpFooter(lp)
+			@CmpFooter(vc)
 		</div>
 	}
 }
 
-templ LayoutAuth(lp *Ctx) {
-	@HTMLPage(lp) {
+templ LayoutAuth(vc *Ctx) {
+	@HTMLPage(vc) {
 		<div id="root" class="flex flex-col justify-center py-12 sm:px-6 lg:px-8">
 			{ children... }
 		</div>
 	}
 }
 
-templ LayoutPrimary(lp *Ctx) {
-	@HTMLPage(lp) {
+templ LayoutPrimary(vc *Ctx) {
+	@HTMLPage(vc) {
 		<div id="root" class="flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-primary">
 			{ children... }
 		</div>
