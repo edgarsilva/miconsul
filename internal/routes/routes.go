@@ -92,9 +92,9 @@ func ClinicsRoutes(s *server.Server) {
 	g := c.Group("/clinics", auth.MustAuthenticate(c))
 	g.Get("/", c.HandleClinicsPage)
 	g.Get("/makeaton", auth.MustBeAdmin(c), c.HandleMockManyClinics)
-	g.Get("/:id", c.HandleClinicsPage)
-
 	g.Post("/search", c.HandleClinicSearch)
+	g.Get("/search", c.HandleClinicIndexSearch)
+	g.Get("/:id", c.HandleClinicsPage)
 
 	g.Post("/", c.HandleCreateClinic)
 

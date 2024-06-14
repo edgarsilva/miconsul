@@ -3,7 +3,7 @@ package view
 templ CmpHeader(vc *Ctx) {
 	<header id="header" class="relative mb-8 bg-base-100 border-y border-base-content/10" hx-boost="true">
 		<nav id="navbar" class="navbar rounded-lg p-4">
-			<div class="navbar-start self-stretch">
+			<div class="navbar-start">
 				<a href="/?timeframe=day" class="relative px-2 rounded-xl self-stretch flex items-center text-xl font-semibold hover:ring hover:ring-secondary/35 hover:bg-secondary/10 active:ring">
 					<div class="avatar overflow-hidden mr-2">
 						<div class="h-10">
@@ -14,6 +14,14 @@ templ CmpHeader(vc *Ctx) {
 				</a>
 			</div>
 			<div class="navbar-end flex items-center">
+				<div class="flex gap-2 mr-2">
+					<button class="p-1 hover:outline">
+						@IconSearch("")
+					</button>
+					<kbd class="kbd kbd-sm">ctrl</kbd>
+					+
+					<kbd class="kbd kbd-sm">k</kbd>
+				</div>
 				<div class="hidden md:flex">
 					<a href="/appointments?timeframe=day" class="btn btn-ghost text-sm">{ l(vc.Locale, "nav.appointments") }</a>
 					<a href="/clinics" class="btn btn-ghost text-sm">{ l(vc.Locale, "nav.clinics") }</a>

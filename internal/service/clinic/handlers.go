@@ -31,7 +31,7 @@ func (s *service) HandleClinicsPage(c *fiber.Ctx) error {
 
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
-	return view.Render(c, view.ClinicsPage(clinics, clinic, vc))
+	return view.Render(c, view.ClinicsPage(vc, clinics, clinic))
 }
 
 // HandleCreateClinic inserts a new clinic record for the given user
@@ -66,7 +66,7 @@ func (s *service) HandleCreateClinic(c *fiber.Ctx) error {
 	c.Set("HX-Push-Url", "/clinics/"+clinic.ID)
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
-	return view.Render(c, view.ClinicsPage([]model.Clinic{}, clinic, vc))
+	return view.Render(c, view.ClinicsPage(vc, []model.Clinic{}, clinic))
 }
 
 // HandleUpdateClinic updates a clinic record for the CurrentUser
@@ -156,7 +156,7 @@ func (s *service) HandleClinicSearch(c *fiber.Ctx) error {
 	queryStr := c.FormValue("query", "")
 	clinics := []model.Clinic{}
 
-	dbquery := s.DB.Model(&cu).Limit(5)
+	dbquery := s.DB.Model(&cu)
 	if queryStr != "" {
 		dbquery.Scopes(model.GlobalFTS(queryStr))
 	} else {
@@ -168,6 +168,32 @@ func (s *service) HandleClinicSearch(c *fiber.Ctx) error {
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
 	return view.Render(c, view.ClinicSearchResults(clinics, vc))
+}
+
+// HandleClinicIndexSearch searches patients and returns an HTML fragment to be
+// replacesd in the HTMX active search
+//
+// POST: /clinics/search
+func (s *service) HandleClinicIndexSearch(c *fiber.Ctx) error {
+	cu, err := s.CurrentUser(c)
+	if err != nil {
+		return c.Redirect("/login")
+	}
+
+	term := c.Query("term", "")
+	clinics := []model.Clinic{}
+
+	dbquery := s.DB.Model(&cu)
+	if term != "" {
+		dbquery.Scopes(model.GlobalFTS(term))
+	} else {
+		dbquery.Order("created_at desc")
+	}
+	dbquery.Limit(25).Association("Clinics").Find(&clinics)
+
+	theme := s.SessionUITheme(c)
+	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	return view.Render(c, view.ClinicsList(vc, clinics))
 }
 
 func (s *service) HandleMockManyClinics(c *fiber.Ctx) error {

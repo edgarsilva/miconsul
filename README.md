@@ -69,10 +69,12 @@ using Go, SQLite with GORM, Templ with HTMX and DaisyUI/TailwindCSS:
 - [x] Sep up Goose migrations
 - [x] Minio install for Litestream
 
-[12/Jun/24 - 14/Jun/24]
+[12/Jun/24 - 17/Jun/24]
 
-- [ ] Appointment select day filtering by default
-- [ ] Appointment filtering by clinic
+- [x] Appointment select day filtering by default
+- [x] Appointment filtering by clinic
+- [ ] Clinic index page search
+- [ ] Patient index page search
 - [ ] Appointment add clinic icon
 - [ ] Show favorite clinic in Dashboard
 - [ ] Getting ready for V1

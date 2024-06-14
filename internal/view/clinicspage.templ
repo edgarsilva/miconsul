@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-templ ClinicsPage(clinics []model.Clinic, clinic model.Clinic, vc *Ctx) {
+templ ClinicsPage(vc *Ctx, clinics []model.Clinic, clinic model.Clinic) {
 	@Layout(vc) {
 		if clinic.ID != "" {
 			<div class="px-4 lg:px-8">
@@ -28,10 +28,34 @@ templ ClinicsPage(clinics []model.Clinic, clinic model.Clinic, vc *Ctx) {
 					class="relative"
 				>
 					<hgroup
-						class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
+						class="flex justify-between items-center pb-2 pl-4 sm:pl-0"
 						hx-boost="true"
 					>
-						<h1 class="font-bold text-2xl">{ l(vc.Locale, "str.clinics") }</h1>
+						<div class="flex gap-2 items-baseline">
+							<h1 class="font-bold text-2xl">
+								{ vc.l("str.clinics") }
+							</h1>
+							<label class="input flex items-center gap-2 rounded-full focus:outline">
+								@IconSearch("size-5")
+								<input
+									type="search"
+									name="term"
+									value=""
+									class="grow"
+									required
+									min="3"
+									placeholder={ vc.l("str.search_clinics") }
+									hx-validate="true"
+									hx-get="/clinics/search"
+									hx-target="#clinics_list"
+									hx-swap="outerHTML"
+									hx-trigger="input changed delay:350ms, search"
+								/>
+								<kbd class="kbd kbd-sm">ctrl</kbd>
+								+
+								<kbd class="kbd kbd-sm">k</kbd>
+							</label>
+						</div>
 						<a
 							href="/clinics/new"
 							class="btn btn-primary btn-sm"
@@ -43,7 +67,7 @@ templ ClinicsPage(clinics []model.Clinic, clinic model.Clinic, vc *Ctx) {
 						</a>
 					</hgroup>
 					if (len(clinics) > 0) {
-						@ClinicsList(clinics, vc)
+						@ClinicsList(vc, clinics)
 					} else {
 						@ClinicsEmptyList(vc)
 					}
@@ -53,12 +77,14 @@ templ ClinicsPage(clinics []model.Clinic, clinic model.Clinic, vc *Ctx) {
 	}
 }
 
-templ ClinicsList(clinics []model.Clinic, vc *Ctx) {
-	<ul id="clinics_list" role="list" class="app-card divide-y divide-base-content/10 overflow-hidden px-4 py-2">
-		for _, clinic := range clinics {
-			@ClinicLi(clinic, vc)
-		}
-	</ul>
+templ ClinicsList(vc *Ctx, clinics []model.Clinic) {
+	<section id="clinics_list" role="list" class="app-card overflow-hidden">
+		<ul role="list" class="divide-y divide-base-content/10">
+			for _, clinic := range clinics {
+				@ClinicLi(clinic, vc)
+			}
+		</ul>
+	</section>
 }
 
 templ ClinicLi(clinic model.Clinic, vc *Ctx) {

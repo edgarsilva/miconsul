@@ -43,10 +43,16 @@ func l(lang, key string) string {
 }
 
 func NewCtx(c *fiber.Ctx, props ...Prop) (*Ctx, error) {
+	locI := c.Locals("locale")
+	loc, ok := locI.(string)
+	if !ok {
+		loc = "es-MX"
+	}
+
 	ctx := Ctx{
 		Ctx:         c,
 		CurrentUser: new(DummyUser),
-		Locale:      "es-MX",
+		Locale:      loc,
 		Theme:       "light",
 		Toast: Toast{
 			Msg:   c.Query("toast", ""),

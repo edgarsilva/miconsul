@@ -8,19 +8,20 @@ import (
 func LocaleLang(st *session.Store) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		lang := ""
-		switch c.AcceptsLanguages("en-US", "es-MX", "es-US") {
-		case "es-US", "es-MX":
+
+		switch c.AcceptsLanguages("en-US", "es-MX", "es-US", "en", "es") {
+		case "es-US", "es-MX", "es":
 			lang = "es-MX"
-		case "en-US":
+		case "en-US", "en":
 			lang = "en-US"
 		default:
 			lang = "es-MX"
 		}
 
-		c.Locals("lang", lang)
+		c.Locals("locale", lang)
 		sess, err := st.Get(c)
 		if err == nil {
-			sess.Set("lang", "es-MX")
+			sess.Set("locale", lang)
 		}
 
 		return c.Next()

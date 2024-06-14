@@ -13,7 +13,7 @@ type Sched struct {
 }
 
 func New() (scheduler *Sched, shutdownFn func()) {
-	s, err := gocron.NewScheduler(gocron.WithLogger(gocron.NewLogger(gocron.LogLevelDebug)))
+	s, err := gocron.NewScheduler(gocron.WithLogger(gocron.NewLogger(gocron.LogLevelInfo)))
 	if err != nil {
 		log.Panic("Failed to start gocron scheduler", err.Error())
 	}
