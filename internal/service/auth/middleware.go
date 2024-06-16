@@ -14,11 +14,15 @@ func MustAuthenticate(s MWService) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		cu, err := Authenticate(s.DBClient(), c)
 		if err != nil {
-			switch c.Accepts("text/plain", "application/json", "text/html") {
+			switch c.Accepts("text/html", "text/plain", "application/json") {
 			case "text/plain", "application/json":
 				return c.SendStatus(fiber.StatusServiceUnavailable)
 			default:
-				return c.Redirect("/login")
+				if c.Get("HX-Request") != "true" {
+					return c.Redirect("/login")
+				}
+				c.Set("HX-Redirect", "/login")
+				return c.SendStatus(fiber.StatusUnauthorized)
 			}
 		}
 
@@ -32,10 +36,14 @@ func MustBeAdmin(s MWService) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		cu, err := Authenticate(s.DBClient(), c)
 		if err != nil || cu.Role != model.UserRoleAdmin {
-			switch c.Accepts("text/plain", "application/json", "text/html") {
+			switch c.Accepts("*/*", "text/html", "text/plain", "application/json") {
+			case "*/*", "text/html":
+				c.Set("HX-Redirect", "/login")
+				return c.Redirect("/login")
 			case "text/plain", "application/json":
 				return c.SendStatus(fiber.StatusServiceUnavailable)
 			default:
+				c.Set("HX-Redirect", "/login")
 				return c.Redirect("/login")
 			}
 		}

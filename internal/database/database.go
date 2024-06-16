@@ -20,7 +20,6 @@ type Database struct {
 
 func New(DBPath string) *Database {
 	loglevel := logger.Info
-
 	if os.Getenv("APP_ENV") == "production" {
 		loglevel = logger.Warn
 	}

@@ -23,7 +23,7 @@ templ DashboardPage(vc *Ctx, stats DashboardStats, appointments []model.Appointm
 				<section
 					class="col-span-3 lg:col-span-2 order-2 lg:order-1"
 				>
-					@AppointmentsList(vc, appointments, true)
+					@AppointmentsSection(vc, appointments, true)
 				</section>
 				<section
 					class="col-span-3 lg:col-span-1 order-1 lg:order-2 flex flex-col gap-8"

@@ -10,7 +10,7 @@ testdata_dir = "testdata"
 # Array of commands to run before each build
 pre_cmd = [
 	"go-localize -input locales -output internal/localize",
-	"bunx tailwindcss -i ./styles/global.css -o ./public/global.css",
+	"bunx tailwindcss -i ./styles/global.css -o ./public/global.css --minify",
 	"templ generate",
 ]
 # Just plain old shell command. You could use `make` as well.

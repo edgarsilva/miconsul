@@ -30,7 +30,7 @@ templ AppointmentsPage(vc *Ctx, appointments []model.Appointment) {
 						{ l(vc.Locale, "btn.new") }
 					</a>
 				</hgroup>
-				@AppointmentsList(vc, appointments, false)
+				@AppointmentsSection(vc, appointments, false)
 			</div>
 		</section>
 	}
@@ -52,15 +52,18 @@ templ AppointmentPage(vc *Ctx, appointment model.Appointment, patients []model.P
 	}
 }
 
-templ AppointmentsList(vc *Ctx, appointments []model.Appointment, showTitle bool) {
-	<section class="app-card col-span-2 flex flex-col pt-4">
-		<div class="relative items-center flex justify-between border-b border-base-coentent/10 pb-2" hx-boost="true">
+templ AppointmentsSection(vc *Ctx, appointments []model.Appointment, showTitle bool) {
+	<section id="appointments_section" class="app-card col-span-2 flex flex-col pt-4">
+		<div class="relative items-center flex justify-between border-b border-base-coentent/10 pb-2">
 			<h3 class="font-semibold text-xl flex items-center gap-4">
 				if showTitle {
 					{ l(vc.Locale, "str.appointments") }
 				}
 				if vc.Query("patientId", "") != "" {
-					<a href={ templ.URL(vc.Path() + QueryParams(vc, "patientId=")) } class="badge badge-secondary badge-outline gap-2 hover:bg-secondary hover:text-secondary-content">
+					<a
+						href={ templ.URL(vc.Path() + QueryParams(vc, "patientId=")) }
+						class="badge badge-secondary badge-outline gap-2 hover:bg-secondary hover:text-secondary-content"
+					>
 						if patient, ok := vc.Locals("patient").(model.Patient); ok {
 							{ patient.Email }
 						}
@@ -68,7 +71,10 @@ templ AppointmentsList(vc *Ctx, appointments []model.Appointment, showTitle bool
 					</a>
 				}
 				if vc.Query("clinicId", "") != "" {
-					<a href={ templ.URL(vc.Path() + QueryParams(vc, "clinicId=")) } class="badge badge-secondary badge-outline gap-2 hover:bg-secondary hover:text-secondary-content">
+					<a
+						href={ templ.URL(vc.Path() + QueryParams(vc, "clinicId=")) }
+						class="badge badge-secondary badge-outline gap-2 hover:bg-secondary hover:text-secondary-content"
+					>
 						if clinic, ok := vc.Locals("clinic").(model.Clinic); ok {
 							{ clinic.Name }
 						}
@@ -89,34 +95,48 @@ templ AppointmentsList(vc *Ctx, appointments []model.Appointment, showTitle bool
 				</ul>
 			</details>
 			<div class="lg:block">
-				<nav class="flex gap-2" aria-label="Tabs">
+				<nav
+					class="flex gap-2"
+					aria-label="Tabs"
+					hx-swap="outerHTML"
+					hx-target="closest section"
+					hx-select="#appointments_section"
+				>
 					<a
-						href={ templ.URL(vc.Path() + QueryParams(vc, "timeframe=day")) }
 						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium",
-            templ.KV("bg-secondary/35 text-secondary-content", vc.Query("timeframe", "day") == "day") }
+              templ.KV("bg-secondary/35 text-secondary-content", vc.Query("timeframe", "day") == "day") }
+						href={ templ.URL(vc.Path() + QueryParams(vc, "timeframe=day")) }
+						hx-get={ vc.Path() + QueryParams(vc, "timeframe=day") }
 					>{ l(vc.Locale, "nav.my_day") }</a>
 					<a
+						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium",
+              templ.KV("bg-secondary/15 text-secondary-content", vc.Query("timeframe") == "week") }
 						href={ templ.URL(vc.Path() + QueryParams(vc, "timeframe=week")) }
-						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/15 text-secondary-content", vc.Query("timeframe") == "week") }
-						aria-current="page"
+						hx-get={ vc.Path() + QueryParams(vc, "timeframe=week") }
 					>{ l(vc.Locale, "nav.my_week") }</a>
 					<a
+						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium",
+              templ.KV("bg-secondary/15 text-secondary-content", vc.Query("timeframe") == "month") }
 						href={ templ.URL(vc.Path() + QueryParams(vc, "timeframe=month")) }
-						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium", templ.KV("bg-secondary/15 text-secondary-content", vc.Query("timeframe") == "month") }
+						hx-get={ vc.Path() + QueryParams(vc, "timeframe=month") }
 					>{ l(vc.Locale, "nav.my_month") }</a>
 				</nav>
 			</div>
 		</div>
 		if (len(appointments) > 0) {
-			<ul class="divide-y divide-base-content-10 text-sm leading-6" hx-boost="true">
-				for _, appointment := range appointments {
-					@AppointmentLi(vc, appointment)
-				}
-			</ul>
+			@AppointmentsList(vc, appointments)
 		} else {
 			@AppointmentsEmptyList(vc)
 		}
 	</section>
+}
+
+templ AppointmentsList(vc *Ctx, appointments []model.Appointment) {
+	<ul id="appointments_list" class="divide-y divide-base-content-10 text-sm leading-6" hx-boost="true">
+		for _, appointment := range appointments {
+			@AppointmentLi(vc, appointment)
+		}
+	</ul>
 }
 
 templ AppointmentLi(vc *Ctx, appointment model.Appointment) {
@@ -212,7 +232,7 @@ templ AppointmentActions(appointment model.Appointment, vc *Ctx) {
 }
 
 templ AppointmentsEmptyList(vc *Ctx) {
-	<div class="flex mt-4">
+	<div id="appointments_list" class="flex mt-4">
 		<a href="/appointments/new" class="relative block w-full rounded-lg border-2 border-dashed border-base-content/10 p-12 text-center hover:border-base-content/30 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
 			@IconHeroOutlineCalendar("mx-auto w-12 h-12 text-base-content/30")
 			<span class="mt-2 block text-sm font-semibold">{ l(vc.Locale, "str.create_new_appointment") }</span>

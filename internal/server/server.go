@@ -4,6 +4,7 @@ package server
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/edgarsilva/go-scaffold/internal/backgroundjob"
 	"github.com/edgarsilva/go-scaffold/internal/database"
@@ -15,6 +16,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/etag"
 	"github.com/gofiber/fiber/v2/middleware/favicon"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
+	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/monitor"
 	"github.com/gofiber/fiber/v2/middleware/recover"
@@ -45,6 +47,10 @@ func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjo
 
 	fiberApp.Use(logger.New())
 
+	if os.Getenv("APP_ENV") == "production" {
+		fiberApp.Use(helmet.New(helmetConfig()))
+	}
+
 	// Initialize recover middleware to catch panics that might
 	// stop the application
 	fiberApp.Use(recover.New())
@@ -73,7 +79,14 @@ func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjo
 	// Adds req language to the session adds local("lang")
 	fiberApp.Use(LocaleLang(sessionStore))
 
-	fiberApp.Static("/public", "./public")
+	fiberApp.Static("/public", "./public", fiber.Static{
+		Compress:      true,
+		ByteRange:     true,
+		Browse:        false,
+		Index:         "",
+		CacheDuration: 300 * time.Second,
+		MaxAge:        3600,
+	})
 
 	return &Server{
 		App:          fiberApp,

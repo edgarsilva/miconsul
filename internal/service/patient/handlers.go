@@ -32,7 +32,7 @@ func (s *service) HandlePatientsPage(c *fiber.Ctx) error {
 	}
 
 	patients := []model.Patient{}
-	s.DB.Model(&cu).Limit(25).Association("Patients").Find(&patients)
+	s.DB.Model(&cu).Limit(20).Association("Patients").Find(&patients)
 	return view.Render(c, view.PatientsPage(patients, vc))
 }
 

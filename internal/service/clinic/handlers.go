@@ -20,6 +20,23 @@ func (s *service) HandleClinicsPage(c *fiber.Ctx) error {
 		return c.Redirect("/login")
 	}
 
+	clinics := []model.Clinic{}
+	s.DB.Model(&model.Clinic{}).Limit(20).Find(&clinics)
+
+	theme := s.SessionUITheme(c)
+	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	return view.Render(c, view.ClinicsPage(vc, clinics))
+}
+
+// HandleClinicPage renders the clinics page HTML
+//
+// GET: /clinics/:id
+func (s *service) HandleClinicPage(c *fiber.Ctx) error {
+	cu, err := s.CurrentUser(c)
+	if err != nil {
+		return c.Redirect("/login")
+	}
+
 	id := c.Params("id", "")
 	clinic := model.Clinic{}
 	clinic.ID = id
@@ -27,11 +44,11 @@ func (s *service) HandleClinicsPage(c *fiber.Ctx) error {
 		s.DB.Model(&model.Clinic{}).First(&clinic)
 	}
 	clinics := []model.Clinic{}
-	s.DB.Model(&model.Clinic{}).Limit(25).Find(&clinics)
+	s.DB.Model(&model.Clinic{}).Limit(20).Find(&clinics)
 
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
-	return view.Render(c, view.ClinicsPage(vc, clinics, clinic))
+	return view.Render(c, view.ClinicPage(vc, clinic))
 }
 
 // HandleCreateClinic inserts a new clinic record for the given user
@@ -66,7 +83,7 @@ func (s *service) HandleCreateClinic(c *fiber.Ctx) error {
 	c.Set("HX-Push-Url", "/clinics/"+clinic.ID)
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
-	return view.Render(c, view.ClinicsPage(vc, []model.Clinic{}, clinic))
+	return view.Render(c, view.ClinicPage(vc, clinic))
 }
 
 // HandleUpdateClinic updates a clinic record for the CurrentUser
@@ -189,7 +206,7 @@ func (s *service) HandleClinicIndexSearch(c *fiber.Ctx) error {
 	} else {
 		dbquery.Order("created_at desc")
 	}
-	dbquery.Limit(25).Association("Clinics").Find(&clinics)
+	dbquery.Limit(20).Association("Clinics").Find(&clinics)
 
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))

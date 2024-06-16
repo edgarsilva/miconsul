@@ -11,9 +11,6 @@ docker/build:
 docker/run:
 	docker run -e PORT=3000 -p 3000:3000 --name miconsul-app go-containerized:latest
 
-docker/start:
-	docker start miconsul-app
-
 docker/stop:
 	docker stop miconsul-app
 
@@ -28,6 +25,8 @@ install:
 	~/.bun/bin/bun add -D tailwindcss
 	~/.bun/bin/bun add -D daisyui@latest
 	~/.bun/bin/bun add -D @tailwindcss/typography
+	@echo "🪿 installing goose"
+	go install github.com/pressly/goose/v3/cmd/goose@latest
 	@echo "🛕 installing Templ"
 	go install github.com/a-h/templ/cmd/templ@latest
 

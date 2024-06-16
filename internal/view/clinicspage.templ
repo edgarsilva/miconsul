@@ -5,75 +5,75 @@ import (
 	"strconv"
 )
 
-templ ClinicsPage(vc *Ctx, clinics []model.Clinic, clinic model.Clinic) {
+templ ClinicsPage(vc *Ctx, clinics []model.Clinic) {
 	@Layout(vc) {
-		if clinic.ID != "" {
-			<div class="px-4 lg:px-8">
-				@CmpBtnBack(l(vc.Locale, "btn.back"), "/clinics")
-			</div>
-			<section id="clinic_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
-				if clinic.ID == "" || clinic.ID == "new" {
-					<h1 class="px-4 sm:px-0 font-bold text-2xl pb-0 w-full">{ l(vc.Locale, "str.new_clinic") }</h1>
-				} else {
-					<h1 class="px-4 sm:px-0 font-bold text-2xl pb-0 w-full">{ l(vc.Locale, "str.edit_clinic") }</h1>
-				}
-				@ClinicProfile(clinic, vc)
-			</section>
-		} else {
-			<div class="px-4 lg:px-8">
-				@CmpBtnBack(l(vc.Locale, "btn.back"), "/")
-			</div>
-			<section class="grow flex flex-col px-0 sm:px-4 py-8 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
-				<div
-					class="relative"
+		<div class="px-4 lg:px-8">
+			@CmpBtnBack(l(vc.Locale, "btn.back"), "/")
+		</div>
+		<section class="grow flex flex-col px-0 sm:px-4 py-8 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
+			<div
+				class="relative"
+			>
+				<hgroup
+					class="flex justify-between items-center pb-2 pl-4 sm:pl-0"
+					hx-boost="true"
 				>
-					<hgroup
-						class="flex justify-between items-center pb-2 pl-4 sm:pl-0"
-						hx-boost="true"
+					<div class="flex gap-2 items-baseline">
+						<h1 class="font-bold text-2xl">
+							{ vc.l("str.clinics") }
+						</h1>
+						<label class="input flex items-center gap-2 rounded-full focus:outline">
+							@IconSearch("size-5")
+							<input
+								type="search"
+								name="term"
+								value=""
+								class="grow"
+								required
+								placeholder={ vc.l("str.search_clinics") }
+								hx-get="/clinics/search"
+								hx-target="#clinics_list"
+								hx-swap="outerHTML"
+								hx-trigger="input changed delay:350ms, search"
+							/>
+							<kbd class="kbd kbd-sm">ctrl</kbd>
+							+
+							<kbd class="kbd kbd-sm">k</kbd>
+						</label>
+					</div>
+					<a
+						href="/clinics/new"
+						class="btn btn-primary btn-sm"
 					>
-						<div class="flex gap-2 items-baseline">
-							<h1 class="font-bold text-2xl">
-								{ vc.l("str.clinics") }
-							</h1>
-							<label class="input flex items-center gap-2 rounded-full focus:outline">
-								@IconSearch("size-5")
-								<input
-									type="search"
-									name="term"
-									value=""
-									class="grow"
-									required
-									min="3"
-									placeholder={ vc.l("str.search_clinics") }
-									hx-validate="true"
-									hx-get="/clinics/search"
-									hx-target="#clinics_list"
-									hx-swap="outerHTML"
-									hx-trigger="input changed delay:350ms, search"
-								/>
-								<kbd class="kbd kbd-sm">ctrl</kbd>
-								+
-								<kbd class="kbd kbd-sm">k</kbd>
-							</label>
-						</div>
-						<a
-							href="/clinics/new"
-							class="btn btn-primary btn-sm"
-						>
-							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-								<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"></path>
-							</svg>
-							{ l(vc.Locale, "btn.new") }
-						</a>
-					</hgroup>
-					if (len(clinics) > 0) {
-						@ClinicsList(vc, clinics)
-					} else {
-						@ClinicsEmptyList(vc)
-					}
-				</div>
-			</section>
-		}
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"></path>
+						</svg>
+						{ l(vc.Locale, "btn.new") }
+					</a>
+				</hgroup>
+				if (len(clinics) > 0) {
+					@ClinicsList(vc, clinics)
+				} else {
+					@ClinicsEmptyList(vc)
+				}
+			</div>
+		</section>
+	}
+}
+
+templ ClinicPage(vc *Ctx, clinic model.Clinic) {
+	@Layout(vc) {
+		<div class="px-4 lg:px-8">
+			@CmpBtnBack(l(vc.Locale, "btn.back"), "/clinics")
+		</div>
+		<section id="clinic_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
+			if clinic.ID == "" || clinic.ID == "new" {
+				<h1 class="px-4 sm:px-0 font-bold text-2xl pb-0 w-full">{ l(vc.Locale, "str.new_clinic") }</h1>
+			} else {
+				<h1 class="px-4 sm:px-0 font-bold text-2xl pb-0 w-full">{ l(vc.Locale, "str.edit_clinic") }</h1>
+			}
+			@ClinicProfile(clinic, vc)
+		</section>
 	}
 }
 
@@ -249,22 +249,22 @@ templ ClinicProfile(clinic model.Clinic, vc *Ctx) {
 							</div>
 						</div>
 						<div class="sm:col-span-4">
-							<label for="email" class="block text-sm font-medium leading-6 text-base-content">{ l(vc.Locale, "str.phone") }</label>
+							<label for="phone" class="block text-sm font-medium leading-6 text-base-content">{ l(vc.Locale, "str.phone") }</label>
 							<div class="mt-2">
 								<input required type="text" name="phone" value={ clinic.Phone } id="phone" autocomplete="phone" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 						<div class="col-span-full">
-							<label for="cover-photo" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.cover_photo") }</label>
+							<label for="file_upload" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.cover_photo") }</label>
 							<div class="mt-2 flex justify-center rounded-lg border border-dashed border-base-content/25 px-6 py-10">
 								<div class="text-center">
 									<svg class="mx-auto h-12 w-12 text-base-content/60" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
 										<path fill-rule="evenodd" d="M1.5 6a2.25 2.25 0 012.25-2.25h16.5A2.25 2.25 0 0122.5 6v12a2.25 2.25 0 01-2.25 2.25H3.75A2.25 2.25 0 011.5 18V6zM3 16.06V18c0 .414.336.75.75.75h16.5A.75.75 0 0021 18v-1.94l-2.69-2.689a1.5 1.5 0 00-2.12 0l-.88.879.97.97a.75.75 0 11-1.06 1.06l-5.16-5.159a1.5 1.5 0 00-2.12 0L3 16.061zm10.125-7.81a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0z" clip-rule="evenodd"></path>
 									</svg>
 									<div class="mt-4 flex text-sm leading-6 text-base-content/60">
-										<label for="file-upload" class="relative link link-primary font-semibold leading-6">
+										<label for="file_upload" class="relative link link-primary font-semibold leading-6">
 											<span>{ l(vc.Locale, "str.upload_file") }</span>
-											<input id="file-upload" name="profilePic" type="file" class="sr-only"/>
+											<input id="file_upload" name="profilePic" type="file" class="sr-only"/>
 										</label>
 										<p class="pl-1">{ l(vc.Locale, "str.or_drag_and_drop") }</p>
 									</div>
@@ -290,34 +290,34 @@ templ ClinicProfile(clinic model.Clinic, vc *Ctx) {
 				<div class="px-4 py-6 sm:p-8">
 					<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
 						<div class="col-span-full">
-							<label for="street-address" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.address_street") }</label>
+							<label for="address_line1" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.address_street") }</label>
 							<div class="mt-2">
 								<input type="text" name="addressLine1" value={ clinic.Address.Line1 } id="address_line1" autocomplete="street-address" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-2 sm:col-start-1">
-							<label for="city" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.address_city") }</label>
+							<label for="address_city" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.address_city") }</label>
 							<div class="mt-2">
 								<input type="text" name="addressCity" value={ clinic.Address.City } id="address_city" autocomplete="address-level2" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-2">
-							<label for="region" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.address_state") }</label>
+							<label for="address_state" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.address_state") }</label>
 							<div class="mt-2">
 								<input type="text" name="addressState" value={ clinic.Address.State } id="address_state" autocomplete="address-level1" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-2">
-							<label for="postal-code" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.address_zip_code") }</label>
+							<label for="address_zip_code" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.address_zip_code") }</label>
 							<div class="mt-2">
 								<input type="text" name="addressZipCode" value={ clinic.Address.Zip } id="address_zip_code" autocomplete="postal-code" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 					</div>
 					<div class="sm:col-span-4">
-						<label for="country" class="block text-sm font-medium leading-6 text-base-content">{ l(vc.Locale, "str.address_country") }</label>
+						<label for="address_country" class="block text-sm font-medium leading-6 text-base-content">{ l(vc.Locale, "str.address_country") }</label>
 						<div class="mt-2">
-							<select id="country" name="addressCountry" autocomplete="country-name" class="select select-bordered block w-full">
+							<select id="address_country" name="addressCountry" autocomplete="country-name" class="select select-bordered block w-full">
 								@CountryOption("none", "none", clinic.Country)
 								@CountryOption("Mexico", "Mexico", clinic.Country)
 								@CountryOption("United States", "United States", clinic.Country)

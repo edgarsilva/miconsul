@@ -7,9 +7,9 @@ templ HTMLPage(vc *Ctx) {
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
 			<meta name="color-scheme" content="light dark"/>
-			<title>Todos</title>
+			<title>Miconsul</title>
 			<link href="/public/global.css" rel="stylesheet"/>
-			<script src="https://unpkg.com/htmx.org@1.9.9" integrity="sha384-QFjmbokDn2DjBjq+fM+8LUIVrAgqcNW2s0PjAxHETgRn9l4fvX31ZxDxvwQnyMOX" crossorigin="anonymous"></script>
+			<script defer src="https://unpkg.com/htmx.org@1.9.9" integrity="sha384-QFjmbokDn2DjBjq+fM+8LUIVrAgqcNW2s0PjAxHETgRn9l4fvX31ZxDxvwQnyMOX" crossorigin="anonymous"></script>
 			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.0/dist/cdn.min.js"></script>
 		</head>
 		<body class="flex-grow">
@@ -41,7 +41,7 @@ templ HTMLPageWithApexCharts() {
 templ Layout(vc *Ctx) {
 	@HTMLPage(vc) {
 		<div id="root">
-			@CmpHeader(vc)
+			@CmpNavbar(vc)
 			<main id="main" class="grow flex flex-col">
 				{ children... }
 			</main>
