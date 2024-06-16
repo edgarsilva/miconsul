@@ -107,18 +107,21 @@ templ AppointmentsSection(vc *Ctx, appointments []model.Appointment, showTitle b
               templ.KV("bg-secondary/35 text-secondary-content", vc.Query("timeframe", "day") == "day") }
 						href={ templ.URL(vc.Path() + QueryParams(vc, "timeframe=day")) }
 						hx-get={ vc.Path() + QueryParams(vc, "timeframe=day") }
+						hx-push-url={ vc.Path() + QueryParams(vc, "timeframe=day") }
 					>{ l(vc.Locale, "nav.my_day") }</a>
 					<a
 						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium",
               templ.KV("bg-secondary/15 text-secondary-content", vc.Query("timeframe") == "week") }
 						href={ templ.URL(vc.Path() + QueryParams(vc, "timeframe=week")) }
 						hx-get={ vc.Path() + QueryParams(vc, "timeframe=week") }
+						hx-push-url={ vc.Path() + QueryParams(vc, "timeframe=week") }
 					>{ l(vc.Locale, "nav.my_week") }</a>
 					<a
 						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium",
               templ.KV("bg-secondary/15 text-secondary-content", vc.Query("timeframe") == "month") }
 						href={ templ.URL(vc.Path() + QueryParams(vc, "timeframe=month")) }
 						hx-get={ vc.Path() + QueryParams(vc, "timeframe=month") }
+						hx-push-url={ vc.Path() + QueryParams(vc, "timeframe=month") }
 					>{ l(vc.Locale, "nav.my_month") }</a>
 				</nav>
 			</div>
