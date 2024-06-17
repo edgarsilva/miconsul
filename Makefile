@@ -84,6 +84,7 @@ clean:
 
 db/create:
 	touch database/app.sqlite
+	migrations/up
 
 db/reset:
 	@read -p "Do you want to reset the DB (you'll loose all data)? [y/n] " choice; \
@@ -103,19 +104,19 @@ db/setup:
 	migrations/up
 
 
-migrations/create:
+db/create_migration:
 	${GOPATH}/bin/goose create ${name} sql
 
-migrations/up:
-	${GOPATH}/bin/goose up
-
-migrations/down:
-	${GOPATH}/bin/goose down
-
-migrations/status:
+db/status:
 	${GOPATH}/bin/goose status
 
-migrations/redo:
+db/migrate:
+	${GOPATH}/bin/goose up
+
+db/rollback:
+	${GOPATH}/bin/goose down
+
+db/redo:
 	${GOPATH}/bin/goose redo
 
 .PHONY: all install build start run test clean dev

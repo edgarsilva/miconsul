@@ -1,9 +1,9 @@
 package appointment
 
 import (
-	"strconv"
 	"time"
 
+	"github.com/edgarsilva/go-scaffold/internal/common"
 	"github.com/edgarsilva/go-scaffold/internal/lib/xid"
 	"github.com/edgarsilva/go-scaffold/internal/model"
 	"github.com/edgarsilva/go-scaffold/internal/view"
@@ -124,11 +124,6 @@ func (s *service) HandleCreateAppointment(c *fiber.Ctx) error {
 	}
 
 	priceValue := c.FormValue("price", "")
-	price := 0
-	if priceValue != "" {
-		pricef, _ := strconv.ParseFloat(priceValue, 64)
-		price = int(pricef * 100)
-	}
 
 	appointment := model.Appointment{
 		Token:        xid.New("tkn_"),
@@ -139,7 +134,7 @@ func (s *service) HandleCreateAppointment(c *fiber.Ctx) error {
 		BookedDay:    bookedAt.Day(),
 		BookedHour:   bookedAt.Hour(),
 		BookedMinute: bookedAt.Minute(),
-		Price:        price,
+		Price:        common.StrToAmount(priceValue),
 	}
 	c.BodyParser(&appointment)
 
@@ -190,17 +185,10 @@ func (s *service) HandleUpdateAppointment(c *fiber.Ctx) error {
 		bookedAt = time.Now()
 	}
 
-	priceValue := c.FormValue("price", "")
-	price := 0
-	if priceValue != "" {
-		pricef, _ := strconv.ParseFloat(priceValue, 64)
-		price = int(pricef * 100)
-	}
-
 	appointment := model.Appointment{
 		UserID:   cu.ID,
 		BookedAt: bookedAt,
-		Price:    price,
+		Price:    common.StrToAmount(c.FormValue("price", "")),
 	}
 	c.BodyParser(&appointment)
 
@@ -430,4 +418,54 @@ func (s *service) HandlePatientChangeDate(c *fiber.Ctx) error {
 	}
 
 	return c.SendString("A new date for your appointment has been requested.")
+}
+
+// HandlePriceFrg renders the price input based on clinic selected
+//
+// GET: /appointments/new
+func (s *service) HandlePriceFrg(c *fiber.Ctx) error {
+	cu, err := s.CurrentUser(c)
+	if err != nil {
+		return c.Redirect("/login")
+	}
+
+	id := c.Params("id", "")
+	clinic := model.Clinic{
+		UserID: cu.ID,
+		ID:     id,
+	}
+
+	s.DB.Model(&clinic).Select("id", "price").Take(&clinic)
+
+	toast := c.Query("toast", "")
+	vc, _ := view.NewCtx(c, view.WithToast(toast, "", ""))
+
+	return view.Render(c, view.ApptPrice(vc, model.Appointment{}, clinic, false))
+}
+
+// HandleSearchClinics searches clinics and returns an HTML fragment to be
+// replacesd in the HTMX active search
+//
+// POST: /clinics/search
+func (s *service) HandleSearchClinics(c *fiber.Ctx) error {
+	cu, err := s.CurrentUser(c)
+	if err != nil {
+		return c.Redirect("/login")
+	}
+
+	queryStr := c.FormValue("query", "")
+	clinics := []model.Clinic{}
+
+	dbquery := s.DB.Model(&cu)
+	if queryStr != "" {
+		dbquery.Scopes(model.GlobalFTS(queryStr))
+	} else {
+		dbquery.Order("created_at desc")
+	}
+	dbquery.Limit(10).Association("Clinics").Find(&clinics)
+
+	// time.Sleep(time.Second * 2)
+	theme := s.SessionUITheme(c)
+	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	return view.Render(c, view.ClinicSearchResults(vc, clinics))
 }

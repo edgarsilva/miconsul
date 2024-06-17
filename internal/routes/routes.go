@@ -93,7 +93,6 @@ func ClinicsRoutes(s *server.Server) {
 	g.Get("/", c.HandleClinicsPage)
 	g.Get("/makeaton", auth.MustBeAdmin(c), c.HandleMockManyClinics)
 	g.Get("/search", c.HandleClinicsIndexSearch)
-	g.Post("/search", c.HandleClinicSearch)
 	g.Get("/:id", c.HandleClinicPage)
 
 	g.Post("/", c.HandleCreateClinic)
@@ -151,6 +150,8 @@ func AppointmentRoutes(s *server.Server) {
 	g.Get("/", a.HandleAppointmentsPage)
 	g.Get("/", a.HandleAppointmentsPage)
 	g.Get("/new", a.HandleAppointmentPage)
+	g.Get("/new/pricefrg/:id", a.HandlePriceFrg)
+	g.Post("/searchclinics", a.HandleSearchClinics)
 	g.Get("/:id", a.HandleAppointmentsPage)
 	g.Get("/:id/begin", a.HandleAppointmentBeginPage)
 	g.Post("/:id/done", a.HandleAppointmentDone)

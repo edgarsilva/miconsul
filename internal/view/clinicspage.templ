@@ -250,13 +250,33 @@ templ ClinicProfile(clinic model.Clinic, vc *Ctx) {
 						<div class="sm:col-span-2 flex flex-col">
 							<label for="favorite" class="block text-sm font-medium leading-6 text-base-content">{ l(vc.Locale, "str.favorite") }</label>
 							<div class="flex items-center grow">
-								<input required type="checkbox" name="favorite" value={ strconv.FormatBool(clinic.Favorite) } id="favorite" class="toggle toggle-warning"/>
+								<input type="checkbox" name="favorite" value={ strconv.FormatBool(clinic.Favorite) } id="favorite" class="toggle toggle-warning"/>
 							</div>
 						</div>
 						<div class="sm:col-span-4">
 							<label for="phone" class="block text-sm font-medium leading-6 text-base-content">{ l(vc.Locale, "str.phone") }</label>
 							<div class="mt-2">
 								<input required type="text" name="phone" value={ clinic.Phone } id="phone" autocomplete="phone" class="input input-bordered block w-full"/>
+							</div>
+						</div>
+						<div class="sm:col-span-3">
+							<label for="price" class="block text-sm font-medium leading-6 text-base-content">{ vc.l("str.appt_price") }</label>
+							<div class="mt-2">
+								<input
+									required
+									type="number"
+									id="price"
+									name="price"
+									min="1"
+									max="100000"
+									step="0.01"
+									if clinic.Price == 0 {
+										value="0.00"
+									} else {
+										value={ clinic.PriceInputValue() }
+									}
+									class="input input-bordered block w-full"
+								/>
 							</div>
 						</div>
 						<div class="col-span-full">

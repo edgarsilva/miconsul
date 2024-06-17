@@ -62,6 +62,7 @@ func (s *service) HandleCreateClinic(c *fiber.Ctx) error {
 
 	clinic := model.Clinic{
 		UserID: cu.ID,
+		Price:  common.StrToAmount(c.FormValue("price", "")),
 	}
 	c.BodyParser(&clinic)
 
@@ -107,6 +108,7 @@ func (s *service) HandleUpdateClinic(c *fiber.Ctx) error {
 
 	clinic := model.Clinic{
 		UserID: cu.ID,
+		Price:  common.StrToAmount(c.FormValue("price", "")),
 	}
 	c.BodyParser(&clinic)
 	path, err := SaveProfilePicToDisk(c, clinic)
@@ -158,33 +160,6 @@ func (s *service) HandleDeleteClinic(c *fiber.Ctx) error {
 
 	c.Set("HX-Location", "/clinics")
 	return c.SendStatus(fiber.StatusOK)
-}
-
-// HandleClinicSearch searches patients and returns an HTML fragment to be
-// replacesd in the HTMX active search
-//
-// POST: /clinics/search
-func (s *service) HandleClinicSearch(c *fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return c.Redirect("/login")
-	}
-
-	queryStr := c.FormValue("query", "")
-	clinics := []model.Clinic{}
-
-	dbquery := s.DB.Model(&cu)
-	if queryStr != "" {
-		dbquery.Scopes(model.GlobalFTS(queryStr))
-	} else {
-		dbquery.Order("created_at desc")
-	}
-	dbquery.Limit(10).Association("Clinics").Find(&clinics)
-
-	// time.Sleep(time.Second * 2)
-	theme := s.SessionUITheme(c)
-	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
-	return view.Render(c, view.ClinicSearchResults(clinics, vc))
 }
 
 // HandleClinicIndexSearch searches patients and returns an HTML fragment to be

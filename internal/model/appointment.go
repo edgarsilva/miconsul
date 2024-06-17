@@ -67,7 +67,7 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
-func (a *Appointment) InputPriceValue() string {
+func (a *Appointment) PriceInputValue() string {
 	v := strconv.FormatFloat(float64(a.Price/100), 'f', 1, 32)
 
 	return v

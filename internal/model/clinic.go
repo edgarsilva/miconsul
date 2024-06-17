@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/edgarsilva/go-scaffold/internal/lib/xid"
 	"gorm.io/gorm"
@@ -17,12 +18,12 @@ type Clinic struct {
 	Email      string         `form:"email"`
 	Phone      string         `form:"phone"`
 	DeletedAt  gorm.DeletedAt `gorm:"index"`
-	Price      int            `form:"-"`
 	Address
 	SocialMedia
 	ModelBase
 	User     User
 	Favorite bool `form:"favorite"`
+	Price    int  `form:"-"`
 }
 
 func (c *Clinic) BeforeCreate(tx *gorm.DB) error {
@@ -60,4 +61,10 @@ func (c Clinic) Initials() string {
 	}
 
 	return string([]rune(c.Name)[0:2])
+}
+
+func (c *Clinic) PriceInputValue() string {
+	v := strconv.FormatFloat(float64(c.Price/100), 'f', 1, 32)
+
+	return v
 }

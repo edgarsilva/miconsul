@@ -306,26 +306,7 @@ templ AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.P
 									/>
 								</div>
 							</div>
-							<div class="sm:col-span-3">
-								<label for="price" class="block text-sm font-medium leading-6 text-base-content">{ l(vc.Locale, "str.price") }</label>
-								<div class="mt-2">
-									<input
-										required
-										type="number"
-										id="price"
-										name="price"
-										min="1"
-										max="100000"
-										step="0.01"
-										if appointment.Price == 0 {
-											value="0.00"
-										} else {
-											value={ appointment.InputPriceValue() }
-										}
-										class="input input-bordered block w-full"
-									/>
-								</div>
-							</div>
+							@ApptPrice(vc, appointment, model.Clinic{}, false)
 							<div class="col-span-full mt-2">
 								<label class="relative flex gap-x-3">
 									<input
@@ -355,6 +336,29 @@ templ AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.P
 	</div>
 }
 
+templ ApptPrice(vc *Ctx, appointment model.Appointment, clinic model.Clinic, swapOOB bool) {
+	<div id="appt_price" class="sm:col-span-3" hx-swap-oob={ strconv.FormatBool(swapOOB) }>
+		<label for="price" class="block text-sm font-medium leading-6 text-base-content">{ l(vc.Locale, "str.price") }</label>
+		<div class="mt-2">
+			<input
+				required
+				type="number"
+				id="price"
+				name="price"
+				min="1"
+				max="100000"
+				step="0.01"
+				if appointment.Price == 0 {
+					value={ clinic.PriceInputValue() }
+				} else {
+					value={ appointment.PriceInputValue() }
+				}
+				class="input input-bordered block w-full"
+			/>
+		</div>
+	</div>
+}
+
 templ ClinicSearch(vc *Ctx, clinics []model.Clinic) {
 	<section class="p-4 md:p-6 bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
 		<span class="absolute top-2 right-2 loading loading-ring text-primary loading-md htmx-indicator"></span>
@@ -374,23 +378,25 @@ templ ClinicSearch(vc *Ctx, clinics []model.Clinic) {
 				type="search"
 				name="query"
 				placeholder={ l(vc.Locale, "str.search_clinics") }
-				hx-post="/clinics/search"
+				hx-post="/appointments/searchclinics"
 				hx-trigger="input changed delay:300ms, search"
 				hx-target="#clinic_search_results"
 				hx-indicator=".htmx-indicator"
 			/>
 		</label>
 		<div class="max-h-72 overflow-y-auto pr-2 -mr-2">
-			@ClinicSearchResults(clinics, vc)
+			@ClinicSearchResults(vc, clinics)
 		</div>
 	</section>
 }
 
-templ ClinicSearchResults(clinics []model.Clinic, vc *Ctx) {
+templ ClinicSearchResults(vc *Ctx, clinics []model.Clinic) {
 	<ul
 		id="clinic_search_results"
 		role="list"
 		class="divide-y divide-base-content/10"
+		hx-target="#appt_price"
+		hx-swap="outerHTML"
 	>
 		for i, clinic := range clinics {
 			<li>
@@ -411,6 +417,8 @@ templ ClinicSearchResults(clinics []model.Clinic, vc *Ctx) {
 						if i == 0 {
 							checked
 						}
+						hx-get={ "/appointments/new/pricefrg/" + clinic.ID }
+						hx-trigger="click"
 					/>
 				</label>
 			</li>
@@ -421,6 +429,9 @@ templ ClinicSearchResults(clinics []model.Clinic, vc *Ctx) {
 			</li>
 		}
 	</ul>
+	if len(clinics) > 0 {
+		@ApptPrice(vc, model.Appointment{}, clinics[0], true)
+	}
 }
 
 templ PatientSearch(vc *Ctx, patients []model.Patient) {
