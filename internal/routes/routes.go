@@ -92,8 +92,8 @@ func ClinicsRoutes(s *server.Server) {
 	g := c.Group("/clinics", auth.MustAuthenticate(c))
 	g.Get("/", c.HandleClinicsPage)
 	g.Get("/makeaton", auth.MustBeAdmin(c), c.HandleMockManyClinics)
+	g.Get("/search", c.HandleClinicsIndexSearch)
 	g.Post("/search", c.HandleClinicSearch)
-	g.Get("/search", c.HandleClinicIndexSearch)
 	g.Get("/:id", c.HandleClinicPage)
 
 	g.Post("/", c.HandleCreateClinic)
@@ -119,9 +119,10 @@ func PatientRoutes(s *server.Server) {
 	g := p.Group("/patients", auth.MustAuthenticate(p))
 	g.Get("/", p.HandlePatientsPage)
 	g.Get("/makeaton", auth.MustBeAdmin(p), p.HandleMockManyPatients)
-	g.Get("/:id", p.HandlePatientFormPage)
-
+	g.Get("/search", p.HandlePatientsIndexSearch)
 	g.Post("/search", p.HandlePatientSearch)
+
+	g.Get("/:id", p.HandlePatientFormPage)
 
 	g.Post("/", p.HandleCreatePatient)
 
@@ -148,9 +149,10 @@ func AppointmentRoutes(s *server.Server) {
 
 	g := a.Group("/appointments", auth.MustAuthenticate(s))
 	g.Get("/", a.HandleAppointmentsPage)
+	g.Get("/", a.HandleAppointmentsPage)
 	g.Get("/new", a.HandleAppointmentPage)
 	g.Get("/:id", a.HandleAppointmentsPage)
-	g.Get("/:id/Begin", a.HandleAppointmentBeginPage)
+	g.Get("/:id/begin", a.HandleAppointmentBeginPage)
 	g.Post("/:id/done", a.HandleAppointmentDone)
 	g.Post("/:id/cancel", a.HandleAppointmentCancel)
 

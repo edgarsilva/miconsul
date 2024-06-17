@@ -7,21 +7,49 @@ import (
 
 templ PatientsPage(patients []model.Patient, vc *Ctx) {
 	@Layout(vc) {
-		<div class="px-4 lg:px-8">
+		<div class="hidden md:block px-4 lg:px-8">
 			@CmpBtnBack(l(vc.Locale, "btn.back"), "/")
 		</div>
-		<section class="grow flex flex-col px-0 sm:px-4 py-8 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
+		<section id="patients_section" class="grow flex flex-col px-0 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<div
 				class="relative"
 			>
-				<hgroup
-					class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
-					hx-boost="true"
-				>
-					<h1 class="font-bold text-2xl">{ l(vc.Locale, "str.patients") }</h1>
+				<hgroup class="md:flex md:justify-between md:items-center pb-4 px-2 md:px-0 w-full" hx-boost="true">
+					<div class="md:flex md:gap-2 items-baseline w-full md:justify-between md:pr-4">
+						<h1 class="flex w-full md:w-auto font-bold text-2xl mb-4 md:mb-0">
+							{ vc.l("str.patients") }
+							<a
+								href="/patients/new"
+								class="ml-auto btn btn-primary btn-sm md:hidden"
+							>
+								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"></path>
+								</svg>
+								{ l(vc.Locale, "btn.new") }
+							</a>
+						</h1>
+						<label class="input flex items-center gap-2 rounded-full focus:outline">
+							@IconSearch("size-5")
+							<input
+								type="search"
+								name="term"
+								value=""
+								class="grow"
+								required
+								placeholder={ vc.l("str.search_patients") }
+								hx-get="/patients/search"
+								hx-target="#patients_list"
+								hx-swap="outerHTML"
+								hx-trigger="input changed delay:350ms, search"
+							/>
+							<kbd class="kbd kbd-sm">ctrl</kbd>
+							+
+							<kbd class="kbd kbd-sm">k</kbd>
+						</label>
+					</div>
 					<a
 						href="/patients/new"
-						class="btn btn-primary btn-sm"
+						class="hidden md:flex btn btn-primary btn-sm"
 					>
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
 							<path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z"></path>
@@ -30,7 +58,7 @@ templ PatientsPage(patients []model.Patient, vc *Ctx) {
 					</a>
 				</hgroup>
 				if (len(patients) > 0) {
-					@PatientsList(patients, vc)
+					@PatientsList(vc, patients)
 				} else {
 					@PatientsEmptyList(vc)
 				}
@@ -67,7 +95,7 @@ templ PatientFormPage(patient model.Patient, vc *Ctx) {
 	}
 }
 
-templ PatientsList(patients []model.Patient, vc *Ctx) {
+templ PatientsList(vc *Ctx, patients []model.Patient) {
 	<ul id="patients_list" role="list" class="app-card divide-y divide-base-content/10 overflow-hidden px-4 py-2">
 		for _, patient := range patients {
 			@PatientLi(patient, vc)

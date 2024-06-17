@@ -15,12 +15,11 @@ templ CmpNavbar(vc *Ctx) {
 			</div>
 			<div class="navbar-end flex items-center">
 				<div class="flex gap-2 mr-2">
-					<button class="p-1 hover:outline">
+					<button class="p-1 hover:outline rounded-xl">
 						@IconSearch("")
 					</button>
-					<kbd class="kbd kbd-sm">ctrl</kbd>
-					+
-					<kbd class="kbd kbd-sm">k</kbd>
+					<kbd class="hidden md:kbd md:kbd-sm">ctrl</kbd>
+					<kbd class="hidden md:kbd md:kbd-sm">k</kbd>
 				</div>
 				<div class="hidden md:flex">
 					<a href="/appointments?timeframe=day" class="btn btn-ghost text-sm">{ l(vc.Locale, "nav.appointments") }</a>
@@ -39,7 +38,7 @@ templ CmpNavbar(vc *Ctx) {
 				<div class="flex-none px-1">
 					@CmpBtnTheme(vc.Theme)
 				</div>
-				<div class="md:hidden divider divider-horizontal"></div>
+				<div class="md:hidden divider divider-horizontal mx-0"></div>
 				<div class="md:hidden flex-none">
 					<button class="btn btn-square btn-ghost">
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-5 h-5 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>

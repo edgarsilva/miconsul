@@ -36,6 +36,30 @@ func (s *service) HandlePatientsPage(c *fiber.Ctx) error {
 	return view.Render(c, view.PatientsPage(patients, vc))
 }
 
+// HandlePatientsIndexSearch GlobalFTS search for patients index page.
+//
+// GET: /patients/search
+func (s *service) HandlePatientsIndexSearch(c *fiber.Ctx) error {
+	cu, err := s.CurrentUser(c)
+	if err != nil {
+		return c.Redirect("/login")
+	}
+
+	term := c.Query("term", "")
+	patients := []model.Patient{}
+
+	s.DB.
+		Model(&cu).
+		Scopes(model.GlobalFTS(term)).
+		Limit(20).
+		Association("Patients").
+		Find(&patients)
+
+	theme := s.SessionUITheme(c)
+	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	return view.Render(c, view.PatientsList(vc, patients))
+}
+
 // HandlePatientFormPage renders the patients page HTML
 //
 // GET: /patients/:id

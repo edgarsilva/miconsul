@@ -191,7 +191,7 @@ func (s *service) HandleClinicSearch(c *fiber.Ctx) error {
 // replacesd in the HTMX active search
 //
 // POST: /clinics/search
-func (s *service) HandleClinicIndexSearch(c *fiber.Ctx) error {
+func (s *service) HandleClinicsIndexSearch(c *fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
 		return c.Redirect("/login")
@@ -200,13 +200,12 @@ func (s *service) HandleClinicIndexSearch(c *fiber.Ctx) error {
 	term := c.Query("term", "")
 	clinics := []model.Clinic{}
 
-	dbquery := s.DB.Model(&cu)
-	if term != "" {
-		dbquery.Scopes(model.GlobalFTS(term))
-	} else {
-		dbquery.Order("created_at desc")
-	}
-	dbquery.Limit(20).Association("Clinics").Find(&clinics)
+	s.DB.
+		Model(&cu).
+		Scopes(model.GlobalFTS(term)).
+		Limit(20).
+		Association("Clinics").
+		Find(&clinics)
 
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))

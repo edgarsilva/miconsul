@@ -14,13 +14,19 @@ templ ClinicsPage(vc *Ctx, clinics []model.Clinic) {
 			<div
 				class="relative"
 			>
-				<hgroup
-					class="flex justify-between items-center pb-2 pl-4 sm:pl-0"
-					hx-boost="true"
-				>
-					<div class="flex gap-2 items-baseline">
-						<h1 class="font-bold text-2xl">
+				<hgroup class="md:flex md:justify-between md:items-center pb-4 px-2 md:px-0 w-full" hx-boost="true">
+					<div class="md:flex md:gap-2 items-baseline w-full md:justify-between md:pr-4">
+						<h1 class="flex w-full md:w-auto font-bold text-2xl mb-4 md:mb-0">
 							{ vc.l("str.clinics") }
+							<a
+								href="/clinics/new"
+								class="ml-auto btn btn-primary btn-sm md:hidden"
+							>
+								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"></path>
+								</svg>
+								{ l(vc.Locale, "btn.new") }
+							</a>
 						</h1>
 						<label class="input flex items-center gap-2 rounded-full focus:outline">
 							@IconSearch("size-5")
@@ -36,14 +42,13 @@ templ ClinicsPage(vc *Ctx, clinics []model.Clinic) {
 								hx-swap="outerHTML"
 								hx-trigger="input changed delay:350ms, search"
 							/>
-							<kbd class="kbd kbd-sm">ctrl</kbd>
-							+
-							<kbd class="kbd kbd-sm">k</kbd>
+							<kbd class="hidden kbd kbd-sm md:flex">ctrl</kbd>
+							<kbd class="hidden kbd kbd-sm md:flex">k</kbd>
 						</label>
 					</div>
 					<a
 						href="/clinics/new"
-						class="btn btn-primary btn-sm"
+						class="hidden md:flex btn btn-primary btn-sm"
 					>
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
 							<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"></path>

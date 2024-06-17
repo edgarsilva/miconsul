@@ -54,7 +54,7 @@ templ AppointmentPage(vc *Ctx, appointment model.Appointment, patients []model.P
 
 templ AppointmentsSection(vc *Ctx, appointments []model.Appointment, showTitle bool) {
 	<section id="appointments_section" class="app-card col-span-2 flex flex-col pt-4">
-		<div class="relative items-center flex justify-between border-b border-base-coentent/10 pb-2">
+		<div class="relative items-center flex justify-between border-b border-base-content/10 pb-2">
 			<h3 class="font-semibold text-xl flex items-center gap-4">
 				if showTitle {
 					{ l(vc.Locale, "str.appointments") }
@@ -150,7 +150,7 @@ templ AppointmentLi(vc *Ctx, appointment model.Appointment) {
 		<div class="flex-auto">
 			<hgroup class="flex items-center gap-2">
 				<a href={ templ.URL("/appointments" + QueryParams(vc, "patientId="+appointment.PatientID)) } class="link link-hover">
-					<h3 class="pr-10 font-semibold text-base-content xl:pr-0">
+					<h3 class="font-semibold text-base-content xl:pr-0">
 						{ appointment.Patient.Name() }
 					</h3>
 				</a>
@@ -307,20 +307,20 @@ templ AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.P
 								</div>
 							</div>
 							<div class="sm:col-span-3">
-								<label for="cost" class="block text-sm font-medium leading-6 text-base-content">{ l(vc.Locale, "str.cost") }</label>
+								<label for="price" class="block text-sm font-medium leading-6 text-base-content">{ l(vc.Locale, "str.price") }</label>
 								<div class="mt-2">
 									<input
 										required
 										type="number"
-										id="cost"
-										name="cost"
+										id="price"
+										name="price"
 										min="1"
 										max="100000"
 										step="0.01"
-										if appointment.Cost == 0 {
+										if appointment.Price == 0 {
 											value="0.00"
 										} else {
-											value={ appointment.InputCostValue() }
+											value={ appointment.InputPriceValue() }
 										}
 										class="input input-bordered block w-full"
 									/>

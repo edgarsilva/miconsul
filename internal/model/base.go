@@ -130,6 +130,10 @@ func countries() []Country {
 //		 Order("bm25(global_fts, 0, 1, 2, 3)")
 func GlobalFTS(term string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
+		if term == "" {
+			return db.Order("created_at desc")
+		}
+
 		return db.
 			Joins("INNER JOIN global_fts ON gid = id").
 			Where("global_fts MATCH ?", "\""+term+"\" * ").

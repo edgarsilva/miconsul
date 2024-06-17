@@ -51,7 +51,7 @@ type Appointment struct {
 	User         User
 	Patient      Patient
 	Duration     int `form:"duration"`
-	Cost         int `form:"-"`
+	Price        int `form:"-"`
 	BookedYear   int
 	BookedMonth  int
 	BookedDay    int
@@ -67,8 +67,8 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
-func (a *Appointment) InputCostValue() string {
-	v := strconv.FormatFloat(float64(a.Cost/100), 'f', 1, 32)
+func (a *Appointment) InputPriceValue() string {
+	v := strconv.FormatFloat(float64(a.Price/100), 'f', 1, 32)
 
 	return v
 }

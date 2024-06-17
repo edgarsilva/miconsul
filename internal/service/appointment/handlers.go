@@ -123,11 +123,11 @@ func (s *service) HandleCreateAppointment(c *fiber.Ctx) error {
 		bookedAt = time.Now()
 	}
 
-	costValue := c.FormValue("cost", "")
-	cost := 0
-	if costValue != "" {
-		costf, _ := strconv.ParseFloat(costValue, 64)
-		cost = int(costf * 100)
+	priceValue := c.FormValue("price", "")
+	price := 0
+	if priceValue != "" {
+		pricef, _ := strconv.ParseFloat(priceValue, 64)
+		price = int(pricef * 100)
 	}
 
 	appointment := model.Appointment{
@@ -139,7 +139,7 @@ func (s *service) HandleCreateAppointment(c *fiber.Ctx) error {
 		BookedDay:    bookedAt.Day(),
 		BookedHour:   bookedAt.Hour(),
 		BookedMinute: bookedAt.Minute(),
-		Cost:         cost,
+		Price:        price,
 	}
 	c.BodyParser(&appointment)
 
@@ -190,17 +190,17 @@ func (s *service) HandleUpdateAppointment(c *fiber.Ctx) error {
 		bookedAt = time.Now()
 	}
 
-	costValue := c.FormValue("cost", "")
-	cost := 0
-	if costValue != "" {
-		costf, _ := strconv.ParseFloat(costValue, 64)
-		cost = int(costf * 100)
+	priceValue := c.FormValue("price", "")
+	price := 0
+	if priceValue != "" {
+		pricef, _ := strconv.ParseFloat(priceValue, 64)
+		price = int(pricef * 100)
 	}
 
 	appointment := model.Appointment{
 		UserID:   cu.ID,
 		BookedAt: bookedAt,
-		Cost:     cost,
+		Price:    price,
 	}
 	c.BodyParser(&appointment)
 

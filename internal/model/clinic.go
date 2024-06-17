@@ -17,6 +17,7 @@ type Clinic struct {
 	Email      string         `form:"email"`
 	Phone      string         `form:"phone"`
 	DeletedAt  gorm.DeletedAt `gorm:"index"`
+	Price      int            `form:"-"`
 	Address
 	SocialMedia
 	ModelBase
