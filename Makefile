@@ -41,7 +41,7 @@ build:
 
 start:
 	@echo "🪿 running migrations with goose"
-	make migrations/up
+	make db/migrate
 	@echo ""
 	@echo "👟 Starting the app..."
 	bin/app
@@ -84,7 +84,7 @@ clean:
 
 db/create:
 	touch database/app.sqlite
-	migrations/up
+	db/migrate
 
 db/reset:
 	@read -p "Do you want to reset the DB (you'll loose all data)? [y/n] " choice; \
@@ -101,7 +101,7 @@ db/dump-schema:
 db/setup:
 	db/reset
 	db/create
-	migrations/up
+	db/migrate
 
 
 db/create_migration:
