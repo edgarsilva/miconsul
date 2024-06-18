@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/edgarsilva/go-scaffold/internal/lib/xid"
-	"github.com/edgarsilva/go-scaffold/internal/mailer"
-	"github.com/edgarsilva/go-scaffold/internal/model"
-	"github.com/edgarsilva/go-scaffold/internal/view"
+	"github.com/edgarsilva/miconsul/internal/lib/xid"
+	"github.com/edgarsilva/miconsul/internal/mailer"
+	"github.com/edgarsilva/miconsul/internal/model"
+	"github.com/edgarsilva/miconsul/internal/view"
 
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"

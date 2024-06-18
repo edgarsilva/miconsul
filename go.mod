@@ -1,4 +1,4 @@
-module github.com/edgarsilva/go-scaffold
+module miconsul
 
 go 1.21.4
 

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"os"
 
-	"github.com/edgarsilva/go-scaffold/internal/model"
+	"github.com/edgarsilva/miconsul/internal/model"
 	"gopkg.in/gomail.v2"
 )
 

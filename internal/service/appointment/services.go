@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/edgarsilva/go-scaffold/internal/common"
-	"github.com/edgarsilva/go-scaffold/internal/mailer"
-	"github.com/edgarsilva/go-scaffold/internal/model"
-	"github.com/edgarsilva/go-scaffold/internal/server"
+	"github.com/edgarsilva/miconsul/internal/common"
+	"github.com/edgarsilva/miconsul/internal/mailer"
+	"github.com/edgarsilva/miconsul/internal/model"
+	"github.com/edgarsilva/miconsul/internal/server"
 	"github.com/gofiber/fiber/v2"
 )
 

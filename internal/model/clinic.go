@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/edgarsilva/go-scaffold/internal/lib/xid"
+	"github.com/edgarsilva/miconsul/internal/lib/xid"
 	"gorm.io/gorm"
 )
 

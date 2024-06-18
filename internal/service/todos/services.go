@@ -3,8 +3,8 @@ package todos
 import (
 	"strings"
 
-	"github.com/edgarsilva/go-scaffold/internal/model"
-	"github.com/edgarsilva/go-scaffold/internal/server"
+	"github.com/edgarsilva/miconsul/internal/model"
+	"github.com/edgarsilva/miconsul/internal/server"
 )
 
 type service struct {

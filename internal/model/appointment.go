@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/edgarsilva/go-scaffold/internal/common"
-	"github.com/edgarsilva/go-scaffold/internal/lib/xid"
+	"github.com/edgarsilva/miconsul/internal/common"
+	"github.com/edgarsilva/miconsul/internal/lib/xid"
 	"gorm.io/gorm"
 )
 

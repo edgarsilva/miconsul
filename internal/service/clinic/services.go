@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/edgarsilva/go-scaffold/internal/model"
-	"github.com/edgarsilva/go-scaffold/internal/server"
+	"github.com/edgarsilva/miconsul/internal/model"
+	"github.com/edgarsilva/miconsul/internal/server"
 	"github.com/gofiber/fiber/v2"
 )
 

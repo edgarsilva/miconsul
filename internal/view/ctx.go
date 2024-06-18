@@ -3,7 +3,7 @@ package view
 import (
 	"errors"
 
-	"github.com/edgarsilva/go-scaffold/internal/localize"
+	"github.com/edgarsilva/miconsul/internal/localize"
 	"github.com/gofiber/fiber/v2"
 )
 

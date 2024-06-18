@@ -1,17 +1,17 @@
 package routes
 
 import (
-	"github.com/edgarsilva/go-scaffold/internal/server"
-	"github.com/edgarsilva/go-scaffold/internal/service/appointment"
-	"github.com/edgarsilva/go-scaffold/internal/service/auth"
-	"github.com/edgarsilva/go-scaffold/internal/service/blog"
-	"github.com/edgarsilva/go-scaffold/internal/service/clinic"
-	"github.com/edgarsilva/go-scaffold/internal/service/counter"
-	"github.com/edgarsilva/go-scaffold/internal/service/dashboard"
-	"github.com/edgarsilva/go-scaffold/internal/service/patient"
-	"github.com/edgarsilva/go-scaffold/internal/service/theme"
-	"github.com/edgarsilva/go-scaffold/internal/service/todos"
-	"github.com/edgarsilva/go-scaffold/internal/service/users"
+	"github.com/edgarsilva/miconsul/internal/server"
+	"github.com/edgarsilva/miconsul/internal/service/appointment"
+	"github.com/edgarsilva/miconsul/internal/service/auth"
+	"github.com/edgarsilva/miconsul/internal/service/blog"
+	"github.com/edgarsilva/miconsul/internal/service/clinic"
+	"github.com/edgarsilva/miconsul/internal/service/counter"
+	"github.com/edgarsilva/miconsul/internal/service/dashboard"
+	"github.com/edgarsilva/miconsul/internal/service/patient"
+	"github.com/edgarsilva/miconsul/internal/service/theme"
+	"github.com/edgarsilva/miconsul/internal/service/todos"
+	"github.com/edgarsilva/miconsul/internal/service/users"
 )
 
 type Router struct {

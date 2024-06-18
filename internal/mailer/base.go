@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/edgarsilva/go-scaffold/internal/localize"
+	"github.com/edgarsilva/miconsul/internal/localize"
 )
 
 const fontFamily = "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\""

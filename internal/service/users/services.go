@@ -1,7 +1,7 @@
 package users
 
 import (
-	"github.com/edgarsilva/go-scaffold/internal/server"
+	"github.com/edgarsilva/miconsul/internal/server"
 )
 
 type service struct {

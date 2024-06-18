@@ -4,12 +4,12 @@ import (
 	"log"
 	"os"
 
-	"github.com/edgarsilva/go-scaffold/internal/backgroundjob"
-	"github.com/edgarsilva/go-scaffold/internal/database"
-	"github.com/edgarsilva/go-scaffold/internal/localize"
-	"github.com/edgarsilva/go-scaffold/internal/routes"
-	"github.com/edgarsilva/go-scaffold/internal/server"
-	"github.com/edgarsilva/go-scaffold/internal/workerpool"
+	"github.com/edgarsilva/miconsul/internal/backgroundjob"
+	"github.com/edgarsilva/miconsul/internal/database"
+	"github.com/edgarsilva/miconsul/internal/localize"
+	"github.com/edgarsilva/miconsul/internal/routes"
+	"github.com/edgarsilva/miconsul/internal/server"
+	"github.com/edgarsilva/miconsul/internal/workerpool"
 
 	"github.com/joho/godotenv"
 )

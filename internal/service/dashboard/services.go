@@ -3,10 +3,10 @@ package dashboard
 import (
 	"time"
 
-	"github.com/edgarsilva/go-scaffold/internal/common"
-	"github.com/edgarsilva/go-scaffold/internal/model"
-	"github.com/edgarsilva/go-scaffold/internal/server"
-	"github.com/edgarsilva/go-scaffold/internal/view"
+	"github.com/edgarsilva/miconsul/internal/common"
+	"github.com/edgarsilva/miconsul/internal/model"
+	"github.com/edgarsilva/miconsul/internal/server"
+	"github.com/edgarsilva/miconsul/internal/view"
 )
 
 type service struct {
