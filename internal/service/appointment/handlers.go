@@ -467,5 +467,6 @@ func (s *service) HandleSearchClinics(c *fiber.Ctx) error {
 	// time.Sleep(time.Second * 2)
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
-	return view.Render(c, view.ClinicSearchResults(vc, clinics))
+
+	return view.Render(c, view.ApptSearchClinicsFrg(vc, clinics))
 }

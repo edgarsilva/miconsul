@@ -31,7 +31,7 @@ install:
 	go install github.com/a-h/templ/cmd/templ@latest
 
 build:
-	@echo "📦 Building"
+	@echo "📦 Building"p
 	@echo "🌬️ Generating Tailwind CSS styles..."
 	~/.bun/bin/bunx tailwindcss -i ./styles/global.css -o ./public/global.css --minify
 	@echo "🛕 Generating Templ files..."

@@ -337,7 +337,13 @@ templ AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.P
 }
 
 templ ApptPrice(vc *Ctx, appointment model.Appointment, clinic model.Clinic, swapOOB bool) {
-	<div id="appt_price" class="sm:col-span-3" hx-swap-oob={ strconv.FormatBool(swapOOB) }>
+	<div
+		id="appt_price"
+		class="sm:col-span-3"
+		if swapOOB {
+			hx-swap-oob="true"
+		}
+	>
 		<label for="price" class="block text-sm font-medium leading-6 text-base-content">{ l(vc.Locale, "str.price") }</label>
 		<div class="mt-2">
 			<input
@@ -380,17 +386,18 @@ templ ClinicSearch(vc *Ctx, clinics []model.Clinic) {
 				placeholder={ l(vc.Locale, "str.search_clinics") }
 				hx-post="/appointments/searchclinics"
 				hx-trigger="input changed delay:300ms, search"
+				hx-select="#clinic_search_results"
 				hx-target="#clinic_search_results"
 				hx-indicator=".htmx-indicator"
 			/>
 		</label>
 		<div class="max-h-72 overflow-y-auto pr-2 -mr-2">
-			@ClinicSearchResults(vc, clinics)
+			@ApptSearchClinicsResults(vc, clinics)
 		</div>
 	</section>
 }
 
-templ ClinicSearchResults(vc *Ctx, clinics []model.Clinic) {
+templ ApptSearchClinicsResults(vc *Ctx, clinics []model.Clinic) {
 	<ul
 		id="clinic_search_results"
 		role="list"
@@ -429,6 +436,10 @@ templ ClinicSearchResults(vc *Ctx, clinics []model.Clinic) {
 			</li>
 		}
 	</ul>
+}
+
+templ ApptSearchClinicsFrg(vc *Ctx, clinics []model.Clinic) {
+	@ApptSearchClinicsResults(vc, clinics)
 	if len(clinics) > 0 {
 		@ApptPrice(vc, model.Appointment{}, clinics[0], true)
 	}
