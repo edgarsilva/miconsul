@@ -3,12 +3,11 @@ package auth
 import (
 	"errors"
 	"fmt"
+	"miconsul/internal/lib/xid"
+	"miconsul/internal/mailer"
+	"miconsul/internal/model"
+	"miconsul/internal/view"
 	"time"
-
-	"github.com/edgarsilva/miconsul/internal/lib/xid"
-	"github.com/edgarsilva/miconsul/internal/mailer"
-	"github.com/edgarsilva/miconsul/internal/model"
-	"github.com/edgarsilva/miconsul/internal/view"
 
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"

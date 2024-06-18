@@ -1,7 +1,7 @@
 package users
 
 import (
-	"github.com/edgarsilva/miconsul/internal/server"
+	"miconsul/internal/server"
 )
 
 type service struct {

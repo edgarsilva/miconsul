@@ -3,13 +3,14 @@ package server
 
 import (
 	"fmt"
+	"miconsul/internal/backgroundjob"
+	"miconsul/internal/database"
+	"miconsul/internal/localize"
+	mw "miconsul/internal/middleware"
+	"miconsul/internal/model"
 	"os"
 	"time"
 
-	"github.com/edgarsilva/miconsul/internal/backgroundjob"
-	"github.com/edgarsilva/miconsul/internal/database"
-	"github.com/edgarsilva/miconsul/internal/localize"
-	"github.com/edgarsilva/miconsul/internal/model"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/encryptcookie"
@@ -77,7 +78,7 @@ func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjo
 	fiberApp.Use(healthcheck.New())
 
 	// Adds req language to the session adds local("lang")
-	fiberApp.Use(LocaleLang(sessionStore))
+	fiberApp.Use(mw.LocaleLang(sessionStore))
 
 	fiberApp.Static("/public", "./public", fiber.Static{
 		Compress:      true,

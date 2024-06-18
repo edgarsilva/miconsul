@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/edgarsilva/miconsul/internal/lib/xid"
+	"miconsul/internal/lib/xid"
 	"gorm.io/gorm"
 )
 

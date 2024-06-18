@@ -3,7 +3,7 @@ package counter
 import (
 	"strconv"
 
-	"github.com/edgarsilva/miconsul/internal/view"
+	"miconsul/internal/view"
 
 	"github.com/gofiber/fiber/v2"
 )

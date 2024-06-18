@@ -3,8 +3,8 @@ package todos
 import (
 	"strconv"
 
-	"github.com/edgarsilva/miconsul/internal/model"
-	"github.com/edgarsilva/miconsul/internal/view"
+	"miconsul/internal/model"
+	"miconsul/internal/view"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"

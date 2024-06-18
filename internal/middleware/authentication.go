@@ -2,12 +2,11 @@ package middleware
 
 import (
 	"errors"
+	"miconsul/internal/database"
+	"miconsul/internal/model"
 	"os"
 	"strings"
-	"time"
 
-	"github.com/edgarsilva/miconsul/internal/database"
-	"github.com/edgarsilva/miconsul/internal/model"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -64,21 +63,6 @@ func authenticateWithJWT(DB *database.Database, tokenStr string) (model.User, er
 	}
 
 	return user, nil
-}
-
-// JWTCreateToken returns a JWT token string for the sub and uid, optionally error
-func JWTCreateToken(sub, uid string) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
-		"sub": sub,
-		"uid": uid,
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
-	})
-	tokenStr, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-	if err != nil {
-		return "", err
-	}
-
-	return tokenStr, nil
 }
 
 // JWTValidateToken returns the uid string from the JWT claims if valid, and an

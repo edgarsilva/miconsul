@@ -3,7 +3,7 @@ package users
 import (
 	"strconv"
 
-	"github.com/edgarsilva/miconsul/internal/model"
+	"miconsul/internal/model"
 	"github.com/gofiber/fiber/v2"
 	"syreclabs.com/go/faker"
 )

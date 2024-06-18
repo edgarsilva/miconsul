@@ -3,10 +3,10 @@ package appointment
 import (
 	"time"
 
-	"github.com/edgarsilva/miconsul/internal/common"
-	"github.com/edgarsilva/miconsul/internal/lib/xid"
-	"github.com/edgarsilva/miconsul/internal/model"
-	"github.com/edgarsilva/miconsul/internal/view"
+	"miconsul/internal/common"
+	"miconsul/internal/lib/xid"
+	"miconsul/internal/model"
+	"miconsul/internal/view"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )

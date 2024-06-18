@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/edgarsilva/miconsul/internal/model"
-	"github.com/edgarsilva/miconsul/internal/server"
+	"miconsul/internal/model"
+	"miconsul/internal/server"
 	"github.com/gofiber/fiber/v2"
 )
 

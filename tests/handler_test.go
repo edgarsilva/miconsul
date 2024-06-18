@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/edgarsilva/miconsul/internal/server"
-	"github.com/edgarsilva/miconsul/internal/service/counter"
+	"miconsul/internal/server"
+	"miconsul/internal/service/counter"
 
 	"github.com/gofiber/fiber/v2"
 )

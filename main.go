@@ -2,14 +2,13 @@ package main
 
 import (
 	"log"
+	"miconsul/internal/backgroundjob"
+	"miconsul/internal/database"
+	"miconsul/internal/localize"
+	"miconsul/internal/routes"
+	"miconsul/internal/server"
+	"miconsul/internal/workerpool"
 	"os"
-
-	"github.com/edgarsilva/miconsul/internal/backgroundjob"
-	"github.com/edgarsilva/miconsul/internal/database"
-	"github.com/edgarsilva/miconsul/internal/localize"
-	"github.com/edgarsilva/miconsul/internal/routes"
-	"github.com/edgarsilva/miconsul/internal/server"
-	"github.com/edgarsilva/miconsul/internal/workerpool"
 
 	"github.com/joho/godotenv"
 )

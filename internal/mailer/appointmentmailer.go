@@ -6,7 +6,7 @@ import (
 	"errors"
 	"os"
 
-	"github.com/edgarsilva/miconsul/internal/model"
+	"miconsul/internal/model"
 	"gopkg.in/gomail.v2"
 )
 

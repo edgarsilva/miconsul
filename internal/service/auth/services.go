@@ -2,13 +2,15 @@ package auth
 
 import (
 	"errors"
+	"miconsul/internal/mailer"
+	"miconsul/internal/model"
+	"miconsul/internal/server"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/edgarsilva/miconsul/internal/mailer"
-	"github.com/edgarsilva/miconsul/internal/model"
-	"github.com/edgarsilva/miconsul/internal/server"
+	"github.com/golang-jwt/jwt/v5"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -179,4 +181,19 @@ func (s service) resetPasswordVerifyToken(token string) (email string, err error
 	}
 
 	return user.Email, nil
+}
+
+// JWTCreateToken returns a JWT token string for the sub and uid, optionally error
+func JWTCreateToken(sub, uid string) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
+		"sub": sub,
+		"uid": uid,
+		"exp": time.Now().Add(time.Hour * 24).Unix(),
+	})
+	tokenStr, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenStr, nil
 }

@@ -3,8 +3,8 @@ package todos
 import (
 	"strings"
 
-	"github.com/edgarsilva/miconsul/internal/model"
-	"github.com/edgarsilva/miconsul/internal/server"
+	"miconsul/internal/model"
+	"miconsul/internal/server"
 )
 
 type service struct {

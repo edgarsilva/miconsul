@@ -3,10 +3,10 @@ package dashboard
 import (
 	"time"
 
-	"github.com/edgarsilva/miconsul/internal/common"
-	"github.com/edgarsilva/miconsul/internal/model"
-	"github.com/edgarsilva/miconsul/internal/server"
-	"github.com/edgarsilva/miconsul/internal/view"
+	"miconsul/internal/common"
+	"miconsul/internal/model"
+	"miconsul/internal/server"
+	"miconsul/internal/view"
 )
 
 type service struct {

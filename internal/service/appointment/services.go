@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/edgarsilva/miconsul/internal/common"
-	"github.com/edgarsilva/miconsul/internal/mailer"
-	"github.com/edgarsilva/miconsul/internal/model"
-	"github.com/edgarsilva/miconsul/internal/server"
+	"miconsul/internal/common"
+	"miconsul/internal/mailer"
+	"miconsul/internal/model"
+	"miconsul/internal/server"
 	"github.com/gofiber/fiber/v2"
 )
 

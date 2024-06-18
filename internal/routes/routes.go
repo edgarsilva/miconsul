@@ -1,17 +1,18 @@
 package routes
 
 import (
-	"github.com/edgarsilva/miconsul/internal/server"
-	"github.com/edgarsilva/miconsul/internal/service/appointment"
-	"github.com/edgarsilva/miconsul/internal/service/auth"
-	"github.com/edgarsilva/miconsul/internal/service/blog"
-	"github.com/edgarsilva/miconsul/internal/service/clinic"
-	"github.com/edgarsilva/miconsul/internal/service/counter"
-	"github.com/edgarsilva/miconsul/internal/service/dashboard"
-	"github.com/edgarsilva/miconsul/internal/service/patient"
-	"github.com/edgarsilva/miconsul/internal/service/theme"
-	"github.com/edgarsilva/miconsul/internal/service/todos"
-	"github.com/edgarsilva/miconsul/internal/service/users"
+	mw "miconsul/internal/middleware"
+	"miconsul/internal/server"
+	"miconsul/internal/service/appointment"
+	"miconsul/internal/service/auth"
+	"miconsul/internal/service/blog"
+	"miconsul/internal/service/clinic"
+	"miconsul/internal/service/counter"
+	"miconsul/internal/service/dashboard"
+	"miconsul/internal/service/patient"
+	"miconsul/internal/service/theme"
+	"miconsul/internal/service/todos"
+	"miconsul/internal/service/users"
 )
 
 type Router struct {
@@ -41,7 +42,7 @@ func AuthRoutes(s *server.Server) {
 	a := auth.NewService(s)
 
 	// Root
-	a.Get("/login", auth.MaybeAuthenticate(a), a.HandleLoginPage)
+	a.Get("/login", mw.MaybeAuthenticate(a), a.HandleLoginPage)
 	a.Post("/login", a.HandleLogin)
 	a.All("/logout", a.HandleLogout)
 	a.Get("/signup", a.HandleSignupPage)
@@ -56,16 +57,16 @@ func AuthRoutes(s *server.Server) {
 
 	// API
 	g := a.Group("/api/auth")
-	g.Get("/protected", auth.MustAuthenticate(a), a.HandleShowUser)
-	g.Post("/validate", auth.MustAuthenticate(a), a.HandleValidate)
+	g.Get("/protected", mw.MustAuthenticate(a), a.HandleShowUser)
+	g.Post("/validate", mw.MustAuthenticate(a), a.HandleValidate)
 }
 
 func DashbordhRoutes(s *server.Server) {
 	d := dashboard.NewService(s)
 
-	d.Get("/", auth.MustAuthenticate(d), d.HandleDashboardPage)
+	d.Get("/", mw.MustAuthenticate(d), d.HandleDashboardPage)
 
-	g := s.Group("/dashboard", auth.MustAuthenticate(d))
+	g := s.Group("/dashboard", mw.MustAuthenticate(d))
 	g.Get("", d.HandleDashboardPage)
 }
 
@@ -73,7 +74,7 @@ func UsersRoutes(s *server.Server) {
 	u := users.NewService(s)
 
 	// Pages
-	g := u.Group("/users", auth.MustAuthenticate(u))
+	g := u.Group("/users", mw.MustAuthenticate(u))
 	g.Get("/", u.HandleUsersPage)
 
 	// Fragments
@@ -89,9 +90,9 @@ func ClinicsRoutes(s *server.Server) {
 	c := clinic.NewService(s)
 
 	// Pages
-	g := c.Group("/clinics", auth.MustAuthenticate(c))
+	g := c.Group("/clinics", mw.MustAuthenticate(c))
 	g.Get("/", c.HandleClinicsPage)
-	g.Get("/makeaton", auth.MustBeAdmin(c), c.HandleMockManyClinics)
+	g.Get("/makeaton", mw.MustBeAdmin(c), c.HandleMockManyClinics)
 	g.Get("/search", c.HandleClinicsIndexSearch)
 	g.Get("/:id", c.HandleClinicPage)
 
@@ -115,9 +116,9 @@ func ClinicsRoutes(s *server.Server) {
 func PatientRoutes(s *server.Server) {
 	p := patient.NewService(s)
 
-	g := p.Group("/patients", auth.MustAuthenticate(p))
+	g := p.Group("/patients", mw.MustAuthenticate(p))
 	g.Get("/", p.HandlePatientsPage)
-	g.Get("/makeaton", auth.MustBeAdmin(p), p.HandleMockManyPatients)
+	g.Get("/makeaton", mw.MustBeAdmin(p), p.HandleMockManyPatients)
 	g.Get("/search", p.HandlePatientsIndexSearch)
 	g.Post("/search", p.HandlePatientSearch)
 
@@ -146,7 +147,7 @@ func PatientRoutes(s *server.Server) {
 func AppointmentRoutes(s *server.Server) {
 	a := appointment.NewService(s)
 
-	g := a.Group("/appointments", auth.MustAuthenticate(s))
+	g := a.Group("/appointments", mw.MustAuthenticate(s))
 	g.Get("/", a.HandleAppointmentsPage)
 	g.Get("/", a.HandleAppointmentsPage)
 	g.Get("/new", a.HandleAppointmentPage)
@@ -198,7 +199,7 @@ func TodosRoutes(s *server.Server) {
 	t := todos.NewService(s)
 
 	// Pages
-	g := t.Group("/todos", auth.MaybeAuthenticate(t))
+	g := t.Group("/todos", mw.MaybeAuthenticate(t))
 	g.Get("/", t.HandleTodos)
 	g.Get("/filter", t.HandleFilterTodos)
 

@@ -1,7 +1,7 @@
 package blog
 
 import (
-	"github.com/edgarsilva/miconsul/internal/server"
+	"miconsul/internal/server"
 )
 
 type service struct {

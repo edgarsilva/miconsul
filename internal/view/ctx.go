@@ -3,7 +3,7 @@ package view
 import (
 	"errors"
 
-	"github.com/edgarsilva/miconsul/internal/localize"
+	"miconsul/internal/localize"
 	"github.com/gofiber/fiber/v2"
 )
 

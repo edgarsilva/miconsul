@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/edgarsilva/miconsul/internal/common"
-	"github.com/edgarsilva/miconsul/internal/lib/xid"
+	"miconsul/internal/common"
+	"miconsul/internal/lib/xid"
 	"gorm.io/gorm"
 )
 
