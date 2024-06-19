@@ -27,9 +27,7 @@ func main() {
 	defer shutdown()
 
 	s := server.New(db, locales, wp, bgj)
-
-	appRoutes := routes.New()
-	s.RegisterRoutes(&appRoutes)
+	routes.RegisterServices(s)
 
 	port := os.Getenv("PORT")
 	if port == "" {

@@ -6,7 +6,6 @@ import (
 	"miconsul/internal/backgroundjob"
 	"miconsul/internal/database"
 	"miconsul/internal/localize"
-	mw "miconsul/internal/middleware"
 	"miconsul/internal/model"
 	"os"
 	"time"
@@ -25,10 +24,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/session"
 	"github.com/panjf2000/ants/v2"
 )
-
-type router interface {
-	RegisterRoutes(*Server)
-}
 
 type Server struct {
 	*fiber.App
@@ -78,7 +73,7 @@ func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjo
 	fiberApp.Use(healthcheck.New())
 
 	// Adds req language to the session adds local("lang")
-	fiberApp.Use(mw.LocaleLang(sessionStore))
+	fiberApp.Use(LocaleLang(sessionStore))
 
 	fiberApp.Static("/public", "./public", fiber.Static{
 		Compress:      true,
@@ -112,11 +107,6 @@ func (s *Server) CurrentUser(c *fiber.Ctx) (model.User, error) {
 
 func (s *Server) DBClient() *database.Database {
 	return s.DB
-}
-
-// RegisterRoutes registers a router Routes and exposes the endpoints on the server.
-func (s *Server) RegisterRoutes(r router) {
-	r.RegisterRoutes(s)
 }
 
 // Listen starts the server on the specified port.

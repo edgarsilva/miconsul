@@ -15,17 +15,7 @@ import (
 	"miconsul/internal/service/users"
 )
 
-type Router struct {
-	*server.Server
-}
-
-func New() Router {
-	return Router{}
-}
-
-func (r *Router) RegisterRoutes(s *server.Server) {
-	r.Server = s
-
+func RegisterServices(s *server.Server) {
 	AuthRoutes(s)
 	DashbordhRoutes(s)
 	UsersRoutes(s)
@@ -52,8 +42,6 @@ func AuthRoutes(s *server.Server) {
 	a.Post("/resetpassword", a.HandleResetPassword)
 	a.Get("/resetpassword/change/:token", a.HandleResetPasswordChange)
 	a.Post("/resetpassword/change/:token", a.HandleResetPasswordUpdate)
-
-	// Auth service
 
 	// API
 	g := a.Group("/api/auth")
