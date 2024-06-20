@@ -11,7 +11,7 @@ import (
 
 type MWService interface {
 	DBClient() *database.Database
-	Session(*fiber.Ctx) (*session.Session, error)
+	Session(*fiber.Ctx) *session.Session
 }
 
 func MustAuthenticate(s MWService) func(c *fiber.Ctx) error {

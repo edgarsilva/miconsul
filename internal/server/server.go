@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/encryptcookie"
 	"github.com/gofiber/fiber/v2/middleware/etag"
@@ -119,45 +120,50 @@ func (s *Server) Listen(port string) error {
 	return s.App.Listen(fmt.Sprintf(":%v", port))
 }
 
-func (s *Server) LogtoClient(c *fiber.Ctx) *logto.LogtoClient {
-	session, _ := s.Session(c)
-	storage := common.NewSessionStorage(session)
+// LogtoClient returns the LogtoClient and a save function to persist the
+// session on defer or at the end of the handler.
+//
+//	e.g.
+//		logtoClient, saveSess := s.LogtoClient(c)
+//		defer saveSess()
+func (s *Server) LogtoClient(c *fiber.Ctx) (client *logto.LogtoClient, save func()) {
+	sess := s.Session(c)
+	storage := common.NewSessionStorage(sess)
 	logtoClient := logto.NewLogtoClient(
 		s.LogtoConfig,
 		storage,
 	)
 
-	return logtoClient
+	return logtoClient, func() { sess.Save() }
 }
 
-func (s *Server) Session(c *fiber.Ctx) (*session.Session, error) {
-	return s.SessionStore.Get(c)
+func (s *Server) Session(c *fiber.Ctx) *session.Session {
+	sess, err := s.SessionStore.Get(c)
+	if err != nil {
+		log.Info("Failed to retrieve session from req ctx:", err)
+	}
+	return sess
 }
 
 func (s *Server) SessionSave(c *fiber.Ctx) {
-	sess, err := s.Session(c)
+	sess := s.Session(c)
+	err := sess.Save()
 	if err != nil {
-		return
+		log.Info("Failed to save session:", err)
 	}
-
-	_ = sess.Save()
 }
 
 func (s *Server) SessionDestroy(c *fiber.Ctx) {
-	sess, err := s.Session(c)
+	sess := s.Session(c)
+	err := sess.Destroy()
 	if err != nil {
-		return
+		log.Info("Failed to destroy session:", err)
 	}
-
-	_ = sess.Destroy()
 }
 
 // SessionGet gets a session value by key, or returns the default value.
 func (s *Server) SessionGet(c *fiber.Ctx, key string, defaultVal string) string {
-	sess, err := s.Session(c)
-	if err != nil {
-		return defaultVal
-	}
+	sess := s.Session(c)
 
 	val := sess.Get(key)
 	if val == nil {
@@ -174,16 +180,8 @@ func (s *Server) SessionGet(c *fiber.Ctx, key string, defaultVal string) string 
 
 // SessionSet sets a session value.
 func (s *Server) SessionSet(c *fiber.Ctx, k string, v string) error {
-	sess, err := s.Session(c)
-	if err != nil {
-		return err
-	}
-
+	sess := s.Session(c)
 	sess.Set(k, v)
-
-	if err := sess.Save(); err != nil {
-		return err
-	}
 
 	return nil
 }

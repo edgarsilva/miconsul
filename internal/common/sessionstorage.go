@@ -26,6 +26,12 @@ func (storage *SessionStorage) GetItem(key string) string {
 
 func (storage *SessionStorage) SetItem(key, value string) {
 	storage.session.Set(key, value)
+}
 
+func (storage *SessionStorage) Session(key, value string) *session.Session {
+	return storage.session
+}
+
+func (storage *SessionStorage) Save() {
 	storage.session.Save()
 }

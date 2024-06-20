@@ -8,7 +8,6 @@ import (
 	"miconsul/internal/model"
 	"miconsul/internal/view"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -341,7 +340,8 @@ func (s *service) HandleShowUser(c *fiber.Ctx) error {
 
 func (s *service) HandleLogtoPage(c *fiber.Ctx) error {
 	// Init LogtoClient
-	logtoClient := s.LogtoClient(c)
+	logtoClient, saveSess := s.LogtoClient(c)
+	defer saveSess()
 
 	// Use Logto to control the content of the home page
 	authState := "You are not logged in to this website. :("
@@ -355,11 +355,12 @@ func (s *service) HandleLogtoPage(c *fiber.Ctx) error {
 }
 
 func (s *service) HandleLogtoSignin(c *fiber.Ctx) error {
-	logtoClient := s.LogtoClient(c)
+	logtoClient, saveSess := s.LogtoClient(c)
+	defer saveSess()
 
 	// The sign-in request is handled by Logto.
 	// The user will be redirected to the Redirect URI on signed in.
-	signInUri, err := logtoClient.SignIn("http://0.0.0.0:3000/logto/callback")
+	signInUri, err := logtoClient.SignIn("http://localhost:3000/logto/callback")
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
@@ -369,12 +370,12 @@ func (s *service) HandleLogtoSignin(c *fiber.Ctx) error {
 }
 
 func (s *service) HandleLogtoCallback(c *fiber.Ctx) error {
-	logtoClient := s.LogtoClient(c)
+	logtoClient, saveSess := s.LogtoClient(c)
+	defer saveSess()
+
 	req, _ := adaptor.ConvertRequest(c, true)
 
 	err := logtoClient.HandleSignInCallback(req)
-	fmt.Println("LogtoClient.config.msgs", strings.Join(s.LogtoConfig.Msgs, "\n"))
-
 	if err != nil {
 		fmt.Println("--------->", err)
 		return nil
@@ -386,11 +387,12 @@ func (s *service) HandleLogtoCallback(c *fiber.Ctx) error {
 }
 
 func (s *service) HandleLogtoSignout(c *fiber.Ctx) error {
-	logtoClient := s.LogtoClient(c)
+	logtoClient, saveSess := s.LogtoClient(c)
+	defer saveSess()
 
 	// The sign-out request is handled by Logto.
 	// The user will be redirected to the Post Sign-out Redirect URI on signed out.
-	signOutUri, err := logtoClient.SignOut("http://0.0.0.0:3000/login")
+	signOutUri, err := logtoClient.SignOut("http://localhost:3000/login")
 	if err != nil {
 		return c.SendStatus(fiber.StatusOK)
 	}
