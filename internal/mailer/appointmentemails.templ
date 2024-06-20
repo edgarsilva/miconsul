@@ -134,32 +134,32 @@ templ AppointmentBookedEmail(appointment model.Appointment) {
 															<td align="center" valign="top" style="padding:0;Margin:0;width:520px">
 																<table celvcadding="0" cellspacing="0" width="100%" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
 																	<tr>
-																		<td align="center" style="padding:0;Margin:0;">
-																			<span
-																				class="msohide es-button-border"
-																				style="border-style:solid;border-color:#2CB543;background:#93c47d;border-width:0px;display:inline-block;border-radius:15px;width:100%;mso-hide:all"
-																			>
-																				<a
-																					href={ templ.URL(appointment.ConfirmURL()) }
-																					class="es-button"
-																					target="_blank"
-																					style="mso-style-priority:100 !important;text-decoration:none;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;color:#FFFFFF;font-size:20px;display:inline-block;background:#93c47d;border-radius:15px;font-family:Oswald, sans-serif;font-weight:normal;font-style:normal;line-height:24px;width:auto;text-align:center;padding:10px 0px 10px 0px;mso-padding-alt:0;mso-border-alt:10px solid #93c47d;width:100%;display:inline-block;"
-																				>Confirmar</a>
-																			</span>
-																		</td>
-																	</tr>
-																	<tr>
-																		<td align="center" style="padding:0;Margin:0;padding-top:20px">
+																		<td align="center" style="padding:0;Margin:0;padding-top:0px">
 																			<span
 																				class="msohide es-button-border"
 																				style="border-style:solid;border-color:#3f78bc;background:#6fa8dc;border-width:0px;display:inline-block;border-radius:15px;width:100%;mso-hide:all;"
 																			>
 																				<a
-																					href={ templ.URL(appointment.CancelURL()) }
+																					href={ templ.URL(appointment.ConfirmURL()) }
 																					class="es-button"
 																					target="_blank"
 																					style="mso-style-priority:100 !important;text-decoration:none;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;color:#FFFFFF;font-size:20px;display:inline-block;background:#6fa8dc;border-radius:15px;font-family:Oswald, sans-serif;font-weight:normal;font-style:normal;line-height:24px;width:auto;text-align:center;padding:10px 0px 10px 0px;mso-padding-alt:0;mso-border-alt:10px solid #6fa8dc;width:100%;display:inline-block;"
-																				>Reagendar</a>
+																				>Confirm</a>
+																			</span>
+																		</td>
+																	</tr>
+																	<tr>
+																		<td align="center" style="padding-top:20px;Margin:0;">
+																			<span
+																				class="msohide es-button-border"
+																				style="border-style:solid;border-color:#2CB543;background:#93c47d;border-width:0px;display:inline-block;border-radius:15px;width:100%;mso-hide:all"
+																			>
+																				<a
+																					href={ templ.URL(waURL(appointment.Clinic.Phone, "Me gustaria cambiar la fecha de mi cita.")) }
+																					class="es-button"
+																					target="_blank"
+																					style="mso-style-priority:100 !important;text-decoration:none;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;color:#FFFFFF;font-size:20px;display:inline-block;background:#93c47d;border-radius:15px;font-family:Oswald, sans-serif;font-weight:normal;font-style:normal;line-height:24px;width:auto;text-align:center;padding:10px 0px 10px 0px;mso-padding-alt:0;mso-border-alt:10px solid #93c47d;width:100%;display:inline-block;"
+																				>Reagendar por Whatsapp</a>
 																			</span>
 																		</td>
 																	</tr>
@@ -495,32 +495,32 @@ templ AppointmentReminderEmail(appointment model.Appointment) {
 															<td align="center" valign="top" style="padding:0;Margin:0;width:520px">
 																<table celvcadding="0" cellspacing="0" width="100%" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
 																	<tr>
-																		<td align="center" style="padding:0;Margin:0;">
-																			<span
-																				class="msohide es-button-border"
-																				style="border-style:solid;border-color:#2CB543;background:#93c47d;border-width:0px;display:inline-block;border-radius:15px;width:100%;mso-hide:all"
-																			>
-																				<a
-																					href={ templ.URL(appointment.ConfirmURL()) }
-																					class="es-button"
-																					target="_blank"
-																					style="mso-style-priority:100 !important;text-decoration:none;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;color:#FFFFFF;font-size:20px;display:inline-block;background:#93c47d;border-radius:15px;font-family:Oswald, sans-serif;font-weight:normal;font-style:normal;line-height:24px;width:auto;text-align:center;padding:10px 0px 10px 0px;mso-padding-alt:0;mso-border-alt:10px solid #93c47d;width:100%;display:inline-block;"
-																				>Confirmar</a>
-																			</span>
-																		</td>
-																	</tr>
-																	<tr>
-																		<td align="center" style="padding:0;Margin:0;padding-top:20px">
+																		<td align="center" style="padding:0;Margin:0;padding-top:0px">
 																			<span
 																				class="msohide es-button-border"
 																				style="border-style:solid;border-color:#3f78bc;background:#6fa8dc;border-width:0px;display:inline-block;border-radius:15px;width:100%;mso-hide:all;"
 																			>
 																				<a
-																					href={ templ.URL(appointment.CancelURL()) }
+																					href={ templ.URL(appointment.ConfirmURL()) }
 																					class="es-button"
 																					target="_blank"
 																					style="mso-style-priority:100 !important;text-decoration:none;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;color:#FFFFFF;font-size:20px;display:inline-block;background:#6fa8dc;border-radius:15px;font-family:Oswald, sans-serif;font-weight:normal;font-style:normal;line-height:24px;width:auto;text-align:center;padding:10px 0px 10px 0px;mso-padding-alt:0;mso-border-alt:10px solid #6fa8dc;width:100%;display:inline-block;"
-																				>Reagendar</a>
+																				>Confirm</a>
+																			</span>
+																		</td>
+																	</tr>
+																	<tr>
+																		<td align="center" style="padding-top:20px;Margin:0;">
+																			<span
+																				class="msohide es-button-border"
+																				style="border-style:solid;border-color:#2CB543;background:#93c47d;border-width:0px;display:inline-block;border-radius:15px;width:100%;mso-hide:all"
+																			>
+																				<a
+																					href={ templ.URL(waURL(appointment.Clinic.Phone, "Me gustaria cambiar la fecha de mi cita.")) }
+																					class="es-button"
+																					target="_blank"
+																					style="mso-style-priority:100 !important;text-decoration:none;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;color:#FFFFFF;font-size:20px;display:inline-block;background:#93c47d;border-radius:15px;font-family:Oswald, sans-serif;font-weight:normal;font-style:normal;line-height:24px;width:auto;text-align:center;padding:10px 0px 10px 0px;mso-padding-alt:0;mso-border-alt:10px solid #93c47d;width:100%;display:inline-block;"
+																				>Reagendar por Whatsapp</a>
 																			</span>
 																		</td>
 																	</tr>

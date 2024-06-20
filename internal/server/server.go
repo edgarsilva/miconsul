@@ -4,6 +4,7 @@ package server
 import (
 	"fmt"
 	"miconsul/internal/backgroundjob"
+	"miconsul/internal/common"
 	"miconsul/internal/database"
 	"miconsul/internal/localize"
 	"miconsul/internal/model"
@@ -19,9 +20,9 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/monitor"
-	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/gofiber/fiber/v2/middleware/session"
+	logto "github.com/logto-io/go/client"
 	"github.com/panjf2000/ants/v2"
 )
 
@@ -33,6 +34,7 @@ type Server struct {
 	SessionStore *session.Store
 	DB           *database.Database
 	LC           *localize.Localizer
+	LogtoConfig  *logto.LogtoConfig
 }
 
 func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjob *backgroundjob.Sched) *Server {
@@ -49,7 +51,7 @@ func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjo
 
 	// Initialize recover middleware to catch panics that might
 	// stop the application
-	fiberApp.Use(recover.New())
+	// fiberApp.Use(recover.New())
 
 	fiberApp.Use(cors.New())
 
@@ -84,6 +86,8 @@ func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjo
 		MaxAge:        3600,
 	})
 
+	logtoConfig := LogtoConfig()
+
 	return &Server{
 		App:          fiberApp,
 		SessionStore: sessionStore,
@@ -91,6 +95,7 @@ func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjo
 		WP:           wp,
 		DB:           db,
 		LC:           locales,
+		LogtoConfig:  logtoConfig,
 	}
 }
 
@@ -114,12 +119,32 @@ func (s *Server) Listen(port string) error {
 	return s.App.Listen(fmt.Sprintf(":%v", port))
 }
 
-func (s *Server) session(c *fiber.Ctx) (*session.Session, error) {
+func (s *Server) LogtoClient(c *fiber.Ctx) *logto.LogtoClient {
+	session, _ := s.Session(c)
+	storage := common.NewSessionStorage(session)
+	logtoClient := logto.NewLogtoClient(
+		s.LogtoConfig,
+		storage,
+	)
+
+	return logtoClient
+}
+
+func (s *Server) Session(c *fiber.Ctx) (*session.Session, error) {
 	return s.SessionStore.Get(c)
 }
 
+func (s *Server) SessionSave(c *fiber.Ctx) {
+	sess, err := s.Session(c)
+	if err != nil {
+		return
+	}
+
+	_ = sess.Save()
+}
+
 func (s *Server) SessionDestroy(c *fiber.Ctx) {
-	sess, err := s.session(c)
+	sess, err := s.Session(c)
 	if err != nil {
 		return
 	}
@@ -129,7 +154,7 @@ func (s *Server) SessionDestroy(c *fiber.Ctx) {
 
 // SessionGet gets a session value by key, or returns the default value.
 func (s *Server) SessionGet(c *fiber.Ctx, key string, defaultVal string) string {
-	sess, err := s.session(c)
+	sess, err := s.Session(c)
 	if err != nil {
 		return defaultVal
 	}
@@ -149,7 +174,7 @@ func (s *Server) SessionGet(c *fiber.Ctx, key string, defaultVal string) string 
 
 // SessionSet sets a session value.
 func (s *Server) SessionSet(c *fiber.Ctx, k string, v string) error {
-	sess, err := s.session(c)
+	sess, err := s.Session(c)
 	if err != nil {
 		return err
 	}

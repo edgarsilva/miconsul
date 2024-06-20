@@ -4,12 +4,32 @@ import (
 	"miconsul/internal/model"
 )
 
+templ AppointmentNotFoundPage(vc *Ctx) {
+	@LayoutPrimary(vc) {
+		<div class="absolute top-4 right-4">
+			@CmpBtnTheme(vc.Theme)
+		</div>
+		<div class="app-card pt-10 w-full sm:max-w-4xl sm:mx-auto text-base-content">
+			<div class="px-6 py-24 sm:px-6 sm:py-20 lg:px-8">
+				<div class="mx-auto max-w-2xl text-center">
+					<h2 class="text-3xl font-bold tracking-tight text-primary-content sm:text-4xl">
+						{ l(vc.Locale, "str.appt_not_found") }
+					</h2>
+					<p class="mx-auto mt-6 max-w-xl text-lg leading-8 text-primary-content/90">
+						{ vc.l("str.appt_not_found_desc") }
+					</p>
+				</div>
+			</div>
+		</div>
+	}
+}
+
 templ AppointmentConfirmPage(vc *Ctx) {
 	@LayoutPrimary(vc) {
 		<div class="absolute top-4 right-4">
 			@CmpBtnTheme(vc.Theme)
 		</div>
-		<div class="pt-10 card shadow w-full bg-primary sm:max-w-4xl sm:mx-auto">
+		<div class="app-card pt-10 w-full sm:max-w-4xl sm:mx-auto text-base-content">
 			<div class="px-6 py-24 sm:px-6 sm:py-20 lg:px-8">
 				<div class="mx-auto max-w-2xl text-center">
 					<h2 class="text-3xl font-bold tracking-tight text-primary-content sm:text-4xl">
@@ -26,25 +46,33 @@ templ AppointmentConfirmPage(vc *Ctx) {
 	}
 }
 
-templ AppointmentCancelPage(appointment model.Appointment, vc *Ctx) {
+templ AppointmentCancelPage(vc *Ctx, appointment model.Appointment) {
 	@LayoutPrimary(vc) {
 		<div class="absolute top-4 right-4">
 			@CmpBtnTheme(vc.Theme)
 		</div>
-		<div class="pt-10 w-full sm:max-w-4xl sm:mx-auto text-base-content">
+		<div class="app-card pt-10 w-full sm:max-w-4xl sm:mx-auto text-base-content">
 			<div class="px-6 py-24 sm:px-6 sm:py-20 lg:px-8">
 				<div class="mx-auto max-w-2xl text-center">
 					<h2 class="text-3xl font-bold tracking-tight sm:text-4xl">
 						{ l(vc.Locale, "str.cancel_appointment_confirmation") }
 					</h2>
 					<p class="mx-auto mt-6 max-w-xl text-lg leading-8 text-base-content/60">
-						@AppointmentDescription(appointment)
+						@AppointmentDescription(vc, appointment)
 					</p>
 					<div class="mt-10 flex items-center justify-center gap-x-6">
-						<a href="#" class="btn btn-secondary">{ l(vc.Locale, "str.yes_cancel_my_appointment") }</a>
-						<!--
-						<a href="#" class="link link-hover font-semibold">Learn more <span aria-hidden="true">→</span></a>
-            -->
+						if appointment.CanceledAt.IsZero() {
+							<form action={ templ.URL("/appointments/" + appointment.ID + "/patient/cancel/" + appointment.Token) } method="POST" hx-boost="true">
+								<button type="submit" class="btn btn-secondary">{ l(vc.Locale, "str.yes_cancel_my_appointment") }</button>
+							</form>
+						} else {
+							<div role="alert" class="alert shadow-lg">
+								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+								<div>
+									<h3 class="font-bold">{ vc.l("str.appt_canceled") }</h3>
+								</div>
+							</div>
+						}
 					</div>
 				</div>
 			</div>
@@ -52,19 +80,26 @@ templ AppointmentCancelPage(appointment model.Appointment, vc *Ctx) {
 	}
 }
 
-templ AppointmentDescription(appointment model.Appointment) {
+templ AppointmentDescription(vc *Ctx, appointment model.Appointment) {
 	<div class="lg:col-start-3 lg:row-end-1">
 		<h2 class="sr-only">Summary</h2>
 		<dl class="flex flex-wrap">
 			<div class="flex w-full flex-none gap-x-4 px-6">
 				<dt class="flex-none">
-					<span class="sr-only">Client</span>
-					<svg class="h-6 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-						<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-5.5-2.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM10 12a5.99 5.99 0 00-4.793 2.39A6.483 6.483 0 0010 16.5a6.483 6.483 0 004.793-2.11A5.99 5.99 0 0010 12z" clip-rule="evenodd"></path>
-					</svg>
+					<span class="sr-only">{ vc.l("str.clinic") }</span>
+					@IconSolidMarker()
 				</dt>
 				<dd class="text-sm font-medium leading-6">
-					{ appointment.Patient.Name() }
+					{  } { appointment.Clinic.Name }
+				</dd>
+			</div>
+			<div class="mt-4 flex w-full flex-none gap-x-4 px-6">
+				<dt class="flex-none">
+					<span class="sr-only">Professional</span>
+					@IconSolidUser()
+				</dt>
+				<dd class="text-sm font-medium leading-6">
+					{ appointment.User.Name() }
 				</dd>
 			</div>
 			<div class="mt-4 flex w-full flex-none gap-x-4 px-6">
@@ -78,15 +113,6 @@ templ AppointmentDescription(appointment model.Appointment) {
 				<dd class="text-sm leading-6">
 					<time datetime={ appointment.BookedAt.Format(FormTimeFormat) }>{ appointment.BookedAt.Format(ViewTimeFormat) }</time>
 				</dd>
-			</div>
-			<div class="mt-4 flex w-full flex-none gap-x-4 px-6">
-				<dt class="flex-none">
-					<span class="sr-only">Status</span>
-					<svg class="h-6 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-						<path fill-rule="evenodd" d="M2.5 4A1.5 1.5 0 001 5.5V6h18v-.5A1.5 1.5 0 0017.5 4h-15zM19 8.5H1v6A1.5 1.5 0 002.5 16h15a1.5 1.5 0 001.5-1.5v-6zM3 13.25a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75zm4.75-.75a.75.75 0 000 1.5h3.5a.75.75 0 000-1.5h-3.5z" clip-rule="evenodd"></path>
-					</svg>
-				</dt>
-				<dd class="text-sm leading-6">Paid with MasterCard</dd>
 			</div>
 		</dl>
 	</div>

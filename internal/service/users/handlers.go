@@ -1,9 +1,9 @@
 package users
 
 import (
+	"miconsul/internal/model"
 	"strconv"
 
-	"miconsul/internal/model"
 	"github.com/gofiber/fiber/v2"
 	"syreclabs.com/go/faker"
 )
@@ -59,8 +59,9 @@ func (s *service) HandleMakeUsers(c *fiber.Ctx) error {
 	var users []model.User
 	for i := 0; i <= n; i++ {
 		users = append(users, model.User{
-			Name:  faker.Name().Name(),
-			Email: faker.Internet().Email(),
+			FirstName: faker.Name().FirstName(),
+			LastName:  faker.Name().LastName(),
+			Email:     faker.Internet().Email(),
 		})
 	}
 

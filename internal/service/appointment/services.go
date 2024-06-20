@@ -3,12 +3,12 @@ package appointment
 import (
 	"errors"
 	"fmt"
-	"time"
-
 	"miconsul/internal/common"
 	"miconsul/internal/mailer"
 	"miconsul/internal/model"
 	"miconsul/internal/server"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 )
 

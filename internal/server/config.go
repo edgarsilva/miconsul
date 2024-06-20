@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/session"
+	logto "github.com/logto-io/go/client"
 )
 
 const csp = "default-src 'self';base-uri 'self';font-src 'self' https: data:;" +
@@ -51,4 +52,14 @@ func LocaleLang(st *session.Store) func(c *fiber.Ctx) error {
 
 		return c.Next()
 	}
+}
+
+func LogtoConfig() *logto.LogtoConfig {
+	logtoConfig := logto.LogtoConfig{
+		Endpoint:  "https://logto.miconsul.xyz/",
+		AppId:     "pyo6iheu3rl4ca6ikio9z",
+		AppSecret: "yi5G2wDXTcBBGtGRK3bmihDdG5w0VklM",
+	}
+
+	return &logtoConfig
 }

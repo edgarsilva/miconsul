@@ -1,11 +1,11 @@
 package model
 
 import (
+	"miconsul/internal/common"
+	"miconsul/internal/lib/xid"
 	"strconv"
 	"time"
 
-	"miconsul/internal/common"
-	"miconsul/internal/lib/xid"
 	"gorm.io/gorm"
 )
 
@@ -73,16 +73,28 @@ func (a *Appointment) PriceInputValue() string {
 	return v
 }
 
+func (a *Appointment) ConfirmPath() string {
+	return "/appointments/" + a.ID + "/patient/confirm/" + a.Token
+}
+
 func (a *Appointment) ConfirmURL() string {
-	return "/appointments/" + a.ID + "/confirm"
+	return common.AppURL() + a.ConfirmPath()
+}
+
+func (a *Appointment) CancelPath() string {
+	return "/appointments/" + a.ID + "/patient/cancel/" + a.Token
 }
 
 func (a *Appointment) CancelURL() string {
-	return "/appointments/" + a.ID + "/cancel"
+	return common.AppURL() + a.CancelPath()
+}
+
+func (a *Appointment) RescheduledPath() string {
+	return "/appointments/" + a.ID + "/patient/reschedule/" + a.Token
 }
 
 func (a *Appointment) RescheduledURL() string {
-	return "/appointments/" + a.ID + "/reschedule"
+	return common.AppURL() + a.RescheduledPath()
 }
 
 // Scopes

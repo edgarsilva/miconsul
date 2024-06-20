@@ -4,13 +4,17 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"miconsul/internal/model"
 	"os"
 
-	"miconsul/internal/model"
 	"gopkg.in/gomail.v2"
 )
 
 func SendAppointmentBookedEmail(appointment model.Appointment) error {
+	if appointment.Patient.ID == "" || appointment.Clinic.ID == "" {
+		return errors.New("appointment Clinic or Patient association is missing, they must be Preloaded")
+	}
+
 	m := gomail.NewMessage()
 	m.SetHeader("From", os.Getenv("EMAIL_SENDER"))
 	m.SetHeader("To", appointment.Patient.Email)
@@ -34,6 +38,10 @@ func SendAppointmentBookedEmail(appointment model.Appointment) error {
 }
 
 func SendAppointmentReminderEmail(appointment model.Appointment) error {
+	if appointment.Patient.ID == "" || appointment.Clinic.ID == "" {
+		return errors.New("appointment Clinic or Patient association is missing, they must be Preloaded")
+	}
+
 	m := gomail.NewMessage()
 	m.SetHeader("From", os.Getenv("EMAIL_SENDER"))
 	m.SetHeader("To", appointment.Patient.Email)

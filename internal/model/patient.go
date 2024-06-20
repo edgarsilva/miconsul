@@ -2,8 +2,8 @@ package model
 
 import (
 	"errors"
-
 	"miconsul/internal/lib/xid"
+
 	"gorm.io/gorm"
 )
 

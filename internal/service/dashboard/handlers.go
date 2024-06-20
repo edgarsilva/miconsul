@@ -1,18 +1,17 @@
 package dashboard
 
 import (
-	"time"
-
 	"miconsul/internal/common"
 	"miconsul/internal/model"
 	"miconsul/internal/view"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-// HandleBlogPage renders the blog home html page
+// HandleDashboardPage renders the home dashboard
 //
-// GET: /blog
+//	GET: / or /dashboard
 func (s *service) HandleDashboardPage(c *fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
@@ -34,7 +33,8 @@ func (s *service) HandleDashboardPage(c *fiber.Ctx) error {
 		query.Where("booked_at > ?", common.BoD(time.Now()))
 	}
 
-	query.Preload("Clinic").
+	query.
+		Preload("Clinic").
 		Preload("Patient").
 		Limit(10).
 		Find(&appointments)

@@ -6,10 +6,12 @@ import (
 	"miconsul/internal/service/auth"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/session"
 )
 
 type MWService interface {
 	DBClient() *database.Database
+	Session(*fiber.Ctx) (*session.Session, error)
 }
 
 func MustAuthenticate(s MWService) func(c *fiber.Ctx) error {

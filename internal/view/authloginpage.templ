@@ -73,3 +73,13 @@ templ LoginPage(email, msg string, err error, vc *Ctx) {
 		</div>
 	}
 }
+
+templ LogtoPage(vc *Ctx, authState string) {
+	<div class="app-card">
+		<h1>Hello Logto</h1>
+		<div>{ authState } </div>
+		<div><a href="/logto/signin">Sign In</a></div>
+		// Add link
+		<div><a href="/logto/signout">Sign Out</a></div>
+	</div>
+}

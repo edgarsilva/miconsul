@@ -2,6 +2,7 @@ package model
 
 import (
 	"miconsul/internal/lib/xid"
+
 	"gorm.io/gorm"
 )
 

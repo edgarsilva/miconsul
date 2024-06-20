@@ -31,7 +31,6 @@ func RegisterServices(s *server.Server) {
 func AuthRoutes(s *server.Server) {
 	a := auth.NewService(s)
 
-	// Root
 	a.Get("/login", mw.MaybeAuthenticate(a), a.HandleLoginPage)
 	a.Post("/login", a.HandleLogin)
 	a.All("/logout", a.HandleLogout)
@@ -43,7 +42,12 @@ func AuthRoutes(s *server.Server) {
 	a.Get("/resetpassword/change/:token", a.HandleResetPasswordChange)
 	a.Post("/resetpassword/change/:token", a.HandleResetPasswordUpdate)
 
-	// API
+	// Logto
+	a.Get("/logto", a.HandleLogtoPage)
+	a.Get("/logto/signin", a.HandleLogtoSignin)
+	a.Get("/logto/callback", a.HandleLogtoCallback)
+	a.Get("/logto/signout", a.HandleLogtoSignout)
+
 	g := a.Group("/api/auth")
 	g.Get("/protected", mw.MustAuthenticate(a), a.HandleShowUser)
 	g.Post("/validate", mw.MustAuthenticate(a), a.HandleValidate)
@@ -156,7 +160,8 @@ func AppointmentRoutes(s *server.Server) {
 
 	g.Get("/:id/patient/confirm/:token", a.HandlePatientConfirm)
 	g.Get("/:id/patient/changedate/:token", a.HandlePatientChangeDate)
-	g.Get("/:id/patient/cancel/:token", a.HandlePatientCancel)
+	g.Get("/:id/patient/cancel/:token", a.HandlePatientCancelPage)
+	g.Post("/:id/patient/cancel/:token", a.HandlePatientCancel)
 
 	// g.Get("/:id", p.HandlePatientsPage)
 

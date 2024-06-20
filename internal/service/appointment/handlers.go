@@ -1,12 +1,13 @@
 package appointment
 
 import (
-	"time"
-
+	"fmt"
 	"miconsul/internal/common"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/model"
 	"miconsul/internal/view"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
@@ -336,18 +337,14 @@ func (s *service) HandleDeleteAppointment(c *fiber.Ctx) error {
 //
 //	GET: /patient/:id/confirm/:token
 func (s *service) HandlePatientConfirm(c *fiber.Ctx) error {
-	appointmentID := c.Params("id", "")
+	apptID := c.Params("id", "")
 	token := c.Params("token", "")
-	if appointmentID == "" || token == "" {
-		return c.Redirect("/login?toast=Can't find that appointment&level=error")
-	}
-
-	appointment := model.Appointment{
+	appt := model.Appointment{
 		// Token:       "",
 		ConfirmedAt: time.Now(),
 		Status:      model.ApntStatusConfirmed,
 	}
-	res := s.DB.Select("ConfirmedAt", "Status").Where("id = ? AND token = ?", appointmentID, token).Updates(&appointment)
+	res := s.DB.Select("ConfirmedAt", "Status").Where("id = ? AND token = ?", apptID, token).Updates(&appt)
 	if err := res.Error; err != nil {
 		redirectPath := "/login?toast=Failed to confirm appointment&level=error"
 		return c.Redirect(redirectPath, fiber.StatusSeeOther)
@@ -358,41 +355,63 @@ func (s *service) HandlePatientConfirm(c *fiber.Ctx) error {
 	vc, _ := view.NewCtx(c,
 		view.WithTheme(theme), view.WithToast(toast, "", ""),
 	)
+
+	if appt.ID == "" {
+		return view.Render(c, view.AppointmentNotFoundPage(vc))
+	}
+
 	return view.Render(c, view.AppointmentConfirmPage(vc))
 }
 
 // HandlePatientCancel lets a patient cancel an appointment
 //
 // GET: /patient/:id/cancel/:token
-func (s *service) HandlePatientCancel(c *fiber.Ctx) error {
-	appointmentID := c.Params("id", "")
+func (s *service) HandlePatientCancelPage(c *fiber.Ctx) error {
+	apptID := c.Params("id", "")
 	token := c.Params("token", "")
-	if appointmentID == "" || token == "" {
-		return c.Redirect("/login?toast=Can't find that appointment&level=error")
-	}
-
-	appointment := model.Appointment{}
-	appointmentUpds := model.Appointment{
-		// Token:      "",
-		CanceledAt: time.Now(),
-		Status:     model.ApntStatusCanceled,
-	}
-	s.DB.Preload("Clinic").Where("id = ? AND token = ?", appointmentID, token).Take(&appointment)
-	res := s.DB.
-		Select("CanceledAt", "Status").
-		Where("id = ? AND token = ?", appointmentID, token).
-		Updates(&appointmentUpds)
-	if err := res.Error; err != nil {
-		redirectPath := "/login?toast=Failed to confirm appointment&level=error"
-		return c.Redirect(redirectPath, fiber.StatusSeeOther)
-	}
+	appt := model.Appointment{}
+	s.DB.Preload("Clinic").Preload("User").Where("id = ? AND token = ?", apptID, token).Take(&appt)
 
 	theme := s.SessionUITheme(c)
-	toast := c.Query("toast", "some toast")
+	toast := c.Query("toast", "")
 	vc, _ := view.NewCtx(c,
 		view.WithTheme(theme), view.WithToast(toast, "", ""),
 	)
-	return view.Render(c, view.AppointmentCancelPage(appointment, vc))
+
+	if appt.ID == "" {
+		return view.Render(c, view.AppointmentNotFoundPage(vc))
+	}
+
+	return view.Render(c, view.AppointmentCancelPage(vc, appt))
+}
+
+// HandlePatientCancel lets a patient cancel an appointment
+//
+// POST: /patient/:id/cancel/:token
+func (s *service) HandlePatientCancel(c *fiber.Ctx) error {
+	apptID := c.Params("id", "")
+	token := c.Params("token", "")
+	apptUpds := model.Appointment{
+		CanceledAt: time.Now(),
+		Status:     model.ApntStatusCanceled,
+	}
+	result := s.DB.
+		Select("CanceledAt", "Status").
+		Where("id = ? AND token = ?", apptID, token).
+		Updates(&apptUpds)
+	if result.Error != nil || result.RowsAffected != 1 {
+		fmt.Println("------>", result.Error.Error())
+	}
+
+	appt := model.Appointment{}
+	s.DB.Preload("Clinic").Where("id = ? AND token = ?", apptID, token).Take(&appt)
+
+	theme := s.SessionUITheme(c)
+	toast := c.Query("toast", "Success!")
+	vc, _ := view.NewCtx(c,
+		view.WithTheme(theme), view.WithToast(toast, "", "sucess"),
+	)
+	return view.Render(c, view.AppointmentCancelPage(vc, appt))
 }
 
 // HandlePatientChangeDate lets a patient mark an appointment as needs
@@ -407,7 +426,6 @@ func (s *service) HandlePatientChangeDate(c *fiber.Ctx) error {
 	}
 
 	appointment := model.Appointment{
-		Token:     "",
 		PendingAt: time.Now(),
 		Status:    model.ApntStatusPending,
 	}

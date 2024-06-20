@@ -7,9 +7,12 @@ import (
 	"miconsul/internal/mailer"
 	"miconsul/internal/model"
 	"miconsul/internal/view"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -334,4 +337,63 @@ func (s *service) HandleShowUser(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(res)
+}
+
+func (s *service) HandleLogtoPage(c *fiber.Ctx) error {
+	// Init LogtoClient
+	logtoClient := s.LogtoClient(c)
+
+	// Use Logto to control the content of the home page
+	authState := "You are not logged in to this website. :("
+
+	if logtoClient.IsAuthenticated() {
+		authState = "You are logged in to this website! :)"
+	}
+
+	vc, _ := view.NewCtx(c)
+	return view.Render(c, view.LogtoPage(vc, authState))
+}
+
+func (s *service) HandleLogtoSignin(c *fiber.Ctx) error {
+	logtoClient := s.LogtoClient(c)
+
+	// The sign-in request is handled by Logto.
+	// The user will be redirected to the Redirect URI on signed in.
+	signInUri, err := logtoClient.SignIn("http://0.0.0.0:3000/logto/callback")
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	// Redirect the user to the Logto sign-in page.
+	return c.Redirect(signInUri, fiber.StatusTemporaryRedirect)
+}
+
+func (s *service) HandleLogtoCallback(c *fiber.Ctx) error {
+	logtoClient := s.LogtoClient(c)
+	req, _ := adaptor.ConvertRequest(c, true)
+
+	err := logtoClient.HandleSignInCallback(req)
+	fmt.Println("LogtoClient.config.msgs", strings.Join(s.LogtoConfig.Msgs, "\n"))
+
+	if err != nil {
+		fmt.Println("--------->", err)
+		return nil
+	}
+
+	// Jump to the page specified by the developer.
+	// This example takes the user back to the home page.
+	return c.Redirect("/logto", http.StatusTemporaryRedirect)
+}
+
+func (s *service) HandleLogtoSignout(c *fiber.Ctx) error {
+	logtoClient := s.LogtoClient(c)
+
+	// The sign-out request is handled by Logto.
+	// The user will be redirected to the Post Sign-out Redirect URI on signed out.
+	signOutUri, err := logtoClient.SignOut("http://0.0.0.0:3000/login")
+	if err != nil {
+		return c.SendStatus(fiber.StatusOK)
+	}
+
+	return c.Redirect(signOutUri, fiber.StatusTemporaryRedirect)
 }

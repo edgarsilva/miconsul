@@ -1,9 +1,9 @@
 package model
 
 import (
+	"miconsul/internal/lib/xid"
 	"time"
 
-	"miconsul/internal/lib/xid"
 	"gorm.io/gorm"
 )
 
@@ -22,7 +22,8 @@ type User struct {
 	ResetTokenExpiresAt   time.Time
 	ExtID                 string
 	ProfilePic            string
-	Name                  string
+	FirstName             string
+	LastName              string
 	Email                 string   `gorm:"uniqueIndex;default:null;not null"`
 	Role                  UserRole `gorm:"index;default:null;not null;type:string"`
 	Password              string   `json:"-"`
@@ -46,4 +47,8 @@ func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 
 func (u User) IsLoggedIn() bool {
 	return u.ID != ""
+}
+
+func (u *User) Name() string {
+	return u.FirstName + " " + u.LastName
 }

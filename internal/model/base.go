@@ -1,9 +1,9 @@
 package model
 
 import (
+	"miconsul/internal/lib/xid"
 	"time"
 
-	"miconsul/internal/lib/xid"
 	"gorm.io/gorm"
 )
 
@@ -21,6 +21,10 @@ type Address struct {
 	State   string `form:"addressState"`
 	Country string `form:"addressCountry"`
 	Zip     string `form:"addressZipCode"`
+}
+
+func (a Address) FullAddress(sep string) string {
+	return a.Line1 + sep + a.Line2 + sep + a.City + ", " + a.State + ", " + a.Country + sep + a.Zip
 }
 
 type SocialMedia struct {
