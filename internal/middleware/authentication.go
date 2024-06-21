@@ -16,7 +16,7 @@ type MWService interface {
 
 func MustAuthenticate(s MWService) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		cu, err := auth.Authenticate(s.DBClient(), c)
+		cu, err := auth.Authenticate(c, s.DBClient())
 		if err != nil {
 			switch c.Accepts("text/html", "text/plain", "application/json") {
 			case "text/plain", "application/json":
@@ -38,7 +38,7 @@ func MustAuthenticate(s MWService) func(c *fiber.Ctx) error {
 
 func MustBeAdmin(s MWService) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		cu, err := auth.Authenticate(s.DBClient(), c)
+		cu, err := auth.Authenticate(c, s.DBClient())
 		if err != nil || cu.Role != model.UserRoleAdmin {
 			switch c.Accepts("*/*", "text/html", "text/plain", "application/json") {
 			case "*/*", "text/html":
@@ -58,7 +58,7 @@ func MustBeAdmin(s MWService) func(c *fiber.Ctx) error {
 
 func MaybeAuthenticate(s MWService) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		cu, _ := auth.Authenticate(s.DBClient(), c)
+		cu, _ := auth.Authenticate(c, s.DBClient())
 		c.Locals("current_user", cu)
 		c.Locals("uid", cu.ID)
 

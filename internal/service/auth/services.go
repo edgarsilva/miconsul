@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"fmt"
 	"miconsul/internal/database"
 	"miconsul/internal/mailer"
 	"miconsul/internal/model"
@@ -190,7 +191,7 @@ func JWTCreateToken(sub, uid string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 		"sub": sub,
 		"uid": uid,
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
+		"exp": time.Now().Add(24 * time.Hour).Unix(),
 	})
 	tokenStr, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {
@@ -202,42 +203,54 @@ func JWTCreateToken(sub, uid string) (string, error) {
 
 // Authenticate an user based on Req Ctx Cookie 'Auth'
 // cookies
-func Authenticate(DB *database.Database, c *fiber.Ctx) (model.User, error) {
+func Authenticate(c *fiber.Ctx, DB *database.Database) (model.User, error) {
 	uid := c.Cookies("Auth", "")
 	if uid == "" {
 		uid = strings.TrimPrefix(c.Get("Authorization", ""), "Bearer ")
 	}
 
-	user, err := authenticateWithJWT(DB, uid)
-	if err == nil {
-		return user, nil
+	user, err := authenticateWithJWT(c, DB, uid)
+	if err != nil {
+		return user, errors.New("failed to authenticate user")
 	}
 
-	return user, errors.New("failed to authenticate user")
+	return user, nil
 }
 
-func authenticateWithJWT(DB *database.Database, tokenStr string) (model.User, error) {
+func authenticateWithJWT(c *fiber.Ctx, DB *database.Database, tokenStr string) (model.User, error) {
 	user := model.User{}
 	if tokenStr == "" {
 		return user, errors.New("JWT token is blank")
 	}
 
-	uid, err := JWTValidateToken(tokenStr)
+	fmt.Println("CHECK 1")
+	claims, err := JWTValidateToken(tokenStr)
 	if err != nil {
 		return user, errors.New("failed to validase JWT token")
 	}
 
+	fmt.Println("CHECK 1.1")
+	uid, ok := claims["uid"].(string)
+	if !ok {
+		uid = ""
+	}
+
+	fmt.Println("CHECK 1.2", uid)
 	result := DB.Where("id = ?", uid).Take(&user)
 	if result.Error != nil {
+		fmt.Println("----->", result.Error)
 		return user, errors.New("user NOT FOUND with UID in JWT token")
 	}
+
+	fmt.Println("CHECK 1.3")
+	RefreshAuthCookie(c, claims)
 
 	return user, nil
 }
 
 // JWTValidateToken returns the uid string from the JWT claims if valid, and an
 // error if not valid or able to parse the token
-func JWTValidateToken(tokenStr string) (uid string, err error) {
+func JWTValidateToken(tokenStr string) (claims jwt.MapClaims, err error) {
 	tokenJWT, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		// Don't forget to validate the algorithm is what you expect:
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -248,18 +261,50 @@ func JWTValidateToken(tokenStr string) (uid string, err error) {
 		return []byte(os.Getenv("JWT_SECRET")), nil
 	})
 	if err != nil {
-		return "", err
+		return jwt.MapClaims{}, err
 	}
 
 	claims, ok := tokenJWT.Claims.(jwt.MapClaims)
 	if !ok {
-		return "", errors.New("JWT token claims can't be parsed")
+		return jwt.MapClaims{}, errors.New("JWT token claims can't be parsed")
 	}
 
-	uid, ok = claims["uid"].(string)
+	uid, ok := claims["uid"].(string)
 	if !ok || uid == "" {
-		return "", errors.New("uid not found in token claims")
+		return jwt.MapClaims{}, errors.New("uid not found in token claims")
 	}
 
-	return uid, nil
+	return claims, nil
+}
+
+func RefreshAuthCookie(c *fiber.Ctx, claims jwt.MapClaims) {
+	exp, err := claims.GetExpirationTime()
+	if err != nil {
+		return
+	}
+
+	t1 := exp.Time
+	t2 := time.Now()
+	diff := t2.Sub(t1)
+	if diff > time.Hour {
+		return
+	}
+
+	email, err := claims.GetSubject()
+	if err != nil {
+		return
+	}
+
+	uid, ok := claims["uid"].(string)
+	if !ok {
+		return
+	}
+
+	jwt, err := JWTCreateToken(email, uid)
+	if err != nil {
+		return
+	}
+
+	fmt.Println("New Token Created and saved in new cookie.")
+	c.Cookie(newCookie("Auth", jwt, time.Hour*8))
 }

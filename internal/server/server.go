@@ -21,6 +21,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/monitor"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/gofiber/fiber/v2/middleware/session"
 	logto "github.com/logto-io/go/client"
@@ -34,7 +35,7 @@ type Server struct {
 	WP           *ants.Pool
 	SessionStore *session.Store
 	DB           *database.Database
-	LC           *localize.Localizer
+	Locales      *localize.Localizer
 	LogtoConfig  *logto.LogtoConfig
 }
 
@@ -52,7 +53,7 @@ func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjo
 
 	// Initialize recover middleware to catch panics that might
 	// stop the application
-	// fiberApp.Use(recover.New())
+	fiberApp.Use(recover.New())
 
 	fiberApp.Use(cors.New())
 
@@ -64,9 +65,6 @@ func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjo
 		Key: os.Getenv("COOKIE_SECRET"),
 	}))
 
-	// Initialize default monitor (Assign the middleware to /metrics)
-	fiberApp.Get("/metrics", monitor.New())
-
 	fiberApp.Use(favicon.New(favicon.Config{
 		File: "./public/favicon.ico",
 		URL:  "/favicon.ico",
@@ -77,6 +75,9 @@ func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjo
 
 	// Adds req language to the session adds local("lang")
 	fiberApp.Use(LocaleLang(sessionStore))
+
+	// Initialize default monitor (Assign the middleware to /metrics)
+	fiberApp.Get("/metrics", monitor.New())
 
 	fiberApp.Static("/public", "./public", fiber.Static{
 		Compress:      true,
@@ -95,7 +96,7 @@ func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjo
 		BGJob:        bgjob,
 		WP:           wp,
 		DB:           db,
-		LC:           locales,
+		Locales:      locales,
 		LogtoConfig:  logtoConfig,
 	}
 }
@@ -225,6 +226,6 @@ func (s *Server) IsHTMX(c *fiber.Ctx) bool {
 	return isHTMX == "true"
 }
 
-func (s *Server) l(lang, key string) string {
-	return s.LC.GetWithLocale(lang, key)
+func (s *Server) L(c *fiber.Ctx, key string) string {
+	return s.Locales.GetWithLocale(s.SessionLang(c), key)
 }

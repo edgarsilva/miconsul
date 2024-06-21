@@ -8,23 +8,23 @@ templ LoginPage(email, msg string, err error, vc *Ctx) {
 		<div class="pt-10 card glass bg-base-100 shadow w-full sm:max-w-[480px] sm:mx-auto">
 			<div class="flex justify-center overflow-visible">
 				<div
-					class="w-28 rounded-lg overflow-clip shadow-xl"
+					class="w-28 rounded-lg overflow-clip"
 				>
 					@CmpLogo()
 				</div>
 			</div>
 			<div class="card-body">
 				<h2 class="card-title">
-					Sign in to your account
+					Miconsul
 					<div class="badge badge-secondary">INC</div>
 				</h2>
 				<form class="space-y-6" action="/login" method="POST">
 					@CmpInputEmail(email)
 					@CmpInputPassword("")
 					<div class="flex items-center justify-between">
-						@CmpCheckbox("Remember me", "remember_me", "true", false)
+						@CmpCheckbox(vc.l("str.keep_me_signed_in"), "remember_me", "true", false)
 						<div class="text-sm leading-6">
-							<a href="/resetpassword" class="link link-secondary link-hover font-semibold underline-offset-2">Forgot password?</a>
+							<a href="/resetpassword" class="link link-secondary link-hover font-semibold underline-offset-2">{ vc.l("str.forgot_password") }</a>
 						</div>
 					</div>
 					if msg != "" {
@@ -40,10 +40,10 @@ templ LoginPage(email, msg string, err error, vc *Ctx) {
 						</div>
 					}
 					<div>
-						<button type="submit" class="btn btn-primary btn-block">Sign in</button>
+						<button type="submit" class="btn btn-primary btn-block">{ vc.l("btn.sign_in") }</button>
 					</div>
 				</form>
-				<div class="divider py-6">Or continue with</div>
+				<div class="divider py-6">{ vc.l("str.or_continue_with") }</div>
 				<div>
 					<div class="grid grid-cols-2 gap-4">
 						<a href="#" class="btn">

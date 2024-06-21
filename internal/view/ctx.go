@@ -2,8 +2,8 @@ package view
 
 import (
 	"errors"
-
 	"miconsul/internal/localize"
+
 	"github.com/gofiber/fiber/v2"
 )
 
