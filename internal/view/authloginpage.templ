@@ -67,8 +67,8 @@ templ LoginPage(email, msg string, err error, vc *Ctx) {
 		</div>
 		<div>
 			<p class="mt-10 text-center text-sm">
-				Not a member?
-				<a href="/signup" class="ml-1 link link-info link-hover font-semibold leading-6">Create an account</a>
+				{ vc.l("str.not_a_member") }
+				<a href="/signup" class="ml-1 link link-info link-hover font-semibold leading-6">{ vc.l("str.create_an_account") }</a>
 			</p>
 		</div>
 	}

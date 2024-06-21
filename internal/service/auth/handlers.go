@@ -96,7 +96,7 @@ func (s *service) HandleSignupPage(c *fiber.Ctx) error {
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme))
 
-	return view.Render(c, view.SignupPage("", err, vc))
+	return view.Render(c, view.SignupPage(vc, "", err))
 }
 
 // HandleSignup creates a new user if email and password are valid
@@ -107,13 +107,13 @@ func (s *service) HandleSignup(c *fiber.Ctx) error {
 	vc, _ := view.NewCtx(c, view.WithTheme(theme))
 	email, password, err := authParams(c)
 	if err != nil {
-		return view.Render(c, view.SignupPage(email, err, vc))
+		return view.Render(c, view.SignupPage(vc, email, err))
 	}
 
 	confirm := c.FormValue("confirm", "")
 	if confirm == "" || password != confirm {
 		err := errors.New("passwords don't match")
-		return view.Render(c, view.SignupPage(email, err, vc))
+		return view.Render(c, view.SignupPage(vc, email, err))
 	}
 
 	err = s.userPendingConfirmation(email)
@@ -125,7 +125,7 @@ func (s *service) HandleSignup(c *fiber.Ctx) error {
 	}
 
 	if err := s.signup(email, password); err != nil {
-		return view.Render(c, view.SignupPage(email, err, vc))
+		return view.Render(c, view.SignupPage(vc, email, err))
 	}
 
 	return c.Redirect("/login?msg=check your inbox to confirm your email")

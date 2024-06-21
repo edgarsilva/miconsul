@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"miconsul/internal/model"
 	"os"
 
@@ -12,7 +13,7 @@ import (
 
 func SendAppointmentBookedEmail(appointment model.Appointment) error {
 	if appointment.Patient.ID == "" || appointment.Clinic.ID == "" {
-		return errors.New("appointment Clinic or Patient association is missing, they must be Preloaded")
+		fmt.Println(errors.New("appointment Clinic or Patient association is missing, they must be Preloaded"))
 	}
 
 	m := gomail.NewMessage()
@@ -23,15 +24,16 @@ func SendAppointmentBookedEmail(appointment model.Appointment) error {
 
 	emailHTML := bytes.Buffer{}
 	if err := AppointmentBookedEmail(appointment).Render(context.Background(), &emailHTML); err != nil {
-		return errors.New("couldn't create HTML from templ comp to send email")
+		fmt.Println(errors.New("couldn't create HTML from templ comp to send email"))
 	}
 	m.SetBody("text/html", emailHTML.String())
 
-	d := gomail.NewDialer("smtp.gmail.com", 587, dialerUsername(), dialerPassword())
+	smtpURL := os.Getenv("EMAIL_SMTP_URL")
+	d := gomail.NewDialer(smtpURL, 587, dialerUsername(), dialerPassword())
 
 	// Send Email
 	if err := d.DialAndSend(m); err != nil {
-		return err
+		fmt.Println(err)
 	}
 
 	return nil

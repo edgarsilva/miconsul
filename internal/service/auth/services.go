@@ -34,9 +34,9 @@ func (s service) signup(email string, password string) error {
 		return err
 	}
 
-	// if err := s.signupIsPasswordValid(password); err != nil {
-	// 	return err
-	// }
+	if err := s.signupIsPasswordValid(password); err != nil {
+		return err
+	}
 
 	pwd, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
