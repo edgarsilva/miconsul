@@ -3,10 +3,10 @@ package server
 import (
 	"os"
 
+	logto "github.com/edgarsilva/logto-go-client/client"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/session"
-	logto "github.com/logto-io/go/client"
 )
 
 const csp = "default-src 'self';base-uri 'self';font-src 'self' https: data:;" +
@@ -24,7 +24,7 @@ func helmetConfig() helmet.Config {
 		ReferrerPolicy:            "no-referrer",
 		CrossOriginEmbedderPolicy: "credentialless",
 		CrossOriginOpenerPolicy:   "same-origin",
-		CrossOriginResourcePolicy: "cross-origin",
+		CrossOriginResourcePolicy: "cross-origin-origin",
 		OriginAgentCluster:        "?1",
 		XDNSPrefetchControl:       "off",
 		XDownloadOptions:          "noopen",
@@ -56,15 +56,15 @@ func LocaleLang(st *session.Store) func(c *fiber.Ctx) error {
 	}
 }
 
-func LogtoConfig() *logto.LogtoConfig {
+func LogtoConfig() logto.LogtoConfig {
 	endpoint := os.Getenv("LOGTO_URL")
 	appid := os.Getenv("LOGTO_APP_ID")
 	appsecret := os.Getenv("LOGTO_APP_SECRET")
-	logtoConfig := logto.LogtoConfig{
+	return logto.LogtoConfig{
 		Endpoint:  endpoint,
 		AppId:     appid,
 		AppSecret: appsecret,
+		Resources: []string{"https://app.miconsul.xyz/api"},
+		Scopes:    []string{"email", "phone", "picture", "custom_data", "app:read", "app:write"},
 	}
-
-	return &logtoConfig
 }

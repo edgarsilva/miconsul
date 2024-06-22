@@ -17,6 +17,10 @@ import (
 //
 // GET: /login
 func (s *service) HandleLoginPage(c *fiber.Ctx) error {
+	if s.LogtoEnabled() {
+		return c.Redirect("/logto/signin", fiber.StatusSeeOther)
+	}
+
 	cu, _ := s.CurrentUser(c)
 	if cu.IsLoggedIn() {
 		return c.Redirect("/")
@@ -171,17 +175,22 @@ func (s *service) HandleSignupConfirmEmail(c *fiber.Ctx) error {
 // HandleLogout calles sessionDestroy and invalidateCookies then redirects to
 // /login
 //
-// DELETE: /logout
+// ALL: /logout
 func (s *service) HandleLogout(c *fiber.Ctx) error {
 	s.SessionDestroy(c)
 	invalidateSessionCookies(c)
 
+	redirectURL := "/login"
+	if s.LogtoEnabled() {
+		redirectURL = "/logto/signout"
+	}
+
 	if c.Get("HX-Request") == "true" {
-		c.Set("HX-Redirect", "/")
+		c.Set("HX-Redirect", redirectURL)
 		return c.SendStatus(fiber.StatusTemporaryRedirect)
 	}
 
-	return c.Redirect("/")
+	return c.Redirect(redirectURL)
 }
 
 // HandlePageResetPassword renders the HTML reset password page/form

@@ -11,6 +11,7 @@ import (
 	"os"
 	"time"
 
+	logto "github.com/edgarsilva/logto-go-client/client"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -24,7 +25,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/gofiber/fiber/v2/middleware/session"
-	logto "github.com/logto-io/go/client"
 	"github.com/panjf2000/ants/v2"
 )
 
@@ -97,7 +97,7 @@ func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjo
 		WP:           wp,
 		DB:           db,
 		Locales:      locales,
-		LogtoConfig:  logtoConfig,
+		LogtoConfig:  &logtoConfig,
 	}
 }
 
@@ -136,6 +136,11 @@ func (s *Server) LogtoClient(c *fiber.Ctx) (client *logto.LogtoClient, save func
 	)
 
 	return logtoClient, func() { sess.Save() }
+}
+
+func (s *Server) LogtoEnabled() bool {
+	logtourl := os.Getenv("LOGTO_URL")
+	return logtourl != ""
 }
 
 func (s *Server) Session(c *fiber.Ctx) *session.Session {

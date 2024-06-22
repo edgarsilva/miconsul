@@ -5,11 +5,11 @@ go 1.21.4
 require (
 	github.com/a-h/templ v0.2.707
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
+	github.com/edgarsilva/logto-go-client v0.0.0-20240622153708-a6f7f21a0c22
 	github.com/go-co-op/gocron/v2 v2.5.0
 	github.com/gofiber/fiber/v2 v2.52.4
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/joho/godotenv v1.5.1
-	github.com/logto-io/go v1.0.6
 	github.com/panjf2000/ants/v2 v2.9.1
 	github.com/pkg/errors v0.9.1
 	github.com/rs/xid v1.5.0

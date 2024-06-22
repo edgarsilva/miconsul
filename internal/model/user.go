@@ -18,18 +18,19 @@ const (
 )
 
 type User struct {
+	ID                    string `gorm:"primarykey;default:null;not null"`
 	ConfirmEmailExpiresAt time.Time
 	ResetTokenExpiresAt   time.Time
 	ExtID                 string
 	ProfilePic            string
-	FirstName             string
-	LastName              string
+	Name                  string
 	Email                 string   `gorm:"uniqueIndex;default:null;not null"`
 	Role                  UserRole `gorm:"index;default:null;not null;type:string"`
 	Password              string   `json:"-"`
 	Theme                 string
 	ResetToken            string
 	ConfirmEmailToken     string
+	Phone                 string
 	ModelBase
 	Clinics      []Clinic
 	Patients     []Patient
@@ -49,6 +50,6 @@ func (u User) IsLoggedIn() bool {
 	return u.ID != ""
 }
 
-func (u *User) Name() string {
-	return u.FirstName + " " + u.LastName
-}
+// func (u *User) Name() string {
+// 	return u.FirstName + " " + u.LastName
+// }

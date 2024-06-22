@@ -13,10 +13,19 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/session"
 	"github.com/golang-jwt/jwt/v5"
 
+	logto "github.com/edgarsilva/logto-go-client/client"
 	"golang.org/x/crypto/bcrypt"
 )
+
+type MWService interface {
+	DBClient() *database.Database
+	Session(*fiber.Ctx) *session.Session
+	LogtoClient(c *fiber.Ctx) (client *logto.LogtoClient, save func())
+	LogtoEnabled() bool
+}
 
 type service struct {
 	*server.Server
@@ -44,7 +53,6 @@ func (s service) signup(email string, password string) error {
 	}
 
 	token := randToken()
-
 	_, err = s.userCreate(email, string(pwd), token)
 	if err != nil {
 		return errors.New("failed to save email or password, try again")
@@ -203,13 +211,45 @@ func JWTCreateToken(sub, uid string) (string, error) {
 
 // Authenticate an user based on Req Ctx Cookie 'Auth'
 // cookies
-func Authenticate(c *fiber.Ctx, DB *database.Database) (model.User, error) {
+func Authenticate(c *fiber.Ctx, mws MWService) (model.User, error) {
+	if mws == nil {
+		return model.User{}, errors.New("failed to authenticate user")
+	}
+
+	if mws.LogtoEnabled() {
+		return logtoStrategy(c, mws)
+	}
+
+	return localStrategy(c, mws)
+}
+
+func logtoStrategy(c *fiber.Ctx, mws MWService) (model.User, error) {
+	logtoClient, saveSess := mws.LogtoClient(c)
+	defer saveSess()
+
+	claims, err := logtoClient.GetIdTokenClaims()
+	if err != nil {
+		return model.User{}, err
+	}
+
+	db := mws.DBClient()
+	user := model.User{ExtID: claims.Sub}
+	result := db.Model(user).Take(&user)
+	if result.Error != nil {
+		return user, errors.New("failed to authenticate user")
+	}
+
+	return user, nil
+}
+
+func localStrategy(c *fiber.Ctx, mws MWService) (model.User, error) {
 	uid := c.Cookies("Auth", "")
 	if uid == "" {
 		uid = strings.TrimPrefix(c.Get("Authorization", ""), "Bearer ")
 	}
 
-	user, err := authenticateWithJWT(c, DB, uid)
+	db := mws.DBClient()
+	user, err := authenticateWithJWT(c, db, uid)
 	if err != nil {
 		return user, errors.New("failed to authenticate user")
 	}
@@ -217,48 +257,43 @@ func Authenticate(c *fiber.Ctx, DB *database.Database) (model.User, error) {
 	return user, nil
 }
 
-func authenticateWithJWT(c *fiber.Ctx, DB *database.Database, tokenStr string) (model.User, error) {
+func authenticateWithJWT(c *fiber.Ctx, db *database.Database, tokenStr string) (model.User, error) {
 	user := model.User{}
 	if tokenStr == "" {
 		return user, errors.New("JWT token is blank")
 	}
-
-	fmt.Println("CHECK 1")
-	claims, err := JWTValidateToken(tokenStr)
+	secret := os.Getenv("JWT_SECRET")
+	claims, err := DecodeJWTToken(secret, tokenStr)
 	if err != nil {
 		return user, errors.New("failed to validase JWT token")
 	}
 
-	fmt.Println("CHECK 1.1")
 	uid, ok := claims["uid"].(string)
 	if !ok {
 		uid = ""
 	}
 
-	fmt.Println("CHECK 1.2", uid)
-	result := DB.Where("id = ?", uid).Take(&user)
+	result := db.Where("id = ?", uid).Take(&user)
 	if result.Error != nil {
-		fmt.Println("----->", result.Error)
 		return user, errors.New("user NOT FOUND with UID in JWT token")
 	}
 
-	fmt.Println("CHECK 1.3")
 	RefreshAuthCookie(c, claims)
 
 	return user, nil
 }
 
-// JWTValidateToken returns the uid string from the JWT claims if valid, and an
+// DecodeJWTToken returns the uid string from the JWT claims if valid, and an
 // error if not valid or able to parse the token
-func JWTValidateToken(tokenStr string) (claims jwt.MapClaims, err error) {
+func DecodeJWTToken(secret, tokenStr string) (claims jwt.MapClaims, err error) {
 	tokenJWT, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		// Don't forget to validate the algorithm is what you expect:
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return "", errors.New("JWT token can't be parsed")
-		}
+		// if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		// 	return "", errors.New("JWT token can't be parsed")
+		// }
 
 		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
-		return []byte(os.Getenv("JWT_SECRET")), nil
+		return []byte(secret), nil
 	})
 	if err != nil {
 		return jwt.MapClaims{}, err

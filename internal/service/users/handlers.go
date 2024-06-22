@@ -59,9 +59,8 @@ func (s *service) HandleMakeUsers(c *fiber.Ctx) error {
 	var users []model.User
 	for i := 0; i <= n; i++ {
 		users = append(users, model.User{
-			FirstName: faker.Name().FirstName(),
-			LastName:  faker.Name().LastName(),
-			Email:     faker.Internet().Email(),
+			Name:  faker.Name().Name(),
+			Email: faker.Internet().Email(),
 		})
 	}
 
