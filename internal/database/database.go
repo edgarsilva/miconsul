@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-const DBOpts = "?cache=shared&mode=rwc&_journal_mode=WAL&_foreign_keys=true"
+const DBOpts = "?mode=rwc&_journal_mode=WAL&_foreign_keys=on&_busy_timeout=5000"
 
 type Database struct {
 	*gorm.DB
