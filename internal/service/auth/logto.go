@@ -121,7 +121,7 @@ func (s *service) HandleLogtoSignout(c *fiber.Ctx) error {
 
 	// The sign-out request is handled by Logto.
 	// The user will be redirected to the Post Sign-out Redirect URI on signed out.
-	signOutUri, err := logtoClient.SignOut(redirectURI("/logout"))
+	signOutUri, err := logtoClient.SignOut(redirectURI("/"))
 	if err != nil {
 		return c.SendStatus(fiber.StatusOK)
 	}
