@@ -11,7 +11,7 @@ import (
 
 func ResetPassword(email, token string) error {
 	m := gomail.NewMessage()
-	m.SetHeader("From", os.Getenv("EMAIL_SENDER"))
+	m.SetHeader("From", os.Getenv("EMAIL_FROM_ADDR"))
 	m.SetHeader("To", "edgarsilva.dev@gmail.com")
 	// m.SetAddressHeader("Cc", "dan@example.com", "Dan")
 	m.SetHeader("Subject", "Scaffold: Reset Your Password!")
@@ -30,7 +30,7 @@ func ResetPassword(email, token string) error {
 	// log.Info("sent CWD ->", cwd)
 	// m.Attach(cwd + "/public/images/ripple-pic.jpg")
 
-	d := gomail.NewDialer("smtp.gmail.com", 587, os.Getenv("EMAIL_SENDER"), os.Getenv("EMAIL_SECRET"))
+	d := gomail.NewDialer("smtp.gmail.com", 587, dialerUsername(), dialerPassword())
 
 	// Send Email
 	if err := d.DialAndSend(m); err != nil {

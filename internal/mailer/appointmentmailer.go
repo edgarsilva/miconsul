@@ -17,7 +17,7 @@ func SendAppointmentBookedEmail(appointment model.Appointment) error {
 	}
 
 	m := gomail.NewMessage()
-	m.SetHeader("From", os.Getenv("EMAIL_SENDER"))
+	m.SetHeader("From", os.Getenv("EMAIL_FROM_ADDR"))
 	m.SetHeader("To", appointment.Patient.Email)
 	m.SetAddressHeader("Bcc", "edgarsilva.dev@gmail.com", "edgarsilva")
 	m.SetHeader("Subject", "Miconsul:"+l("es-MX", "email.confirm_appointment_title"))
@@ -45,7 +45,7 @@ func SendAppointmentReminderEmail(appointment model.Appointment) error {
 	}
 
 	m := gomail.NewMessage()
-	m.SetHeader("From", os.Getenv("EMAIL_SENDER"))
+	m.SetHeader("From", os.Getenv("EMAIL_FROM_ADDR"))
 	m.SetHeader("To", appointment.Patient.Email)
 	m.SetAddressHeader("Bcc", "edgarsilva.dev@gmail.com", "edgarsilva")
 	m.SetHeader("Subject", "Miconsul:"+l("es-MX", "email.confirm_appointment_title"))
