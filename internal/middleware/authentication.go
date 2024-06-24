@@ -5,9 +5,9 @@ import (
 	"miconsul/internal/model"
 	"miconsul/internal/service/auth"
 
-	logto "github.com/logto-io/go/client"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/session"
+	logto "github.com/logto-io/go/client"
 )
 
 type MWService interface {

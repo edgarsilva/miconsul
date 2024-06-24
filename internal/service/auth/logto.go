@@ -18,20 +18,6 @@ import (
 	logtocore "github.com/logto-io/go/core"
 )
 
-func (s *service) HandleLogtoPage(c *fiber.Ctx) error {
-	logtoClient, saveSess := s.LogtoClient(c)
-	defer saveSess()
-
-	// Use Logto to control the content of the home page
-	authState := "You are not logged in to this website. :("
-	if logtoClient.IsAuthenticated() {
-		authState = "You are logged in to this website! :)"
-	}
-
-	vc, _ := view.NewCtx(c)
-	return view.Render(c, view.LogtoPage(vc, authState))
-}
-
 func (s *service) HandleLogtoSignin(c *fiber.Ctx) error {
 	logtoClient, saveSess := s.LogtoClient(c)
 	defer saveSess()
@@ -83,6 +69,34 @@ func (s *service) HandleLogtoCallback(c *fiber.Ctx) error {
 	return c.Redirect("/", http.StatusSeeOther)
 }
 
+func (s *service) HandleLogtoSignout(c *fiber.Ctx) error {
+	logtoClient, saveSess := s.LogtoClient(c)
+	defer saveSess()
+
+	// The sign-out request is handled by Logto.
+	// The user will be redirected to the Post Sign-out Redirect URI on signed out.
+	signOutUri, err := logtoClient.SignOut(redirectURI("/login"))
+	if err != nil {
+		return c.SendStatus(fiber.StatusOK)
+	}
+
+	return c.Redirect(signOutUri, fiber.StatusTemporaryRedirect)
+}
+
+func (s *service) HandleLogtoPage(c *fiber.Ctx) error {
+	logtoClient, saveSess := s.LogtoClient(c)
+	defer saveSess()
+
+	// Use Logto to control the content of the home page
+	authState := "You are not logged in to this website. :("
+	if logtoClient.IsAuthenticated() {
+		authState = "You are logged in to this website! :)"
+	}
+
+	vc, _ := view.NewCtx(c)
+	return view.Render(c, view.LogtoPage(vc, authState))
+}
+
 func (s service) logtoSaveUser(claims logtocore.IdTokenClaims) error {
 	db := s.DBClient()
 	user := model.User{Email: claims.Email}
@@ -113,20 +127,6 @@ func (s service) logtoSaveUser(claims logtocore.IdTokenClaims) error {
 	}
 
 	return nil
-}
-
-func (s *service) HandleLogtoSignout(c *fiber.Ctx) error {
-	logtoClient, saveSess := s.LogtoClient(c)
-	defer saveSess()
-
-	// The sign-out request is handled by Logto.
-	// The user will be redirected to the Post Sign-out Redirect URI on signed out.
-	signOutUri, err := logtoClient.SignOut(redirectURI("/"))
-	if err != nil {
-		return c.SendStatus(fiber.StatusOK)
-	}
-
-	return c.Redirect(signOutUri, fiber.StatusTemporaryRedirect)
 }
 
 func logtoCustomJWTClaims(logtoClient *logto.LogtoClient) (logtocore.IdTokenClaims, error) {
