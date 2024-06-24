@@ -11,7 +11,6 @@ import (
 	"os"
 	"time"
 
-	logto "github.com/logto-io/go/client"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -25,6 +24,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/gofiber/fiber/v2/middleware/session"
+	"github.com/gofiber/storage/sqlite3/v2"
+	logto "github.com/logto-io/go/client"
 	"github.com/panjf2000/ants/v2"
 )
 
@@ -41,7 +42,10 @@ type Server struct {
 
 func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjob *backgroundjob.Sched) *Server {
 	// Initialize session middleware config
-	sessionStore := session.New()
+	storage := sqlite3.New(sessionConfig())
+	sessionStore := session.New(session.Config{
+		Storage: storage,
+	})
 
 	fiberApp := fiber.New()
 
