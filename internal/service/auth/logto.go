@@ -42,7 +42,7 @@ func (s *service) HandleLogtoSignin(c *fiber.Ctx) error {
 
 	// The sign-in request is handled by Logto.
 	// The user will be redirected to the Redirect URI on signed in.
-	signInUri, err := logtoClient.SignIn(callbackURL("/logto/callback"))
+	signInUri, err := logtoClient.SignIn(redirectURI("/logto/callback"))
 	if err != nil {
 		return c.Redirect("/logto/signout")
 	}
@@ -121,7 +121,7 @@ func (s *service) HandleLogtoSignout(c *fiber.Ctx) error {
 
 	// The sign-out request is handled by Logto.
 	// The user will be redirected to the Post Sign-out Redirect URI on signed out.
-	signOutUri, err := logtoClient.SignOut("http://localhost:3000/login")
+	signOutUri, err := logtoClient.SignOut(redirectURI("/logout"))
 	if err != nil {
 		return c.SendStatus(fiber.StatusOK)
 	}
@@ -158,12 +158,12 @@ func logtoDecodeAccessToken(token string) (logtocore.IdTokenClaims, error) {
 	return accessTokenClaims, nil
 }
 
-// callbackURL returns the full qualified callbackURL for the path passed
+// redirectURI returns the full qualified redirectURI for the path passed
 //
 //	e.g.
-//		url := callbackURL("/logto/callback")
+//		url := redirectURI("/logto/callback")
 //		-> http://localhost:3000/logto/callback
-func callbackURL(path string) string {
+func redirectURI(path string) string {
 	domain := os.Getenv("APP_DOMAIN")
 	protocol := os.Getenv("APP_PROTOCOL")
 	path = strings.TrimPrefix(path, "/")
