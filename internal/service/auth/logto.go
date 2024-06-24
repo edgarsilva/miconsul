@@ -42,7 +42,7 @@ func (s *service) HandleLogtoSignin(c *fiber.Ctx) error {
 
 	// The sign-in request is handled by Logto.
 	// The user will be redirected to the Redirect URI on signed in.
-	signInUri, err := logtoClient.SignIn(callbackURL())
+	signInUri, err := logtoClient.SignIn(callbackURL("/logto/callback"))
 	if err != nil {
 		return c.Redirect("/logto/signout")
 	}
