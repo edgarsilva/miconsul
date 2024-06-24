@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-const DBOpts = "?mode=rwc&_journal_mode=WAL&_foreign_keys=on&_busy_timeout=5000"
+const PragmaOpts = "?mode=rwc&_journal_mode=WAL&_foreign_keys=on&_busy_timeout=5000"
 
 type Database struct {
 	*gorm.DB
@@ -35,7 +35,7 @@ func New(DBPath string) *Database {
 		},
 	)
 
-	DB, err := gorm.Open(sqlite.Open(DBPath+DBOpts), &gorm.Config{
+	DB, err := gorm.Open(sqlite.Open(DBPath+PragmaOpts), &gorm.Config{
 		Logger:                 newLogger,
 		SkipDefaultTransaction: true,
 		PrepareStmt:            true,
