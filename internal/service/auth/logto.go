@@ -168,6 +168,6 @@ func redirectURI(path string) string {
 	protocol := os.Getenv("APP_PROTOCOL")
 	path = strings.TrimPrefix(path, "/")
 
-	url := protocol + "://" + domain + path
+	url := protocol + "://" + domain + "/" + path
 	return url
 }
