@@ -7,6 +7,7 @@ import (
 	"miconsul/internal/view"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
@@ -41,8 +42,7 @@ func (s *service) HandleLogtoSignin(c *fiber.Ctx) error {
 
 	// The sign-in request is handled by Logto.
 	// The user will be redirected to the Redirect URI on signed in.
-	callbackURL := os.Getenv("LOGTO_CALLBACK_URL")
-	signInUri, err := logtoClient.SignIn(callbackURL)
+	signInUri, err := logtoClient.SignIn(callbackURL())
 	if err != nil {
 		return c.Redirect("/logto/signout")
 	}
@@ -135,7 +135,7 @@ func logtoCustomJWTClaims(logtoClient *logto.LogtoClient) (logtocore.IdTokenClai
 		return logtocore.IdTokenClaims{}, err
 	}
 
-	claims, err := LogtoDecodeAccessToken(accessToken.Token)
+	claims, err := logtoDecodeAccessToken(accessToken.Token)
 	if err != nil {
 		return logtocore.IdTokenClaims{}, err
 	}
@@ -143,14 +143,7 @@ func logtoCustomJWTClaims(logtoClient *logto.LogtoClient) (logtocore.IdTokenClai
 	return claims, nil
 }
 
-type TClaims struct {
-	Uid      string `json:"uid"`
-	Testkey  string `json:"testkey"`
-	Name     string `json:"name"`
-	Username string `json:"username"`
-}
-
-func LogtoDecodeAccessToken(token string) (logtocore.IdTokenClaims, error) {
+func logtoDecodeAccessToken(token string) (logtocore.IdTokenClaims, error) {
 	jwtObject, err := logtocore.ParseSignedJwt(token)
 	if err != nil {
 		return logtocore.IdTokenClaims{}, err
@@ -163,4 +156,18 @@ func LogtoDecodeAccessToken(token string) (logtocore.IdTokenClaims, error) {
 	}
 
 	return accessTokenClaims, nil
+}
+
+// callbackURL returns the full qualified callbackURL for the path passed
+//
+//	e.g.
+//		url := callbackURL("/logto/callback")
+//		-> http://localhost:3000/logto/callback
+func callbackURL(path string) string {
+	domain := os.Getenv("APP_DOMAIN")
+	protocol := os.Getenv("APP_PROTOCOL")
+	path = strings.TrimPrefix(path, "/")
+
+	url := protocol + "://" + domain + path
+	return url
 }

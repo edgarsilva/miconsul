@@ -12,7 +12,7 @@ import (
 
 func ConfirmEmail(email, token string) error {
 	m := gomail.NewMessage()
-	m.SetHeader("From", os.Getenv("EMAIL_SENDER"))
+	m.SetHeader("From", os.Getenv("EMAIL_FROM_ADDR"))
 	m.SetHeader("To", email)
 	// m.SetAddressHeader("Cc", "dan@example.com", "Dan")
 	m.SetHeader("Subject", "Scaffold: Confirm your email to login to Miconsul!")
