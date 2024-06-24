@@ -16,7 +16,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/session"
 	"github.com/golang-jwt/jwt/v5"
 
-	logto "github.com/edgarsilva/logto-go-client/client"
+	logto "github.com/logto-io/go/client"
 	"golang.org/x/crypto/bcrypt"
 )
 

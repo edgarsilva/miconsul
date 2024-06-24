@@ -14,8 +14,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"golang.org/x/crypto/bcrypt"
 
-	logto "github.com/edgarsilva/logto-go-client/client"
-	logtocore "github.com/edgarsilva/logto-go-client/core"
+	logto "github.com/logto-io/go/client"
+	logtocore "github.com/logto-io/go/core"
 )
 
 func (s *service) HandleLogtoPage(c *fiber.Ctx) error {

@@ -3,7 +3,7 @@ package server
 import (
 	"os"
 
-	logto "github.com/edgarsilva/logto-go-client/client"
+	logto "github.com/logto-io/go/client"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 )
 
