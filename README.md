@@ -1,6 +1,6 @@
-# Go Scaffold
+# Miconsul: patient appointment planner and notification center
 
-A GoScaffold allows you to quickly set-up Ready to deploy Web application projects
+Base on my GoScaffold project which allows you to quickly set-up Ready to deploy Web application projects
 using Go, SQLite with GORM, Templ with HTMX and DaisyUI/TailwindCSS:
 
 - Go Web Server: Fiber
