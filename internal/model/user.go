@@ -18,7 +18,7 @@ const (
 )
 
 type User struct {
-	ID                    string `gorm:"primarykey;default:null;not null"`
+	ID                    string `gorm:"primarykey;default:null;not null" form: "__blank"`
 	ConfirmEmailExpiresAt time.Time
 	ResetTokenExpiresAt   time.Time
 	ExtID                 string

@@ -21,8 +21,8 @@ const (
 )
 
 type Appointment struct {
-	BookedAt            time.Time      `gorm:"index;default:null;not null" form:"-"`
-	OldBookedAt         time.Time      `gorm:"index;default:null" form:"-"`
+	BookedAt            time.Time      `gorm:"index;default:null;not null" form:"_"`
+	OldBookedAt         time.Time      `gorm:"index;default:null" form:"_"`
 	BookedAlertSentAt   time.Time      `gorm:"default:null"`
 	ReminderAlertSentAt time.Time      `gorm:"default:null"`
 	ViewedAt            time.Time      `gorm:"default:null"`
@@ -33,9 +33,9 @@ type Appointment struct {
 	RescheduledAt       time.Time      `gorm:"default:null"`
 	DeletedAt           gorm.DeletedAt `gorm:"index"`
 	ModelBase
-	ID           string            `gorm:"primarykey;default:null;not null"`
+	ID           string            `gorm:"primarykey;default:null;not null" form:"_"`
 	ExtID        string            `form:"extId"`
-	Token        string            `form:"-"`
+	Token        string            `form:"_"`
 	Summary      string            `form:"summary"`
 	Observations string            `form:"observations"`
 	Conclusions  string            `form:"conclusions"`
@@ -51,7 +51,7 @@ type Appointment struct {
 	User         User
 	Patient      Patient
 	Duration     int `form:"duration"`
-	Price        int `form:"-"`
+	Price        int `form:"_"`
 	BookedYear   int
 	BookedMonth  int
 	BookedDay    int

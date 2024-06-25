@@ -2,15 +2,15 @@ package model
 
 import (
 	"errors"
+	"miconsul/internal/lib/xid"
 	"strconv"
 
-	"miconsul/internal/lib/xid"
 	"gorm.io/gorm"
 )
 
 type Clinic struct {
-	ID         string `gorm:"primarykey;default:null;not null" form:"-"`
-	ExtID      string `gorm:"primarykey;default:null;" form:"-"`
+	ID         string `gorm:"primarykey;default:null;not null" form:"_"`
+	ExtID      string `gorm:"primarykey;default:null;" form:"_"`
 	UserID     string `gorm:"index;default:null;not null"`
 	CoverPic   string
 	ProfilePic string         `form:"profilePic"`
@@ -23,7 +23,7 @@ type Clinic struct {
 	ModelBase
 	User     User
 	Favorite bool `form:"favorite"`
-	Price    int  `form:"-"`
+	Price    int  `form:"_"`
 }
 
 func (c *Clinic) BeforeCreate(tx *gorm.DB) error {

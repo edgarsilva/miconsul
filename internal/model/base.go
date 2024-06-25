@@ -11,7 +11,7 @@ type ModelBase struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	fieldErrors map[string]string `gorm:"-:all"`
-	ID          string            `gorm:"primarykey;default:null;not null"`
+	ID          string            `gorm:"primarykey;default:null;not null" form:"__blank"`
 }
 
 type Address struct {

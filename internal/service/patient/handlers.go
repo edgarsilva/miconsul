@@ -1,12 +1,12 @@
 package patient
 
 import (
-	"strconv"
-
 	"miconsul/internal/common"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/model"
 	"miconsul/internal/view"
+	"strconv"
+
 	"github.com/gofiber/fiber/v2"
 	"syreclabs.com/go/faker"
 )
@@ -140,7 +140,7 @@ func (s *service) HandleUpdatePatient(c *fiber.Ctx) error {
 		return c.Redirect("/login")
 	}
 
-	patientID := c.Params("ID", "")
+	patientID := c.Params("id", "")
 	if patientID == "" {
 		patientID = c.FormValue("id", "")
 	}
@@ -149,9 +149,7 @@ func (s *service) HandleUpdatePatient(c *fiber.Ctx) error {
 		return c.Redirect("/patients?msg=can't update without an id", fiber.StatusSeeOther)
 	}
 
-	patient := model.Patient{
-		UserID: cu.ID,
-	}
+	patient := model.Patient{}
 	c.BodyParser(&patient)
 	path, err := SaveProfilePicToDisk(c, patient)
 	if err == nil {
