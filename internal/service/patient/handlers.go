@@ -99,6 +99,7 @@ func (s *service) HandleCreatePatient(c *fiber.Ctx) error {
 		UserID: cu.ID,
 	}
 	c.BodyParser(&patient)
+	patient.Sanitize()
 
 	result := s.DB.Create(&patient)
 	if err := result.Error; err == nil {
@@ -151,6 +152,8 @@ func (s *service) HandleUpdatePatient(c *fiber.Ctx) error {
 
 	patient := model.Patient{}
 	c.BodyParser(&patient)
+	patient.Sanitize()
+
 	path, err := SaveProfilePicToDisk(c, patient)
 	if err == nil {
 		patient.ProfilePic = path

@@ -26,33 +26,12 @@ type Patient struct {
 	MedicalBackground string `form:"medicalBackground"`
 	Notes             string `form:"notes"`
 
-	DeletedAt    gorm.DeletedAt `gorm:"index" form:"_"`
+	DeletedAt    gorm.DeletedAt `form:"_"`
 	User         User
 	Appointments []Appointment
 	Age          int `form:"age"`
 
 	NotificationFlags
-}
-
-func (p *Patient) BeforeSave(tx *gorm.DB) error {
-	p.Email = bluemonday.UGCPolicy().Sanitize(p.Email)
-	p.Phone = bluemonday.UGCPolicy().Sanitize(p.Phone)
-	p.Ocupation = bluemonday.UGCPolicy().Sanitize(p.Ocupation)
-	p.Line1 = bluemonday.UGCPolicy().Sanitize(p.Line1)
-	p.Line2 = bluemonday.UGCPolicy().Sanitize(p.Line2)
-	p.City = bluemonday.UGCPolicy().Sanitize(p.City)
-	p.State = bluemonday.UGCPolicy().Sanitize(p.State)
-	p.Zip = bluemonday.UGCPolicy().Sanitize(p.Zip)
-	p.Country = bluemonday.UGCPolicy().Sanitize(p.Country)
-	p.FamilyHistory = bluemonday.UGCPolicy().Sanitize(p.FamilyHistory)
-	p.MedicalBackground = bluemonday.UGCPolicy().Sanitize(p.MedicalBackground)
-	p.Notes = bluemonday.UGCPolicy().Sanitize(p.Notes)
-	p.Whatsapp = bluemonday.UGCPolicy().Sanitize(p.Whatsapp)
-	p.Telegram = bluemonday.UGCPolicy().Sanitize(p.Telegram)
-	p.Messenger = bluemonday.UGCPolicy().Sanitize(p.Messenger)
-	p.Facebook = bluemonday.UGCPolicy().Sanitize(p.Facebook)
-
-	return nil
 }
 
 func (p *Patient) BeforeCreate(tx *gorm.DB) error {
@@ -103,4 +82,23 @@ func (p Patient) Initials() string {
 	}
 
 	return string([]rune(p.FirstName)[0]) + " " + string([]rune(p.LastName)[0])
+}
+
+func (p *Patient) Sanitize() {
+	p.Email = bluemonday.UGCPolicy().Sanitize(p.Email)
+	p.Phone = bluemonday.UGCPolicy().Sanitize(p.Phone)
+	p.Ocupation = bluemonday.UGCPolicy().Sanitize(p.Ocupation)
+	p.Line1 = bluemonday.UGCPolicy().Sanitize(p.Line1)
+	p.Line2 = bluemonday.UGCPolicy().Sanitize(p.Line2)
+	p.City = bluemonday.UGCPolicy().Sanitize(p.City)
+	p.State = bluemonday.UGCPolicy().Sanitize(p.State)
+	p.Zip = bluemonday.UGCPolicy().Sanitize(p.Zip)
+	p.Country = bluemonday.UGCPolicy().Sanitize(p.Country)
+	p.FamilyHistory = bluemonday.UGCPolicy().Sanitize(p.FamilyHistory)
+	p.MedicalBackground = bluemonday.UGCPolicy().Sanitize(p.MedicalBackground)
+	p.Notes = bluemonday.UGCPolicy().Sanitize(p.Notes)
+	p.Whatsapp = bluemonday.UGCPolicy().Sanitize(p.Whatsapp)
+	p.Telegram = bluemonday.UGCPolicy().Sanitize(p.Telegram)
+	p.Messenger = bluemonday.UGCPolicy().Sanitize(p.Messenger)
+	p.Facebook = bluemonday.UGCPolicy().Sanitize(p.Facebook)
 }
