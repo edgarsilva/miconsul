@@ -152,7 +152,7 @@ templ PatientLi(patient model.Patient, vc *Ctx) {
 			<div class="min-w-0">
 				<p>
 					<span href="/patients" class="font-semibold text-base-content">
-						{ patient.Name() }
+						{ patient.Name }
 					</span>
 				</p>
 				<p class="text-xs leading-5 text-base-content/50">
@@ -273,23 +273,12 @@ templ PatientProfile(patient model.Patient, vc *Ctx) {
 							</div>
 						</div>
 						<div class="sm:col-span-3">
-							<label for="first_name" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.first_name") }</label>
+							<label for="name" class="block text-sm font-medium leading-6 text-base-content">{ l(vc.Locale, "str.name") }</label>
 							<div class="mt-2">
-								<input required min="2" type="text" name="firstName" value={ patient.FirstName } id="first_name" autocomplete="given-name" class="input input-bordered block w-full"/>
-								if patient.FieldError("firstName") != "" {
+								<input required min="2" type="text" name="name" value={ patient.Name } id="name" autocomplete="family-name" class="input input-bordered block w-full"/>
+								if patient.FieldError("name") != "" {
 									<div class="label">
-										<span class="label-text-alt text-error">{ patient.FieldError("firstName") }</span>
-									</div>
-								}
-							</div>
-						</div>
-						<div class="sm:col-span-3">
-							<label for="last_name" class="block text-sm font-medium leading-6 text-base-content">{ l(vc.Locale, "str.last_name") }</label>
-							<div class="mt-2">
-								<input required min="2" type="text" name="lastName" value={ patient.LastName } id="last_name" autocomplete="family-name" class="input input-bordered block w-full"/>
-								if patient.FieldError("lastName") != "" {
-									<div class="label">
-										<span class="label-text-alt text-error">{ patient.FieldError("lastName") }</span>
+										<span class="label-text-alt text-error">{ patient.FieldError("name") }</span>
 									</div>
 								}
 							</div>

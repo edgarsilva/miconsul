@@ -3,6 +3,7 @@ package model
 import (
 	"errors"
 	"miconsul/internal/lib/xid"
+	"strings"
 
 	"github.com/microcosm-cc/bluemonday"
 	"gorm.io/gorm"
@@ -19,8 +20,7 @@ type Patient struct {
 	Phone             string `form:"phone"`
 	Ocupation         string `form:"ocupation"`
 	UserID            string `gorm:"index;default:null;not null"`
-	LastName          string `gorm:"default:null;not null" form:"lastName"`
-	FirstName         string `gorm:"default:null;not null" form:"firstName"`
+	Name              string `gorm:"default:null;not null" form:"name"`
 	ProfilePic        string `form:"profilePic"`
 	FamilyHistory     string `form:"familyHistory"`
 	MedicalBackground string `form:"medicalBackground"`
@@ -45,12 +45,8 @@ func (p *Patient) BeforeCreate(tx *gorm.DB) error {
 }
 
 func (p *Patient) IsValid() error {
-	if len(p.FirstName) == 0 {
-		p.SetFieldError("firstName", "First Name can't be blank")
-	}
-
-	if len(p.FirstName) == 0 {
-		p.SetFieldError("lastName", "Last Name can't be blank")
+	if len(p.Name) == 0 {
+		p.SetFieldError("name", "Name can't be blank")
 	}
 
 	if p.Age <= 0 {
@@ -68,20 +64,24 @@ func (p *Patient) IsValid() error {
 	return nil
 }
 
-func (p *Patient) Name() string {
-	return p.FirstName + " " + p.LastName
-}
-
 func (p Patient) AvatarPic() string {
 	return p.ProfilePic
 }
 
 func (p Patient) Initials() string {
-	if len(p.FirstName) < 2 || len(p.LastName) < 2 {
+	if p.Name == "" {
 		return "PA"
 	}
 
-	return string([]rune(p.FirstName)[0]) + " " + string([]rune(p.LastName)[0])
+	parts := strings.Split(p.Name, " ")
+	a := string(parts[0][0])
+	b := ""
+
+	if len(parts) > 1 {
+		b = string(parts[1][0])
+	}
+
+	return a + b
 }
 
 func (p *Patient) Sanitize() {

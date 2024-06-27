@@ -49,7 +49,3 @@ func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 func (u User) IsLoggedIn() bool {
 	return u.ID != ""
 }
-
-// func (u *User) Name() string {
-// 	return u.FirstName + " " + u.LastName
-// }

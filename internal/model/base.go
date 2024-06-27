@@ -141,6 +141,6 @@ func GlobalFTS(term string) func(db *gorm.DB) *gorm.DB {
 		return db.
 			Joins("INNER JOIN global_fts ON gid = id").
 			Where("global_fts MATCH ?", "\""+term+"\" * ").
-			Order("bm25(global_fts)")
+			Order("bm25(global_fts, 0, 5, 3, 2)")
 	}
 }

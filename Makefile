@@ -84,7 +84,7 @@ clean:
 
 db/create:
 	touch database/app.sqlite
-	db/migrate
+	make db/migrate
 
 db/reset:
 	@read -p "Do you want to reset the DB (you'll loose all data)? [y/n] " choice; \
@@ -92,19 +92,18 @@ db/reset:
 		echo "Exiting..."; \
 		exit 1; \
 	else \
-		rm database/*.sqlite*; \
+		rm -f database/*.sqlite*; \
 	fi; \
 
 db/dump-schema:
 	sqlite3 database/app.sqlite '.schema' > ./database/schema.sql
 
 db/setup:
-	db/reset
-	db/create
-	db/migrate
+	make db/reset
+	make db/create
+	make db/migrate
 
-
-db/create_migration:
+db/migration:
 	${GOPATH}/bin/goose create ${name} sql
 
 db/status:
@@ -119,4 +118,4 @@ db/rollback:
 db/redo:
 	${GOPATH}/bin/goose redo
 
-.PHONY: all install build start run test clean dev
+.PHONY: all install build start run test clean dev db/reset db/create db/migrate

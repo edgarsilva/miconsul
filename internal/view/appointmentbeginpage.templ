@@ -75,7 +75,7 @@ templ PatientCard(patient model.Patient, vc *Ctx) {
 						}
 					</div>
 					<ul class="flex divide-x divide-base-content/10 pt-2">
-						<li class="font-semibold tracking-tight pr-2">{ patient.Name() }</li>
+						<li class="font-semibold tracking-tight pr-2">{ patient.Name }</li>
 						<li class="text-base-content/50 px-2">{ l(vc.Locale, "str.age") + ": " + strconv.Itoa(patient.Age) }</li>
 						<li class="text-base-content/50 px-2">{ l(vc.Locale, "str.ocupation") + ": " + patient.Ocupation }</li>
 					</ul>
