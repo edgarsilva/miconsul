@@ -90,8 +90,8 @@ using Go, SQLite with GORM, Templ with HTMX and DaisyUI/TailwindCSS:
 
 [2024/Jun/25 - 2024/Jun/30]
 
-- [ ] Accept profile pic from Logto
-- [ ] Pull gravatar avatar
+- [ ] Fix navigation buttons on mobile
+- [ ] Accept profile pic from Logto (This is partially done, need to check the identity of social media to pull from there)
 - [ ] Accept file uploads for avatars
 - [ ] Upload images to object storage
 

@@ -21,12 +21,12 @@ templ DashboardPage(vc *Ctx, stats DashboardStats, appointments []model.Appointm
 			@MonthTrends(stats, vc)
 			<div class="flex-1 grid grid-cols-3 gap-5 mt-8">
 				<section
-					class="col-span-3 lg:col-span-2 order-2 lg:order-1"
+					class="col-span-3 lg:col-span-2 order-1 lg:order-1"
 				>
 					@AppointmentsSection(vc, appointments, true)
 				</section>
 				<section
-					class="col-span-3 lg:col-span-1 order-1 lg:order-2 flex flex-col gap-8"
+					class="col-span-3 lg:col-span-1 order-2 lg:order-2 flex flex-col gap-8"
 				>
 					@Clinic()
 					@Feed()

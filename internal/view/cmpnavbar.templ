@@ -1,7 +1,7 @@
 package view
 
 templ CmpNavbar(vc *Ctx) {
-	<header id="header" class="relative mb-8 bg-base-100 border-y border-base-content/10" hx-boost="true">
+	<header id="header" class="relative mb-4 lg:mb-8 bg-base-100 border-y border-base-content/10" hx-boost="true">
 		<nav id="navbar" class="navbar rounded-lg p-4">
 			<div class="navbar-start">
 				<a href="/?timeframe=day" class="relative px-2 rounded-xl self-stretch flex items-center text-xl font-semibold hover:ring hover:ring-secondary/35 hover:bg-secondary/10 active:ring">
@@ -39,10 +39,23 @@ templ CmpNavbar(vc *Ctx) {
 					@CmpBtnTheme(vc.Theme)
 				</div>
 				<div class="md:hidden divider divider-horizontal mx-0"></div>
-				<div class="md:hidden flex-none">
-					<button class="btn btn-square btn-ghost">
+				<div class="md:hidden flex-none dropdown dropdown-end">
+					<button tabindex="0" role="button" class="btn btn-square btn-ghost">
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-5 h-5 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
 					</button>
+					<ul
+						tabindex="0"
+						class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+					>
+						<li><a href="/appointments?timeframe=day">{ l(vc.Locale, "nav.appointments") }</a></li>
+						<li><a href="/clinics">{ l(vc.Locale, "nav.clinics") }</a></li>
+						<li><a href="/patients">{ l(vc.Locale, "nav.patients") }</a></li>
+						if vc.CurrentUser.IsLoggedIn() {
+							<li><a href="/logout">{ l(vc.Locale, "btn.logout") }</a></li>
+						} else {
+							<li><a href="/login">{ l(vc.Locale, "btn.login") }</a></li>
+						}
+					</ul>
 				</div>
 			</div>
 		</nav>
