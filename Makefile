@@ -107,6 +107,7 @@ db/status:
 	${GOPATH}/bin/goose status
 
 db/migrate:
+    @echo "🪿 running migrations with goose before Start"
 	${GOPATH}/bin/goose up
 
 db/rollback:
