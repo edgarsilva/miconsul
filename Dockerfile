@@ -26,6 +26,10 @@ RUN echo "🌬️ Installing TailwindCSS plugins"
 RUN ~/.bun/bin/bun install
 RUN make build
 
+# Migrate DB
+RUN echo "🪿 running migrations with goose before Start"
+RUN make db/migrate
+
 # Start
 CMD ["make", "start"]
 

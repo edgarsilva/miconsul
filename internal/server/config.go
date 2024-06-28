@@ -4,16 +4,41 @@ import (
 	"os"
 	"time"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/storage/sqlite3/v2"
 	logto "github.com/logto-io/go/client"
 )
 
 const csp = "default-src 'self';base-uri 'self';font-src 'self' https: data:;" +
-	"form-action 'self';frame-ancestors 'self';" +
-	"img-src 'self' data: *.dicebear.com *.pravatar.cc images.unsplash.com;object-src 'none';" +
+	"form-action 'self';" +
+	"frame-ancestors 'self';" +
+	"img-src 'self' data: *.dicebear.com *.pravatar.cc images.unsplash.com;" +
+	"object-src 'none';" +
 	"script-src 'self' 'unsafe-eval' 'unsafe-inline' unpkg.com *.unpkg.com *.jsdelivr.net;" +
-	"script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests"
+	"script-src-attr 'none';" +
+	"style-src 'self' https: 'unsafe-inline';" +
+	"upgrade-insecure-requests"
+
+func limiterConfig() limiter.Config {
+	return limiter.Config{
+		Max:               100,
+		Expiration:        60 * time.Second,
+		LimiterMiddleware: limiter.SlidingWindow{},
+	}
+}
+
+func staticConfig() fiber.Static {
+	return fiber.Static{
+		Compress:      true,
+		ByteRange:     true,
+		Browse:        false,
+		Index:         "",
+		CacheDuration: 300 * time.Second,
+		MaxAge:        3600,
+	}
+}
 
 func sessionConfig() sqlite3.Config {
 	sessPath := os.Getenv("SESSION_PATH")

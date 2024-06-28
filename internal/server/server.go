@@ -9,7 +9,6 @@ import (
 	"miconsul/internal/localize"
 	"miconsul/internal/model"
 	"os"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
@@ -19,6 +18,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/favicon"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/monitor"
 	"github.com/gofiber/fiber/v2/middleware/recover"
@@ -80,17 +80,12 @@ func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjo
 	// Adds req language to the session adds local("lang")
 	fiberApp.Use(LocaleLang(sessionStore))
 
+	fiberApp.Use(limiter.New(limiterConfig()))
+
 	// Initialize default monitor (Assign the middleware to /metrics)
 	fiberApp.Get("/metrics", monitor.New())
 
-	fiberApp.Static("/public", "./public", fiber.Static{
-		Compress:      true,
-		ByteRange:     true,
-		Browse:        false,
-		Index:         "",
-		CacheDuration: 300 * time.Second,
-		MaxAge:        3600,
-	})
+	fiberApp.Static("/public", "./public", staticConfig())
 
 	logtoConfig := LogtoConfig()
 

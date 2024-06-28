@@ -90,9 +90,20 @@ using Go, SQLite with GORM, Templ with HTMX and DaisyUI/TailwindCSS:
 
 [2024/Jun/25 - 2024/Jun/30]
 
-- [ ] Show favorite clinic in Dashboard
-- [ ] Show appointment clinic and professional profile in emails and messages
-- [ ] Update actions in emails/messages to use pro info
+- [ ] Accept profile pic from Logto
+- [ ] Pull gravatar avatar
+- [ ] Accept file uploads for avatars
+- [ ] Upload images to object storage
+
+- [ ] Dashboard updates
+
+  - [ ] Show favorite clinic in Dashboard
+
+- [ ] Email/Messages updates
+
+  - [ ] Show appointment clinic and professional profile in emails and messages
+  - [ ] Update actions in emails/messages to use pro info
+
 - [ ] Release to beta testers
 
 ## Overall architecture guidelines for new features (WIP)
