@@ -40,6 +40,7 @@ build:
 	go build -tags fts5 -o bin/app main.go
 
 start:
+	make db/migrate
 	@echo "👟 Starting the app..."
 	bin/app
 

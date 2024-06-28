@@ -27,5 +27,5 @@ RUN ~/.bun/bin/bun install
 RUN make build
 
 # Start
-CMD ["make", "db/migrate", "&&", "make", "start"]
+CMD ["make", "start"]
 
