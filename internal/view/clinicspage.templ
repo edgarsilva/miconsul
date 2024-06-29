@@ -7,10 +7,10 @@ import (
 
 templ ClinicsPage(vc *Ctx, clinics []model.Clinic) {
 	@Layout(vc) {
-		<div class="px-4 lg:px-8">
+		<div class="hidden md:block px-4 lg:px-8">
 			@CmpBtnBack(l(vc.Locale, "btn.back"), "/")
 		</div>
-		<section class="grow flex flex-col px-0 sm:px-4 py-8 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
+		<section class="grow flex flex-col px-0 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<div
 				class="relative"
 			>

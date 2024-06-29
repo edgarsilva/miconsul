@@ -17,7 +17,7 @@ type DashboardStats struct {
 
 templ DashboardPage(vc *Ctx, stats DashboardStats, appointments []model.Appointment) {
 	@Layout(vc) {
-		<main id="content" class="px-4 container mx-auto">
+		<div id="content" class="container md:mx-auto md:px-4">
 			@MonthTrends(stats, vc)
 			<div class="flex-1 grid grid-cols-3 gap-5 mt-8">
 				<section
@@ -32,14 +32,14 @@ templ DashboardPage(vc *Ctx, stats DashboardStats, appointments []model.Appointm
 					@Feed()
 				</section>
 			</div>
-		</main>
+		</div>
 	}
 }
 
 templ MonthTrends(stats DashboardStats, vc *Ctx) {
 	<div>
 		<h3 class="sr-only">{ l(vc.Locale, "str.stats") }</h3>
-		<dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+		<dl class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
 			<div class="app-card relative">
 				<dt>
 					<div class="avatar overflow-hidden absolute mt-1 ml-1">

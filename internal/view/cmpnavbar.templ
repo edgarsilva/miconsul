@@ -1,7 +1,7 @@
 package view
 
 templ CmpNavbar(vc *Ctx) {
-	<header id="header" class="relative mb-4 lg:mb-8 bg-base-100 border-y border-base-content/10" hx-boost="true">
+	<header id="header" class="relative mb-8 lg:mb-12 bg-base-100 border-y border-base-content/10" hx-boost="true">
 		<nav id="navbar" class="navbar rounded-lg p-4">
 			<div class="navbar-start">
 				<a href="/?timeframe=day" class="relative px-2 rounded-xl self-stretch flex items-center text-xl font-semibold hover:ring hover:ring-secondary/35 hover:bg-secondary/10 active:ring">
@@ -51,9 +51,19 @@ templ CmpNavbar(vc *Ctx) {
 						<li><a href="/clinics">{ l(vc.Locale, "nav.clinics") }</a></li>
 						<li><a href="/patients">{ l(vc.Locale, "nav.patients") }</a></li>
 						if vc.CurrentUser.IsLoggedIn() {
-							<li><a href="/logout">{ l(vc.Locale, "btn.logout") }</a></li>
+							<li>
+								<a href="/logout">
+									{ l(vc.Locale, "btn.logout") }
+									@IconHeroOutlineSignout("")
+								</a>
+							</li>
 						} else {
-							<li><a href="/login">{ l(vc.Locale, "btn.login") }</a></li>
+							<li>
+								<a href="/login">
+									{ l(vc.Locale, "btn.login") }
+									@IconHeroOutlineSignin("")
+								</a>
+							</li>
 						}
 					</ul>
 				</div>
