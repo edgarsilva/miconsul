@@ -12,7 +12,12 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-const PragmaOpts = "?mode=rwc&_journal_mode=WAL&_foreign_keys=on&_busy_timeout=5000&_sync=NORMAL"
+const PragmaOpts = "?mode=rwc&" +
+	"_foreign_keys=on&" +
+	"_journal_mode=WAL&" +
+	"_busy_timeout=5000&" +
+	"_sync=NORMAL&" +
+	"_cache_size=2000"
 
 type Database struct {
 	*gorm.DB
