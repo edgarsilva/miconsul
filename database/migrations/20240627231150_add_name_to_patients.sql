@@ -2,11 +2,15 @@
 -- +goose StatementBegin
 ALTER TABLE patients ADD COLUMN name TEXT;
 
-UPDATE patients
-SET name = (
-    SELECT first_name || ' ' || last_name
-    FROM patients p2
-);
+-- Never Update from migrations, if you have enough data since it
+-- runs in a transaction it will lock everything.
+-- Create a bettes Expand/Collapse strategy to make it incrementally.
+--
+-- UPDATE patients
+-- SET name = (
+--     SELECT first_name || ' ' || last_name
+--     FROM patients p2
+-- );
 
 DROP TRIGGER IF EXISTS trgr_insert_patients_on_gfts;
 DROP TRIGGER IF EXISTS trgr_update_patients_on_gfts;

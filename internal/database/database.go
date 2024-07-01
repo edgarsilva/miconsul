@@ -38,9 +38,9 @@ func New(DBPath string) *Database {
 	)
 
 	DB, err := gorm.Open(sqlite.Open(DBPath+PragmaOpts), &gorm.Config{
-		Logger:                 newLogger,
-		SkipDefaultTransaction: false,
-		PrepareStmt:            true,
+		Logger: newLogger,
+		// SkipDefaultTransaction: false,
+		PrepareStmt: true,
 	})
 	if err != nil {
 		panic("failed to connect database")
