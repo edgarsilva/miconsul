@@ -1,11 +1,9 @@
 package view
 
-import (
-	"miconsul/internal/model"
-)
+import "miconsul/internal/model"
 
 templ AppointmentNotFoundPage(vc *Ctx) {
-	@LayoutPrimary(vc) {
+	@LayoutCentered(vc) {
 		<div class="absolute top-4 right-4">
 			@CmpBtnTheme(vc.Theme)
 		</div>
@@ -25,7 +23,7 @@ templ AppointmentNotFoundPage(vc *Ctx) {
 }
 
 templ AppointmentConfirmPage(vc *Ctx) {
-	@LayoutPrimary(vc) {
+	@LayoutCentered(vc) {
 		<div class="absolute top-4 right-4">
 			@CmpBtnTheme(vc.Theme)
 		</div>
@@ -47,7 +45,7 @@ templ AppointmentConfirmPage(vc *Ctx) {
 }
 
 templ AppointmentCancelPage(vc *Ctx, appointment model.Appointment) {
-	@LayoutPrimary(vc) {
+	@LayoutCentered(vc) {
 		<div class="absolute top-4 right-4">
 			@CmpBtnTheme(vc.Theme)
 		</div>

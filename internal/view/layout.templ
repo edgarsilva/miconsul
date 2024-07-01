@@ -50,6 +50,15 @@ templ Layout(vc *Ctx) {
 	}
 }
 
+templ LayoutWithBackBtn(vc *Ctx, backpath string) {
+	@Layout(vc) {
+		<div class="hidden md:block px-4 lg:px-8">
+			@CmpBtnBack(l(vc.Locale, "btn.back"), backpath)
+		</div>
+		{ children... }
+	}
+}
+
 templ LayoutAuth(vc *Ctx) {
 	@HTMLPage(vc) {
 		<div id="root" class="flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -58,7 +67,7 @@ templ LayoutAuth(vc *Ctx) {
 	}
 }
 
-templ LayoutPrimary(vc *Ctx) {
+templ LayoutCentered(vc *Ctx) {
 	@HTMLPage(vc) {
 		<div id="root" class="flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-primary">
 			{ children... }

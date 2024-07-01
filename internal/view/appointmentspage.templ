@@ -7,10 +7,7 @@ import (
 )
 
 templ AppointmentsPage(vc *Ctx, appointments []model.Appointment) {
-	@Layout(vc) {
-		<div class="hidden md:block px-4 lg:px-8">
-			@CmpBtnBack(l(vc.Locale, "btn.back"), "/")
-		</div>
+	@LayoutWithBackBtn(vc, "/") {
 		<section class="grow flex flex-col px-0 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<div
 				class="relative"
@@ -37,11 +34,8 @@ templ AppointmentsPage(vc *Ctx, appointments []model.Appointment) {
 }
 
 templ AppointmentPage(vc *Ctx, appointment model.Appointment, patients []model.Patient, clinics []model.Clinic) {
-	@Layout(vc) {
-		<div class="px-4 lg:px-8">
-			@CmpBtnBack(l(vc.Locale, "btn.back"), "/appointments")
-		</div>
-		<section id="appointment_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
+	@LayoutWithBackBtn(vc, "/appointments") {
+		<section id="appointment_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 md:py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			if appointment.ID == "" || appointment.ID == "new" {
 				<h1 class="px-4 sm:px-0 font-bold text-2xl pb-0 w-full">{ l(vc.Locale, "str.new_appointment") }</h1>
 			} else {

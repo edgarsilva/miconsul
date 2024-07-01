@@ -133,6 +133,7 @@ or_continue_with: "Continuar con"
 not_a_member: "No tienes cuenta?"
 already_a_member: "Ya tienes cuenta?"
 create_account: "Crear cuenta"
+view_appt: "Ver citas"
 
 #_login = "Hello my name is {{.name}}"
 #_hello_firstname_lastname = "Hello {{.firstname}} {{.lastname}}"

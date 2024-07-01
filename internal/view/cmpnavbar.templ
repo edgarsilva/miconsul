@@ -45,21 +45,21 @@ templ CmpNavbar(vc *Ctx) {
 					</button>
 					<ul
 						tabindex="0"
-						class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+						class="menu dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
 					>
-						<li><a href="/appointments?timeframe=day">{ l(vc.Locale, "nav.appointments") }</a></li>
-						<li><a href="/clinics">{ l(vc.Locale, "nav.clinics") }</a></li>
-						<li><a href="/patients">{ l(vc.Locale, "nav.patients") }</a></li>
+						<li><a href="/appointments?timeframe=day" class="btn btn-ghost justify-between">{ l(vc.Locale, "nav.appointments") }</a></li>
+						<li><a href="/clinics" class="btn btn-ghost justify-between">{ l(vc.Locale, "nav.clinics") }</a></li>
+						<li><a href="/patients" class="btn btn-ghost justify-between">{ l(vc.Locale, "nav.patients") }</a></li>
 						if vc.CurrentUser.IsLoggedIn() {
 							<li>
-								<a href="/logout">
+								<a href="/logout" class="btn btn-ghost justify-between">
 									{ l(vc.Locale, "btn.logout") }
 									@IconHeroOutlineSignout("")
 								</a>
 							</li>
 						} else {
 							<li>
-								<a href="/login">
+								<a href="/login" class="btn btn-ghost justify-between">
 									{ l(vc.Locale, "btn.login") }
 									@IconHeroOutlineSignin("")
 								</a>

@@ -96,9 +96,9 @@ using Go, SQLite with GORM, Templ with HTMX and DaisyUI/TailwindCSS:
       the identity of social media to pull from there).
 - [ ] Upload images to object storage?
 
-- [ ] Dashboard updates
+- [x] Dashboard updates
 
-  - [ ] Show favorite clinic in Dashboard
+  - [x] Show favorite clinic in Dashboard
 
 - [ ] Email/Messages updates
 
