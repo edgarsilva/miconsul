@@ -69,9 +69,9 @@ using Go, SQLite with GORM, Templ with HTMX and DaisyUI/TailwindCSS:
 [2024/Jun/10 - 2024/Jun/11]
 
 - [x] Setup servers DNS and Coolify container/service manager
+- [x] Minio install for Litestream
 - [x] Hostinger backup for Sqlite DB backup streams with Litestream/Minio
 - [x] Sep up Goose migrations
-- [x] Minio install for Litestream
 
 ### V1 (We can consider v1 Alpha started here)
 
@@ -92,13 +92,17 @@ using Go, SQLite with GORM, Templ with HTMX and DaisyUI/TailwindCSS:
 
 - [x] Fix navigation buttons on mobile
 - [x] Accept file uploads for avatars
-- [ ] Accept profile pic from Logto (This is partially done, need to check
-      the identity of social media to pull from there).
-- [ ] Upload images to object storage?
 
 - [x] Dashboard updates
 
   - [x] Show favorite clinic in Dashboard
+
+[2024/Jul/01 - 2024/Jul/07]
+
+- [x] Upload patients profile pic to disk under authentication
+- [ ] Accept profile pic from Logto (This is partially done, need to check
+      the identity of social media to pull from there).
+- [ ] Upload images to object storage?
 
 - [ ] Email/Messages updates
 

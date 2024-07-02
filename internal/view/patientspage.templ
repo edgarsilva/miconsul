@@ -242,7 +242,7 @@ templ PatientProfile(patient model.Patient, vc *Ctx) {
 									<figure class="flex flex-col gap-1 items-center" id="avatar_pic">
 										<div class="avatar">
 											<div class="w-12 rounded-full">
-												<img src={ string(templ.URL(patient.ProfilePic)) }/>
+												<img src={ "/patients/" + patient.ID + "/profilepic/" + patient.ProfilePic }/>
 											</div>
 										</div>
 										<a

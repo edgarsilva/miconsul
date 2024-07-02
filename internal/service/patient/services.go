@@ -3,9 +3,11 @@ package patient
 import (
 	"errors"
 	"fmt"
-
 	"miconsul/internal/model"
 	"miconsul/internal/server"
+	"os"
+	"path/filepath"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -19,6 +21,8 @@ func NewService(s *server.Server) service {
 	}
 }
 
+const patientsDir = "/patients"
+
 func SaveProfilePicToDisk(c *fiber.Ctx, patient model.Patient) (string, error) {
 	profilePic, err := c.FormFile("profilePic")
 	if err != nil {
@@ -26,14 +30,36 @@ func SaveProfilePicToDisk(c *fiber.Ctx, patient model.Patient) (string, error) {
 	}
 
 	if patient.ID == "" {
-		return "", errors.New("can't save profile pic without patient.ID")
+		return "", errors.New("failed to save profile pic without patient.ID")
 	}
 
-	path := "/public/assets/profile_pics/" + patient.ID + "_" + profilePic.Filename
-	err = c.SaveFile(profilePic, "."+path)
+	filename := patient.ID + "_ppic_" + profilePic.Filename
+	path, err := ProfilePicPath(filename)
+	if err != nil {
+		return "", errors.New("failed to save profile pic without an ASSETS_DIR")
+	}
+
+	err = c.SaveFile(profilePic, path)
 	if err != nil {
 		return "", fmt.Errorf("failed to save profilePic to disk: %w", err)
 	}
 
-	return path, nil
+	return filename, nil
+}
+
+func ProfilePicPath(filename string) (string, error) {
+	assetsDir := os.Getenv("ASSETS_DIR")
+	if assetsDir == "" {
+		return "", errors.New("failed to find assets directory")
+	}
+
+	path := filepath.Join("./", assetsDir, patientsDir)
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		err := os.Mkdir(path, os.ModeDir|0755)
+		if err != nil {
+			return "", errors.New("failed to create assets/patients dir")
+		}
+	}
+
+	return path + "/" + filename, nil
 }

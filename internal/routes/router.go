@@ -115,6 +115,7 @@ func PatientRoutes(s *server.Server) {
 	g.Post("/search", p.HandlePatientSearch)
 
 	g.Get("/:id", p.HandlePatientFormPage)
+	g.Get("/:id/profilepic/:filename", p.HandlePatientProfilePicImgSrc)
 
 	g.Post("/", p.HandleCreatePatient)
 

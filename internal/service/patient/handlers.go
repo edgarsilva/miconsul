@@ -5,6 +5,7 @@ import (
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/model"
 	"miconsul/internal/view"
+	"net/url"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -150,7 +151,7 @@ func (s *service) HandleUpdatePatient(c *fiber.Ctx) error {
 		return c.Redirect("/patients?msg=can't update without an id", fiber.StatusSeeOther)
 	}
 
-	patient := model.Patient{}
+	patient := model.Patient{ID: patientID, UserID: cu.ID}
 	c.BodyParser(&patient)
 	patient.Sanitize()
 
@@ -159,8 +160,8 @@ func (s *service) HandleUpdatePatient(c *fiber.Ctx) error {
 		patient.ProfilePic = path
 	}
 
-	res := s.DB.Where("id = ? AND user_id = ?", patientID, cu.ID).Updates(&patient)
-	if err := res.Error; err != nil {
+	result := s.DB.Where("id = ? AND user_id = ?", patientID, cu.ID).Updates(&patient)
+	if err := result.Error; err != nil {
 		redirectPath := "/patients?err=failed to update patient&level=error"
 		if !s.IsHTMX(c) {
 			return c.Redirect(redirectPath)
@@ -308,4 +309,18 @@ func (s *service) HandleMockManyPatients(c *fiber.Ctx) error {
 	}
 
 	return c.SendString("Rowsaffected:" + strconv.Itoa(int(result.RowsAffected)))
+}
+
+func (s *service) HandlePatientProfilePicImgSrc(c *fiber.Ctx) error {
+	id := c.Params("id", "")
+	filename := c.Params("filename", "")
+	if id == "" || filename == "" {
+		return c.SendStatus(fiber.StatusNotFound)
+	}
+
+	path, err := ProfilePicPath(filename)
+	if err != nil {
+		return c.SendStatus(fiber.StatusNotFound)
+	}
+	return c.SendFile(url.PathEscape(path))
 }
