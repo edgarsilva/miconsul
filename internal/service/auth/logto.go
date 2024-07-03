@@ -53,13 +53,19 @@ func (s *service) HandleLogtoCallback(c *fiber.Ctx) error {
 		return c.Redirect("/logto/signout")
 	}
 
-	claims, err := logtoClient.GetIdTokenClaims()
-	if err != nil || claims.Email == "" {
-		log.Error("failed to get IdTokenClaims in logto callback handler")
+	// claims, err := logtoClient.GetIdTokenClaims()
+	// if err != nil {
+	// 	log.Error("failed to get IdTokenClaims in logto callback handler")
+	// 	return c.Redirect("/logto/signout")
+	// }
+
+	logtoUser, err := logtoCustomJWTClaims(logtoClient)
+	if err != nil {
+		log.Error("failed to get CustomClaims from logto")
 		return c.Redirect("/logto/signout")
 	}
 
-	err = s.logtoSaveUser(claims)
+	err = s.logtoSaveUser(logtoUser)
 	if err != nil {
 		log.Error("failed to save user from profile in logto callback handler")
 		return c.Redirect("/logto/signout")
@@ -97,7 +103,7 @@ func (s *service) HandleLogtoPage(c *fiber.Ctx) error {
 	return view.Render(c, view.LogtoPage(vc, authState))
 }
 
-func (s service) logtoSaveUser(claims logtocore.IdTokenClaims) error {
+func (s service) logtoSaveUser(claims LogtoUser) error {
 	db := s.DBClient()
 	user := model.User{Email: claims.Email}
 	db.Where("email = ?", claims.Email).Take(&user)
@@ -118,6 +124,9 @@ func (s service) logtoSaveUser(claims logtocore.IdTokenClaims) error {
 	user.ExtID = claims.Sub
 	user.Email = claims.Email
 	user.ProfilePic = claims.Picture
+	if claims.Picture == "" && claims.Identities.Google.Details.Avatar != "" {
+		user.ProfilePic = claims.Identities.Google.Details.Avatar
+	}
 	user.Phone = claims.PhoneNumber
 	user.Role = model.UserRoleUser
 
@@ -129,30 +138,30 @@ func (s service) logtoSaveUser(claims logtocore.IdTokenClaims) error {
 	return nil
 }
 
-func logtoCustomJWTClaims(logtoClient *logto.LogtoClient) (logtocore.IdTokenClaims, error) {
+func logtoCustomJWTClaims(logtoClient *logto.LogtoClient) (LogtoUser, error) {
 	accessToken, err := logtoClient.GetAccessToken("https://app.miconsul.xyz/api")
 	if err != nil {
-		return logtocore.IdTokenClaims{}, err
+		return LogtoUser{}, err
 	}
 
 	claims, err := logtoDecodeAccessToken(accessToken.Token)
 	if err != nil {
-		return logtocore.IdTokenClaims{}, err
+		return LogtoUser{}, err
 	}
 
 	return claims, nil
 }
 
-func logtoDecodeAccessToken(token string) (logtocore.IdTokenClaims, error) {
+func logtoDecodeAccessToken(token string) (LogtoUser, error) {
 	jwtObject, err := logtocore.ParseSignedJwt(token)
 	if err != nil {
-		return logtocore.IdTokenClaims{}, err
+		return LogtoUser{}, err
 	}
 
-	var accessTokenClaims logtocore.IdTokenClaims
-	claimsErr := jwtObject.UnsafeClaimsWithoutVerification(&accessTokenClaims)
-	if claimsErr != nil {
-		return logtocore.IdTokenClaims{}, claimsErr
+	var accessTokenClaims LogtoUser
+	err = jwtObject.UnsafeClaimsWithoutVerification(&accessTokenClaims)
+	if err != nil {
+		return LogtoUser{}, err
 	}
 
 	return accessTokenClaims, nil
