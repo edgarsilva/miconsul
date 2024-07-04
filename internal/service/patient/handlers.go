@@ -107,6 +107,7 @@ func (s *service) HandleCreatePatient(c *fiber.Ctx) error {
 	if err := result.Error; err == nil {
 		path, err := SaveProfilePicToDisk(c, patient)
 		if err == nil {
+			log.Error(err)
 			patient.ProfilePic = path
 		}
 	}
