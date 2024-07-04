@@ -127,3 +127,8 @@ func AppointmentBookedThisMonth(db *gorm.DB) *gorm.DB {
 
 	return db.Where("booked_at > ?", t).Where("booked_at < ?", t.Add(time.Hour*24*dinm))
 }
+
+func (a *Appointment) BookedAtLT() time.Time {
+	localTime := common.LocalTime("MexicoCity", a.BookedAt)
+	return localTime
+}

@@ -1,6 +1,7 @@
 package view
 
 import (
+	"miconsul/internal/common"
 	"miconsul/internal/model"
 	"strconv"
 	"time"
@@ -272,9 +273,9 @@ templ AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.P
 										type="datetime-local"
 										name="bookedAt"
 										if appointment.BookedAt.IsZero() {
-											value={ time.Now().Format("2006-01-02T15:04") }
+											value={ common.LocalTime("MexicoCity", time.Now()).Format("2006-01-02T15:04") }
 										} else {
-											value={ appointment.BookedAt.Format("2006-01-02T15:04") }
+											value={ appointment.BookedAtLT().Format("2006-01-02T15:04") }
 										}
 										id="booked_at"
 										class="input input-bordered block w-full"
