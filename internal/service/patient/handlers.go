@@ -5,7 +5,6 @@ import (
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/model"
 	"miconsul/internal/view"
-	"net/url"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -325,5 +324,5 @@ func (s *service) HandlePatientProfilePicImgSrc(c *fiber.Ctx) error {
 	if err != nil {
 		return c.SendStatus(fiber.StatusNotFound)
 	}
-	return c.SendFile(url.PathEscape(path))
+	return c.SendFile(path)
 }
