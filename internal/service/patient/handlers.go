@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 	"syreclabs.com/go/faker"
 )
 
@@ -157,6 +158,7 @@ func (s *service) HandleUpdatePatient(c *fiber.Ctx) error {
 
 	path, err := SaveProfilePicToDisk(c, patient)
 	if err == nil {
+		log.Error(err)
 		patient.ProfilePic = path
 	}
 
