@@ -37,7 +37,7 @@ func SaveProfilePicToDisk(c *fiber.Ctx, patient model.Patient) (string, error) {
 	filename := patient.ID + "_ppic_" + profilePic.Filename
 	path, err := ProfilePicPath(filename)
 	if err != nil {
-		return "", errors.New("failed to save profile pic without an ASSETS_DIR")
+		return "", fmt.Errorf("failed to save profile pic without an ASSETS_DIR: %w", err)
 	}
 
 	err = c.SaveFile(profilePic, path)
@@ -57,7 +57,7 @@ func ProfilePicPath(filename string) (string, error) {
 		return "", errors.New("failed to find assets directory")
 	}
 
-	path := filepath.Join("./", assetsDir, patientsDir)
+	path := filepath.Join(assetsDir, patientsDir)
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		err := os.Mkdir(path, os.ModeDir|0755)
 		if err != nil {
