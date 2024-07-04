@@ -30,9 +30,15 @@ templ CmpNavbar(vc *Ctx) {
 					</div>
 					<div class="divider divider-horizontal"></div>
 					if vc.CurrentUser.IsLoggedIn() {
-						<a class="btn btn-ghost" href="/logout">{ l(vc.Locale, "btn.logout") }</a>
+						<a class="btn btn-ghost" href="/logout">
+							{ l(vc.Locale, "btn.logout") }
+							@IconHeroOutlineSignout("")
+						</a>
 					} else {
-						<a class="btn btn-ghost" href="/login">{ l(vc.Locale, "btn.login") }</a>
+						<a class="btn btn-ghost" href="/login">
+							{ l(vc.Locale, "btn.login") }
+							@IconHeroOutlineSignin("")
+						</a>
 					}
 				</div>
 				<div class="flex-none px-1">
@@ -41,25 +47,25 @@ templ CmpNavbar(vc *Ctx) {
 				<div class="md:hidden divider divider-horizontal mx-0"></div>
 				<div class="md:hidden flex-none dropdown dropdown-end">
 					<button tabindex="0" role="button" class="btn btn-square btn-ghost">
-						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-5 h-5 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+						@IconMenu()
 					</button>
 					<ul
 						tabindex="0"
 						class="menu dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
 					>
-						<li><a href="/appointments?timeframe=day" class="btn btn-ghost justify-between">{ l(vc.Locale, "nav.appointments") }</a></li>
-						<li><a href="/clinics" class="btn btn-ghost justify-between">{ l(vc.Locale, "nav.clinics") }</a></li>
-						<li><a href="/patients" class="btn btn-ghost justify-between">{ l(vc.Locale, "nav.patients") }</a></li>
+						<li><a href="/appointments?timeframe=day" class="btn btn-ghost justify-start">{ l(vc.Locale, "nav.appointments") }</a></li>
+						<li><a href="/clinics" class="btn btn-ghost justify-start">{ l(vc.Locale, "nav.clinics") }</a></li>
+						<li><a href="/patients" class="btn btn-ghost justify-start">{ l(vc.Locale, "nav.patients") }</a></li>
 						if vc.CurrentUser.IsLoggedIn() {
 							<li>
-								<a href="/logout" class="btn btn-ghost justify-between">
+								<a href="/logout" class="btn btn-ghost justify-start">
 									{ l(vc.Locale, "btn.logout") }
 									@IconHeroOutlineSignout("")
 								</a>
 							</li>
 						} else {
 							<li>
-								<a href="/login" class="btn btn-ghost justify-between">
+								<a href="/login" class="btn btn-ghost justify-start">
 									{ l(vc.Locale, "btn.login") }
 									@IconHeroOutlineSignin("")
 								</a>
