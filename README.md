@@ -100,9 +100,8 @@ using Go, SQLite with GORM, Templ with HTMX and DaisyUI/TailwindCSS:
 [2024/Jul/01 - 2024/Jul/07]
 
 - [x] Upload patients profile pic to disk under authentication
-- [ ] Accept profile pic from Logto (This is partially done, need to check
-      the identity of social media to pull from there).
-- [ ] Upload images to object storage?
+- [x] Accept profile pic from Logto, from google identity.
+- [ ] Upload images to object storage? <- still unsure about this one...
 
 - [ ] Email/Messages updates
 

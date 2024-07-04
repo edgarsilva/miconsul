@@ -64,10 +64,6 @@ func (p *Patient) IsValid() error {
 	return nil
 }
 
-func (p Patient) AvatarPic() string {
-	return p.ProfilePic
-}
-
 func (p Patient) Initials() string {
 	if p.Name == "" {
 		return "PA"
@@ -101,4 +97,12 @@ func (p *Patient) Sanitize() {
 	p.Telegram = bluemonday.UGCPolicy().Sanitize(p.Telegram)
 	p.Messenger = bluemonday.UGCPolicy().Sanitize(p.Messenger)
 	p.Facebook = bluemonday.UGCPolicy().Sanitize(p.Facebook)
+}
+
+func (p *Patient) ProfilePicPath() string {
+	return p.ProfilePic
+}
+
+func (p Patient) AvatarPic() string {
+	return p.ProfilePicPath()
 }

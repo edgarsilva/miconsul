@@ -240,11 +240,7 @@ templ PatientProfile(patient model.Patient, vc *Ctx) {
 							<div class="mt-2 flex items-center gap-x-3">
 								if patient.ProfilePic != "" {
 									<figure class="flex flex-col gap-1 items-center" id="avatar_pic">
-										<div class="avatar">
-											<div class="w-12 rounded-full">
-												<img src={ "/patients/" + patient.ID + "/profilepic/" + patient.ProfilePic }/>
-											</div>
-										</div>
+										@CmpAvatar(patient)
 										<a
 											href={ templ.URL("/patients/" + patient.ID + "/removepic") }
 											hx-patch={ "/patients/" + patient.ID + "/removepic" }

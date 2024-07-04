@@ -44,7 +44,9 @@ func SaveProfilePicToDisk(c *fiber.Ctx, patient model.Patient) (string, error) {
 		return "", fmt.Errorf("failed to save profilePic to disk: %w", err)
 	}
 
-	return filename, nil
+	// we return the url path to retrieve it, not where it's stored on disk
+	imgsrc := "/patients/" + patient.ID + "/profilepic/" + filename
+	return imgsrc, nil
 }
 
 func ProfilePicPath(filename string) (string, error) {
