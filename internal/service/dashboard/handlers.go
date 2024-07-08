@@ -1,7 +1,7 @@
 package dashboard
 
 import (
-	"miconsul/internal/common"
+	"miconsul/internal/lib/libtime"
 	"miconsul/internal/model"
 	"miconsul/internal/view"
 	"time"
@@ -30,7 +30,7 @@ func (s *service) HandleDashboardPage(c *fiber.Ctx) error {
 	case "month":
 		query.Scopes(model.AppointmentBookedThisMonth)
 	default:
-		query.Where("booked_at > ?", common.BoD(time.Now()))
+		query.Where("booked_at > ?", libtime.BoD(time.Now()))
 	}
 
 	clinic := model.Clinic{}

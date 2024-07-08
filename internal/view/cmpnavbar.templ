@@ -32,12 +32,12 @@ templ CmpNavbar(vc *Ctx) {
 					if vc.CurrentUser.IsLoggedIn() {
 						<a class="btn btn-ghost" href="/logout">
 							{ l(vc.Locale, "btn.logout") }
-							@IconHeroOutlineSignout("")
+							@IconSignout("")
 						</a>
 					} else {
 						<a class="btn btn-ghost" href="/login">
 							{ l(vc.Locale, "btn.login") }
-							@IconHeroOutlineSignin("")
+							@IconSignin("")
 						</a>
 					}
 				</div>
@@ -60,14 +60,14 @@ templ CmpNavbar(vc *Ctx) {
 							<li>
 								<a href="/logout" class="btn btn-ghost justify-start">
 									{ l(vc.Locale, "btn.logout") }
-									@IconHeroOutlineSignout("")
+									@IconSignout("")
 								</a>
 							</li>
 						} else {
 							<li>
 								<a href="/login" class="btn btn-ghost justify-start">
 									{ l(vc.Locale, "btn.login") }
-									@IconHeroOutlineSignin("")
+									@IconSignin("")
 								</a>
 							</li>
 						}

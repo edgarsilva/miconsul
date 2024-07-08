@@ -1,9 +1,9 @@
 package patient
 
 import (
-	"miconsul/internal/common"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/model"
+	"miconsul/internal/lib"
 	"miconsul/internal/view"
 	"strconv"
 
@@ -296,7 +296,7 @@ func (s *service) HandleMockManyPatients(c *fiber.Ctx) error {
 		ExtID := xid.New("prav")
 		patients = append(patients, model.Patient{
 			ExtID:      ExtID,
-			ProfilePic: common.PravatarURL(ExtID),
+			ProfilePic: lib.PravatarURL(ExtID),
 			Name:       faker.Name().Name(),
 			Email:      faker.Internet().Email(),
 			Phone:      faker.PhoneNumber().CellPhone(),

@@ -1,10 +1,9 @@
 -- +goose Up
 -- +goose StatementBegin
-ALTER TABLE clinics ADD COLUMN price integer;
+ALTER TABLE appointments ADD COLUMN timezone text;
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-ALTER TABLE clinics DROP COLUMN price;
+ALTER TABLE appointments DROP COLUMN timezone;
 -- +goose StatementEnd
--

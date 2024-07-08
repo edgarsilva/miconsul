@@ -1,12 +1,11 @@
 package dashboard
 
 import (
-	"time"
-
-	"miconsul/internal/common"
+	"miconsul/internal/lib/libtime"
 	"miconsul/internal/model"
 	"miconsul/internal/server"
 	"miconsul/internal/view"
+	"time"
 )
 
 type service struct {
@@ -34,7 +33,7 @@ func (s service) CalcMonthlyStats(modelIface interface{}) view.DashboardStat {
 	s.DB.Model(modelIface).Count(&cnt)
 
 	var lastMonth int64
-	s.DB.Model(modelIface).Where("created_at <= ?", common.BoM(time.Now())).Count(&lastMonth)
+	s.DB.Model(modelIface).Where("created_at <= ?", libtime.BoM(time.Now())).Count(&lastMonth)
 
 	var diff int64 = cnt - lastMonth
 

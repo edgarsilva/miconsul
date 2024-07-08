@@ -1,9 +1,8 @@
 package view
 
 import (
-	"strconv"
-
 	"miconsul/internal/model"
+	"strconv"
 )
 
 templ AppointmentBeginPage(appointment model.Appointment, vc *Ctx) {
@@ -55,7 +54,7 @@ templ PatientCard(patient model.Patient, vc *Ctx) {
 							<h3>
 								{ l(vc.Locale, "str.last_appointment") }
 								if len(patient.Appointments) > 0 {
-									<time datetime={ patient.Appointments[0].BookedAt.Format(FormTimeFormat) }>{ patient.Appointments[0].BookedAt.Format(ViewTimeFormat) }</time>
+									@CmpTime(patient.Appointments[0].BookedAt)
 								}
 							</h3>
 						</hgroup>
@@ -99,7 +98,7 @@ templ AppointmentBegin(appointment model.Appointment, vc *Ctx) {
 				<input type="hidden" name="id" value={ appointment.ID } id="mb_appointment_id"/>
 				<input type="hidden" name="status" value="done" id="mb_appointment_id"/>
 				<div class="flex justify-end p-4 pb-0 text-base-content/50">
-					<time datetime={ appointment.BookedAt.Format(FormTimeFormat) }>{ appointment.BookedAt.Format(ViewTimeFormat) }</time>
+					@CmpTime(appointment.BookedAt)
 				</div>
 				<form
 					id="patch_appointment"

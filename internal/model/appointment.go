@@ -1,13 +1,16 @@
 package model
 
 import (
-	"miconsul/internal/common"
+	"miconsul/internal/lib"
+	"miconsul/internal/lib/libtime"
 	"miconsul/internal/lib/xid"
 	"strconv"
 	"time"
 
 	"gorm.io/gorm"
 )
+
+const DefaultTimezone = "MexicoCity"
 
 type AppointmentStatus string
 
@@ -21,17 +24,17 @@ const (
 )
 
 type Appointment struct {
-	BookedAt            time.Time      `gorm:"index;default:null;not null" form:"_"`
-	OldBookedAt         time.Time      `gorm:"index;default:null" form:"_"`
-	BookedAlertSentAt   time.Time      `gorm:"default:null"`
-	ReminderAlertSentAt time.Time      `gorm:"default:null"`
-	ViewedAt            time.Time      `gorm:"default:null"`
-	ConfirmedAt         time.Time      `gorm:"default:null"`
-	DoneAt              time.Time      `gorm:"default:null"`
-	CanceledAt          time.Time      `gorm:"default:null"`
-	PendingAt           time.Time      `gorm:"default:null"`
-	RescheduledAt       time.Time      `gorm:"default:null"`
-	DeletedAt           gorm.DeletedAt `gorm:"index"`
+	BookedAt            time.Time `gorm:"index;default:null;not null" form:"_"`
+	OldBookedAt         time.Time `gorm:"index;default:null" form:"_"`
+	BookedAlertSentAt   time.Time `gorm:"default:null"`
+	ReminderAlertSentAt time.Time `gorm:"default:null"`
+	ViewedAt            time.Time `gorm:"default:null"`
+	ConfirmedAt         time.Time `gorm:"default:null"`
+	DoneAt              time.Time `gorm:"default:null"`
+	CanceledAt          time.Time `gorm:"default:null"`
+	PendingAt           time.Time `gorm:"default:null"`
+	RescheduledAt       time.Time `gorm:"default:null"`
+	DeletedAt           gorm.DeletedAt
 	ModelBase
 	ID           string            `gorm:"primarykey;default:null;not null" form:"_"`
 	ExtID        string            `form:"extId"`
@@ -41,6 +44,7 @@ type Appointment struct {
 	Conclusions  string            `form:"conclusions"`
 	Notes        string            `form:"notes"`
 	Hashtags     string            `form:"hashtags"`
+	Timezone     string            `form:"timezone"`
 	UserID       string            `gorm:"index;default:null;not null"`
 	ClinicID     string            `gorm:"index;default:null;not null" form:"clinicId"`
 	PatientID    string            `gorm:"index;default:null;not null" form:"patientId"`
@@ -78,7 +82,7 @@ func (a *Appointment) ConfirmPath() string {
 }
 
 func (a *Appointment) ConfirmURL() string {
-	return common.AppURL() + a.ConfirmPath()
+	return lib.AppURL() + a.ConfirmPath()
 }
 
 func (a *Appointment) CancelPath() string {
@@ -86,7 +90,7 @@ func (a *Appointment) CancelPath() string {
 }
 
 func (a *Appointment) CancelURL() string {
-	return common.AppURL() + a.CancelPath()
+	return lib.AppURL() + a.CancelPath()
 }
 
 func (a *Appointment) RescheduledPath() string {
@@ -94,7 +98,7 @@ func (a *Appointment) RescheduledPath() string {
 }
 
 func (a *Appointment) RescheduledURL() string {
-	return common.AppURL() + a.RescheduledPath()
+	return lib.AppURL() + a.RescheduledPath()
 }
 
 // Scopes
@@ -110,25 +114,33 @@ func AppointmentWithPendingAlerts(db *gorm.DB) *gorm.DB {
 }
 
 func AppointmentBookedToday(db *gorm.DB) *gorm.DB {
-	t := common.BoD(time.Now())
+	t := libtime.BoD(time.Now())
 
 	return db.Where("booked_at > ?", t).Where("booked_at < ?", t.Add(time.Hour*24))
 }
 
 func AppointmentBookedThisWeek(db *gorm.DB) *gorm.DB {
-	t := common.BoW(time.Now())
+	t := libtime.BoW(time.Now())
 
 	return db.Where("booked_at > ?", t).Where("booked_at < ?", t.Add(time.Hour*24*7))
 }
 
 func AppointmentBookedThisMonth(db *gorm.DB) *gorm.DB {
-	t := common.BoM(time.Now())
-	dinm := common.DaysInMonth(t.Month(), t.Year())
+	t := libtime.BoM(time.Now())
+	dinm := libtime.DaysInMonth(t.Month(), t.Year())
 
 	return db.Where("booked_at > ?", t).Where("booked_at < ?", t.Add(time.Hour*24*dinm))
 }
 
-func (a *Appointment) BookedAtLT() time.Time {
-	localTime := common.LocalTime("MexicoCity", a.BookedAt)
+func (a *Appointment) LocalTimezone() string {
+	if a.Timezone == "" {
+		return DefaultTimezone
+	}
+
+	return a.Timezone
+}
+
+func (a *Appointment) BookedAtInLocalTime() time.Time {
+	localTime := libtime.InTimezone(a.BookedAt, a.LocalTimezone())
 	return localTime
 }

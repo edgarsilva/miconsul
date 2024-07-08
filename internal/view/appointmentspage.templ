@@ -1,7 +1,7 @@
 package view
 
 import (
-	"miconsul/internal/common"
+	"miconsul/internal/lib/libtime"
 	"miconsul/internal/model"
 	"strconv"
 	"time"
@@ -186,9 +186,9 @@ templ AppointmentLi(vc *Ctx, appointment model.Appointment) {
 						}
 					</dt>
 					<dd class="flex flex-col">
-						<time datetime={ appointment.BookedAt.Format(FormTimeFormat) }>{ appointment.BookedAt.Format(ViewTimeFormat) }</time>
+						@CmpTimeInTimezone(appointment.BookedAt, appointment.Timezone, "font-semibold", "text-info")
 						if !appointment.RescheduledAt.IsZero() {
-							<time class="font-semibold text-info" datetime="2022-01-12T15:00">Jan 21th, 2022 at 3:00 PM</time>
+							@CmpTimeInTimezone(appointment.RescheduledAt, appointment.Timezone, "font-semibold text-warning")
 						}
 					</dd>
 				</div>
@@ -232,7 +232,7 @@ templ AppointmentActions(appointment model.Appointment, vc *Ctx) {
 templ AppointmentsEmptyList(vc *Ctx) {
 	<div id="appointments_list" class="flex mt-4">
 		<a href="/appointments/new" class="relative block w-full rounded-lg border-2 border-dashed border-base-content/10 p-12 text-center hover:border-base-content/30 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-			@IconHeroOutlineCalendar("mx-auto w-12 h-12 text-base-content/30")
+			@IconCalendar("mx-auto w-12 h-12 text-base-content/30")
 			<span class="mt-2 block text-sm font-semibold">{ l(vc.Locale, "str.create_new_appointment") }</span>
 			<p class="mt-1 text-sm text-base-content/40">No se encontraron citas.</p>
 		</a>
@@ -266,16 +266,16 @@ templ AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.P
 					<div class="px-4 py-6 sm:p-8">
 						<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
 							<div class="sm:col-span-4">
-								<label for="street-address" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.booked_at") }</label>
+								<label for="street-address" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.booked_at") } 123</label>
 								<div class="mt-2">
 									<input
 										required
 										type="datetime-local"
 										name="bookedAt"
 										if appointment.BookedAt.IsZero() {
-											value={ common.LocalTime("MexicoCity", time.Now()).Format("2006-01-02T15:04") }
+											value={ libtime.InTimezone(time.Now(), "MexicoCity").Format("2006-01-02T15:04") }
 										} else {
-											value={ appointment.BookedAtLT().Format("2006-01-02T15:04") }
+											value={ appointment.BookedAtInLocalTime().Format("2006-01-02T15:04") }
 										}
 										id="booked_at"
 										class="input input-bordered block w-full"

@@ -1,0 +1,15 @@
+package view
+
+import (
+	"miconsul/internal/lib/libtime"
+	"strings"
+	"time"
+)
+
+templ CmpTime(t time.Time, class ...string) {
+	<time class={ strings.Join(class, " ") } datetime={ t.Format(FormTimeFormat) }>{ t.Format(ViewTimeFormat) }</time>
+}
+
+templ CmpTimeInTimezone(t time.Time, tz string, class ...string) {
+	@CmpTime(libtime.InTimezone(t, tz), class...)
+}

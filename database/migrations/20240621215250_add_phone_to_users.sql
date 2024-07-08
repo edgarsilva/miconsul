@@ -6,6 +6,6 @@ CREATE INDEX IF NOT EXISTS `idx_users_ext_id` ON `users`(`ext_id`);
 
 -- +goose Down
 -- +goose StatementBegin
-ALTER TABLE users DROP COLUMN phone string;
+ALTER TABLE users DROP COLUMN phone;
 DROP INDEX IF EXISTS `idx_users_ext_id` ON `users`(`ext_id`);
 -- +goose StatementEnd

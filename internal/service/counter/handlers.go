@@ -33,7 +33,7 @@ func (s *service) HandleDecrement(c *fiber.Ctx) error {
 	return view.Render(c, view.CounterContainer(int64(cnt)))
 }
 
-// Utils
+// lib
 func (s *service) sessionCountVal(c *fiber.Ctx) int64 {
 	cnt, err := strconv.Atoi(s.SessionGet(c, "cnt", "0"))
 	if err != nil {

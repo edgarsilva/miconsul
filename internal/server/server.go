@@ -4,8 +4,8 @@ package server
 import (
 	"fmt"
 	"miconsul/internal/backgroundjob"
-	"miconsul/internal/common"
 	"miconsul/internal/database"
+	"miconsul/internal/lib"
 	"miconsul/internal/localize"
 	"miconsul/internal/model"
 	"os"
@@ -128,7 +128,7 @@ func (s *Server) Listen(port string) error {
 //		defer saveSess()
 func (s *Server) LogtoClient(c *fiber.Ctx) (client *logto.LogtoClient, save func()) {
 	sess := s.Session(c)
-	storage := common.NewSessionStorage(sess)
+	storage := lib.NewSessionStorage(sess)
 	logtoClient := logto.NewLogtoClient(
 		s.LogtoConfig,
 		storage,

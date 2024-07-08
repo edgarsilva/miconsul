@@ -146,7 +146,7 @@ func AppointmentRoutes(s *server.Server) {
 	g.Get("/new", a.HandleAppointmentPage)
 	g.Get("/new/pricefrg/:id", a.HandlePriceFrg)
 	g.Post("/searchclinics", a.HandleSearchClinics)
-	g.Get("/:id", a.HandleAppointmentsPage)
+	g.Get("/:id", a.HandleAppointmentPage)
 	g.Get("/:id/begin", a.HandleAppointmentBeginPage)
 	g.Post("/:id/done", a.HandleAppointmentDone)
 	g.Post("/:id/cancel", a.HandleAppointmentCancel)

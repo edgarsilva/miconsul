@@ -2,7 +2,8 @@ package appointment
 
 import (
 	"fmt"
-	"miconsul/internal/common"
+	"miconsul/internal/lib"
+	"miconsul/internal/lib/libtime"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/model"
 	"miconsul/internal/view"
@@ -126,6 +127,8 @@ func (s *service) HandleCreateAppointment(c *fiber.Ctx) error {
 
 	priceValue := c.FormValue("price", "")
 
+	bookedAt = libtime.NewInTimezone(bookedAt, model.DefaultTimezone)
+	bookedAt = bookedAt.UTC()
 	appointment := model.Appointment{
 		Token:        xid.New("tkn_"),
 		UserID:       cu.ID,
@@ -135,7 +138,8 @@ func (s *service) HandleCreateAppointment(c *fiber.Ctx) error {
 		BookedDay:    bookedAt.Day(),
 		BookedHour:   bookedAt.Hour(),
 		BookedMinute: bookedAt.Minute(),
-		Price:        common.StrToAmount(priceValue),
+		Timezone:     model.DefaultTimezone,
+		Price:        lib.StrToAmount(priceValue),
 	}
 	c.BodyParser(&appointment)
 
@@ -186,10 +190,17 @@ func (s *service) HandleUpdateAppointment(c *fiber.Ctx) error {
 		bookedAt = time.Now()
 	}
 
+	bookedAt = libtime.NewInTimezone(bookedAt, model.DefaultTimezone)
+	bookedAt = bookedAt.UTC()
 	appointment := model.Appointment{
-		UserID:   cu.ID,
-		BookedAt: bookedAt,
-		Price:    common.StrToAmount(c.FormValue("price", "")),
+		UserID:       cu.ID,
+		BookedAt:     bookedAt,
+		BookedYear:   bookedAt.Year(),
+		BookedMonth:  int(bookedAt.Month()),
+		BookedDay:    bookedAt.Day(),
+		BookedHour:   bookedAt.Hour(),
+		BookedMinute: bookedAt.Minute(),
+		Price:        lib.StrToAmount(c.FormValue("price", "")),
 	}
 	c.BodyParser(&appointment)
 

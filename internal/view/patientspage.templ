@@ -3,6 +3,7 @@ package view
 import (
 	"miconsul/internal/model"
 	"strconv"
+	"time"
 )
 
 templ PatientsPage(patients []model.Patient, vc *Ctx) {
@@ -86,7 +87,7 @@ templ PatientFormPage(patient model.Patient, vc *Ctx) {
 					href={ templ.URL("/appointments?patientId=" + patient.ID) }
 					class="btn btn-primary btn-sm"
 				>
-					@IconHeroOutlineCalendar("")
+					@IconCalendar("")
 					{ l(vc.Locale, "btn.appointments") }
 				</a>
 			</hgroup>
@@ -157,7 +158,7 @@ templ PatientLi(patient model.Patient, vc *Ctx) {
 				</p>
 				<p class="text-xs leading-5 text-base-content/50">
 					{ l(vc.Locale, "str.last_appointment") }
-					<time datetime="2022-01-10T17:00">10/Ago/2022 5:00 PM</time>
+					@CmpTime(time.Now())
 				</p>
 			</div>
 		</div>
@@ -495,7 +496,7 @@ templ PatientProfile(patient model.Patient, vc *Ctx) {
 									/>
 									Email
 									<figure aria-lable="whatsapp icon" class="h-6 w-6">
-										@IconColorGmail()
+										@IconGmail()
 									</figure>
 								</label>
 								<label class="flex items-center gap-x-3 text-sm font-medium leading-6">
@@ -510,7 +511,7 @@ templ PatientProfile(patient model.Patient, vc *Ctx) {
 									/>
 									Whatsapp
 									<figure aria-lable="whatsapp icon" class="h-6 w-6">
-										@IconColorWhatsapp()
+										@IconWhatsapp()
 									</figure>
 								</label>
 								<label class="flex items-center gap-x-3 text-sm font-medium leading-6">
@@ -525,7 +526,7 @@ templ PatientProfile(patient model.Patient, vc *Ctx) {
 									/>
 									Telegram
 									<figure aria-lable="whatsapp icon" class="h-6 w-6">
-										@IconColorTelegram()
+										@IconTelegram()
 									</figure>
 								</label>
 								<label class="flex items-center gap-x-3 text-sm font-medium leading-6">
@@ -540,7 +541,7 @@ templ PatientProfile(patient model.Patient, vc *Ctx) {
 									/>
 									Messenger
 									<figure aria-lable="whatsapp icon" class="h-6 w-6">
-										@IconColorMessenger()
+										@IconMessenger()
 									</figure>
 								</label>
 							</div>

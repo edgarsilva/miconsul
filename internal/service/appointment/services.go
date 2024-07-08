@@ -3,7 +3,7 @@ package appointment
 import (
 	"errors"
 	"fmt"
-	"miconsul/internal/common"
+	"miconsul/internal/lib/libtime"
 	"miconsul/internal/mailer"
 	"miconsul/internal/model"
 	"miconsul/internal/server"
@@ -94,7 +94,7 @@ func (s *service) GetAppointmentsBy(c *fiber.Ctx, cu model.User, patientID, clin
 	case "month":
 		dbquery.Scopes(model.AppointmentBookedThisMonth)
 	default:
-		dbquery.Where("booked_at > ?", common.BoD(time.Now()))
+		dbquery.Where("booked_at > ?", libtime.BoD(time.Now()))
 	}
 
 	dbquery.Preload("Clinic").

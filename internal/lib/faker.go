@@ -1,4 +1,4 @@
-package common
+package lib
 
 func PravatarURL(id string) string {
 	return "https://i.pravatar.cc/150?u=" + id
