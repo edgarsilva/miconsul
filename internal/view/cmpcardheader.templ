@@ -1,0 +1,30 @@
+package view
+
+templ CmpCardHeaderNewBtn(path, label string, class ...string) {
+	<a
+		href={ templ.URL(path) }
+		class={ class }
+	>
+		@IconPlusCircled()
+		{ label }
+	</a>
+}
+
+templ CmpCardHeader(c *Ctx, title, newLabel, newPath, searchPlaceholder, searchPath, searchTarget string) {
+	<hgroup class="md:flex md:justify-between md:items-center pb-4 px-2 md:px-0 w-full" hx-boost="true">
+		<div class="md:flex md:gap-2 items-baseline w-full md:justify-between md:pr-4">
+			<h1 class="flex w-full md:w-auto font-bold text-2xl mb-4 md:mb-0">
+				{ title }
+				if newPath != "" {
+					@CmpCardHeaderNewBtn(newPath, newLabel, "ml-auto btn btn-primary btn-sm md:hidden")
+				}
+			</h1>
+			if searchPath != "" {
+				@CmpSearchInput(searchPlaceholder, searchPath, searchTarget)
+			}
+		</div>
+		if newPath != "" {
+			@CmpCardHeaderNewBtn(newPath, newLabel, "hidden md:flex btn btn-primary btn-sm")
+		}
+	</hgroup>
+}

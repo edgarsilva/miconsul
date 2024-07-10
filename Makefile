@@ -3,20 +3,6 @@ ifneq (,$(wildcard ./.env))
     export
 endif
 
-all: install build
-
-docker/build:
-	docker build . -t go-containerized:latest
-
-docker/run:
-	docker run -e PORT=3000 -p 3000:3000 --name miconsul-app go-containerized:latest
-
-docker/stop:
-	docker stop miconsul-app
-
-docker/clean:
-	docker container rm miconsul-app
-
 install:
 	@echo "📦 Installing dependencies"
 	@echo "🥐 Installing bun (for tailwindcss)"
@@ -84,8 +70,8 @@ db/create:
 	touch database/app.sqlite
 	make db/migrate
 
-db/reset:
-	@read -p "Do you want to reset the DB (you'll loose all data)? [y/n] " choice; \
+db/delete:
+	@read -p "Do you want to delete the DB (you'll loose all data)? [y/n] " choice; \
 	if [ "$$choice" != "y" ] && [ "$$choice" != "Y" ]; then \
 		echo "Exiting..."; \
 		exit 1; \
@@ -93,13 +79,13 @@ db/reset:
 		rm -f database/*.sqlite*; \
 	fi; \
 
-db/dump-schema:
-	sqlite3 database/app.sqlite '.schema' > ./database/schema.sql
-
 db/setup:
-	make db/reset
+	make db/delete
 	make db/create
 	make db/migrate
+
+db/dump-schema:
+	sqlite3 database/app.sqlite '.schema' > ./database/schema.sql
 
 db/migration:
 	${GOPATH}/bin/goose create ${name} sql
@@ -117,4 +103,16 @@ db/rollback:
 db/redo:
 	${GOPATH}/bin/goose redo
 
-.PHONY: all install build start run test clean dev db/reset db/create db/migrate
+docker/build:
+	docker build . -t go-containerized:latest
+
+docker/run:
+	docker run -e PORT=3000 -p 3000:3000 --name miconsul-app go-containerized:latest
+
+docker/stop:
+	docker stop miconsul-app
+
+docker/clean:
+	docker container rm miconsul-app
+
+.PHONY: all install build start run test clean dev db/delete db/create db/migrate

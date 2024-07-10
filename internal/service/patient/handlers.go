@@ -1,9 +1,9 @@
 package patient
 
 import (
+	"miconsul/internal/lib"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/model"
-	"miconsul/internal/lib"
 	"miconsul/internal/view"
 	"strconv"
 
@@ -25,10 +25,9 @@ func (s *service) HandlePatientsPage(c *fiber.Ctx) error {
 	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
 
 	id := c.Params("id", "")
-	patient := model.Patient{}
-	patient.ID = id
+	patient := model.Patient{ID: id}
 	if id != "" && id != "new" {
-		s.DB.Model(&model.Patient{}).First(&patient)
+		s.DB.Model(&model.Patient{}).Take(&patient)
 		return view.Render(c, view.PatientFormPage(patient, vc))
 	}
 

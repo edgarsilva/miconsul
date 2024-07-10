@@ -1,4 +1,4 @@
-package users
+package user
 
 import (
 	"miconsul/internal/model"

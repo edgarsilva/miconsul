@@ -1,6 +1,6 @@
 package view
 
-templ HTMLPage(vc *Ctx) {
+templ HTMLPage(c *Ctx) {
 	<!DOCTYPE html>
 	<html data-theme="cmyk" x-ref="html">
 		<head>
@@ -14,7 +14,7 @@ templ HTMLPage(vc *Ctx) {
 		</head>
 		<body class="flex-grow">
 			{ children... }
-			@GlobalToastRegion(vc)
+			@GlobalToastRegion(c)
 		</body>
 	</html>
 }
@@ -38,37 +38,37 @@ templ HTMLPageWithApexCharts() {
 	</html>
 }
 
-templ Layout(vc *Ctx) {
-	@HTMLPage(vc) {
+templ Layout(c *Ctx) {
+	@HTMLPage(c) {
 		<div id="root">
-			@CmpNavbar(vc)
+			@CmpNavbar(c)
 			<main id="main" class="grow flex flex-col">
 				{ children... }
 			</main>
-			@CmpFooter(vc)
+			@CmpFooter(c)
 		</div>
 	}
 }
 
-templ LayoutWithBackBtn(vc *Ctx, backpath string) {
-	@Layout(vc) {
+templ LayoutWithBackBtn(c *Ctx, backpath string) {
+	@Layout(c) {
 		<div class="hidden md:block px-4 lg:px-8">
-			@CmpBtnBack(l(vc.Locale, "btn.back"), backpath)
+			@CmpBtnBack(l(c.Locale, "btn.back"), backpath)
 		</div>
 		{ children... }
 	}
 }
 
-templ LayoutAuth(vc *Ctx) {
-	@HTMLPage(vc) {
+templ LayoutAuth(c *Ctx) {
+	@HTMLPage(c) {
 		<div id="root" class="flex flex-col justify-center py-12 sm:px-6 lg:px-8">
 			{ children... }
 		</div>
 	}
 }
 
-templ LayoutCentered(vc *Ctx) {
-	@HTMLPage(vc) {
+templ LayoutCentered(c *Ctx) {
+	@HTMLPage(c) {
 		<div id="root" class="flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-primary">
 			{ children... }
 		</div>

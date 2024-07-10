@@ -1,0 +1,22 @@
+package view
+
+templ CmpSearchInput(placeholder, path, target string) {
+	<label class="input flex items-center gap-2 rounded-full focus:outline">
+		@IconSearch("size-5")
+		<input
+			type="search"
+			name="term"
+			value=""
+			class="grow"
+			required
+			placeholder={ placeholder }
+			hx-get={ path }
+			hx-target={ target }
+			hx-swap="outerHTML"
+			hx-trigger="input changed delay:350ms, search"
+		/>
+		<kbd class="kbd kbd-sm">ctrl</kbd>
+		+
+		<kbd class="kbd kbd-sm">k</kbd>
+	</label>
+}

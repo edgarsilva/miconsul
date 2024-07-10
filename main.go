@@ -2,12 +2,12 @@ package main
 
 import (
 	"log"
-	"miconsul/internal/backgroundjob"
 	"miconsul/internal/database"
-	"miconsul/internal/localize"
+	"miconsul/internal/lib/backgroundjob"
+	"miconsul/internal/lib/localize"
+	"miconsul/internal/lib/workerpool"
 	"miconsul/internal/routes"
 	"miconsul/internal/server"
-	"miconsul/internal/workerpool"
 	"os"
 
 	"github.com/joho/godotenv"

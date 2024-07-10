@@ -9,7 +9,7 @@ testdata_dir = "testdata"
 [build]
 # Array of commands to run before each build
 pre_cmd = [
-	"go-localize -input locales -output internal/localize",
+	"go-localize -input locales -output internal/lib/localize",
 	"bunx tailwindcss -i ./styles/global.css -o ./public/global.css --minify",
 	"templ generate",
 ]
@@ -39,7 +39,7 @@ exclude_dir = [
 	"public",
 	"node_modules",
 	"coverage",
-	"internal/localize",
+	"internal/lib/localize",
 ]
 # Watch these directories if you specified.
 include_dir = []

@@ -3,10 +3,10 @@ package server
 
 import (
 	"fmt"
-	"miconsul/internal/backgroundjob"
 	"miconsul/internal/database"
 	"miconsul/internal/lib"
-	"miconsul/internal/localize"
+	"miconsul/internal/lib/backgroundjob"
+	"miconsul/internal/lib/localize"
 	"miconsul/internal/model"
 	"os"
 

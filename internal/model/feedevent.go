@@ -1,9 +1,9 @@
 package model
 
 import (
+	"miconsul/internal/lib/xid"
 	"time"
 
-	"miconsul/internal/lib/xid"
 	"gorm.io/gorm"
 )
 
@@ -21,6 +21,7 @@ const (
 	EventActionSuccess  EventAction = "success"
 )
 
+// --model: FeedEvent
 type FeedEvent struct {
 	extID             string `gorm:"index;default:null;not null"`
 	Name              string `gorm:"index;default:null;not null"`

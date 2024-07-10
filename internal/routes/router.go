@@ -3,6 +3,7 @@ package routes
 import (
 	mw "miconsul/internal/middleware"
 	"miconsul/internal/server"
+	"miconsul/internal/service/admin"
 	"miconsul/internal/service/appointment"
 	"miconsul/internal/service/auth"
 	"miconsul/internal/service/blog"
@@ -12,13 +13,14 @@ import (
 	"miconsul/internal/service/patient"
 	"miconsul/internal/service/theme"
 	"miconsul/internal/service/todos"
-	"miconsul/internal/service/users"
+	"miconsul/internal/service/user"
 )
 
 func RegisterServices(s *server.Server) {
 	AuthRoutes(s)
+	UserRoutes(s)
+	AdminRoutes(s)
 	DashbordhRoutes(s)
-	UsersRoutes(s)
 	ClinicsRoutes(s)
 	PatientRoutes(s)
 	BlogRoutes(s)
@@ -60,22 +62,6 @@ func DashbordhRoutes(s *server.Server) {
 
 	g := s.Group("/dashboard", mw.MustAuthenticate(d))
 	g.Get("", d.HandleDashboardPage)
-}
-
-func UsersRoutes(s *server.Server) {
-	u := users.NewService(s)
-
-	// Pages
-	g := u.Group("/users", mw.MustAuthenticate(u))
-	g.Get("/", u.HandleUsersPage)
-
-	// Fragments
-	// g.Get("/fragment/footer", u.HandleFooterFragment)
-	// g.Get("/fragment/list", u.HandleTodosFragment)
-
-	// API
-	api := u.Group("/api/users")
-	api.Get("", u.HandleAPIUsers)
 }
 
 func ClinicsRoutes(s *server.Server) {
@@ -220,4 +206,32 @@ func CounterRoutes(s *server.Server) {
 	g.Get("", c.HandlePage)
 	g.Put("/increment", c.HandleIncrement)
 	g.Put("/decrement", c.HandleDecrement)
+}
+
+func UserRoutes(s *server.Server) {
+	u := user.NewService(s)
+
+	// Pages
+	g := u.Group("/users", mw.MustAuthenticate(u))
+	g.Get("/", u.HandleUsersPage)
+
+	// Fragments
+	// g.Get("/fragment/footer", u.HandleFooterFragment)
+	// g.Get("/fragment/list", u.HandleTodosFragment)
+
+	// API
+	api := u.Group("/api/users")
+	api.Get("", u.HandleAPIUsers)
+}
+
+func AdminRoutes(s *server.Server) {
+	a := admin.NewService(s)
+
+	// Pages
+	g := a.Group("/admin", mw.MustBeAdmin(a))
+	g.Get("/models", a.HandleAdminModelsPage)
+
+	// Fragments
+	// g.Get("/fragment/footer", u.HandleFooterFragment)
+	// g.Get("/fragment/list", u.HandleTodosFragment)
 }

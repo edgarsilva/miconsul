@@ -17,6 +17,7 @@ const (
 	UserRoleTest  UserRole = "test"
 )
 
+// --model:User
 type User struct {
 	ConfirmEmailExpiresAt time.Time
 	ResetTokenExpiresAt   time.Time
@@ -37,8 +38,7 @@ type User struct {
 	Clinics      []Clinic
 	Patients     []Patient
 	Appointments []Appointment
-
-	Todos []Todo
+	Todos        []Todo
 	// Articles []Article
 	// Comments []Comment
 }

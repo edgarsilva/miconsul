@@ -9,28 +9,26 @@ import (
 	"gorm.io/gorm"
 )
 
+// model: FeedEvent
 type Patient struct {
 	Address
 	SocialMedia
 	ModelBase
-
 	ID                string `gorm:"primarykey;default:null;not null" form:"_"`
 	ExtID             string
-	Email             string `form:"email"`
-	Phone             string `form:"phone"`
-	Ocupation         string `form:"ocupation"`
-	UserID            string `gorm:"index;default:null;not null"`
-	Name              string `gorm:"default:null;not null" form:"name"`
-	ProfilePic        string `form:"profilePic"`
-	FamilyHistory     string `form:"familyHistory"`
-	MedicalBackground string `form:"medicalBackground"`
-	Notes             string `form:"notes"`
-
-	DeletedAt    gorm.DeletedAt `form:"_"`
-	User         User
-	Appointments []Appointment
-	Age          int `form:"age"`
-
+	Email             string         `form:"email"`
+	Phone             string         `form:"phone"`
+	Ocupation         string         `form:"ocupation"`
+	UserID            string         `gorm:"index;default:null;not null"`
+	Name              string         `gorm:"default:null;not null" form:"name"`
+	ProfilePic        string         `form:"profilePic"`
+	FamilyHistory     string         `form:"familyHistory"`
+	MedicalBackground string         `form:"medicalBackground"`
+	Notes             string         `form:"notes"`
+	DeletedAt         gorm.DeletedAt `form:"_"`
+	User              User
+	Appointments      []Appointment
+	Age               int `form:"age"`
 	NotificationFlags
 }
 

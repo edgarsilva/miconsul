@@ -1,7 +1,7 @@
 package mailer
 
 import (
-	"miconsul/internal/localize"
+	"miconsul/internal/lib/localize"
 	"os"
 	"strings"
 )
