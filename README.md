@@ -1,19 +1,29 @@
 # Miconsul: patient appointment planner and notification center
 
-Base on my GoScaffold project which allows you to quickly set-up Ready to deploy Web application projects
+Based on my GoScaffold project which allows you to quickly set-up Ready to deploy Web application projects
 using Go, SQLite with GORM, Templ with HTMX and DaisyUI/TailwindCSS:
 
-- Go Web Server: Fiber
-- Database: SQLite3 (PostreSQL/MySQL)
-- ORM/SQL Query Builder: GORM
-- HTML/Templating: Templ and HTMX
-- UI/CSS: DaisyUI/TailwindCSS
+- Go Web Server: [Fiber](https://docs.gofiber.io/)
+- Database: [SQLite3 (or PostreSQL/MySQL)](https://sqlite.org/index.html)
+- ORM/SQL Query Builder: [GORM](https://gorm.io/docs/)
+- HTML/Templating: [Templ](https://templ.guide/)
+- Client/Server interactions: [HTMX](https://htmx.org/)
+- Client Interactivity: [AlpineJS](https://alpinejs.dev/start-here)
+- UI/CSS: [DaisyUI](https://daisyui.com)/[TailwindCSS](https://tailwindcss.com/)
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your
-local machine for development and testing purposes. See deployment for notes on
-how to deploy the project on a live system.
+These instructions will get you a copy of the project up and running
+on your local machine for development, scaffolding and testing purposes.
+
+Other sections still pending in the README:
+
+Note: _working_ but pending readme section
+
+1. Automated production deployments with Coolify
+2. Sqlite Litestream backups
+3. Object storage with Minio (used by Litestream)
+4. Development feature brances.
 
 ## MakeFile
 
