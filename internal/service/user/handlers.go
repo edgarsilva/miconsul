@@ -2,34 +2,45 @@ package user
 
 import (
 	"miconsul/internal/model"
+	"miconsul/internal/view"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"syreclabs.com/go/faker"
 )
 
-// handleUsers listr all users in a table *the index*
+// HandleIndexPage list all users in a table *the index*
 //
-// GET: /todos
-func (s *service) HandleUsersPage(c *fiber.Ctx) error {
-	// cu, err := s.CurrentUser(c)
-	// if err != nil {
-	// 	return c.Redirect("/login")
-	// }
-
-	theme := s.SessionGet(c, "theme", "light")
-	// Ctx, err := view.NewCtx(c, view.WithCurrentUser(cu), view.WithTheme(theme))
-	// if err != nil {
-	// 	return c.Redirect("/login")
-	// }
-
-	if theme == "light" {
-		s.SessionSet(c, "theme", "light")
-	} else {
-		s.SessionSet(c, "theme", "dark")
+// GET: /admin/users
+func (s *service) HandleIndexPage(c *fiber.Ctx) error {
+	cu, err := s.CurrentUser(c)
+	if err != nil || cu.Role != model.UserRoleAdmin {
+		return c.Redirect("/login")
 	}
 
-	return c.SendString("Users Index Page")
+	users := []model.User{}
+	s.DB.Order("id DESC").Limit(10).Find(&users)
+
+	theme := s.SessionUITheme(c)
+	vc, _ := view.NewCtx(c, view.WithCurrentUser(cu), view.WithTheme(theme))
+	return view.Render(c, view.UserIndexPage(vc, users))
+}
+
+// HandleProfilePage list all users in a table *the index*
+//
+// GET: /profile
+func (s *service) HandleProfilePage(c *fiber.Ctx) error {
+	cu, err := s.CurrentUser(c)
+	if err != nil || cu.Role != model.UserRoleAdmin {
+		return c.Redirect("/login")
+	}
+
+	users := []model.User{}
+	s.DB.Order("id DESC").Limit(10).Find(&users)
+
+	theme := s.SessionUITheme(c)
+	vc, _ := view.NewCtx(c, view.WithCurrentUser(cu), view.WithTheme(theme))
+	return view.Render(c, view.UserIndexPage(vc, users))
 }
 
 // handleApiUsers returns all users as JSON

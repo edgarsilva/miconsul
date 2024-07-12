@@ -1,7 +1,8 @@
 # Miconsul: patient appointment planner and notification center
 
-Based on my GoScaffold project which allows you to quickly set-up Ready to deploy Web application projects
-using Go, SQLite with GORM, Templ with HTMX and DaisyUI/TailwindCSS:
+Based on my GoScaffold project which allows you to quickly set-up Ready to
+deploy Web application projects using Go, SQLite with GORM, Templ with HTMX
+and DaisyUI/TailwindCSS:
 
 - Go Web Server: [Fiber](https://docs.gofiber.io/)
 - Database: [SQLite3 (or PostreSQL/MySQL)](https://sqlite.org/index.html)

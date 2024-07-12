@@ -1,23 +1,13 @@
 package middleware
 
 import (
-	"miconsul/internal/database"
 	"miconsul/internal/model"
 	"miconsul/internal/service/auth"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/session"
-	logto "github.com/logto-io/go/client"
 )
 
-type MWService interface {
-	DBClient() *database.Database
-	Session(*fiber.Ctx) *session.Session
-	LogtoClient(c *fiber.Ctx) (client *logto.LogtoClient, save func())
-	LogtoEnabled() bool
-}
-
-func MustAuthenticate(s MWService) func(c *fiber.Ctx) error {
+func MustAuthenticate(s auth.MWService) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		cu, err := auth.Authenticate(c, s)
 		if err != nil {
@@ -39,7 +29,7 @@ func MustAuthenticate(s MWService) func(c *fiber.Ctx) error {
 	}
 }
 
-func MustBeAdmin(s MWService) func(c *fiber.Ctx) error {
+func MustBeAdmin(s auth.MWService) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		cu, err := auth.Authenticate(c, s)
 		if err != nil || cu.Role != model.UserRoleAdmin {
@@ -61,7 +51,7 @@ func MustBeAdmin(s MWService) func(c *fiber.Ctx) error {
 	}
 }
 
-func MaybeAuthenticate(s MWService) func(c *fiber.Ctx) error {
+func MaybeAuthenticate(s auth.MWService) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		cu, _ := auth.Authenticate(c, s)
 		c.Locals("current_user", cu)

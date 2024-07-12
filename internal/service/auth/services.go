@@ -2,7 +2,6 @@ package auth
 
 import (
 	"errors"
-	"fmt"
 	"miconsul/internal/database"
 	"miconsul/internal/mailer"
 	"miconsul/internal/model"
@@ -13,7 +12,6 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/session"
 	"github.com/golang-jwt/jwt/v5"
 
 	logto "github.com/logto-io/go/client"
@@ -22,7 +20,6 @@ import (
 
 type MWService interface {
 	DBClient() *database.Database
-	Session(*fiber.Ctx) *session.Session
 	LogtoClient(c *fiber.Ctx) (client *logto.LogtoClient, save func())
 	LogtoEnabled() bool
 }
@@ -234,9 +231,7 @@ func logtoStrategy(c *fiber.Ctx, mws MWService) (model.User, error) {
 
 	db := mws.DBClient()
 	user := model.User{ExtID: claims.Sub}
-	fmt.Printf("CLAIMS ---> %#v\n\n", claims)
 	result := db.Model(user).Take(&user)
-	fmt.Printf("user ---> %#v", user)
 	if result.Error != nil {
 		return user, errors.New("failed to authenticate user")
 	}
@@ -342,6 +337,5 @@ func RefreshAuthCookie(c *fiber.Ctx, claims jwt.MapClaims) {
 		return
 	}
 
-	fmt.Println("New Token Created and saved in new cookie.")
 	c.Cookie(newCookie("Auth", jwt, time.Hour*8))
 }

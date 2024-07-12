@@ -62,22 +62,6 @@ func (p *Patient) IsValid() error {
 	return nil
 }
 
-func (p Patient) Initials() string {
-	if p.Name == "" {
-		return "PA"
-	}
-
-	parts := strings.Split(p.Name, " ")
-	a := string(parts[0][0])
-	b := ""
-
-	if len(parts) > 1 {
-		b = string(parts[1][0])
-	}
-
-	return a + b
-}
-
 func (p *Patient) Sanitize() {
 	p.Email = bluemonday.UGCPolicy().Sanitize(p.Email)
 	p.Phone = bluemonday.UGCPolicy().Sanitize(p.Phone)
@@ -95,6 +79,22 @@ func (p *Patient) Sanitize() {
 	p.Telegram = bluemonday.UGCPolicy().Sanitize(p.Telegram)
 	p.Messenger = bluemonday.UGCPolicy().Sanitize(p.Messenger)
 	p.Facebook = bluemonday.UGCPolicy().Sanitize(p.Facebook)
+}
+
+func (p Patient) Initials() string {
+	if p.Name == "" {
+		return "PA"
+	}
+
+	parts := strings.Split(p.Name, " ")
+	a := string(parts[0][0])
+	b := ""
+
+	if len(parts) > 1 {
+		b = string(parts[1][0])
+	}
+
+	return a + b
 }
 
 func (p *Patient) ProfilePicPath() string {

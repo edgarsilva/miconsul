@@ -1,10 +1,10 @@
-## Release Milestones
+# Release Milestones
 
-### Ongoing
+## Ongoing
 
 - [ ] README and Go Env Setup/Updates
 
-### V0 (7day proof of concept)
+## V0 (7day proof of concept)
 
 [2024/Apr/21]
 
@@ -62,7 +62,7 @@
 - [x] Hostinger backup for Sqlite DB backup streams with Litestream/Minio
 - [x] Sep up Goose migrations
 
-### V1 (We can consider v1 Alpha started here)
+## V1 (We can consider v1 Alpha started here)
 
 [2024/Jun/12 - 2024/Jun/17]
 

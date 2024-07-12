@@ -212,8 +212,10 @@ func UserRoutes(s *server.Server) {
 	u := user.NewService(s)
 
 	// Pages
-	g := u.Group("/users", mw.MustAuthenticate(u))
-	g.Get("/", u.HandleUsersPage)
+	u.Get("/profile", mw.MustAuthenticate(u), u.HandleProfilePage)
+
+	// Admin only
+	u.Get("/admin/users", mw.MustBeAdmin(u), u.HandleIndexPage)
 
 	// Fragments
 	// g.Get("/fragment/footer", u.HandleFooterFragment)

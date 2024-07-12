@@ -2,6 +2,7 @@ package model
 
 import (
 	"miconsul/internal/lib/xid"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -50,4 +51,28 @@ func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 
 func (u User) IsLoggedIn() bool {
 	return u.ID != ""
+}
+
+func (u User) Initials() string {
+	if u.Name == "" {
+		return "PA"
+	}
+
+	parts := strings.Split(u.Name, " ")
+	a := string(parts[0][0])
+	b := ""
+
+	if len(parts) > 1 {
+		b = string(parts[1][0])
+	}
+
+	return a + b
+}
+
+func (u User) ProfilePicPath() string {
+	return u.ProfilePic
+}
+
+func (u User) AvatarPic() string {
+	return u.ProfilePicPath()
 }

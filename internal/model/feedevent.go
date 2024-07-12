@@ -10,18 +10,18 @@ import (
 type EventAction string
 
 const (
-	EventActionCreated  EventAction = "created"
-	EventActionReplaced EventAction = "replaced"
-	EventActionUpdated  EventAction = "updated"
-	EventActionDeleted  EventAction = "deleted"
-	EventActionChanged  EventAction = "changed"
-	EventActionCanceled EventAction = "canceled"
-	EventActionSent     EventAction = "sent"
-	EventActionFailed   EventAction = "failed"
-	EventActionSuccess  EventAction = "success"
+	EventActionCreated   EventAction = "created"
+	EventActionReplaced  EventAction = "replaced"
+	EventActionUpdated   EventAction = "updated"
+	EventActionDeleted   EventAction = "deleted"
+	EventActionChanged   EventAction = "changed"
+	EventActionCanceled  EventAction = "canceled"
+	EventActionSent      EventAction = "sent"
+	EventActionDelivered EventAction = "delivered"
+	EventActionFailed    EventAction = "failed"
+	EventActionSuccess   EventAction = "success"
 )
 
-// --model: FeedEvent
 type FeedEvent struct {
 	extID             string `gorm:"index;default:null;not null"`
 	Name              string `gorm:"index;default:null;not null"`
