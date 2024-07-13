@@ -231,7 +231,7 @@ func logtoStrategy(c *fiber.Ctx, mws MWService) (model.User, error) {
 
 	db := mws.DBClient()
 	user := model.User{ExtID: claims.Sub}
-	result := db.Model(user).Take(&user)
+	result := db.Where(user, "ExtID").Take(&user)
 	if result.Error != nil {
 		return user, errors.New("failed to authenticate user")
 	}

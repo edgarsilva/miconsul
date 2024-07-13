@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 type service struct {
@@ -30,7 +31,6 @@ func (s *service) RegisterJobs() {
 	_, err := s.BGJob.RunCronJob("0/1 * * * *", false, func() {
 		appointments := []model.Appointment{}
 		s.DB.
-			Model(&model.Appointment{}).
 			Preload("Patient").
 			Preload("Clinic").
 			Scopes(model.AppointmentWithPendingAlerts).
@@ -51,8 +51,9 @@ func (s *service) GetPatientByID(c *fiber.Ctx, id string) (model.Patient, error)
 
 	cu, _ := s.CurrentUser(c)
 	patient := model.Patient{ID: id, UserID: cu.ID}
-	result := s.DB.Model(&patient).Take(&patient)
-	if result.RowsAffected != 1 {
+	result := s.DB.Where(&patient, "ID", "UserID").Take(&patient)
+
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return model.Patient{}, errors.New("incorrect number of patient rows, expecting: 1, got:" + string(result.RowsAffected))
 	}
 
@@ -66,8 +67,8 @@ func (s *service) GetClinicByID(c *fiber.Ctx, id string) (model.Clinic, error) {
 
 	cu, _ := s.CurrentUser(c)
 	clinic := model.Clinic{ID: id, UserID: cu.ID}
-	result := s.DB.Model(&clinic).Take(&clinic)
-	if result.RowsAffected != 1 {
+	result := s.DB.Where(&clinic, "ID", "UserID").Take(&clinic)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return model.Clinic{}, errors.New("incorrect number of clinic rows, expecting: 1, got:" + string(result.RowsAffected))
 	}
 
@@ -79,11 +80,11 @@ func (s *service) GetAppointmentsBy(c *fiber.Ctx, cu model.User, patientID, clin
 	dbquery := s.DB.Model(model.Appointment{}).Where("user_id = ?", cu.ID)
 
 	if patientID != "" {
-		dbquery.Where("patient_id", patientID)
+		dbquery.Where("patient_id = ?", patientID)
 	}
 
 	if clinicID != "" {
-		dbquery.Where("clinic_id", clinicID)
+		dbquery.Where("clinic_id = ?", clinicID)
 	}
 
 	switch timeframe {

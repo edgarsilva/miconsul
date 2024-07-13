@@ -33,8 +33,12 @@ func (s *service) HandleDashboardPage(c *fiber.Ctx) error {
 		query.Where("booked_at > ?", libtime.BoD(time.Now()))
 	}
 
-	clinic := model.Clinic{}
-	s.DB.Order("favorite desc, created_at").Limit(1).First(&clinic)
+	clinic := model.Clinic{UserID: cu.ID, Favorite: true}
+	s.DB.Where(clinic, "UserID", "favorite").Order("created_at").Take(&clinic)
+
+	if clinic.ID == "" {
+		s.DB.Where(clinic, "UserID").Order("created_at").Take(&clinic)
+	}
 
 	query.
 		Preload("Clinic").
@@ -44,6 +48,6 @@ func (s *service) HandleDashboardPage(c *fiber.Ctx) error {
 
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithCurrentUser(cu), view.WithTheme(theme))
-	stats := s.CalcDashboardStats()
+	stats := s.CalcDashboardStats(cu)
 	return view.Render(c, view.DashboardPage(vc, stats, appointments, clinic))
 }

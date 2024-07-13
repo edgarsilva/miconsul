@@ -18,9 +18,9 @@ func NewService(s *server.Server) service {
 	}
 }
 
-func (s service) CalcDashboardStats() view.DashboardStats {
-	patStats := s.CalcMonthlyStats(&model.Patient{})
-	apptStats := s.CalcMonthlyStats(&model.Appointment{})
+func (s service) CalcDashboardStats(cu model.User) view.DashboardStats {
+	patStats := s.CalcMonthlyStats(cu, &model.Patient{UserID: cu.ID})
+	apptStats := s.CalcMonthlyStats(cu, &model.Appointment{UserID: cu.ID})
 
 	return view.DashboardStats{
 		Patients:     patStats,
@@ -28,14 +28,14 @@ func (s service) CalcDashboardStats() view.DashboardStats {
 	}
 }
 
-func (s service) CalcMonthlyStats(modelIface interface{}) view.DashboardStat {
+func (s service) CalcMonthlyStats(cu model.User, modelIface interface{}) view.DashboardStat {
 	var cnt int64
-	s.DB.Model(modelIface).Count(&cnt)
+	s.DB.Where(modelIface).Count(&cnt)
 
 	var lastMonth int64
-	s.DB.Model(modelIface).Where("created_at <= ?", libtime.BoM(time.Now())).Count(&lastMonth)
+	s.DB.Where("user_id = ? AND created_at <= ?", cu.ID, libtime.BoM(time.Now())).Count(&lastMonth)
 
-	var diff int64 = cnt - lastMonth
+	diff := cnt - lastMonth
 
 	return view.DashboardStat{
 		Total: int(cnt),
