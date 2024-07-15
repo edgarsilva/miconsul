@@ -273,7 +273,6 @@ func (s *service) HandlePatientSearch(c *fiber.Ctx) error {
 
 	dbquery.Limit(10).Association("Patients").Find(&patients)
 
-	// time.Sleep(time.Second * 2)
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
 	return view.Render(c, view.PatientSearchResults(patients, vc))

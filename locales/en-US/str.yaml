@@ -128,6 +128,8 @@ not_a_member: "Not a member?"
 already_a_member: "Already a member?"
 create_an_account: "Create an account"
 view_appt: "View appointments"
+users: "Users"
+search_users: "Search users"
 
 #_login = "Hello my name is {{.name}}"
 #_hello_firstname_lastname = "Hello {{.firstname}} {{.lastname}}"

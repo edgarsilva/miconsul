@@ -47,84 +47,119 @@ templ AppointmentPage(vc *Ctx, appointment model.Appointment, patients []model.P
 	}
 }
 
-templ AppointmentsSection(vc *Ctx, appointments []model.Appointment, showTitle bool) {
+templ AppointmentsSection(c *Ctx, appointments []model.Appointment, showTitle bool) {
 	<section id="appointments_section" class="app-card col-span-2 flex flex-col pt-4">
-		<div class="relative items-center flex justify-between border-b border-base-content/10 pb-2">
+		<div
+			class="relative items-center flex justify-between border-b border-base-content/10 pb-2"
+			hx-swap="outerHTML"
+			hx-target="closest section"
+			hx-select="#appointments_section"
+		>
 			<h3 class="font-semibold text-xl flex items-center gap-4">
 				if showTitle {
-					{ l(vc.Locale, "str.appointments") }
+					{ c.l("str.appointments") }
 				}
-				if vc.Query("patientId", "") != "" {
+				if c.Query("patientId", "") != "" {
 					<a
-						href={ templ.URL(vc.Path() + QueryParams(vc, "patientId=")) }
+						href={ templ.URL(c.Path() + QueryParams(c, "patientId=")) }
 						class="badge badge-secondary badge-outline gap-2 hover:bg-secondary hover:text-secondary-content"
 					>
-						if patient, ok := vc.Locals("patient").(model.Patient); ok {
+						if patient, ok := c.Locals("patient").(model.Patient); ok {
 							{ patient.Email }
 						}
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="inline-block w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
 					</a>
 				}
-				if vc.Query("clinicId", "") != "" {
+				if c.Query("clinicId", "") != "" {
 					<a
-						href={ templ.URL(vc.Path() + QueryParams(vc, "clinicId=")) }
+						href={ templ.URL(c.Path() + QueryParams(c, "clinicId=")) }
 						class="badge badge-secondary badge-outline gap-2 hover:bg-secondary hover:text-secondary-content"
 					>
-						if clinic, ok := vc.Locals("clinic").(model.Clinic); ok {
+						if clinic, ok := c.Locals("clinic").(model.Clinic); ok {
 							{ clinic.Name }
 						}
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="inline-block w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
 					</a>
 				}
 			</h3>
-			<details class="absolute right-0 dropdown hidden ">
-				<summary class="btn btn-square btn-ghost">
-					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"></path>
-					</svg>
+			<details class="dropdown dropdown-end md:hidden">
+				<summary
+					class="rounded-md px-3 py-2 text-sm font-medium bg-secondary/35 text-secondary-content"
+				>
+					switch c.Query("timeframe", "") {
+						case "day":
+							{ c.l("nav.my_day") }
+						case "week":
+							{ c.l("nav.my_week") }
+						case "month":
+							{ c.l("nav.my_month") }
+						default:
+							{ c.l("nav.my_day") }
+					}
 				</summary>
 				<ul class="p-2 shadow menu dropdown-content z-[1] bg-base-100 rounded-box w-52">
-					<li><a href="#" class="text-base-content/50 hover:text-base-content/80 rounded-md px-3 py-2 text-sm font-medium">{ l(vc.Locale, "nav.my_day") }</a></li>
-					<li><a href="#" class="bg-base-100 text-base-content/80 rounded-md px-3 py-2 text-sm font-medium" aria-current="page">{ l(vc.Locale, "nav.my_week") }</a></li>
-					<li><a href="#" class="text-base-content/50 hover:text-base-content/80 rounded-md px-3 py-2 text-sm font-medium">{ l(vc.Locale, "nav.my_month") }</a></li>
+					<li>
+						<a
+							class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium",
+              templ.KV("bg-secondary/35 text-secondary-content", c.Query("timeframe", "day") == "day") }
+							href={ templ.URL(c.Path() + QueryParams(c, "timeframe=day")) }
+							hx-get={ c.Path() + QueryParams(c, "timeframe=day") }
+							hx-push-url={ c.Path() + QueryParams(c, "timeframe=day") }
+						>{ l(c.Locale, "nav.my_day") }</a>
+					</li>
+					<li>
+						<a
+							class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium",
+              templ.KV("bg-secondary/15 text-secondary-content", c.Query("timeframe") == "week") }
+							href={ templ.URL(c.Path() + QueryParams(c, "timeframe=week")) }
+							hx-get={ c.Path() + QueryParams(c, "timeframe=week") }
+							hx-push-url={ c.Path() + QueryParams(c, "timeframe=week") }
+						>{ c.l("nav.my_week") }</a>
+					</li>
+					<li>
+						<a
+							class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium",
+              templ.KV("bg-secondary/15 text-secondary-content",c.Query("timeframe") == "month") }
+							href={ templ.URL(c.Path() + QueryParams(c, "timeframe=month")) }
+							hx-get={ c.Path() + QueryParams(c, "timeframe=month") }
+							hx-push-url={ c.Path() + QueryParams(c, "timeframe=month") }
+						>{ l(c.Locale, "nav.my_month") }</a>
+					</li>
 				</ul>
 			</details>
-			<div class="lg:block">
+			<div class="hidden md:block">
 				<nav
 					class="flex gap-2"
 					aria-label="Tabs"
-					hx-swap="outerHTML"
-					hx-target="closest section"
-					hx-select="#appointments_section"
 				>
 					<a
 						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium",
-              templ.KV("bg-secondary/35 text-secondary-content", vc.Query("timeframe", "day") == "day") }
-						href={ templ.URL(vc.Path() + QueryParams(vc, "timeframe=day")) }
-						hx-get={ vc.Path() + QueryParams(vc, "timeframe=day") }
-						hx-push-url={ vc.Path() + QueryParams(vc, "timeframe=day") }
-					>{ l(vc.Locale, "nav.my_day") }</a>
+              templ.KV("bg-secondary/35 text-secondary-content", c.Query("timeframe", "day") == "day") }
+						href={ templ.URL(c.Path() + QueryParams(c, "timeframe=day")) }
+						hx-get={ c.Path() + QueryParams(c, "timeframe=day") }
+						hx-push-url={ c.Path() + QueryParams(c, "timeframe=day") }
+					>{ l(c.Locale, "nav.my_day") }</a>
 					<a
 						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium",
-              templ.KV("bg-secondary/15 text-secondary-content", vc.Query("timeframe") == "week") }
-						href={ templ.URL(vc.Path() + QueryParams(vc, "timeframe=week")) }
-						hx-get={ vc.Path() + QueryParams(vc, "timeframe=week") }
-						hx-push-url={ vc.Path() + QueryParams(vc, "timeframe=week") }
-					>{ l(vc.Locale, "nav.my_week") }</a>
+              templ.KV("bg-secondary/15 text-secondary-content", c.Query("timeframe") == "week") }
+						href={ templ.URL(c.Path() + QueryParams(c, "timeframe=week")) }
+						hx-get={ c.Path() + QueryParams(c, "timeframe=week") }
+						hx-push-url={ c.Path() + QueryParams(c, "timeframe=week") }
+					>{ c.l("nav.my_week") }</a>
 					<a
 						class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium",
-              templ.KV("bg-secondary/15 text-secondary-content", vc.Query("timeframe") == "month") }
-						href={ templ.URL(vc.Path() + QueryParams(vc, "timeframe=month")) }
-						hx-get={ vc.Path() + QueryParams(vc, "timeframe=month") }
-						hx-push-url={ vc.Path() + QueryParams(vc, "timeframe=month") }
-					>{ l(vc.Locale, "nav.my_month") }</a>
+              templ.KV("bg-secondary/15 text-secondary-content",c.Query("timeframe") == "month") }
+						href={ templ.URL(c.Path() + QueryParams(c, "timeframe=month")) }
+						hx-get={ c.Path() + QueryParams(c, "timeframe=month") }
+						hx-push-url={ c.Path() + QueryParams(c, "timeframe=month") }
+					>{ l(c.Locale, "nav.my_month") }</a>
 				</nav>
 			</div>
 		</div>
 		if (len(appointments) > 0) {
-			@AppointmentsList(vc, appointments)
+			@AppointmentsList(c, appointments)
 		} else {
-			@AppointmentsEmptyList(vc)
+			@AppointmentsEmptyList(c)
 		}
 	</section>
 }
