@@ -32,8 +32,8 @@ func (s *service) HandlePatientsPage(c *fiber.Ctx) error {
 	}
 
 	patients := []model.Patient{}
-	s.DB.Model(&cu).Limit(20).Association("Patients").Find(&patients)
-	return view.Render(c, view.PatientsPage(patients, vc))
+	s.DB.Model(&cu).Limit(15).Association("Patients").Find(&patients)
+	return view.Render(c, view.PatientsPage(vc, patients))
 }
 
 // HandlePatientsIndexSearch GlobalFTS search for patients index page.
@@ -51,7 +51,7 @@ func (s *service) HandlePatientsIndexSearch(c *fiber.Ctx) error {
 	s.DB.
 		Model(&cu).
 		Scopes(model.GlobalFTS(term)).
-		Limit(20).
+		Limit(15).
 		Association("Patients").
 		Find(&patients)
 

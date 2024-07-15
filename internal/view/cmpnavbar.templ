@@ -1,6 +1,8 @@
 package view
 
-templ CmpNavbar(vc *Ctx) {
+import "strings"
+
+templ CmpNavbar(c *Ctx) {
 	<header id="header" class="relative mb-8 lg:mb-12 bg-base-100 border-y border-base-content/10" hx-boost="true">
 		<nav id="navbar" class="navbar rounded-lg p-4">
 			<div class="navbar-start">
@@ -22,27 +24,27 @@ templ CmpNavbar(vc *Ctx) {
 					<kbd class="hidden md:kbd md:kbd-sm">k</kbd>
 				</div>
 				<div class="hidden md:flex">
-					<a href="/appointments?timeframe=day" class="btn btn-ghost text-sm">{ l(vc.Locale, "nav.appointments") }</a>
-					<a href="/clinics" class="btn btn-ghost text-sm">{ l(vc.Locale, "nav.clinics") }</a>
-					<a href="/patients" class="btn btn-ghost text-sm">{ l(vc.Locale, "nav.patients") }</a>
-					<div class="tooltip tooltip-bottom hidden" data-tip={ l(vc.Locale, "str.coming_soon") }>
-						<a href="#" class="btn btn-ghost text-sm text-base-content/35">{ l(vc.Locale, "nav.exp_rev") }</a>
+					<a href="/appointments?timeframe=day" class={ "btn btn-ghost text-sm",  templ.KV("underline underline-offset-4", strings.Contains(c.Path(), "/appointments")) }>{ c.l("nav.appointments") }</a>
+					<a href="/clinics" class={ "btn btn-ghost text-sm", templ.KV("btn-active", strings.Contains(c.Path(), "/clinics")) }>{ c.l("nav.clinics") }</a>
+					<a href="/patients" class="btn btn-ghost text-sm">{ c.l("nav.patients") }</a>
+					<div class="tooltip tooltip-bottom hidden" data-tip={ c.l("str.coming_soon") }>
+						<a href="#" class="btn btn-ghost text-sm text-base-content/35">{ c.l("nav.exp_rev") }</a>
 					</div>
 					<div class="divider divider-horizontal"></div>
-					if vc.CurrentUser.IsLoggedIn() {
+					if c.CurrentUser.IsLoggedIn() {
 						<a class="btn btn-ghost" href="/logout">
-							{ l(vc.Locale, "btn.logout") }
+							{ c.l("btn.logout") }
 							@IconSignout("")
 						</a>
 					} else {
 						<a class="btn btn-ghost" href="/login">
-							{ l(vc.Locale, "btn.login") }
+							{ c.l("btn.login") }
 							@IconSignin("")
 						</a>
 					}
 				</div>
 				<div class="flex-none px-1">
-					@CmpBtnTheme(vc.Theme)
+					@CmpBtnTheme(c.Theme)
 				</div>
 				<div class="md:hidden divider divider-horizontal mx-0"></div>
 				<div class="md:hidden flex-none dropdown dropdown-end">
@@ -53,20 +55,20 @@ templ CmpNavbar(vc *Ctx) {
 						tabindex="0"
 						class="menu dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
 					>
-						<li><a href="/appointments?timeframe=day" class="btn btn-ghost justify-start">{ l(vc.Locale, "nav.appointments") }</a></li>
-						<li><a href="/clinics" class="btn btn-ghost justify-start">{ l(vc.Locale, "nav.clinics") }</a></li>
-						<li><a href="/patients" class="btn btn-ghost justify-start">{ l(vc.Locale, "nav.patients") }</a></li>
-						if vc.CurrentUser.IsLoggedIn() {
+						<li><a href="/appointments?timeframe=day" class="btn btn-ghost justify-start">{ c.l("nav.appointments") }</a></li>
+						<li><a href="/clinics" class="btn btn-ghost justify-start">{ c.l("nav.clinics") }</a></li>
+						<li><a href="/patients" class="btn btn-ghost justify-start">{ c.l("nav.patients") }</a></li>
+						if c.CurrentUser.IsLoggedIn() {
 							<li>
 								<a href="/logout" class="btn btn-ghost justify-start">
-									{ l(vc.Locale, "btn.logout") }
+									{ c.l("btn.logout") }
 									@IconSignout("")
 								</a>
 							</li>
 						} else {
 							<li>
 								<a href="/login" class="btn btn-ghost justify-start">
-									{ l(vc.Locale, "btn.login") }
+									{ c.l("btn.login") }
 									@IconSignin("")
 								</a>
 							</li>
