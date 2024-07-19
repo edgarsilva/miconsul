@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-templ UserIndexPage(c *Ctx, users []model.User) {
+templ UsersIndexPage(c *Ctx, users []model.User) {
 	@LayoutWithBackBtn(c, "/") {
 		<section id="users_section" class="grow flex flex-col px-0 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<div
@@ -107,18 +107,162 @@ templ UserLi(c *Ctx, user model.User) {
 
 templ UsersEmptyList(c *Ctx) {
 	<div class="app-card flex">
-		<a href="/patients/new" class="relative block w-full rounded-lg border-2 border-dashed border-base-content/30 p-12 text-center hover:border-base-content/40 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-			<svg
-				class="mx-auto w-12 h-12 text-base-content/60"
-				xmlns="http://www.w3.org/2000/svg"
-				fill="none"
-				viewBox="0 0 24 24"
-				stroke-width="1.5"
-				stroke="currentColor"
-			>
-				<path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z"></path>
-			</svg>
-			<span class="mt-2 block text-sm font-semibold">{ l(c.Locale, "str.create_new_patient") }</span>
+		<a href="/users/new" class="relative block w-full rounded-lg border-2 border-dashed border-base-content/30 p-12 text-center hover:border-base-content/40 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+			@IconAddUser("mx-auto w-8 h-8 text-base-content/60")
+			<span class="mt-2 block text-sm font-semibold">{ l(c.Locale, "str.create_new_user") }</span>
 		</a>
 	</div>
+}
+
+templ UserEditPage(c *Ctx, user model.User) {
+	@LayoutWithBackBtn(c, "/") {
+		<section id="user_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
+			<hgroup
+				class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
+				hx-boost="true"
+			>
+				if user.ID == "" || user.ID == "new" {
+					<h1 class="font-bold text-2xl">{ l(c.Locale, "str.new_user") }</h1>
+				} else {
+					<h1 class="font-bold text-2xl">{ l(c.Locale, "str.edit_user") }</h1>
+				}
+				<a
+					href={ templ.URL("/appointments?userId=" + user.ID) }
+					class="btn btn-primary btn-sm"
+				>
+					@IconCalendar("")
+					{ l(c.Locale, "btn.appointments") }
+				</a>
+			</hgroup>
+			@UserProfile(c, user)
+		</section>
+	}
+}
+
+templ UserProfile(c *Ctx, user model.User) {
+	<div id="user_profile" class="space-y-10 divide-y divide-base-content/10">
+		<div class="grid grid-cols-1 gap-x-8 gap-y-8 md:grid-cols-3">
+			<div class="px-4 sm:px-0">
+				<h2 class="text-base font-semibold leading-7">{ c.l("str.personal_info") }</h2>
+				<p class="mt-1 text-sm leading-6 text-base-content/60">{ c.l("str.personal_info_desc") }</p>
+			</div>
+			@UserForm(user, c) {
+				<input type="hidden" name="id" value={ user.ID } id="pi_user_id"/>
+				<div class="px-4 py-6 sm:p-8">
+					<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+						<div class="col-span-full">
+							<label for="profile_pic" class="block text-sm font-medium leading-6">{ c.l("str.profile_pic") }</label>
+							<div class="mt-2 flex items-center gap-x-3">
+								if user.ProfilePic != "" {
+									<figure class="flex flex-col gap-1 items-center" id="avatar_pic">
+										@CmpAvatar(user)
+										<a
+											href={ templ.URL("/users/" + user.ID + "/removepic") }
+											hx-patch={ "/users/" + user.ID + "/removepic" }
+											hx-select="#avatar_pic"
+											hx-swap="outerHTML"
+											hx-target="closest figure"
+											class="link text-xs link-secondary"
+										>{ c.l("btn.remove") }</a>
+									</figure>
+								} else {
+									<figure class="flex flex-col gap-2" id="avatar_pic">
+										<div class="avatar placeholder">
+											<div class="bg-neutral text-neutral-content rounded-full w-12">
+												<span class="text-xl">{ user.Initials() }</span>
+											</div>
+										</div>
+									</figure>
+								}
+								<input
+									id="profile_pic"
+									name="profilePic"
+									type="file"
+									class="file-input file-input-bordered w-full file-input-primary"
+									accept="image/*"
+								/>
+							</div>
+						</div>
+						<div class="sm:col-span-3">
+							<label for="name" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.name") }</label>
+							<div class="mt-2">
+								<input required min="2" type="text" name="name" value={ user.Name } id="name" autocomplete="family-name" class="input input-bordered block w-full"/>
+								if user.FieldError("name") != "" {
+									<div class="label">
+										<span class="label-text-alt text-error">{ user.FieldError("name") }</span>
+									</div>
+								}
+							</div>
+						</div>
+						<div class="sm:col-span-4">
+							<label for="phone" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.phone") }</label>
+							<div class="mt-2">
+								<input required type="tel" name="phone" value={ user.Phone } id="phone" autocomplete="tel" class="input input-bordered block w-full"/>
+								if user.FieldError("phone") != "" {
+									<div class="label">
+										<span class="label-text-alt text-error">{ user.FieldError("phone") }</span>
+									</div>
+								}
+							</div>
+						</div>
+						<div class="sm:col-span-4">
+							<label for="email" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.email_address") }</label>
+							<div class="mt-2">
+								<input type="email" name="email" value={ user.Email } id="email" autocomplete="email" class="input input-bordered block w-full"/>
+								if user.FieldError("email") != "" {
+									<div class="label">
+										<span class="label-text-alt text-error">{ user.FieldError("email") }</span>
+									</div>
+								}
+							</div>
+						</div>
+						<div class="col-span-full">
+							<label for="cover-photo" class="block text-sm font-medium leading-6">{ c.l("str.cover_photo") }</label>
+							<div class="mt-2 flex justify-center rounded-lg border border-dashed border-base-content/25 px-6 py-10">
+								<div class="text-center">
+									<svg class="mx-auto h-12 w-12 text-base-content/60" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+										<path fill-rule="evenodd" d="M1.5 6a2.25 2.25 0 012.25-2.25h16.5A2.25 2.25 0 0122.5 6v12a2.25 2.25 0 01-2.25 2.25H3.75A2.25 2.25 0 011.5 18V6zM3 16.06V18c0 .414.336.75.75.75h16.5A.75.75 0 0021 18v-1.94l-2.69-2.689a1.5 1.5 0 00-2.12 0l-.88.879.97.97a.75.75 0 11-1.06 1.06l-5.16-5.159a1.5 1.5 0 00-2.12 0L3 16.061zm10.125-7.81a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0z" clip-rule="evenodd"></path>
+									</svg>
+									<div class="mt-4 flex text-sm leading-6 text-base-content/60">
+										<label for="file-upload" class="relative link link-primary font-semibold leading-6">
+											<span>{ c.l("str.upload_file") }</span>
+											<input id="file-upload" name="profilePic" type="file" class="sr-only"/>
+										</label>
+										<p class="pl-1">{ c.l("str.or_drag_and_drop") }</p>
+									</div>
+									<p class="text-xs leading-5 text-base-content/60">PNG, JPG, GIF { c.l("str.up_to_10mb") }</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="flex items-center justify-end gap-x-6 border-t border-base-content/10 px-4 py-4 sm:px-8">
+					<button type="submit" class="btn btn-primary">{ c.l("btn.save") }</button>
+				</div>
+			}
+		</div>
+	</div>
+}
+
+templ UserForm(user model.User, c *Ctx) {
+	<form
+		class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2"
+		method="POST"
+		enctype="multipart/form-data"
+		if user.ID != "" && user.ID != "new" {
+			hx-patch={ "/users/" + user.ID }
+			action={ templ.URL("/users/" + user.ID + "/patch") }
+		} else {
+			hx-post="/users"
+			action="/users"
+		}
+		hx-target="closest #user_profile_cont"
+		hx-select="#user_profile_cont"
+		hx-swap="outerHTML"
+	>
+		<span class="absolute badge badge-success badge-sm p-2 top-2 right-2 htmx-indicator">
+			<span class="loading loading-ring loading-sm"></span>
+		</span>
+		{ children... }
+	</form>
 }

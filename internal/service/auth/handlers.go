@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"fmt"
+	"miconsul/internal/lib/handlerutils"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/mailer"
 	"miconsul/internal/model"
@@ -77,7 +78,7 @@ func (s *service) HandleLogin(c *fiber.Ctx) error {
 		if err != nil {
 			return c.Redirect("/?msg=Failed to login, please try again")
 		}
-		c.Cookie(newCookie("Auth", jwt, time.Hour*validFor))
+		c.Cookie(handlerutils.NewCookie("Auth", jwt, time.Hour*validFor))
 		return c.Redirect("/?timeframe=day")
 	}
 }
@@ -168,7 +169,7 @@ func (s *service) HandleSignupConfirmEmail(c *fiber.Ctx) error {
 		return c.Redirect("/login?msg=Email confirmed, you should be able to login now")
 	}
 
-	c.Cookie(newCookie("Auth", jwt, time.Hour*24))
+	c.Cookie(handlerutils.NewCookie("Auth", jwt, time.Hour*24))
 	return c.Redirect("/login?msg=Email confirmed, you should be able to login now")
 }
 
@@ -178,7 +179,7 @@ func (s *service) HandleSignupConfirmEmail(c *fiber.Ctx) error {
 // ALL: /logout
 func (s *service) HandleLogout(c *fiber.Ctx) error {
 	s.SessionDestroy(c)
-	invalidateSessionCookies(c)
+	handlerutils.InvalidateCookies(c, "Auth", "JWT")
 
 	redirectURL := "/login"
 	if s.LogtoEnabled() {

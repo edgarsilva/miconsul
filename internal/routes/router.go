@@ -17,6 +17,11 @@ import (
 )
 
 func RegisterServices(s *server.Server) {
+	// Middleware
+	s.Use(mw.LocaleLang())
+	s.Use(mw.UITheme())
+
+	// Routes
 	AuthRoutes(s)
 	UserRoutes(s)
 	AdminRoutes(s)
@@ -216,6 +221,7 @@ func UserRoutes(s *server.Server) {
 
 	// Admin only
 	u.Get("/admin/users", mw.MustBeAdmin(u), u.HandleIndexPage)
+	u.Get("/admin/users/:id", mw.MustBeAdmin(u), u.HandleEditPage)
 
 	// Fragments
 	// g.Get("/fragment/footer", u.HandleFooterFragment)

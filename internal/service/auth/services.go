@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"miconsul/internal/database"
+	"miconsul/internal/lib/handlerutils"
 	"miconsul/internal/mailer"
 	"miconsul/internal/model"
 	"miconsul/internal/server"
@@ -337,5 +338,5 @@ func RefreshAuthCookie(c *fiber.Ctx, claims jwt.MapClaims) {
 		return
 	}
 
-	c.Cookie(newCookie("Auth", jwt, time.Hour*8))
+	c.Cookie(handlerutils.NewCookie("Auth", jwt, time.Hour*8))
 }

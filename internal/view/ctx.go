@@ -3,6 +3,7 @@ package view
 import (
 	"errors"
 	"miconsul/internal/lib/localize"
+	"miconsul/internal/model"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -42,18 +43,42 @@ func l(lang, key string) string {
 	return locales.GetWithLocale(lang, key)
 }
 
-func NewCtx(c *fiber.Ctx, props ...Prop) (*Ctx, error) {
+func extLoc(c *fiber.Ctx) string {
 	locI := c.Locals("locale")
 	loc, ok := locI.(string)
 	if !ok {
 		loc = "es-MX"
 	}
 
+	return loc
+}
+
+func extTheme(c *fiber.Ctx) string {
+	themeI := c.Locals("theme")
+	theme, ok := themeI.(string)
+	if !ok {
+		theme = "light"
+	}
+
+	return theme
+}
+
+func extCurrentUser(c *fiber.Ctx) model.User {
+	userI := c.Locals("current_user")
+	cu, ok := userI.(model.User)
+	if !ok {
+		return model.User{}
+	}
+
+	return cu
+}
+
+func NewCtx(c *fiber.Ctx, props ...Prop) (*Ctx, error) {
 	ctx := Ctx{
 		Ctx:         c,
-		CurrentUser: new(DummyUser),
-		Locale:      loc,
-		Theme:       "light",
+		CurrentUser: extCurrentUser(c),
+		Locale:      extLoc(c),
+		Theme:       extTheme(c),
 		Toast: Toast{
 			Msg:   c.Query("toast", ""),
 			Sub:   c.Query("sub", ""),

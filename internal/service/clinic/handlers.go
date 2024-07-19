@@ -1,9 +1,9 @@
 package clinic
 
 import (
+	"miconsul/internal/lib/handlerutils"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/model"
-	"miconsul/internal/lib"
 	"miconsul/internal/view"
 	"strconv"
 
@@ -62,7 +62,7 @@ func (s *service) HandleCreateClinic(c *fiber.Ctx) error {
 
 	clinic := model.Clinic{
 		UserID: cu.ID,
-		Price:  lib.StrToAmount(c.FormValue("price", "")),
+		Price:  handlerutils.StrToAmount(c.FormValue("price", "")),
 	}
 	c.BodyParser(&clinic)
 
@@ -108,7 +108,7 @@ func (s *service) HandleUpdateClinic(c *fiber.Ctx) error {
 
 	clinic := model.Clinic{
 		UserID: cu.ID,
-		Price:  lib.StrToAmount(c.FormValue("price", "")),
+		Price:  handlerutils.StrToAmount(c.FormValue("price", "")),
 	}
 	c.BodyParser(&clinic)
 	path, err := SaveProfilePicToDisk(c, clinic)
@@ -203,7 +203,7 @@ func (s *service) HandleMockManyClinics(c *fiber.Ctx) error {
 		ExtID := xid.New("prav")
 		clinics = append(clinics, model.Clinic{
 			ExtID:      ExtID,
-			ProfilePic: lib.DicebearShapeAvatarURL(ExtID),
+			ProfilePic: handlerutils.DicebearShapeAvatarURL(ExtID),
 			Name:       faker.Company().Name(),
 			Email:      faker.Internet().Email(),
 			Phone:      faker.PhoneNumber().CellPhone(),

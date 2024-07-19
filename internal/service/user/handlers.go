@@ -21,9 +21,21 @@ func (s *service) HandleIndexPage(c *fiber.Ctx) error {
 	users := []model.User{}
 	s.DB.Order("id DESC").Limit(10).Find(&users)
 
-	theme := s.SessionUITheme(c)
-	vc, _ := view.NewCtx(c, view.WithCurrentUser(cu), view.WithTheme(theme))
-	return view.Render(c, view.UserIndexPage(vc, users))
+	vc, _ := view.NewCtx(c)
+	return view.Render(c, view.UsersIndexPage(vc, users))
+}
+
+// HandleEditPage shows the edit/new form for users
+//
+// GET: /admin/users/:id
+func (s *service) HandleEditPage(c *fiber.Ctx) error {
+	cu, err := s.CurrentUser(c)
+	if err != nil || cu.Role != model.UserRoleAdmin {
+		return c.Redirect("/login")
+	}
+
+	vc, _ := view.NewCtx(c)
+	return view.Render(c, view.UserEditPage(vc, cu))
 }
 
 // HandleProfilePage list all users in a table *the index*
@@ -35,12 +47,8 @@ func (s *service) HandleProfilePage(c *fiber.Ctx) error {
 		return c.Redirect("/login")
 	}
 
-	users := []model.User{}
-	s.DB.Order("id DESC").Limit(10).Find(&users)
-
-	theme := s.SessionUITheme(c)
-	vc, _ := view.NewCtx(c, view.WithCurrentUser(cu), view.WithTheme(theme))
-	return view.Render(c, view.UserIndexPage(vc, users))
+	vc, _ := view.NewCtx(c)
+	return view.Render(c, view.UserEditPage(vc, cu))
 }
 
 // handleApiUsers returns all users as JSON

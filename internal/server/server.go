@@ -4,7 +4,6 @@ package server
 import (
 	"fmt"
 	"miconsul/internal/database"
-	"miconsul/internal/lib"
 	"miconsul/internal/lib/backgroundjob"
 	"miconsul/internal/lib/localize"
 	"miconsul/internal/model"
@@ -30,14 +29,13 @@ import (
 )
 
 type Server struct {
-	*fiber.App
-	// WorkerPool that handles Background Goroutines
-	BGJob        *backgroundjob.Sched
-	WP           *ants.Pool
+	WP           *ants.Pool           // <- WorkerPool that handles Background Goroutines or Async Jobs (emails)
+	BGJob        *backgroundjob.Sched // <- Actual BGJob scheduler
 	SessionStore *session.Store
 	DB           *database.Database
 	Locales      *localize.Localizer
 	LogtoConfig  *logto.LogtoConfig
+	*fiber.App
 }
 
 func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjob *backgroundjob.Sched) *Server {
@@ -76,9 +74,6 @@ func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjo
 
 	// Add healthcheck endpoints /livez /readyz
 	fiberApp.Use(healthcheck.New())
-
-	// Adds req language to the session adds local("lang")
-	fiberApp.Use(LocaleLang(sessionStore))
 
 	fiberApp.Use(limiter.New(limiterConfig()))
 
@@ -128,7 +123,7 @@ func (s *Server) Listen(port string) error {
 //		defer saveSess()
 func (s *Server) LogtoClient(c *fiber.Ctx) (client *logto.LogtoClient, save func()) {
 	sess := s.Session(c)
-	storage := lib.NewSessionStorage(sess)
+	storage := NewSessionStorage(sess)
 	logtoClient := logto.NewLogtoClient(
 		s.LogtoConfig,
 		storage,

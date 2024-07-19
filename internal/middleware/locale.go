@@ -1,12 +1,11 @@
-package server
+package middleware
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/session"
 )
 
 // LocaleLang defines a universal middleware to stract Locale lang en-US, es-MX, etc
-func LocaleLang(st *session.Store) func(c *fiber.Ctx) error {
+func LocaleLang() func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		lang := ""
 
@@ -20,10 +19,6 @@ func LocaleLang(st *session.Store) func(c *fiber.Ctx) error {
 		}
 
 		c.Locals("locale", lang)
-		sess, err := st.Get(c)
-		if err == nil {
-			sess.Set("locale", lang)
-		}
 
 		return c.Next()
 	}

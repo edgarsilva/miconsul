@@ -5,8 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	mrand "math/rand"
-	"os"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -21,25 +19,6 @@ func authParams(c *fiber.Ctx) (email, password string, err error) {
 	}
 
 	return email, password, nil
-}
-
-// newCookie creates a new cookie and returns a pointer to the cookie
-func newCookie(name, value string, validFor time.Duration) *fiber.Cookie {
-	return &fiber.Cookie{
-		Name:     name,
-		Value:    value,
-		Expires:  time.Now().Add(validFor),
-		Secure:   os.Getenv("env") == "production",
-		HTTPOnly: true,
-	}
-}
-
-// invalidateSessionCookies blanks session cookies and expires them
-// time.Hour*0
-func invalidateSessionCookies(c *fiber.Ctx) {
-	c.ClearCookie("Auth", "JWT")
-	c.Cookie(newCookie("Auth", "", time.Hour*0))
-	// c.Cookie(newCookie("JWT", "", time.Hour*0))
 }
 
 // resetPasswordEmailParam returns the email address string from either

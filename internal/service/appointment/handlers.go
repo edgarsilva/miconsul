@@ -2,7 +2,7 @@ package appointment
 
 import (
 	"fmt"
-	"miconsul/internal/lib"
+	"miconsul/internal/lib/handlerutils"
 	"miconsul/internal/lib/libtime"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/model"
@@ -139,7 +139,7 @@ func (s *service) HandleCreateAppointment(c *fiber.Ctx) error {
 		BookedHour:   bookedAt.Hour(),
 		BookedMinute: bookedAt.Minute(),
 		Timezone:     model.DefaultTimezone,
-		Price:        lib.StrToAmount(priceValue),
+		Price:        handlerutils.StrToAmount(priceValue),
 	}
 	c.BodyParser(&appointment)
 
@@ -200,7 +200,7 @@ func (s *service) HandleUpdateAppointment(c *fiber.Ctx) error {
 		BookedDay:    bookedAt.Day(),
 		BookedHour:   bookedAt.Hour(),
 		BookedMinute: bookedAt.Minute(),
-		Price:        lib.StrToAmount(c.FormValue("price", "")),
+		Price:        handlerutils.StrToAmount(c.FormValue("price", "")),
 	}
 	c.BodyParser(&appointment)
 

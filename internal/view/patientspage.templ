@@ -64,10 +64,10 @@ templ PatientsPage(c *Ctx, patients []model.Patient) {
 	}
 }
 
-templ PatientFormPage(patient model.Patient, vc *Ctx) {
-	@Layout(vc) {
+templ PatientFormPage(patient model.Patient, c *Ctx) {
+	@Layout(c) {
 		<div class="px-4 lg:px-8">
-			@CmpBtnBack(l(vc.Locale, "btn.back"), "/patients")
+			@CmpBtnBack(c.l("btn.back"), "/patients")
 		</div>
 		<section id="patient_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<hgroup
@@ -75,27 +75,27 @@ templ PatientFormPage(patient model.Patient, vc *Ctx) {
 				hx-boost="true"
 			>
 				if patient.ID == "" || patient.ID == "new" {
-					<h1 class="font-bold text-2xl">{ l(vc.Locale, "str.new_patient") }</h1>
+					<h1 class="font-bold text-2xl">{ c.l("str.new_patient") }</h1>
 				} else {
-					<h1 class="font-bold text-2xl">{ l(vc.Locale, "str.edit_patient") }</h1>
+					<h1 class="font-bold text-2xl">{ c.l("str.edit_patient") }</h1>
 				}
 				<a
 					href={ templ.URL("/appointments?patientId=" + patient.ID) }
 					class="btn btn-primary btn-sm"
 				>
 					@IconCalendar("")
-					{ l(vc.Locale, "btn.appointments") }
+					{ c.l("btn.appointments") }
 				</a>
 			</hgroup>
-			@PatientProfile(patient, vc)
+			@PatientProfile(patient, c)
 		</section>
 	}
 }
 
-templ PatientsList(vc *Ctx, patients []model.Patient) {
+templ PatientsList(c *Ctx, patients []model.Patient) {
 	<ul id="patients_list" role="list" class="app-card divide-y divide-base-content/10 overflow-hidden px-4 py-2">
 		for _, patient := range patients {
-			@PatientLi(patient, vc)
+			@PatientLi(patient, c)
 		}
 		<li class="relative flex justify-between gap-x-6 px-2 py-4 hover:bg-base-200/75">
 			<div class="flex items-center min-w-0 gap-x-4">
@@ -109,7 +109,7 @@ templ PatientsList(vc *Ctx, patients []model.Patient) {
 								<span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
 							</span>
 							Michael Foster
-							<span class="badge badge-success badge-sm mr-2">{ l(vc.Locale, "str.appointment_today") }</span>
+							<span class="badge badge-success badge-sm mr-2">{ c.l("str.appointment_today") }</span>
 						</a>
 					</p>
 					<p class="flex text-xs text-base-content/60">
@@ -124,13 +124,13 @@ templ PatientsList(vc *Ctx, patients []model.Patient) {
 							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
 								<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"></path>
 							</svg>
-							{ l(vc.Locale, "btn.appointments") }
+							{ c.l("btn.appointments") }
 						</button>
 						<button class="btn btn-secondary btn-outline">
 							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
 								<path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"></path>
 							</svg>
-							{ l(vc.Locale, "btn.edit") }
+							{ c.l("btn.edit") }
 						</button>
 					</div>
 					<p class="mt-1 text-xs leading-5 text-base-content/60">
@@ -142,7 +142,7 @@ templ PatientsList(vc *Ctx, patients []model.Patient) {
 	</ul>
 }
 
-templ PatientLi(patient model.Patient, vc *Ctx) {
+templ PatientLi(patient model.Patient, c *Ctx) {
 	<li class="relative flex justify-between items-center gap-x-6 px-2 py-2 hover:bg-base-200/75">
 		<div class="flex items-center min-w-0 gap-x-4">
 			@CmpAvatar(patient)
@@ -153,7 +153,7 @@ templ PatientLi(patient model.Patient, vc *Ctx) {
 					</span>
 				</p>
 				<p class="text-xs leading-5 text-base-content/50">
-					{ l(vc.Locale, "str.last_appointment") }
+					{ c.l("str.last_appointment") }
 					@CmpTime(time.Now())
 				</p>
 			</div>
@@ -168,7 +168,7 @@ templ PatientLi(patient model.Patient, vc *Ctx) {
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
 							<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"></path>
 						</svg>
-						{ l(vc.Locale, "btn.appointments") }
+						{ c.l("btn.appointments") }
 					</a>
 					<a
 						class="btn btn-outline btn-secondary"
@@ -178,7 +178,7 @@ templ PatientLi(patient model.Patient, vc *Ctx) {
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
 							<path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"></path>
 						</svg>
-						{ l(vc.Locale, "btn.edit") }
+						{ c.l("btn.edit") }
 					</a>
 				</div>
 			</div>
@@ -186,12 +186,12 @@ templ PatientLi(patient model.Patient, vc *Ctx) {
 	</li>
 }
 
-templ PatientDeleteForm(patient model.Patient, vc *Ctx) {
+templ PatientDeleteForm(patient model.Patient, c *Ctx) {
 	<form
 		method="POST"
 		action={ templ.URL("/patients/"+patient.ID) + "/delete" }
 		hx-delete={ "/patients/" + patient.ID }
-		hx-confirm={ l(vc.Locale, "str.are_you_sure") }
+		hx-confirm={ c.l("str.are_you_sure") }
 		hx-select="#patients_list"
 		hx-target="#patients_list"
 	>
@@ -221,19 +221,19 @@ templ PatientsEmptyList(c *Ctx) {
 	</div>
 }
 
-templ PatientProfile(patient model.Patient, vc *Ctx) {
+templ PatientProfile(patient model.Patient, c *Ctx) {
 	<div id="patient_profile" class="space-y-10 divide-y divide-base-content/10">
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
-				<h2 class="text-base font-semibold leading-7">{ l(vc.Locale, "str.personal_info") }</h2>
-				<p class="mt-1 text-sm leading-6 text-base-content/60">{ l(vc.Locale, "str.personal_info_desc") }</p>
+				<h2 class="text-base font-semibold leading-7">{ c.l("str.personal_info") }</h2>
+				<p class="mt-1 text-sm leading-6 text-base-content/60">{ c.l("str.personal_info_desc") }</p>
 			</div>
-			@PatientForm(patient, vc) {
+			@PatientForm(c, patient) {
 				<input type="hidden" name="id" value={ patient.ID } id="pi_patient_id"/>
 				<div class="px-4 py-6 sm:p-8">
 					<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
 						<div class="col-span-full">
-							<label for="profile_pic" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.profile_pic") }</label>
+							<label for="profile_pic" class="block text-sm font-medium leading-6">{ c.l("str.profile_pic") }</label>
 							<div class="mt-2 flex items-center gap-x-3">
 								if patient.ProfilePic != "" {
 									<figure class="flex flex-col gap-1 items-center" id="avatar_pic">
@@ -245,7 +245,7 @@ templ PatientProfile(patient model.Patient, vc *Ctx) {
 											hx-swap="outerHTML"
 											hx-target="closest figure"
 											class="link text-xs link-secondary"
-										>{ l(vc.Locale, "btn.remove") }</a>
+										>{ c.l("btn.remove") }</a>
 									</figure>
 								} else {
 									<figure class="flex flex-col gap-2" id="avatar_pic">
@@ -266,7 +266,7 @@ templ PatientProfile(patient model.Patient, vc *Ctx) {
 							</div>
 						</div>
 						<div class="sm:col-span-3">
-							<label for="name" class="block text-sm font-medium leading-6 text-base-content">{ l(vc.Locale, "str.name") }</label>
+							<label for="name" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.name") }</label>
 							<div class="mt-2">
 								<input required min="2" type="text" name="name" value={ patient.Name } id="name" autocomplete="family-name" class="input input-bordered block w-full"/>
 								if patient.FieldError("name") != "" {
@@ -277,7 +277,7 @@ templ PatientProfile(patient model.Patient, vc *Ctx) {
 							</div>
 						</div>
 						<div class="sm:col-span-4">
-							<label for="phone" class="block text-sm font-medium leading-6 text-base-content">{ l(vc.Locale, "str.phone") }</label>
+							<label for="phone" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.phone") }</label>
 							<div class="mt-2">
 								<input required type="tel" name="phone" value={ patient.Phone } id="phone" autocomplete="tel" class="input input-bordered block w-full"/>
 								if patient.FieldError("phone") != "" {
@@ -288,7 +288,7 @@ templ PatientProfile(patient model.Patient, vc *Ctx) {
 							</div>
 						</div>
 						<div class="sm:col-span-4">
-							<label for="email" class="block text-sm font-medium leading-6 text-base-content">{ l(vc.Locale, "str.email_address") }</label>
+							<label for="email" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.email_address") }</label>
 							<div class="mt-2">
 								<input type="email" name="email" value={ patient.Email } id="email" autocomplete="email" class="input input-bordered block w-full"/>
 								if patient.FieldError("email") != "" {
@@ -299,7 +299,7 @@ templ PatientProfile(patient model.Patient, vc *Ctx) {
 							</div>
 						</div>
 						<div class="sm:col-span-4">
-							<label for="age" class="block text-sm font-medium leading-6 text-base-content">{ l(vc.Locale, "str.age") }</label>
+							<label for="age" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.age") }</label>
 							<div class="mt-2">
 								<input
 									required
@@ -319,13 +319,13 @@ templ PatientProfile(patient model.Patient, vc *Ctx) {
 							</div>
 						</div>
 						<div class="sm:col-span-4">
-							<label for="ocupation" class="block text-sm font-medium leading-6 text-base-content">{ l(vc.Locale, "str.ocupation") }</label>
+							<label for="ocupation" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.ocupation") }</label>
 							<div class="mt-2">
 								<input type="text" name="ocupation" value={ patient.Ocupation } id="ocupation" autocomplete="ocupation" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 						<div class="col-span-full">
-							<label for="cover-photo" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.cover_photo") }</label>
+							<label for="cover-photo" class="block text-sm font-medium leading-6">{ c.l("str.cover_photo") }</label>
 							<div class="mt-2 flex justify-center rounded-lg border border-dashed border-base-content/25 px-6 py-10">
 								<div class="text-center">
 									<svg class="mx-auto h-12 w-12 text-base-content/60" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -333,57 +333,57 @@ templ PatientProfile(patient model.Patient, vc *Ctx) {
 									</svg>
 									<div class="mt-4 flex text-sm leading-6 text-base-content/60">
 										<label for="file-upload" class="relative link link-primary font-semibold leading-6">
-											<span>{ l(vc.Locale, "str.upload_file") }</span>
+											<span>{ c.l("str.upload_file") }</span>
 											<input id="file-upload" name="profilePic" type="file" class="sr-only"/>
 										</label>
-										<p class="pl-1">{ l(vc.Locale, "str.or_drag_and_drop") }</p>
+										<p class="pl-1">{ c.l("str.or_drag_and_drop") }</p>
 									</div>
-									<p class="text-xs leading-5 text-base-content/60">PNG, JPG, GIF { l(vc.Locale, "str.up_to_10mb") }</p>
+									<p class="text-xs leading-5 text-base-content/60">PNG, JPG, GIF { c.l("str.up_to_10mb") }</p>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
 				<div class="flex items-center justify-end gap-x-6 border-t border-base-content/10 px-4 py-4 sm:px-8">
-					<button type="submit" class="btn btn-primary">{ l(vc.Locale, "btn.save") }</button>
+					<button type="submit" class="btn btn-primary">{ c.l("btn.save") }</button>
 				</div>
 			}
 		</div>
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
-				<h2 class="text-base font-semibold leading-7">{ l(vc.Locale, "str.address") }</h2>
-				<p class="mt-1 text-sm leading-6 text-base-content/60">{ l(vc.Locale, "str.address_desc") }</p>
+				<h2 class="text-base font-semibold leading-7">{ c.l("str.address") }</h2>
+				<p class="mt-1 text-sm leading-6 text-base-content/60">{ c.l("str.address_desc") }</p>
 			</div>
-			@PatientForm(patient, vc) {
+			@PatientForm(c, patient) {
 				<input type="hidden" name="id" value={ patient.ID } id="address_patient_id"/>
 				<div class="px-4 py-6 sm:p-8">
 					<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
 						<div class="col-span-full">
-							<label for="street-address" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.address_street") }</label>
+							<label for="street-address" class="block text-sm font-medium leading-6">{ c.l("str.address_street") }</label>
 							<div class="mt-2">
 								<input type="text" name="addressLine1" value={ patient.Address.Line1 } id="address_line1" autocomplete="street-address" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-2 sm:col-start-1">
-							<label for="city" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.address_city") }</label>
+							<label for="city" class="block text-sm font-medium leading-6">{ c.l("str.address_city") }</label>
 							<div class="mt-2">
 								<input type="text" name="addressCity" value={ patient.Address.City } id="address_city" autocomplete="address-level2" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-2">
-							<label for="region" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.address_state") }</label>
+							<label for="region" class="block text-sm font-medium leading-6">{ c.l("str.address_state") }</label>
 							<div class="mt-2">
 								<input type="text" name="addressState" value={ patient.Address.State } id="address_state" autocomplete="address-level1" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-2">
-							<label for="postal-code" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.address_zip_code") }</label>
+							<label for="postal-code" class="block text-sm font-medium leading-6">{ c.l("str.address_zip_code") }</label>
 							<div class="mt-2">
 								<input type="text" name="addressZipCode" value={ patient.Address.Zip } id="address_zip_code" autocomplete="postal-code" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-4">
-							<label for="country" class="block text-sm font-medium leading-6 text-base-content">{ l(vc.Locale, "str.address_country") }</label>
+							<label for="country" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.address_country") }</label>
 							<div class="mt-2">
 								<select id="country" name="addressCountry" autocomplete="country-name" class="select select-bordered block w-full">
 									@CountryOption("none", "none", patient.Country)
@@ -396,46 +396,46 @@ templ PatientProfile(patient model.Patient, vc *Ctx) {
 					</div>
 				</div>
 				<div class="flex items-center justify-end gap-x-6 border-t border-base-content/10 px-4 py-4 sm:px-8">
-					<button type="submit" class="btn btn-primary">{ l(vc.Locale, "btn.save") }</button>
+					<button type="submit" class="btn btn-primary">{ c.l("btn.save") }</button>
 				</div>
 			}
 		</div>
 		<div class="grid grid-cols-1 pt-8 gap-x-8 gap-y-8 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
-				<h2 class="text-base font-semibold leading-7">{ l(vc.Locale, "str.medical_profile") }</h2>
-				<p class="mt-1 text-sm leading-6 text-base-content/60">{ l(vc.Locale, "str.medical_profile_desc") }</p>
+				<h2 class="text-base font-semibold leading-7">{ c.l("str.medical_profile") }</h2>
+				<p class="mt-1 text-sm leading-6 text-base-content/60">{ c.l("str.medical_profile_desc") }</p>
 			</div>
-			@PatientForm(patient, vc) {
+			@PatientForm(c, patient) {
 				<input type="hidden" name="id" value={ patient.ID } id="mb_patient_id"/>
 				<div class="px-4 py-6 sm:p-8">
 					<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
 						<div class="col-span-full">
-							<label for="website" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.family_history") }</label>
+							<label for="website" class="block text-sm font-medium leading-6">{ c.l("str.family_history") }</label>
 							<div class="mt-2">
 								<textarea
 									name="familyHistory"
 									class="textarea textarea-bordered w-full block"
-									placeholder={ l(vc.Locale, "str.family_history_ph") }
+									placeholder={ c.l("str.family_history_ph") }
 								>{ patient.FamilyHistory }</textarea>
 							</div>
 						</div>
 						<div class="col-span-full">
-							<label for="website" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.background") }</label>
+							<label for="website" class="block text-sm font-medium leading-6">{ c.l("str.background") }</label>
 							<div class="mt-2">
 								<textarea
 									name="medicalBackground"
 									class="textarea textarea-bordered w-full block"
-									placeholder={ l(vc.Locale, "str.background_ph") }
+									placeholder={ c.l("str.background_ph") }
 								>{ patient.MedicalBackground }</textarea>
 							</div>
 						</div>
 						<div class="col-span-full">
-							<label for="about" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.notes") }</label>
+							<label for="about" class="block text-sm font-medium leading-6">{ c.l("str.notes") }</label>
 							<div class="mt-2">
 								<textarea
 									name="notes"
 									class="textarea textarea-bordered w-full block"
-									placeholder={ l(vc.Locale, "str.notes_ph") }
+									placeholder={ c.l("str.notes_ph") }
 								>
 									{ patient.Notes }
 								</textarea>
@@ -444,21 +444,21 @@ templ PatientProfile(patient model.Patient, vc *Ctx) {
 					</div>
 				</div>
 				<div class="flex items-center justify-end gap-x-6 border-t border-base-content/10 px-4 py-4 sm:px-8">
-					<button type="submit" class="btn btn-primary">{ l(vc.Locale, "btn.save") }</button>
+					<button type="submit" class="btn btn-primary">{ c.l("btn.save") }</button>
 				</div>
 			}
 		</div>
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
-				<h2 class="text-base font-semibold leading-7">{ l(vc.Locale, "str.notifications") }</h2>
-				<p class="mt-1 text-sm leading-6">{ l(vc.Locale, "str.notifications_desc") }</p>
+				<h2 class="text-base font-semibold leading-7">{ c.l("str.notifications") }</h2>
+				<p class="mt-1 text-sm leading-6">{ c.l("str.notifications_desc") }</p>
 			</div>
-			@PatientForm(patient, vc) {
+			@PatientForm(c, patient) {
 				<input type="hidden" name="id" value={ patient.ID } id="no_patient_id"/>
 				<div class="px-4 py-6 sm:p-8">
 					<div class="max-w-2xl space-y-10">
 						<fieldset>
-							<legend class="text-sm font-semibold leading-6">{ l(vc.Locale, "str.notifications_about") }</legend>
+							<legend class="text-sm font-semibold leading-6">{ c.l("str.notifications_about") }</legend>
 							<div class="mt-6 space-y-6">
 								<label class="relative flex gap-x-3">
 									<input
@@ -471,14 +471,14 @@ templ PatientProfile(patient model.Patient, vc *Ctx) {
 										}
 									/>
 									<div class="text-sm leading-6">
-										<span class="font-medium">{ l(vc.Locale, "str.notifications_appointment_lifecycle") }</span>
-										<p class="text-base-content/60">{ l(vc.Locale, "str.notifications_appointment_lifecycle_desc") }</p>
+										<span class="font-medium">{ c.l("str.notifications_appointment_lifecycle") }</span>
+										<p class="text-base-content/60">{ c.l("str.notifications_appointment_lifecycle_desc") }</p>
 									</div>
 								</label>
 							</div>
 						</fieldset>
 						<fieldset>
-							<legend class="text-sm font-semibold leading-6">{ l(vc.Locale, "str.notifications_via") }</legend>
+							<legend class="text-sm font-semibold leading-6">{ c.l("str.notifications_via") }</legend>
 							<div class="mt-6 space-y-6">
 								<label class="flex items-center gap-x-3 text-sm font-medium leading-6">
 									<input
@@ -545,14 +545,14 @@ templ PatientProfile(patient model.Patient, vc *Ctx) {
 					</div>
 				</div>
 				<div class="flex items-center justify-end gap-x-6 border-t border-base/content/10 px-4 py-4 sm:px-8">
-					<button type="submit" class="btn btn-primary">{ l(vc.Locale, "btn.save") }</button>
+					<button type="submit" class="btn btn-primary">{ c.l("btn.save") }</button>
 				</div>
 			}
 		</div>
 	</div>
 }
 
-templ PatientForm(patient model.Patient, vc *Ctx) {
+templ PatientForm(c *Ctx, patient model.Patient) {
 	<form
 		class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2"
 		method="POST"
