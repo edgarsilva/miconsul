@@ -1,6 +1,9 @@
 package middleware
 
 import (
+	"miconsul/internal/lib/handlerutils"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -15,7 +18,7 @@ func UITheme() func(c *fiber.Ctx) error {
 			theme = "light"
 		}
 
-		c.Cookies("theme", theme)
+		handlerutils.NewCookie("theme", theme, 24*time.Hour*7)
 		c.Locals("theme", theme)
 
 		return c.Next()
