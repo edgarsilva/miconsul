@@ -26,7 +26,7 @@ templ CmpBtnTheme(theme string) {
 		for="theme_toggle"
 		class="swap swap-rotate"
 		title="Toggle theme"
-		if theme != "dark" {
+		if theme == "light" {
 			hx-get="/api/theme?theme=dark"
 			hx-push-url="?theme=dark"
 		} else {

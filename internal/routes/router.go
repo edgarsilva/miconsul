@@ -177,7 +177,7 @@ func ThemeRoutes(s *server.Server) {
 	t := theme.NewService(s)
 
 	g := s.Group("/api/theme")
-	g.Get("", t.HandleThemeChange)
+	g.Get("", t.HandleChangeUITheme)
 }
 
 func TodosRoutes(s *server.Server) {

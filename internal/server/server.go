@@ -189,15 +189,9 @@ func (s *Server) SessionSet(c *fiber.Ctx, k string, v string) error {
 // SessionUITheme returns the user UI theme (light|dark) from the session or query
 // url param
 func (s *Server) SessionUITheme(c *fiber.Ctx) string {
-	theme := c.Query("theme", "")
-	if theme == "" {
-		theme = s.SessionGet(c, "theme", "light")
-	}
-
-	if theme == "light" {
-		s.SessionSet(c, "theme", "light")
-	} else {
-		s.SessionSet(c, "theme", "dark")
+	theme, ok := c.Locals("theme").(string)
+	if !ok || theme == "" {
+		theme = "light"
 	}
 
 	return theme
