@@ -13,7 +13,8 @@ and DaisyUI/TailwindCSS:
 - UI/CSS: [DaisyUI](https://daisyui.com)/[TailwindCSS](https://tailwindcss.com/)
 
 ## The MVP App
-[vokoscreenNG-2024-07-23_14-35-58.webm](https://github.com/user-attachments/assets/ed603525-3912-4c27-8d2c-5896b3d21a7c)
+[vokoscreenNG-2024-07-23_17-00-32.webm](https://github.com/user-attachments/assets/f6915e3a-bb64-4a34-8ccc-78bec186f4a3)
+
 
 ## Getting Started
 
