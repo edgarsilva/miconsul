@@ -14,7 +14,7 @@ pre_cmd = [
 	"templ generate",
 ]
 # Just plain old shell command. You could use `make` as well.
-cmd = "go build -tags fts5 -o ./tmp/main main.go"
+cmd = "go build -tags fts5 -o ./tmp/main cmd/app/main.go"
 # Array of commands to run after ^C
 post_cmd = []
 # Binary file yields from `cmd`.

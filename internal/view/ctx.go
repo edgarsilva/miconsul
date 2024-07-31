@@ -8,11 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type CurrentUser interface {
-	IsLoggedIn() bool
-}
-
-// Toast notification required
+// Toast describes the notification shown in the FE
 type Toast struct {
 	Msg   string
 	Sub   string
@@ -21,14 +17,14 @@ type Toast struct {
 
 type Ctx struct {
 	*fiber.Ctx
-	CurrentUser
-	Locale    string
-	Theme     string
-	Timeframe string
-	Toast     Toast
+	Locale      string
+	Theme       string
+	Timeframe   string
+	Toast       Toast
+	CurrentUser model.User
 }
 
-type Prop func(ctx *Ctx) error
+type FnProp func(ctx *Ctx) error
 
 var (
 	phoneRegex = "^[\\+]?[(]?[0-9]{3}[)]?[-\\s\\.]?[0-9]{3}[-\\s\\.]?[0-9]{4,6}$"
@@ -44,8 +40,8 @@ func l(lang, key string) string {
 }
 
 func extLoc(c *fiber.Ctx) string {
-	locI := c.Locals("locale")
-	loc, ok := locI.(string)
+	iloc := c.Locals("locale")
+	loc, ok := iloc.(string)
 	if !ok {
 		loc = "es-MX"
 	}
@@ -54,8 +50,8 @@ func extLoc(c *fiber.Ctx) string {
 }
 
 func extTheme(c *fiber.Ctx) string {
-	themeI := c.Locals("theme")
-	theme, ok := themeI.(string)
+	itheme := c.Locals("theme")
+	theme, ok := itheme.(string)
 	if !ok {
 		theme = "light"
 	}
@@ -64,8 +60,8 @@ func extTheme(c *fiber.Ctx) string {
 }
 
 func extCurrentUser(c *fiber.Ctx) model.User {
-	userI := c.Locals("current_user")
-	cu, ok := userI.(model.User)
+	iuser := c.Locals("current_user")
+	cu, ok := iuser.(model.User)
 	if !ok {
 		return model.User{}
 	}
@@ -73,7 +69,11 @@ func extCurrentUser(c *fiber.Ctx) model.User {
 	return cu
 }
 
-func NewCtx(c *fiber.Ctx, props ...Prop) (*Ctx, error) {
+func CU(c *fiber.Ctx) model.User {
+	return extCurrentUser(c)
+}
+
+func NewCtx(c *fiber.Ctx, fnProps ...FnProp) (*Ctx, error) {
 	ctx := Ctx{
 		Ctx:         c,
 		CurrentUser: extCurrentUser(c),
@@ -86,8 +86,8 @@ func NewCtx(c *fiber.Ctx, props ...Prop) (*Ctx, error) {
 		},
 	}
 
-	for _, prop := range props {
-		err := prop(&ctx)
+	for _, fnProp := range fnProps {
+		err := fnProp(&ctx)
 		if err != nil {
 			return &ctx, nil
 		}
@@ -96,19 +96,14 @@ func NewCtx(c *fiber.Ctx, props ...Prop) (*Ctx, error) {
 	return &ctx, nil
 }
 
-func WithCurrentUser(cu CurrentUser) Prop {
+func WithCurrentUser(cu model.User) FnProp {
 	return func(props *Ctx) error {
-		if cu == nil {
-			return errors.New("current user must exist, you might be passing an emtpy(nil) interface")
-		}
-
 		props.CurrentUser = cu
-
 		return nil
 	}
 }
 
-func WithTheme(theme string) Prop {
+func WithTheme(theme string) FnProp {
 	return func(props *Ctx) error {
 		if theme == "" {
 			return errors.New("theme can't be blank if you are trying to set it)")
@@ -124,7 +119,7 @@ func WithTheme(theme string) Prop {
 	}
 }
 
-func WithLocale(lang string) Prop {
+func WithLocale(lang string) FnProp {
 	return func(props *Ctx) error {
 		if lang == "" {
 			lang = "es-MX"
@@ -144,7 +139,7 @@ func WithLocale(lang string) Prop {
 //   - toast: main text,
 //   - sub: optional subtitle,
 //   - level: alert level, one of success, error, warning or info (defaults to info)
-func WithToast(toast, sub, level string) Prop {
+func WithToast(toast, sub, level string) FnProp {
 	return func(props *Ctx) error {
 		props.Toast = Toast{
 			Msg:   toast,

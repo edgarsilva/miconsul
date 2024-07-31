@@ -124,7 +124,7 @@ templ UserEditPage(c *Ctx, user model.User) {
 				if user.ID == "" || user.ID == "new" {
 					<h1 class="font-bold text-2xl">{ l(c.Locale, "str.new_user") }</h1>
 				} else {
-					<h1 class="font-bold text-2xl">{ l(c.Locale, "str.edit_user") }</h1>
+					<h1 class="font-bold text-2xl">{ l(c.Locale, "str.my_profile") }</h1>
 				}
 				<a
 					href={ templ.URL("/appointments?userId=" + user.ID) }
@@ -146,7 +146,7 @@ templ UserProfile(c *Ctx, user model.User) {
 				<h2 class="text-base font-semibold leading-7">{ c.l("str.personal_info") }</h2>
 				<p class="mt-1 text-sm leading-6 text-base-content/60">{ c.l("str.personal_info_desc") }</p>
 			</div>
-			@UserForm(user, c) {
+			@UserForm(c, user) {
 				<input type="hidden" name="id" value={ user.ID } id="pi_user_id"/>
 				<div class="px-4 py-6 sm:p-8">
 					<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -244,17 +244,22 @@ templ UserProfile(c *Ctx, user model.User) {
 	</div>
 }
 
-templ UserForm(user model.User, c *Ctx) {
+templ UserForm(c *Ctx, user model.User) {
 	<form
 		class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2"
 		method="POST"
 		enctype="multipart/form-data"
-		if user.ID != "" && user.ID != "new" {
+		if user.ID != "new" {
+			hx-post="/users"
+			action="/users"
+		}
+		else
+		if c.CurrentUser.Role == model.UserRoleAdmin {
 			hx-patch={ "/users/" + user.ID }
 			action={ templ.URL("/users/" + user.ID + "/patch") }
 		} else {
-			hx-post="/users"
-			action="/users"
+			hx-patch={ "/profile" }
+			action={ templ.URL("/profile") }
 		}
 		hx-target="closest #user_profile_cont"
 		hx-select="#user_profile_cont"

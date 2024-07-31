@@ -131,6 +131,7 @@ create_an_account: "Create an account"
 view_appt: "View appointments"
 users: "Users"
 search_users: "Search users"
+my_profile: "My profile"
 
 #_login = "Hello my name is {{.name}}"
 #_hello_firstname_lastname = "Hello {{.firstname}} {{.lastname}}"

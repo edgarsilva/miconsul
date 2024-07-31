@@ -218,6 +218,7 @@ func UserRoutes(s *server.Server) {
 
 	// Pages
 	u.Get("/profile", mw.MustAuthenticate(u), u.HandleProfilePage)
+	u.Post("/profile", mw.MustAuthenticate(u), u.HandleProfilePage)
 
 	// Admin only
 	u.Get("/admin/users", mw.MustBeAdmin(u), u.HandleIndexPage)

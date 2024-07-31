@@ -68,3 +68,24 @@ func InTimezone(t time.Time, tz string) time.Time {
 
 	return t.In(loc)
 }
+
+func TimeBetween(t time.Time, start time.Time, end time.Time) bool {
+	return (t.Equal(start) || t.After(start)) && (t.Equal(end) || t.Before(end))
+}
+
+func subRef() {
+	firstDate := time.Date(2022, 4, 13, 1, 0, 0, 0, time.UTC)
+	secondDate := time.Date(2021, 2, 12, 5, 0, 0, 0, time.UTC)
+	difference := firstDate.Sub(secondDate)
+
+	fmt.Printf("Years: %d\n", int64(difference.Hours()/24/365))
+	fmt.Printf("Months: %d\n", int64(difference.Hours()/24/30))
+	fmt.Printf("Weeks: %d\n", int64(difference.Hours()/24/7))
+	fmt.Printf("Days: %d\n", int64(difference.Hours()/24))
+	fmt.Printf("Hours: %.f\n", difference.Hours())
+	fmt.Printf("Minutes: %.f\n", difference.Minutes())
+	fmt.Printf("Seconds: %.f\n", difference.Seconds())
+	fmt.Printf("Milliseconds: %d\n", difference.Milliseconds())
+	fmt.Printf("Microseconds: %d\n", difference.Microseconds())
+	fmt.Printf("Nanoseconds: %d\n", difference.Nanoseconds())
+}

@@ -23,7 +23,7 @@ build:
 	@echo "🛕 Generating Templ files..."
 	${GOPATH}/bin/templ generate
 	@echo "🤖 go build..."
-	go build -tags fts5 -o bin/app main.go
+	go build -tags fts5 -o bin/app cmd/app/main.go
 
 start:
 	make db/migrate
@@ -37,7 +37,7 @@ run:
 	@echo "🛕 Generating Templ files..."
 	${GOPATH}/bin/templ generate
 	@echo "🤖 go run..."
-	go run main.go -tags fts5
+	go run cmd/app/main.go -tags fts5
 
 # Local development with Live Reload <- not hot reload on the browser only of the server
 dev:

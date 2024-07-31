@@ -15,7 +15,7 @@ import (
 func (s *service) HandleIndexPage(c *fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil || cu.Role != model.UserRoleAdmin {
-		return c.Redirect("/login")
+		return c.Redirect("/")
 	}
 
 	users := []model.User{}
@@ -31,24 +31,52 @@ func (s *service) HandleIndexPage(c *fiber.Ctx) error {
 func (s *service) HandleEditPage(c *fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil || cu.Role != model.UserRoleAdmin {
-		return c.Redirect("/login")
+		return c.Redirect("/")
+	}
+
+	userID := c.Params("id", "")
+	if userID == "" {
+		return c.Redirect("/")
 	}
 
 	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.UserEditPage(vc, cu))
 }
 
-// HandleProfilePage list all users in a table *the index*
+// HandleProfilePage show the CurrentUser profile page
 //
 // GET: /profile
 func (s *service) HandleProfilePage(c *fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
-	if err != nil || cu.Role != model.UserRoleAdmin {
-		return c.Redirect("/login")
+	if err != nil {
+		return c.Redirect("/")
 	}
 
 	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.UserEditPage(vc, cu))
+}
+
+// HandleProfilePage show the CurrentUser profile page
+//
+// GET: /profile
+func (s *service) HandleUpdateProfile(c *fiber.Ctx) error {
+	cu, err := s.CurrentUser(c)
+	if err != nil {
+		return c.Redirect("/")
+	}
+
+	userUpds := model.User{}
+	c.BodyParser(&userUpds)
+	result := s.DB.Where("id = ?", cu.ID).Updates(&userUpds)
+	if err := result.Error; err != nil {
+		redirectPath := "/profile?err=failed to update profile&level=error"
+		if !s.IsHTMX(c) {
+			return c.Redirect(redirectPath)
+		}
+	}
+
+	vc, _ := view.NewCtx(c)
+	return view.Render(c, view.UserEditPage(vc, userUpds))
 }
 
 // handleApiUsers returns all users as JSON
