@@ -15,13 +15,16 @@ import (
 //
 // GET: /clinics
 func (s *service) HandleClinicsPage(c *fiber.Ctx) error {
+	_, span := s.Tracer.Start(c.UserContext(), "HandleClinicsPage")
+	defer span.End()
+
 	cu, err := s.CurrentUser(c)
 	if err != nil {
 		return c.Redirect("/login")
 	}
 
 	clinics := []model.Clinic{}
-	s.DB.Model(&model.Clinic{}).Limit(20).Find(&clinics)
+	s.DB.WithContext(c.UserContext()).Model(&model.Clinic{}).Limit(5).Find(&clinics)
 
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
@@ -44,7 +47,7 @@ func (s *service) HandleClinicPage(c *fiber.Ctx) error {
 		s.DB.Model(&model.Clinic{}).First(&clinic)
 	}
 	clinics := []model.Clinic{}
-	s.DB.Model(&model.Clinic{}).Limit(20).Find(&clinics)
+	s.DB.Model(&model.Clinic{}).Limit(5).Find(&clinics)
 
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
@@ -176,6 +179,7 @@ func (s *service) HandleClinicsIndexSearch(c *fiber.Ctx) error {
 	clinics := []model.Clinic{}
 
 	s.DB.
+		WithContext(c.UserContext()).
 		Model(&cu).
 		Scopes(model.GlobalFTS(term)).
 		Limit(20).

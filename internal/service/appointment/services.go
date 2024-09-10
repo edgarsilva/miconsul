@@ -1,6 +1,7 @@
 package appointment
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"miconsul/internal/lib/libtime"
@@ -10,6 +11,8 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 )
 
@@ -28,9 +31,18 @@ func NewService(s *server.Server) service {
 }
 
 func (s *service) RegisterJobs() {
-	_, err := s.BGJob.RunCronJob("0/1 * * * *", false, func() {
+	_, err := s.BGJ.RunCron("0/1 * * * *", false, func() {
+		ctx, span := s.Tracer.Start(context.Background(), "appointment/services:RegisterJobs>CronJob",
+			trace.WithAttributes(
+				attribute.String("grouping.fingerprint", "cronjob"),
+			),
+		)
+		defer span.End()
+
 		appointments := []model.Appointment{}
 		s.DB.
+			WithContext(ctx).
+			Model(&model.Appointment{}).
 			Preload("Patient").
 			Preload("Clinic").
 			Scopes(model.AppointmentWithPendingAlerts).
@@ -67,7 +79,7 @@ func (s *service) GetClinicByID(c *fiber.Ctx, id string) (model.Clinic, error) {
 
 	cu, _ := s.CurrentUser(c)
 	clinic := model.Clinic{ID: id, UserID: cu.ID}
-	result := s.DB.Where(&clinic, "ID", "UserID").Take(&clinic)
+	result := s.DB.Model(&clinic).Where(&clinic, "ID", "UserID").Take(&clinic)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return model.Clinic{}, errors.New("incorrect number of clinic rows, expecting: 1, got:" + string(result.RowsAffected))
 	}
@@ -77,7 +89,7 @@ func (s *service) GetClinicByID(c *fiber.Ctx, id string) (model.Clinic, error) {
 
 func (s *service) GetAppointmentsBy(c *fiber.Ctx, cu model.User, patientID, clinicID, timeframe string) ([]model.Appointment, error) {
 	appointments := []model.Appointment{}
-	dbquery := s.DB.Model(model.Appointment{}).Where("user_id = ?", cu.ID)
+	dbquery := s.DB.Model(&model.Appointment{}).Where("user_id = ?", cu.ID)
 
 	if patientID != "" {
 		dbquery.Where("patient_id = ?", patientID)
@@ -107,7 +119,7 @@ func (s *service) GetAppointmentsBy(c *fiber.Ctx, cu model.User, patientID, clin
 }
 
 func (s *service) SendBookedAlert(appointment model.Appointment) error {
-	return s.WP.Submit(func() {
+	_, err := s.BGJ.RunImmediately(func() {
 		err := mailer.SendAppointmentBookedEmail(appointment)
 		if err != nil {
 			alert := model.Alert{
@@ -132,10 +144,12 @@ func (s *service) SendBookedAlert(appointment model.Appointment) error {
 		}
 		s.DB.Model(&appointment).Association("Alerts").Append(&alert)
 	})
+
+	return err
 }
 
 func (s *service) SendReminderAlert(appointment model.Appointment) error {
-	return s.WP.Submit(func() {
+	_, err := s.BGJ.RunImmediately(func() {
 		err := mailer.SendAppointmentReminderEmail(appointment)
 		if err != nil {
 			alert := model.Alert{
@@ -160,4 +174,6 @@ func (s *service) SendReminderAlert(appointment model.Appointment) error {
 		}
 		s.DB.Model(&appointment).Association("Alerts").Append(&alert)
 	})
+
+	return err
 }

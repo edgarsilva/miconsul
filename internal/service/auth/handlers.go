@@ -2,7 +2,6 @@ package auth
 
 import (
 	"errors"
-	"fmt"
 	"miconsul/internal/lib/handlerutils"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/mailer"
@@ -48,7 +47,10 @@ func (s *service) HandleLogin(c *fiber.Ctx) error {
 		return view.Render(c, view.LoginPage(email, "", respErr, vc))
 	}
 
-	user, err := s.userFetch(email)
+	ctx, span := s.Tracer.Start(c.UserContext(), "auth/handlers:HandleLogin")
+	defer span.End()
+
+	user, err := s.userFetch(ctx, email)
 	if err != nil {
 		return view.Render(c, view.LoginPage(email, "", respErr, vc))
 	}
@@ -147,7 +149,7 @@ func (s *service) HandleSignupConfirmEmail(c *fiber.Ctx) error {
 
 	user := model.User{}
 	err := s.DB.
-		Model(&model.User{}).
+		Model(&user).
 		Select("id, email, confirm_email_token").
 		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
 		Take(&user).Error
@@ -221,7 +223,7 @@ func (s *service) HandleResetPassword(c *fiber.Ctx) error {
 	}
 
 	user := model.User{}
-	err = s.DB.Model(&model.User{}).Select("id", "name").Where("email = ?", email).Take(&user).Error
+	err = s.DB.Model(user).Select("id", "name").Where("email = ?", email).Take(&user).Error
 	if err != nil {
 		errView := errors.New("user not found with that email")
 		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
@@ -232,7 +234,6 @@ func (s *service) HandleResetPassword(c *fiber.Ctx) error {
 		return c.Redirect("/resetpassword")
 	}
 
-	fmt.Println("Test USER ->", user)
 	user.ResetToken = token
 	user.ResetTokenExpiresAt = time.Now().Add(time.Hour * 1)
 	s.DB.Model(&user).Select("ResetToken", "ResetTokenExpiresAt").Updates(&user)
@@ -325,6 +326,9 @@ func (s *service) HandleValidate(c *fiber.Ctx) error {
 //
 // GET: /auth/show
 func (s *service) HandleShowUser(c *fiber.Ctx) error {
+	ctx, span := s.Tracer.Start(c.UserContext(), "auth/handlers:HandleShowUser")
+	defer span.End()
+
 	id := c.Locals("uid")
 	if id == nil {
 		return c.Status(fiber.StatusForbidden).SendString("Forbidden")
@@ -334,8 +338,9 @@ func (s *service) HandleShowUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusForbidden).SendString("Forbidden")
 	}
 
-	var user model.User
-	if result := s.DB.Where("id = ?", id).Take(&user); result.Error != nil {
+	user := model.User{}
+	result := s.DB.WithContext(ctx).Model(&user).Where("id = ?", id).Take(&user)
+	if result.Error != nil {
 		return c.Status(fiber.StatusForbidden).SendString("Forbidden")
 	}
 

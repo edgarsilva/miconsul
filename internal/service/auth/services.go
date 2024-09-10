@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"errors"
 	"miconsul/internal/database"
 	"miconsul/internal/lib/handlerutils"
@@ -16,12 +17,14 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 
 	logto "github.com/logto-io/go/client"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type MWService interface {
+	TracerClient() trace.Tracer
 	DBClient() *database.Database
-	LogtoClient(c *fiber.Ctx) (client *logto.LogtoClient, save func())
+	LogtoClient(*fiber.Ctx) (client *logto.LogtoClient, save func())
 	LogtoEnabled() bool
 }
 
@@ -69,7 +72,7 @@ func (s service) signupIsEmailValid(email string) error {
 	}
 
 	user := model.User{Email: email}
-	if result := s.DB.Where(user, "Email").Take(&user); result.RowsAffected != 0 {
+	if result := s.DB.Model(user).Where(user, "Email").Take(&user); result.RowsAffected != 0 {
 		return errors.New("email already exists, try login instead")
 	}
 
@@ -113,9 +116,12 @@ func (s service) userCreate(email, password, token string) (model.User, error) {
 }
 
 // userFetch returns a User by email
-func (s service) userFetch(email string) (model.User, error) {
+func (s service) userFetch(ctx context.Context, email string) (model.User, error) {
+	ctx, span := s.Tracer.Start(ctx, "auth/services:userFetch")
+	defer span.End()
+
 	user := model.User{Email: email}
-	s.DB.Where(user, "Email").Take(&user)
+	s.DB.WithContext(ctx).Model(&user).Where(user, "Email").Take(&user)
 	if user.ID == "" {
 		return user, errors.New("user not found")
 	}
@@ -169,7 +175,7 @@ func (s service) userUpdateConfirmToken(email, token string) error {
 func (s service) userPendingConfirmation(email string) error {
 	user := model.User{}
 	result := s.DB.
-		Select("id, email, confirm_email_token").
+		Select("ID, Email, ConfirmEmailToken").
 		Where("email = ? AND confirm_email_token IS NOT null AND confirm_email_token != ''", email).
 		Take(&user)
 	if result.RowsAffected != 0 || user.ID != "" { // If a row/record exists it means confirmation is pending and we should re-send
@@ -222,6 +228,9 @@ func Authenticate(c *fiber.Ctx, mws MWService) (model.User, error) {
 }
 
 func logtoStrategy(c *fiber.Ctx, mws MWService) (model.User, error) {
+	ctx, span := mws.TracerClient().Start(c.UserContext(), "auth/services:logtoStrategy")
+	defer span.End()
+
 	logtoClient, saveSess := mws.LogtoClient(c)
 	defer saveSess()
 
@@ -232,7 +241,7 @@ func logtoStrategy(c *fiber.Ctx, mws MWService) (model.User, error) {
 
 	db := mws.DBClient()
 	user := model.User{ExtID: claims.Sub}
-	result := db.Where(user, "ExtID").Take(&user)
+	result := db.WithContext(ctx).Model(&user).Where(user, "ExtID").Take(&user)
 	if result.Error != nil {
 		return user, errors.New("failed to authenticate user")
 	}
@@ -256,14 +265,13 @@ func localStrategy(c *fiber.Ctx, mws MWService) (model.User, error) {
 }
 
 func authenticateWithJWT(c *fiber.Ctx, db *database.Database, tokenStr string) (model.User, error) {
-	user := model.User{}
 	if tokenStr == "" {
-		return user, errors.New("JWT token is blank")
+		return model.User{}, errors.New("JWT token is blank")
 	}
 	secret := os.Getenv("JWT_SECRET")
 	claims, err := DecodeJWTToken(secret, tokenStr)
 	if err != nil {
-		return user, errors.New("failed to validase JWT token")
+		return model.User{}, errors.New("failed to validase JWT token")
 	}
 
 	uid, ok := claims["uid"].(string)
@@ -271,7 +279,8 @@ func authenticateWithJWT(c *fiber.Ctx, db *database.Database, tokenStr string) (
 		uid = ""
 	}
 
-	result := db.Where("id = ?", uid).Take(&user)
+	user := model.User{}
+	result := db.Model(&user).Where("id = ?", uid).Take(&user)
 	if result.Error != nil {
 		return user, errors.New("user NOT FOUND with UID in JWT token")
 	}

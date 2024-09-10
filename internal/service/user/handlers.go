@@ -13,13 +13,16 @@ import (
 //
 // GET: /admin/users
 func (s *service) HandleIndexPage(c *fiber.Ctx) error {
+	ctx, span := s.Tracer.Start(c.UserContext(), "user/handlers:HandleIndexPage")
+	defer span.End()
+
 	cu, err := s.CurrentUser(c)
 	if err != nil || cu.Role != model.UserRoleAdmin {
 		return c.Redirect("/")
 	}
 
 	users := []model.User{}
-	s.DB.Order("id DESC").Limit(10).Find(&users)
+	s.DB.WithContext(ctx).Model(&model.User{}).Order("id DESC").Limit(10).Find(&users)
 
 	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.UsersIndexPage(vc, users))

@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -42,16 +43,19 @@ func New(DBPath string) *Database {
 		},
 	)
 
-	DB, err := gorm.Open(sqlite.Open(DBPath+PragmaOpts), &gorm.Config{
+	db, err := gorm.Open(sqlite.Open(DBPath+PragmaOpts), &gorm.Config{
 		Logger: newLogger,
 		// SkipDefaultTransaction: false,
 		PrepareStmt: true,
 	})
 	if err != nil {
-		panic("failed to connect database")
+		log.Panic("Failed to connect database")
+	}
+	if err := db.Use(otelgorm.NewPlugin()); err != nil {
+		panic(err)
 	}
 
 	return &Database{
-		DB: DB,
+		DB: db,
 	}
 }

@@ -2,18 +2,19 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"miconsul/internal/database"
-	"miconsul/internal/lib/backgroundjob"
+	"miconsul/internal/lib/bgjob"
 	"miconsul/internal/lib/localize"
 	"miconsul/internal/model"
 	"os"
 
+	"github.com/gofiber/contrib/otelfiber"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/encryptcookie"
-	"github.com/gofiber/fiber/v2/middleware/etag"
 	"github.com/gofiber/fiber/v2/middleware/favicon"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
@@ -26,72 +27,78 @@ import (
 	"github.com/gofiber/storage/sqlite3/v2"
 	logto "github.com/logto-io/go/client"
 	"github.com/panjf2000/ants/v2"
+	"go.opentelemetry.io/otel"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type Server struct {
-	WP           *ants.Pool           // <- WorkerPool that handles Background Goroutines or Async Jobs (emails)
-	BGJob        *backgroundjob.Sched // <- Actual BGJob scheduler
-	SessionStore *session.Store
 	DB           *database.Database
+	WP           *ants.Pool   // <- WorkerPool - handles Background Goroutines or Async Jobs (emails) with Ants
+	BGJ          *bgjob.Sched // <- BGJob Cron scheduler
+	SessionStore *session.Store
 	Locales      *localize.Localizer
 	LogtoConfig  *logto.LogtoConfig
 	*fiber.App
+	TP     *sdktrace.TracerProvider
+	Tracer trace.Tracer
 }
 
-func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjob *backgroundjob.Sched) *Server {
+func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjob *bgjob.Sched, tp *sdktrace.TracerProvider) *Server {
 	// Initialize session middleware config
 	storage := sqlite3.New(sessionConfig())
 	sessionStore := session.New(session.Config{
 		Storage: storage,
 	})
 
-	fiberApp := fiber.New()
+	tracer := otel.Tracer("fiberapp-server")
+	app := fiber.New(fiber.Config{
+		// Override default error handler
+		ErrorHandler: fiberAppErrorHandler,
+	})
 
-	fiberApp.Use(logger.New())
+	// Recover middleware - Catches panics that might stop app execution
+	app.Use(recover.New())
+
+	app.Use(otelfiber.Middleware())
+
+	app.Use(logger.New())
 
 	if os.Getenv("APP_ENV") == "production" {
-		fiberApp.Use(helmet.New(helmetConfig()))
+		app.Use(helmet.New(helmetConfig()))
 	}
 
-	// Initialize recover middleware to catch panics that might
-	// stop the application
-	fiberApp.Use(recover.New())
-
-	fiberApp.Use(cors.New())
-
-	fiberApp.Use(etag.New())
-
-	fiberApp.Use(requestid.New())
-
-	fiberApp.Use(encryptcookie.New(encryptcookie.Config{
+	app.Use(cors.New())
+	app.Use(requestid.New())
+	app.Use(encryptcookie.New(encryptcookie.Config{
 		Key: os.Getenv("COOKIE_SECRET"),
 	}))
-
-	fiberApp.Use(favicon.New(favicon.Config{
+	app.Use(favicon.New(favicon.Config{
 		File: "./public/favicon.ico",
 		URL:  "/favicon.ico",
 	}))
 
 	// Add healthcheck endpoints /livez /readyz
-	fiberApp.Use(healthcheck.New())
-
-	fiberApp.Use(limiter.New(limiterConfig()))
+	app.Use(healthcheck.New())
+	app.Use(limiter.New(limiterConfig()))
 
 	// Initialize default monitor (Assign the middleware to /metrics)
-	fiberApp.Get("/metrics", monitor.New())
+	app.Get("/metrics", monitor.New())
 
-	fiberApp.Static("/public", "./public", staticConfig())
+	app.Static("/public", "./public", staticConfig())
 
 	logtoConfig := LogtoConfig()
 
 	return &Server{
-		App:          fiberApp,
-		SessionStore: sessionStore,
-		BGJob:        bgjob,
-		WP:           wp,
+		App:          app,
 		DB:           db,
+		WP:           wp,
+		BGJ:          bgjob,
+		TP:           tp,
+		Tracer:       tracer,
 		Locales:      locales,
-		LogtoConfig:  &logtoConfig,
+		SessionStore: sessionStore,
+		LogtoConfig:  logtoConfig,
 	}
 }
 
@@ -108,6 +115,14 @@ func (s *Server) CurrentUser(c *fiber.Ctx) (model.User, error) {
 
 func (s *Server) DBClient() *database.Database {
 	return s.DB
+}
+
+func (s *Server) TracerClient() trace.Tracer {
+	return s.Tracer
+}
+
+func (s *Server) Trace(c *fiber.Ctx, spanName string) (context.Context, trace.Span) {
+	return s.Tracer.Start(c.UserContext(), spanName)
 }
 
 // Listen starts the server on the specified port.

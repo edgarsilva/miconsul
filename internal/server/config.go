@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"os"
 	"time"
 
@@ -9,12 +10,14 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/storage/sqlite3/v2"
 	logto "github.com/logto-io/go/client"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const csp = "default-src 'self';base-uri 'self';font-src 'self' https: data:;" +
 	"form-action 'self';" +
 	"frame-ancestors 'self';" +
-	"img-src 'self' data: *.dicebear.com *.pravatar.cc images.unsplash.com;" +
+	"img-src 'self' data: *.dicebear.com *.pravatar.cc images.unsplash.com *.googleusercontent.com;" +
 	"object-src 'none';" +
 	"script-src 'self' 'unsafe-eval' 'unsafe-inline' unpkg.com *.unpkg.com *.jsdelivr.net;" +
 	"script-src-attr 'none';" +
@@ -70,19 +73,50 @@ func helmetConfig() helmet.Config {
 		OriginAgentCluster:        "?1",
 		XDNSPrefetchControl:       "off",
 		XDownloadOptions:          "noopen",
-		XPermittedCrossDomain:     "*.dicebear.com",
+		XPermittedCrossDomain:     "*.dicebear.com,*.googleusercontent.com",
 	}
 }
 
-func LogtoConfig() logto.LogtoConfig {
+func LogtoConfig() *logto.LogtoConfig {
 	endpoint := os.Getenv("LOGTO_URL")
 	appid := os.Getenv("LOGTO_APP_ID")
 	appsecret := os.Getenv("LOGTO_APP_SECRET")
-	return logto.LogtoConfig{
+
+	c := logto.LogtoConfig{
 		Endpoint:  endpoint,
 		AppId:     appid,
 		AppSecret: appsecret,
 		Resources: []string{"https://app.miconsul.xyz/api"},
 		Scopes:    []string{"email", "phone", "picture", "custom_data", "app:read", "app:write"},
 	}
+
+	return &c
+}
+
+// recoverConfig returns recover middleware config object with the yield func
+// executed with the request ctx to trace the panic error
+func fiberAppErrorHandler(ctx *fiber.Ctx, err error) error {
+	// Status code defaults to 500
+	code := fiber.StatusInternalServerError
+
+	// Retrieve the custom status code if it's a *fiber.Error
+	var e *fiber.Error
+	if errors.As(err, &e) {
+		code = e.Code
+	}
+
+	// Send custom error to intrumentation logs
+	span := trace.SpanFromContext(ctx.UserContext())
+	defer span.End()
+
+	if err != nil {
+		// Record the error.
+		span.RecordError(err)
+
+		// Update the span status.
+		span.SetStatus(codes.Error, err.Error())
+	}
+
+	// Return from handler
+	return ctx.Status(code).SendString("Internal Server Error")
 }

@@ -33,12 +33,7 @@ func (s *service) HandleAppointmentsPage(c *fiber.Ctx) error {
 	timeframe := c.Query("timeframe", "day")
 	appointments, _ := s.GetAppointmentsBy(c, cu, patientID, clinicID, timeframe)
 
-	theme := s.SessionUITheme(c)
-	toast := c.Query("toast", "")
-	vc, _ := view.NewCtx(c,
-		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, "", ""),
-	)
-
+	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.AppointmentsPage(vc, appointments))
 }
 

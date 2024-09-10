@@ -37,7 +37,7 @@ run:
 	@echo "🛕 Generating Templ files..."
 	${GOPATH}/bin/templ generate
 	@echo "🤖 go run..."
-	go run cmd/app/main.go -tags fts5
+	go run -tags fts5 cmd/app/main.go
 
 # Local development with Live Reload <- not hot reload on the browser only of the server
 dev:
@@ -63,7 +63,7 @@ test:
 	go test ./tests -v
 
 clean:
-	@echo "Cleaning..."
+	@echo "Cleaning builds..."
 	rm bin/*
 
 db/create:

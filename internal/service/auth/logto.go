@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"errors"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/model"
@@ -103,10 +104,12 @@ func (s *service) HandleLogtoPage(c *fiber.Ctx) error {
 	return view.Render(c, view.LogtoPage(vc, authState))
 }
 
-func (s service) logtoSaveUser(claims LogtoUser) error {
-	db := s.DBClient()
+func (s *service) logtoSaveUser(claims LogtoUser) error {
+	ctx, span := s.Tracer.Start(context.Background(), "auth/logto:logtoSaveUser")
+	defer span.End()
+
 	user := model.User{Email: claims.Email}
-	db.Where("email = ?", claims.Email).Take(&user)
+	s.DB.WithContext(ctx).Model(&model.User{}).Where(user, "Email").Take(&user)
 
 	if user.ID != "" && user.ExtID == claims.Sub {
 		return nil
@@ -130,7 +133,7 @@ func (s service) logtoSaveUser(claims LogtoUser) error {
 	user.Phone = claims.PhoneNumber
 	user.Role = model.UserRoleUser
 
-	result := s.DB.Save(&user)
+	result := s.DB.WithContext(ctx).Model(&model.User{}).Save(&user)
 	if result.Error != nil {
 		return errors.New("failed to save new user from logto profile")
 	}

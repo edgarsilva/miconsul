@@ -1,7 +1,6 @@
-package backgroundjob
+package bgjob
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -32,9 +31,9 @@ func New() (scheduler *Sched, shutdownFn func()) {
 	}, shutdownFn
 }
 
-// RunCronJob runs the function passed as a bg job (goroutine) at the interval
+// RunCron runs the function passed as a bgjob (goroutine) at the interval
 // specefied by the crontab
-func (s *Sched) RunCronJob(crontab string, withSeconds bool, taskFn func()) (gocron.Job, error) {
+func (s *Sched) RunCron(crontab string, withSeconds bool, taskFn func()) (gocron.Job, error) {
 	return s.NewJob(
 		gocron.CronJob(
 			// standard cron tab parsing
@@ -46,9 +45,9 @@ func (s *Sched) RunCronJob(crontab string, withSeconds bool, taskFn func()) (goc
 	)
 }
 
-// RunJobAt runs the function passed as a bg job (goroutine) at the specified
+// RunAt runs the function passed as a bg job (goroutine) at the specified
 // time.Time
-func (s *Sched) RunJobAt(t time.Time, fn func()) (gocron.Job, error) {
+func (s *Sched) RunAt(t time.Time, fn func()) (gocron.Job, error) {
 	return s.NewJob(
 		gocron.OneTimeJob(
 			gocron.OneTimeJobStartDateTime(t),
@@ -57,16 +56,12 @@ func (s *Sched) RunJobAt(t time.Time, fn func()) (gocron.Job, error) {
 	)
 }
 
-// RunJobImmediately runs the function passed as a bg job (goroutine) Immediately
-func (s *Sched) RunJobImmediately(fn func()) (gocron.Job, error) {
+// RunImmediately runs the function passed as a bg job (goroutine) Immediately
+func (s *Sched) RunImmediately(fn func()) (gocron.Job, error) {
 	return s.NewJob(
 		gocron.OneTimeJob(
 			gocron.OneTimeJobStartImmediately(),
 		),
-		gocron.NewTask(
-			func() {
-				fmt.Println("-----------> This job runs immediately after server started once....")
-			},
-		),
+		gocron.NewTask(fn),
 	)
 }

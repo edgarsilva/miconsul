@@ -1,14 +1,18 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"miconsul/internal/database"
-	"miconsul/internal/lib/backgroundjob"
+	"miconsul/internal/lib/bgjob"
 	"miconsul/internal/lib/localize"
+	"miconsul/internal/lib/otel"
 	"miconsul/internal/lib/workerpool"
 	"miconsul/internal/routes"
 	"miconsul/internal/server"
 	"os"
+	"os/signal"
 
 	"github.com/joho/godotenv"
 )
@@ -16,17 +20,31 @@ import (
 func main() {
 	godotenv.Load(".env")
 
-	locales := localize.New("en-US", "es-MX")
-	db := database.New(os.Getenv("DB_PATH"))
+	defer func() {
+		fmt.Println("✅ All cleanup tasks completed")
+	}()
+
+	ctx := context.Background()
+	tp, shutdownTP := otel.NewUptraceTracerProvider(ctx)
+	defer func() {
+		fmt.Println("Tracer is shutting down...")
+		shutdownTP()
+	}()
+
+	bgj, shutdownBGJ := bgjob.New()
+	defer func() {
+		fmt.Println("BGJ is shutting down...")
+		shutdownBGJ()
+	}()
+
 	wp, err := workerpool.New(10)
 	if err != nil {
 		log.Panic("Failed to start workerpool", err.Error())
 	}
 
-	bgj, shutdown := backgroundjob.New()
-	defer shutdown()
-
-	s := server.New(db, locales, wp, bgj)
+	locales := localize.New("en-US", "es-MX")
+	db := database.New(os.Getenv("DB_PATH"))
+	s := server.New(db, locales, wp, bgj, tp)
 	routes.RegisterServices(s)
 
 	port := os.Getenv("PORT")
@@ -34,8 +52,25 @@ func main() {
 		port = "3000"
 	}
 
-	err = s.Listen(port) // <-- this is a blocking call
-	if err != nil {
-		log.Panic("Failed to start server:", err.Error())
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+
+	serverShutdown := make(chan struct{})
+
+	go func() {
+		_ = <-c
+		fmt.Println("Gracefully shutting down...")
+		if err := s.Shutdown(); err != nil {
+			log.Panic("Failed to gracefully shutdowm fiber app server:", err.Error())
+		}
+		serverShutdown <- struct{}{}
+	}()
+
+	if err := s.Listen(port); err != nil {
+		log.Panic("Failed to start server on port:", port, err.Error())
 	}
+
+	<-serverShutdown
+	fmt.Println("🧹 Running cleanup tasks...")
+	// Your cleanup tasks go here
 }
