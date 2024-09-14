@@ -185,8 +185,8 @@ func (s *service) HandleUpdatePatient(c *fiber.Ctx) error {
 // PATCH: /patients/:id/removepic
 // POST: /patients/:id/removepic
 func (s *service) HandleRemovePic(c *fiber.Ctx) error {
-	ctx, span := s.Trace(c, "patient/handlers:HandleRemovePic")
-	defer span.End()
+	ctx, endTrace := s.Trace(c, "patient/handlers:HandleRemovePic")
+	defer endTrace()
 
 	cu, err := s.CurrentUser(c)
 	if err != nil {

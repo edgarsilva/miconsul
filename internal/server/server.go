@@ -121,11 +121,14 @@ func (s *Server) TracerClient() trace.Tracer {
 	return s.Tracer
 }
 
-func (s *Server) Trace(c *fiber.Ctx, spanName string) (context.Context, trace.Span) {
-	return s.Tracer.Start(c.UserContext(), spanName)
+func (s *Server) Trace(c *fiber.Ctx, spanName string) (context.Context, func()) {
+	ctx, span := s.Tracer.Start(c.UserContext(), spanName)
+	return ctx, func() {
+		span.End()
+	}
 }
 
-// Listen starts the server on the specified port.
+// Listen starts the fiberapp server (fiperapp.Listen()) on the specified port.
 func (s *Server) Listen(port string) error {
 	return s.App.Listen(fmt.Sprintf(":%v", port))
 }
