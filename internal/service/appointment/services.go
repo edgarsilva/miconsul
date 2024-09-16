@@ -66,7 +66,8 @@ func (s *service) GetPatientByID(c *fiber.Ctx, id string) (model.Patient, error)
 	result := s.DB.Where(&patient, "ID", "UserID").Take(&patient)
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return model.Patient{}, errors.New("incorrect number of patient rows, expecting: 1, got:" + string(result.RowsAffected))
+		err := errors.New(fmt.Sprintf("incorrect number of patient rows, expecting: 1, got: %d", result.RowsAffected))
+		return model.Patient{}, err
 	}
 
 	return patient, nil
@@ -81,7 +82,8 @@ func (s *service) GetClinicByID(c *fiber.Ctx, id string) (model.Clinic, error) {
 	clinic := model.Clinic{ID: id, UserID: cu.ID}
 	result := s.DB.Model(&clinic).Where(&clinic, "ID", "UserID").Take(&clinic)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return model.Clinic{}, errors.New("incorrect number of clinic rows, expecting: 1, got:" + string(result.RowsAffected))
+		err := errors.New(fmt.Sprintf("incorrect number of clinic rows, expecting: 1, got: %d", result.RowsAffected))
+		return model.Clinic{}, err
 	}
 
 	return clinic, nil

@@ -3,6 +3,8 @@ ifneq (,$(wildcard ./.env))
     export
 endif
 
+.PHONY: all clean
+
 install:
 	@echo "📦 Installing dependencies"
 	@echo "🥐 Installing bun (for tailwindcss)"
@@ -57,10 +59,17 @@ dev:
 	fi
 
 test:
+	@echo "Testing all"
+	go test ./... -coverprofile=coverage/c.out
+
+
+test/unit:
 	@echo "Testing unit"
-	go test ./internal/...
+	go test -v ./internal/... -coverprofile=coverage/unit_c.out
+
+test/integration:
 	@echo "Testing integration"
-	go test ./tests -v
+	go test -v ./tests/... -coverprofile=coverage/int_c.out
 
 clean:
 	@echo "Cleaning builds..."
@@ -115,4 +124,3 @@ docker/stop:
 docker/clean:
 	docker container rm miconsul-app
 
-.PHONY: all install build start run test clean dev db/delete db/create db/migrate

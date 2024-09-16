@@ -110,7 +110,7 @@ func NewUptraceTracerProvider(ctx context.Context) (tp *sdktrace.TracerProvider,
 
 	return tp, func() {
 		if err := tp.Shutdown(context.Background()); err != nil {
-			fmt.Println("Error shutting down tracer provider: %v", err)
+			fmt.Println("Error shutting down tracer provider: ", err)
 		}
 	}
 }

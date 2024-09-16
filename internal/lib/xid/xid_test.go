@@ -1,7 +1,6 @@
 package xid
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 )
@@ -28,8 +27,6 @@ func TestValidate(t *testing.T) {
 	t.Run("Validate with empty str", func(t *testing.T) {
 		xid := ""
 		val := Validate("XID", xid)
-		fmt.Println(val.Error())
-		fmt.Println("Contain ---->", strings.Contains(val.Error(), "cannot be blank"))
 		if !strings.Contains(val.Error(), "cannot be blank") {
 			t.Errorf("%v", "validate must return error with blank string")
 		}
