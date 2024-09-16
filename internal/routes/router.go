@@ -177,7 +177,6 @@ func UserRoutes(s *server.Server) {
 
 	// Fragments
 	// g.Get("/fragment/footer", u.HandleFooterFragment)
-	// g.Get("/fragment/list", u.HandleTodosFragment)
 
 	// API
 	api := u.Group("/api/users")
@@ -193,5 +192,4 @@ func AdminRoutes(s *server.Server) {
 
 	// Fragments
 	// g.Get("/fragment/footer", u.HandleFooterFragment)
-	// g.Get("/fragment/list", u.HandleTodosFragment)
 }

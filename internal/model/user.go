@@ -39,9 +39,6 @@ type User struct {
 	Clinics      []Clinic
 	Patients     []Patient
 	Appointments []Appointment
-	Todos        []Todo
-	// Articles []Article
-	// Comments []Comment
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
