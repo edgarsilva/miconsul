@@ -6,13 +6,10 @@ import (
 	"miconsul/internal/service/admin"
 	"miconsul/internal/service/appointment"
 	"miconsul/internal/service/auth"
-	"miconsul/internal/service/blog"
 	"miconsul/internal/service/clinic"
-	"miconsul/internal/service/counter"
 	"miconsul/internal/service/dashboard"
 	"miconsul/internal/service/patient"
 	"miconsul/internal/service/theme"
-	"miconsul/internal/service/todos"
 	"miconsul/internal/service/user"
 )
 
@@ -28,10 +25,7 @@ func RegisterServices(s *server.Server) {
 	DashbordhRoutes(s)
 	ClinicsRoutes(s)
 	PatientRoutes(s)
-	BlogRoutes(s)
 	ThemeRoutes(s)
-	TodosRoutes(s)
-	CounterRoutes(s)
 	AppointmentRoutes(s)
 }
 
@@ -89,7 +83,6 @@ func ClinicsRoutes(s *server.Server) {
 
 	// Fragments
 	// g.Get("/fragment/footer", u.HandleFooterFragment)
-	// g.Get("/fragment/list", u.HandleTodosFragment)
 
 	// API
 	// api := p.Group("/api/patients")
@@ -121,7 +114,6 @@ func PatientRoutes(s *server.Server) {
 
 	// Fragments
 	// g.Get("/fragment/footer", u.HandleFooterFragment)
-	// g.Get("/fragment/list", u.HandleTodosFragment)
 
 	// API
 	// api := p.Group("/api/patients")
@@ -159,18 +151,10 @@ func AppointmentRoutes(s *server.Server) {
 
 	// Fragments
 	// g.Get("/fragment/footer", u.HandleFooterFragment)
-	// g.Get("/fragment/list", u.HandleTodosFragment)
 
 	// API
 	// api := p.Group("/api/patients")
 	// api.Get("", p.HandleAPIPatients)
-}
-
-func BlogRoutes(s *server.Server) {
-	b := blog.NewService(s)
-
-	g := s.Group("/blog")
-	g.Get("", b.HandleBlogPage)
 }
 
 func ThemeRoutes(s *server.Server) {
@@ -178,39 +162,6 @@ func ThemeRoutes(s *server.Server) {
 
 	g := s.Group("/api/theme")
 	g.Get("", t.HandleChangeUITheme)
-}
-
-func TodosRoutes(s *server.Server) {
-	t := todos.NewService(s)
-
-	// Pages
-	g := t.Group("/todos", mw.MaybeAuthenticate(t))
-	g.Get("/", t.HandleTodos)
-	g.Get("/filter", t.HandleFilterTodos)
-
-	g.Post("", t.HandleCreateTodo)
-	g.Post("/:id/duplicate", t.HandleDuplicateTodo)
-	g.Delete("/:id", t.HandleDeleteTodo)
-	g.Patch("/:id/check", t.HandleCheckTodo)
-	g.Patch("/:id/uncheck", t.HandleUncheckTodo)
-
-	// Fragments
-	g.Get("/fragment/footer", t.HandleFooterFragment)
-	g.Get("/fragment/list", t.HandleTodosFragment)
-
-	// API
-	api := t.Group("/api/todos")
-	api.Get("", t.HandleApiTodos)
-}
-
-func CounterRoutes(s *server.Server) {
-	c := counter.NewService(s)
-
-	g := c.Group("/counter")
-
-	g.Get("", c.HandlePage)
-	g.Put("/increment", c.HandleIncrement)
-	g.Put("/decrement", c.HandleDecrement)
 }
 
 func UserRoutes(s *server.Server) {
