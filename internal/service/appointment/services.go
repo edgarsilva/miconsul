@@ -66,7 +66,7 @@ func (s *service) GetPatientByID(c *fiber.Ctx, id string) (model.Patient, error)
 	result := s.DB.Where(&patient, "ID", "UserID").Take(&patient)
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		err := errors.New(fmt.Sprintf("incorrect number of patient rows, expecting: 1, got: %d", result.RowsAffected))
+		err := fmt.Errorf("incorrect number of patient rows, expecting: 1, got: %d", result.RowsAffected)
 		return model.Patient{}, err
 	}
 
@@ -82,7 +82,7 @@ func (s *service) GetClinicByID(c *fiber.Ctx, id string) (model.Clinic, error) {
 	clinic := model.Clinic{ID: id, UserID: cu.ID}
 	result := s.DB.Model(&clinic).Where(&clinic, "ID", "UserID").Take(&clinic)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		err := errors.New(fmt.Sprintf("incorrect number of clinic rows, expecting: 1, got: %d", result.RowsAffected))
+		err := fmt.Errorf("incorrect number of clinic rows, expecting: 1, got: %d", result.RowsAffected)
 		return model.Clinic{}, err
 	}
 
@@ -121,7 +121,7 @@ func (s *service) GetAppointmentsBy(c *fiber.Ctx, cu model.User, patientID, clin
 }
 
 func (s *service) SendBookedAlert(appointment model.Appointment) error {
-	_, err := s.BGJ.RunImmediately(func() {
+	err := s.WP.Submit(func() {
 		err := mailer.SendAppointmentBookedEmail(appointment)
 		if err != nil {
 			alert := model.Alert{
@@ -151,7 +151,7 @@ func (s *service) SendBookedAlert(appointment model.Appointment) error {
 }
 
 func (s *service) SendReminderAlert(appointment model.Appointment) error {
-	_, err := s.BGJ.RunImmediately(func() {
+	err := s.WP.Submit(func() {
 		err := mailer.SendAppointmentReminderEmail(appointment)
 		if err != nil {
 			alert := model.Alert{

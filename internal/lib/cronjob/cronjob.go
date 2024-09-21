@@ -1,4 +1,4 @@
-package bgjob
+package cronjob
 
 import (
 	"log"
@@ -31,7 +31,7 @@ func New() (scheduler *Sched, shutdownFn func()) {
 	}, shutdownFn
 }
 
-// RunCron runs the function passed as a bgjob (goroutine) at the interval
+// RunCron runs the function passed as a cronjob (goroutine) at the interval
 // specefied by the crontab
 func (s *Sched) RunCron(crontab string, withSeconds bool, taskFn func()) (gocron.Job, error) {
 	return s.NewJob(

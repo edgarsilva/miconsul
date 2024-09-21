@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 	"miconsul/internal/database"
-	"miconsul/internal/lib/bgjob"
+	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
 	"miconsul/internal/model"
 	"os"
@@ -34,8 +34,8 @@ import (
 
 type Server struct {
 	DB           *database.Database
-	WP           *ants.Pool   // <- WorkerPool - handles Background Goroutines or Async Jobs (emails) with Ants
-	BGJ          *bgjob.Sched // <- BGJob Cron scheduler
+	WP           *ants.Pool     // <- WorkerPool - handles Background Goroutines or Async Jobs (emails) with Ants
+	CJ           *cronjob.Sched // <- CronJob scheduler
 	SessionStore *session.Store
 	Localizer    *localize.Localizer
 	LogtoConfig  *logto.LogtoConfig
@@ -128,13 +128,13 @@ func WithWorkerPool(wp *ants.Pool) ServerOption {
 	}
 }
 
-func WithBGJob(bgj *bgjob.Sched) ServerOption {
+func WithCronJob(cj *cronjob.Sched) ServerOption {
 	return func(server *Server) error {
-		if bgj == nil {
-			log.Panic("failed to start server without a bgjob/cron scheduler")
+		if cj == nil {
+			log.Panic("failed to start server without a cronjob/cron scheduler")
 		}
 
-		server.BGJ = bgj
+		server.CJ = cj
 		return nil
 	}
 }

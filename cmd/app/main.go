@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"miconsul/internal/database"
-	"miconsul/internal/lib/bgjob"
+	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
 	"miconsul/internal/lib/otel"
 	"miconsul/internal/lib/workerpool"
@@ -32,10 +32,10 @@ func main() {
 		shutdownTP()
 	}()
 
-	bgj, shutdownBGJ := bgjob.New()
+	cj, shutdownCJ := cronjob.New()
 	defer func() {
 		fmt.Println("BGJ is shutting down...")
-		shutdownBGJ()
+		shutdownCJ()
 	}()
 
 	wp, err := workerpool.New(10)
@@ -47,7 +47,7 @@ func main() {
 	db := database.New(os.Getenv("DB_PATH"))
 	s := server.New(
 		server.WithDatabase(db),
-		server.WithBGJob(bgj),
+		server.WithCronJob(cj),
 		server.WithWorkerPool(wp),
 		server.WithTracerProvider(tp),
 		server.WithLocalizer(localizer),
