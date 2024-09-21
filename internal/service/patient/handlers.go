@@ -32,7 +32,7 @@ func (s *service) HandlePatientsPage(c *fiber.Ctx) error {
 	}
 
 	patients := []model.Patient{}
-	s.DB.Model(&cu).Limit(15).Association("Patients").Find(&patients)
+	s.DB.Model(&cu).Order("created_at desc").Limit(10).Association("Patients").Find(&patients)
 	return view.Render(c, view.PatientsPage(vc, patients))
 }
 
@@ -47,11 +47,10 @@ func (s *service) HandlePatientsIndexSearch(c *fiber.Ctx) error {
 
 	term := c.Query("term", "")
 	patients := []model.Patient{}
-
 	s.DB.
 		Model(&cu).
 		Scopes(model.GlobalFTS(term)).
-		Limit(15).
+		Limit(10).
 		Association("Patients").
 		Find(&patients)
 

@@ -41,7 +41,7 @@ run:
 	@echo "🤖 go run..."
 	go run -tags fts5 cmd/app/main.go
 
-# Local development with Live Reload <- not hot reload on the browser only of the server
+# Local development with Live Reload <- not hot reload on the browser only the BE server
 dev:
 	@if command -v air > /dev/null; then \
 	    air; \

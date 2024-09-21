@@ -24,7 +24,7 @@ type Ctx struct {
 	CurrentUser model.User
 }
 
-type FnProp func(ctx *Ctx) error
+type ContextOption func(*Ctx) error
 
 var (
 	phoneRegex = "^[\\+]?[(]?[0-9]{3}[)]?[-\\s\\.]?[0-9]{3}[-\\s\\.]?[0-9]{4,6}$"
@@ -73,7 +73,7 @@ func CU(c *fiber.Ctx) model.User {
 	return extCurrentUser(c)
 }
 
-func NewCtx(c *fiber.Ctx, fnProps ...FnProp) (*Ctx, error) {
+func NewCtx(c *fiber.Ctx, ctxOpts ...ContextOption) (*Ctx, error) {
 	ctx := Ctx{
 		Ctx:         c,
 		CurrentUser: extCurrentUser(c),
@@ -86,8 +86,8 @@ func NewCtx(c *fiber.Ctx, fnProps ...FnProp) (*Ctx, error) {
 		},
 	}
 
-	for _, fnProp := range fnProps {
-		err := fnProp(&ctx)
+	for _, fnOpt := range ctxOpts {
+		err := fnOpt(&ctx)
 		if err != nil {
 			return &ctx, nil
 		}
@@ -96,14 +96,14 @@ func NewCtx(c *fiber.Ctx, fnProps ...FnProp) (*Ctx, error) {
 	return &ctx, nil
 }
 
-func WithCurrentUser(cu model.User) FnProp {
+func WithCurrentUser(cu model.User) ContextOption {
 	return func(props *Ctx) error {
 		props.CurrentUser = cu
 		return nil
 	}
 }
 
-func WithTheme(theme string) FnProp {
+func WithTheme(theme string) ContextOption {
 	return func(props *Ctx) error {
 		if theme == "" {
 			return errors.New("theme can't be blank if you are trying to set it)")
@@ -119,7 +119,7 @@ func WithTheme(theme string) FnProp {
 	}
 }
 
-func WithLocale(lang string) FnProp {
+func WithLocale(lang string) ContextOption {
 	return func(props *Ctx) error {
 		if lang == "" {
 			lang = "es-MX"
@@ -139,7 +139,7 @@ func WithLocale(lang string) FnProp {
 //   - toast: main text,
 //   - sub: optional subtitle,
 //   - level: alert level, one of success, error, warning or info (defaults to info)
-func WithToast(toast, sub, level string) FnProp {
+func WithToast(toast, sub, level string) ContextOption {
 	return func(props *Ctx) error {
 		props.Toast = Toast{
 			Msg:   toast,
