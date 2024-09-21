@@ -26,6 +26,7 @@ func main() {
 
 	ctx := context.Background()
 	tp, shutdownTP := otel.NewUptraceTracerProvider(ctx)
+
 	defer func() {
 		fmt.Println("Tracer is shutting down...")
 		shutdownTP()
@@ -42,9 +43,15 @@ func main() {
 		log.Panic("Failed to start workerpool", err.Error())
 	}
 
-	locales := localize.New("en-US", "es-MX")
+	localizer := localize.New("en-US", "es-MX")
 	db := database.New(os.Getenv("DB_PATH"))
-	s := server.New(db, locales, wp, bgj, tp)
+	s := server.New(
+		server.WithDatabase(db),
+		server.WithBGJob(bgj),
+		server.WithWorkerPool(wp),
+		server.WithTracerProvider(tp),
+		server.WithLocalizer(localizer),
+	)
 	routes.RegisterServices(s)
 
 	port := os.Getenv("PORT")
@@ -58,7 +65,7 @@ func main() {
 	serverShutdown := make(chan struct{})
 
 	go func() {
-		_ = <-c
+		<-c
 		fmt.Println("Gracefully shutting down...")
 		if err := s.Shutdown(); err != nil {
 			log.Panic("Failed to gracefully shutdowm fiber app server:", err.Error())

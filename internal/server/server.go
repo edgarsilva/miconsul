@@ -37,68 +37,116 @@ type Server struct {
 	WP           *ants.Pool   // <- WorkerPool - handles Background Goroutines or Async Jobs (emails) with Ants
 	BGJ          *bgjob.Sched // <- BGJob Cron scheduler
 	SessionStore *session.Store
-	Locales      *localize.Localizer
+	Localizer    *localize.Localizer
 	LogtoConfig  *logto.LogtoConfig
 	*fiber.App
 	TP     *sdktrace.TracerProvider
 	Tracer trace.Tracer
 }
 
-func New(db *database.Database, locales *localize.Localizer, wp *ants.Pool, bgjob *bgjob.Sched, tp *sdktrace.TracerProvider) *Server {
-	// Initialize session middleware config
+type ServerOption func(*Server) error
+
+func New(serverOpts ...ServerOption) *Server {
+	server := Server{}
+	for _, fnOpt := range serverOpts {
+		err := fnOpt(&server)
+		if err != nil {
+			log.Panic("🔴 Failed to start server... exiting")
+		}
+	}
+
 	storage := sqlite3.New(sessionConfig())
-	sessionStore := session.New(session.Config{
+	server.SessionStore = session.New(session.Config{
 		Storage: storage,
 	})
 
 	tracer := otel.Tracer("fiberapp-server")
-	app := fiber.New(fiber.Config{
-		// Override default error handler
-		ErrorHandler: fiberAppErrorHandler,
-	})
+	server.Tracer = tracer
 
-	// Recover middleware - Catches panics that might stop app execution
-	app.Use(recover.New())
-
-	app.Use(otelfiber.Middleware())
-
-	app.Use(logger.New())
+	fiberConfig := fiber.Config{ErrorHandler: fiberAppErrorHandler}
+	fiberApp := fiber.New(fiberConfig)
+	fiberApp.Use(recover.New()) // Recover MW catches panics that might stop app execution
+	fiberApp.Use(otelfiber.Middleware())
+	fiberApp.Use(logger.New())
 
 	if os.Getenv("APP_ENV") == "production" {
-		app.Use(helmet.New(helmetConfig()))
+		fiberApp.Use(helmet.New(helmetConfig()))
 	}
 
-	app.Use(cors.New())
-	app.Use(requestid.New())
-	app.Use(encryptcookie.New(encryptcookie.Config{
+	fiberApp.Use(cors.New())
+	fiberApp.Use(requestid.New())
+	fiberApp.Use(encryptcookie.New(encryptcookie.Config{
 		Key: os.Getenv("COOKIE_SECRET"),
 	}))
-	app.Use(favicon.New(favicon.Config{
+	fiberApp.Use(favicon.New(favicon.Config{
 		File: "./public/favicon.ico",
 		URL:  "/favicon.ico",
 	}))
+	fiberApp.Use(healthcheck.New()) // healthcheck endpoints /livez /readyz
+	fiberApp.Use(limiter.New(limiterConfig()))
+	fiberApp.Get("/metrics", monitor.New()) // app monitor @ /metrics
+	fiberApp.Static("/public", "./public", staticConfig())
 
-	// Add healthcheck endpoints /livez /readyz
-	app.Use(healthcheck.New())
-	app.Use(limiter.New(limiterConfig()))
-
-	// Initialize default monitor (Assign the middleware to /metrics)
-	app.Get("/metrics", monitor.New())
-
-	app.Static("/public", "./public", staticConfig())
+	server.App = fiberApp
 
 	logtoConfig := LogtoConfig()
+	server.LogtoConfig = logtoConfig
 
-	return &Server{
-		App:          app,
-		DB:           db,
-		WP:           wp,
-		BGJ:          bgjob,
-		TP:           tp,
-		Tracer:       tracer,
-		Locales:      locales,
-		SessionStore: sessionStore,
-		LogtoConfig:  logtoConfig,
+	return &server
+}
+
+func WithDatabase(db *database.Database) ServerOption {
+	return func(server *Server) error {
+		if db == nil {
+			log.Panic("failed to start server without Database conection")
+		}
+
+		server.DB = db
+		return nil
+	}
+}
+
+func WithLocalizer(localizer *localize.Localizer) ServerOption {
+	return func(server *Server) error {
+		if localizer == nil {
+			return nil
+		}
+
+		server.Localizer = localizer
+		return nil
+	}
+}
+
+func WithWorkerPool(wp *ants.Pool) ServerOption {
+	return func(server *Server) error {
+		if wp == nil {
+			log.Panic("failed to start server without a worker pool for sending emails and async work")
+		}
+
+		server.WP = wp
+		return nil
+	}
+}
+
+func WithBGJob(bgj *bgjob.Sched) ServerOption {
+	return func(server *Server) error {
+		if bgj == nil {
+			log.Panic("failed to start server without a bgjob/cron scheduler")
+		}
+
+		server.BGJ = bgj
+		return nil
+	}
+}
+
+func WithTracerProvider(tp *sdktrace.TracerProvider) ServerOption {
+	return func(server *Server) error {
+		if tp == nil {
+			return nil
+		}
+
+		server.TP = tp
+		return nil
 	}
 }
 
@@ -141,7 +189,7 @@ func (s *Server) Listen(port string) error {
 //		defer saveSess()
 func (s *Server) LogtoClient(c *fiber.Ctx) (client *logto.LogtoClient, save func()) {
 	sess := s.Session(c)
-	storage := NewSessionStorage(sess)
+	storage := NewLogtoStorage(sess)
 	logtoClient := logto.NewLogtoClient(
 		s.LogtoConfig,
 		storage,
@@ -237,6 +285,10 @@ func (s *Server) IsHTMX(c *fiber.Ctx) bool {
 	return isHTMX == "true"
 }
 
-func (s *Server) L(c *fiber.Ctx, key string) string {
-	return s.Locales.GetWithLocale(s.SessionLang(c), key)
+func (s *Server) L(c *fiber.Ctx, key string) (translation string, ok bool) {
+	if s.Localizer == nil {
+		return "", false
+	}
+
+	return s.Localizer.GetWithLocale(s.SessionLang(c), key), true
 }

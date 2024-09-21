@@ -25,23 +25,7 @@ templ ClinicsPage(vc *Ctx, clinics []model.Clinic) {
 								{ l(vc.Locale, "btn.new") }
 							</a>
 						</h1>
-						<label class="input flex items-center gap-2 rounded-full focus:outline">
-							@IconSearch("size-5")
-							<input
-								type="search"
-								name="term"
-								value=""
-								class="grow"
-								required
-								placeholder={ vc.l("str.search_clinics") }
-								hx-get="/clinics/search"
-								hx-target="#clinics_list"
-								hx-swap="outerHTML"
-								hx-trigger="input changed delay:350ms, search"
-							/>
-							<kbd class="hidden kbd kbd-sm md:flex">ctrl</kbd>
-							<kbd class="hidden kbd kbd-sm md:flex">k</kbd>
-						</label>
+						@CmpSearchInput(vc.l("str.search_clinics"), "/clinics/search", "#clinics_list")
 					</div>
 					<a
 						href="/clinics/new"

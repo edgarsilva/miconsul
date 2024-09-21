@@ -8,7 +8,7 @@ type SessionStorage struct {
 	session *session.Session
 }
 
-func NewSessionStorage(session *session.Session) *SessionStorage {
+func NewLogtoStorage(session *session.Session) *SessionStorage {
 	s := SessionStorage{
 		session: session,
 	}
