@@ -25,8 +25,8 @@ func RegisterServices(s *server.Server) {
 	DashbordhRoutes(s)
 	ClinicsRoutes(s)
 	PatientRoutes(s)
-	ThemeRoutes(s)
 	AppointmentRoutes(s)
+	ThemeRoutes(s)
 }
 
 func AuthRoutes(s *server.Server) {
@@ -80,13 +80,6 @@ func ClinicsRoutes(s *server.Server) {
 
 	g.Post("/:id/delete", c.HandleDeleteClinic)
 	g.Delete("/:id", c.HandleDeleteClinic)
-
-	// Fragments
-	// g.Get("/fragment/footer", u.HandleFooterFragment)
-
-	// API
-	// api := p.Group("/api/patients")
-	// api.Get("", p.HandleAPIPatients)
 }
 
 func PatientRoutes(s *server.Server) {
@@ -146,15 +139,6 @@ func AppointmentRoutes(s *server.Server) {
 	g.Get("/:id/patient/changedate/:token", a.HandlePatientChangeDate)
 	g.Get("/:id/patient/cancel/:token", a.HandlePatientCancelPage)
 	g.Post("/:id/patient/cancel/:token", a.HandlePatientCancel)
-
-	// g.Get("/:id", p.HandlePatientsPage)
-
-	// Fragments
-	// g.Get("/fragment/footer", u.HandleFooterFragment)
-
-	// API
-	// api := p.Group("/api/patients")
-	// api.Get("", p.HandleAPIPatients)
 }
 
 func ThemeRoutes(s *server.Server) {
@@ -175,9 +159,6 @@ func UserRoutes(s *server.Server) {
 	u.Get("/admin/users", mw.MustBeAdmin(u), u.HandleIndexPage)
 	u.Get("/admin/users/:id", mw.MustBeAdmin(u), u.HandleEditPage)
 
-	// Fragments
-	// g.Get("/fragment/footer", u.HandleFooterFragment)
-
 	// API
 	api := u.Group("/api/users")
 	api.Get("", u.HandleAPIUsers)
@@ -189,7 +170,4 @@ func AdminRoutes(s *server.Server) {
 	// Pages
 	g := a.Group("/admin", mw.MustBeAdmin(a))
 	g.Get("/models", a.HandleAdminModelsPage)
-
-	// Fragments
-	// g.Get("/fragment/footer", u.HandleFooterFragment)
 }

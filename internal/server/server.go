@@ -3,6 +3,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"miconsul/internal/database"
 	"miconsul/internal/lib/cronjob"
@@ -34,8 +35,8 @@ import (
 
 type Server struct {
 	DB           *database.Database
-	WP           *ants.Pool     // <- WorkerPool - handles Background Goroutines or Async Jobs (emails) with Ants
-	CJ           *cronjob.Sched // <- CronJob scheduler
+	wp           *ants.Pool     // <- WorkerPool - handles Background Goroutines or Async Jobs (emails) with Ants
+	cj           *cronjob.Sched // <- CronJob scheduler
 	SessionStore *session.Store
 	Localizer    *localize.Localizer
 	LogtoConfig  *logto.LogtoConfig
@@ -98,7 +99,7 @@ func New(serverOpts ...ServerOption) *Server {
 func WithDatabase(db *database.Database) ServerOption {
 	return func(server *Server) error {
 		if db == nil {
-			log.Panic("failed to start server without Database conection")
+			return errors.New("failed to start server without Database conection")
 		}
 
 		server.DB = db
@@ -120,10 +121,11 @@ func WithLocalizer(localizer *localize.Localizer) ServerOption {
 func WithWorkerPool(wp *ants.Pool) ServerOption {
 	return func(server *Server) error {
 		if wp == nil {
-			log.Panic("failed to start server without a worker pool for sending emails and async work")
+			fmt.Println("failed to server worker pool for sending emails and async work")
+			return nil
 		}
 
-		server.WP = wp
+		server.wp = wp
 		return nil
 	}
 }
@@ -131,10 +133,11 @@ func WithWorkerPool(wp *ants.Pool) ServerOption {
 func WithCronJob(cj *cronjob.Sched) ServerOption {
 	return func(server *Server) error {
 		if cj == nil {
-			log.Panic("failed to start server without a cronjob/cron scheduler")
+			fmt.Println("failed to start server cron job scheduler")
+			return nil
 		}
 
-		server.CJ = cj
+		server.cj = cj
 		return nil
 	}
 }
@@ -148,6 +151,28 @@ func WithTracerProvider(tp *sdktrace.TracerProvider) ServerOption {
 		server.TP = tp
 		return nil
 	}
+}
+
+// SendToWorker passes fn as a job to the worker pool to be executed in a go routine
+func (s *Server) AddCronJob(crontab string, fn func()) error {
+	if s.wp == nil {
+		return errors.New("failed to add new cron job, server.cj might be nil, cron job is not running")
+	}
+
+	_, err := s.cj.RunCron(crontab, false, fn)
+	return err
+}
+
+// SendToWorker passes fn as a job to the worker pool to be executed in a go routine
+func (s *Server) SendToWorker(fn func()) error {
+	if s.wp == nil {
+		fmt.Println("failed to add fn to run as job in worker pool, server.wp might be nil, running sinchronously")
+		fn()
+		return nil
+	}
+
+	err := s.wp.Submit(fn)
+	return err
 }
 
 // CurrentUser returns currently logged-in(or anon) user by User.ID from fiber.Locals("id")

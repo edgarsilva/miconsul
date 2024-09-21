@@ -25,14 +25,14 @@ func NewService(s *server.Server) service {
 		Server: s,
 	}
 
-	ser.RegisterJobs()
+	ser.RegisterCronJob()
 
 	return ser
 }
 
-func (s *service) RegisterJobs() {
-	_, err := s.BGJ.RunCron("0/1 * * * *", false, func() {
-		ctx, span := s.Tracer.Start(context.Background(), "appointment/services:RegisterJobs>CronJob",
+func (s *service) RegisterCronJob() {
+	err := s.AddCronJob("0/1 * * * *", func() {
+		ctx, span := s.Tracer.Start(context.Background(), "appointment/services:RegisterCronJob>Job",
 			trace.WithAttributes(
 				attribute.String("grouping.fingerprint", "cronjob"),
 			),
@@ -121,7 +121,7 @@ func (s *service) GetAppointmentsBy(c *fiber.Ctx, cu model.User, patientID, clin
 }
 
 func (s *service) SendBookedAlert(appointment model.Appointment) error {
-	err := s.WP.Submit(func() {
+	err := s.SendToWorker(func() {
 		err := mailer.SendAppointmentBookedEmail(appointment)
 		if err != nil {
 			alert := model.Alert{
@@ -151,7 +151,7 @@ func (s *service) SendBookedAlert(appointment model.Appointment) error {
 }
 
 func (s *service) SendReminderAlert(appointment model.Appointment) error {
-	err := s.WP.Submit(func() {
+	err := s.SendToWorker(func() {
 		err := mailer.SendAppointmentReminderEmail(appointment)
 		if err != nil {
 			alert := model.Alert{
