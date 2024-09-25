@@ -15,8 +15,6 @@ module.exports = {
         }
       },
       "dracula",
-      "night",
-      "pastel",
     ],
   },
   // plugins: [require("@tailwindcss/forms")],

@@ -3,9 +3,9 @@ ifneq (,$(wildcard ./.env))
     export
 endif
 
-.DEFAULT_GOAL := build
+.DEFAULT_GOAL := dev
 
-.PHONY: fmt vet build
+.PHONY: tailwind templ fmt vet build
 
 install:
 	@echo "📦 Installing dependencies"
@@ -26,12 +26,16 @@ fmt:
 vet: fmt
 	go vet ./...
 
-build: vet
-	@echo "📦 Building"p
+tailwind:
 	@echo "🌬️ Generating Tailwind CSS styles..."
 	~/.bun/bin/bunx tailwindcss -i ./styles/global.css -o ./public/global.css --minify
+
+templ: tailwind
 	@echo "🛕 Generating Templ files..."
 	${GOPATH}/bin/templ generate
+
+build: templ
+	@echo "📦 Building"
 	@echo "🤖 go build..."
 	go build -tags fts5 -o bin/app cmd/app/main.go
 
@@ -40,12 +44,8 @@ start:
 	@echo "👟 Starting the app..."
 	bin/app
 
-run:
+run: templ
 	@echo "👟 Running app..."
-	@echo "🌬️ Generating Tailwind CSS styles..."
-	~/.bun/bin/bunx tailwindcss -i ./styles/global.css -o ./public/global.css --minify
-	@echo "🛕 Generating Templ files..."
-	${GOPATH}/bin/templ generate
 	@echo "🤖 go run..."
 	go run -tags fts5 cmd/app/main.go
 
