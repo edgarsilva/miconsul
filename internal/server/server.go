@@ -310,6 +310,11 @@ func (s *Server) IsHTMX(c *fiber.Ctx) bool {
 	return isHTMX == "true"
 }
 
+// IsHTMX returns true if the request was initiated by HTMX
+func (s *Server) NotHTMX(c *fiber.Ctx) bool {
+	return !s.IsHTMX(c)
+}
+
 func (s *Server) L(c *fiber.Ctx, key string) (translation string, ok bool) {
 	if s.Localizer == nil {
 		return "", false

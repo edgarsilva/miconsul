@@ -176,7 +176,6 @@ templ PatientDeleteForm(patient model.Patient, c *Ctx) {
 		action={ templ.URL("/patients/"+patient.ID) + "/delete" }
 		hx-delete={ "/patients/" + patient.ID }
 		hx-confirm={ c.l("str.are_you_sure") }
-		hx-select="#patients_list"
 		hx-target="#patients_list"
 	>
 		<button type="submit" class="btn btn-sm btn-circle">

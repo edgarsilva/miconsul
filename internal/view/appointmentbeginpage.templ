@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-templ AppointmentBeginPage(appointment model.Appointment, vc *Ctx) {
+templ AppointmentCommencePage(appointment model.Appointment, vc *Ctx) {
 	@Layout(vc) {
 		<div class="px-4 lg:px-8">
 			@CmpBtnBack(l(vc.Locale, "btn.back"), "/appointments")
@@ -103,8 +103,8 @@ templ AppointmentBegin(appointment model.Appointment, vc *Ctx) {
 				<form
 					id="patch_appointment"
 					method="POST"
-					action={ templ.URL("/appointments/" + appointment.ID + "/done") }
-					hx-post={ "/appointments/" + appointment.ID + "/done" }
+					action={ templ.URL("/appointments/" + appointment.ID + "/conclude") }
+					hx-post={ "/appointments/" + appointment.ID + "/conclude" }
 				>
 					<div class="px-4 py-6 sm:p-8">
 						<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">

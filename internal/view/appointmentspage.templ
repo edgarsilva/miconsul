@@ -414,7 +414,7 @@ templ ClinicSearch(vc *Ctx, clinics []model.Clinic) {
 				type="search"
 				name="query"
 				placeholder={ l(vc.Locale, "str.search_clinics") }
-				hx-post="/appointments/searchclinics"
+				hx-post="/appointments/search/clinics"
 				hx-trigger="input changed delay:300ms, search"
 				hx-select="#clinic_search_results"
 				hx-target="#clinic_search_results"

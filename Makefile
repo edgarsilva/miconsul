@@ -3,7 +3,9 @@ ifneq (,$(wildcard ./.env))
     export
 endif
 
-.PHONY: all clean
+.DEFAULT_GOAL := build
+
+.PHONY: fmt vet build
 
 install:
 	@echo "📦 Installing dependencies"
@@ -18,7 +20,13 @@ install:
 	@echo "🛕 installing Templ"
 	go install github.com/a-h/templ/cmd/templ@latest
 
-build:
+fmt:
+	go fmt ./...
+
+vet: fmt
+	go vet ./...
+
+build: vet
 	@echo "📦 Building"p
 	@echo "🌬️ Generating Tailwind CSS styles..."
 	~/.bun/bin/bunx tailwindcss -i ./styles/global.css -o ./public/global.css --minify

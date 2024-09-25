@@ -2,11 +2,10 @@ package tests
 
 import (
 	"io"
+	"miconsul/internal/server"
+	"miconsul/internal/service/theme"
 	"net/http"
 	"testing"
-
-	"miconsul/internal/server"
-	"miconsul/internal/service/counter"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -17,10 +16,10 @@ func TestHandler(t *testing.T) {
 
 	// Inject the Fiber app into the server
 	s := &server.Server{App: fiberApp}
-	rc := counter.NewService(s)
+	rc := theme.NewService(s)
 
 	// Define a route in the Fiber app
-	fiberApp.Get("/", rc.HandlePage)
+	fiberApp.Get("/", rc.HandleUITheme)
 
 	// Create a test HTTP request
 	req, err := http.NewRequest("GET", "/", nil)

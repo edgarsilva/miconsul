@@ -40,22 +40,15 @@ func (s *service) HandlePatientsPage(c *fiber.Ctx) error {
 //
 // GET: /patients/search
 func (s *service) HandlePatientsIndexSearch(c *fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
+	cu, _ := s.CurrentUser(c)
+	patients, err := s.Patients(cu, c.Query("term", ""))
 	if err != nil {
-		return c.Redirect("/login")
+		return c.SendStatus(fiber.StatusInternalServerError)
 	}
-
-	term := c.Query("term", "")
-	patients := []model.Patient{}
-	s.DB.
-		Model(&cu).
-		Scopes(model.GlobalFTS(term)).
-		Limit(10).
-		Association("Patients").
-		Find(&patients)
 
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+
 	return view.Render(c, view.PatientsList(vc, patients))
 }
 
@@ -244,13 +237,18 @@ func (s *service) HandleDeletePatient(c *fiber.Ctx) error {
 		return c.Redirect("/patients?msg=failed to delete that patient", fiber.StatusSeeOther)
 	}
 
-	isHTMX := c.Get("HX-Request", "") // will be a string 'true' for HTMX requests
-	if isHTMX == "" {
+	if s.NotHTMX(c) {
 		return c.Redirect("/patients", fiber.StatusSeeOther)
 	}
 
-	c.Set("HX-Location", "/patients")
-	return c.SendStatus(fiber.StatusOK)
+	patients, err := s.Patients(cu, c.Query("term", ""))
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	theme := s.SessionUITheme(c)
+	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	return view.Render(c, view.PatientsList(vc, patients))
 }
 
 // HandlePatientSearch searches patients and returns an HTML fragment to be

@@ -3,8 +3,8 @@ package model
 import (
 	"time"
 
-	"miconsul/internal/lib/xid"
 	"gorm.io/gorm"
+	"miconsul/internal/lib/xid"
 )
 
 type SessionType string

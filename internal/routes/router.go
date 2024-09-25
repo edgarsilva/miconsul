@@ -117,23 +117,22 @@ func AppointmentRoutes(s *server.Server) {
 	a := appointment.NewService(s)
 
 	g := a.Group("/appointments", mw.MustAuthenticate(s))
-	g.Get("/", a.HandleAppointmentsPage)
-	g.Get("/", a.HandleAppointmentsPage)
-	g.Get("/new", a.HandleAppointmentPage)
+	g.Get("/", a.HandleIndexPage)
+	g.Get("/new", a.HandleShowPage)
 	g.Get("/new/pricefrg/:id", a.HandlePriceFrg)
-	g.Post("/searchclinics", a.HandleSearchClinics)
-	g.Get("/:id", a.HandleAppointmentPage)
-	g.Get("/:id/begin", a.HandleAppointmentBeginPage)
-	g.Post("/:id/done", a.HandleAppointmentDone)
-	g.Post("/:id/cancel", a.HandleAppointmentCancel)
+	g.Get("/:id", a.HandleShowPage)
+	g.Get("/:id/commence", a.HandleCommencePage)
+	g.Post("/:id/conclude", a.HandleConclude)
+	g.Post("/:id/cancel", a.HandleCancel)
+	g.Post("/appointments/search/clinics", a.HandleSearchClinics)
 
-	g.Post("/", a.HandleCreateAppointment)
+	g.Post("/", a.HandleCreate)
 
-	g.Post("/:id/patch", a.HandleUpdateAppointment)
-	g.Patch("/:id", a.HandleUpdateAppointment)
+	g.Post("/:id/patch", a.HandleUpdate)
+	g.Patch("/:id", a.HandleUpdate)
 
-	g.Post("/:id/delete", a.HandleDeleteAppointment)
-	g.Delete("/:id", a.HandleDeleteAppointment)
+	g.Post("/:id/delete", a.HandleDelete)
+	g.Delete("/:id", a.HandleDelete)
 
 	g.Get("/:id/patient/confirm/:token", a.HandlePatientConfirm)
 	g.Get("/:id/patient/changedate/:token", a.HandlePatientChangeDate)
@@ -145,7 +144,7 @@ func ThemeRoutes(s *server.Server) {
 	t := theme.NewService(s)
 
 	g := s.Group("/api/theme")
-	g.Get("", t.HandleChangeUITheme)
+	g.Get("", t.HandleUITheme)
 }
 
 func UserRoutes(s *server.Server) {

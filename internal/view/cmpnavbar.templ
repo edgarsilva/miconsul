@@ -48,11 +48,15 @@ templ Search() {
 	</div>
 }
 
+func ActiveLink(c *Ctx, p string) templ.KeyValue[string, bool] {
+	return templ.KV("underline underline-offset-4", strings.Contains(c.Path(), p))
+}
+
 templ DesktopNav(c *Ctx) {
 	<div class="hidden md:flex">
-		<a href="/appointments?timeframe=day" class={ "btn btn-ghost text-sm",  templ.KV("underline underline-offset-4", strings.Contains(c.Path(), "/appointments")) }>{ c.l("nav.appointments") }</a>
-		<a href="/clinics" class={ "btn btn-ghost text-sm", templ.KV("btn-active", strings.Contains(c.Path(), "/clinics")) }>{ c.l("nav.clinics") }</a>
-		<a href="/patients" class="btn btn-ghost text-sm">{ c.l("nav.patients") }</a>
+		<a href="/appointments?timeframe=day" class={ "btn btn-ghost text-sm", ActiveLink(c, "/appointments") }>{ c.l("nav.appointments") }</a>
+		<a href="/clinics" class={ "btn btn-ghost text-sm", ActiveLink(c, "/clinics") }>{ c.l("nav.clinics") }</a>
+		<a href="/patients" class={ "btn btn-ghost text-sm", ActiveLink(c, "/patients") }>{ c.l("nav.patients") }</a>
 		<div class="tooltip tooltip-bottom hidden" data-tip={ c.l("str.coming_soon") }>
 			<a href="#" class="btn btn-ghost text-sm text-base-content/35">{ c.l("nav.exp_rev") }</a>
 		</div>

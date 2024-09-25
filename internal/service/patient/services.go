@@ -24,6 +24,18 @@ func NewService(s *server.Server) service {
 
 const patientsDir = "/patients"
 
+func (s service) Patients(cu model.User, term string) ([]model.Patient, error) {
+	patients := []model.Patient{}
+	err := s.DB.
+		Model(&cu).
+		Scopes(model.GlobalFTS(term)).
+		Limit(10).
+		Association("Patients").
+		Find(&patients)
+
+	return patients, err
+}
+
 func SaveProfilePicToDisk(c *fiber.Ctx, patient model.Patient) (string, error) {
 	profilePic, err := c.FormFile("profilePic")
 	if err != nil {

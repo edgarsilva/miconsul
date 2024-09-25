@@ -8,7 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func (s *service) HandleChangeUITheme(c *fiber.Ctx) error {
+func (s *service) HandleUITheme(c *fiber.Ctx) error {
 	theme := s.SessionUITheme(c)
 
 	if theme == "light" {

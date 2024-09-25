@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/gofiber/fiber/v2"
 	"miconsul/internal/model"
 	"miconsul/internal/server"
-	"github.com/gofiber/fiber/v2"
 )
 
 type service struct {

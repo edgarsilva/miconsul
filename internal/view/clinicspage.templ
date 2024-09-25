@@ -140,7 +140,7 @@ templ ClinicLi(clinic model.Clinic, vc *Ctx) {
 	</li>
 }
 
-templ ClinicDeletForm(clinic model.Clinic, vc *Ctx) {
+templ ClinicDeleteForm(clinic model.Clinic, vc *Ctx) {
 	<form
 		method="POST"
 		action={ templ.URL("/clinics/"+clinic.ID) + "/delete" }
