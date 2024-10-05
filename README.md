@@ -13,8 +13,8 @@ and DaisyUI/TailwindCSS:
 - UI/CSS: [DaisyUI](https://daisyui.com)/[TailwindCSS](https://tailwindcss.com/)
 
 ## The MVP App
-[vokoscreenNG-2024-07-23_17-00-32.webm](https://github.com/user-attachments/assets/f6915e3a-bb64-4a34-8ccc-78bec186f4a3)
 
+[vokoscreenNG-2024-07-23_17-00-32.webm](https://github.com/user-attachments/assets/f6915e3a-bb64-4a34-8ccc-78bec186f4a3)
 
 ## Getting Started
 
@@ -30,11 +30,64 @@ Note: _working_ but pending readme section
 3. Object storage with Minio (used by Litestream)
 4. Development feature brances.
 
-## MakeFile
+## Justfile
+
+I've added `just` recipes for the most common tasks, you can list them by
+running `just`.
+
+To install `justfile` support on your system run:
+
+```bash
+# you might need sudo or install to a diff directory that makes just available
+# in your path.
+$ curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
+
+# then run
+$ just
+just --list
+Available recipes:
+    build                     # Build the app
+    clean                     # Clean builds
+    default                   # Display this list of recipes
+    dev                       # Start app in dev mode
+    fmt                       # Run Go formatter/linter
+    install                   # Install deps 🥐 Bun, 🪿 goose and 🛕 templ
+    integration-test          # Run integration-test
+    run                       # Run the app
+    start                     # Start the app
+    tailwind                  # Generate Tailwind styles
+    templ                     # Generate templ files
+    test                      # Run tests
+    unit-test                 # Run unit-tests
+    vet                       # Run Go vet to detect possible issues
+
+    [db]
+    db-create                 # Create Database
+    db-delete                 # Deletes the DB giving you a choice.
+    db-dump-schema            # Dumps the DB schema to ./database/schema.sql
+    db-migrate                # Migrates the DB to latest migration
+    db-setup                  # Set up the DB by running delete, create and migrate
+    migration-create arg_name # Creates a new migration for the DB
+    migration-redo            # Redo the last migration
+    migration-rollback        # Rollbacks last migration
+    migration-status          # Lists the DB migration status
+
+    [docker]
+    docker-down               # Terminates the docker services
+    docker-logs               # Shows DB service logs
+    docker-up                 # Starts the docker services
+    docker-up-detached        # Starts the docker services detached
+
+    [migration]
+    migration-create arg_name # Creates a new migration for the DB
+    migration-redo            # Redo the last migration
+    migration-rollback        # Rollbacks last migration
+    migration-status          # Lists the DB migration status
+```
 
 ### Install dependencies and tooling (not Go itself)
 
-Install dev environment tooling, you must have go correctly installed and in
+Install dev environment tooling, you must have `go` correctly installed and in
 your path.
 
 It will install:
@@ -45,42 +98,7 @@ It will install:
 - templ: to build/compile templ files into go code
 
 ```bash
-make install
-```
-
-### Build the application
-
-Generate TailwindCSS styles, templ files and go executable (go build)
-
-```bash
-make build
-```
-
-### Start the app (for docker and prod deployments)
-
-Apply migrations to the DB and start the application (used in prod docker deployment)
-
-```bash
-make start
-```
-
-### Development
-
-This is what you should be using for development, will auto generate css, templ
-files and translations and enable auto reloading of the server on file changes
-(not browser, just refresh the page, hit [f5] and done).
-
-```bash
-make dev
-```
-
-### Run the app manually in dev mode (requires manual restart of the app)
-
-If for whatever reason you don't want to use Air and have auto reloading enabled
-(use `make dev` above for that), this will generate the css and templ files and `go run`.
-
-```bash
-make run
+just install
 ```
 
 ### DB - Create Database
@@ -88,72 +106,17 @@ make run
 Creates an Sqlite file at `./database/app.sqlite` to use for the app
 
 ```bash
-make db/create
+just setup
 ```
 
-### DB - Delete Database
+### Development
 
-It deletes the database file
-
-```bash
-make db/delete
-```
-
-### DB - Setup the database
-
-It deletes, then re-creates the Database and runs all migrations to start with a
-clean slate.
+To run the app in dev mode, will auto generate css, templ
+files and translations and enable auto reloading of the server on file changes
+(not browser, just refresh the page, hit [f5] and done).
 
 ```bash
-make db/setup
-```
-
-### DB - Dump schema
-
-It dumps the DB schema into a file at `./database/schema.sql`
-
-```bash
-make db/dump-schema
-```
-
-### DB - Create migration
-
-Creates a new migration file for the DB.
-
-```bash
-make db/migration name=add_column_price_to_payments
-```
-
-### DB - Check migrations status
-
-Lists Goose migration status
-
-```bash
-make db/status
-```
-
-### DB - Run migrations
-
-Runs pending migrations
-
-```bash
-make db/migrate
-```
-
-### DB - Rollback last migrations
-
-Rollbacks the last migration
-
-```bash
-make db/rollback
-```
-
-### DB - Redo last migration
-
-Rollbacks then re-runs last migration
-
-```bash
-make db/redo
+just dev
 ```
 
 ## Overall architecture guidelines for new features (WIP)

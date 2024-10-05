@@ -2,7 +2,7 @@ set dotenv-load
 
 # Display this list of recipes
 default:
-  just --list
+	just --list
 
 # Install deps 🥐 Bun, 🪿 goose and 🛕 templ
 install:
@@ -18,20 +18,20 @@ install:
 	@echo "🛕 installing Templ"
 	go install github.com/a-h/templ/cmd/templ@latest
 
-# Run formatter `go fmt`
+# Run the Go formatter/linter
 fmt:
 	go fmt ./...
 
-# Run vet `go vet`
+# Run go vet to detect code issues
 vet: fmt
 	go vet ./...
 
-# Generate TailwindCSS styles generator
+# Generate Tailwind styles
 tailwind:
 	@echo "🌬️ Generating Tailwind CSS styles..."
 	~/.bun/bin/bunx tailwindcss -i ./styles/global.css -o ./public/global.css --minify
 
-# Generate templ files
+# Generate Templ files
 templ: tailwind
 	@echo "🛕 Generating Templ files..."
 	${GOPATH}/bin/templ generate
@@ -42,7 +42,7 @@ build: templ
 	@echo "🤖 go build..."
 	go build -tags fts5 -o bin/app cmd/app/main.go
 
-# Start the app
+# Start the app using the build binary
 start: db-migrate
 	@echo "👟 Starting the app..."
 	bin/app
@@ -53,7 +53,7 @@ run: templ vet
 	@echo "🤖 go run..."
 	go run -tags fts5 cmd/app/main.go
 
-# Local dev with LiveReload, not browser hot reload, only BE
+# Start the app in dev mode
 dev:
 	@if command -v air > /dev/null; then \
 	    air; \
@@ -116,7 +116,6 @@ db-migrate:
 # Set up the DB by running delete, create and migrate
 [group('db')]
 db-setup:
-	just db-delete
 	just db-create
 	just db-migrate
 
@@ -128,8 +127,8 @@ db-dump-schema:
 # Creates a new migration for the DB
 [group('db')]
 [group('migration')]
-migration-create:
-	${GOPATH}/bin/goose create ${name} sql
+migration-create arg_name:
+	${GOPATH}/bin/goose create {{arg_name}} sql
 
 # Lists the DB migration status
 [group('db')]
@@ -167,8 +166,8 @@ docker-down:
 	@echo " Docker down"
 	docker compose down
 
-# Shows DB service logs
+# Shows app service logs
 [group('docker')]
 docker-logs:
 	@echo " Docker app logs "
-	docker compose logs db -f
+	docker compose logs app -f
