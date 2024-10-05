@@ -1,12 +1,10 @@
-ifneq (,$(wildcard ./.env))
-    include .env
-    export
-endif
+set dotenv-load
 
-.DEFAULT_GOAL := dev
+# Display this list of recipes
+default:
+  just --list
 
-.PHONY: tailwind templ fmt vet build
-
+# Install deps 🥐 Bun, 🪿 goose and 🛕 templ
 install:
 	@echo "📦 Installing dependencies"
 	@echo "🥐 Installing bun (for tailwindcss)"
@@ -20,36 +18,42 @@ install:
 	@echo "🛕 installing Templ"
 	go install github.com/a-h/templ/cmd/templ@latest
 
+# Run formatter `go fmt`
 fmt:
 	go fmt ./...
 
+# Run vet `go vet`
 vet: fmt
 	go vet ./...
 
+# Generate TailwindCSS styles generator
 tailwind:
 	@echo "🌬️ Generating Tailwind CSS styles..."
 	~/.bun/bin/bunx tailwindcss -i ./styles/global.css -o ./public/global.css --minify
 
+# Generate templ files
 templ: tailwind
 	@echo "🛕 Generating Templ files..."
 	${GOPATH}/bin/templ generate
 
+# Build the app
 build: templ
 	@echo "📦 Building"
 	@echo "🤖 go build..."
 	go build -tags fts5 -o bin/app cmd/app/main.go
 
-start:
-	make db/migrate
+# Start the app
+start: db-migrate
 	@echo "👟 Starting the app..."
 	bin/app
 
-run: templ
+# Run the app
+run: templ vet
 	@echo "👟 Running app..."
 	@echo "🤖 go run..."
 	go run -tags fts5 cmd/app/main.go
 
-# Local development with Live Reload <- not hot reload on the browser only the BE server
+# Local dev with LiveReload, not browser hot reload, only BE
 dev:
 	@if command -v air > /dev/null; then \
 	    air; \
@@ -66,28 +70,35 @@ dev:
 	    fi; \
 	fi
 
+# Run tests
 test:
 	@echo "Testing all"
 	go test ./... -coverprofile=coverage/c.out
 
-
-test/unit:
+# Run unit-tests
+unit-test:
 	@echo "Testing unit"
 	go test -v ./internal/... -coverprofile=coverage/unit_c.out
 
-test/integration:
+# Run integration-test
+integration-test:
 	@echo "Testing integration"
 	go test -v ./tests/... -coverprofile=coverage/int_c.out
 
+# Clean builds
 clean:
 	@echo "Cleaning builds..."
 	rm bin/*
 
-db/create:
+# Create Database
+[group('db')]
+db-create:
 	touch database/app.sqlite
-	make db/migrate
+	just db-migrate
 
-db/delete:
+# Deletes the DB giving you a choice.
+[group('db')]
+db-delete:
 	@read -p "Do you want to delete the DB (you'll loose all data)? [y/n] " choice; \
 	if [ "$$choice" != "y" ] && [ "$$choice" != "Y" ]; then \
 		echo "Exiting..."; \
@@ -96,39 +107,68 @@ db/delete:
 		rm -f database/*.sqlite*; \
 	fi; \
 
-db/setup:
-	make db/delete
-	make db/create
-	make db/migrate
-
-db/dump-schema:
-	sqlite3 database/app.sqlite '.schema' > ./database/schema.sql
-
-db/migration:
-	${GOPATH}/bin/goose create ${name} sql
-
-db/status:
-	${GOPATH}/bin/goose status
-
-db/migrate:
+# Migrates the DB to latest migration
+[group('db')]
+db-migrate:
 	@echo "🪿 running migrations with goose before Start"
 	${GOPATH}/bin/goose up
 
-db/rollback:
+# Set up the DB by running delete, create and migrate
+[group('db')]
+db-setup:
+	just db-delete
+	just db-create
+	just db-migrate
+
+# Dumps the DB schema to ./database/schema.sql
+[group('db')]
+db-dump-schema:
+  sqlite3 database/app.sqlite '.schema' > ./database/schema.sql
+
+# Creates a new migration for the DB
+[group('db')]
+[group('migration')]
+migration-create:
+	${GOPATH}/bin/goose create ${name} sql
+
+# Lists the DB migration status
+[group('db')]
+[group('migration')]
+migration-status:
+	${GOPATH}/bin/goose status
+
+# Rollbacks last migration
+[group('db')]
+[group('migration')]
+migration-rollback:
 	${GOPATH}/bin/goose down
 
-db/redo:
+# Redos the last migration
+[group('db')]
+[group('migration')]
+migration-redo:
 	${GOPATH}/bin/goose redo
 
-docker/build:
-	docker build . -t go-containerized:latest
+# Starts the docker services
+[group('docker')]
+docker-up:
+	@echo " Docker services up"
+	docker compose up
 
-docker/run:
-	docker run -e PORT=3000 -p 3000:3000 --name miconsul-app go-containerized:latest
+# Starts the docker services detached
+[group('docker')]
+docker-up-detached:
+	@echo " Docker up detached"
+	docker compose up -d
 
-docker/stop:
-	docker stop miconsul-app
+# Terminates the docker services
+[group('docker')]
+docker-down:
+	@echo " Docker down"
+	docker compose down
 
-docker/clean:
-	docker container rm miconsul-app
-
+# Shows DB service logs
+[group('docker')]
+docker-logs:
+	@echo " Docker app logs "
+	docker compose logs db -f

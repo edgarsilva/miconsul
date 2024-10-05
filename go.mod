@@ -5,7 +5,7 @@ go 1.22
 toolchain go1.23.0
 
 require (
-	github.com/a-h/templ v0.2.731
+	github.com/a-h/templ v0.2.778
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/go-co-op/gocron/v2 v2.5.0
 	github.com/gofiber/contrib/otelfiber v1.0.10
