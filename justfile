@@ -171,3 +171,9 @@ docker-down:
 docker-logs:
 	@echo " Docker app logs "
 	docker compose logs app -f
+
+# Rebuild the docker image (for Dockerfile changes)
+[group('docker')]
+docker-build:
+	docker compose up -d --no-deps --build app
+
