@@ -33,8 +33,8 @@ type User struct {
 	ConfirmEmailToken     string
 	Phone                 string
 	Timezone              string
-	LocaleLang            string
-	Role                  UserRole `gorm:"index;default:null;not null;type:string" form:"__blank__"`
+	// LocaleLang            string
+	Role UserRole `gorm:"index;default:null;not null;type:string" form:"__blank__"`
 	ModelBase
 	Clinics      []Clinic
 	Patients     []Patient

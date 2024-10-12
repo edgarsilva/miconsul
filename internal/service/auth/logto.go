@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/model"
 	"miconsul/internal/view"
@@ -44,13 +45,13 @@ func (s *service) HandleLogtoCallback(c *fiber.Ctx) error {
 
 	req, err := adaptor.ConvertRequest(c, true)
 	if err != nil {
-		log.Error("failed to convert fiber request to http request with adaptor on logto callback")
+		log.Error("failed to convert fiber request to http request with adaptor on logto callback:", err)
 		return c.Redirect("/logto/signout")
 	}
 
 	err = logtoClient.HandleSignInCallback(req)
 	if err != nil {
-		log.Error("failed to verify signin in logto callback handler")
+		log.Error("failed to verify signin in logto callback handler:", err)
 		return c.Redirect("/logto/signout")
 	}
 
@@ -62,13 +63,13 @@ func (s *service) HandleLogtoCallback(c *fiber.Ctx) error {
 
 	logtoUser, err := logtoCustomJWTClaims(logtoClient)
 	if err != nil {
-		log.Error("failed to get CustomClaims from logto")
+		log.Error("failed to get CustomClaims from logto:", err)
 		return c.Redirect("/logto/signout")
 	}
 
 	err = s.logtoSaveUser(logtoUser)
 	if err != nil {
-		log.Error("failed to save user from profile in logto callback handler")
+		log.Error(err)
 		return c.Redirect("/logto/signout")
 	}
 
@@ -109,16 +110,22 @@ func (s *service) logtoSaveUser(claims LogtoUser) error {
 	defer span.End()
 
 	user := model.User{Email: claims.Email}
-	s.DB.WithContext(ctx).Model(&model.User{}).Where(user, "Email").Take(&user)
+	s.DB.WithContext(ctx).Model(&user).Where(user, "Email").Take(&user)
 
 	if user.ID != "" && user.ExtID == claims.Sub {
 		return nil
 	}
 
+	fmt.Println("---------------------------------------")
+	fmt.Println("THE USER EMAIL", user.Email)
+	fmt.Println("THE USER ID", user.ID)
+	fmt.Println("	USER LOCAL EXD_ID", user.ExtID)
+	fmt.Println("	THE LOGTO USER EXD_ID", claims.Sub)
+	fmt.Println("---------------------------------------")
 	if user.Password == "" {
 		rndPwd, err := bcrypt.GenerateFromPassword([]byte(xid.New("rpwd")), 10)
 		if err != nil {
-			return errors.New("failed to save email or password, try again")
+			return errors.New("failed to generate password placeholder for user")
 		}
 		user.Password = string(rndPwd)
 	}
@@ -133,9 +140,8 @@ func (s *service) logtoSaveUser(claims LogtoUser) error {
 	user.Phone = claims.PhoneNumber
 	user.Role = model.UserRoleUser
 
-	result := s.DB.WithContext(ctx).Model(&model.User{}).Save(&user)
-	if result.Error != nil {
-		return errors.New("failed to save new user from logto profile")
+	if result := s.DB.WithContext(ctx).Save(&user); result.Error != nil {
+		return fmt.Errorf("failed to create or update user from logto claims, GORM error: %w", result.Error)
 	}
 
 	return nil
