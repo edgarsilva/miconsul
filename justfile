@@ -29,7 +29,7 @@ vet: fmt
 # Generate Tailwind styles
 tailwind:
 	@echo "🌬️ Generating Tailwind CSS styles..."
-	~/.bun/bin/bunx tailwindcss -i ./styles/global.css -o ./public/global.css --minify
+	~/.bun/bin/bun x tailwindcss -i ./styles/global.css -o ./public/global.css --minify
 
 # Generate Templ files
 templ: tailwind

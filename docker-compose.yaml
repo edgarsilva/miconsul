@@ -1,8 +1,8 @@
 services:
     app:
         build: .
-        # volumes:
-        #     - dbdata:/var/local/miconsul/data
+        volumes:
+            - ./store:/app/store
         ports:
             - 3000:3000
         healthcheck:
@@ -10,30 +10,10 @@ services:
             interval: 30s
             timeout: 5s
             retries: 5
+        env_file:
+            - ./.env
         environment:
-            PORT: ${PORT}
-            APP_NAME: ${APP_NAME}
             APP_ENV: ${APP_ENV}
-            APP_PROTOCOL: ${APP_PROTOCOL}
-            APP_DOMAIN: ${APP_DOMAIN}
-            APP_VERSION: ${APP_VERSION}
-            COOKIE_SECRET: ${COOKIE_SECRET}
-            JWT_SECRET: ${JWT_SECRET}
-            DB_PATH: ${DB_PATH}
-            SESSION_PATH: ${SESSION_PATH}
-            EMAIL_SENDER: ${EMAIL_SENDER}
-            EMAIL_SECRET: ${EMAIL_SECRET}
-            EMAIL_FROM_ADDR: ${EMAIL_FROM_ADDR}
-            EMAIL_SMTP_URL: ${EMAIL_SMTP_URL}
-            GOOSE_DRIVER: ${GOOSE_DRIVER}
-            GOOSE_DBSTRING: ${GOOSE_DBSTRING}
-            GOOSE_MIGRATION_DIR: ${GOOSE_MIGRATION_DIR}
-            LOGTO_URL: ${LOGTO_URL}
-            LOGTO_APP_ID: ${LOGTO_APP_ID}
-            LOGTO_APP_SECRET: ${LOGTO_APP_SECRET}
-            UPTRACE_DSN: ${UPTRACE_DSN}
-            UPTRACE_ENDPOINT: ${UPTRACE_ENDPOINT}
-            ASSETS_DIR: ${ASSETS_DIR}
 
 volumes:
-    dbdata:
+    appstore:

@@ -1,8 +1,11 @@
 # Git and Docker
 .git/
-Dockerfile
 contrib/
 docs/
+coverage/
+Dockerfile
+docker-compose
+docker-compose.*
 
 # Vendors
 node_modules/
