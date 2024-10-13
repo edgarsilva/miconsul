@@ -116,12 +116,6 @@ func (s *service) logtoSaveUser(claims LogtoUser) error {
 		return nil
 	}
 
-	fmt.Println("---------------------------------------")
-	fmt.Println("THE USER EMAIL", user.Email)
-	fmt.Println("THE USER ID", user.ID)
-	fmt.Println("	USER LOCAL EXD_ID", user.ExtID)
-	fmt.Println("	THE LOGTO USER EXD_ID", claims.Sub)
-	fmt.Println("---------------------------------------")
 	if user.Password == "" {
 		rndPwd, err := bcrypt.GenerateFromPassword([]byte(xid.New("rpwd")), 10)
 		if err != nil {
