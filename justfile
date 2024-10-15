@@ -43,7 +43,7 @@ build: templ
 	go build -tags fts5 -o bin/app cmd/app/main.go
 
 # Start the app using the build binary
-start: db-migrate
+start: migration-apply
 	@echo "👟 Starting the app..."
 	bin/app
 
@@ -107,12 +107,6 @@ db-delete:
 		rm -f database/*.sqlite*; \
 	fi; \
 
-# Migrates the DB to latest migration
-[group('db')]
-db-migrate:
-	@echo "🪿 running migrations with goose before Start"
-	${GOPATH}/bin/goose up
-
 # Set up the DB by running delete, create and migrate
 [group('db')]
 db-setup:
@@ -123,6 +117,14 @@ db-setup:
 [group('db')]
 db-dump-schema:
   sqlite3 database/app.sqlite '.schema' > ./database/schema.sql
+
+
+# Migrates the DB to latest migration
+[group('db')]
+[group('migration')]
+migration-apply:
+	@echo "🪿 running migrations with goose before Start"
+	${GOPATH}/bin/goose up
 
 # Creates a new migration for the DB
 [group('db')]
