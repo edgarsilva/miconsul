@@ -315,10 +315,10 @@ func (s *Server) NotHTMX(c *fiber.Ctx) bool {
 	return !s.IsHTMX(c)
 }
 
-func (s *Server) L(c *fiber.Ctx, key string) (translation string, ok bool) {
+func (s *Server) L(c *fiber.Ctx, key string) (translation string) {
 	if s.Localizer == nil {
-		return "", false
+		return ""
 	}
 
-	return s.Localizer.GetWithLocale(s.SessionLang(c), key), true
+	return s.Localizer.GetWithLocale(s.SessionLang(c), key)
 }

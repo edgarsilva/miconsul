@@ -68,18 +68,19 @@ func ClinicsRoutes(s *server.Server) {
 
 	// Pages
 	g := c.Group("/clinics", mw.MustAuthenticate(c))
-	g.Get("/", c.HandleClinicsPage)
+	g.Get("/", c.HandleClinicsIndexPage)
 	g.Get("/makeaton", mw.MustBeAdmin(c), c.HandleMockManyClinics)
 	g.Get("/search", c.HandleClinicsIndexSearch)
-	g.Get("/:id", c.HandleClinicPage)
+	g.Get("/new", c.HandleClinicsNewPage)
+	g.Get("/:id", c.HandleClinicsShowPage)
 
-	g.Post("/", c.HandleCreateClinic)
+	g.Post("/", c.HandleClinicsCreate)
 
-	g.Post("/:id/patch", c.HandleUpdateClinic)
-	g.Patch("/:id", c.HandleUpdateClinic)
+	g.Post("/:id/patch", c.HandleClinicsUpdate)
+	g.Patch("/:id", c.HandleClinicsUpdate)
 
-	g.Post("/:id/delete", c.HandleDeleteClinic)
-	g.Delete("/:id", c.HandleDeleteClinic)
+	g.Post("/:id/delete", c.HandleClinicsDelete)
+	g.Delete("/:id", c.HandleClinicsDelete)
 }
 
 func PatientRoutes(s *server.Server) {

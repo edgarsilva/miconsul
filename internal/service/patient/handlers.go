@@ -12,6 +12,10 @@ import (
 	"syreclabs.com/go/faker"
 )
 
+const (
+	QUERY_LIMIT int = 10
+)
+
 // HandlePatientsPage renders the patients page HTML
 //
 // GET: /patients
@@ -32,7 +36,7 @@ func (s *service) HandlePatientsPage(c *fiber.Ctx) error {
 	}
 
 	patients := []model.Patient{}
-	s.DB.Model(&cu).Order("created_at desc").Limit(10).Association("Patients").Find(&patients)
+	s.DB.Model(&cu).Order("created_at desc").Limit(QUERY_LIMIT).Association("Patients").Find(&patients)
 	return view.Render(c, view.PatientsPage(vc, patients))
 }
 
@@ -40,15 +44,18 @@ func (s *service) HandlePatientsPage(c *fiber.Ctx) error {
 //
 // GET: /patients/search
 func (s *service) HandlePatientsIndexSearch(c *fiber.Ctx) error {
+	term := c.Query("term", "")
+	if len(term) < 3 {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
 	cu, _ := s.CurrentUser(c)
-	patients, err := s.Patients(cu, c.Query("term", ""))
+	patients, err := s.Patients(cu, term)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	theme := s.SessionUITheme(c)
-	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
-
+	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.PatientsList(vc, patients))
 }
 
@@ -177,9 +184,6 @@ func (s *service) HandleUpdatePatient(c *fiber.Ctx) error {
 // PATCH: /patients/:id/removepic
 // POST: /patients/:id/removepic
 func (s *service) HandleRemovePic(c *fiber.Ctx) error {
-	ctx, endTrace := s.Trace(c, "patient/handlers:HandleRemovePic")
-	defer endTrace()
-
 	cu, err := s.CurrentUser(c)
 	if err != nil {
 		return c.Redirect("/login")
@@ -198,7 +202,7 @@ func (s *service) HandleRemovePic(c *fiber.Ctx) error {
 		UserID: cu.ID,
 	}
 	res := s.DB.Model(&patient).Where("id = ? AND user_id = ?", patientID, cu.ID).Update("profile_pic", "")
-	s.DB.WithContext(ctx).Model(&patient).Where("id = ?", patientID).Take(&patient)
+	s.DB.WithContext(c.UserContext()).Model(&patient).Where("id = ?", patientID).Take(&patient)
 
 	if !s.IsHTMX(c) {
 		if err := res.Error; err != nil {
@@ -256,9 +260,6 @@ func (s *service) HandleDeletePatient(c *fiber.Ctx) error {
 //
 // POST: /patients/search
 func (s *service) HandlePatientSearch(c *fiber.Ctx) error {
-	ctx, span := s.Tracer.Start(c.UserContext(), "patient/handlers:HandlePatientSearch")
-	defer span.End()
-
 	cu, err := s.CurrentUser(c)
 	if err != nil {
 		return c.Redirect("/login")
@@ -267,14 +268,14 @@ func (s *service) HandlePatientSearch(c *fiber.Ctx) error {
 	queryStr := c.FormValue("query", "")
 	patients := []model.Patient{}
 
-	dbquery := s.DB.WithContext(ctx).Model(&cu)
+	dbquery := s.DB.WithContext(c.UserContext()).Model(&cu)
 	if queryStr != "" {
 		dbquery.Scopes(model.GlobalFTS(queryStr))
 	} else {
 		dbquery.Order("created_at desc")
 	}
 
-	dbquery.Limit(10).Association("Patients").Find(&patients)
+	dbquery.Limit(QUERY_LIMIT).Association("Patients").Find(&patients)
 
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))

@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/log"
 )
 
 type service struct {
@@ -29,7 +28,7 @@ func (s service) Patients(cu model.User, term string) ([]model.Patient, error) {
 	err := s.DB.
 		Model(&cu).
 		Scopes(model.GlobalFTS(term)).
-		Limit(10).
+		Limit(QUERY_LIMIT).
 		Association("Patients").
 		Find(&patients)
 
@@ -57,7 +56,6 @@ func SaveProfilePicToDisk(c *fiber.Ctx, patient model.Patient) (string, error) {
 		return "", fmt.Errorf("failed to save profilePic to disk: %w", err)
 	}
 
-	log.Debug("----> Path to file:", path)
 	// we return the url path to retrieve it, not where it's stored on disk
 	imgsrc := "/patients/" + patient.ID + "/profilepic/" + filename
 	return imgsrc, nil

@@ -132,6 +132,7 @@ view_appt: "View appointments"
 users: "Users"
 search_users: "Search users"
 my_profile: "My profile"
+failed_to_update: "Update failed, try again"
 
 #_login = "Hello my name is {{.name}}"
 #_hello_firstname_lastname = "Hello {{.firstname}} {{.lastname}}"

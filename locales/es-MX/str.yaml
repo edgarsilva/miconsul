@@ -138,6 +138,7 @@ view_appt: "Ver citas"
 users: "Usuarios"
 search_users: "Buscar usuarios"
 my_profile: "Mis datos"
+failed_to_update: "Los datos no se guardaron correctamente"
 
 #_login = "Hello my name is {{.name}}"
 #_hello_firstname_lastname = "Hello {{.firstname}} {{.lastname}}"

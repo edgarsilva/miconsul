@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
@@ -99,24 +100,26 @@ func fiberAppErrorHandler(ctx *fiber.Ctx, err error) error {
 	// Status code defaults to 500
 	code := fiber.StatusInternalServerError
 
-	// Retrieve the custom status code if it's a *fiber.Error
 	var e *fiber.Error
 	if errors.As(err, &e) {
 		code = e.Code
 	}
 
-	// Send custom error to intrumentation logs
 	span := trace.SpanFromContext(ctx.UserContext())
 	defer span.End()
 
 	if err != nil {
-		// Record the error.
 		span.RecordError(err)
-
-		// Update the span status.
 		span.SetStatus(codes.Error, err.Error())
 	}
 
+	// Send custom error page
+	err = ctx.Status(code).SendFile(fmt.Sprintf("./public/%d.html", code))
+	if err != nil {
+		// In case SendFile fails
+		return ctx.Status(fiber.StatusInternalServerError).SendString("Internal Server Error")
+	}
+
 	// Return from handler
-	return ctx.Status(code).SendString("Internal Server Error")
+	return nil
 }
