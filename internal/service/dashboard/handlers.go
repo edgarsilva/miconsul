@@ -13,16 +13,13 @@ import (
 //
 //	GET: / or /dashboard
 func (s *service) HandleDashboardPage(c *fiber.Ctx) error {
-	ctx, span := s.Tracer.Start(c.UserContext(), "dashboard/handlers:HandleDashboardPage")
-	defer span.End()
-
 	cu, err := s.CurrentUser(c)
 	if err != nil {
 		return c.Redirect("/login")
 	}
 
 	appointments := []model.Appointment{}
-	query := s.DB.WithContext(ctx).Model(model.Appointment{}).Where("user_id = ?", cu.ID)
+	query := s.DB.WithContext(c.UserContext()).Model(model.Appointment{}).Where("user_id = ?", cu.ID)
 
 	timeframe := c.Query("timeframe", "")
 	switch timeframe {
@@ -43,14 +40,14 @@ func (s *service) HandleDashboardPage(c *fiber.Ctx) error {
 		Find(&appointments)
 
 	clinic := model.Clinic{UserID: cu.ID, Favorite: true}
-	s.DB.WithContext(ctx).Model(&model.Clinic{}).Where(clinic, "UserID", "favorite").Order("created_at").Take(&clinic)
+	s.DB.WithContext(c.UserContext()).Model(&model.Clinic{}).Where(clinic, "UserID", "favorite").Order("created_at").Take(&clinic)
 
 	if clinic.ID == "" {
-		s.DB.WithContext(ctx).Model(&model.Clinic{}).Where(clinic, "UserID").First(&clinic)
+		s.DB.WithContext(c.UserContext()).Model(&model.Clinic{}).Where(clinic, "UserID").Order("created_at").Take(&clinic)
 	}
 
 	vc, _ := view.NewCtx(c)
-	stats := s.CalcDashboardStats(ctx, cu)
+	stats := s.CalcDashboardStats(c, cu)
 
 	return view.Render(c, view.DashboardPage(vc, stats, appointments, clinic))
 }

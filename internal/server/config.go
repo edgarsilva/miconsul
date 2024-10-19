@@ -1,6 +1,7 @@
 package server
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"os"
@@ -44,8 +45,8 @@ func staticConfig() fiber.Static {
 	}
 }
 
-func sessionConfig() sqlite3.Config {
-	sessPath := os.Getenv("SESSION_PATH")
+func sessionConfig(path string) sqlite3.Config {
+	sessPath := cmp.Or(path, os.Getenv("SESSION_DB_PATH"))
 	if sessPath == "" {
 		sessPath = "./fiber_session.sqlite3"
 	}

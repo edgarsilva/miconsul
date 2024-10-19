@@ -59,14 +59,17 @@ func main() {
 		port = "3000"
 	}
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	osExitSignal := make(chan os.Signal, 1)
+	signal.Notify(osExitSignal, os.Interrupt)
 
 	serverShutdown := make(chan struct{})
 
 	go func() {
-		<-c
+		<-osExitSignal
 		fmt.Println("Gracefully shutting down...")
+		fmt.Println("🦡 Closing badger connection...")
+		s.Cache.Close()
+
 		if err := s.Shutdown(); err != nil {
 			log.Panic("Failed to gracefully shutdowm fiber app server:", err.Error())
 		}

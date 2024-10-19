@@ -31,10 +31,20 @@ tailwind:
 	@echo "🌬️ Generating Tailwind CSS styles..."
 	~/.bun/bin/bun x tailwindcss -i ./styles/global.css -o ./public/global.css --minify
 
+# Watch Tailwind styles
+tailwind-watch:
+	@echo "🌬️ Watching Tailwind CSS styles..."
+	~/.bun/bin/bun x tailwindcss -i ./styles/global.css -o ./public/global.css --watch
+
 # Generate Templ files
 templ: tailwind
 	@echo "🛕 Generating Templ files..."
 	${GOPATH}/bin/templ generate
+
+# Watch Templ files
+templ-watch:
+	@echo "🛕 Watching Templ files..."
+	${GOPATH}/bin/templ generate --watch
 
 # Build the app
 build: templ

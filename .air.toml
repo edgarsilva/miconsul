@@ -25,7 +25,7 @@ full_bin = ""
 # Add additional arguments when running binary (bin/full_bin). Will run './tmp/main hello world'.
 args_bin = []
 # Watch these filename extensions.
-include_ext = ["go", "html", "tmpl", "templ", "html", "toml", "yaml"]
+include_ext = ["go", "html", "tmpl", "templ", "toml", "yaml", "yml"]
 # Ignore these filename extensions or directories.
 exclude_dir = [
 	"assets",
@@ -93,3 +93,9 @@ clean_on_exit = true
 [screen]
 clear_on_rebuild = false
 keep_scroll = true
+
+[proxy]
+# Enable live-reloading on the browser.
+enabled = false
+proxy_port = 3001
+app_port = 3000
