@@ -6,13 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"miconsul/internal/database"
+	"miconsul/internal/lib/cache"
 	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
 	"miconsul/internal/model"
 	"os"
 	"time"
 
-	"github.com/dgraph-io/badger"
 	"github.com/gofiber/contrib/otelfiber"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
@@ -36,12 +36,17 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+type Cache interface {
+	Read(key string, dst *[]byte) error
+	Write(key string, src *[]byte, ttl time.Duration) error
+}
+
 type Server struct {
 	DB           *database.Database
 	wp           *ants.Pool     // <- WorkerPool - handles Background Goroutines or Async Jobs (emails) with Ants
 	cj           *cronjob.Sched // <- CronJob scheduler
+	Cache        Cache
 	SessionStore *session.Store
-	Cache        *badger.DB
 	Localizer    *localize.Localizer
 	LogtoConfig  *logto.LogtoConfig
 	*fiber.App
@@ -65,15 +70,6 @@ func New(serverOpts ...ServerOption) *Server {
 		Storage:      storage,
 		CookieSecure: true,
 	})
-
-	cacheOpts := badger.DefaultOptions(os.Getenv("CACHE_DB_PATH"))
-	cachedb, err := badger.Open(cacheOpts)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// defer cachedb.Close()
-
-	server.Cache = cachedb
 
 	tracer := otel.Tracer("fiberapp-server")
 	server.Tracer = tracer
@@ -163,6 +159,17 @@ func WithTracerProvider(tp *sdktrace.TracerProvider) ServerOption {
 		}
 
 		server.TP = tp
+		return nil
+	}
+}
+
+func WithCache(cache *cache.Cache) ServerOption {
+	return func(server *Server) error {
+		if cache == nil {
+			return nil
+		}
+
+		server.Cache = cache
 		return nil
 	}
 }
@@ -277,37 +284,15 @@ func (s *Server) SessionGet(c *fiber.Ctx, key string, defaultVal string) string 
 
 // CacheWrite writes a value to the Cache
 // backed by BadgerDB
-func (s *Server) CacheWrite(key string, value []byte) error {
-	err := s.Cache.Update(func(txn *badger.Txn) error {
-		entry := badger.NewEntry([]byte(key), value).WithTTL(15 * time.Second)
-		err := txn.SetEntry(entry)
-		return err
-	})
-
-	fmt.Println("CacheWrite -> SUCCESS")
+func (s *Server) CacheWrite(key string, src *[]byte, ttl time.Duration) error {
+	err := s.Cache.Write(key, src, ttl)
 
 	return err
 }
 
 // CacheRead reads a cache value by key
-func (s *Server) CacheRead(key string) ([]byte, error) {
-	var value []byte
-
-	err := s.Cache.View(func(txn *badger.Txn) error {
-		item, err := txn.Get([]byte(key))
-		if err != nil {
-			return err
-		}
-
-		err = item.Value(func(val []byte) error {
-			value = val
-			return nil
-		})
-
-		return err
-	})
-
-	return value, err
+func (s *Server) CacheRead(key string, dst *[]byte) error {
+	return s.Cache.Read(key, dst)
 }
 
 // SessionSet sets a session value.
@@ -347,6 +332,19 @@ func (s *Server) SessionLang(c *fiber.Ctx) string {
 
 	sess.Set("lang", lang)
 	return lang
+}
+
+// SessionUITheme returns the user UI theme (light|dark) from the session or query
+// url param
+func (s *Server) SessionID(c *fiber.Ctx) string {
+	sessionID := c.Cookies("session_id", "")
+	return sessionID
+}
+
+// SessionUITheme returns the user UI theme (light|dark) from the session or query
+// url param
+func (s *Server) TagWithSessionID(c *fiber.Ctx, tag string) string {
+	return s.SessionID(c) + ":" + tag
 }
 
 // IsHTMX returns true if the request was initiated by HTMX

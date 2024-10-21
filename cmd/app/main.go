@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"miconsul/internal/database"
+	"miconsul/internal/lib/cache"
 	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
 	"miconsul/internal/lib/otel"
@@ -19,29 +20,34 @@ import (
 
 func main() {
 	godotenv.Load(".env")
-
 	defer func() {
 		fmt.Println("✅ All cleanup tasks completed")
 	}()
 
 	ctx := context.Background()
-	tp, shutdownTP := otel.NewUptraceTracerProvider(ctx)
-
+	tp, shutdownTracer := otel.NewUptraceTracerProvider(ctx)
 	defer func() {
-		fmt.Println("Tracer is shutting down...")
-		shutdownTP()
+		fmt.Println("󰓾 Tracer provider shutting down...")
+		shutdownTracer()
 	}()
 
-	cj, shutdownCJ := cronjob.New()
+	cj, shutdownCronjob := cronjob.New()
 	defer func() {
-		fmt.Println("BGJ is shutting down...")
-		shutdownCJ()
+		fmt.Println("🕑 Cronjobs shutting down...")
+		shutdownCronjob()
 	}()
 
-	wp, err := workerpool.New(10)
-	if err != nil {
-		log.Panic("Failed to start workerpool", err.Error())
-	}
+	wp, shutdownWorkerPool := workerpool.New(10)
+	defer func() {
+		fmt.Println("🐜 Ants workerpool shutting down...")
+		shutdownWorkerPool()
+	}()
+
+	cache, shutdownCache := cache.New()
+	defer func() {
+		fmt.Println("🦡 Badger Cache shutting down...")
+		shutdownCache()
+	}()
 
 	localizer := localize.New("en-US", "es-MX")
 	db := database.New(os.Getenv("DB_PATH"))
@@ -51,6 +57,7 @@ func main() {
 		server.WithWorkerPool(wp),
 		server.WithTracerProvider(tp),
 		server.WithLocalizer(localizer),
+		server.WithCache(cache),
 	)
 	routes.RegisterServices(s)
 
@@ -67,8 +74,6 @@ func main() {
 	go func() {
 		<-osExitSignal
 		fmt.Println("Gracefully shutting down...")
-		fmt.Println("🦡 Closing badger connection...")
-		s.Cache.Close()
 
 		if err := s.Shutdown(); err != nil {
 			log.Panic("Failed to gracefully shutdowm fiber app server:", err.Error())

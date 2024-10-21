@@ -28,9 +28,8 @@ func (s service) CalcDashboardStats(c *fiber.Ctx, cu model.User) view.DashboardS
 	ctx, span := s.Tracer.Start(c.UserContext(), "dashboard/services:CalcDashboardStats")
 	defer span.End()
 
-	sessionID := c.Cookies("session_id", "")
-	cachekey := sessionID + ":" + "dashboard_monthlystats"
-	if stats, ok := s.GetStatsCache(cachekey); ok {
+	cacheKey := s.TagWithSessionID(c, "dashboard_monthlystats")
+	if stats, ok := s.ReadStatsCache(cacheKey); ok {
 		return stats
 	}
 
@@ -41,18 +40,18 @@ func (s service) CalcDashboardStats(c *fiber.Ctx, cu model.User) view.DashboardS
 		Appointments: apptStats,
 	}
 
-	s.SetStatsCache(cachekey, stats)
+	s.WriteStatsCache(cacheKey, stats)
 
 	return stats
 }
 
-func (s service) SetStatsCache(cachekey string, stats view.DashboardStats) error {
+func (s service) WriteStatsCache(cachekey string, stats view.DashboardStats) error {
 	statsBytes, err := Serialize(stats)
 	if err != nil {
 		return err
 	}
 
-	err = s.CacheWrite(cachekey, statsBytes)
+	err = s.CacheWrite(cachekey, &statsBytes, 15*time.Minute)
 	if err != nil {
 		return err
 	}
@@ -60,13 +59,14 @@ func (s service) SetStatsCache(cachekey string, stats view.DashboardStats) error
 	return nil
 }
 
-func (s service) GetStatsCache(cachekey string) (stats view.DashboardStats, ok bool) {
-	cacheValBytes, err := s.CacheRead(cachekey)
+func (s service) ReadStatsCache(cachekey string) (stats view.DashboardStats, ok bool) {
+	cacheBytes := make([]byte, 32)
+	err := s.CacheRead(cachekey, &cacheBytes)
 	if err != nil {
 		return stats, false
 	}
 
-	stats, err = Deserialize(cacheValBytes)
+	stats, err = Deserialize(cacheBytes)
 	if err != nil {
 		return stats, false
 	}
