@@ -21,11 +21,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type MWService interface {
+type MiddlewareService interface {
 	TracerClient() trace.Tracer
 	DBClient() *database.Database
 	LogtoClient(*fiber.Ctx) (client *logto.LogtoClient, save func())
 	LogtoEnabled() bool
+	CacheRead(key string, dst *[]byte) error
 }
 
 type service struct {
@@ -215,7 +216,7 @@ func JWTCreateToken(sub, uid string) (string, error) {
 
 // Authenticate an user based on Req Ctx Cookie 'Auth'
 // cookies
-func Authenticate(c *fiber.Ctx, mws MWService) (model.User, error) {
+func Authenticate(c *fiber.Ctx, mws MiddlewareService) (model.User, error) {
 	if mws == nil {
 		return model.User{}, errors.New("failed to authenticate user")
 	}
@@ -227,7 +228,11 @@ func Authenticate(c *fiber.Ctx, mws MWService) (model.User, error) {
 	return localStrategy(c, mws)
 }
 
-func logtoStrategy(c *fiber.Ctx, mws MWService) (model.User, error) {
+func logtoStrategy(c *fiber.Ctx, mws MiddlewareService) (model.User, error) {
+	if mws == nil {
+		return model.User{}, errors.New("failed to authenticate user")
+	}
+
 	ctx, span := mws.TracerClient().Start(c.UserContext(), "auth/services:logtoStrategy")
 	defer span.End()
 
@@ -249,7 +254,11 @@ func logtoStrategy(c *fiber.Ctx, mws MWService) (model.User, error) {
 	return user, nil
 }
 
-func localStrategy(c *fiber.Ctx, mws MWService) (model.User, error) {
+func localStrategy(c *fiber.Ctx, mws MiddlewareService) (model.User, error) {
+	if mws == nil {
+		return model.User{}, errors.New("failed to authenticate user")
+	}
+
 	uid := c.Cookies("Auth", "")
 	if uid == "" {
 		uid = strings.TrimPrefix(c.Get("Authorization", ""), "Bearer ")

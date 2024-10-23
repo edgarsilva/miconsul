@@ -9,6 +9,7 @@ import (
 	"miconsul/internal/lib/cache"
 	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
+	"miconsul/internal/lib/sessionstorage"
 	"miconsul/internal/model"
 	"os"
 	"time"
@@ -27,7 +28,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/gofiber/fiber/v2/middleware/session"
-	"github.com/gofiber/storage/sqlite3/v2"
 
 	logto "github.com/logto-io/go/client"
 	"github.com/panjf2000/ants/v2"
@@ -65,7 +65,7 @@ func New(serverOpts ...ServerOption) *Server {
 		}
 	}
 
-	storage := sqlite3.New(sessionConfig(""))
+	storage := sessionstorage.New()
 	server.SessionStore = session.New(session.Config{
 		Storage:      storage,
 		CookieSecure: true,
@@ -80,11 +80,10 @@ func New(serverOpts ...ServerOption) *Server {
 	fiberApp.Use(otelfiber.Middleware())
 	fiberApp.Use(logger.New())
 
-	if os.Getenv("APP_ENV") == "production" {
-		fiberApp.Use(helmet.New(helmetConfig()))
-	}
-
 	fiberApp.Use(cors.New())
+
+	fiberApp.Use(helmet.New(helmetConfig()))
+
 	fiberApp.Use(requestid.New())
 	fiberApp.Use(encryptcookie.New(encryptcookie.Config{
 		Key: os.Getenv("COOKIE_SECRET"),
@@ -235,7 +234,6 @@ func (s *Server) Listen(port string) error {
 //		defer saveSess()
 func (s *Server) LogtoClient(c *fiber.Ctx) (client *logto.LogtoClient, save func()) {
 	sess := s.Session(c)
-
 	storage := NewLogtoStorage(sess)
 	logtoClient := logto.NewLogtoClient(
 		s.LogtoConfig,
@@ -283,7 +281,6 @@ func (s *Server) SessionGet(c *fiber.Ctx, key string, defaultVal string) string 
 }
 
 // CacheWrite writes a value to the Cache
-// backed by BadgerDB
 func (s *Server) CacheWrite(key string, src *[]byte, ttl time.Duration) error {
 	err := s.Cache.Write(key, src, ttl)
 

@@ -9,7 +9,7 @@ templ CmpNavbar(c *Ctx) {
 				<a href="/?timeframe=day" class="relative px-2 rounded-xl self-stretch flex items-center text-xl font-semibold hover:ring hover:ring-secondary/35 hover:bg-secondary/10 active:ring">
 					<div class="avatar overflow-hidden mr-2">
 						<div class="h-10">
-							<img class="" src="/public/images/labcoat64.png"/>
+							<img class="" src="/public/images/labcoat64.png" alt="miconsul logo"/>
 						</div>
 					</div>
 					miconsul
@@ -40,7 +40,7 @@ templ UserAvatar(c *Ctx) {
 
 templ Search() {
 	<div class="flex gap-2 mr-2">
-		<button class="p-1 hover:outline rounded-xl">
+		<button class="p-1 hover:outline rounded-xl" aria-label="Global Search">
 			@IconSearch("")
 		</button>
 		<kbd class="hidden md:kbd md:kbd-sm">ctrl</kbd>

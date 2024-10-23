@@ -108,6 +108,7 @@ func Serialize(stats view.DashboardStats) ([]byte, error) {
 func Deserialize(statsB []byte) (view.DashboardStats, error) {
 	buffer := bytes.NewBuffer(statsB)
 	decoder := gob.NewDecoder(buffer)
+
 	var stats view.DashboardStats
 	err := decoder.Decode(&stats)
 	if err != nil {

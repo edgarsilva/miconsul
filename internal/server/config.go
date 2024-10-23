@@ -21,9 +21,9 @@ const csp = "default-src 'self';base-uri 'self';font-src 'self' https: data:;" +
 	"frame-ancestors 'self';" +
 	"img-src 'self' data: *.dicebear.com *.pravatar.cc images.unsplash.com *.googleusercontent.com *.gravatar.com;" +
 	"object-src 'none';" +
-	"script-src 'self' 'unsafe-eval' 'unsafe-inline' unpkg.com *.unpkg.com *.jsdelivr.net;" +
+	"script-src 'self' 'unsafe-eval' unpkg.com *.jsdelivr.net;" +
 	"script-src-attr 'none';" +
-	"style-src 'self' https: 'unsafe-inline';" +
+	"style-src 'self' https:;" +
 	"upgrade-insecure-requests"
 
 func limiterConfig() limiter.Config {
@@ -45,7 +45,7 @@ func staticConfig() fiber.Static {
 	}
 }
 
-func sessionConfig(path string) sqlite3.Config {
+func sqlite3SessionConfig(path string) sqlite3.Config {
 	sessPath := cmp.Or(path, os.Getenv("SESSION_DB_PATH"))
 	if sessPath == "" {
 		sessPath = "./fiber_session.sqlite3"
@@ -75,7 +75,7 @@ func helmetConfig() helmet.Config {
 		OriginAgentCluster:        "?1",
 		XDNSPrefetchControl:       "off",
 		XDownloadOptions:          "noopen",
-		XPermittedCrossDomain:     "*.dicebear.com,*.googleusercontent.com",
+		XPermittedCrossDomain:     "none",
 	}
 }
 

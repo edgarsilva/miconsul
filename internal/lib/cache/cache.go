@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"time"
@@ -35,8 +34,6 @@ func (c *Cache) Write(key string, src *[]byte, ttl time.Duration) error {
 		err := txn.SetEntry(entry)
 		return err
 	})
-
-	fmt.Println("CacheWrite -> SUCCESS")
 
 	return err
 }
