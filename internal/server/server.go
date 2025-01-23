@@ -264,8 +264,19 @@ func (s *Server) SessionDestroy(c *fiber.Ctx) {
 	}
 }
 
-// SessionGet gets a session string value by key, or returns the default value.
-func (s *Server) SessionGet(c *fiber.Ctx, key string, defaultVal string) string {
+// SessionWrite sets a session value.
+func (s *Server) SessionWrite(c *fiber.Ctx, k string, v interface{}) (err error) {
+	sess := s.Session(c)
+	sess.Set(k, v)
+	defer func() {
+		err = sess.Save()
+	}()
+
+	return nil
+}
+
+// SessionRead gets a session string value by key, or returns the default value.
+func (s *Server) SessionRead(c *fiber.Ctx, key string, defaultVal string) string {
 	sess := s.Session(c)
 	val := sess.Get(key)
 	if val == nil {
@@ -290,17 +301,6 @@ func (s *Server) CacheWrite(key string, src *[]byte, ttl time.Duration) error {
 // CacheRead reads a cache value by key
 func (s *Server) CacheRead(key string, dst *[]byte) error {
 	return s.Cache.Read(key, dst)
-}
-
-// SessionSet sets a session value.
-func (s *Server) SessionSet(c *fiber.Ctx, k string, v interface{}) (err error) {
-	sess := s.Session(c)
-	sess.Set(k, v)
-	defer func() {
-		err = sess.Save()
-	}()
-
-	return nil
 }
 
 // SessionUITheme returns the user UI theme (light|dark) from the session or query

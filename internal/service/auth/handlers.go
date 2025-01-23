@@ -202,7 +202,7 @@ func (s *service) HandleLogout(c *fiber.Ctx) error {
 func (s *service) HandleResetPasswordPage(c *fiber.Ctx) error {
 	vc, _ := view.NewCtx(c)
 
-	msg := s.SessionGet(c, "msg", "")
+	msg := s.SessionRead(c, "msg", "")
 	if msg == "" {
 		msg = c.Query("msg", "")
 	}
@@ -259,7 +259,8 @@ func (s *service) HandleResetPasswordChange(c *fiber.Ctx) error {
 	}
 
 	nonce := xid.New("rpnnce")
-	s.SessionSet(c, "nonce", nonce)
+	s.SessionWrite(c, "nonce", nonce)
+
 	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.ResetPasswordChangePage(email, token, nonce, nil, vc))
 }
@@ -279,7 +280,7 @@ func (s *service) HandleResetPasswordUpdate(c *fiber.Ctx) error {
 	}
 
 	nonce := c.FormValue("nonce", "")
-	cmpNonce := s.SessionGet(c, "nonce", nonce)
+	cmpNonce := s.SessionRead(c, "nonce", nonce)
 	if nonce == "" || nonce != cmpNonce {
 		return c.Redirect("/resetpassword?msg=something went wrong with the nonce, try again!")
 	}

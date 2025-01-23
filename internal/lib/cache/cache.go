@@ -5,25 +5,23 @@ import (
 	"os"
 	"time"
 
-	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/v4"
 )
 
 type Cache struct {
 	*badger.DB
 }
 
-func New() (c *Cache, shutdownFn func()) {
+func New() (cacheRef *Cache, shutdownFn func()) {
 	cacheOpts := badger.DefaultOptions(os.Getenv("CACHE_DB_PATH"))
 	cachedb, err := badger.Open(cacheOpts)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return &Cache{
-			DB: cachedb,
-		}, func() {
-			cachedb.Close()
-		}
+	return &Cache{DB: cachedb}, func() {
+		cachedb.Close()
+	}
 }
 
 // Write writes a value to the Cache

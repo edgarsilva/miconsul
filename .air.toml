@@ -10,7 +10,7 @@ testdata_dir = "testdata"
 # Array of commands to run before each build
 pre_cmd = [
 	"go-localize -input locales -output internal/lib/localize",
-	"bunx tailwindcss -i ./styles/global.css -o ./public/global.css --minify",
+	"bun x tailwindcss -i ./styles/global.css -o ./public/global.css --minify",
 	"templ generate",
 ]
 # Just plain old shell command. You could use `make` as well.
@@ -33,7 +33,6 @@ exclude_dir = [
 	"bin",
 	"docs",
 	"store",
-	"frontend/node_modules",
 	"testdata",
 	"static",
 	"public",
@@ -96,6 +95,6 @@ keep_scroll = true
 
 [proxy]
 # Enable live-reloading on the browser.
-enabled = false
+enabled = true
 proxy_port = 3001
 app_port = 3000

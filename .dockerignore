@@ -1,4 +1,5 @@
 # Git and Docker
+.env*
 .git/
 contrib/
 docs/
