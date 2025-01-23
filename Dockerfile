@@ -1,42 +1,39 @@
 FROM golang:1.23
 
 # Install needed dependencies
-RUN apt update && apt install -y unzip tar curl wget
+RUN apt-get update && \
+	apt-get install -y unzip --no-install-recommends && \
+	rm -rf /var/lib/apt/lists/* tar curl wget
 
-# Install just utility
-RUN curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
-
-RUN groupadd miconsul && useradd -r -m -g miconsul miconsul
+RUN groupadd -g 1000 miconsul && useradd -u 1000 -m -g miconsul miconsul
 USER miconsul
+WORKDIR /app
 
-# Set destination for COPY
-WORKDIR /home/miconsul/app
+# USER miconsul
+RUN mkdir /app/store
 
 # Install bun (for TailwindCSS)
-RUN curl -fsSL https://bun.sh/install | bash
+RUN bash -o pipefail -c "curl -fsSL https://bun.sh/install | bash"
 
 # Set GOPATH to a directory where the app user has permission to write
 ENV GOPATH=/home/miconsul/go
 
-# Install templ (Go HTML template generator)
-RUN go install github.com/a-h/templ/cmd/templ@v0.2.778
-
-# Install goose for DB migrations
-RUN go install github.com/pressly/goose/v3/cmd/goose@v3.20
+# Install templ (Go HTML template generator) and goose for DB migrations
+RUN go install github.com/a-h/templ/cmd/templ@v0.3.819 && \
+	go install github.com/pressly/goose/v3/cmd/goose@v3.20
 
 # Build TailwindCSS plugins and the Go application
-COPY --chown=miconsul:miconsul package*.json ./
-
+COPY package*.json ./
 RUN ~/.bun/bin/bun install
 
 # Download Go modules
 COPY --chown=miconsul:miconsul go.mod go.sum ./
-RUN go mod download && go mod verify
+RUN go mod download all && go mod verify
 
 # Copy app source code to /app inside container
 COPY --chown=miconsul:miconsul . .
 
-RUN just build
+RUN make build
 
 # Start the application
-CMD ["just", "start"]
+CMD ["make", "start"]

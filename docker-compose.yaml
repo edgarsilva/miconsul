@@ -14,6 +14,9 @@ services:
             - ./.env
         environment:
             APP_ENV: ${APP_ENV}
+            DB_PATH: /app/store/app.sqlite
+            SESSION_DB_PATH: /app/store/session.badger
+            CACHE_DB_PATH: /app/store/cache.badger
 
 volumes:
     appstore:

@@ -180,5 +180,4 @@ docker/logs:
 
 # Rebuild the docker image (for Dockerfile changes)
 docker/build:
-	docker compose up -d --no-deps --build app
-
+	docker compose up --no-deps --build app
