@@ -29,30 +29,24 @@ func Render(c *fiber.Ctx, component templ.Component, options ...func(*templ.Comp
 }
 
 // QueryParams returns the queryParams (AKA searchParams) in the
-// req ctx and appends (or updates) the params passed to it as
-// in the form "name=value"
+// req ctx and appends(or updates) params passed in the form "name=value"
 //
 //	e.g.
 //		QueryParams(vc, "timeframe=day", "clinic=myclinic")
 func QueryParams(vc *Ctx, params ...string) string {
 	queryParams := vc.Queries()
+	paramStrTokens := []string{"?"}
 
 	for _, param := range params {
 		kv := strings.Split(param, "=")
 		if len(kv) < 2 {
 			continue
 		}
+
 		key, val := kv[0], kv[1]
 		queryParams[key] = val
+		paramStrTokens = append(paramStrTokens, key+"="+val)
 	}
 
-	tokens := make([]string, 0, len(queryParams))
-	for k, v := range queryParams {
-		if v == "" {
-			continue
-		}
-		tokens = append(tokens, k+"="+v)
-	}
-
-	return "?" + strings.Join(tokens, "&")
+	return strings.Join(paramStrTokens, "&")
 }
