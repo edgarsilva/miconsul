@@ -8,9 +8,7 @@ testdata_dir = "testdata"
 
 [build]
 # Array of commands to run before each build
-pre_cmd = [
-	# "go-localize -input locales -output internal/lib/localize",
-]
+pre_cmd = ["go-localize -input locales -output internal/lib/localize"]
 # Just plain old shell command. You could use `make` as well.
 cmd = "go build -tags fts5 -o ./tmp/main cmd/app/main.go"
 # Array of commands to run after ^C
@@ -35,7 +33,7 @@ exclude_dir = [
 	"styles",
 	"node_modules",
 	"coverage",
-	# "internal/lib/localize",
+	"internal/lib/localize",
 ]
 # Watch these directories if you specified.
 include_dir = []

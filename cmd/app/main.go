@@ -18,8 +18,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-//go:generate go-localize -input locales -output internal/lib/localize
-
 func main() {
 	godotenv.Load(".env")
 	defer func() {
