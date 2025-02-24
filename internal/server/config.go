@@ -40,9 +40,17 @@ func staticConfig() fiber.Static {
 		ByteRange:     true,
 		Browse:        false,
 		Index:         "",
-		CacheDuration: 300 * time.Second,
+		CacheDuration: staticCacheDuration(),
 		MaxAge:        3600,
 	}
+}
+
+func staticCacheDuration() time.Duration {
+	if os.Getenv("APP_ENV") == "development" {
+		return -10
+	}
+
+	return 300 * time.Second
 }
 
 func sqlite3SessionConfig(path string) sqlite3.Config {

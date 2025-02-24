@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@import "tailwindcss" source("../internal");
+
+@source "../styles";
 
 @plugin "daisyui" {
 	themes: light --default, dark --prefersdark;
@@ -9,16 +11,14 @@
 
 @config '../tailwind.config.js';
 
-
 /* Custom classes*/
 .app-card {
 	@apply relative bg-base-100 sm:rounded-xl ring-1 ring-base-content/10 p-4 md:p-6
 }
 
 #root {
-	min-height: 100vh;
 	min-height: 100svh;
-	@apply relative flex flex-col bg-base-200;
+	@apply relative flex flex-col;
 }
 
 *::-webkit-scrollbar {

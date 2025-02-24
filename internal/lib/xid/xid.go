@@ -14,18 +14,16 @@ const (
 	length   = 20
 )
 
-// New returns a new XID as a string
+// New returns a new XID as a string with a given prefix
 func New(prefix string) string {
 	id := xid.New()
-	return concatStr(prefix, id.String())
+	return prefix + id.String()
 }
 
-func concatStr(a, b string) string {
-	if len(a) == 0 {
-		return b
-	}
-
-	return a + b
+// New returns a new XID as a string
+func Pure() string {
+	id := xid.New()
+	return id.String()
 }
 
 // Validate checks if a given field name’s publicID (nanoid) value is valid according to

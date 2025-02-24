@@ -38,21 +38,21 @@ vet: fmt
 
 tailwind:
 	@echo "🌬️ Generating Tailwind CSS styles..."
-	~/.bun/bin/bun x tailwindcss -i ./styles/global.css -o ./public/global.css --minify
+	~/.bun/bin/bun x @tailwindcss/cli -i ./styles/global.css -o ./public/global.css --minify
 
 .PHONY: tailwind/watch
 tailwind/watch:
 	@echo "🌬️ Watching for Tailwind CSS style changes..."
-	~/.bun/bin/bun x tailwindcss -i ./styles/global.css -o ./public/global.css --watch
+	~/.bun/bin/bun x @tailwindcss/cli -i ./styles/global.css -o ./public/global.css --minify --watch
 
 templ: tailwind
 	@echo "🛕 Generating Templ files..."
 	${GOPATH}/bin/templ generate
 
 .PHONY: templ/watch
-templ/watch: tailwind/watch
+templ/watch:
 	@echo "🛕 Watching for Templ file changes..."
-	${GOPATH}/bin/templ generate --watch
+	${GOPATH}/bin/templ generate --watch -v
 
 build: templ
 	@echo "📦 Building"
@@ -70,8 +70,9 @@ run: templ
 	@echo "🤖 go run..."
 	go run -tags fts5 cmd/app/main.go
 
+.PHONY: air/watch
 # Starts the app in dev/watch mode
-dev:
+air/watch:
 	@if command -v air > /dev/null; then \
 	    air; \
 	    echo "Running in dev mode and Watching files...";\
@@ -86,6 +87,10 @@ dev:
 	        exit 1; \
 	    fi; \
 	fi
+
+# start all watch processes in parallel.
+dev:
+	make -j3 tailwind/watch templ/watch air/watch
 
 # Run tests
 test:
