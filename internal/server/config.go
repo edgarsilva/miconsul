@@ -11,7 +11,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/storage/sqlite3/v2"
-	logto "github.com/logto-io/go/client"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -85,22 +84,6 @@ func helmetConfig() helmet.Config {
 		XDownloadOptions:          "noopen",
 		XPermittedCrossDomain:     "none",
 	}
-}
-
-func LogtoConfig() *logto.LogtoConfig {
-	endpoint := os.Getenv("LOGTO_URL")
-	appid := os.Getenv("LOGTO_APP_ID")
-	appsecret := os.Getenv("LOGTO_APP_SECRET")
-
-	c := logto.LogtoConfig{
-		Endpoint:  endpoint,
-		AppId:     appid,
-		AppSecret: appsecret,
-		Resources: []string{"https://app.miconsul.xyz/api"},
-		Scopes:    []string{"email", "phone", "picture", "custom_data", "app:read", "app:write"},
-	}
-
-	return &c
 }
 
 // recoverConfig returns recover middleware config object with the yield func

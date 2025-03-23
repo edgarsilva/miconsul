@@ -22,7 +22,7 @@ func authParams(c *fiber.Ctx) (email, password string, err error) {
 }
 
 // resetPasswordEmailParam returns the email address string from either
-// FormValue, URLParam or Query in that order of existance
+// FormValue, URLParam or Query in that order of existance precedence
 func resetPasswordEmailParam(c *fiber.Ctx) (string, error) {
 	email := c.FormValue("email", "")
 	if email != "" {

@@ -49,9 +49,9 @@ type Server struct {
 	SessionStore *session.Store
 	Localizer    *localize.Localizer
 	LogtoConfig  *logto.LogtoConfig
+	TP           *sdktrace.TracerProvider
+	Tracer       trace.Tracer
 	*fiber.App
-	TP     *sdktrace.TracerProvider
-	Tracer trace.Tracer
 }
 
 type ServerOption func(*Server) error
@@ -224,23 +224,6 @@ func (s *Server) Trace(c *fiber.Ctx, spanName string) (context.Context, func()) 
 // Listen starts the fiberapp server (fiperapp.Listen()) on the specified port.
 func (s *Server) Listen(port string) error {
 	return s.App.Listen(fmt.Sprintf(":%v", port))
-}
-
-// LogtoClient returns the LogtoClient and a save function to persist the
-// session on defer or at the end of the handler.
-//
-//	e.g.
-//		logtoClient, saveSess := s.LogtoClient(c)
-//		defer saveSess()
-func (s *Server) LogtoClient(c *fiber.Ctx) (client *logto.LogtoClient, save func()) {
-	sess := s.Session(c)
-	storage := NewLogtoStorage(sess)
-	logtoClient := logto.NewLogtoClient(
-		s.LogtoConfig,
-		storage,
-	)
-
-	return logtoClient, func() { sess.Save() }
 }
 
 func (s *Server) LogtoEnabled() bool {
