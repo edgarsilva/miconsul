@@ -1,18 +1,12 @@
 package auth
 
 import (
-	"context"
-	"errors"
-	"fmt"
-	"miconsul/internal/lib/xid"
-	"miconsul/internal/model"
 	"miconsul/internal/view"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
-	"golang.org/x/crypto/bcrypt"
 
 	logto "github.com/logto-io/go/client"
 	logtocore "github.com/logto-io/go/core"
@@ -67,7 +61,7 @@ func (s *service) HandleLogtoCallback(c *fiber.Ctx) error {
 		return c.Redirect("/logto/signout")
 	}
 
-	err = s.logtoSaveUser(c.UserContext(), logtoUser)
+	err = s.saveLogtoUser(c.UserContext(), logtoUser)
 	if err != nil {
 		log.Error(err)
 		return c.Redirect("/logto/signout")
@@ -91,6 +85,7 @@ func (s *service) HandleLogtoSignout(c *fiber.Ctx) error {
 	return c.Redirect(signOutUri, fiber.StatusTemporaryRedirect)
 }
 
+// HandleLogtoPage renders the Logto page with two links to sign in and sign out
 func (s *service) HandleLogtoPage(c *fiber.Ctx) error {
 	logtoClient, saveSess := LogtoClient(s.Session(c))
 	defer saveSess()
@@ -105,54 +100,18 @@ func (s *service) HandleLogtoPage(c *fiber.Ctx) error {
 	return view.Render(c, view.LogtoPage(vc, authState))
 }
 
-func (s *service) logtoSaveUser(ctx context.Context, claims LogtoUser) error {
-	ctx, span := s.Trace(ctx, "auth/logto:logtoSaveUser")
-	defer span.End()
-
-	user := model.User{Email: claims.Email}
-	s.DB.WithContext(ctx).Model(&user).Where(user, "Email").Take(&user)
-
-	if user.ID != "" && user.ExtID == claims.Sub {
-		return nil
-	}
-
-	if user.Password == "" {
-		rndPwd, err := bcrypt.GenerateFromPassword([]byte(xid.New("rpwd")), 10)
-		if err != nil {
-			return errors.New("failed to generate password placeholder for user")
-		}
-		user.Password = string(rndPwd)
-	}
-
-	user.Name = claims.Name
-	user.ExtID = claims.Sub
-	user.Email = claims.Email
-	user.ProfilePic = claims.Picture
-	if claims.Picture == "" && claims.Identities.Google.Details.Avatar != "" {
-		user.ProfilePic = claims.Identities.Google.Details.Avatar
-	}
-	user.Phone = claims.PhoneNumber
-	user.Role = model.UserRoleUser
-
-	if result := s.DB.WithContext(ctx).Save(&user); result.Error != nil {
-		return fmt.Errorf("failed to create or update user from logto claims, GORM error: %w", result.Error)
-	}
-
-	return nil
-}
-
 func logtoCustomJWTClaims(logtoClient *logto.LogtoClient) (LogtoUser, error) {
 	accessToken, err := logtoClient.GetAccessToken("https://app.miconsul.xyz/api")
 	if err != nil {
 		return LogtoUser{}, err
 	}
 
-	claims, err := logtoDecodeAccessToken(accessToken.Token)
+	logtoUser, err := logtoDecodeAccessToken(accessToken.Token)
 	if err != nil {
 		return LogtoUser{}, err
 	}
 
-	return claims, nil
+	return logtoUser, nil
 }
 
 func logtoDecodeAccessToken(token string) (LogtoUser, error) {
@@ -161,11 +120,11 @@ func logtoDecodeAccessToken(token string) (LogtoUser, error) {
 		return LogtoUser{}, err
 	}
 
-	var accessTokenClaims LogtoUser
-	err = jwtObject.UnsafeClaimsWithoutVerification(&accessTokenClaims)
+	var logtoUser LogtoUser
+	err = jwtObject.UnsafeClaimsWithoutVerification(&logtoUser)
 	if err != nil {
 		return LogtoUser{}, err
 	}
 
-	return accessTokenClaims, nil
+	return logtoUser, nil
 }

@@ -101,7 +101,6 @@ func Serialize(stats view.DashboardStats) ([]byte, error) {
 		return []byte{}, err
 	}
 
-	fmt.Println("Serialized Gob:", buffer.Bytes())
 	return buffer.Bytes(), nil
 }
 

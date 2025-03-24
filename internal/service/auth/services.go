@@ -3,7 +3,9 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"miconsul/internal/database"
+	"miconsul/internal/lib/xid"
 	"miconsul/internal/mailer"
 	"miconsul/internal/model"
 	"miconsul/internal/server"
@@ -217,4 +219,46 @@ func selectStrategy(c *fiber.Ctx, mws MiddlewareService) AuthStrategy {
 	default:
 		return NewLocalStrategy(c, mws)
 	}
+}
+
+func (s *service) saveLogtoUser(ctx context.Context, logtoUser LogtoUser) error {
+	ctx, span := s.Trace(ctx, "auth/logto:saveLogtoUser")
+	defer span.End()
+
+	user := model.User{Email: logtoUser.Email}
+	result := s.DB.WithContext(ctx).Model(&user).Where(user, "Email").Take(&user)
+
+	userExists := user.ID != ""
+	extIDMatchesUID := user.ExtID == logtoUser.UID
+	if result.RowsAffected == 1 && userExists && extIDMatchesUID {
+		// user exists and has the same extID as the logtoUser, user is now logged in
+		return nil
+	}
+
+	// user does not exist or has a different extID
+	// since user has a different extID and logtoUser.UID
+	// we need to create a new user or update the existing one ExtID
+	if user.Password == "" {
+		rndPwd, err := bcrypt.GenerateFromPassword([]byte(xid.New("rpwd")), 8)
+		if err != nil {
+			return errors.New("failed to generate password placeholder for user")
+		}
+		user.Password = string(rndPwd)
+	}
+
+	user.Name = logtoUser.Name
+	user.ExtID = logtoUser.UID
+	user.Email = logtoUser.Email
+	user.ProfilePic = logtoUser.Picture
+	if logtoUser.Picture == "" && logtoUser.Identities.Google.Details.Avatar != "" {
+		user.ProfilePic = logtoUser.Identities.Google.Details.Avatar
+	}
+	user.Phone = logtoUser.PhoneNumber
+	user.Role = model.UserRoleUser
+
+	if result := s.DB.WithContext(ctx).Save(&user); result.Error != nil {
+		return fmt.Errorf("failed to create or update user from logto claims, GORM error: %w", result.Error)
+	}
+
+	return nil
 }
