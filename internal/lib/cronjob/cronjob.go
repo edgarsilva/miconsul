@@ -36,7 +36,6 @@ func New() (scheduler *Sched, shutdownFn func()) {
 func (s *Sched) RunCron(crontab string, withSeconds bool, taskFn func()) (gocron.Job, error) {
 	return s.NewJob(
 		gocron.CronJob(
-			// standard cron tab parsing
 			crontab,
 			withSeconds,
 		),

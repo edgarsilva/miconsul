@@ -170,7 +170,7 @@ func WithCache(cache *cache.Cache) ServerOption {
 
 // SendToWorker passes fn as a job to the worker pool to be executed in a go routine
 func (s *Server) AddCronJob(crontab string, fn func()) error {
-	if s.wp == nil {
+	if s.cj == nil {
 		return errors.New("failed to add new cron job, server.cj might be nil, cron job is not running")
 	}
 
