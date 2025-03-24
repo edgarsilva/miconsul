@@ -55,7 +55,11 @@ templ/watch:
 	@echo "🛕 Watching for Templ file changes..."
 	${GOPATH}/bin/templ generate --watch -v
 
-build: templ
+locales/build:
+	@echo "  Building locales"
+	go-localize -input locales -output internal/lib/localize
+
+build: templ locales/build
 	@echo "📦 Building"
 	@echo "🤖 go build..."
 	go build -tags fts5 -o bin/app cmd/app/main.go

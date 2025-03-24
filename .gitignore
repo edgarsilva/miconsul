@@ -39,6 +39,9 @@ database/*.sqlite*
 # Don't Local store DB and Session
 store/
 
-# Don't include tmp/dev/test uploades
+# Don't include tmp/dev/test uploads
 assets/
 
+#
+internal/lib/localize/*.go
+!internal/lib/localize/.keep
