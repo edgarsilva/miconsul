@@ -11,7 +11,6 @@ require (
 	github.com/go-co-op/gocron/v2 v2.5.0
 	github.com/gofiber/contrib/otelfiber v1.0.10
 	github.com/gofiber/fiber/v2 v2.52.5
-	github.com/gofiber/storage/sqlite3/v2 v2.1.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/joho/godotenv v1.5.1
 	github.com/logto-io/go v1.0.6
