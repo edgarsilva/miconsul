@@ -4,43 +4,42 @@ import (
 	"context"
 	"errors"
 	"miconsul/internal/database"
-	"miconsul/internal/lib/handlerutils"
 	"miconsul/internal/mailer"
 	"miconsul/internal/model"
 	"miconsul/internal/server"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v5"
-
-	logto "github.com/logto-io/go/client"
+	"github.com/gofiber/fiber/v2/middleware/session"
 	"go.opentelemetry.io/otel/trace"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
 type MiddlewareService interface {
-	TracerClient() trace.Tracer
+	Session(c *fiber.Ctx) *session.Session
 	DBClient() *database.Database
-	LogtoClient(*fiber.Ctx) (client *logto.LogtoClient, save func())
-	LogtoEnabled() bool
-	CacheRead(key string, dst *[]byte) error
+	Trace(ctx context.Context, spanName string) (context.Context, trace.Span)
 }
 
-type service struct {
+type AuthStrategy interface {
+	Authenticate(c *fiber.Ctx) (model.User, error)
+}
+
+type Service struct {
 	*server.Server
 }
 
-func NewService(s *server.Server) service {
-	return service{
+func NewService(s *server.Server) Service {
+	return Service{
 		Server: s,
 	}
 }
 
 // Signup creates a new user record if req.body Email & Password are valid
-func (s service) signup(email string, password string) error {
+func (s Service) signup(email string, password string) error {
 	if err := s.signupIsEmailValid(email); err != nil {
 		return err
 	}
@@ -66,7 +65,7 @@ func (s service) signup(email string, password string) error {
 }
 
 // IsEmailValidForSignup returns nil if valid, otherwise returns an error
-func (s service) signupIsEmailValid(email string) error {
+func (s Service) signupIsEmailValid(email string) error {
 	validEmail := govalidator.IsEmail(email)
 	if !validEmail {
 		return errors.New("email address is invalid")
@@ -81,7 +80,7 @@ func (s service) signupIsEmailValid(email string) error {
 }
 
 // signupIsPasswordValid returns nil if valid, otherwise returns an error
-func (s service) signupIsPasswordValid(pwd string) error {
+func (s Service) signupIsPasswordValid(pwd string) error {
 	if len(pwd) < 8 {
 		return errors.New("password is too short")
 	}
@@ -98,7 +97,7 @@ func (s service) signupIsPasswordValid(pwd string) error {
 }
 
 // userCreate creates a new row in the users table
-func (s service) userCreate(email, password, token string) (model.User, error) {
+func (s Service) userCreate(email, password, token string) (model.User, error) {
 	user := model.User{
 		Email:                 email,
 		Password:              password,
@@ -117,7 +116,7 @@ func (s service) userCreate(email, password, token string) (model.User, error) {
 }
 
 // userFetch returns a User by email
-func (s service) userFetch(ctx context.Context, email string) (model.User, error) {
+func (s Service) userFetch(ctx context.Context, email string) (model.User, error) {
 	ctx, span := s.Tracer.Start(ctx, "auth/services:userFetch")
 	defer span.End()
 
@@ -131,7 +130,7 @@ func (s service) userFetch(ctx context.Context, email string) (model.User, error
 }
 
 // userUpdatePassword updates a user password
-func (s service) userUpdatePassword(email, password, token string) (model.User, error) {
+func (s Service) userUpdatePassword(email, password, token string) (model.User, error) {
 	pwd, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
 		return model.User{}, errors.New("failed to update password")
@@ -155,7 +154,7 @@ func (s service) userUpdatePassword(email, password, token string) (model.User, 
 	return user, nil
 }
 
-func (s service) userUpdateConfirmToken(email, token string) error {
+func (s Service) userUpdateConfirmToken(email, token string) error {
 	user := model.User{
 		ConfirmEmailToken:     token,
 		ConfirmEmailExpiresAt: time.Now().Add(time.Hour * 24),
@@ -173,7 +172,7 @@ func (s service) userUpdateConfirmToken(email, token string) error {
 	return nil
 }
 
-func (s service) userPendingConfirmation(email string) error {
+func (s Service) userPendingConfirmation(email string) error {
 	user := model.User{}
 	result := s.DB.
 		Select("ID, Email, ConfirmEmailToken").
@@ -186,7 +185,7 @@ func (s service) userPendingConfirmation(email string) error {
 	return nil
 }
 
-func (s service) resetPasswordVerifyToken(token string) (email string, err error) {
+func (s Service) resetPasswordVerifyToken(token string) (email string, err error) {
 	user := model.User{}
 	result := s.DB.
 		Select("id, email").
@@ -199,162 +198,23 @@ func (s service) resetPasswordVerifyToken(token string) (email string, err error
 	return user.Email, nil
 }
 
-// JWTCreateToken returns a JWT token string for the sub and uid, optionally error
-func JWTCreateToken(sub, uid string) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
-		"sub": sub,
-		"uid": uid,
-		"exp": time.Now().Add(24 * time.Hour).Unix(),
-	})
-	tokenStr, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-	if err != nil {
-		return "", err
-	}
-
-	return tokenStr, nil
-}
-
 // Authenticate an user based on Req Ctx Cookie 'Auth'
 // cookies
 func Authenticate(c *fiber.Ctx, mws MiddlewareService) (model.User, error) {
-	if mws == nil {
-		return model.User{}, errors.New("failed to authenticate user")
-	}
-
-	if mws.LogtoEnabled() {
-		return logtoStrategy(c, mws)
-	}
-
-	return localStrategy(c, mws)
-}
-
-func logtoStrategy(c *fiber.Ctx, mws MiddlewareService) (model.User, error) {
-	if mws == nil {
-		return model.User{}, errors.New("failed to authenticate user")
-	}
-
-	ctx, span := mws.TracerClient().Start(c.UserContext(), "auth/services:logtoStrategy")
-	defer span.End()
-
-	logtoClient, saveSess := mws.LogtoClient(c)
-	defer saveSess()
-
-	claims, err := logtoClient.GetIdTokenClaims()
+	strategy := selectStrategy(c, mws)
+	user, err := strategy.Authenticate(c)
 	if err != nil {
 		return model.User{}, err
 	}
 
-	db := mws.DBClient()
-	user := model.User{ExtID: claims.Sub}
-	result := db.WithContext(ctx).Model(&user).Where(user, "ExtID").Take(&user)
-	if result.Error != nil {
-		return user, errors.New("failed to authenticate user")
-	}
-
 	return user, nil
 }
 
-func localStrategy(c *fiber.Ctx, mws MiddlewareService) (model.User, error) {
-	if mws == nil {
-		return model.User{}, errors.New("failed to authenticate user")
+func selectStrategy(c *fiber.Ctx, mws MiddlewareService) AuthStrategy {
+	switch {
+	case LogtoEnabled():
+		return NewLogtoStrategy(c, mws)
+	default:
+		return NewLocalStrategy(c, mws)
 	}
-
-	uid := c.Cookies("Auth", "")
-	if uid == "" {
-		uid = strings.TrimPrefix(c.Get("Authorization", ""), "Bearer ")
-	}
-
-	db := mws.DBClient()
-	user, err := authenticateWithJWT(c, db, uid)
-	if err != nil {
-		return user, errors.New("failed to authenticate user")
-	}
-
-	return user, nil
-}
-
-func authenticateWithJWT(c *fiber.Ctx, db *database.Database, tokenStr string) (model.User, error) {
-	if tokenStr == "" {
-		return model.User{}, errors.New("JWT token is blank")
-	}
-	secret := os.Getenv("JWT_SECRET")
-	claims, err := DecodeJWTToken(secret, tokenStr)
-	if err != nil {
-		return model.User{}, errors.New("failed to validase JWT token")
-	}
-
-	uid, ok := claims["uid"].(string)
-	if !ok {
-		uid = ""
-	}
-
-	user := model.User{}
-	result := db.Model(&user).Where("id = ?", uid).Take(&user)
-	if result.Error != nil {
-		return user, errors.New("user NOT FOUND with UID in JWT token")
-	}
-
-	RefreshAuthCookie(c, claims)
-
-	return user, nil
-}
-
-// DecodeJWTToken returns the uid string from the JWT claims if valid, and an
-// error if not valid or able to parse the token
-func DecodeJWTToken(secret, tokenStr string) (claims jwt.MapClaims, err error) {
-	tokenJWT, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		// Don't forget to validate the algorithm is what you expect:
-		// if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-		// 	return "", errors.New("JWT token can't be parsed")
-		// }
-
-		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
-		return []byte(secret), nil
-	})
-	if err != nil {
-		return jwt.MapClaims{}, err
-	}
-
-	claims, ok := tokenJWT.Claims.(jwt.MapClaims)
-	if !ok {
-		return jwt.MapClaims{}, errors.New("JWT token claims can't be parsed")
-	}
-
-	uid, ok := claims["uid"].(string)
-	if !ok || uid == "" {
-		return jwt.MapClaims{}, errors.New("uid not found in token claims")
-	}
-
-	return claims, nil
-}
-
-func RefreshAuthCookie(c *fiber.Ctx, claims jwt.MapClaims) {
-	exp, err := claims.GetExpirationTime()
-	if err != nil {
-		return
-	}
-
-	t1 := exp.Time
-	t2 := time.Now()
-	diff := t2.Sub(t1)
-	if diff > time.Hour {
-		return
-	}
-
-	email, err := claims.GetSubject()
-	if err != nil {
-		return
-	}
-
-	uid, ok := claims["uid"].(string)
-	if !ok {
-		return
-	}
-
-	jwt, err := JWTCreateToken(email, uid)
-	if err != nil {
-		return
-	}
-
-	c.Cookie(handlerutils.NewCookie("Auth", jwt, time.Hour*8))
 }

@@ -16,8 +16,8 @@ import (
 // HandleLoginPage returns the login page html
 //
 // GET: /login
-func (s *service) HandleLoginPage(c *fiber.Ctx) error {
-	if s.LogtoEnabled() {
+func (s *Service) HandleLoginPage(c *fiber.Ctx) error {
+	if LogtoEnabled() {
 		return c.Redirect("/logto/signin", fiber.StatusSeeOther)
 	}
 
@@ -37,7 +37,7 @@ func (s *service) HandleLoginPage(c *fiber.Ctx) error {
 // if the email & password combination are valid
 //
 // POST: /login
-func (s *service) HandleLogin(c *fiber.Ctx) error {
+func (s *Service) HandleLogin(c *fiber.Ctx) error {
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme))
 	respErr := errors.New("incorrect email and password combination")
@@ -88,7 +88,7 @@ func (s *service) HandleLogin(c *fiber.Ctx) error {
 // HandleSignupPage returns the Signup form page html
 //
 // GET: /signup
-func (s *service) HandleSignupPage(c *fiber.Ctx) error {
+func (s *Service) HandleSignupPage(c *fiber.Ctx) error {
 	cu, _ := s.CurrentUser(c)
 
 	if cu.IsLoggedIn() {
@@ -109,7 +109,7 @@ func (s *service) HandleSignupPage(c *fiber.Ctx) error {
 // HandleSignup creates a new user if email and password are valid
 //
 // POST: /signup
-func (s *service) HandleSignup(c *fiber.Ctx) error {
+func (s *Service) HandleSignup(c *fiber.Ctx) error {
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme))
 	email, password, err := authParams(c)
@@ -141,7 +141,7 @@ func (s *service) HandleSignup(c *fiber.Ctx) error {
 // HandleEmailConfirmation creates a new user if email and password are valid
 //
 // POST: /signup/confirmemail
-func (s *service) HandleSignupConfirmEmail(c *fiber.Ctx) error {
+func (s *Service) HandleSignupConfirmEmail(c *fiber.Ctx) error {
 	token := c.Params("token", "")
 	if token == "" {
 		return c.Redirect("/login?msg=unable to confirm email, try login instead")
@@ -179,12 +179,12 @@ func (s *service) HandleSignupConfirmEmail(c *fiber.Ctx) error {
 // /login
 //
 // ALL: /logout
-func (s *service) HandleLogout(c *fiber.Ctx) error {
+func (s *Service) HandleLogout(c *fiber.Ctx) error {
 	s.SessionDestroy(c)
 	handlerutils.InvalidateCookies(c, "Auth", "JWT")
 
 	redirectURL := "/login"
-	if s.LogtoEnabled() {
+	if LogtoEnabled() {
 		redirectURL = "/logto/signout"
 	}
 
@@ -199,7 +199,7 @@ func (s *service) HandleLogout(c *fiber.Ctx) error {
 // HandlePageResetPassword renders the HTML reset password page/form
 //
 // GET: /resetpassword
-func (s *service) HandleResetPasswordPage(c *fiber.Ctx) error {
+func (s *Service) HandleResetPasswordPage(c *fiber.Ctx) error {
 	vc, _ := view.NewCtx(c)
 
 	msg := s.SessionRead(c, "msg", "")
@@ -214,7 +214,7 @@ func (s *service) HandleResetPasswordPage(c *fiber.Ctx) error {
 // as query param, url param or body param
 //
 // POST: /resetpassword
-func (s *service) HandleResetPassword(c *fiber.Ctx) error {
+func (s *Service) HandleResetPassword(c *fiber.Ctx) error {
 	vc, _ := view.NewCtx(c)
 	email, err := resetPasswordEmailParam(c)
 	if err != nil {
@@ -247,7 +247,7 @@ func (s *service) HandleResetPassword(c *fiber.Ctx) error {
 // combo ase valid
 //
 // GET: /resetpassword/change/:token
-func (s *service) HandleResetPasswordChange(c *fiber.Ctx) error {
+func (s *Service) HandleResetPasswordChange(c *fiber.Ctx) error {
 	token := c.Params("token", "")
 	if token == "" {
 		return c.Redirect("/resetpassword?msg=token can't be blank")
@@ -268,7 +268,7 @@ func (s *service) HandleResetPasswordChange(c *fiber.Ctx) error {
 // HandleResetPasswordUpdate updates the user password in the DB
 //
 // POST: /resetpassword/update
-func (s *service) HandleResetPasswordUpdate(c *fiber.Ctx) error {
+func (s *Service) HandleResetPasswordUpdate(c *fiber.Ctx) error {
 	email, err := resetPasswordEmailParam(c)
 	if err != nil {
 		return c.Redirect("/resetpassword?msg=something went wrong with the email, try again!")
@@ -314,7 +314,7 @@ func (s *service) HandleResetPasswordUpdate(c *fiber.Ctx) error {
 // HandleValidate validates the uses auth session is still valid
 //
 // POST: /auth/validate
-func (s *service) HandleValidate(c *fiber.Ctx) error {
+func (s *Service) HandleValidate(c *fiber.Ctx) error {
 	_, err := s.CurrentUser(c)
 	if err != nil {
 		return c.SendStatus(fiber.StatusUnauthorized)
@@ -326,7 +326,7 @@ func (s *service) HandleValidate(c *fiber.Ctx) error {
 // HandleShowUser returns a JSON model.User if the session is valid
 //
 // GET: /auth/show
-func (s *service) HandleShowUser(c *fiber.Ctx) error {
+func (s *Service) HandleShowUser(c *fiber.Ctx) error {
 	ctx, span := s.Tracer.Start(c.UserContext(), "auth/handlers:HandleShowUser")
 	defer span.End()
 

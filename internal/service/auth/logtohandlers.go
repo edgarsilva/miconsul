@@ -9,7 +9,6 @@ import (
 	"miconsul/internal/view"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
@@ -20,8 +19,9 @@ import (
 	logtocore "github.com/logto-io/go/core"
 )
 
-func (s *service) HandleLogtoSignin(c *fiber.Ctx) error {
-	logtoClient, saveSess := s.LogtoClient(c)
+// HandleLogtoSignin redirects to Logto sign-in page
+func (s Service) HandleLogtoSignin(c *fiber.Ctx) error {
+	logtoClient, saveSess := LogtoClient(s.Session(c))
 	defer saveSess()
 
 	if logtoClient.IsAuthenticated() {
@@ -29,7 +29,7 @@ func (s *service) HandleLogtoSignin(c *fiber.Ctx) error {
 	}
 
 	// The sign-in request is handled by Logto.
-	// The user will be redirected to the Redirect URI on signed in.
+	// The user will be redirected to the RedirectURI after successful sign in.
 	signInUri, err := logtoClient.SignIn(redirectURI("/logto/callback"))
 	if err != nil {
 		return c.Redirect("/logto/signout")
@@ -39,8 +39,9 @@ func (s *service) HandleLogtoSignin(c *fiber.Ctx) error {
 	return c.Redirect(signInUri, fiber.StatusTemporaryRedirect)
 }
 
-func (s *service) HandleLogtoCallback(c *fiber.Ctx) error {
-	logtoClient, saveSess := s.LogtoClient(c)
+// HandleLogtoCallback handles the Logto callback/webhook after login
+func (s *Service) HandleLogtoCallback(c *fiber.Ctx) error {
+	logtoClient, saveSess := LogtoClient(s.Session(c))
 	defer saveSess()
 
 	req, err := adaptor.ConvertRequest(c, true)
@@ -67,7 +68,7 @@ func (s *service) HandleLogtoCallback(c *fiber.Ctx) error {
 		return c.Redirect("/logto/signout")
 	}
 
-	err = s.logtoSaveUser(logtoUser)
+	err = s.logtoSaveUser(c.UserContext(), logtoUser)
 	if err != nil {
 		log.Error(err)
 		return c.Redirect("/logto/signout")
@@ -77,8 +78,8 @@ func (s *service) HandleLogtoCallback(c *fiber.Ctx) error {
 	return c.Redirect("/", http.StatusSeeOther)
 }
 
-func (s *service) HandleLogtoSignout(c *fiber.Ctx) error {
-	logtoClient, saveSess := s.LogtoClient(c)
+func (s *Service) HandleLogtoSignout(c *fiber.Ctx) error {
+	logtoClient, saveSess := LogtoClient(s.Session(c))
 	defer saveSess()
 
 	// The sign-out request is handled by Logto.
@@ -91,8 +92,8 @@ func (s *service) HandleLogtoSignout(c *fiber.Ctx) error {
 	return c.Redirect(signOutUri, fiber.StatusTemporaryRedirect)
 }
 
-func (s *service) HandleLogtoPage(c *fiber.Ctx) error {
-	logtoClient, saveSess := s.LogtoClient(c)
+func (s *Service) HandleLogtoPage(c *fiber.Ctx) error {
+	logtoClient, saveSess := LogtoClient(s.Session(c))
 	defer saveSess()
 
 	// Use Logto to control the content of the home page
@@ -105,8 +106,8 @@ func (s *service) HandleLogtoPage(c *fiber.Ctx) error {
 	return view.Render(c, view.LogtoPage(vc, authState))
 }
 
-func (s *service) logtoSaveUser(claims LogtoUser) error {
-	ctx, span := s.Tracer.Start(context.Background(), "auth/logto:logtoSaveUser")
+func (s *Service) logtoSaveUser(ctx context.Context, claims LogtoUser) error {
+	ctx, span := s.Trace(ctx, "auth/logto:logtoSaveUser")
 	defer span.End()
 
 	user := model.User{Email: claims.Email}
@@ -170,16 +171,7 @@ func logtoDecodeAccessToken(token string) (LogtoUser, error) {
 	return accessTokenClaims, nil
 }
 
-// redirectURI returns the full qualified redirectURI for the path passed
-//
-//	e.g.
-//		url := redirectURI("/logto/callback")
-//		-> http://localhost:3000/logto/callback
-func redirectURI(path string) string {
-	domain := os.Getenv("APP_DOMAIN")
-	protocol := os.Getenv("APP_PROTOCOL")
-	path = strings.TrimPrefix(path, "/")
-
-	url := protocol + "://" + domain + "/" + path
-	return url
+func LogtoEnabled() bool {
+	logtourl := os.Getenv("LOGTO_URL")
+	return logtourl != ""
 }

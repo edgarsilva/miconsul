@@ -1,7 +1,6 @@
 package server
 
 import (
-	"cmp"
 	"errors"
 	"fmt"
 	"os"
@@ -10,7 +9,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
-	"github.com/gofiber/storage/sqlite3/v2"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -52,22 +50,22 @@ func staticCacheDuration() time.Duration {
 	return 300 * time.Second
 }
 
-func sqlite3SessionConfig(path string) sqlite3.Config {
-	sessPath := cmp.Or(path, os.Getenv("SESSION_DB_PATH"))
-	if sessPath == "" {
-		sessPath = "./fiber_session.sqlite3"
-	}
-
-	return sqlite3.Config{
-		Database:        sessPath,
-		Table:           "fiber_storage",
-		Reset:           false,
-		GCInterval:      10 * time.Second,
-		MaxOpenConns:    100,
-		MaxIdleConns:    100,
-		ConnMaxLifetime: 1 * time.Second,
-	}
-}
+// func sqlite3SessionConfig(path string) sqlite3.Config {
+// 	sessPath := cmp.Or(path, os.Getenv("SESSION_DB_PATH"))
+// 	if sessPath == "" {
+// 		sessPath = "./fiber_session.sqlite3"
+// 	}
+//
+// 	return sqlite3.Config{
+// 		Database:        sessPath,
+// 		Table:           "fiber_storage",
+// 		Reset:           false,
+// 		GCInterval:      10 * time.Second,
+// 		MaxOpenConns:    100,
+// 		MaxIdleConns:    100,
+// 		ConnMaxLifetime: 1 * time.Second,
+// 	}
+// }
 
 func helmetConfig() helmet.Config {
 	return helmet.Config{
