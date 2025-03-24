@@ -54,9 +54,3 @@ func BenchmarkNewXID(b *testing.B) {
 		_ = New("tdo")
 	}
 }
-
-func BenchmarkConcatStr(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_ = concatStr("tdo", "1234512345123451234512345")
-	}
-}
