@@ -89,3 +89,8 @@ func redirectURI(path string) string {
 	url := protocol + "://" + domain + "/" + path
 	return url
 }
+
+func LogtoEnabled() bool {
+	logtourl := os.Getenv("LOGTO_URL")
+	return logtourl != ""
+}

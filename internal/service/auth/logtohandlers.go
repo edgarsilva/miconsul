@@ -8,7 +8,6 @@ import (
 	"miconsul/internal/model"
 	"miconsul/internal/view"
 	"net/http"
-	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
@@ -20,7 +19,7 @@ import (
 )
 
 // HandleLogtoSignin redirects to Logto sign-in page
-func (s Service) HandleLogtoSignin(c *fiber.Ctx) error {
+func (s service) HandleLogtoSignin(c *fiber.Ctx) error {
 	logtoClient, saveSess := LogtoClient(s.Session(c))
 	defer saveSess()
 
@@ -40,7 +39,7 @@ func (s Service) HandleLogtoSignin(c *fiber.Ctx) error {
 }
 
 // HandleLogtoCallback handles the Logto callback/webhook after login
-func (s *Service) HandleLogtoCallback(c *fiber.Ctx) error {
+func (s *service) HandleLogtoCallback(c *fiber.Ctx) error {
 	logtoClient, saveSess := LogtoClient(s.Session(c))
 	defer saveSess()
 
@@ -78,7 +77,7 @@ func (s *Service) HandleLogtoCallback(c *fiber.Ctx) error {
 	return c.Redirect("/", http.StatusSeeOther)
 }
 
-func (s *Service) HandleLogtoSignout(c *fiber.Ctx) error {
+func (s *service) HandleLogtoSignout(c *fiber.Ctx) error {
 	logtoClient, saveSess := LogtoClient(s.Session(c))
 	defer saveSess()
 
@@ -92,7 +91,7 @@ func (s *Service) HandleLogtoSignout(c *fiber.Ctx) error {
 	return c.Redirect(signOutUri, fiber.StatusTemporaryRedirect)
 }
 
-func (s *Service) HandleLogtoPage(c *fiber.Ctx) error {
+func (s *service) HandleLogtoPage(c *fiber.Ctx) error {
 	logtoClient, saveSess := LogtoClient(s.Session(c))
 	defer saveSess()
 
@@ -106,7 +105,7 @@ func (s *Service) HandleLogtoPage(c *fiber.Ctx) error {
 	return view.Render(c, view.LogtoPage(vc, authState))
 }
 
-func (s *Service) logtoSaveUser(ctx context.Context, claims LogtoUser) error {
+func (s *service) logtoSaveUser(ctx context.Context, claims LogtoUser) error {
 	ctx, span := s.Trace(ctx, "auth/logto:logtoSaveUser")
 	defer span.End()
 
@@ -169,9 +168,4 @@ func logtoDecodeAccessToken(token string) (LogtoUser, error) {
 	}
 
 	return accessTokenClaims, nil
-}
-
-func LogtoEnabled() bool {
-	logtourl := os.Getenv("LOGTO_URL")
-	return logtourl != ""
 }

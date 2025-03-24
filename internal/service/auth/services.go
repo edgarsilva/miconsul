@@ -28,18 +28,18 @@ type AuthStrategy interface {
 	Authenticate(c *fiber.Ctx) (model.User, error)
 }
 
-type Service struct {
+type service struct {
 	*server.Server
 }
 
-func NewService(s *server.Server) Service {
-	return Service{
+func NewService(s *server.Server) service {
+	return service{
 		Server: s,
 	}
 }
 
 // Signup creates a new user record if req.body Email & Password are valid
-func (s Service) signup(email string, password string) error {
+func (s service) signup(email string, password string) error {
 	if err := s.signupIsEmailValid(email); err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ func (s Service) signup(email string, password string) error {
 }
 
 // IsEmailValidForSignup returns nil if valid, otherwise returns an error
-func (s Service) signupIsEmailValid(email string) error {
+func (s service) signupIsEmailValid(email string) error {
 	validEmail := govalidator.IsEmail(email)
 	if !validEmail {
 		return errors.New("email address is invalid")
@@ -80,7 +80,7 @@ func (s Service) signupIsEmailValid(email string) error {
 }
 
 // signupIsPasswordValid returns nil if valid, otherwise returns an error
-func (s Service) signupIsPasswordValid(pwd string) error {
+func (s service) signupIsPasswordValid(pwd string) error {
 	if len(pwd) < 8 {
 		return errors.New("password is too short")
 	}
@@ -97,7 +97,7 @@ func (s Service) signupIsPasswordValid(pwd string) error {
 }
 
 // userCreate creates a new row in the users table
-func (s Service) userCreate(email, password, token string) (model.User, error) {
+func (s service) userCreate(email, password, token string) (model.User, error) {
 	user := model.User{
 		Email:                 email,
 		Password:              password,
@@ -116,7 +116,7 @@ func (s Service) userCreate(email, password, token string) (model.User, error) {
 }
 
 // userFetch returns a User by email
-func (s Service) userFetch(ctx context.Context, email string) (model.User, error) {
+func (s service) userFetch(ctx context.Context, email string) (model.User, error) {
 	ctx, span := s.Tracer.Start(ctx, "auth/services:userFetch")
 	defer span.End()
 
@@ -130,7 +130,7 @@ func (s Service) userFetch(ctx context.Context, email string) (model.User, error
 }
 
 // userUpdatePassword updates a user password
-func (s Service) userUpdatePassword(email, password, token string) (model.User, error) {
+func (s service) userUpdatePassword(email, password, token string) (model.User, error) {
 	pwd, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
 		return model.User{}, errors.New("failed to update password")
@@ -154,7 +154,7 @@ func (s Service) userUpdatePassword(email, password, token string) (model.User, 
 	return user, nil
 }
 
-func (s Service) userUpdateConfirmToken(email, token string) error {
+func (s service) userUpdateConfirmToken(email, token string) error {
 	user := model.User{
 		ConfirmEmailToken:     token,
 		ConfirmEmailExpiresAt: time.Now().Add(time.Hour * 24),
@@ -172,7 +172,7 @@ func (s Service) userUpdateConfirmToken(email, token string) error {
 	return nil
 }
 
-func (s Service) userPendingConfirmation(email string) error {
+func (s service) userPendingConfirmation(email string) error {
 	user := model.User{}
 	result := s.DB.
 		Select("ID, Email, ConfirmEmailToken").
@@ -185,7 +185,7 @@ func (s Service) userPendingConfirmation(email string) error {
 	return nil
 }
 
-func (s Service) resetPasswordVerifyToken(token string) (email string, err error) {
+func (s service) resetPasswordVerifyToken(token string) (email string, err error) {
 	user := model.User{}
 	result := s.DB.
 		Select("id, email").
