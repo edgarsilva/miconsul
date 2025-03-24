@@ -3,30 +3,31 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"miconsul/internal/database"
-	"miconsul/internal/lib/handlerutils"
+	"miconsul/internal/lib/xid"
 	"miconsul/internal/mailer"
 	"miconsul/internal/model"
 	"miconsul/internal/server"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v5"
-
-	logto "github.com/logto-io/go/client"
+	"github.com/gofiber/fiber/v2/middleware/session"
 	"go.opentelemetry.io/otel/trace"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
 type MiddlewareService interface {
-	TracerClient() trace.Tracer
+	Session(c *fiber.Ctx) *session.Session
 	DBClient() *database.Database
-	LogtoClient(*fiber.Ctx) (client *logto.LogtoClient, save func())
-	LogtoEnabled() bool
-	CacheRead(key string, dst *[]byte) error
+	Trace(ctx context.Context, spanName string) (context.Context, trace.Span)
+}
+
+type AuthStrategy interface {
+	Authenticate(c *fiber.Ctx) (model.User, error)
 }
 
 type service struct {
@@ -199,162 +200,65 @@ func (s service) resetPasswordVerifyToken(token string) (email string, err error
 	return user.Email, nil
 }
 
-// JWTCreateToken returns a JWT token string for the sub and uid, optionally error
-func JWTCreateToken(sub, uid string) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
-		"sub": sub,
-		"uid": uid,
-		"exp": time.Now().Add(24 * time.Hour).Unix(),
-	})
-	tokenStr, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-	if err != nil {
-		return "", err
-	}
-
-	return tokenStr, nil
-}
-
 // Authenticate an user based on Req Ctx Cookie 'Auth'
 // cookies
 func Authenticate(c *fiber.Ctx, mws MiddlewareService) (model.User, error) {
-	if mws == nil {
-		return model.User{}, errors.New("failed to authenticate user")
-	}
-
-	if mws.LogtoEnabled() {
-		return logtoStrategy(c, mws)
-	}
-
-	return localStrategy(c, mws)
-}
-
-func logtoStrategy(c *fiber.Ctx, mws MiddlewareService) (model.User, error) {
-	if mws == nil {
-		return model.User{}, errors.New("failed to authenticate user")
-	}
-
-	ctx, span := mws.TracerClient().Start(c.UserContext(), "auth/services:logtoStrategy")
-	defer span.End()
-
-	logtoClient, saveSess := mws.LogtoClient(c)
-	defer saveSess()
-
-	claims, err := logtoClient.GetIdTokenClaims()
+	strategy := selectStrategy(c, mws)
+	user, err := strategy.Authenticate(c)
 	if err != nil {
 		return model.User{}, err
 	}
 
-	db := mws.DBClient()
-	user := model.User{ExtID: claims.Sub}
-	result := db.WithContext(ctx).Model(&user).Where(user, "ExtID").Take(&user)
-	if result.Error != nil {
-		return user, errors.New("failed to authenticate user")
-	}
-
 	return user, nil
 }
 
-func localStrategy(c *fiber.Ctx, mws MiddlewareService) (model.User, error) {
-	if mws == nil {
-		return model.User{}, errors.New("failed to authenticate user")
+func selectStrategy(c *fiber.Ctx, mws MiddlewareService) AuthStrategy {
+	switch {
+	case LogtoEnabled():
+		return NewLogtoStrategy(c, mws)
+	default:
+		return NewLocalStrategy(c, mws)
 	}
-
-	uid := c.Cookies("Auth", "")
-	if uid == "" {
-		uid = strings.TrimPrefix(c.Get("Authorization", ""), "Bearer ")
-	}
-
-	db := mws.DBClient()
-	user, err := authenticateWithJWT(c, db, uid)
-	if err != nil {
-		return user, errors.New("failed to authenticate user")
-	}
-
-	return user, nil
 }
 
-func authenticateWithJWT(c *fiber.Ctx, db *database.Database, tokenStr string) (model.User, error) {
-	if tokenStr == "" {
-		return model.User{}, errors.New("JWT token is blank")
-	}
-	secret := os.Getenv("JWT_SECRET")
-	claims, err := DecodeJWTToken(secret, tokenStr)
-	if err != nil {
-		return model.User{}, errors.New("failed to validase JWT token")
-	}
+func (s *service) saveLogtoUser(ctx context.Context, logtoUser LogtoUser) error {
+	ctx, span := s.Trace(ctx, "auth/logto:saveLogtoUser")
+	defer span.End()
 
-	uid, ok := claims["uid"].(string)
-	if !ok {
-		uid = ""
-	}
+	user := model.User{Email: logtoUser.Email}
+	result := s.DB.WithContext(ctx).Model(&user).Where(user, "Email").Take(&user)
 
-	user := model.User{}
-	result := db.Model(&user).Where("id = ?", uid).Take(&user)
-	if result.Error != nil {
-		return user, errors.New("user NOT FOUND with UID in JWT token")
+	userExists := user.ID != ""
+	extIDMatchesUID := user.ExtID == logtoUser.UID
+	if result.RowsAffected == 1 && userExists && extIDMatchesUID {
+		// user exists and has the same extID as the logtoUser, user is now logged in
+		return nil
 	}
 
-	RefreshAuthCookie(c, claims)
-
-	return user, nil
-}
-
-// DecodeJWTToken returns the uid string from the JWT claims if valid, and an
-// error if not valid or able to parse the token
-func DecodeJWTToken(secret, tokenStr string) (claims jwt.MapClaims, err error) {
-	tokenJWT, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		// Don't forget to validate the algorithm is what you expect:
-		// if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-		// 	return "", errors.New("JWT token can't be parsed")
-		// }
-
-		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
-		return []byte(secret), nil
-	})
-	if err != nil {
-		return jwt.MapClaims{}, err
+	// user does not exist or has a different extID
+	// since user has a different extID and logtoUser.UID
+	// we need to create a new user or update the existing one ExtID
+	if user.Password == "" {
+		rndPwd, err := bcrypt.GenerateFromPassword([]byte(xid.New("rpwd")), 8)
+		if err != nil {
+			return errors.New("failed to generate password placeholder for user")
+		}
+		user.Password = string(rndPwd)
 	}
 
-	claims, ok := tokenJWT.Claims.(jwt.MapClaims)
-	if !ok {
-		return jwt.MapClaims{}, errors.New("JWT token claims can't be parsed")
+	user.Name = logtoUser.Name
+	user.ExtID = logtoUser.UID
+	user.Email = logtoUser.Email
+	user.ProfilePic = logtoUser.Picture
+	if logtoUser.Picture == "" && logtoUser.Identities.Google.Details.Avatar != "" {
+		user.ProfilePic = logtoUser.Identities.Google.Details.Avatar
+	}
+	user.Phone = logtoUser.PhoneNumber
+	user.Role = model.UserRoleUser
+
+	if result := s.DB.WithContext(ctx).Save(&user); result.Error != nil {
+		return fmt.Errorf("failed to create or update user from logto claims, GORM error: %w", result.Error)
 	}
 
-	uid, ok := claims["uid"].(string)
-	if !ok || uid == "" {
-		return jwt.MapClaims{}, errors.New("uid not found in token claims")
-	}
-
-	return claims, nil
-}
-
-func RefreshAuthCookie(c *fiber.Ctx, claims jwt.MapClaims) {
-	exp, err := claims.GetExpirationTime()
-	if err != nil {
-		return
-	}
-
-	t1 := exp.Time
-	t2 := time.Now()
-	diff := t2.Sub(t1)
-	if diff > time.Hour {
-		return
-	}
-
-	email, err := claims.GetSubject()
-	if err != nil {
-		return
-	}
-
-	uid, ok := claims["uid"].(string)
-	if !ok {
-		return
-	}
-
-	jwt, err := JWTCreateToken(email, uid)
-	if err != nil {
-		return
-	}
-
-	c.Cookie(handlerutils.NewCookie("Auth", jwt, time.Hour*8))
+	return nil
 }

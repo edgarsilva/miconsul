@@ -17,7 +17,7 @@ import (
 //
 // GET: /login
 func (s *service) HandleLoginPage(c *fiber.Ctx) error {
-	if s.LogtoEnabled() {
+	if LogtoEnabled() {
 		return c.Redirect("/logto/signin", fiber.StatusSeeOther)
 	}
 
@@ -184,7 +184,7 @@ func (s *service) HandleLogout(c *fiber.Ctx) error {
 	handlerutils.InvalidateCookies(c, "Auth", "JWT")
 
 	redirectURL := "/login"
-	if s.LogtoEnabled() {
+	if LogtoEnabled() {
 		redirectURL = "/logto/signout"
 	}
 

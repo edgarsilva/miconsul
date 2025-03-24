@@ -4,13 +4,13 @@ Based on my GoScaffold project which allows you to quickly set-up Ready to
 deploy Web application projects using Go, SQLite with GORM, Templ with HTMX
 and DaisyUI/TailwindCSS:
 
-- Go Web Server: [Fiber](https://docs.gofiber.io/)
-- Database: [SQLite3 (or PostreSQL/MySQL)](https://sqlite.org/index.html)
-- ORM/SQL Query Builder: [GORM](https://gorm.io/docs/)
-- HTML/Templating: [Templ](https://templ.guide/)
-- Client/Server interactions: [HTMX](https://htmx.org/)
-- Client Interactivity: [AlpineJS](https://alpinejs.dev/start-here)
-- UI/CSS: [DaisyUI](https://daisyui.com)/[TailwindCSS](https://tailwindcss.com/)
+-   Go Web Server: [Fiber](https://docs.gofiber.io/)
+-   Database: [SQLite3 (or PostreSQL/MySQL)](https://sqlite.org/index.html)
+-   ORM/SQL Query Builder: [GORM](https://gorm.io/docs/)
+-   HTML/Templating: [Templ](https://templ.guide/)
+-   Client/Server interactions: [HTMX](https://htmx.org/)
+-   Client Interactivity: [AlpineJS](https://alpinejs.dev/start-here)
+-   UI/CSS: [DaisyUI](https://daisyui.com)/[TailwindCSS](https://tailwindcss.com/)
 
 ## The MVP App
 
@@ -30,21 +30,14 @@ Note: _working_ but pending readme section
 3. Object storage with Minio (used by Litestream)
 4. Development feature brances.
 
-## Justfile
+## Makefile
 
-I've added `just` recipes for the most common tasks, you can list them by
-running `just`.
-
-To install `justfile` support on your system run:
+I've added `make` recipes/targets for the most common tasks, you can list them by
+running `make`.
 
 ```bash
-# you might need sudo or install to a diff directory that makes just available
-# in your path.
-$ curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
 
-# then run
-$ just
-just --list
+$ make
 Available recipes:
     build                     # Build the app
     clean                     # Clean builds
@@ -92,13 +85,13 @@ your path.
 
 It will install:
 
-- bun: for TailwindCSS
-- TailwindCSS: plugins
-- goose: for migrations
-- templ: to build/compile templ files into go code
+-   bun: for TailwindCSS
+-   TailwindCSS: plugins
+-   goose: for migrations
+-   templ: to build/compile templ files into go code
 
 ```bash
-just install
+make install
 ```
 
 ### DB - Create Database
@@ -106,7 +99,7 @@ just install
 Creates an Sqlite file at `./database/app.sqlite` to use for the app
 
 ```bash
-just setup
+make setup
 ```
 
 ### Development
@@ -116,7 +109,7 @@ files and translations and enable auto reloading of the server on file changes
 (not browser, just refresh the page, hit [f5] and done).
 
 ```bash
-just dev
+make dev
 ```
 
 ## Overall architecture guidelines for new features (WIP)

@@ -20,7 +20,7 @@ func New(prefix string) string {
 	return prefix + id.String()
 }
 
-// New returns a new XID as a string
+// Pure returns a new XID as a string without prefix
 func Pure() string {
 	id := xid.New()
 	return id.String()

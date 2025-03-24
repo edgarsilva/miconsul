@@ -36,6 +36,7 @@ fmt:
 vet: fmt
 	go vet ./...
 
+.PHONY: tailwind
 tailwind:
 	@echo "🌬️ Generating Tailwind CSS styles..."
 	~/.bun/bin/bun x @tailwindcss/cli -i ./styles/global.css -o ./public/global.css --minify
@@ -54,7 +55,11 @@ templ/watch:
 	@echo "🛕 Watching for Templ file changes..."
 	${GOPATH}/bin/templ generate --watch -v
 
-build: templ
+locales/build:
+	@echo "  Building locales"
+	go-localize -input locales -output internal/lib/localize
+
+build: templ locales/build
 	@echo "📦 Building"
 	@echo "🤖 go build..."
 	go build -tags fts5 -o bin/app cmd/app/main.go
@@ -117,7 +122,7 @@ clean:
 .PHONY: db/create
 db/create:
 	touch database/app.sqlite
-	make db-migrate
+	make migrate
 
 # Deletes the DB giving you a choice to opt out
 db/delete:
@@ -131,39 +136,41 @@ db/delete:
 
 # Sets up the DB by running delete, create and migrate
 db/setup:
-	make db-delete
-	make db-create
-	make db-migrate
+	make db/delete
+	make db/create
+	make migrate
 
 # Dumps the DB schema to ./database/schema.sql
 db/dump_schema:
 	sqlite3 database/app.sqlite '.schema' > ./database/schema.sql
 
+# Runs the migrations
 migrations/apply:
 	@echo "🪿 running migrations with goose before Start"
 	${GOPATH}/bin/goose up
 
-migrate: migrate/apply
+# [Migrations]
+# Runs the migrations (alias of migrations/apply)
+migrate: migrations/apply
 
+# [Migrations]
 # Creates a migration file e.g. migrations/create migration_name
 migrations/create arg_name:
 	${GOPATH}/bin/goose create {{arg_name}} sql
 
+# [Migrations]
 migrations/status:
 	${GOPATH}/bin/goose status
 
+# [Migrations]
 migrations/rollback:
 	${GOPATH}/bin/goose down
 
+# [Migrations]
 migrations/redo:
 	${GOPATH}/bin/goose redo
 
-debug:
-	echo This is the curren user $$USER
-	ls -l /app
-	ls -l /app/store
-	# ls -l /app/store/session.badger
-
+# Starts the docker-compose services
 docker/up:
 	@echo " Docker services up"
 	docker compose up

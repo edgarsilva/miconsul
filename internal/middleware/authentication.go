@@ -7,9 +7,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func MustAuthenticate(s auth.MiddlewareService) func(c *fiber.Ctx) error {
+func MustAuthenticate(mws auth.MiddlewareService) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		cu, err := auth.Authenticate(c, s)
+		cu, err := auth.Authenticate(c, mws)
 		if err != nil {
 			switch c.Accepts("text/html", "text/plain", "application/json") {
 			case "text/plain", "application/json":
@@ -29,9 +29,9 @@ func MustAuthenticate(s auth.MiddlewareService) func(c *fiber.Ctx) error {
 	}
 }
 
-func MustBeAdmin(s auth.MiddlewareService) func(c *fiber.Ctx) error {
+func MustBeAdmin(mws auth.MiddlewareService) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		cu, err := auth.Authenticate(c, s)
+		cu, err := auth.Authenticate(c, mws)
 		if err != nil || cu.Role != model.UserRoleAdmin {
 			switch c.Accepts("text/html", "text/plain", "application/json") {
 			case "text/html":
@@ -52,9 +52,9 @@ func MustBeAdmin(s auth.MiddlewareService) func(c *fiber.Ctx) error {
 	}
 }
 
-func MaybeAuthenticate(s auth.MiddlewareService) func(c *fiber.Ctx) error {
+func MaybeAuthenticate(mws auth.MiddlewareService) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		cu, _ := auth.Authenticate(c, s)
+		cu, _ := auth.Authenticate(c, mws)
 
 		c.Locals("current_user", cu)
 		c.Locals("uid", cu.ID)

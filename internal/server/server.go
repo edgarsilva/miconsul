@@ -29,7 +29,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/gofiber/fiber/v2/middleware/session"
 
-	logto "github.com/logto-io/go/client"
 	"github.com/panjf2000/ants/v2"
 	"go.opentelemetry.io/otel"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -48,10 +47,9 @@ type Server struct {
 	Cache        Cache
 	SessionStore *session.Store
 	Localizer    *localize.Localizer
-	LogtoConfig  *logto.LogtoConfig
+	TP           *sdktrace.TracerProvider
+	Tracer       trace.Tracer
 	*fiber.App
-	TP     *sdktrace.TracerProvider
-	Tracer trace.Tracer
 }
 
 type ServerOption func(*Server) error
@@ -98,9 +96,6 @@ func New(serverOpts ...ServerOption) *Server {
 	fiberApp.Static("/public", "./public", staticConfig())
 
 	server.App = fiberApp
-
-	logtoConfig := LogtoConfig()
-	server.LogtoConfig = logtoConfig
 
 	return &server
 }
@@ -210,42 +205,14 @@ func (s *Server) DBClient() *database.Database {
 	return s.DB
 }
 
-func (s *Server) TracerClient() trace.Tracer {
-	return s.Tracer
-}
-
-func (s *Server) Trace(c *fiber.Ctx, spanName string) (context.Context, func()) {
-	ctx, span := s.Tracer.Start(c.UserContext(), spanName)
-	return ctx, func() {
-		span.End()
-	}
+func (s *Server) Trace(ctx context.Context, spanName string) (context.Context, trace.Span) {
+	ctx, span := s.Tracer.Start(ctx, spanName)
+	return ctx, span
 }
 
 // Listen starts the fiberapp server (fiperapp.Listen()) on the specified port.
 func (s *Server) Listen(port string) error {
 	return s.App.Listen(fmt.Sprintf(":%v", port))
-}
-
-// LogtoClient returns the LogtoClient and a save function to persist the
-// session on defer or at the end of the handler.
-//
-//	e.g.
-//		logtoClient, saveSess := s.LogtoClient(c)
-//		defer saveSess()
-func (s *Server) LogtoClient(c *fiber.Ctx) (client *logto.LogtoClient, save func()) {
-	sess := s.Session(c)
-	storage := NewLogtoStorage(sess)
-	logtoClient := logto.NewLogtoClient(
-		s.LogtoConfig,
-		storage,
-	)
-
-	return logtoClient, func() { sess.Save() }
-}
-
-func (s *Server) LogtoEnabled() bool {
-	logtourl := os.Getenv("LOGTO_URL")
-	return logtourl != ""
 }
 
 func (s *Server) Session(c *fiber.Ctx) *session.Session {
@@ -265,7 +232,7 @@ func (s *Server) SessionDestroy(c *fiber.Ctx) {
 }
 
 // SessionWrite sets a session value.
-func (s *Server) SessionWrite(c *fiber.Ctx, k string, v interface{}) (err error) {
+func (s *Server) SessionWrite(c *fiber.Ctx, k string, v any) (err error) {
 	sess := s.Session(c)
 	sess.Set(k, v)
 	defer func() {
