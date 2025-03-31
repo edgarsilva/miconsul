@@ -27,7 +27,7 @@ func New() (cacheRef *Cache, shutdownFn func()) {
 // Write writes a value to the Cache
 // backed by BadgerDB
 func (c *Cache) Write(key string, src *[]byte, ttl time.Duration) error {
-	err := c.DB.Update(func(txn *badger.Txn) error {
+	err := c.Update(func(txn *badger.Txn) error {
 		entry := badger.NewEntry([]byte(key), *src).WithTTL(ttl)
 		err := txn.SetEntry(entry)
 		return err
@@ -38,7 +38,7 @@ func (c *Cache) Write(key string, src *[]byte, ttl time.Duration) error {
 
 // Read reads a cache value by key
 func (c *Cache) Read(key string, dst *[]byte) error {
-	err := c.DB.View(func(txn *badger.Txn) error {
+	err := c.View(func(txn *badger.Txn) error {
 		item, err := txn.Get([]byte(key))
 		if err != nil {
 			return err

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"miconsul/internal/database"
+	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/cache"
 	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
@@ -41,6 +42,7 @@ type Cache interface {
 }
 
 type Server struct {
+	AppEnv       *appenv.Env
 	DB           *database.Database
 	wp           *ants.Pool     // <- WorkerPool - handles Background Goroutines or Async Jobs (emails) with Ants
 	cj           *cronjob.Sched // <- CronJob scheduler
@@ -98,6 +100,17 @@ func New(serverOpts ...ServerOption) *Server {
 	server.App = fiberApp
 
 	return &server
+}
+
+func WithAppEnv(env *appenv.Env) ServerOption {
+	return func(server *Server) error {
+		if env == nil {
+			return errors.New("failed to start server without AppEnv")
+		}
+
+		server.AppEnv = env
+		return nil
+	}
 }
 
 func WithDatabase(db *database.Database) ServerOption {
@@ -181,7 +194,7 @@ func (s *Server) AddCronJob(crontab string, fn func()) error {
 // SendToWorker passes fn as a job to the worker pool to be executed in a go routine
 func (s *Server) SendToWorker(fn func()) error {
 	if s.wp == nil {
-		fmt.Println("failed to add fn to run as job in worker pool, server.wp might be nil, running sinchronously")
+		log.Warn("failed to add fn to run as job in worker pool, server.wp might be nil, running sinchronously")
 		fn()
 		return nil
 	}
@@ -218,7 +231,7 @@ func (s *Server) Listen(port string) error {
 func (s *Server) Session(c *fiber.Ctx) *session.Session {
 	sess, err := s.SessionStore.Get(c)
 	if err != nil {
-		log.Info("Failed to retrieve session from req ctx:", err)
+		log.Warn("Failed to retrieve session from req ctx:", err)
 	}
 	return sess
 }
@@ -267,6 +280,11 @@ func (s *Server) CacheWrite(key string, src *[]byte, ttl time.Duration) error {
 
 // CacheRead reads a cache value by key
 func (s *Server) CacheRead(key string, dst *[]byte) error {
+	return s.Cache.Read(key, dst)
+}
+
+// CacheRead reads a cache value by key
+func (s *Server) CacheReadGen(key string, dst *[]byte) error {
 	return s.Cache.Read(key, dst)
 }
 

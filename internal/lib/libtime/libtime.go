@@ -7,22 +7,37 @@ import (
 	"github.com/gofiber/fiber/v2/log"
 )
 
-var Timezones = map[string]string{
-	"EasternTime":       "America/New_York",
-	"CentralTime":       "America/Chicago",
-	"MountainTime":      "America/Denver",
-	"PacificTime":       "America/Los_Angeles",
-	"Alaska":            "America/Anchorage",
-	"Hawaii":            "Pacific/Honolulu",
-	"MexicoCity":        "America/Mexico_City",
-	"Guadalajara":       "America/Mexico_City",
-	"Tijuana":           "America/Tijuana",
-	"Chihuahua":         "America/Chihuahua",
-	"BajaCaliforniaSur": "America/Mazatlan",
-	"Oaxaca":            "America/Ojinaga",
-	"Cancun":            "America/Cancun",
-	"Sonora":            "America/Hermosillo",
-}
+type Timezone = string
+
+const (
+	AmericaNewYork      Timezone = "America/New_York"
+	AmericaChicago      Timezone = "America/Chicago"
+	AmericaDenver       Timezone = "America/Denver"
+	AmericaLosAngeles   Timezone = "America/Los_Angeles"
+	AmericaAnchorage    Timezone = "America/Anchorage"
+	PacificHonolulu     Timezone = "Pacific/Honolulu"
+	AmericaMexicoCity   Timezone = "America/Mexico_City"
+	AmericaGuadalajara  Timezone = "America/Guadalajara"
+	AmericaTijuana      Timezone = "America/Tijuana"
+	AmericaChihuahua    Timezone = "America/Chihuahua"
+	AmericaMazatlan     Timezone = "America/Mazatlan"
+	AmericaOjinaga      Timezone = "America/Ojinaga"
+	AmericaCancun       Timezone = "America/Cancun"
+	AmericaHermosillo   Timezone = "America/Hermosillo"
+	AmericaSantiago     Timezone = "America/Santiago"
+	AmericaMontevideo   Timezone = "America/Montevideo"
+	AmericaLaPaz        Timezone = "America/La_Paz"
+	AmericaPortoVelho   Timezone = "America/Porto_Velho"
+	AmericaMontreal     Timezone = "America/Montreal"
+	AmericaSaoPaulo     Timezone = "America/Sao_Paulo"
+	AmericaCambridgeBay Timezone = "America/Cambridge_Bay"
+	AmericaEirunepe     Timezone = "America/Eirunepe"
+	AmericaRioBranco    Timezone = "America/Rio_Branco"
+	AmericaWinnipeg     Timezone = "America/Winnipeg"
+	AmericaSaskatchewan Timezone = "America/Saskatchewan"
+	AmericaAdak         Timezone = "America/Adak"
+	PacificMidway       Timezone = "Pacific/Midway"
+)
 
 func BoD(t time.Time) time.Time {
 	year, month, day := t.Date()
@@ -49,8 +64,8 @@ func DaysInMonth(m time.Month, year int) time.Duration {
 	return time.Duration(time.Date(year, m+1, 0, 0, 0, 0, 0, time.UTC).Day())
 }
 
-func NewInTimezone(t time.Time, tz string) time.Time {
-	loc, err := time.LoadLocation(Timezones[tz])
+func NewInTimezone(t time.Time, tz Timezone) time.Time {
+	loc, err := time.LoadLocation(string(tz))
 	if err != nil {
 		log.Error("failed to convert time to local time")
 		return t
@@ -59,8 +74,8 @@ func NewInTimezone(t time.Time, tz string) time.Time {
 	return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), loc)
 }
 
-func InTimezone(t time.Time, tz string) time.Time {
-	loc, err := time.LoadLocation(Timezones[tz])
+func InTimezone(t time.Time, tz Timezone) time.Time {
+	loc, err := time.LoadLocation(string(tz))
 	if err != nil {
 		log.Error("failed to convert time to local time")
 		return t

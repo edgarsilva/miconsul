@@ -36,6 +36,8 @@ fmt:
 vet: fmt
 	go vet ./...
 
+lint: vet
+
 .PHONY: tailwind
 tailwind:
 	@echo "🌬️ Generating Tailwind CSS styles..."

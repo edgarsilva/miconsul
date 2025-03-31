@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
+	"miconsul/internal/lib/appenv"
 
 	"go.opentelemetry.io/contrib/propagators/aws/xray"
 	"go.opentelemetry.io/otel"
@@ -50,13 +50,13 @@ func NewStdoutTracerProvider(ctx context.Context) *sdktrace.TracerProvider {
 	return tp
 }
 
-func NewUptraceTracerProvider(ctx context.Context) (tp *sdktrace.TracerProvider, shutdown func()) {
+func NewUptraceTracerProvider(ctx context.Context, env *appenv.Env) (tp *sdktrace.TracerProvider, shutdownFn func()) {
 	var (
-		dsn         = os.Getenv("UPTRACE_DSN")
-		endpoint    = os.Getenv("UPTRACE_ENDPOINT")
-		appName     = os.Getenv("APP_NAME")
-		appEnv      = os.Getenv("APP_ENV")
-		appVersion  = os.Getenv("APP_VERSION")
+		dsn         = env.UptraceEndpoint
+		endpoint    = env.UptraceEndpoint
+		appName     = env.AppName
+		appEnv      = env.AppEnv
+		appVersion  = env.AppVersion
 		serviceName = appName + "_" + appEnv
 	)
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"miconsul/internal/database"
+	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/cache"
 	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
@@ -24,8 +25,10 @@ func main() {
 		fmt.Println("✅ All cleanup tasks completed")
 	}()
 
+	env := appenv.New()
+
 	ctx := context.Background()
-	tp, shutdownTracer := otel.NewUptraceTracerProvider(ctx)
+	tp, shutdownTracer := otel.NewUptraceTracerProvider(ctx, env)
 	defer func() {
 		fmt.Println("󰓾 Tracer provider shutting down...")
 		shutdownTracer()
@@ -52,6 +55,7 @@ func main() {
 	localizer := localize.New("en-US", "es-MX")
 	db := database.New(os.Getenv("DB_PATH"))
 	s := server.New(
+		server.WithAppEnv(env),
 		server.WithDatabase(db),
 		server.WithCronJob(cj),
 		server.WithWorkerPool(wp),

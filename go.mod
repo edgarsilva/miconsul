@@ -1,13 +1,12 @@
 module miconsul
 
-go 1.23
-
-toolchain go1.23.2
+go 1.24.0
 
 require (
 	github.com/a-h/templ v0.3.819
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/dgraph-io/badger/v4 v4.5.1
+	github.com/edgarsilva/simpleenv v1.0.1
 	github.com/go-co-op/gocron/v2 v2.5.0
 	github.com/gofiber/contrib/otelfiber v1.0.10
 	github.com/gofiber/fiber/v2 v2.52.5

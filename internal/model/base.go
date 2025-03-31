@@ -87,7 +87,7 @@ type Country struct {
 	Locale       string
 }
 
-func countries() []Country {
+func Countries() []Country {
 	c := []Country{
 		{
 			Name:         "United States of America",
