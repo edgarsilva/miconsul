@@ -1,10 +1,24 @@
 package lib
 
-import "os"
+import (
+	net "net/url"
+	"os"
+)
 
-func AppURL() string {
-	p := os.Getenv("APP_PROTOCOL")
-	d := os.Getenv("APP_DOMAIN")
+func AppURL(paths ...string) string {
+	scheme := os.Getenv("APP_PROTOCOL")
+	domain := os.Getenv("APP_DOMAIN")
 
-	return p + "://" + d
+	u := net.URL{
+		Scheme: scheme,
+		Host:   domain,
+	}
+
+	path, err := net.JoinPath("", paths...)
+	if err != nil {
+		return u.String()
+	}
+
+	u.Path = path
+	return u.String()
 }

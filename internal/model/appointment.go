@@ -82,7 +82,7 @@ func (a *Appointment) ConfirmPath() string {
 }
 
 func (a *Appointment) ConfirmURL() string {
-	return lib.AppURL() + a.ConfirmPath()
+	return lib.AppURL(a.ConfirmPath())
 }
 
 func (a *Appointment) CancelPath() string {
@@ -90,7 +90,7 @@ func (a *Appointment) CancelPath() string {
 }
 
 func (a *Appointment) CancelURL() string {
-	return lib.AppURL() + a.CancelPath()
+	return lib.AppURL(a.CancelPath())
 }
 
 func (a *Appointment) RescheduledPath() string {
@@ -98,7 +98,7 @@ func (a *Appointment) RescheduledPath() string {
 }
 
 func (a *Appointment) RescheduledURL() string {
-	return lib.AppURL() + a.RescheduledPath()
+	return lib.AppURL(a.RescheduledPath())
 }
 
 // Scopes

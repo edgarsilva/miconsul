@@ -30,13 +30,6 @@ func dialerPassword() string {
 	return pwd
 }
 
-func appURL() string {
-	p := os.Getenv("APP_PROTOCOL")
-	d := os.Getenv("APP_DOMAIN")
-
-	return p + "://" + d
-}
-
 func waURL(phone, msg string) string {
 	return "https://wa.me/" + keepChars(phone, "1234567890") + "?text=" + msg
 }

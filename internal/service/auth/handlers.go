@@ -73,7 +73,6 @@ func (s *service) HandleLogin(c *fiber.Ctx) error {
 
 	switch c.Accepts("text/plain", "text/html", "application/json") {
 	case "application/json":
-		// TODO: HandleLogin maybe accept JWT for application/json
 		return c.SendStatus(fiber.StatusServiceUnavailable)
 	default:
 		jwt, err := JWTCreateToken(user.Email, user.ID)

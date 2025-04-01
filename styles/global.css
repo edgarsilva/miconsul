@@ -1,15 +1,11 @@
 @import "tailwindcss" source("../internal");
 
-@source "../styles";
-
 @plugin "daisyui" {
 	themes: light --default, dark --prefersdark;
 }
 
 @plugin "@tailwindcss/typography";
 @plugin '@tailwindcss/forms';
-
-@config '../tailwind.config.js';
 
 /* Custom classes*/
 .app-card {

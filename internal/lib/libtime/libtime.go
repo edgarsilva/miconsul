@@ -73,7 +73,7 @@ func TimeBetween(t time.Time, start time.Time, end time.Time) bool {
 	return (t.Equal(start) || t.After(start)) && (t.Equal(end) || t.Before(end))
 }
 
-func subRef() {
+func SubRef() {
 	firstDate := time.Date(2022, 4, 13, 1, 0, 0, 0, time.UTC)
 	secondDate := time.Date(2021, 2, 12, 5, 0, 0, 0, time.UTC)
 	difference := firstDate.Sub(secondDate)

@@ -21,10 +21,7 @@ type service struct {
 }
 
 func NewService(s *server.Server) service {
-	ser := service{
-		Server: s,
-	}
-
+	ser := service{Server: s}
 	ser.RegisterCronJob()
 
 	return ser

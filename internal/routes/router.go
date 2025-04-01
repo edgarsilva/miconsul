@@ -14,7 +14,7 @@ import (
 )
 
 func RegisterServices(s *server.Server) {
-	// Custom Middleware at the domain layer (not app server layer)
+	// Middlewares implemented in all halders
 	s.Use(mw.LocaleLang())
 	s.Use(mw.UITheme())
 
