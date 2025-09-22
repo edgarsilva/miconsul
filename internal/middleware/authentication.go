@@ -1,3 +1,5 @@
+// Package middleware provides middlewares for the Fiber app
+// e.g. authentication, authorization, etc.
 package middleware
 
 import (

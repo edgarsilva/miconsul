@@ -52,7 +52,7 @@ func NewStdoutTracerProvider(ctx context.Context) *sdktrace.TracerProvider {
 
 func NewUptraceTracerProvider(ctx context.Context, env *appenv.Env) (tp *sdktrace.TracerProvider, shutdownFn func()) {
 	var (
-		dsn         = env.UptraceEndpoint
+		dsn         = env.UptraceDSN
 		endpoint    = env.UptraceEndpoint
 		appName     = env.AppName
 		appEnv      = env.AppEnv

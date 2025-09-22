@@ -82,6 +82,7 @@ func main() {
 		if err := s.Shutdown(); err != nil {
 			log.Panic("Failed to gracefully shutdowm fiber app server:", err.Error())
 		}
+
 		serverShutdown <- struct{}{}
 	}()
 

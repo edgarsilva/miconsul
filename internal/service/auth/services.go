@@ -1,16 +1,19 @@
+// Package auth provides authentication services
+// e.g. signup, login, logout, etc.
 package auth
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	"miconsul/internal/database"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/mailer"
 	"miconsul/internal/model"
 	"miconsul/internal/server"
-	"strings"
-	"time"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/gofiber/fiber/v2"
