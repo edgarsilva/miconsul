@@ -4,194 +4,200 @@ ifneq ($(wildcard ./.env),)
 else
   env_check = $(shell echo "🟡 WARNING: .env file not found! continue only with exported shell env variables\n\n")
   $(info ${env_check})
-  $(info )
 endif
 
-.DEFAULT: help
-.PHONY: tailwind templ fmt vet buildset help
+.DEFAULT_GOAL := help
+SHELL := /bin/bash
+GOBIN ?= $(shell go env GOBIN)
 
-# Displays this list of tasks in the Makefile
-help:
-	@awk '/^[a-zA-Z0-9 _-\/]+:/ { if (prev_comment) { print $$1, "#", prev_comment } else { print $$1 }; prev_comment="" } { if (/^#/) { sub(/^# */, "", $$0); prev_comment=$$0 } }' $(MAKEFILE_LIST)
+##@ Meta
+help: ## Show this help with available tasks
+	@awk 'BEGIN {FS = ":.*## "}; \
+	/^[a-zA-Z0-9_\/-]+:.*## / { printf "  \033[36m%-28s\033[0m %s\n", $$1, $$2 } \
+	/^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0,5) }' $(MAKEFILE_LIST)
 
-# Installs deps 🥐 Bun, 🪿 goose and 🛕 templ
-install:
+##@ Setup
+install: ## Installs deps 🥐 Bun, 🪿 goose and 🛕 templ
 	@echo "📦 Installing dependencies"
 	@echo "🥐 Installing bun (for tailwindcss)"
 	curl -fsSL https://bun.sh/install | bash
 	@echo "🌬️ Installing TailwindCSS plugins"
-	~/.bun/bin/bun add -D tailwindcss
-	~/.bun/bin/bun add -D daisyui@latest
-	~/.bun/bin/bun add -D @tailwindcss/typography
+	bun add -D tailwindcss@latest
+	bun add -D daisyui@latest
+	bun add -D @tailwindcss/typography
 	@echo "🪿 installing goose"
 	go install github.com/pressly/goose/v3/cmd/goose@latest
 	@echo "🛕 installing Templ"
 	go install github.com/a-h/templ/cmd/templ@latest
 
-# Runs the Go formatter/linter
-fmt:
+##@ Code Quality
+fmt: ## Run go fmt
 	go fmt ./...
 
-# Runs go vet to detect code issues
-vet: fmt
+vet: fmt ## Run go vet (after fmt)
 	go vet ./...
 
-lint: vet
+lint: vet ## Alias for vet
 
-.PHONY: tailwind
-tailwind:
+##@ Frontend
+tailwind: ## Build Tailwind CSS
 	@echo "🌬️ Generating Tailwind CSS styles..."
-	~/.bun/bin/bun x @tailwindcss/cli -i ./styles/global.css -o ./public/global.css --minify
+	bun x @tailwindcss/cli -i ./styles/global.css -o ./public/global.css --minify
 
-.PHONY: tailwind/watch
-tailwind/watch:
-	@echo "🌬️ Watching for Tailwind CSS style changes..."
-	~/.bun/bin/bun x @tailwindcss/cli -i ./styles/global.css -o ./public/global.css --minify --watch
+tailwind/watch: ## Watch Tailwind CSS
+	@echo "🌬️ Watching for Tailwind CSS changes..."
+	bun x @tailwindcss/cli -i ./styles/global.css -o ./public/global.css --minify --watch
 
-templ: tailwind
+templ: tailwind ## Generate Templ files (depends on tailwind)
 	@echo "🛕 Generating Templ files..."
-	${GOPATH}/bin/templ generate
+	templ generate
 
-.PHONY: templ/watch
-templ/watch:
-	@echo "🛕 Watching for Templ file changes..."
-	${GOPATH}/bin/templ generate --watch -v
+templ/watch: ## Watch Templ
+	@echo "🛕 Watching for Templ changes..."
+	templ generate --watch -v
 
-locales/build:
+locales/build: ## Build locales with go-localize
 	@echo "  Building locales"
 	go-localize -input locales -output internal/lib/localize
 
-build: templ locales/build
+##@ Build & Run
+build: templ locales/build ## Build Go binary with fts5
 	@echo "📦 Building"
-	@echo "🤖 go build..."
 	go build -tags fts5 -o bin/app cmd/app/main.go
 
-# Start the app using the built binary
-start: migrations/apply
+start: ## Start the built binary
 	@echo "👟 Starting the app..."
 	bin/app
 
-# Runs the app using go run
-run: templ
+run: templ ## Run via go run (generates Templ first)
 	@echo "👟 Running app..."
-	@echo "🤖 go run..."
 	go run -tags fts5 cmd/app/main.go
 
-.PHONY: air/watch
-# Starts the app in dev/watch mode
-air/watch:
+air/watch: ## Run in dev mode with air (installs if missing)
 	@if command -v air > /dev/null; then \
 	    air; \
-	    echo "Running in dev mode and Watching files...";\
 	else \
-	    read -p "Go's 'air' is not installed on your machine. Do you want to install it? [Y/n] " choice; \
+	    read -p "Install air? [Y/n] " choice; \
 	    if [ "$$choice" != "n" ] && [ "$$choice" != "N" ]; then \
 	        go install github.com/cosmtrek/air@latest; \
 	        air; \
-	        echo "Watching...";\
 	    else \
 	        echo "You chose not to install air. Exiting..."; \
 	        exit 1; \
 	    fi; \
 	fi
 
-# start all watch processes in parallel.
-dev:
-	make -j3 tailwind/watch templ/watch air/watch
+dev: ## Start tailwind/watch, templ/watch, and air/watch in parallel
+	$(MAKE) -j3 tailwind/watch templ/watch air/watch
 
-# Run tests
-test:
+##@ Tests
+test: ## Run all tests with coverage
 	@echo "Testing all"
-	go test ./... -coverprofile=coverage/c.out
+	go test -race ./internal/...
+	go test ./..
 
-# Run unit-tests
-.PHONY: test/unit
-test/unit:
+test/v: ## Verbose tests
+	@echo "Testing all verbose"
+	go test ./... -race -v
+
+test/unit: ## Run unit tests
 	@echo "Testing unit"
-	go test -v ./internal/... -coverprofile=coverage/unit_c.out
+	go test -race ./internal/...
 
-# Run integration test
-.PHONY: test/integration
-test/integration:
+test/unit/c: ## Run unit tests
+	@echo "Testing unit"
+	go test ./internal/... -race -coverprofile=coverage/unit_c.out && go tool cover -func=coverage/unit_c.out
+
+test/unit/v: ## Run unit tests in verbose mode
+	@echo "Testing units --verbose"
+	go test -v -race ./internal/...
+
+test/integration: ## Run integration tests
 	@echo "Testing integration"
 	go test -v ./tests/... -coverprofile=coverage/int_c.out
 
-# Deletes build file binaries
-clean:
+test/coverage: ## Coverage
+	go test ./... -race -coverprofile=coverage.out && go tool cover -func=coverage/c.out
+
+
+##@ Test Coverage
+cover:
+	go test ./internal/... -covermode=atomic -coverpkg=./internal/... -coverprofile=coverage/c.out
+	go tool cover -func=coverage/c.out
+
+cover/html: cover
+	go tool cover -html=coverage/c.out -o coverage/c.html
+	@echo "Open coverage.html in your browser"
+	google-chrome coverage/c.html
+
+cover/missing: cover
+	@awk -F '[: ,]+' 'NR>1 && $$NF==0 {printf "%s:%s-%s\n",$$1,$$2,$$4}' coverage.out | sort
+
+##@ Cleanup
+clean: ## Remove build artifacts
 	@echo "Cleaning builds..."
-	rm bin/*
+	rm -f bin/*
 
-.PHONY: db/create
-db/create:
-	touch database/app.sqlite
-	make migrate
+##@ Database & Migrations
+db/create: ## Create DB (and run migrations)
+	$(MAKE) migrate
 
-# Deletes the DB giving you a choice to opt out
-db/delete:
-	@read -p "Do you want to delete the DB (you'll loose all data)? [y/n] " choice; \
+db/delete: ## Delete DB (interactive confirmation)
+	@read -p "Delete DB (this is destructive)? [y/N] " choice; \
 	if [ "$$choice" != "y" ] && [ "$$choice" != "Y" ]; then \
-		echo "Exiting..."; \
-		exit 1; \
-	else \
-		rm -f database/*.sqlite*; \
-	fi; \
+		echo "Exiting..."; exit 1; \
+	else echo "deleting..."; fi
 
-# Sets up the DB by running delete, create and migrate
-db/setup:
-	make db/delete
-	make db/create
-	make migrate
+db/setup: ## Recreate DB and apply migrations
+	$(MAKE) db/delete
+	$(MAKE) db/create
 
-# Dumps the DB schema to ./database/schema.sql
-db/dump_schema:
-	sqlite3 database/app.sqlite '.schema' > ./database/schema.sql
+db/dump_schema: ## Dump DB schema
+	sqlite3 store/app.sqlite3 .schema > goose/schema.sql
 
-# Runs the migrations
-migrations/apply:
-	@echo "🪿 running migrations with goose before Start"
-	${GOPATH}/bin/goose up
+migrations/apply: ## Apply migrations with goose
+	@echo "🪿 running migrations with momma goose"
+	$(GOBIN)/goose up
 
-# [Migrations]
-# Runs the migrations (alias of migrations/apply)
-migrate: migrations/apply
+migrate: migrations/apply ## Alias for migrations/apply
 
-# [Migrations]
-# Creates a migration file e.g. migrations/create migration_name
-migrations/create arg_name:
-	${GOPATH}/bin/goose create {{arg_name}} sql
+.PHONY: migrations/create/%
+migrations/create/%: ## Create a migration file: make migrations/create/add_column_to_table
+	${GOBIN}/goose create $* sql
 
-# [Migrations]
-migrations/status:
-	${GOPATH}/bin/goose status
+migrations/status: ## Show migrations status
+	$(GOBIN)/goose status
 
-# [Migrations]
-migrations/rollback:
-	${GOPATH}/bin/goose down
+migrations/rollback: ## Roll back last migration
+	$(GOBIN)/goose down
 
-# [Migrations]
-migrations/redo:
-	${GOPATH}/bin/goose redo
+migrations/redo: ## Redo last migration
+	$(GOBIN)/goose redo
 
-# Starts the docker-compose services
-docker/up:
+##@ Docker
+docker/up: ## docker compose up (foreground)
 	@echo " Docker services up"
 	docker compose up
 
-# Starts the docker services detached
-docker/detached:
+docker/detached: ## docker compose up -d
 	@echo " Docker up detached"
 	docker compose up -d
 
-# Terminates the docker services
-docker/down:
+docker/down: ## docker compose down
 	@echo " Docker down"
 	docker compose down
 
-# Shows app service logs
-docker/logs:
+docker/logs: ## Follow app logs
 	@echo " Docker app logs "
 	docker compose logs app -f
 
-# Rebuild the docker image (for Dockerfile changes)
-docker/build:
+docker/build: ## Rebuild the app image
 	docker compose up --no-deps --build app
+
+.PHONY: help install fmt vet lint \
+	tailwind tailwind/watch templ templ/watch locales/build \
+	build start run air/watch dev \
+	test test/unit test/integration clean \
+	db/create db/delete db/setup db/dump_schema \
+	migrations/apply migrate migrations/create migrations/status migrations/rollback migrations/redo \
+	docker/up docker/detached docker/down docker/logs docker/build
