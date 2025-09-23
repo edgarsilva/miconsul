@@ -27,7 +27,7 @@ type Env struct {
 	EmailSMTPURL     string `env:"EMAIL_SMTP_URL"`
 
 	GooseDriver       string `env:"GOOSE_DRIVER"`
-	GooseDBString     string `env:"GOOSE_DB_STRING"`
+	GooseDBString     string `env:"GOOSE_DBSTRING"`
 	GooseMigrationDir string `env:"GOOSE_MIGRATION_DIR"`
 
 	LogtoURL       string `env:"LOGTO_URL;optional"`

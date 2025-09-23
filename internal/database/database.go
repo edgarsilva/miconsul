@@ -4,11 +4,15 @@ package database
 import (
 	// libsql "github.com/edgarsilva/gorm-libsql"
 
+	"database/sql"
+	"fmt"
 	"log"
 	"os"
 	"time"
 
+	"github.com/pressly/goose/v3"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
+	"go.uber.org/zap"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -47,7 +51,8 @@ func New(DBPath string) *Database {
 		},
 	)
 
-	db, err := gorm.Open(sqlite.Open(DBPath+PragmaOpts), &gorm.Config{
+	dsn := DBPath + PragmaOpts
+	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
 		Logger:      newLogger,
 		PrepareStmt: true,
 	})
@@ -61,4 +66,53 @@ func New(DBPath string) *Database {
 	return &Database{
 		DB: db,
 	}
+}
+
+func ApplyMigrations(dbPath string) error {
+	fmt.Println(" Applying migrations...")
+	dsn := dbPath
+	sqlDB, err := sql.Open("sqlite3", dsn)
+	if err != nil {
+		return err
+	}
+	defer sqlDB.Close()
+
+	// Usage
+	if os.Getenv("APP_ENV") == "development" || os.Getenv("APP_ENV") == "production" {
+		logger, _ := zap.NewProduction()
+		sugar := logger.Sugar()
+		goose.SetLogger(ZapLogger{l: sugar})
+	}
+
+	goose.SetBaseFS(migrations.FS)
+
+	if err := goose.SetDialect("sqlite3"); err != nil {
+		return err
+	}
+	if err := goose.Up(sqlDB, "."); err != nil {
+		return fmt.Errorf("goose up: %w", err)
+	}
+	return nil
+}
+
+func NewLogger() logger.Interface {
+	loglevel := logger.Warn
+	hideParamValues := true
+	if os.Getenv("APP_ENV") == "development" {
+		loglevel = logger.Info
+		hideParamValues = false
+	}
+
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags),
+		logger.Config{
+			SlowThreshold:             150 * time.Millisecond,
+			LogLevel:                  loglevel,
+			IgnoreRecordNotFoundError: true,
+			ParameterizedQueries:      hideParamValues,
+			Colorful:                  true,
+		},
+	)
+
+	return newLogger
 }

@@ -140,7 +140,7 @@ clean: ## Remove build artifacts
 
 ##@ Database & Migrations
 db/create: ## Create DB (and run migrations)
-	$(MAKE) migrate
+	$(MAKE) db/migrate
 
 db/delete: ## Delete DB (interactive confirmation)
 	@read -p "Delete DB (this is destructive)? [y/N] " choice; \
@@ -159,7 +159,7 @@ migrations/apply: ## Apply migrations with goose
 	@echo "🪿 running migrations with momma goose"
 	$(GOBIN)/goose up
 
-migrate: migrations/apply ## Alias for migrations/apply
+db/migrate: migrations/apply ## Alias for migrations/apply
 
 .PHONY: migrations/create/%
 migrations/create/%: ## Create a migration file: make migrations/create/add_column_to_table
