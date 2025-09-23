@@ -4,17 +4,17 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
+
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/lib/cache"
 	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
 	"miconsul/internal/lib/otel"
 	"miconsul/internal/lib/workerpool"
 	"miconsul/internal/routes"
 	"miconsul/internal/server"
-	"os"
-	"os/signal"
 
 	"github.com/joho/godotenv"
 )
@@ -46,12 +46,6 @@ func main() {
 		shutdownWorkerPool()
 	}()
 
-	cache, shutdownCache := cache.New()
-	defer func() {
-		fmt.Println("🦡 Badger Cache shutting down...")
-		shutdownCache()
-	}()
-
 	localizer := localize.New("en-US", "es-MX")
 	db := database.New(os.Getenv("DB_PATH"))
 	s := server.New(
@@ -61,7 +55,6 @@ func main() {
 		server.WithWorkerPool(wp),
 		server.WithTracerProvider(tp),
 		server.WithLocalizer(localizer),
-		server.WithCache(cache),
 	)
 	routes.RegisterServices(s)
 

@@ -1,3 +1,4 @@
+// Package database provides a gorm database connection
 package database
 
 import (
@@ -13,12 +14,15 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-const PragmaOpts = "?mode=rwc&" +
-	"_foreign_keys=on&" +
-	"_journal_mode=WAL&" +
-	"_busy_timeout=5000&" +
-	"_sync=NORMAL&" +
-	"_cache_size=2000"
+const PragmaOpts = "?mode=rwc" +
+	"&_journal_mode=WAL" +
+	"&_synchronous=NORMAL" +
+	"&_busy_timeout=10000" +
+	"&_cache_size=-16384" +
+	"&_temp_store=MEMORY" +
+	"&_wal_autocheckpoint=1000" +
+	"&_journal_size_limit=67108864" +
+	"&_mmap_size=268435456"
 
 type Database struct {
 	*gorm.DB
@@ -35,7 +39,7 @@ func New(DBPath string) *Database {
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags),
 		logger.Config{
-			SlowThreshold:             time.Millisecond * 150, // Slow SQL threshold
+			SlowThreshold:             150 * time.Millisecond, // Slow SQL threshold
 			LogLevel:                  loglevel,               // Log level
 			IgnoreRecordNotFoundError: true,                   // Ignore ErrRecordNotFound error for logger
 			ParameterizedQueries:      hideParamValues,        // If true, don't include params values in the SQL log
@@ -44,8 +48,7 @@ func New(DBPath string) *Database {
 	)
 
 	db, err := gorm.Open(sqlite.Open(DBPath+PragmaOpts), &gorm.Config{
-		Logger: newLogger,
-		// SkipDefaultTransaction: false,
+		Logger:      newLogger,
 		PrepareStmt: true,
 	})
 	if err != nil {

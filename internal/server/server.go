@@ -5,15 +5,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"time"
+
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/lib/cache"
 	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
 	"miconsul/internal/lib/sessionstorage"
 	"miconsul/internal/model"
-	"os"
-	"time"
 
 	"github.com/gofiber/contrib/otelfiber"
 	"github.com/gofiber/fiber/v2"
@@ -170,7 +170,7 @@ func WithTracerProvider(tp *sdktrace.TracerProvider) ServerOption {
 	}
 }
 
-func WithCache(cache *cache.Cache) ServerOption {
+func WithCache(cache Cache) ServerOption {
 	return func(server *Server) error {
 		if cache == nil {
 			return nil
@@ -181,7 +181,7 @@ func WithCache(cache *cache.Cache) ServerOption {
 	}
 }
 
-// SendToWorker passes fn as a job to the worker pool to be executed in a go routine
+// AddCronJob passes fn as a job to the worker pool to be executed in a go routine
 func (s *Server) AddCronJob(crontab string, fn func()) error {
 	if s.cj == nil {
 		return errors.New("failed to add new cron job, server.cj might be nil, cron job is not running")
@@ -280,11 +280,6 @@ func (s *Server) CacheWrite(key string, src *[]byte, ttl time.Duration) error {
 
 // CacheRead reads a cache value by key
 func (s *Server) CacheRead(key string, dst *[]byte) error {
-	return s.Cache.Read(key, dst)
-}
-
-// CacheRead reads a cache value by key
-func (s *Server) CacheReadGen(key string, dst *[]byte) error {
 	return s.Cache.Read(key, dst)
 }
 
