@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -11,7 +10,6 @@ import (
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
-	"miconsul/internal/lib/otel"
 	"miconsul/internal/lib/workerpool"
 	"miconsul/internal/routes"
 	"miconsul/internal/server"
@@ -27,12 +25,12 @@ func main() {
 
 	env := appenv.New()
 
-	ctx := context.Background()
-	tp, shutdownTracer := otel.NewUptraceTracerProvider(ctx, env)
-	defer func() {
-		fmt.Println("󰓾 Tracer provider shutting down...")
-		shutdownTracer()
-	}()
+	// ctx := context.Background()
+	// tp, shutdownTracer := otel.NewUptraceTracerProvider(ctx, env)
+	// defer func() {
+	// 	fmt.Println("󰓾 Tracer provider shutting down...")
+	// 	shutdownTracer()
+	// }()
 
 	cj, shutdownCronjob := cronjob.New()
 	defer func() {
@@ -53,7 +51,7 @@ func main() {
 		server.WithDatabase(db),
 		server.WithCronJob(cj),
 		server.WithWorkerPool(wp),
-		server.WithTracerProvider(tp),
+		// server.WithTracerProvider(tp),
 		server.WithLocalizer(localizer),
 	)
 	routes.RegisterServices(s)

@@ -1,39 +1,42 @@
-FROM golang:1.23
+# ---------- GO BUILD ----------
+FROM golang:1.24-bookworm AS build
+WORKDIR /app
 
-# Install needed dependencies
+# Enable module and build caching with BuildKit
+RUN --mount=type=cache,target=/go/pkg/mod \
+	--mount=type=cache,target=/root/.cache/go-build \
+	echo "cache warmup"
+
+# Copy go module files first for caching
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
+
+# Copy the rest of the source
+COPY . .
+
+# Build the binary (CGO on for SQLite)
+ENV CGO_ENABLED=1
+RUN go build -tags fts5 -o bin/app cmd/app/main.go
+
+# ---------- RUNTIME ----------
+FROM debian:bookworm-slim AS runtime
+
 RUN apt-get update && \
-	apt-get install -y unzip --no-install-recommends && \
-	rm -rf /var/lib/apt/lists/* tar curl wget
+	apt-get install -y sqlite3 --no-install-recommends && \
+	apt-get install -y curl --no-install-recommends && \
+	rm -rf /var/lib/apt/lists/*
 
+
+
+# Create non-root user (already has nonroot:nonroot 65532)
 RUN groupadd -g 1000 miconsul && useradd -u 1000 -m -g miconsul miconsul
 USER miconsul
 WORKDIR /app
-
-# USER miconsul
 RUN mkdir /app/store
 
-# Install bun (for TailwindCSS)
-RUN bash -o pipefail -c "curl -fsSL https://bun.sh/install | bash"
-
-# Set GOPATH to a directory where the app user has permission to write
-ENV GOPATH=/home/miconsul/go
-
-# Install templ (Go HTML template generator) and goose for DB migrations
-RUN go install github.com/a-h/templ/cmd/templ@v0.3.819 && \
-	go install github.com/pressly/goose/v3/cmd/goose@v3.20
-
-# Build TailwindCSS plugins and the Go application
-COPY package*.json ./
-RUN ~/.bun/bin/bun install
-
-# Download Go modules
-COPY --chown=miconsul:miconsul go.mod go.sum ./
-RUN go mod download all && go mod verify
-
-# Copy app source code to /app inside container
-COPY --chown=miconsul:miconsul . .
-
-RUN make build
+# App binary and runtime assets
+COPY . .
+COPY --from=build /app/bin/app /app/bin/miconsul
 
 # Start the application
-CMD ["make", "start"]
+ENTRYPOINT ["/app/bin/miconsul"]

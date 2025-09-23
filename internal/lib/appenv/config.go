@@ -19,7 +19,7 @@ type Env struct {
 
 	DBPath        string `env:"DB_PATH"`
 	SessionDBPath string `env:"SESSION_DB_PATH"`
-	CacheDBPath   string `env:"CACHE_DB_PATH"`
+	CacheDBPath   string `env:"CACHE_DB_PATH;optional"`
 
 	EmailSender      string `env:"EMAIL_SENDER"`
 	EmailSecret      string `env:"EMAIL_SECRET"`
@@ -30,12 +30,12 @@ type Env struct {
 	GooseDBString     string `env:"GOOSE_DB_STRING"`
 	GooseMigrationDir string `env:"GOOSE_MIGRATION_DIR"`
 
-	LogtoURL       string `env:"LOGTO_URL"`
-	LogtoAppID     string `env:"LOGTO_APP_ID"`
-	LogtoAppSecret string `env:"LOGTO_APP_SECRET"`
+	LogtoURL       string `env:"LOGTO_URL;optional"`
+	LogtoAppID     string `env:"LOGTO_APP_ID;optional"`
+	LogtoAppSecret string `env:"LOGTO_APP_SECRET;optional"`
 
-	UptraceDSN      string `env:"UPTRACE_DSN"`
-	UptraceEndpoint string `env:"UPTRACE_ENDPOINT"`
+	UptraceDSN      string `env:"UPTRACE_DSN;optional"`
+	UptraceEndpoint string `env:"UPTRACE_ENDPOINT;optional"`
 
 	AssetsDir string `env:"ASSETS_DIR"`
 }
