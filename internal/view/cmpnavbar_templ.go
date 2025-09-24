@@ -166,7 +166,7 @@ func Search() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</button> <kbd class=\"hidden md:kbd md:kbd-sm\">ctrl</kbd> <kbd class=\"hidden md:kbd md:kbd-sm\">k</kbd></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</button> <kbd class=\"hidden md:kbd md:kbd-sm\">ctrl</kbd> <kbd class=\"hidden md:kbd md:kbd-sm\">/</kbd></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

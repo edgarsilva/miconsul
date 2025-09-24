@@ -47,7 +47,7 @@ func (s *service) HandleDashboardPage(c *fiber.Ctx) error {
 	}
 
 	vc, _ := view.NewCtx(c)
-	stats := s.CalcDashboardStats(c, cu)
+	stats := s.CalcDashboardStats(c.UserContext(), cu)
 
 	return view.Render(c, view.DashboardPage(vc, stats, appointments, clinic))
 }

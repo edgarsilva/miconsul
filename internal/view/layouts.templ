@@ -1,19 +1,17 @@
 package view
 
-import (
-	"miconsul/internal/lib/xid"
-)
+import "miconsul/internal/lib/xid"
 
 templ HTMLPage(c *Ctx) {
 	<!DOCTYPE html>
-	<html>
+	<html data-theme="light">
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
 			<meta name="color-scheme" content="light dark"/>
 			<meta name="htmx-config" content='{"includeIndicatorStyles":false}'/>
 			<title>Miconsul</title>
-			<link href={"/public/global.css?v_=" + xid.Pure()} rel="stylesheet" />
+			<link href={ "/public/global.css?v_=" + xid.Pure() } rel="stylesheet"/>
 			<script defer src="https://unpkg.com/htmx.org@2.0.1"></script>
 			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.0/dist/cdn.min.js"></script>
 		</head>
@@ -26,13 +24,13 @@ templ HTMLPage(c *Ctx) {
 
 templ HTMLPageWithApexCharts() {
 	<!DOCTYPE html>
-	<html>
+	<html data-theme="light">
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
 			<meta name="color-scheme" content="light dark"/>
 			<title>Dashboard</title>
-			<link href="/public/global.css" rel="stylesheet" />
+			<link href="/public/global.css" rel="stylesheet"/>
 			<script src="https://unpkg.com/htmx.org@1.9.9" integrity="sha384-QFjmbokDn2DjBjq+fM+8LUIVrAgqcNW2s0PjAxHETgRn9l4fvX31ZxDxvwQnyMOX" crossorigin="anonymous"></script>
 			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.0/dist/cdn.min.js"></script>
 			<script defer src="https://cdn.jsdelivr.net/npm/apexcharts"></script>

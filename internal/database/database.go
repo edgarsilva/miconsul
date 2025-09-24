@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"miconsul/goose/migrations"
 	"os"
 	"time"
 

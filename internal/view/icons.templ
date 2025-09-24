@@ -156,9 +156,10 @@ templ IconSunSm() {
 	</svg>
 }
 
-templ IconSearch(classname string) {
+templ IconSearch(classname ...string) {
+	{{ cn := strings.Join(classname, " ") }}
 	<svg
-		class={ templ.KV("size-6", classname == ""), templ.KV(classname , classname != "") }
+		class={ templ.KV("size-6", cn == ""), templ.KV(cn , cn != "") }
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 24 24"
 		fill="currentColor"

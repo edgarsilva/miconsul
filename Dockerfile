@@ -26,8 +26,6 @@ RUN apt-get update && \
 	apt-get install -y curl --no-install-recommends && \
 	rm -rf /var/lib/apt/lists/*
 
-
-
 # Create non-root user (already has nonroot:nonroot 65532)
 RUN groupadd -g 1000 miconsul && useradd -u 1000 -m -g miconsul miconsul
 USER miconsul

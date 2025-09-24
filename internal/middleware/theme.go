@@ -6,11 +6,7 @@ import (
 
 func UITheme() func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		theme := c.Cookies("theme", "")
-		if theme == "" {
-			theme = "light"
-		}
-
+		theme := c.Cookies("theme", "light")
 		c.Locals("theme", theme)
 
 		return c.Next()

@@ -19,7 +19,7 @@ func TestHandler(t *testing.T) {
 	rc := theme.NewService(s)
 
 	// Define a route in the Fiber app
-	fiberApp.Get("/", rc.HandleUITheme)
+	fiberApp.Get("/", rc.HandleToggleTheme)
 
 	// Create a test HTTP request
 	req, err := http.NewRequest("GET", "/", nil)

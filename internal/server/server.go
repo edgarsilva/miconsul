@@ -5,15 +5,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
-	"time"
-
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
 	"miconsul/internal/lib/sessionstorage"
 	"miconsul/internal/model"
+	"os"
+	"time"
 
 	"github.com/gofiber/contrib/otelfiber"
 	"github.com/gofiber/fiber/v2"
@@ -273,6 +272,9 @@ func (s *Server) SessionRead(c *fiber.Ctx, key string, defaultVal string) string
 
 // CacheWrite writes a value to the Cache
 func (s *Server) CacheWrite(key string, src *[]byte, ttl time.Duration) error {
+	if s.Cache == nil {
+		return nil
+	}
 	err := s.Cache.Write(key, src, ttl)
 
 	return err
@@ -280,6 +282,9 @@ func (s *Server) CacheWrite(key string, src *[]byte, ttl time.Duration) error {
 
 // CacheRead reads a cache value by key
 func (s *Server) CacheRead(key string, dst *[]byte) error {
+	if s.Cache == nil {
+		return nil
+	}
 	return s.Cache.Read(key, dst)
 }
 
@@ -311,14 +316,14 @@ func (s *Server) SessionLang(c *fiber.Ctx) string {
 	return lang
 }
 
-// SessionUITheme returns the user UI theme (light|dark) from the session or query
+// SessionID returns the user UI theme (light|dark) from the session or query
 // url param
 func (s *Server) SessionID(c *fiber.Ctx) string {
 	sessionID := c.Cookies("session_id", "")
 	return sessionID
 }
 
-// SessionUITheme returns the user UI theme (light|dark) from the session or query
+// TagWithSessionID returns tags the passed tag with the SessionID
 // url param
 func (s *Server) TagWithSessionID(c *fiber.Ctx, tag string) string {
 	return s.SessionID(c) + ":" + tag

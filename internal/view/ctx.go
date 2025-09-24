@@ -49,7 +49,7 @@ func extLoc(c *fiber.Ctx) string {
 	return loc
 }
 
-func extTheme(c *fiber.Ctx) string {
+func themeFromLocals(c *fiber.Ctx) string {
 	itheme := c.Locals("theme")
 	theme, ok := itheme.(string)
 	if !ok {
@@ -59,7 +59,7 @@ func extTheme(c *fiber.Ctx) string {
 	return theme
 }
 
-func extCurrentUser(c *fiber.Ctx) model.User {
+func currentUserFromLocals(c *fiber.Ctx) model.User {
 	iuser := c.Locals("current_user")
 	cu, ok := iuser.(model.User)
 	if !ok {
@@ -70,15 +70,15 @@ func extCurrentUser(c *fiber.Ctx) model.User {
 }
 
 func CU(c *fiber.Ctx) model.User {
-	return extCurrentUser(c)
+	return currentUserFromLocals(c)
 }
 
 func NewCtx(c *fiber.Ctx, ctxOpts ...ContextOption) (*Ctx, error) {
 	ctx := Ctx{
 		Ctx:         c,
-		CurrentUser: extCurrentUser(c),
+		CurrentUser: currentUserFromLocals(c),
 		Locale:      extLoc(c),
-		Theme:       extTheme(c),
+		Theme:       themeFromLocals(c),
 		Toast: Toast{
 			Msg:   c.Query("toast", ""),
 			Sub:   c.Query("sub", ""),

@@ -26,10 +26,9 @@ func (s *service) HandleLoginPage(c *fiber.Ctx) error {
 		return c.Redirect("/")
 	}
 
-	theme := s.SessionUITheme(c)
-	vc, _ := view.NewCtx(c, view.WithTheme(theme))
 	email := c.Query("email", "")
 	msg := c.Query("msg", "")
+	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.LoginPage(email, msg, nil, vc))
 }
 

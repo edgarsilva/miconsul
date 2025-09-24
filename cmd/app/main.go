@@ -3,9 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
-	"os/signal"
-
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/cronjob"
@@ -13,6 +10,8 @@ import (
 	"miconsul/internal/lib/workerpool"
 	"miconsul/internal/routes"
 	"miconsul/internal/server"
+	"os"
+	"os/signal"
 
 	"github.com/joho/godotenv"
 )
@@ -24,6 +23,11 @@ func main() {
 	}()
 
 	env := appenv.New()
+
+	err := database.ApplyMigrations(env.DBPath)
+	if err != nil {
+		log.Panic("Failed to apply database migrations:", err.Error())
+	}
 
 	// ctx := context.Background()
 	// tp, shutdownTracer := otel.NewUptraceTracerProvider(ctx, env)

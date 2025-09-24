@@ -579,8 +579,7 @@ func AppointmentsSection(c *Ctx, appointments []model.Appointment, showTitle boo
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var37 = []any{"text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium",
-			templ.KV("bg-secondary/35 text-secondary-content", c.Query("timeframe", "day") == "day")}
+		var templ_7745c5c3_Var37 = []any{"btn btn-sm", templ.KV("btn-secondary", c.Query("timeframe", "") == "day"), templ.KV("btn-secondary btn-soft", c.Query("timeframe", "") != "day")}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var37...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -605,7 +604,7 @@ func AppointmentsSection(c *Ctx, appointments []model.Appointment, showTitle boo
 		var templ_7745c5c3_Var39 templ.SafeURL
 		templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(c.Path() + QueryParams(c, "timeframe=day")))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 138, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 137, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 		if templ_7745c5c3_Err != nil {
@@ -618,7 +617,7 @@ func AppointmentsSection(c *Ctx, appointments []model.Appointment, showTitle boo
 		var templ_7745c5c3_Var40 string
 		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(c.Path() + QueryParams(c, "timeframe=day"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 139, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 138, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 		if templ_7745c5c3_Err != nil {
@@ -631,7 +630,7 @@ func AppointmentsSection(c *Ctx, appointments []model.Appointment, showTitle boo
 		var templ_7745c5c3_Var41 string
 		templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(c.Path() + QueryParams(c, "timeframe=day"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 140, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 139, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 		if templ_7745c5c3_Err != nil {
@@ -644,7 +643,7 @@ func AppointmentsSection(c *Ctx, appointments []model.Appointment, showTitle boo
 		var templ_7745c5c3_Var42 string
 		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(l(c.Locale, "nav.my_day"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 141, Col: 33}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 140, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 		if templ_7745c5c3_Err != nil {
@@ -654,8 +653,7 @@ func AppointmentsSection(c *Ctx, appointments []model.Appointment, showTitle boo
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var43 = []any{"text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium",
-			templ.KV("bg-secondary/15 text-secondary-content", c.Query("timeframe") == "week")}
+		var templ_7745c5c3_Var43 = []any{"btn btn-sm", templ.KV("btn-secondary", c.Query("timeframe", "") == "week"), templ.KV("btn-secondary btn-soft", c.Query("timeframe", "") != "week")}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var43...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -680,7 +678,7 @@ func AppointmentsSection(c *Ctx, appointments []model.Appointment, showTitle boo
 		var templ_7745c5c3_Var45 templ.SafeURL
 		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(c.Path() + QueryParams(c, "timeframe=week")))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 145, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 143, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 		if templ_7745c5c3_Err != nil {
@@ -693,7 +691,7 @@ func AppointmentsSection(c *Ctx, appointments []model.Appointment, showTitle boo
 		var templ_7745c5c3_Var46 string
 		templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(c.Path() + QueryParams(c, "timeframe=week"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 146, Col: 58}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 144, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 		if templ_7745c5c3_Err != nil {
@@ -706,7 +704,7 @@ func AppointmentsSection(c *Ctx, appointments []model.Appointment, showTitle boo
 		var templ_7745c5c3_Var47 string
 		templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(c.Path() + QueryParams(c, "timeframe=week"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 147, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 145, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 		if templ_7745c5c3_Err != nil {
@@ -719,7 +717,7 @@ func AppointmentsSection(c *Ctx, appointments []model.Appointment, showTitle boo
 		var templ_7745c5c3_Var48 string
 		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("nav.my_week"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 148, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 146, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 		if templ_7745c5c3_Err != nil {
@@ -729,8 +727,7 @@ func AppointmentsSection(c *Ctx, appointments []model.Appointment, showTitle boo
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var49 = []any{"text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium",
-			templ.KV("bg-secondary/15 text-secondary-content", c.Query("timeframe") == "month")}
+		var templ_7745c5c3_Var49 = []any{"btn btn-sm", templ.KV("btn-secondary", c.Query("timeframe", "") == "month"), templ.KV("btn-secondary btn-soft", c.Query("timeframe", "") != "month")}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var49...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -755,7 +752,7 @@ func AppointmentsSection(c *Ctx, appointments []model.Appointment, showTitle boo
 		var templ_7745c5c3_Var51 templ.SafeURL
 		templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(c.Path() + QueryParams(c, "timeframe=month")))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 152, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 149, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 		if templ_7745c5c3_Err != nil {
@@ -768,7 +765,7 @@ func AppointmentsSection(c *Ctx, appointments []model.Appointment, showTitle boo
 		var templ_7745c5c3_Var52 string
 		templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(c.Path() + QueryParams(c, "timeframe=month"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 153, Col: 59}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 150, Col: 59}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 		if templ_7745c5c3_Err != nil {
@@ -781,7 +778,7 @@ func AppointmentsSection(c *Ctx, appointments []model.Appointment, showTitle boo
 		var templ_7745c5c3_Var53 string
 		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(c.Path() + QueryParams(c, "timeframe=month"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 154, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 151, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 		if templ_7745c5c3_Err != nil {
@@ -794,7 +791,7 @@ func AppointmentsSection(c *Ctx, appointments []model.Appointment, showTitle boo
 		var templ_7745c5c3_Var54 string
 		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(l(c.Locale, "nav.my_month"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 155, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 152, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 		if templ_7745c5c3_Err != nil {
@@ -898,7 +895,7 @@ func AppointmentLi(vc *Ctx, appointment model.Appointment) templ.Component {
 		var templ_7745c5c3_Var57 templ.SafeURL
 		templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL("/appointments" + QueryParams(vc, "patientId="+appointment.PatientID)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 182, Col: 94}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 179, Col: 94}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 		if templ_7745c5c3_Err != nil {
@@ -911,7 +908,7 @@ func AppointmentLi(vc *Ctx, appointment model.Appointment) templ.Component {
 		var templ_7745c5c3_Var58 string
 		templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs(appointment.Patient.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 184, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 181, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var58))
 		if templ_7745c5c3_Err != nil {
@@ -924,7 +921,7 @@ func AppointmentLi(vc *Ctx, appointment model.Appointment) templ.Component {
 		var templ_7745c5c3_Var59 string
 		templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.JoinStringErrs(appointment.Patient.Phone)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 192, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 189, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var59))
 		if templ_7745c5c3_Err != nil {
@@ -937,7 +934,7 @@ func AppointmentLi(vc *Ctx, appointment model.Appointment) templ.Component {
 		var templ_7745c5c3_Var60 string
 		templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.date"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 199, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 196, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 		if templ_7745c5c3_Err != nil {
@@ -974,7 +971,7 @@ func AppointmentLi(vc *Ctx, appointment model.Appointment) templ.Component {
 		var templ_7745c5c3_Var61 string
 		templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.location"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 232, Col: 58}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 229, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var61))
 		if templ_7745c5c3_Err != nil {
@@ -987,7 +984,7 @@ func AppointmentLi(vc *Ctx, appointment model.Appointment) templ.Component {
 		var templ_7745c5c3_Var62 string
 		templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.JoinStringErrs(appointment.Clinic.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 238, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 235, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var62))
 		if templ_7745c5c3_Err != nil {
@@ -1045,7 +1042,7 @@ func AppointmentActions(appointment model.Appointment, vc *Ctx) templ.Component 
 		var templ_7745c5c3_Var64 templ.SafeURL
 		templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL("/appointments/" + appointment.ID + "/begin"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 252, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 249, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var64))
 		if templ_7745c5c3_Err != nil {
@@ -1058,7 +1055,7 @@ func AppointmentActions(appointment model.Appointment, vc *Ctx) templ.Component 
 		var templ_7745c5c3_Var65 string
 		templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "btn.open"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 256, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 253, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 		if templ_7745c5c3_Err != nil {
@@ -1071,7 +1068,7 @@ func AppointmentActions(appointment model.Appointment, vc *Ctx) templ.Component 
 		var templ_7745c5c3_Var66 templ.SafeURL
 		templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL("/appointments/" + appointment.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 258, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 255, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var66))
 		if templ_7745c5c3_Err != nil {
@@ -1084,7 +1081,7 @@ func AppointmentActions(appointment model.Appointment, vc *Ctx) templ.Component 
 		var templ_7745c5c3_Var67 string
 		templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "btn.change"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 262, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 259, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var67))
 		if templ_7745c5c3_Err != nil {
@@ -1134,7 +1131,7 @@ func AppointmentsEmptyList(vc *Ctx) templ.Component {
 		var templ_7745c5c3_Var69 string
 		templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.create_new_appointment"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 271, Col: 94}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 268, Col: 94}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var69))
 		if templ_7745c5c3_Err != nil {
@@ -1176,7 +1173,7 @@ func AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.Pa
 		var templ_7745c5c3_Var71 string
 		templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.apnt_step_1"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 281, Col: 83}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 278, Col: 83}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var71))
 		if templ_7745c5c3_Err != nil {
@@ -1189,7 +1186,7 @@ func AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.Pa
 		var templ_7745c5c3_Var72 string
 		templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.apnt_step_1_desc"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 282, Col: 97}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 279, Col: 97}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var72))
 		if templ_7745c5c3_Err != nil {
@@ -1210,7 +1207,7 @@ func AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.Pa
 		var templ_7745c5c3_Var73 string
 		templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.apnt_step_2"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 288, Col: 83}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 285, Col: 83}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var73))
 		if templ_7745c5c3_Err != nil {
@@ -1223,7 +1220,7 @@ func AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.Pa
 		var templ_7745c5c3_Var74 string
 		templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.apnt_step_2_desc"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 289, Col: 97}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 286, Col: 97}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var74))
 		if templ_7745c5c3_Err != nil {
@@ -1244,7 +1241,7 @@ func AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.Pa
 		var templ_7745c5c3_Var75 string
 		templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.apnt_step_3"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 295, Col: 83}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 292, Col: 83}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var75))
 		if templ_7745c5c3_Err != nil {
@@ -1257,7 +1254,7 @@ func AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.Pa
 		var templ_7745c5c3_Var76 string
 		templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.apnt_step_3_desc"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 296, Col: 97}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 293, Col: 97}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var76))
 		if templ_7745c5c3_Err != nil {
@@ -1286,7 +1283,7 @@ func AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.Pa
 			var templ_7745c5c3_Var78 string
 			templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.JoinStringErrs(appointment.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 300, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 297, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var78))
 			if templ_7745c5c3_Err != nil {
@@ -1299,7 +1296,7 @@ func AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.Pa
 			var templ_7745c5c3_Var79 string
 			templ_7745c5c3_Var79, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.booked_at"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 304, Col: 111}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 301, Col: 111}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var79))
 			if templ_7745c5c3_Err != nil {
@@ -1317,7 +1314,7 @@ func AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.Pa
 				var templ_7745c5c3_Var80 string
 				templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.JoinStringErrs(libtime.InTimezone(time.Now(), "MexicoCity").Format("2006-01-02T15:04"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 311, Col: 90}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 308, Col: 90}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var80))
 				if templ_7745c5c3_Err != nil {
@@ -1335,7 +1332,7 @@ func AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.Pa
 				var templ_7745c5c3_Var81 string
 				templ_7745c5c3_Var81, templ_7745c5c3_Err = templ.JoinStringErrs(appointment.BookedAtInLocalTime().Format("2006-01-02T15:04"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 313, Col: 79}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 310, Col: 79}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var81))
 				if templ_7745c5c3_Err != nil {
@@ -1353,7 +1350,7 @@ func AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.Pa
 			var templ_7745c5c3_Var82 string
 			templ_7745c5c3_Var82, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.duration"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 321, Col: 122}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 318, Col: 122}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var82))
 			if templ_7745c5c3_Err != nil {
@@ -1376,7 +1373,7 @@ func AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.Pa
 				var templ_7745c5c3_Var83 string
 				templ_7745c5c3_Var83, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(appointment.Duration))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 333, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 330, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var83))
 				if templ_7745c5c3_Err != nil {
@@ -1402,7 +1399,7 @@ func AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.Pa
 			var templ_7745c5c3_Var84 string
 			templ_7745c5c3_Var84, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.appointment_send_email"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 349, Col: 80}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 346, Col: 80}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var84))
 			if templ_7745c5c3_Err != nil {
@@ -1415,7 +1412,7 @@ func AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.Pa
 			var templ_7745c5c3_Var85 string
 			templ_7745c5c3_Var85, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.appointment_send_email_desc"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 350, Col: 91}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 347, Col: 91}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var85))
 			if templ_7745c5c3_Err != nil {
@@ -1438,7 +1435,7 @@ func AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.Pa
 		var templ_7745c5c3_Var86 string
 		templ_7745c5c3_Var86, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "btn.save"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 362, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 359, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var86))
 		if templ_7745c5c3_Err != nil {
@@ -1490,7 +1487,7 @@ func ApptPrice(vc *Ctx, appointment model.Appointment, clinic model.Clinic, swap
 		var templ_7745c5c3_Var88 string
 		templ_7745c5c3_Var88, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.price"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 377, Col: 110}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 374, Col: 110}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var88))
 		if templ_7745c5c3_Err != nil {
@@ -1508,7 +1505,7 @@ func ApptPrice(vc *Ctx, appointment model.Appointment, clinic model.Clinic, swap
 			var templ_7745c5c3_Var89 string
 			templ_7745c5c3_Var89, templ_7745c5c3_Err = templ.JoinStringErrs(clinic.PriceInputValue())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 388, Col: 37}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 385, Col: 37}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var89))
 			if templ_7745c5c3_Err != nil {
@@ -1526,7 +1523,7 @@ func ApptPrice(vc *Ctx, appointment model.Appointment, clinic model.Clinic, swap
 			var templ_7745c5c3_Var90 string
 			templ_7745c5c3_Var90, templ_7745c5c3_Err = templ.JoinStringErrs(appointment.PriceInputValue())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 390, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 387, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var90))
 			if templ_7745c5c3_Err != nil {
@@ -1573,7 +1570,7 @@ func ClinicSearch(vc *Ctx, clinics []model.Clinic) templ.Component {
 		var templ_7745c5c3_Var92 string
 		templ_7745c5c3_Var92, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.search_clinics"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 416, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 413, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var92))
 		if templ_7745c5c3_Err != nil {
@@ -1636,7 +1633,7 @@ func ApptSearchClinicsResults(vc *Ctx, clinics []model.Clinic) templ.Component {
 			var templ_7745c5c3_Var94 string
 			templ_7745c5c3_Var94, templ_7745c5c3_Err = templ.JoinStringErrs(clinic.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 444, Col: 63}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 441, Col: 63}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var94))
 			if templ_7745c5c3_Err != nil {
@@ -1649,7 +1646,7 @@ func ApptSearchClinicsResults(vc *Ctx, clinics []model.Clinic) templ.Component {
 			var templ_7745c5c3_Var95 string
 			templ_7745c5c3_Var95, templ_7745c5c3_Err = templ.JoinStringErrs(clinic.Email)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 445, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 442, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var95))
 			if templ_7745c5c3_Err != nil {
@@ -1662,7 +1659,7 @@ func ApptSearchClinicsResults(vc *Ctx, clinics []model.Clinic) templ.Component {
 			var templ_7745c5c3_Var96 string
 			templ_7745c5c3_Var96, templ_7745c5c3_Err = templ.JoinStringErrs(clinic.Phone)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 445, Col: 104}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 442, Col: 104}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var96))
 			if templ_7745c5c3_Err != nil {
@@ -1675,7 +1672,7 @@ func ApptSearchClinicsResults(vc *Ctx, clinics []model.Clinic) templ.Component {
 			var templ_7745c5c3_Var97 string
 			templ_7745c5c3_Var97, templ_7745c5c3_Err = templ.JoinStringErrs(clinic.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 453, Col: 23}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 450, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var97))
 			if templ_7745c5c3_Err != nil {
@@ -1698,7 +1695,7 @@ func ApptSearchClinicsResults(vc *Ctx, clinics []model.Clinic) templ.Component {
 			var templ_7745c5c3_Var98 string
 			templ_7745c5c3_Var98, templ_7745c5c3_Err = templ.JoinStringErrs("/appointments/new/pricefrg/" + clinic.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 457, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 454, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var98))
 			if templ_7745c5c3_Err != nil {
@@ -1717,7 +1714,7 @@ func ApptSearchClinicsResults(vc *Ctx, clinics []model.Clinic) templ.Component {
 			var templ_7745c5c3_Var99 string
 			templ_7745c5c3_Var99, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.nothing_found"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 465, Col: 75}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 462, Col: 75}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var99))
 			if templ_7745c5c3_Err != nil {
@@ -1799,7 +1796,7 @@ func PatientSearch(vc *Ctx, patients []model.Patient) templ.Component {
 		var templ_7745c5c3_Var102 string
 		templ_7745c5c3_Var102, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.search_patients"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 496, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 493, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var102))
 		if templ_7745c5c3_Err != nil {
@@ -1862,7 +1859,7 @@ func PatientSearchResults(patients []model.Patient, vc *Ctx) templ.Component {
 			var templ_7745c5c3_Var104 string
 			templ_7745c5c3_Var104, templ_7745c5c3_Err = templ.JoinStringErrs(patient.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 521, Col: 64}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 518, Col: 64}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var104))
 			if templ_7745c5c3_Err != nil {
@@ -1875,7 +1872,7 @@ func PatientSearchResults(patients []model.Patient, vc *Ctx) templ.Component {
 			var templ_7745c5c3_Var105 string
 			templ_7745c5c3_Var105, templ_7745c5c3_Err = templ.JoinStringErrs(patient.Email)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 522, Col: 86}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 519, Col: 86}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var105))
 			if templ_7745c5c3_Err != nil {
@@ -1888,7 +1885,7 @@ func PatientSearchResults(patients []model.Patient, vc *Ctx) templ.Component {
 			var templ_7745c5c3_Var106 string
 			templ_7745c5c3_Var106, templ_7745c5c3_Err = templ.JoinStringErrs(patient.Phone)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 522, Col: 106}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 519, Col: 106}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var106))
 			if templ_7745c5c3_Err != nil {
@@ -1901,7 +1898,7 @@ func PatientSearchResults(patients []model.Patient, vc *Ctx) templ.Component {
 			var templ_7745c5c3_Var107 string
 			templ_7745c5c3_Var107, templ_7745c5c3_Err = templ.JoinStringErrs(patient.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 530, Col: 24}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 527, Col: 24}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var107))
 			if templ_7745c5c3_Err != nil {
@@ -1930,7 +1927,7 @@ func PatientSearchResults(patients []model.Patient, vc *Ctx) templ.Component {
 			var templ_7745c5c3_Var108 string
 			templ_7745c5c3_Var108, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.nothing_found"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 540, Col: 75}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 537, Col: 75}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var108))
 			if templ_7745c5c3_Err != nil {
@@ -1982,7 +1979,7 @@ func AppointmentForm(appointment model.Appointment, vc *Ctx) templ.Component {
 			var templ_7745c5c3_Var110 string
 			templ_7745c5c3_Var110, templ_7745c5c3_Err = templ.JoinStringErrs("/appointments/" + appointment.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 552, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 549, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var110))
 			if templ_7745c5c3_Err != nil {
@@ -1995,7 +1992,7 @@ func AppointmentForm(appointment model.Appointment, vc *Ctx) templ.Component {
 			var templ_7745c5c3_Var111 templ.SafeURL
 			templ_7745c5c3_Var111, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL("/appointments/" + appointment.ID + "/patch"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 553, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 550, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var111))
 			if templ_7745c5c3_Err != nil {

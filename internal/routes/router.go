@@ -41,7 +41,7 @@ func AuthRoutes(s *server.Server) {
 	a.Get("/resetpassword", a.HandleResetPasswordPage)
 	a.Post("/resetpassword", a.HandleResetPassword)
 	a.Get("/resetpassword/change/:token", a.HandleResetPasswordChange)
-	a.Post("/resetpassword/change/:token", a.HandleResetPasswordUpdate)
+	a.Post("/resetpassword/change", a.HandleResetPasswordUpdate)
 
 	// Logto
 	a.Get("/logto", a.HandleLogtoPage)
@@ -145,7 +145,7 @@ func ThemeRoutes(s *server.Server) {
 	t := theme.NewService(s)
 
 	g := s.Group("/api/theme")
-	g.Get("", t.HandleUITheme)
+	g.Post("/toggle", t.HandleToggleTheme)
 }
 
 func UserRoutes(s *server.Server) {

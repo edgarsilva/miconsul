@@ -40,7 +40,7 @@ vet: fmt ## Run go vet (after fmt)
 lint: vet ## Alias for vet
 
 ##@ Frontend
-tailwind: ## Build Tailwind CSS
+tailwind/build: ## Build Tailwind CSS
 	@echo "🌬️ Generating Tailwind CSS styles..."
 	bun x @tailwindcss/cli -i ./styles/global.css -o ./public/global.css --minify
 
@@ -48,7 +48,7 @@ tailwind/watch: ## Watch Tailwind CSS
 	@echo "🌬️ Watching for Tailwind CSS changes..."
 	bun x @tailwindcss/cli -i ./styles/global.css -o ./public/global.css --minify --watch
 
-templ: tailwind ## Generate Templ files (depends on tailwind)
+templ/build: tailwind/build ## Generate Templ files (depends on tailwind)
 	@echo "🛕 Generating Templ files..."
 	templ generate
 
@@ -118,7 +118,6 @@ test/integration: ## Run integration tests
 
 test/coverage: ## Coverage
 	go test ./... -race -coverprofile=coverage.out && go tool cover -func=coverage/c.out
-
 
 ##@ Test Coverage
 cover:

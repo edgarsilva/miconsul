@@ -10,8 +10,6 @@ import (
 	"miconsul/internal/server"
 	"miconsul/internal/view"
 	"time"
-
-	"github.com/gofiber/fiber/v2"
 )
 
 type service struct {
@@ -24,11 +22,11 @@ func NewService(s *server.Server) service {
 	}
 }
 
-func (s service) CalcDashboardStats(c *fiber.Ctx, cu model.User) view.DashboardStats {
-	ctx, span := s.Tracer.Start(c.UserContext(), "dashboard/services:CalcDashboardStats")
+func (s service) CalcDashboardStats(ctx context.Context, cu model.User) view.DashboardStats {
+	ctx, span := s.Tracer.Start(ctx, "dashboard/services.CalcDashboardStats")
 	defer span.End()
 
-	cacheKey := s.TagWithSessionID(c, "dashboard_monthlystats")
+	cacheKey := cu.ID + ".dashboard.stats"
 	if stats, ok := s.ReadStatsCache(cacheKey); ok {
 		return stats
 	}
