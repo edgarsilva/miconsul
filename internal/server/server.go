@@ -5,17 +5,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"runtime"
+	"strconv"
+	"time"
+
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
-	"miconsul/internal/lib/sessionstorage"
 	"miconsul/internal/model"
-	"os"
-	"runtime"
-	"time"
 
-	"github.com/gofiber/contrib/otelfiber/v2"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
 	"github.com/gofiber/fiber/v3/middleware/cors"
@@ -29,6 +29,7 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/requestid"
 	"github.com/gofiber/fiber/v3/middleware/session"
 	"github.com/gofiber/fiber/v3/middleware/static"
+	"github.com/gofiber/storage/sqlite3/v2"
 
 	"github.com/panjf2000/ants/v2"
 	"go.opentelemetry.io/otel"
@@ -65,7 +66,11 @@ func New(serverOpts ...ServerOption) *Server {
 		}
 	}
 
-	storage := sessionstorage.New()
+	sessionPath := ""
+	if server.AppEnv != nil {
+		sessionPath = server.AppEnv.SessionDBPath
+	}
+	storage := sqlite3.New(sessionConfig(sessionPath))
 	server.SessionStore = session.NewStore(session.Config{
 		Storage:      storage,
 		CookieSecure: true,
@@ -77,7 +82,6 @@ func New(serverOpts ...ServerOption) *Server {
 	fiberConfig := fiber.Config{ErrorHandler: fiberAppErrorHandler}
 	fiberApp := fiber.New(fiberConfig)
 	fiberApp.Use(recover.New()) // Recover MW catches panics that might stop app execution
-	fiberApp.Use(otelfiber.Middleware())
 	fiberApp.Use(logger.New())
 
 	fiberApp.Use(cors.New())
@@ -238,8 +242,21 @@ func (s *Server) Trace(ctx context.Context, spanName string) (context.Context, t
 }
 
 // Listen starts the fiberapp server (fiperapp.Listen()) on the specified port.
-func (s *Server) Listen(port string) error {
-	return s.App.Listen(fmt.Sprintf(":%v", port))
+func (s *Server) Listen(portOverride ...int) error {
+	port := 0
+	if s.AppEnv != nil && s.AppEnv.AppPort > 0 {
+		port = s.AppEnv.AppPort
+	}
+
+	if len(portOverride) > 0 {
+		port = portOverride[0]
+	}
+
+	if port <= 0 {
+		port = 3000
+	}
+
+	return s.App.Listen(":" + strconv.Itoa(port))
 }
 
 func (s *Server) Session(c fiber.Ctx) *session.Session {

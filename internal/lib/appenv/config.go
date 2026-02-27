@@ -2,17 +2,20 @@ package appenv
 
 import (
 	"log"
+	"time"
 
 	"github.com/edgarsilva/simpleenv"
 )
 
 type Env struct {
 	AppName     string `env:"APP_NAME"`
-	AppEnv      string `env:"APP_ENV"`
+	AppEnv      string `env:"APP_ENV;oneof=development,test,staging,production"`
 	AppProtocol string `env:"APP_PROTOCOL"`
 	AppDomain   string `env:"APP_DOMAIN"`
 	AppVersion  string `env:"APP_VERSION"`
-	AppPort     string `env:"APP_PORT"`
+	AppPort     int    `env:"APP_PORT;min=1;max=65535"`
+
+	AppShutdownTimeout time.Duration `env:"APP_SHUTDOWN_TIMEOUT;optional;min=1s"`
 
 	CookieSecret string `env:"COOKIE_SECRET"`
 	JWTSecret    string `env:"JWT_SECRET"`
@@ -41,11 +44,11 @@ type Env struct {
 }
 
 func New() *Env {
-	e := Env{}
-	err := simpleenv.Load(&e)
+	e := &Env{AppShutdownTimeout: 10 * time.Second}
+	err := simpleenv.Load(e)
 	if err != nil {
 		log.Fatal("failed to load loading ENV variables:", err)
 	}
 
-	return &e
+	return e
 }

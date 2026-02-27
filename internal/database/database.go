@@ -53,14 +53,45 @@ func New(DBPath string) *Database {
 	}
 }
 
-func ApplyMigrations(dbPath string) error {
-	fmt.Println(" Applying migrations...")
-	dsn := dbPath
-	sqlDB, err := sql.Open("sqlite3", dsn)
+func (d *Database) SQLDB() (*sql.DB, error) {
+	if d == nil || d.DB == nil {
+		return nil, nil
+	}
+
+	sqlDB, err := d.DB.DB()
+	if err != nil {
+		return nil, fmt.Errorf("get sql db handle: %w", err)
+	}
+
+	return sqlDB, nil
+}
+
+func (d *Database) Close() error {
+	sqlDB, err := d.SQLDB()
 	if err != nil {
 		return err
 	}
-	defer sqlDB.Close()
+
+	if sqlDB == nil {
+		return nil
+	}
+
+	return sqlDB.Close()
+}
+
+func ApplyMigrations(database *Database) error {
+	fmt.Println(" Applying migrations...")
+	if database == nil {
+		return fmt.Errorf("database is not initialized")
+	}
+
+	sqlDB, err := database.SQLDB()
+	if err != nil {
+		return fmt.Errorf("resolve sql db handle: %w", err)
+	}
+	if sqlDB == nil {
+		return fmt.Errorf("database is not initialized")
+	}
 
 	// Usage
 	if os.Getenv("APP_ENV") == "development" || os.Getenv("APP_ENV") == "production" {
@@ -72,11 +103,16 @@ func ApplyMigrations(dbPath string) error {
 	goose.SetBaseFS(migrations.FS)
 
 	if err := goose.SetDialect("sqlite3"); err != nil {
-		return err
+		return fmt.Errorf("set goose dialect: %w", err)
 	}
 	if err := goose.Up(sqlDB, "."); err != nil {
-		return fmt.Errorf("goose up: %w", err)
+		return fmt.Errorf("run goose migrations: %w", err)
 	}
+
+	if err := sqlDB.Ping(); err != nil {
+		return fmt.Errorf("ping db: %w", err)
+	}
+
 	return nil
 }
 

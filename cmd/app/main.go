@@ -1,10 +1,17 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
+	"net"
+	"net/http"
 	"os"
 	"os/signal"
+	"strings"
+	"syscall"
+	"time"
 
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
@@ -18,16 +25,31 @@ import (
 )
 
 func main() {
-	godotenv.Load(".env")
+	_ = godotenv.Load(".env")
+
+	fmt.Println(" Starting server...")
 	defer func() {
 		fmt.Println("✅ All cleanup tasks completed")
 	}()
 
+	fmt.Println(" Loading environment variables...")
 	env := appenv.New()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
-	err := database.ApplyMigrations(env.DBPath)
-	if err != nil {
-		log.Panic("Failed to apply database migrations:", err.Error())
+	fmt.Println(" Connecting to database...")
+	db := database.New(env.DBPath)
+	defer func() {
+		fmt.Println("🔌 Closing database connections...")
+		if err := db.Close(); err != nil {
+			log.Printf("failed to close database: %v", err)
+		}
+	}()
+
+	fmt.Println(" Applying database migrations...")
+	if err := database.ApplyMigrations(db); err != nil {
+		log.Printf("failed to apply database migrations: %v", err)
+		return
 	}
 
 	// ctx := context.Background()
@@ -37,20 +59,22 @@ func main() {
 	// 	shutdownTracer()
 	// }()
 
+	fmt.Println(" Starting cronjobs...")
 	cj, shutdownCronjob := cronjob.New()
 	defer func() {
 		fmt.Println("🕑 Cronjobs shutting down...")
 		shutdownCronjob()
 	}()
 
+	fmt.Println(" Starting workpool...")
 	wp, shutdownWorkPool := workpool.New(10)
 	defer func() {
 		fmt.Println("🐜 Ants workpool shutting down...")
 		shutdownWorkPool()
 	}()
 
+	fmt.Println(" Starting localizer...")
 	localizer := localize.New("en-US", "es-MX")
-	db := database.New(os.Getenv("DB_PATH"))
 	s := server.New(
 		server.WithAppEnv(env),
 		server.WithDatabase(db),
@@ -59,34 +83,59 @@ func main() {
 		// server.WithTracerProvider(tp),
 		server.WithLocalizer(localizer),
 	)
+
+	fmt.Println(" Registering routes...")
 	routes.RegisterServices(s)
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "3000"
-	}
+	fmt.Println(" Setting up server...")
 
-	osExitSignal := make(chan os.Signal, 1)
-	signal.Notify(osExitSignal, os.Interrupt)
-
-	serverShutdown := make(chan struct{})
-
+	serveErr := make(chan error, 1)
 	go func() {
-		<-osExitSignal
-		fmt.Println("Gracefully shutting down...")
-
-		if err := s.Shutdown(); err != nil {
-			log.Panic("Failed to gracefully shutdowm fiber app server:", err.Error())
-		}
-
-		serverShutdown <- struct{}{}
+		serveErr <- s.Listen(env.AppPort)
 	}()
 
-	if err := s.Listen(port); err != nil {
-		log.Panic("Failed to start server on port:", port, err.Error())
+	shutdownTimeout := env.AppShutdownTimeout
+	select {
+	case err := <-serveErr:
+		if err != nil && !isExpectedServerCloseError(err) {
+			log.Printf("server stopped with error: %v", err)
+		}
+	case <-ctx.Done():
+		fmt.Println("🩰 Graceful shutdown requested...")
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+		defer cancel()
+
+		err := s.ShutdownWithContext(shutdownCtx)
+		if err != nil && !errors.Is(err, context.Canceled) && !isExpectedServerCloseError(err) {
+			log.Printf("graceful shutdown error: %v", err)
+		} else {
+			fmt.Println("✅ Server shutdown completed")
+		}
+
+		select {
+		case err := <-serveErr:
+			if err != nil && !isExpectedServerCloseError(err) {
+				log.Printf("server exit error after shutdown: %v", err)
+			}
+		case <-time.After(shutdownTimeout):
+			log.Printf("listen exit timed out after %s", shutdownTimeout)
+		}
 	}
 
-	<-serverShutdown
 	fmt.Println("🧹 Running cleanup tasks...")
-	// Your cleanup tasks go here
+}
+
+func isExpectedServerCloseError(err error) bool {
+	if err == nil {
+		return true
+	}
+
+	if errors.Is(err, context.Canceled) || errors.Is(err, http.ErrServerClosed) || errors.Is(err, net.ErrClosed) {
+		return true
+	}
+
+	message := strings.ToLower(err.Error())
+	return strings.Contains(message, "server closed") ||
+		strings.Contains(message, "listener closed") ||
+		strings.Contains(message, "use of closed network connection")
 }
