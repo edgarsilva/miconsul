@@ -6,9 +6,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/helmet"
-	"github.com/gofiber/fiber/v2/middleware/limiter"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/helmet"
+	"github.com/gofiber/fiber/v3/middleware/limiter"
+	"github.com/gofiber/fiber/v3/middleware/static"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -31,12 +32,12 @@ func limiterConfig() limiter.Config {
 	}
 }
 
-func staticConfig() fiber.Static {
-	return fiber.Static{
+func staticConfig() static.Config {
+	return static.Config{
 		Compress:      true,
 		ByteRange:     true,
 		Browse:        false,
-		Index:         "",
+		IndexNames:    []string{},
 		CacheDuration: staticCacheDuration(),
 		MaxAge:        3600,
 	}
@@ -86,7 +87,7 @@ func helmetConfig() helmet.Config {
 
 // recoverConfig returns recover middleware config object with the yield func
 // executed with the request ctx to trace the panic error
-func fiberAppErrorHandler(ctx *fiber.Ctx, err error) error {
+func fiberAppErrorHandler(ctx fiber.Ctx, err error) error {
 	// Status code defaults to 500
 	code := fiber.StatusInternalServerError
 
@@ -95,7 +96,7 @@ func fiberAppErrorHandler(ctx *fiber.Ctx, err error) error {
 		code = e.Code
 	}
 
-	span := trace.SpanFromContext(ctx.UserContext())
+	span := trace.SpanFromContext(ctx.Context())
 	defer span.End()
 
 	if err != nil {

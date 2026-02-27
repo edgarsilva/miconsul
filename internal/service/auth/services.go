@@ -15,21 +15,21 @@ import (
 	"time"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/session"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/session"
 	"go.opentelemetry.io/otel/trace"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 type MiddlewareService interface {
-	Session(c *fiber.Ctx) *session.Session
+	Session(c fiber.Ctx) *session.Session
 	DBClient() *database.Database
 	Trace(ctx context.Context, spanName string) (context.Context, trace.Span)
 }
 
 type AuthStrategy interface {
-	Authenticate(c *fiber.Ctx) (model.User, error)
+	Authenticate(c fiber.Ctx) (model.User, error)
 }
 
 type service struct {
@@ -204,7 +204,7 @@ func (s service) resetPasswordVerifyToken(token string) (email string, err error
 
 // Authenticate an user based on Req Ctx Cookie 'Auth'
 // cookies
-func Authenticate(c *fiber.Ctx, mws MiddlewareService) (model.User, error) {
+func Authenticate(c fiber.Ctx, mws MiddlewareService) (model.User, error) {
 	strategy := selectStrategy(c, mws)
 	user, err := strategy.Authenticate(c)
 	if err != nil {
@@ -214,7 +214,7 @@ func Authenticate(c *fiber.Ctx, mws MiddlewareService) (model.User, error) {
 	return user, nil
 }
 
-func selectStrategy(c *fiber.Ctx, mws MiddlewareService) AuthStrategy {
+func selectStrategy(c fiber.Ctx, mws MiddlewareService) AuthStrategy {
 	switch {
 	case LogtoEnabled():
 		return NewLogtoStrategy(c, mws)

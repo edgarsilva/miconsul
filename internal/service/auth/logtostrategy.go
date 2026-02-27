@@ -7,15 +7,15 @@ import (
 	"miconsul/internal/model"
 	"os"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/session"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/session"
 	"go.opentelemetry.io/otel/trace"
 
 	logto "github.com/logto-io/go/client"
 )
 
 type LogtoStrategy struct {
-	Ctx      *fiber.Ctx
+	Ctx      fiber.Ctx
 	Logto    *logto.LogtoClient
 	SaveSess func()
 	service  LogtoStrategyService
@@ -23,11 +23,11 @@ type LogtoStrategy struct {
 
 type LogtoStrategyService interface {
 	DBClient() *database.Database
-	Session(c *fiber.Ctx) *session.Session
+	Session(c fiber.Ctx) *session.Session
 	Trace(ctx context.Context, spanName string) (context.Context, trace.Span)
 }
 
-func NewLogtoStrategy(c *fiber.Ctx, s LogtoStrategyService) *LogtoStrategy {
+func NewLogtoStrategy(c fiber.Ctx, s LogtoStrategyService) *LogtoStrategy {
 	client, saveSess := LogtoClient(s.Session(c))
 
 	return &LogtoStrategy{
@@ -52,8 +52,8 @@ func (s LogtoStrategy) FindUserByExtID(ctx context.Context, extID string) (model
 	return user, result.Error
 }
 
-func (s *LogtoStrategy) Authenticate(c *fiber.Ctx) (model.User, error) {
-	ctx, span := s.Trace(c.UserContext(), "auth/services:logtoStrategy")
+func (s *LogtoStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
+	ctx, span := s.Trace(c.Context(), "auth/services:logtoStrategy")
 	defer span.End()
 	defer s.SaveSess()
 

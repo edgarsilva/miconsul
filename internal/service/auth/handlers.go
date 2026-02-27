@@ -9,21 +9,21 @@ import (
 	"miconsul/internal/view"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"golang.org/x/crypto/bcrypt"
 )
 
 // HandleLoginPage returns the login page html
 //
 // GET: /login
-func (s *service) HandleLoginPage(c *fiber.Ctx) error {
+func (s *service) HandleLoginPage(c fiber.Ctx) error {
 	if LogtoEnabled() {
-		return c.Redirect("/logto/signin", fiber.StatusSeeOther)
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/logto/signin")
 	}
 
 	cu, _ := s.CurrentUser(c)
 	if cu.IsLoggedIn() {
-		return c.Redirect("/")
+		return c.Redirect().To("/")
 	}
 
 	email := c.Query("email", "")
@@ -36,7 +36,7 @@ func (s *service) HandleLoginPage(c *fiber.Ctx) error {
 // if the email & password combination are valid
 //
 // POST: /login
-func (s *service) HandleLogin(c *fiber.Ctx) error {
+func (s *service) HandleLogin(c fiber.Ctx) error {
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme))
 	respErr := errors.New("incorrect email and password combination")
@@ -46,7 +46,7 @@ func (s *service) HandleLogin(c *fiber.Ctx) error {
 		return view.Render(c, view.LoginPage(email, "", respErr, vc))
 	}
 
-	ctx, span := s.Tracer.Start(c.UserContext(), "auth/handlers:HandleLogin")
+	ctx, span := s.Tracer.Start(c.Context(), "auth/handlers:HandleLogin")
 	defer span.End()
 
 	user, err := s.userFetch(ctx, email)
@@ -76,21 +76,21 @@ func (s *service) HandleLogin(c *fiber.Ctx) error {
 	default:
 		jwt, err := JWTCreateToken(user.Email, user.ID)
 		if err != nil {
-			return c.Redirect("/?msg=Failed to login, please try again")
+			return c.Redirect().To("/?msg=Failed to login, please try again")
 		}
 		c.Cookie(handlerutils.NewCookie("Auth", jwt, time.Hour*validFor))
-		return c.Redirect("/?timeframe=day")
+		return c.Redirect().To("/?timeframe=day")
 	}
 }
 
 // HandleSignupPage returns the Signup form page html
 //
 // GET: /signup
-func (s *service) HandleSignupPage(c *fiber.Ctx) error {
+func (s *service) HandleSignupPage(c fiber.Ctx) error {
 	cu, _ := s.CurrentUser(c)
 
 	if cu.IsLoggedIn() {
-		return c.Redirect("/todos")
+		return c.Redirect().To("/todos")
 	}
 
 	msg := c.Query("msg", "")
@@ -107,7 +107,7 @@ func (s *service) HandleSignupPage(c *fiber.Ctx) error {
 // HandleSignup creates a new user if email and password are valid
 //
 // POST: /signup
-func (s *service) HandleSignup(c *fiber.Ctx) error {
+func (s *service) HandleSignup(c fiber.Ctx) error {
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme))
 	email, password, err := authParams(c)
@@ -126,23 +126,23 @@ func (s *service) HandleSignup(c *fiber.Ctx) error {
 		token := randToken()
 		s.userUpdateConfirmToken(email, token)
 		go mailer.ConfirmEmail(email, token)
-		return c.Redirect("/login?msg=check your inbox, we'll re-send a confirmation link")
+		return c.Redirect().To("/login?msg=check your inbox, we'll re-send a confirmation link")
 	}
 
 	if err := s.signup(email, password); err != nil {
 		return view.Render(c, view.SignupPage(vc, email, err))
 	}
 
-	return c.Redirect("/login?msg=check your inbox to confirm your email")
+	return c.Redirect().To("/login?msg=check your inbox to confirm your email")
 }
 
 // HandleEmailConfirmation creates a new user if email and password are valid
 //
 // POST: /signup/confirmemail
-func (s *service) HandleSignupConfirmEmail(c *fiber.Ctx) error {
+func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 	token := c.Params("token", "")
 	if token == "" {
-		return c.Redirect("/login?msg=unable to confirm email, try login instead")
+		return c.Redirect().To("/login?msg=unable to confirm email, try login instead")
 	}
 
 	user := model.User{}
@@ -152,7 +152,7 @@ func (s *service) HandleSignupConfirmEmail(c *fiber.Ctx) error {
 		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
 		Take(&user).Error
 	if err != nil {
-		return c.Redirect("/login?msg=we couldn't verify your account, pls try again")
+		return c.Redirect().To("/login?msg=we couldn't verify your account, pls try again")
 	}
 
 	result := s.DB.
@@ -161,23 +161,23 @@ func (s *service) HandleSignupConfirmEmail(c *fiber.Ctx) error {
 		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
 		Updates(&model.User{})
 	if result.Error != nil {
-		return c.Redirect("/login?msg=Email confirmed, you should be able to login now")
+		return c.Redirect().To("/login?msg=Email confirmed, you should be able to login now")
 	}
 
 	jwt, err := JWTCreateToken(user.Email, user.ID)
 	if err != nil {
-		return c.Redirect("/login?msg=Email confirmed, you should be able to login now")
+		return c.Redirect().To("/login?msg=Email confirmed, you should be able to login now")
 	}
 
 	c.Cookie(handlerutils.NewCookie("Auth", jwt, time.Hour*24))
-	return c.Redirect("/login?msg=Email confirmed, you should be able to login now")
+	return c.Redirect().To("/login?msg=Email confirmed, you should be able to login now")
 }
 
 // HandleLogout calles sessionDestroy and invalidateCookies then redirects to
 // /login
 //
 // ALL: /logout
-func (s *service) HandleLogout(c *fiber.Ctx) error {
+func (s *service) HandleLogout(c fiber.Ctx) error {
 	s.SessionDestroy(c)
 	handlerutils.InvalidateCookies(c, "Auth", "JWT")
 
@@ -191,13 +191,13 @@ func (s *service) HandleLogout(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusTemporaryRedirect)
 	}
 
-	return c.Redirect(redirectURL)
+	return c.Redirect().To(redirectURL)
 }
 
 // HandlePageResetPassword renders the HTML reset password page/form
 //
 // GET: /resetpassword
-func (s *service) HandleResetPasswordPage(c *fiber.Ctx) error {
+func (s *service) HandleResetPasswordPage(c fiber.Ctx) error {
 	vc, _ := view.NewCtx(c)
 
 	msg := s.SessionRead(c, "msg", "")
@@ -212,7 +212,7 @@ func (s *service) HandleResetPasswordPage(c *fiber.Ctx) error {
 // as query param, url param or body param
 //
 // POST: /resetpassword
-func (s *service) HandleResetPassword(c *fiber.Ctx) error {
+func (s *service) HandleResetPassword(c fiber.Ctx) error {
 	vc, _ := view.NewCtx(c)
 	email, err := resetPasswordEmailParam(c)
 	if err != nil {
@@ -229,7 +229,7 @@ func (s *service) HandleResetPassword(c *fiber.Ctx) error {
 
 	token, err := resetPasswordToken()
 	if err != nil {
-		return c.Redirect("/resetpassword")
+		return c.Redirect().To("/resetpassword")
 	}
 
 	user.ResetToken = token
@@ -245,15 +245,15 @@ func (s *service) HandleResetPassword(c *fiber.Ctx) error {
 // combo ase valid
 //
 // GET: /resetpassword/change/:token
-func (s *service) HandleResetPasswordChange(c *fiber.Ctx) error {
+func (s *service) HandleResetPasswordChange(c fiber.Ctx) error {
 	token := c.Params("token", "")
 	if token == "" {
-		return c.Redirect("/resetpassword?msg=token can't be blank")
+		return c.Redirect().To("/resetpassword?msg=token can't be blank")
 	}
 
 	email, err := s.resetPasswordVerifyToken(token)
 	if err != nil {
-		return c.Redirect("/resetpassword?msg=invalid email or token")
+		return c.Redirect().To("/resetpassword?msg=invalid email or token")
 	}
 
 	nonce := xid.New("rpnnce")
@@ -266,26 +266,26 @@ func (s *service) HandleResetPasswordChange(c *fiber.Ctx) error {
 // HandleResetPasswordUpdate updates the user password in the DB
 //
 // POST: /resetpassword/update
-func (s *service) HandleResetPasswordUpdate(c *fiber.Ctx) error {
+func (s *service) HandleResetPasswordUpdate(c fiber.Ctx) error {
 	email, err := resetPasswordEmailParam(c)
 	if err != nil {
-		return c.Redirect("/resetpassword?msg=something went wrong with the email, try again!")
+		return c.Redirect().To("/resetpassword?msg=something went wrong with the email, try again!")
 	}
 
 	token := c.FormValue("token", "")
 	if token == "" {
-		return c.Redirect("/resetpassword?msg=something went wrong with the token, try again!")
+		return c.Redirect().To("/resetpassword?msg=something went wrong with the token, try again!")
 	}
 
 	nonce := c.FormValue("nonce", "")
 	cmpNonce := s.SessionRead(c, "nonce", nonce)
 	if nonce == "" || nonce != cmpNonce {
-		return c.Redirect("/resetpassword?msg=something went wrong with the nonce, try again!")
+		return c.Redirect().To("/resetpassword?msg=something went wrong with the nonce, try again!")
 	}
 
 	_, err = s.resetPasswordVerifyToken(token)
 	if err != nil {
-		return c.Redirect("/resetpassword?msg=seems like your token has expired, try again!")
+		return c.Redirect().To("/resetpassword?msg=seems like your token has expired, try again!")
 	}
 
 	vc, _ := view.NewCtx(c)
@@ -303,16 +303,16 @@ func (s *service) HandleResetPasswordUpdate(c *fiber.Ctx) error {
 
 	_, err = s.userUpdatePassword(email, password, token)
 	if err != nil {
-		return c.Redirect("/resetpassword?msg=something went wrong, try again!")
+		return c.Redirect().To("/resetpassword?msg=something went wrong, try again!")
 	}
 
-	return c.Redirect("/login")
+	return c.Redirect().To("/login")
 }
 
 // HandleValidate validates the uses auth session is still valid
 //
 // POST: /auth/validate
-func (s *service) HandleValidate(c *fiber.Ctx) error {
+func (s *service) HandleValidate(c fiber.Ctx) error {
 	_, err := s.CurrentUser(c)
 	if err != nil {
 		return c.SendStatus(fiber.StatusUnauthorized)
@@ -324,8 +324,8 @@ func (s *service) HandleValidate(c *fiber.Ctx) error {
 // HandleShowUser returns a JSON model.User if the session is valid
 //
 // GET: /auth/show
-func (s *service) HandleShowUser(c *fiber.Ctx) error {
-	ctx, span := s.Tracer.Start(c.UserContext(), "auth/handlers:HandleShowUser")
+func (s *service) HandleShowUser(c fiber.Ctx) error {
+	ctx, span := s.Tracer.Start(c.Context(), "auth/handlers:HandleShowUser")
 	defer span.End()
 
 	id := c.Locals("uid")

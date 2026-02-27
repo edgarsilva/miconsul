@@ -4,74 +4,74 @@ import (
 	"miconsul/internal/view"
 	"net/http"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/log"
-	"github.com/gofiber/fiber/v2/middleware/adaptor"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/log"
+	"github.com/gofiber/fiber/v3/middleware/adaptor"
 
 	logto "github.com/logto-io/go/client"
 	logtocore "github.com/logto-io/go/core"
 )
 
 // HandleLogtoSignin redirects to Logto sign-in page
-func (s service) HandleLogtoSignin(c *fiber.Ctx) error {
+func (s service) HandleLogtoSignin(c fiber.Ctx) error {
 	logtoClient, saveSess := LogtoClient(s.Session(c))
 	defer saveSess()
 
 	if logtoClient.IsAuthenticated() {
-		return c.Redirect("/", fiber.StatusTemporaryRedirect)
+		return c.Redirect().Status(fiber.StatusTemporaryRedirect).To("/")
 	}
 
 	// The sign-in request is handled by Logto.
 	// The user will be redirected to the RedirectURI after successful sign in.
 	signInUri, err := logtoClient.SignIn(redirectURI("/logto/callback"))
 	if err != nil {
-		return c.Redirect("/logto/signout")
+		return c.Redirect().To("/logto/signout")
 	}
 
 	// Redirect the user to the Logto sign-in page.
-	return c.Redirect(signInUri, fiber.StatusTemporaryRedirect)
+	return c.Redirect().Status(fiber.StatusTemporaryRedirect).To(signInUri)
 }
 
 // HandleLogtoCallback handles the Logto callback/webhook after login
-func (s *service) HandleLogtoCallback(c *fiber.Ctx) error {
+func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
 	logtoClient, saveSess := LogtoClient(s.Session(c))
 	defer saveSess()
 
 	req, err := adaptor.ConvertRequest(c, true)
 	if err != nil {
 		log.Error("failed to convert fiber request to http request with adaptor on logto callback:", err)
-		return c.Redirect("/logto/signout")
+		return c.Redirect().To("/logto/signout")
 	}
 
 	err = logtoClient.HandleSignInCallback(req)
 	if err != nil {
 		log.Error("failed to verify signin in logto callback handler:", err)
-		return c.Redirect("/logto/signout")
+		return c.Redirect().To("/logto/signout")
 	}
 
 	// claims, err := logtoClient.GetIdTokenClaims()
 	// if err != nil {
 	// 	log.Error("failed to get IdTokenClaims in logto callback handler")
-	// 	return c.Redirect("/logto/signout")
+	// 	return c.Redirect().To("/logto/signout")
 	// }
 
 	logtoUser, err := logtoCustomJWTClaims(logtoClient)
 	if err != nil {
 		log.Error("failed to get CustomClaims from logto:", err)
-		return c.Redirect("/logto/signout")
+		return c.Redirect().To("/logto/signout")
 	}
 
-	err = s.saveLogtoUser(c.UserContext(), logtoUser)
+	err = s.saveLogtoUser(c.Context(), logtoUser)
 	if err != nil {
 		log.Error(err)
-		return c.Redirect("/logto/signout")
+		return c.Redirect().To("/logto/signout")
 	}
 
 	// This example takes the user back to the home page.
-	return c.Redirect("/", http.StatusSeeOther)
+	return c.Redirect().Status(http.StatusSeeOther).To("/")
 }
 
-func (s *service) HandleLogtoSignout(c *fiber.Ctx) error {
+func (s *service) HandleLogtoSignout(c fiber.Ctx) error {
 	logtoClient, saveSess := LogtoClient(s.Session(c))
 	defer saveSess()
 
@@ -82,11 +82,11 @@ func (s *service) HandleLogtoSignout(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
 	}
 
-	return c.Redirect(signOutUri, fiber.StatusTemporaryRedirect)
+	return c.Redirect().Status(fiber.StatusTemporaryRedirect).To(signOutUri)
 }
 
 // HandleLogtoPage renders the Logto page with two links to sign in and sign out
-func (s *service) HandleLogtoPage(c *fiber.Ctx) error {
+func (s *service) HandleLogtoPage(c fiber.Ctx) error {
 	logtoClient, saveSess := LogtoClient(s.Session(c))
 	defer saveSess()
 

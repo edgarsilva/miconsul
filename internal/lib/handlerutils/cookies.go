@@ -4,7 +4,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // newCookie creates a new cookie and returns a pointer to the cookie
@@ -20,7 +20,7 @@ func NewCookie(name, value string, validFor time.Duration) *fiber.Cookie {
 
 // invalidateSessionCookies blanks session cookies and expires them
 // time.Hour*0
-func InvalidateCookies(c *fiber.Ctx, cookieNames ...string) {
+func InvalidateCookies(c fiber.Ctx, cookieNames ...string) {
 	c.ClearCookie(cookieNames...)
 	for _, name := range cookieNames {
 		c.Cookie(NewCookie(name, "", time.Hour*0))

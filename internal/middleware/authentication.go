@@ -6,11 +6,11 @@ import (
 	"miconsul/internal/model"
 	"miconsul/internal/service/auth"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
-func MustAuthenticate(mws auth.MiddlewareService) func(c *fiber.Ctx) error {
-	return func(c *fiber.Ctx) error {
+func MustAuthenticate(mws auth.MiddlewareService) func(c fiber.Ctx) error {
+	return func(c fiber.Ctx) error {
 		cu, err := auth.Authenticate(c, mws)
 		if err != nil {
 			switch c.Accepts("text/html", "text/plain", "application/json") {
@@ -18,7 +18,7 @@ func MustAuthenticate(mws auth.MiddlewareService) func(c *fiber.Ctx) error {
 				return c.SendStatus(fiber.StatusServiceUnavailable)
 			default:
 				if c.Get("HX-Request") != "true" {
-					return c.Redirect("/logout")
+					return c.Redirect().To("/logout")
 				}
 				c.Set("HX-Redirect", "/logout")
 				return c.SendStatus(fiber.StatusUnauthorized)
@@ -31,19 +31,19 @@ func MustAuthenticate(mws auth.MiddlewareService) func(c *fiber.Ctx) error {
 	}
 }
 
-func MustBeAdmin(mws auth.MiddlewareService) func(c *fiber.Ctx) error {
-	return func(c *fiber.Ctx) error {
+func MustBeAdmin(mws auth.MiddlewareService) func(c fiber.Ctx) error {
+	return func(c fiber.Ctx) error {
 		cu, err := auth.Authenticate(c, mws)
 		if err != nil || cu.Role != model.UserRoleAdmin {
 			switch c.Accepts("text/html", "text/plain", "application/json") {
 			case "text/html":
 				c.Set("HX-Redirect", "/logout")
-				return c.Redirect("/logout")
+				return c.Redirect().To("/logout")
 			case "text/plain", "application/json":
 				return c.SendStatus(fiber.StatusServiceUnavailable)
 			default:
 				c.Set("HX-Redirect", "/logout")
-				return c.Redirect("/logout")
+				return c.Redirect().To("/logout")
 			}
 		}
 
@@ -54,8 +54,8 @@ func MustBeAdmin(mws auth.MiddlewareService) func(c *fiber.Ctx) error {
 	}
 }
 
-func MaybeAuthenticate(mws auth.MiddlewareService) func(c *fiber.Ctx) error {
-	return func(c *fiber.Ctx) error {
+func MaybeAuthenticate(mws auth.MiddlewareService) func(c fiber.Ctx) error {
+	return func(c fiber.Ctx) error {
 		cu, _ := auth.Authenticate(c, mws)
 
 		c.Locals("current_user", cu)

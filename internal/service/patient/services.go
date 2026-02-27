@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 type service struct {
@@ -35,7 +35,7 @@ func (s service) Patients(cu model.User, term string) ([]model.Patient, error) {
 	return patients, err
 }
 
-func SaveProfilePicToDisk(c *fiber.Ctx, patient model.Patient) (string, error) {
+func SaveProfilePicToDisk(c fiber.Ctx, patient model.Patient) (string, error) {
 	profilePic, err := c.FormFile("profilePic")
 	if err != nil {
 		return "", fmt.Errorf("failed to grab profilePic from form: %w", err)

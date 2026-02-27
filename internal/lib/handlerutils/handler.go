@@ -5,7 +5,7 @@ import (
 	"miconsul/internal/view"
 	"strconv"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // StrToAmount converts floats and float strings to integers to be saved in the DB
@@ -35,11 +35,11 @@ func FloatToAmount(v float32) int {
 }
 
 type HandlerService interface {
-	SessionUITheme(c *fiber.Ctx) string
-	CurrentUser(c *fiber.Ctx) (model.User, error)
+	SessionUITheme(c fiber.Ctx) string
+	CurrentUser(c fiber.Ctx) (model.User, error)
 }
 
-func NewViewCtx(ctx *fiber.Ctx, s HandlerService) *view.Ctx {
+func NewViewCtx(ctx fiber.Ctx, s HandlerService) *view.Ctx {
 	cu, _ := s.CurrentUser(ctx)
 	theme := s.SessionUITheme(ctx)
 	vctx, _ := view.NewCtx(ctx, view.WithCurrentUser(cu), view.WithTheme(theme))

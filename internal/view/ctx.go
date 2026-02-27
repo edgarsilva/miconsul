@@ -5,7 +5,7 @@ import (
 	"miconsul/internal/lib/localize"
 	"miconsul/internal/model"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // Toast describes the notification shown in the FE
@@ -16,7 +16,7 @@ type Toast struct {
 }
 
 type Ctx struct {
-	*fiber.Ctx
+	fiber.Ctx
 	Locale      string
 	Theme       string
 	Timeframe   string
@@ -39,7 +39,7 @@ func l(lang, key string) string {
 	return locales.GetWithLocale(lang, key)
 }
 
-func extLoc(c *fiber.Ctx) string {
+func extLoc(c fiber.Ctx) string {
 	iloc := c.Locals("locale")
 	loc, ok := iloc.(string)
 	if !ok {
@@ -49,7 +49,7 @@ func extLoc(c *fiber.Ctx) string {
 	return loc
 }
 
-func themeFromLocals(c *fiber.Ctx) string {
+func themeFromLocals(c fiber.Ctx) string {
 	itheme := c.Locals("theme")
 	theme, ok := itheme.(string)
 	if !ok {
@@ -59,7 +59,7 @@ func themeFromLocals(c *fiber.Ctx) string {
 	return theme
 }
 
-func currentUserFromLocals(c *fiber.Ctx) model.User {
+func currentUserFromLocals(c fiber.Ctx) model.User {
 	iuser := c.Locals("current_user")
 	cu, ok := iuser.(model.User)
 	if !ok {
@@ -69,11 +69,11 @@ func currentUserFromLocals(c *fiber.Ctx) model.User {
 	return cu
 }
 
-func CU(c *fiber.Ctx) model.User {
+func CU(c fiber.Ctx) model.User {
 	return currentUserFromLocals(c)
 }
 
-func NewCtx(c *fiber.Ctx, ctxOpts ...ContextOption) (*Ctx, error) {
+func NewCtx(c fiber.Ctx, ctxOpts ...ContextOption) (*Ctx, error) {
 	ctx := Ctx{
 		Ctx:         c,
 		CurrentUser: currentUserFromLocals(c),

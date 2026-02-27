@@ -7,18 +7,18 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"syreclabs.com/go/faker"
 )
 
 // handleUsers listr all users in a table *the index*
 //
 // GET: /todos
-func (s *service) HandleAdminModelsPage(c *fiber.Ctx) error {
+func (s *service) HandleAdminModelsPage(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	fmt.Println("cu", cu)
 	if err != nil || cu.Role != model.UserRoleAdmin {
-		return c.Redirect("/login")
+		return c.Redirect().To("/login")
 	}
 
 	dir, err := os.ReadDir("internal/model")
@@ -47,7 +47,7 @@ func (s *service) HandleAdminModelsPage(c *fiber.Ctx) error {
 // handleApiUsers returns all users as JSON
 //
 // GET: /api/todos - Get all todos
-func (s *service) HandleGetUsers(c *fiber.Ctx) error {
+func (s *service) HandleGetUsers(c fiber.Ctx) error {
 	var users []model.User
 
 	s.DB.
@@ -62,7 +62,7 @@ func (s *service) HandleGetUsers(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(res)
 }
 
-func (s *service) HandleMakeUsers(c *fiber.Ctx) error {
+func (s *service) HandleMakeUsers(c fiber.Ctx) error {
 	n, err := strconv.Atoi(c.Params("n"))
 	if err != nil {
 		n = 10
@@ -88,7 +88,7 @@ func (s *service) HandleMakeUsers(c *fiber.Ctx) error {
 //
 // handleAPIUsers returns all users as JSON
 // GET: /api/todos - Get all todos
-func (s *service) HandleAPIUsers(c *fiber.Ctx) error {
+func (s *service) HandleAPIUsers(c fiber.Ctx) error {
 	var users []model.User
 
 	s.DB.

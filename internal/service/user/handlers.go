@@ -5,20 +5,20 @@ import (
 	"miconsul/internal/view"
 	"strconv"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"syreclabs.com/go/faker"
 )
 
 // HandleIndexPage list all users in a table *the index*
 //
 // GET: /admin/users
-func (s *service) HandleIndexPage(c *fiber.Ctx) error {
-	ctx, span := s.Tracer.Start(c.UserContext(), "user/handlers:HandleIndexPage")
+func (s *service) HandleIndexPage(c fiber.Ctx) error {
+	ctx, span := s.Tracer.Start(c.Context(), "user/handlers:HandleIndexPage")
 	defer span.End()
 
 	cu, err := s.CurrentUser(c)
 	if err != nil || cu.Role != model.UserRoleAdmin {
-		return c.Redirect("/")
+		return c.Redirect().To("/")
 	}
 
 	users := []model.User{}
@@ -31,15 +31,15 @@ func (s *service) HandleIndexPage(c *fiber.Ctx) error {
 // HandleEditPage shows the edit/new form for users
 //
 // GET: /admin/users/:id
-func (s *service) HandleEditPage(c *fiber.Ctx) error {
+func (s *service) HandleEditPage(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil || cu.Role != model.UserRoleAdmin {
-		return c.Redirect("/")
+		return c.Redirect().To("/")
 	}
 
 	userID := c.Params("id", "")
 	if userID == "" {
-		return c.Redirect("/")
+		return c.Redirect().To("/")
 	}
 
 	vc, _ := view.NewCtx(c)
@@ -49,10 +49,10 @@ func (s *service) HandleEditPage(c *fiber.Ctx) error {
 // HandleProfilePage show the CurrentUser profile page
 //
 // GET: /profile
-func (s *service) HandleProfilePage(c *fiber.Ctx) error {
+func (s *service) HandleProfilePage(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect("/")
+		return c.Redirect().To("/")
 	}
 
 	vc, _ := view.NewCtx(c)
@@ -62,19 +62,19 @@ func (s *service) HandleProfilePage(c *fiber.Ctx) error {
 // HandleProfilePage show the CurrentUser profile page
 //
 // GET: /profile
-func (s *service) HandleUpdateProfile(c *fiber.Ctx) error {
+func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect("/")
+		return c.Redirect().To("/")
 	}
 
 	userUpds := model.User{}
-	c.BodyParser(&userUpds)
+	c.Bind().Body(&userUpds)
 	result := s.DB.Where("id = ?", cu.ID).Updates(&userUpds)
 	if err := result.Error; err != nil {
 		redirectPath := "/profile?err=failed to update profile&level=error"
 		if !s.IsHTMX(c) {
-			return c.Redirect(redirectPath)
+			return c.Redirect().To(redirectPath)
 		}
 	}
 
@@ -85,7 +85,7 @@ func (s *service) HandleUpdateProfile(c *fiber.Ctx) error {
 // handleApiUsers returns all users as JSON
 //
 // GET: /api/todos - Get all todos
-func (s *service) HandleGetUsers(c *fiber.Ctx) error {
+func (s *service) HandleGetUsers(c fiber.Ctx) error {
 	var users []model.User
 
 	s.DB.
@@ -100,7 +100,7 @@ func (s *service) HandleGetUsers(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(res)
 }
 
-func (s *service) HandleMakeUsers(c *fiber.Ctx) error {
+func (s *service) HandleMakeUsers(c fiber.Ctx) error {
 	n, err := strconv.Atoi(c.Params("n"))
 	if err != nil {
 		n = 10
@@ -126,7 +126,7 @@ func (s *service) HandleMakeUsers(c *fiber.Ctx) error {
 //
 // handleAPIUsers returns all users as JSON
 // GET: /api/todos - Get all todos
-func (s *service) HandleAPIUsers(c *fiber.Ctx) error {
+func (s *service) HandleAPIUsers(c fiber.Ctx) error {
 	var users []model.User
 
 	s.DB.

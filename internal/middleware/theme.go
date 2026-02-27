@@ -1,11 +1,11 @@
 package middleware
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
-func UITheme() func(c *fiber.Ctx) error {
-	return func(c *fiber.Ctx) error {
+func UITheme() func(c fiber.Ctx) error {
+	return func(c fiber.Ctx) error {
 		theme := c.Cookies("theme", "light")
 		c.Locals("theme", theme)
 

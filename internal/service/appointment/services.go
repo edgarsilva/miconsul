@@ -10,7 +10,7 @@ import (
 	"miconsul/internal/server"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
@@ -53,7 +53,7 @@ func (s *service) RegisterCronJob() {
 	}
 }
 
-func (s *service) GetPatientByID(c *fiber.Ctx, id string) (model.Patient, error) {
+func (s *service) GetPatientByID(c fiber.Ctx, id string) (model.Patient, error) {
 	if id == "" {
 		return model.Patient{}, nil
 	}
@@ -70,7 +70,7 @@ func (s *service) GetPatientByID(c *fiber.Ctx, id string) (model.Patient, error)
 	return patient, nil
 }
 
-func (s *service) GetClinicByID(c *fiber.Ctx, id string) (model.Clinic, error) {
+func (s *service) GetClinicByID(c fiber.Ctx, id string) (model.Clinic, error) {
 	if id == "" {
 		return model.Clinic{}, nil
 	}
@@ -86,7 +86,7 @@ func (s *service) GetClinicByID(c *fiber.Ctx, id string) (model.Clinic, error) {
 	return clinic, nil
 }
 
-func (s *service) GetAppointmentsBy(c *fiber.Ctx, cu model.User, patientID, clinicID, timeframe string) ([]model.Appointment, error) {
+func (s *service) GetAppointmentsBy(c fiber.Ctx, cu model.User, patientID, clinicID, timeframe string) ([]model.Appointment, error) {
 	appointments := []model.Appointment{}
 	dbquery := s.DB.Model(&model.Appointment{}).Where("user_id = ?", cu.ID)
 

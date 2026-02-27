@@ -12,22 +12,23 @@ import (
 	"miconsul/internal/lib/sessionstorage"
 	"miconsul/internal/model"
 	"os"
+	"runtime"
 	"time"
 
-	"github.com/gofiber/contrib/otelfiber"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/log"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/encryptcookie"
-	"github.com/gofiber/fiber/v2/middleware/favicon"
-	"github.com/gofiber/fiber/v2/middleware/healthcheck"
-	"github.com/gofiber/fiber/v2/middleware/helmet"
-	"github.com/gofiber/fiber/v2/middleware/limiter"
-	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/fiber/v2/middleware/monitor"
-	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/gofiber/fiber/v2/middleware/requestid"
-	"github.com/gofiber/fiber/v2/middleware/session"
+	"github.com/gofiber/contrib/otelfiber/v2"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/log"
+	"github.com/gofiber/fiber/v3/middleware/cors"
+	"github.com/gofiber/fiber/v3/middleware/encryptcookie"
+	"github.com/gofiber/fiber/v3/middleware/favicon"
+	"github.com/gofiber/fiber/v3/middleware/healthcheck"
+	"github.com/gofiber/fiber/v3/middleware/helmet"
+	"github.com/gofiber/fiber/v3/middleware/limiter"
+	"github.com/gofiber/fiber/v3/middleware/logger"
+	"github.com/gofiber/fiber/v3/middleware/recover"
+	"github.com/gofiber/fiber/v3/middleware/requestid"
+	"github.com/gofiber/fiber/v3/middleware/session"
+	"github.com/gofiber/fiber/v3/middleware/static"
 
 	"github.com/panjf2000/ants/v2"
 	"go.opentelemetry.io/otel"
@@ -65,7 +66,7 @@ func New(serverOpts ...ServerOption) *Server {
 	}
 
 	storage := sessionstorage.New()
-	server.SessionStore = session.New(session.Config{
+	server.SessionStore = session.NewStore(session.Config{
 		Storage:      storage,
 		CookieSecure: true,
 	})
@@ -93,8 +94,21 @@ func New(serverOpts ...ServerOption) *Server {
 	}))
 	fiberApp.Use(healthcheck.New()) // healthcheck endpoints /livez /readyz
 	fiberApp.Use(limiter.New(limiterConfig()))
-	fiberApp.Get("/metrics", monitor.New()) // app monitor @ /metrics
-	fiberApp.Static("/public", "./public", staticConfig())
+	startedAt := time.Now()
+	fiberApp.Get("/metrics", func(c fiber.Ctx) error {
+		mem := runtime.MemStats{}
+		runtime.ReadMemStats(&mem)
+
+		return c.JSON(fiber.Map{
+			"uptime_seconds":    int(time.Since(startedAt).Seconds()),
+			"goroutines":        runtime.NumGoroutine(),
+			"alloc_bytes":       mem.Alloc,
+			"total_alloc_bytes": mem.TotalAlloc,
+			"sys_bytes":         mem.Sys,
+			"heap_objects":      mem.HeapObjects,
+		})
+	})
+	fiberApp.Use("/public", static.New("./public", staticConfig()))
 
 	server.App = fiberApp
 
@@ -204,7 +218,7 @@ func (s *Server) SendToWorker(fn func()) error {
 }
 
 // CurrentUser returns currently logged-in(or anon) user by User.ID from fiber.Locals("id")
-func (s *Server) CurrentUser(c *fiber.Ctx) (model.User, error) {
+func (s *Server) CurrentUser(c fiber.Ctx) (model.User, error) {
 	userI := c.Locals("current_user")
 	cu, ok := userI.(model.User)
 	if !ok {
@@ -228,7 +242,7 @@ func (s *Server) Listen(port string) error {
 	return s.App.Listen(fmt.Sprintf(":%v", port))
 }
 
-func (s *Server) Session(c *fiber.Ctx) *session.Session {
+func (s *Server) Session(c fiber.Ctx) *session.Session {
 	sess, err := s.SessionStore.Get(c)
 	if err != nil {
 		log.Warn("Failed to retrieve session from req ctx:", err)
@@ -236,7 +250,7 @@ func (s *Server) Session(c *fiber.Ctx) *session.Session {
 	return sess
 }
 
-func (s *Server) SessionDestroy(c *fiber.Ctx) {
+func (s *Server) SessionDestroy(c fiber.Ctx) {
 	sess := s.Session(c)
 	err := sess.Destroy()
 	if err != nil {
@@ -245,7 +259,7 @@ func (s *Server) SessionDestroy(c *fiber.Ctx) {
 }
 
 // SessionWrite sets a session value.
-func (s *Server) SessionWrite(c *fiber.Ctx, k string, v any) (err error) {
+func (s *Server) SessionWrite(c fiber.Ctx, k string, v any) (err error) {
 	sess := s.Session(c)
 	sess.Set(k, v)
 	defer func() {
@@ -256,7 +270,7 @@ func (s *Server) SessionWrite(c *fiber.Ctx, k string, v any) (err error) {
 }
 
 // SessionRead gets a session string value by key, or returns the default value.
-func (s *Server) SessionRead(c *fiber.Ctx, key string, defaultVal string) string {
+func (s *Server) SessionRead(c fiber.Ctx, key string, defaultVal string) string {
 	sess := s.Session(c)
 	val := sess.Get(key)
 	if val == nil {
@@ -291,7 +305,7 @@ func (s *Server) CacheRead(key string, dst *[]byte) error {
 
 // SessionUITheme returns the user UI theme (light|dark) from the session or query
 // url param
-func (s *Server) SessionUITheme(c *fiber.Ctx) string {
+func (s *Server) SessionUITheme(c fiber.Ctx) string {
 	theme, ok := c.Locals("theme").(string)
 	if !ok || theme == "" {
 		theme = "light"
@@ -301,7 +315,7 @@ func (s *Server) SessionUITheme(c *fiber.Ctx) string {
 }
 
 // SessionLang returns the user language from header Accepts-Language or session
-func (s *Server) SessionLang(c *fiber.Ctx) string {
+func (s *Server) SessionLang(c fiber.Ctx) string {
 	sess := s.Session(c)
 	lang, ok := sess.Get("lang").(string)
 	if ok && lang != "" {
@@ -319,29 +333,29 @@ func (s *Server) SessionLang(c *fiber.Ctx) string {
 
 // SessionID returns the user UI theme (light|dark) from the session or query
 // url param
-func (s *Server) SessionID(c *fiber.Ctx) string {
+func (s *Server) SessionID(c fiber.Ctx) string {
 	sessionID := c.Cookies("session_id", "")
 	return sessionID
 }
 
 // TagWithSessionID returns tags the passed tag with the SessionID
 // url param
-func (s *Server) TagWithSessionID(c *fiber.Ctx, tag string) string {
+func (s *Server) TagWithSessionID(c fiber.Ctx, tag string) string {
 	return s.SessionID(c) + ":" + tag
 }
 
 // IsHTMX returns true if the request was initiated by HTMX
-func (s *Server) IsHTMX(c *fiber.Ctx) bool {
+func (s *Server) IsHTMX(c fiber.Ctx) bool {
 	isHTMX := c.Get("HX-Request", "") // will be a string 'true' for HTMX requests
 	return isHTMX == "true"
 }
 
 // IsHTMX returns true if the request was initiated by HTMX
-func (s *Server) NotHTMX(c *fiber.Ctx) bool {
+func (s *Server) NotHTMX(c fiber.Ctx) bool {
 	return !s.IsHTMX(c)
 }
 
-func (s *Server) L(c *fiber.Ctx, key string) (translation string) {
+func (s *Server) L(c fiber.Ctx, key string) (translation string) {
 	if s.Localizer == nil {
 		return ""
 	}

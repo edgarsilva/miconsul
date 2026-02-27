@@ -7,8 +7,8 @@ import (
 	"miconsul/internal/view"
 	"strconv"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/log"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/log"
 	"syreclabs.com/go/faker"
 )
 
@@ -19,10 +19,10 @@ const (
 // HandlePatientsPage renders the patients page HTML
 //
 // GET: /patients
-func (s *service) HandlePatientsPage(c *fiber.Ctx) error {
+func (s *service) HandlePatientsPage(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect("/login")
+		return c.Redirect().To("/login")
 	}
 
 	theme := s.SessionUITheme(c)
@@ -43,7 +43,7 @@ func (s *service) HandlePatientsPage(c *fiber.Ctx) error {
 // HandlePatientsIndexSearch GlobalFTS search for patients index page.
 //
 // GET: /patients/search
-func (s *service) HandlePatientsIndexSearch(c *fiber.Ctx) error {
+func (s *service) HandlePatientsIndexSearch(c fiber.Ctx) error {
 	term := c.Query("term", "")
 	if len(term) < 3 {
 		return c.SendStatus(fiber.StatusBadRequest)
@@ -62,10 +62,10 @@ func (s *service) HandlePatientsIndexSearch(c *fiber.Ctx) error {
 // HandlePatientFormPage renders the patients page HTML
 //
 // GET: /patients/:id
-func (s *service) HandlePatientFormPage(c *fiber.Ctx) error {
+func (s *service) HandlePatientFormPage(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect("/login")
+		return c.Redirect().To("/login")
 	}
 
 	theme := s.SessionUITheme(c)
@@ -73,7 +73,7 @@ func (s *service) HandlePatientFormPage(c *fiber.Ctx) error {
 
 	id := c.Params("id", "")
 	if id == "" {
-		return c.Redirect("/patients?toast=That user does not exist")
+		return c.Redirect().To("/patients?toast=That user does not exist")
 	}
 
 	patient := model.Patient{}
@@ -88,16 +88,16 @@ func (s *service) HandlePatientFormPage(c *fiber.Ctx) error {
 // HandleCreatePatient inserts a new patient record for the CurrentUser
 //
 // POST: /patients
-func (s *service) HandleCreatePatient(c *fiber.Ctx) error {
+func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect("/login")
+		return c.Redirect().To("/login")
 	}
 
 	patient := model.Patient{
 		UserID: cu.ID,
 	}
-	c.BodyParser(&patient)
+	c.Bind().Body(&patient)
 	patient.Sanitize()
 
 	result := s.DB.Create(&patient)
@@ -112,12 +112,12 @@ func (s *service) HandleCreatePatient(c *fiber.Ctx) error {
 	if err := result.Error; err != nil {
 		redirectPath := "/patients/new?toast=Failed to create new patient&level=error"
 		if !s.IsHTMX(c) {
-			return c.Redirect(redirectPath)
+			return c.Redirect().To(redirectPath)
 		}
 	}
 
 	if !s.IsHTMX(c) {
-		return c.Redirect("/patients/" + patient.ID)
+		return c.Redirect().To("/patients/" + patient.ID)
 	}
 
 	c.Set("HX-Push-Url", "/patients/"+patient.ID)
@@ -135,10 +135,10 @@ func (s *service) HandleCreatePatient(c *fiber.Ctx) error {
 //
 // PATCH: /patients/:id
 // POST: /patients/:id/patch
-func (s *service) HandleUpdatePatient(c *fiber.Ctx) error {
+func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect("/login")
+		return c.Redirect().To("/login")
 	}
 
 	patientID := c.Params("id", "")
@@ -147,11 +147,11 @@ func (s *service) HandleUpdatePatient(c *fiber.Ctx) error {
 	}
 
 	if patientID == "" {
-		return c.Redirect("/patients?msg=can't update without an id", fiber.StatusSeeOther)
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/patients?msg=can't update without an id")
 	}
 
 	patient := model.Patient{ID: patientID, UserID: cu.ID}
-	c.BodyParser(&patient)
+	c.Bind().Body(&patient)
 	patient.Sanitize()
 
 	path, err := SaveProfilePicToDisk(c, patient)
@@ -164,7 +164,7 @@ func (s *service) HandleUpdatePatient(c *fiber.Ctx) error {
 	if err := result.Error; err != nil {
 		redirectPath := "/patients?err=failed to update patient&level=error"
 		if !s.IsHTMX(c) {
-			return c.Redirect(redirectPath)
+			return c.Redirect().To(redirectPath)
 		}
 
 		c.Set("HX-Location", redirectPath)
@@ -172,7 +172,7 @@ func (s *service) HandleUpdatePatient(c *fiber.Ctx) error {
 	}
 
 	if !s.IsHTMX(c) {
-		return c.Redirect("/patients/"+patientID, fiber.StatusSeeOther)
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/patients/" + patientID)
 	}
 
 	c.Set("HX-Location", "/patients/"+patientID+"?toast=Patient changes saved&level=success")
@@ -183,10 +183,10 @@ func (s *service) HandleUpdatePatient(c *fiber.Ctx) error {
 //
 // PATCH: /patients/:id/removepic
 // POST: /patients/:id/removepic
-func (s *service) HandleRemovePic(c *fiber.Ctx) error {
+func (s *service) HandleRemovePic(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect("/login")
+		return c.Redirect().To("/login")
 	}
 
 	patientID := c.Params("ID", "")
@@ -202,14 +202,14 @@ func (s *service) HandleRemovePic(c *fiber.Ctx) error {
 		UserID: cu.ID,
 	}
 	res := s.DB.Model(&patient).Where("id = ? AND user_id = ?", patientID, cu.ID).Update("profile_pic", "")
-	s.DB.WithContext(c.UserContext()).Model(&patient).Where("id = ?", patientID).Take(&patient)
+	s.DB.WithContext(c.Context()).Model(&patient).Where("id = ?", patientID).Take(&patient)
 
 	if !s.IsHTMX(c) {
 		if err := res.Error; err != nil {
 			return c.SendStatus(fiber.StatusUnprocessableEntity)
 		}
 
-		return c.Redirect("/patients/"+patient.ID, fiber.StatusSeeOther)
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/patients/" + patient.ID)
 	}
 
 	theme := s.SessionUITheme(c)
@@ -221,15 +221,15 @@ func (s *service) HandleRemovePic(c *fiber.Ctx) error {
 //
 // DELETE: /patients/:id
 // POST: /patients/:id/delete
-func (s *service) HandleDeletePatient(c *fiber.Ctx) error {
+func (s *service) HandleDeletePatient(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect("/login", fiber.StatusSeeOther)
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
 	}
 
 	patientID := c.Params("ID", "")
 	if patientID == "" {
-		return c.Redirect("/patients?msg=can't delete without an id", fiber.StatusSeeOther)
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/patients?msg=can't delete without an id")
 	}
 
 	patient := model.Patient{
@@ -238,11 +238,11 @@ func (s *service) HandleDeletePatient(c *fiber.Ctx) error {
 
 	res := s.DB.Where("id = ? AND user_id = ?", patientID, cu.ID).Delete(&patient)
 	if err := res.Error; err != nil {
-		return c.Redirect("/patients?msg=failed to delete that patient", fiber.StatusSeeOther)
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/patients?msg=failed to delete that patient")
 	}
 
 	if s.NotHTMX(c) {
-		return c.Redirect("/patients", fiber.StatusSeeOther)
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/patients")
 	}
 
 	patients, err := s.Patients(cu, c.Query("term", ""))
@@ -259,16 +259,16 @@ func (s *service) HandleDeletePatient(c *fiber.Ctx) error {
 // replacesd in the HTMX active search
 //
 // POST: /patients/search
-func (s *service) HandlePatientSearch(c *fiber.Ctx) error {
+func (s *service) HandlePatientSearch(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect("/login")
+		return c.Redirect().To("/login")
 	}
 
 	queryStr := c.FormValue("query", "")
 	patients := []model.Patient{}
 
-	dbquery := s.DB.WithContext(c.UserContext()).Model(&cu)
+	dbquery := s.DB.WithContext(c.Context()).Model(&cu)
 	if queryStr != "" {
 		dbquery.Scopes(model.GlobalFTS(queryStr))
 	} else {
@@ -282,10 +282,10 @@ func (s *service) HandlePatientSearch(c *fiber.Ctx) error {
 	return view.Render(c, view.PatientSearchResults(patients, vc))
 }
 
-func (s *service) HandleMockManyPatients(c *fiber.Ctx) error {
+func (s *service) HandleMockManyPatients(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect("/login")
+		return c.Redirect().To("/login")
 	}
 
 	n, err := strconv.Atoi(c.Query("n", "100000"))
@@ -315,7 +315,7 @@ func (s *service) HandleMockManyPatients(c *fiber.Ctx) error {
 	return c.SendString("Rowsaffected:" + strconv.Itoa(int(result.RowsAffected)))
 }
 
-func (s *service) HandlePatientProfilePicImgSrc(c *fiber.Ctx) error {
+func (s *service) HandlePatientProfilePicImgSrc(c fiber.Ctx) error {
 	id := c.Params("id", "")
 	filename := c.Params("filename", "")
 	if id == "" || filename == "" {

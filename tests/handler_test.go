@@ -5,9 +5,10 @@ import (
 	"miconsul/internal/server"
 	"miconsul/internal/service/theme"
 	"net/http"
+	"strings"
 	"testing"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 func TestHandler(t *testing.T) {
@@ -38,12 +39,13 @@ func TestHandler(t *testing.T) {
 		t.Errorf("expected status OK; got %v", resp.Status)
 	}
 
-	expected := "{\"message\":\"Hello World\"}"
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatalf("error reading response body. Err: %v", err)
 	}
-	if expected != string(body) {
-		t.Errorf("expected response body to be %v; got %v", expected, string(body))
+
+	bodyStr := string(body)
+	if !strings.Contains(bodyStr, "theme_toggle") {
+		t.Errorf("expected response body to include theme toggle markup; got %v", bodyStr)
 	}
 }

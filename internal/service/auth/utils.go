@@ -8,11 +8,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // authParams extracts email and password from the request form values
-func authParams(c *fiber.Ctx) (email, password string, err error) {
+func authParams(c fiber.Ctx) (email, password string, err error) {
 	email = c.FormValue("email", "")
 	password = c.FormValue("password", "")
 	if email == "" || password == "" {
@@ -25,7 +25,7 @@ func authParams(c *fiber.Ctx) (email, password string, err error) {
 
 // resetPasswordEmailParam returns the email address string from either
 // FormValue, URLParam or Query in that order of existance precedence
-func resetPasswordEmailParam(c *fiber.Ctx) (string, error) {
+func resetPasswordEmailParam(c fiber.Ctx) (string, error) {
 	email := c.FormValue("email", "")
 	if email != "" {
 		return email, nil
