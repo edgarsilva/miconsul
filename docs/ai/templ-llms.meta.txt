@@ -1,0 +1,6 @@
+source_url=https://templ.guide/llms.md
+fetched_at_utc=2026-02-27T22:21:04Z
+upstream_file=docs/ai/templ-llms.upstream.md
+bytes=222727
+lines=7698
+sha256=2abe78a32bcded05a4ce803670402d69c99963a062ecb34d08fd25864ee88964

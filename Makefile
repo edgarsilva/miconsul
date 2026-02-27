@@ -60,6 +60,11 @@ locales/build: ## Build locales with go-localize
 	@echo "  Building locales"
 	go-localize -input locales -output internal/lib/localize
 
+##@ AI Docs
+ai/templ-sync: ## Refresh templ LLM upstream snapshot and metadata
+	@echo "🤖 Refreshing templ LLM docs snapshot..."
+	./scripts/update-templ-llms.sh
+
 ##@ Build & Run
 build: templ locales/build ## Build Go binary with fts5
 	@echo "📦 Building"
@@ -195,6 +200,7 @@ docker/build: ## Rebuild the app image
 
 .PHONY: help install fmt vet lint \
 	tailwind tailwind/watch templ templ/watch locales/build \
+	ai/templ-sync \
 	build start run air/watch dev \
 	test test/unit test/integration clean \
 	db/create db/delete db/setup db/dump_schema \
