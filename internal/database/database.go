@@ -7,9 +7,10 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"miconsul/goose/migrations"
 	"os"
 	"time"
+
+	"miconsul/goose/migrations"
 
 	"github.com/pressly/goose/v3"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
@@ -34,27 +35,10 @@ type Database struct {
 }
 
 func New(DBPath string) *Database {
-	loglevel := logger.Warn
-	hideParamValues := true
-	if os.Getenv("APP_ENV") == "development" {
-		loglevel = logger.Info
-		hideParamValues = false
-	}
-
-	newLogger := logger.New(
-		log.New(os.Stdout, "\r\n", log.LstdFlags),
-		logger.Config{
-			SlowThreshold:             150 * time.Millisecond, // Slow SQL threshold
-			LogLevel:                  loglevel,               // Log level
-			IgnoreRecordNotFoundError: true,                   // Ignore ErrRecordNotFound error for logger
-			ParameterizedQueries:      hideParamValues,        // If true, don't include params values in the SQL log
-			Colorful:                  true,                   // Enable/Disable color
-		},
-	)
-
+	dbLogger := NewLogger()
 	dsn := DBPath + PragmaOpts
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
-		Logger:      newLogger,
+		Logger:      dbLogger,
 		PrepareStmt: true,
 	})
 	if err != nil {

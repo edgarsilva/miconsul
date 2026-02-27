@@ -158,7 +158,7 @@ func Search() templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"flex gap-2 mr-2\"><button class=\"p-1 hover:outline rounded-xl\" aria-label=\"Global Search\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"flex gap-2 mr-2 items-center\"><button class=\"p-1 hover:outline rounded-xl\" aria-label=\"Global Search\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

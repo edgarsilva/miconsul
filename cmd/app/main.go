@@ -3,15 +3,16 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
+
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
-	"miconsul/internal/lib/workerpool"
+	"miconsul/internal/lib/workpool"
 	"miconsul/internal/routes"
 	"miconsul/internal/server"
-	"os"
-	"os/signal"
 
 	"github.com/joho/godotenv"
 )
@@ -42,10 +43,10 @@ func main() {
 		shutdownCronjob()
 	}()
 
-	wp, shutdownWorkerPool := workerpool.New(10)
+	wp, shutdownWorkPool := workpool.New(10)
 	defer func() {
-		fmt.Println("🐜 Ants workerpool shutting down...")
-		shutdownWorkerPool()
+		fmt.Println("🐜 Ants workpool shutting down...")
+		shutdownWorkPool()
 	}()
 
 	localizer := localize.New("en-US", "es-MX")
@@ -54,7 +55,7 @@ func main() {
 		server.WithAppEnv(env),
 		server.WithDatabase(db),
 		server.WithCronJob(cj),
-		server.WithWorkerPool(wp),
+		server.WithWorkPool(wp),
 		// server.WithTracerProvider(tp),
 		server.WithLocalizer(localizer),
 	)

@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
+@plugin "@tailwindcss/typography";
+
 @plugin "daisyui" {
 	themes: light --default, dark --prefersdark, cupcake, dim;
 }
-
-@plugin "@tailwindcss/typography";
 
 /* Custom classes*/
 .app-card {
@@ -36,7 +36,7 @@ input[type="search"]::-webkit-search-cancel-button {
 	@apply grayscale opacity-35
 }
 
-/* Toast */
+/* TailwindUI Toast */
 .toast-enter {
 	@apply transform ease-out duration-300 transition
 }
@@ -61,7 +61,7 @@ input[type="search"]::-webkit-search-cancel-button {
 	@apply opacity-0
 }
 
-/* HTMX transitions*/
+/* HTMX */
 ul li {
 	opacity: 1;
 	transition: opacity 0.5s ease-out;

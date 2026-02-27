@@ -43,7 +43,7 @@ type Cache interface {
 type Server struct {
 	AppEnv       *appenv.Env
 	DB           *database.Database
-	wp           *ants.Pool     // <- WorkerPool - handles Background Goroutines or Async Jobs (emails) with Ants
+	wp           *ants.Pool     // <- WorkPool - handles Background Goroutines or Async Jobs (emails) with Ants
 	cj           *cronjob.Sched // <- CronJob scheduler
 	Cache        Cache
 	SessionStore *session.Store
@@ -134,10 +134,10 @@ func WithLocalizer(localizer *localize.Localizer) ServerOption {
 	}
 }
 
-func WithWorkerPool(wp *ants.Pool) ServerOption {
+func WithWorkPool(wp *ants.Pool) ServerOption {
 	return func(server *Server) error {
 		if wp == nil {
-			fmt.Println("failed to server worker pool for sending emails and async work")
+			fmt.Println("failed to setup workpool for sending emails and async work")
 			return nil
 		}
 
@@ -180,7 +180,7 @@ func WithCache(cache Cache) ServerOption {
 	}
 }
 
-// AddCronJob passes fn as a job to the worker pool to be executed in a go routine
+// AddCronJob passes fn as a job(fn) to run at a cron interval
 func (s *Server) AddCronJob(crontab string, fn func()) error {
 	if s.cj == nil {
 		return errors.New("failed to add new cron job, server.cj might be nil, cron job is not running")
@@ -190,7 +190,8 @@ func (s *Server) AddCronJob(crontab string, fn func()) error {
 	return err
 }
 
-// SendToWorker passes fn as a job to the worker pool to be executed in a go routine
+// SendToWorker passes fn as a job for a worker in the workpool, to be executed as a go routine
+// when the a worker is available
 func (s *Server) SendToWorker(fn func()) error {
 	if s.wp == nil {
 		log.Warn("failed to add fn to run as job in worker pool, server.wp might be nil, running sinchronously")
