@@ -1,9 +1,10 @@
 package handlerutils
 
 import (
+	"strconv"
+
 	"miconsul/internal/model"
 	"miconsul/internal/view"
-	"strconv"
 
 	"github.com/gofiber/fiber/v3"
 )

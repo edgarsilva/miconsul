@@ -1,3 +1,5 @@
+// Package workpool provides a worker pool for the application to do
+// background work.
 package workpool
 
 import (

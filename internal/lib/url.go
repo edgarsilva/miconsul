@@ -1,3 +1,4 @@
+// Package lib provides a set of utility functions for the application
 package lib
 
 import (
