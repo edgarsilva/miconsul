@@ -47,7 +47,7 @@ func (s *service) HandleLogin(c fiber.Ctx) error {
 		return view.Render(c, view.LoginPage(email, "", respErr, vc))
 	}
 
-	ctx, span := s.Tracer.Start(c.Context(), "auth/handlers:HandleLogin")
+	ctx, span := s.Trace(c.Context(), "auth/handlers:HandleLogin")
 	defer span.End()
 
 	user, err := s.userFetch(ctx, email)
@@ -325,7 +325,7 @@ func (s *service) HandleValidate(c fiber.Ctx) error {
 //
 // GET: /auth/show
 func (s *service) HandleShowUser(c fiber.Ctx) error {
-	ctx, span := s.Tracer.Start(c.Context(), "auth/handlers:HandleShowUser")
+	ctx, span := s.Trace(c.Context(), "auth/handlers:HandleShowUser")
 	defer span.End()
 
 	id := c.Locals("uid")

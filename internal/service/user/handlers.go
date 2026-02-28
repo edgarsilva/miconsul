@@ -14,7 +14,7 @@ import (
 //
 // GET: /admin/users
 func (s *service) HandleIndexPage(c fiber.Ctx) error {
-	ctx, span := s.Tracer.Start(c.Context(), "user/handlers:HandleIndexPage")
+	ctx, span := s.Trace(c.Context(), "user/handlers:HandleIndexPage")
 	defer span.End()
 
 	cu, err := s.CurrentUser(c)

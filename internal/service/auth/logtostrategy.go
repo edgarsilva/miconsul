@@ -24,7 +24,7 @@ type LogtoStrategy struct {
 type LogtoStrategyService interface {
 	GormDB() *gorm.DB
 	Session(c fiber.Ctx) *session.Session
-	Trace(ctx context.Context, spanName string) (context.Context, trace.Span)
+	Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span)
 }
 
 func NewLogtoStrategy(c fiber.Ctx, s LogtoStrategyService) *LogtoStrategy {
@@ -38,8 +38,8 @@ func NewLogtoStrategy(c fiber.Ctx, s LogtoStrategyService) *LogtoStrategy {
 	}
 }
 
-func (s LogtoStrategy) Trace(ctx context.Context, spanName string) (context.Context, trace.Span) {
-	return s.service.Trace(ctx, spanName)
+func (s LogtoStrategy) Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
+	return s.service.Trace(ctx, spanName, opts...)
 }
 
 func (s LogtoStrategy) FindUserByExtID(ctx context.Context, extID string) (model.User, error) {

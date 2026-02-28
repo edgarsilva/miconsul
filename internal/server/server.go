@@ -33,7 +33,6 @@ import (
 
 	"github.com/panjf2000/ants/v2"
 	"go.opentelemetry.io/otel"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 )
@@ -51,7 +50,6 @@ type Server struct {
 	Cache        Cache
 	SessionStore *session.Store
 	Localizer    *localize.Localizer
-	TP           *sdktrace.TracerProvider
 	Tracer       trace.Tracer
 	*fiber.App
 }
@@ -77,7 +75,10 @@ func New(serverOpts ...ServerOption) *Server {
 		CookieSecure: true,
 	})
 
-	tracer := otel.Tracer("fiberapp-server")
+	tracer := server.Tracer
+	if tracer == nil {
+		tracer = otel.Tracer("fiberapp-server")
+	}
 	server.Tracer = tracer
 
 	fiberConfig := fiber.Config{ErrorHandler: fiberAppErrorHandler}
@@ -177,13 +178,13 @@ func WithCronJob(cj *cronjob.Sched) ServerOption {
 	}
 }
 
-func WithTracerProvider(tp *sdktrace.TracerProvider) ServerOption {
+func WithTracer(tracer trace.Tracer) ServerOption {
 	return func(server *Server) error {
-		if tp == nil {
+		if tracer == nil {
 			return nil
 		}
 
-		server.TP = tp
+		server.Tracer = tracer
 		return nil
 	}
 }
@@ -241,8 +242,21 @@ func (s *Server) GormDB() *gorm.DB {
 	return s.DB.GormDB()
 }
 
-func (s *Server) Trace(ctx context.Context, spanName string) (context.Context, trace.Span) {
-	ctx, span := s.Tracer.Start(ctx, spanName)
+func (s *Server) Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
+	if s == nil {
+		panic("server.Trace called with nil server")
+	}
+
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	tracer := s.Tracer
+	if tracer == nil {
+		tracer = otel.Tracer("fiberapp-server")
+	}
+
+	ctx, span := tracer.Start(ctx, spanName, opts...)
 	return ctx, span
 }
 
