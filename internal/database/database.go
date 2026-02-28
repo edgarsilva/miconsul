@@ -53,6 +53,14 @@ func New(DBPath string) *Database {
 	}
 }
 
+func (d *Database) GormDB() *gorm.DB {
+	if d == nil {
+		return nil
+	}
+
+	return d.DB
+}
+
 func (d *Database) SQLDB() (*sql.DB, error) {
 	if d == nil || d.DB == nil {
 		return nil, nil

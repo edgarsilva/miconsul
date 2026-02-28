@@ -146,7 +146,7 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 		return c.Redirect().To("/login?msg=unable to confirm email, try login instead")
 	}
 
-	user, err := gorm.G[model.User](s.DB.DB).
+	user, err := gorm.G[model.User](s.DB.GormDB()).
 		Select("id, email, confirm_email_token").
 		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
 		Take(c.Context())
@@ -154,7 +154,7 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 		return c.Redirect().To("/login?msg=we couldn't verify your account, pls try again")
 	}
 
-	_, err = gorm.G[model.User](s.DB.DB).
+	_, err = gorm.G[model.User](s.DB.GormDB()).
 		Select("ConfirmEmailToken", "ConfirmEmailExpiresAt").
 		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
 		Updates(c.Context(), model.User{})
@@ -218,7 +218,7 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
 	}
 
-	user, err := gorm.G[model.User](s.DB.DB).Select("id", "name").Where("email = ?", email).Take(c.Context())
+	user, err := gorm.G[model.User](s.DB.GormDB()).Select("id", "name").Where("email = ?", email).Take(c.Context())
 	if err != nil {
 		errView := errors.New("user not found with that email")
 		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
@@ -231,7 +231,7 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 
 	user.ResetToken = token
 	user.ResetTokenExpiresAt = time.Now().Add(time.Hour * 1)
-	_, _ = gorm.G[model.User](s.DB.DB).
+	_, _ = gorm.G[model.User](s.DB.GormDB()).
 		Select("ResetToken", "ResetTokenExpiresAt").
 		Where("id = ?", user.ID).
 		Updates(c.Context(), user)
@@ -337,7 +337,7 @@ func (s *service) HandleShowUser(c fiber.Ctx) error {
 		return c.Status(fiber.StatusForbidden).SendString("Forbidden")
 	}
 
-	user, err := gorm.G[model.User](s.DB.DB).Where("id = ?", id).Take(ctx)
+	user, err := gorm.G[model.User](s.DB.GormDB()).Where("id = ?", id).Take(ctx)
 	if err != nil {
 		return c.Status(fiber.StatusForbidden).SendString("Forbidden")
 	}

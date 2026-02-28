@@ -101,7 +101,7 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 	c.Bind().Body(&patient)
 	patient.Sanitize()
 
-	err = gorm.G[model.Patient](s.DB.DB).Create(c.Context(), &patient)
+	err = gorm.G[model.Patient](s.DB.GormDB()).Create(c.Context(), &patient)
 	if err == nil {
 		path, err := SaveProfilePicToDisk(c, patient)
 		if err == nil {
@@ -161,7 +161,7 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 		patient.ProfilePic = path
 	}
 
-	_, err = gorm.G[model.Patient](s.DB.DB).
+	_, err = gorm.G[model.Patient](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", patientID, cu.ID).
 		Updates(c.Context(), patient)
 	if err != nil {
@@ -204,10 +204,10 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 	patient := model.Patient{
 		UserID: cu.ID,
 	}
-	_, err = gorm.G[model.Patient](s.DB.DB).
+	_, err = gorm.G[model.Patient](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", patientID, cu.ID).
 		Update(c.Context(), "profile_pic", "")
-	patient, _ = gorm.G[model.Patient](s.DB.DB).Where("id = ?", patientID).Take(c.Context())
+	patient, _ = gorm.G[model.Patient](s.DB.GormDB()).Where("id = ?", patientID).Take(c.Context())
 
 	if !s.IsHTMX(c) {
 		if err != nil {
@@ -237,7 +237,7 @@ func (s *service) HandleDeletePatient(c fiber.Ctx) error {
 		return c.Redirect().Status(fiber.StatusSeeOther).To("/patients?msg=can't delete without an id")
 	}
 
-	_, err = gorm.G[model.Patient](s.DB.DB).
+	_, err = gorm.G[model.Patient](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", patientID, cu.ID).
 		Delete(c.Context())
 	if err != nil {

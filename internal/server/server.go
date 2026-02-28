@@ -35,6 +35,7 @@ import (
 	"go.opentelemetry.io/otel"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
+	"gorm.io/gorm"
 )
 
 type Cache interface {
@@ -232,8 +233,12 @@ func (s *Server) CurrentUser(c fiber.Ctx) (model.User, error) {
 	return cu, nil
 }
 
-func (s *Server) DBClient() *database.Database {
-	return s.DB
+func (s *Server) GormDB() *gorm.DB {
+	if s == nil || s.DB == nil {
+		return nil
+	}
+
+	return s.DB.GormDB()
 }
 
 func (s *Server) Trace(ctx context.Context, spanName string) (context.Context, trace.Span) {

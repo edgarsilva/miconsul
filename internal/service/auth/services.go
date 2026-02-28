@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"miconsul/internal/database"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/mailer"
 	"miconsul/internal/model"
@@ -25,7 +24,7 @@ import (
 
 type MiddlewareService interface {
 	Session(c fiber.Ctx) *session.Session
-	DBClient() *database.Database
+	GormDB() *gorm.DB
 	Trace(ctx context.Context, spanName string) (context.Context, trace.Span)
 }
 
@@ -77,7 +76,7 @@ func (s service) signupIsEmailValid(email string) error {
 	}
 
 	user := model.User{Email: email}
-	user, err := gorm.G[model.User](s.DB.DB).Where("email = ?", email).Take(context.Background())
+	user, err := gorm.G[model.User](s.DB.GormDB()).Where("email = ?", email).Take(context.Background())
 	if err == nil && user.ID != "" {
 		return errors.New("email already exists, try login instead")
 	}
@@ -112,7 +111,7 @@ func (s service) userCreate(email, password, token string) (model.User, error) {
 		Role:                  model.UserRoleUser,
 	}
 
-	err := gorm.G[model.User](s.DB.DB).Create(context.Background(), &user)
+	err := gorm.G[model.User](s.DB.GormDB()).Create(context.Background(), &user)
 	if err != nil {
 		err := errors.New("faild to save email or password, try again")
 		return model.User{}, err
@@ -126,7 +125,7 @@ func (s service) userFetch(ctx context.Context, email string) (model.User, error
 	ctx, span := s.Tracer.Start(ctx, "auth/services:userFetch")
 	defer span.End()
 
-	user, err := gorm.G[model.User](s.DB.DB).Where("email = ?", email).Take(ctx)
+	user, err := gorm.G[model.User](s.DB.GormDB()).Where("email = ?", email).Take(ctx)
 	if err != nil {
 		return model.User{}, errors.New("user not found")
 	}
@@ -146,7 +145,7 @@ func (s service) userUpdatePassword(email, password, token string) (model.User, 
 		Password: string(pwd),
 	}
 
-	rowsAffected, err := gorm.G[model.User](s.DB.DB).
+	rowsAffected, err := gorm.G[model.User](s.DB.GormDB()).
 		Select("Password", "ResetToken", "ResetTokenExpiresAt").
 		Where("email = ? AND reset_token = ? AND reset_token_expires_at > ?", email, token, time.Now()).
 		Limit(1).
@@ -163,7 +162,7 @@ func (s service) userUpdateConfirmToken(email, token string) error {
 		ConfirmEmailToken:     token,
 		ConfirmEmailExpiresAt: time.Now().Add(time.Hour * 24),
 	}
-	rowsAffected, err := gorm.G[model.User](s.DB.DB).
+	rowsAffected, err := gorm.G[model.User](s.DB.GormDB()).
 		Select("ConfirmEmailToken", "ConfirmEmailExpiresAt").
 		Where("email = ?", email).
 		Limit(1).
@@ -176,7 +175,7 @@ func (s service) userUpdateConfirmToken(email, token string) error {
 }
 
 func (s service) userPendingConfirmation(email string) error {
-	user, err := gorm.G[model.User](s.DB.DB).
+	user, err := gorm.G[model.User](s.DB.GormDB()).
 		Select("ID, Email, ConfirmEmailToken").
 		Where("email = ? AND confirm_email_token IS NOT null AND confirm_email_token != ''", email).
 		Take(context.Background())
@@ -188,7 +187,7 @@ func (s service) userPendingConfirmation(email string) error {
 }
 
 func (s service) resetPasswordVerifyToken(token string) (email string, err error) {
-	user, err := gorm.G[model.User](s.DB.DB).
+	user, err := gorm.G[model.User](s.DB.GormDB()).
 		Select("id, email").
 		Where("reset_token != '' AND reset_token IS NOT null AND reset_token = ? AND reset_token_expires_at > ?", token, time.Now()).
 		Take(context.Background())
@@ -224,7 +223,7 @@ func (s *service) saveLogtoUser(ctx context.Context, logtoUser LogtoUser) error 
 	ctx, span := s.Trace(ctx, "auth/logto:saveLogtoUser")
 	defer span.End()
 
-	user, err := gorm.G[model.User](s.DB.DB).Where("email = ?", logtoUser.Email).Take(ctx)
+	user, err := gorm.G[model.User](s.DB.GormDB()).Where("email = ?", logtoUser.Email).Take(ctx)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return fmt.Errorf("failed to load user from logto claims, GORM error: %w", err)
 	}

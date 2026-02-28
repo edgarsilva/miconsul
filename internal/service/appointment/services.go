@@ -60,7 +60,7 @@ func (s *service) GetPatientByID(c fiber.Ctx, id string) (model.Patient, error) 
 
 	cu, _ := s.CurrentUser(c)
 	patient := model.Patient{ID: id, UserID: cu.ID}
-	patient, err := gorm.G[model.Patient](s.DB.DB).
+	patient, err := gorm.G[model.Patient](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", id, cu.ID).
 		Take(c.Context())
 
@@ -82,7 +82,7 @@ func (s *service) GetClinicByID(c fiber.Ctx, id string) (model.Clinic, error) {
 
 	cu, _ := s.CurrentUser(c)
 	clinic := model.Clinic{ID: id, UserID: cu.ID}
-	clinic, err := gorm.G[model.Clinic](s.DB.DB).
+	clinic, err := gorm.G[model.Clinic](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", id, cu.ID).
 		Take(c.Context())
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -141,7 +141,7 @@ func (s *service) SendBookedAlert(appointment model.Appointment) error {
 			return
 		}
 
-		_, _ = gorm.G[model.Appointment](s.DB.DB).
+		_, _ = gorm.G[model.Appointment](s.DB.GormDB()).
 			Where("id = ?", appointment.ID).
 			Update(context.Background(), "BookedAlertSentAt", time.Now())
 
@@ -171,7 +171,7 @@ func (s *service) SendReminderAlert(appointment model.Appointment) error {
 			return
 		}
 
-		_, _ = gorm.G[model.Appointment](s.DB.DB).
+		_, _ = gorm.G[model.Appointment](s.DB.GormDB()).
 			Where("id = ?", appointment.ID).
 			Update(context.Background(), "ReminderAlertSentAt", time.Now())
 

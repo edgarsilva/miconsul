@@ -23,7 +23,7 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	}
 
 	users := []model.User{}
-	users, _ = gorm.G[model.User](s.DB.DB).Order("id DESC").Limit(10).Find(ctx)
+	users, _ = gorm.G[model.User](s.DB.GormDB()).Order("id DESC").Limit(10).Find(ctx)
 
 	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.UsersIndexPage(vc, users))
@@ -71,7 +71,7 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 
 	userUpds := model.User{}
 	c.Bind().Body(&userUpds)
-	_, err = gorm.G[model.User](s.DB.DB).Where("id = ?", cu.ID).Updates(c.Context(), userUpds)
+	_, err = gorm.G[model.User](s.DB.GormDB()).Where("id = ?", cu.ID).Updates(c.Context(), userUpds)
 	if err != nil {
 		redirectPath := "/profile?err=failed to update profile&level=error"
 		if !s.IsHTMX(c) {
@@ -87,7 +87,7 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 //
 // GET: /api/todos - Get all todos
 func (s *service) HandleGetUsers(c fiber.Ctx) error {
-	users, _ := gorm.G[model.User](s.DB.DB).Limit(10).Find(c.Context())
+	users, _ := gorm.G[model.User](s.DB.GormDB()).Limit(10).Find(c.Context())
 
 	res := struct{ Users []model.User }{
 		Users: users,
@@ -110,7 +110,7 @@ func (s *service) HandleMakeUsers(c fiber.Ctx) error {
 		})
 	}
 
-	err = gorm.G[model.User](s.DB.DB).CreateInBatches(c.Context(), &users, 1000)
+	err = gorm.G[model.User](s.DB.GormDB()).CreateInBatches(c.Context(), &users, 1000)
 	if err != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).SendString("Unprocessable entity")
 	}
@@ -123,7 +123,7 @@ func (s *service) HandleMakeUsers(c fiber.Ctx) error {
 // handleAPIUsers returns all users as JSON
 // GET: /api/todos - Get all todos
 func (s *service) HandleAPIUsers(c fiber.Ctx) error {
-	users, _ := gorm.G[model.User](s.DB.DB).Limit(10).Find(c.Context())
+	users, _ := gorm.G[model.User](s.DB.GormDB()).Limit(10).Find(c.Context())
 
 	res := struct{ Users []model.User }{
 		Users: users,

@@ -50,7 +50,7 @@ func (s *service) HandleShowPage(c fiber.Ctx) error {
 	appointment := model.Appointment{}
 	appointment.ID = id
 	if id != "" && id != "new" {
-		appointment, _ = gorm.G[model.Appointment](s.DB.DB).Where("id = ?", id).Take(c.Context())
+		appointment, _ = gorm.G[model.Appointment](s.DB.GormDB()).Where("id = ?", id).Take(c.Context())
 	}
 
 	clinics := []model.Clinic{}
@@ -81,7 +81,7 @@ func (s *service) HandleCommencePage(c fiber.Ctx) error {
 	appointment := model.Appointment{
 		UserID: cu.ID,
 	}
-	appointment, _ = gorm.G[model.Appointment](s.DB.DB).
+	appointment, _ = gorm.G[model.Appointment](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", id, cu.ID).
 		Take(c.Context())
 	if id == "" || appointment.ID == "" {
@@ -132,7 +132,7 @@ func (s *service) HandleConclude(c fiber.Ctx) error {
 	}
 	c.Bind().Body(&appointment)
 
-	_, err = gorm.G[model.Appointment](s.DB.DB).
+	_, err = gorm.G[model.Appointment](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", appointmentID, cu.ID).
 		Updates(c.Context(), appointment)
 	if err != nil {
@@ -182,7 +182,7 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 	}
 	c.Bind().Body(&appointment)
 
-	err = gorm.G[model.Appointment](s.DB.DB).Create(c.Context(), &appointment)
+	err = gorm.G[model.Appointment](s.DB.GormDB()).Create(c.Context(), &appointment)
 	if err != nil {
 		redirectPath := "/appointments?toast=failed to create appointment&level=error"
 		if !s.IsHTMX(c) {
@@ -243,7 +243,7 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	}
 	c.Bind().Body(&appointment)
 
-	_, err = gorm.G[model.Appointment](s.DB.DB).
+	_, err = gorm.G[model.Appointment](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", appointmentID, cu.ID).
 		Updates(c.Context(), appointment)
 	if err != nil {
@@ -293,7 +293,7 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 		Status:     model.ApntStatusCanceled,
 		CanceledAt: time.Now(),
 	}
-	_, err = gorm.G[model.Appointment](s.DB.DB).
+	_, err = gorm.G[model.Appointment](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", appointmentID, cu.ID).
 		Updates(c.Context(), appointment)
 	if err != nil {
@@ -329,7 +329,7 @@ func (s *service) HandleDelete(c fiber.Ctx) error {
 		return c.Redirect().Status(fiber.StatusSeeOther).To("/appointments?msg=can't delete without an id")
 	}
 
-	_, err = gorm.G[model.Appointment](s.DB.DB).
+	_, err = gorm.G[model.Appointment](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", appointmentID, cu.ID).
 		Delete(c.Context())
 	if err != nil {
@@ -356,7 +356,7 @@ func (s *service) HandlePatientConfirm(c fiber.Ctx) error {
 		ConfirmedAt: time.Now(),
 		Status:      model.ApntStatusConfirmed,
 	}
-	_, err := gorm.G[model.Appointment](s.DB.DB).
+	_, err := gorm.G[model.Appointment](s.DB.GormDB()).
 		Select("ConfirmedAt", "Status").
 		Where("id = ? AND token = ?", apptID, token).
 		Updates(c.Context(), appt)
@@ -410,7 +410,7 @@ func (s *service) HandlePatientCancel(c fiber.Ctx) error {
 		CanceledAt: time.Now(),
 		Status:     model.ApntStatusCanceled,
 	}
-	rowsAffected, err := gorm.G[model.Appointment](s.DB.DB).
+	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
 		Select("CanceledAt", "Status").
 		Where("id = ? AND token = ?", apptID, token).
 		Updates(c.Context(), apptUpds)
@@ -444,7 +444,7 @@ func (s *service) HandlePatientChangeDate(c fiber.Ctx) error {
 		PendingAt: time.Now(),
 		Status:    model.ApntStatusPending,
 	}
-	_, err := gorm.G[model.Appointment](s.DB.DB).
+	_, err := gorm.G[model.Appointment](s.DB.GormDB()).
 		Select("Token", "PendingAt", "Status").
 		Where("id = ? AND token = ?", appointmentID, token).
 		Updates(c.Context(), appointment)
@@ -471,7 +471,7 @@ func (s *service) HandlePriceFrg(c fiber.Ctx) error {
 		ID:     id,
 	}
 
-	clinic, _ = gorm.G[model.Clinic](s.DB.DB).
+	clinic, _ = gorm.G[model.Clinic](s.DB.GormDB()).
 		Select("id", "price").
 		Where("id = ? AND user_id = ?", clinic.ID, clinic.UserID).
 		Take(c.Context())

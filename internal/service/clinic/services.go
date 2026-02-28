@@ -27,7 +27,7 @@ func (s service) TakeClinicByID(c fiber.Ctx, id string) (model.Clinic, error) {
 		UserID: cu.ID,
 	}
 
-	clinic, err := gorm.G[model.Clinic](s.DB.DB).
+	clinic, err := gorm.G[model.Clinic](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", id, cu.ID).
 		Take(c.Context())
 	if err != nil {

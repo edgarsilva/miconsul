@@ -70,7 +70,7 @@ func (s *service) HandleClinicsCreate(c fiber.Ctx) error {
 
 	c.Bind().Body(&clinic)
 
-	err := gorm.G[model.Clinic](s.DB.DB).Create(c.Context(), &clinic)
+	err := gorm.G[model.Clinic](s.DB.GormDB()).Create(c.Context(), &clinic)
 	if err == nil {
 		path, err := SaveProfilePicToDisk(c, clinic)
 		if err == nil {
@@ -115,7 +115,7 @@ func (s *service) HandleClinicsUpdate(c fiber.Ctx) error {
 		clinic.ProfilePic = path
 	}
 
-	_, err = gorm.G[model.Clinic](s.DB.DB).
+	_, err = gorm.G[model.Clinic](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", clinic.ID, clinic.UserID).
 		Updates(c.Context(), clinic)
 
@@ -147,7 +147,7 @@ func (s *service) HandleClinicsDelete(c fiber.Ctx) error {
 		return fiber.ErrNotFound
 	}
 
-	_, err = gorm.G[model.Clinic](s.DB.DB).
+	_, err = gorm.G[model.Clinic](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", clinic.ID, clinic.UserID).
 		Delete(c.Context())
 	if err != nil {

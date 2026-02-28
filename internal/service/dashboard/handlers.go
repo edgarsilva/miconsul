@@ -41,13 +41,13 @@ func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 		Find(&appointments)
 
 	clinic := model.Clinic{UserID: cu.ID, Favorite: true}
-	clinic, _ = gorm.G[model.Clinic](s.DB.DB).
+	clinic, _ = gorm.G[model.Clinic](s.DB.GormDB()).
 		Where("user_id = ? AND favorite = ?", cu.ID, true).
 		Order("created_at").
 		Take(c.Context())
 
 	if clinic.ID == "" {
-		clinic, _ = gorm.G[model.Clinic](s.DB.DB).
+		clinic, _ = gorm.G[model.Clinic](s.DB.GormDB()).
 			Where("user_id = ?", cu.ID).
 			Order("created_at").
 			Take(c.Context())

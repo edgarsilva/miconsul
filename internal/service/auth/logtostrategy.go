@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"errors"
-	"miconsul/internal/database"
 	"miconsul/internal/model"
 	"os"
 
@@ -23,7 +22,7 @@ type LogtoStrategy struct {
 }
 
 type LogtoStrategyService interface {
-	DBClient() *database.Database
+	GormDB() *gorm.DB
 	Session(c fiber.Ctx) *session.Session
 	Trace(ctx context.Context, spanName string) (context.Context, trace.Span)
 }
@@ -44,7 +43,7 @@ func (s LogtoStrategy) Trace(ctx context.Context, spanName string) (context.Cont
 }
 
 func (s LogtoStrategy) FindUserByExtID(ctx context.Context, extID string) (model.User, error) {
-	user, err := gorm.G[model.User](s.service.DBClient().DB).Where("ext_id = ?", extID).Take(ctx)
+	user, err := gorm.G[model.User](s.service.GormDB()).Where("ext_id = ?", extID).Take(ctx)
 	if err != nil {
 		return user, errors.New("failed to authenticate user")
 	}

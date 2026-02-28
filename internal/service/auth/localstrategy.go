@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"errors"
-	"miconsul/internal/database"
 	utils "miconsul/internal/lib/handlerutils"
 	"miconsul/internal/model"
 	"strings"
@@ -19,7 +18,7 @@ type LocalStrategy struct {
 }
 
 type LocalStrategyService interface {
-	DBClient() *database.Database
+	GormDB() *gorm.DB
 }
 
 func NewLocalStrategy(c fiber.Ctx, s LocalStrategyService) *LocalStrategy {
@@ -44,7 +43,7 @@ func (ls LocalStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
 }
 
 func (s LocalStrategy) FindUserById(ctx context.Context, uid string) (model.User, error) {
-	return gorm.G[model.User](s.service.DBClient().DB).Where("id = ?", uid).Take(ctx)
+	return gorm.G[model.User](s.service.GormDB()).Where("id = ?", uid).Take(ctx)
 }
 
 func (ls LocalStrategy) authenticateWithJWT(c fiber.Ctx, token string) (model.User, error) {
