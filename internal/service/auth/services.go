@@ -22,7 +22,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type MiddlewareService interface {
+type ProtectedResource interface {
 	Session(c fiber.Ctx) *session.Session
 	GormDB() *gorm.DB
 	Trace(ctx context.Context, spanName string) (context.Context, trace.Span)
@@ -200,8 +200,8 @@ func (s service) resetPasswordVerifyToken(token string) (email string, err error
 
 // Authenticate an user based on Req Ctx Cookie 'Auth'
 // cookies
-func Authenticate(c fiber.Ctx, mws MiddlewareService) (model.User, error) {
-	strategy := selectStrategy(c, mws)
+func Authenticate(c fiber.Ctx, resource ProtectedResource) (model.User, error) {
+	strategy := selectStrategy(c, resource)
 	user, err := strategy.Authenticate(c)
 	if err != nil {
 		return model.User{}, err
@@ -210,12 +210,12 @@ func Authenticate(c fiber.Ctx, mws MiddlewareService) (model.User, error) {
 	return user, nil
 }
 
-func selectStrategy(c fiber.Ctx, mws MiddlewareService) AuthStrategy {
+func selectStrategy(c fiber.Ctx, resource ProtectedResource) AuthStrategy {
 	switch {
 	case LogtoEnabled():
-		return NewLogtoStrategy(c, mws)
+		return NewLogtoStrategy(c, resource)
 	default:
-		return NewLocalStrategy(c, mws)
+		return NewLocalStrategy(c, resource)
 	}
 }
 
