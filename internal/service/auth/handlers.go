@@ -11,6 +11,7 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 // HandleLoginPage returns the login page html
@@ -145,22 +146,19 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 		return c.Redirect().To("/login?msg=unable to confirm email, try login instead")
 	}
 
-	user := model.User{}
-	err := s.DB.
-		Model(&user).
+	user, err := gorm.G[model.User](s.DB.DB).
 		Select("id, email, confirm_email_token").
 		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
-		Take(&user).Error
+		Take(c.Context())
 	if err != nil {
 		return c.Redirect().To("/login?msg=we couldn't verify your account, pls try again")
 	}
 
-	result := s.DB.
-		Model(&user).
+	_, err = gorm.G[model.User](s.DB.DB).
 		Select("ConfirmEmailToken", "ConfirmEmailExpiresAt").
 		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
-		Updates(&model.User{})
-	if result.Error != nil {
+		Updates(c.Context(), model.User{})
+	if err != nil {
 		return c.Redirect().To("/login?msg=Email confirmed, you should be able to login now")
 	}
 
@@ -220,8 +218,7 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
 	}
 
-	user := model.User{}
-	err = s.DB.Model(user).Select("id", "name").Where("email = ?", email).Take(&user).Error
+	user, err := gorm.G[model.User](s.DB.DB).Select("id", "name").Where("email = ?", email).Take(c.Context())
 	if err != nil {
 		errView := errors.New("user not found with that email")
 		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
@@ -234,7 +231,10 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 
 	user.ResetToken = token
 	user.ResetTokenExpiresAt = time.Now().Add(time.Hour * 1)
-	s.DB.Model(&user).Select("ResetToken", "ResetTokenExpiresAt").Updates(&user)
+	_, _ = gorm.G[model.User](s.DB.DB).
+		Select("ResetToken", "ResetTokenExpiresAt").
+		Where("id = ?", user.ID).
+		Updates(c.Context(), user)
 
 	go mailer.ResetPassword(email, token)
 
@@ -337,9 +337,8 @@ func (s *service) HandleShowUser(c fiber.Ctx) error {
 		return c.Status(fiber.StatusForbidden).SendString("Forbidden")
 	}
 
-	user := model.User{}
-	result := s.DB.WithContext(ctx).Model(&user).Where("id = ?", id).Take(&user)
-	if result.Error != nil {
+	user, err := gorm.G[model.User](s.DB.DB).Where("id = ?", id).Take(ctx)
+	if err != nil {
 		return c.Status(fiber.StatusForbidden).SendString("Forbidden")
 	}
 

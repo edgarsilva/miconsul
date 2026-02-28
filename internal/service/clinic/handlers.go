@@ -70,8 +70,8 @@ func (s *service) HandleClinicsCreate(c fiber.Ctx) error {
 
 	c.Bind().Body(&clinic)
 
-	result := s.DB.Create(&clinic)
-	if result.Error == nil {
+	err := gorm.G[model.Clinic](s.DB.DB).Create(c.Context(), &clinic)
+	if err == nil {
 		path, err := SaveProfilePicToDisk(c, clinic)
 		if err == nil {
 			clinic.ProfilePic = path
@@ -79,7 +79,7 @@ func (s *service) HandleClinicsCreate(c fiber.Ctx) error {
 	}
 
 	if s.NotHTMX(c) {
-		if result.Error != nil {
+		if err != nil {
 			return c.Redirect().Status(fiber.StatusSeeOther).To("/clinics?err=failed to create Clinic")
 		}
 
@@ -115,10 +115,12 @@ func (s *service) HandleClinicsUpdate(c fiber.Ctx) error {
 		clinic.ProfilePic = path
 	}
 
-	result := s.DB.Model(&clinic).Where("user_id = ?", clinic.UserID).Updates(&clinic)
+	_, err = gorm.G[model.Clinic](s.DB.DB).
+		Where("id = ? AND user_id = ?", clinic.ID, clinic.UserID).
+		Updates(c.Context(), clinic)
 
 	if s.NotHTMX(c) {
-		if result.Error != nil {
+		if err != nil {
 			return c.Redirect().To("/clinics?err=failed to update clinic")
 		}
 
@@ -145,8 +147,10 @@ func (s *service) HandleClinicsDelete(c fiber.Ctx) error {
 		return fiber.ErrNotFound
 	}
 
-	res := s.DB.Model(&clinic).Where("user_id = ?", clinic.UserID).Delete(&clinic)
-	if err := res.Error; err != nil {
+	_, err = gorm.G[model.Clinic](s.DB.DB).
+		Where("id = ? AND user_id = ?", clinic.ID, clinic.UserID).
+		Delete(c.Context())
+	if err != nil {
 		return c.Redirect().Status(fiber.StatusSeeOther).To("/clinics?msg=failed to delete that clinic")
 	}
 

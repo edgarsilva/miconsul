@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v3"
+	"gorm.io/gorm"
 )
 
 // HandleDashboardPage renders the home dashboard
@@ -40,10 +41,16 @@ func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 		Find(&appointments)
 
 	clinic := model.Clinic{UserID: cu.ID, Favorite: true}
-	s.DB.WithContext(c.Context()).Model(&model.Clinic{}).Where(clinic, "UserID", "favorite").Order("created_at").Take(&clinic)
+	clinic, _ = gorm.G[model.Clinic](s.DB.DB).
+		Where("user_id = ? AND favorite = ?", cu.ID, true).
+		Order("created_at").
+		Take(c.Context())
 
 	if clinic.ID == "" {
-		s.DB.WithContext(c.Context()).Model(&model.Clinic{}).Where(clinic, "UserID").Order("created_at").Take(&clinic)
+		clinic, _ = gorm.G[model.Clinic](s.DB.DB).
+			Where("user_id = ?", cu.ID).
+			Order("created_at").
+			Take(c.Context())
 	}
 
 	vc, _ := view.NewCtx(c)

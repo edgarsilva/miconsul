@@ -12,6 +12,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	logto "github.com/logto-io/go/client"
+	"gorm.io/gorm"
 )
 
 type LogtoStrategy struct {
@@ -43,13 +44,11 @@ func (s LogtoStrategy) Trace(ctx context.Context, spanName string) (context.Cont
 }
 
 func (s LogtoStrategy) FindUserByExtID(ctx context.Context, extID string) (model.User, error) {
-	db := s.service.DBClient()
-	user := model.User{ExtID: extID}
-	result := db.WithContext(ctx).Model(&user).Where(user, "ExtID").Take(&user)
-	if result.Error != nil {
+	user, err := gorm.G[model.User](s.service.DBClient().DB).Where("ext_id = ?", extID).Take(ctx)
+	if err != nil {
 		return user, errors.New("failed to authenticate user")
 	}
-	return user, result.Error
+	return user, nil
 }
 
 func (s *LogtoStrategy) Authenticate(c fiber.Ctx) (model.User, error) {

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v3"
+	"gorm.io/gorm"
 )
 
 type LocalStrategy struct {
@@ -43,9 +44,7 @@ func (ls LocalStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
 }
 
 func (s LocalStrategy) FindUserById(ctx context.Context, uid string) (model.User, error) {
-	user := model.User{}
-	result := s.service.DBClient().WithContext(ctx).Model(&user).Where("id = ?", uid).Take(&user)
-	return user, result.Error
+	return gorm.G[model.User](s.service.DBClient().DB).Where("id = ?", uid).Take(ctx)
 }
 
 func (ls LocalStrategy) authenticateWithJWT(c fiber.Ctx, token string) (model.User, error) {

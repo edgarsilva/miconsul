@@ -2,12 +2,14 @@ package admin
 
 import (
 	"fmt"
-	"miconsul/internal/model"
-	"miconsul/internal/view"
 	"os"
 	"strconv"
 
+	"miconsul/internal/model"
+	"miconsul/internal/view"
+
 	"github.com/gofiber/fiber/v3"
+	"gorm.io/gorm"
 	"syreclabs.com/go/faker"
 )
 
@@ -48,12 +50,7 @@ func (s *service) HandleAdminModelsPage(c fiber.Ctx) error {
 //
 // GET: /api/todos - Get all todos
 func (s *service) HandleGetUsers(c fiber.Ctx) error {
-	var users []model.User
-
-	s.DB.
-		Model(&model.User{}).
-		Limit(10).
-		Find(&users)
+	users, _ := gorm.G[model.User](s.DB.DB).Limit(10).Find(c.Context())
 
 	res := struct{ Users []model.User }{
 		Users: users,
@@ -76,8 +73,8 @@ func (s *service) HandleMakeUsers(c fiber.Ctx) error {
 		})
 	}
 
-	res := s.DB.Create(&users)
-	if err := res.Error; err != nil {
+	err = gorm.G[model.User](s.DB.DB).CreateInBatches(c.Context(), &users, 1000)
+	if err != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).SendString("Unprocessable entity")
 	}
 
@@ -89,12 +86,7 @@ func (s *service) HandleMakeUsers(c fiber.Ctx) error {
 // handleAPIUsers returns all users as JSON
 // GET: /api/todos - Get all todos
 func (s *service) HandleAPIUsers(c fiber.Ctx) error {
-	var users []model.User
-
-	s.DB.
-		Model(&model.User{}).
-		Limit(10).
-		Find(&users)
+	users, _ := gorm.G[model.User](s.DB.DB).Limit(10).Find(c.Context())
 
 	res := struct{ Users []model.User }{
 		Users: users,

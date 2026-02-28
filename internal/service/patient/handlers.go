@@ -9,6 +9,7 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
+	"gorm.io/gorm"
 	"syreclabs.com/go/faker"
 )
 
@@ -100,8 +101,8 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 	c.Bind().Body(&patient)
 	patient.Sanitize()
 
-	result := s.DB.Create(&patient)
-	if err := result.Error; err == nil {
+	err = gorm.G[model.Patient](s.DB.DB).Create(c.Context(), &patient)
+	if err == nil {
 		path, err := SaveProfilePicToDisk(c, patient)
 		if err == nil {
 			log.Error(err)
@@ -109,7 +110,7 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 		}
 	}
 
-	if err := result.Error; err != nil {
+	if err != nil {
 		redirectPath := "/patients/new?toast=Failed to create new patient&level=error"
 		if !s.IsHTMX(c) {
 			return c.Redirect().To(redirectPath)
@@ -160,8 +161,10 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 		patient.ProfilePic = path
 	}
 
-	result := s.DB.Where("id = ? AND user_id = ?", patientID, cu.ID).Updates(&patient)
-	if err := result.Error; err != nil {
+	_, err = gorm.G[model.Patient](s.DB.DB).
+		Where("id = ? AND user_id = ?", patientID, cu.ID).
+		Updates(c.Context(), patient)
+	if err != nil {
 		redirectPath := "/patients?err=failed to update patient&level=error"
 		if !s.IsHTMX(c) {
 			return c.Redirect().To(redirectPath)
@@ -201,11 +204,13 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 	patient := model.Patient{
 		UserID: cu.ID,
 	}
-	res := s.DB.Model(&patient).Where("id = ? AND user_id = ?", patientID, cu.ID).Update("profile_pic", "")
-	s.DB.WithContext(c.Context()).Model(&patient).Where("id = ?", patientID).Take(&patient)
+	_, err = gorm.G[model.Patient](s.DB.DB).
+		Where("id = ? AND user_id = ?", patientID, cu.ID).
+		Update(c.Context(), "profile_pic", "")
+	patient, _ = gorm.G[model.Patient](s.DB.DB).Where("id = ?", patientID).Take(c.Context())
 
 	if !s.IsHTMX(c) {
-		if err := res.Error; err != nil {
+		if err != nil {
 			return c.SendStatus(fiber.StatusUnprocessableEntity)
 		}
 
@@ -232,12 +237,10 @@ func (s *service) HandleDeletePatient(c fiber.Ctx) error {
 		return c.Redirect().Status(fiber.StatusSeeOther).To("/patients?msg=can't delete without an id")
 	}
 
-	patient := model.Patient{
-		UserID: cu.ID,
-	}
-
-	res := s.DB.Where("id = ? AND user_id = ?", patientID, cu.ID).Delete(&patient)
-	if err := res.Error; err != nil {
+	_, err = gorm.G[model.Patient](s.DB.DB).
+		Where("id = ? AND user_id = ?", patientID, cu.ID).
+		Delete(c.Context())
+	if err != nil {
 		return c.Redirect().Status(fiber.StatusSeeOther).To("/patients?msg=failed to delete that patient")
 	}
 

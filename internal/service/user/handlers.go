@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v3"
+	"gorm.io/gorm"
 	"syreclabs.com/go/faker"
 )
 
@@ -22,7 +23,7 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	}
 
 	users := []model.User{}
-	s.DB.WithContext(ctx).Model(&model.User{}).Order("id DESC").Limit(10).Find(&users)
+	users, _ = gorm.G[model.User](s.DB.DB).Order("id DESC").Limit(10).Find(ctx)
 
 	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.UsersIndexPage(vc, users))
@@ -70,8 +71,8 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 
 	userUpds := model.User{}
 	c.Bind().Body(&userUpds)
-	result := s.DB.Where("id = ?", cu.ID).Updates(&userUpds)
-	if err := result.Error; err != nil {
+	_, err = gorm.G[model.User](s.DB.DB).Where("id = ?", cu.ID).Updates(c.Context(), userUpds)
+	if err != nil {
 		redirectPath := "/profile?err=failed to update profile&level=error"
 		if !s.IsHTMX(c) {
 			return c.Redirect().To(redirectPath)
@@ -86,12 +87,7 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 //
 // GET: /api/todos - Get all todos
 func (s *service) HandleGetUsers(c fiber.Ctx) error {
-	var users []model.User
-
-	s.DB.
-		Model(&model.User{}).
-		Limit(10).
-		Find(&users)
+	users, _ := gorm.G[model.User](s.DB.DB).Limit(10).Find(c.Context())
 
 	res := struct{ Users []model.User }{
 		Users: users,
@@ -114,8 +110,8 @@ func (s *service) HandleMakeUsers(c fiber.Ctx) error {
 		})
 	}
 
-	res := s.DB.Create(&users)
-	if err := res.Error; err != nil {
+	err = gorm.G[model.User](s.DB.DB).CreateInBatches(c.Context(), &users, 1000)
+	if err != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).SendString("Unprocessable entity")
 	}
 
@@ -127,12 +123,7 @@ func (s *service) HandleMakeUsers(c fiber.Ctx) error {
 // handleAPIUsers returns all users as JSON
 // GET: /api/todos - Get all todos
 func (s *service) HandleAPIUsers(c fiber.Ctx) error {
-	var users []model.User
-
-	s.DB.
-		Model(&model.User{}).
-		Limit(10).
-		Find(&users)
+	users, _ := gorm.G[model.User](s.DB.DB).Limit(10).Find(c.Context())
 
 	res := struct{ Users []model.User }{
 		Users: users,

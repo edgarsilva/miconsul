@@ -20,6 +20,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type MiddlewareService interface {
@@ -76,7 +77,8 @@ func (s service) signupIsEmailValid(email string) error {
 	}
 
 	user := model.User{Email: email}
-	if result := s.DB.Model(user).Where(user, "Email").Take(&user); result.RowsAffected != 0 {
+	user, err := gorm.G[model.User](s.DB.DB).Where("email = ?", email).Take(context.Background())
+	if err == nil && user.ID != "" {
 		return errors.New("email already exists, try login instead")
 	}
 
@@ -110,8 +112,8 @@ func (s service) userCreate(email, password, token string) (model.User, error) {
 		Role:                  model.UserRoleUser,
 	}
 
-	result := s.DB.Create(&user) // pass pointer of data to Create
-	if result.Error != nil {
+	err := gorm.G[model.User](s.DB.DB).Create(context.Background(), &user)
+	if err != nil {
 		err := errors.New("faild to save email or password, try again")
 		return model.User{}, err
 	}
@@ -124,10 +126,9 @@ func (s service) userFetch(ctx context.Context, email string) (model.User, error
 	ctx, span := s.Tracer.Start(ctx, "auth/services:userFetch")
 	defer span.End()
 
-	user := model.User{Email: email}
-	s.DB.WithContext(ctx).Model(&user).Where(user, "Email").Take(&user)
-	if user.ID == "" {
-		return user, errors.New("user not found")
+	user, err := gorm.G[model.User](s.DB.DB).Where("email = ?", email).Take(ctx)
+	if err != nil {
+		return model.User{}, errors.New("user not found")
 	}
 
 	return user, nil
@@ -145,13 +146,12 @@ func (s service) userUpdatePassword(email, password, token string) (model.User, 
 		Password: string(pwd),
 	}
 
-	result := s.DB.
-		Model(&user).
+	rowsAffected, err := gorm.G[model.User](s.DB.DB).
 		Select("Password", "ResetToken", "ResetTokenExpiresAt").
 		Where("email = ? AND reset_token = ? AND reset_token_expires_at > ?", email, token, time.Now()).
 		Limit(1).
-		Updates(&user)
-	if result.Error != nil || result.RowsAffected != 1 {
+		Updates(context.Background(), user)
+	if err != nil || rowsAffected != 1 {
 		return model.User{}, errors.New("failed to update password")
 	}
 
@@ -163,13 +163,12 @@ func (s service) userUpdateConfirmToken(email, token string) error {
 		ConfirmEmailToken:     token,
 		ConfirmEmailExpiresAt: time.Now().Add(time.Hour * 24),
 	}
-	result := s.DB.
-		Model(&user).
+	rowsAffected, err := gorm.G[model.User](s.DB.DB).
 		Select("ConfirmEmailToken", "ConfirmEmailExpiresAt").
 		Where("email = ?", email).
 		Limit(1).
-		Updates(&user)
-	if result.Error != nil || result.RowsAffected != 1 {
+		Updates(context.Background(), user)
+	if err != nil || rowsAffected != 1 {
 		return errors.New("failed to update confirm token")
 	}
 
@@ -177,12 +176,11 @@ func (s service) userUpdateConfirmToken(email, token string) error {
 }
 
 func (s service) userPendingConfirmation(email string) error {
-	user := model.User{}
-	result := s.DB.
+	user, err := gorm.G[model.User](s.DB.DB).
 		Select("ID, Email, ConfirmEmailToken").
 		Where("email = ? AND confirm_email_token IS NOT null AND confirm_email_token != ''", email).
-		Take(&user)
-	if result.RowsAffected != 0 || user.ID != "" { // If a row/record exists it means confirmation is pending and we should re-send
+		Take(context.Background())
+	if err == nil && user.ID != "" { // If a row/record exists it means confirmation is pending and we should re-send
 		return errors.New("user pending confirmation")
 	}
 
@@ -190,12 +188,11 @@ func (s service) userPendingConfirmation(email string) error {
 }
 
 func (s service) resetPasswordVerifyToken(token string) (email string, err error) {
-	user := model.User{}
-	result := s.DB.
+	user, err := gorm.G[model.User](s.DB.DB).
 		Select("id, email").
 		Where("reset_token != '' AND reset_token IS NOT null AND reset_token = ? AND reset_token_expires_at > ?", token, time.Now()).
-		Take(&user)
-	if result.Error != nil {
+		Take(context.Background())
+	if err != nil {
 		return "", errors.New("password reset token not found or expired")
 	}
 
@@ -227,12 +224,14 @@ func (s *service) saveLogtoUser(ctx context.Context, logtoUser LogtoUser) error 
 	ctx, span := s.Trace(ctx, "auth/logto:saveLogtoUser")
 	defer span.End()
 
-	user := model.User{Email: logtoUser.Email}
-	result := s.DB.WithContext(ctx).Model(&user).Where(user, "Email").Take(&user)
+	user, err := gorm.G[model.User](s.DB.DB).Where("email = ?", logtoUser.Email).Take(ctx)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return fmt.Errorf("failed to load user from logto claims, GORM error: %w", err)
+	}
 
 	userExists := user.ID != ""
 	extIDMatchesUID := user.ExtID == logtoUser.UID
-	if result.RowsAffected == 1 && userExists && extIDMatchesUID {
+	if userExists && extIDMatchesUID {
 		// user exists and has the same extID as the logtoUser, user is now logged in
 		return nil
 	}

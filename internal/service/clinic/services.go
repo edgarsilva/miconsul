@@ -7,6 +7,7 @@ import (
 	"miconsul/internal/server"
 
 	"github.com/gofiber/fiber/v3"
+	"gorm.io/gorm"
 )
 
 type service struct {
@@ -26,12 +27,11 @@ func (s service) TakeClinicByID(c fiber.Ctx, id string) (model.Clinic, error) {
 		UserID: cu.ID,
 	}
 
-	result := s.DB.
-		Model(&clinic).
-		Where("user_id = ?", cu.ID).
-		Take(&clinic)
-	if result.Error != nil {
-		return model.Clinic{}, result.Error
+	clinic, err := gorm.G[model.Clinic](s.DB.DB).
+		Where("id = ? AND user_id = ?", id, cu.ID).
+		Take(c.Context())
+	if err != nil {
+		return model.Clinic{}, err
 	}
 
 	return clinic, nil

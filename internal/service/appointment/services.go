@@ -60,10 +60,15 @@ func (s *service) GetPatientByID(c fiber.Ctx, id string) (model.Patient, error) 
 
 	cu, _ := s.CurrentUser(c)
 	patient := model.Patient{ID: id, UserID: cu.ID}
-	result := s.DB.Where(&patient, "ID", "UserID").Take(&patient)
+	patient, err := gorm.G[model.Patient](s.DB.DB).
+		Where("id = ? AND user_id = ?", id, cu.ID).
+		Take(c.Context())
 
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		err := fmt.Errorf("incorrect number of patient rows, expecting: 1, got: %d", result.RowsAffected)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		err := fmt.Errorf("incorrect number of patient rows, expecting: 1, got: %d", 0)
+		return model.Patient{}, err
+	}
+	if err != nil {
 		return model.Patient{}, err
 	}
 
@@ -77,9 +82,14 @@ func (s *service) GetClinicByID(c fiber.Ctx, id string) (model.Clinic, error) {
 
 	cu, _ := s.CurrentUser(c)
 	clinic := model.Clinic{ID: id, UserID: cu.ID}
-	result := s.DB.Model(&clinic).Where(&clinic, "ID", "UserID").Take(&clinic)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		err := fmt.Errorf("incorrect number of clinic rows, expecting: 1, got: %d", result.RowsAffected)
+	clinic, err := gorm.G[model.Clinic](s.DB.DB).
+		Where("id = ? AND user_id = ?", id, cu.ID).
+		Take(c.Context())
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		err := fmt.Errorf("incorrect number of clinic rows, expecting: 1, got: %d", 0)
+		return model.Clinic{}, err
+	}
+	if err != nil {
 		return model.Clinic{}, err
 	}
 
@@ -131,9 +141,9 @@ func (s *service) SendBookedAlert(appointment model.Appointment) error {
 			return
 		}
 
-		s.DB.Model(&model.Appointment{}).
+		_, _ = gorm.G[model.Appointment](s.DB.DB).
 			Where("id = ?", appointment.ID).
-			Update("BookedAlertSentAt", time.Now())
+			Update(context.Background(), "BookedAlertSentAt", time.Now())
 
 		alert := model.Alert{
 			Medium: model.AlertMediumEmail,
@@ -161,9 +171,9 @@ func (s *service) SendReminderAlert(appointment model.Appointment) error {
 			return
 		}
 
-		s.DB.Model(&model.Appointment{}).
+		_, _ = gorm.G[model.Appointment](s.DB.DB).
 			Where("id = ?", appointment.ID).
-			Update("ReminderAlertSentAt", time.Now())
+			Update(context.Background(), "ReminderAlertSentAt", time.Now())
 
 		alert := model.Alert{
 			Medium: model.AlertMediumEmail,
