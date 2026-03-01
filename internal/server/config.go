@@ -53,10 +53,6 @@ func staticCacheDuration(appEnv string) time.Duration {
 	return 300 * time.Second
 }
 
-func encryptCookieKey(secret string) string {
-	return secret
-}
-
 func sessionConfig(path string) sqlite3.Config {
 	sessPath := path
 	if sessPath == "" {

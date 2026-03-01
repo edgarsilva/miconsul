@@ -74,6 +74,10 @@ func New(serverOpts ...ServerOption) *Server {
 	sessionPath := server.AppEnv.SessionDBPath
 	appEnvName := server.AppEnv.AppEnv
 	cookieSecret := server.AppEnv.CookieSecret
+	if cookieSecret == "" {
+		log.Fatal("🔴 failed to start server: COOKIE_SECRET is required")
+	}
+
 	storage := sqlite3.New(sessionConfig(sessionPath))
 	server.SessionStore = session.NewStore(session.Config{
 		Storage:      storage,
@@ -96,11 +100,8 @@ func New(serverOpts ...ServerOption) *Server {
 	fiberApp.Use(helmet.New(helmetConfig()))
 
 	fiberApp.Use(requestid.New())
-	if cookieSecret == "" {
-		log.Warn("🟡 COOKIE_SECRET is empty; encrypted cookie middleware is running without a configured secret")
-	}
 	fiberApp.Use(encryptcookie.New(encryptcookie.Config{
-		Key: encryptCookieKey(cookieSecret),
+		Key: cookieSecret,
 	}))
 	fiberApp.Use(favicon.New(favicon.Config{
 		File: "./public/favicon.ico",
