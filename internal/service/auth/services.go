@@ -6,12 +6,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/mailer"
 	"miconsul/internal/model"
 	"miconsul/internal/server"
-	"strings"
-	"time"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/gofiber/fiber/v3"
@@ -133,6 +134,15 @@ func (s service) userFetch(ctx context.Context, email string) (model.User, error
 	return user, nil
 }
 
+func (s service) FindUserByExtID(ctx context.Context, extID string) (model.User, error) {
+	user, err := gorm.G[model.User](s.DB.GormDB()).Where("ext_id = ?", extID).Take(ctx)
+	if err != nil {
+		return model.User{}, errors.New("failed to authenticate user")
+	}
+
+	return user, nil
+}
+
 // userUpdatePassword updates a user password
 func (s service) userUpdatePassword(email, password, token string) (model.User, error) {
 	pwd, err := bcrypt.GenerateFromPassword([]byte(password), 12)
@@ -198,27 +208,6 @@ func (s service) resetPasswordVerifyToken(token string) (email string, err error
 	return user.Email, nil
 }
 
-// Authenticate an user based on Req Ctx Cookie 'Auth'
-// cookies
-func Authenticate(c fiber.Ctx, resource ProtectedResource) (model.User, error) {
-	strategy := selectStrategy(c, resource)
-	user, err := strategy.Authenticate(c)
-	if err != nil {
-		return model.User{}, err
-	}
-
-	return user, nil
-}
-
-func selectStrategy(c fiber.Ctx, resource ProtectedResource) AuthStrategy {
-	switch {
-	case LogtoEnabled():
-		return NewLogtoStrategy(c, resource)
-	default:
-		return NewLocalStrategy(c, resource)
-	}
-}
-
 func (s *service) saveLogtoUser(ctx context.Context, logtoUser LogtoUser) error {
 	ctx, span := s.Trace(ctx, "auth/logto:saveLogtoUser")
 	defer span.End()
@@ -261,4 +250,38 @@ func (s *service) saveLogtoUser(ctx context.Context, logtoUser LogtoUser) error 
 	}
 
 	return nil
+}
+
+// Authenticate an user based on Req Ctx Cookie 'Auth'
+// cookies
+func Authenticate(c fiber.Ctx, resource ProtectedResource) (model.User, error) {
+	strategy := selectStrategy(c, resource)
+	user, err := strategy.Authenticate(c)
+	if err != nil {
+		return model.User{}, err
+	}
+
+	return user, nil
+}
+
+func selectStrategy(c fiber.Ctx, resource ProtectedResource) AuthStrategy {
+	switch {
+	case LogtoEnabled():
+		return NewLogtoStrategy(c, strategyDeps{ProtectedResource: resource})
+	default:
+		return NewLocalStrategy(c, resource)
+	}
+}
+
+type strategyDeps struct {
+	ProtectedResource
+}
+
+func (deps strategyDeps) FindUserByExtID(ctx context.Context, extID string) (model.User, error) {
+	user, err := gorm.G[model.User](deps.GormDB()).Where("ext_id = ?", extID).Take(ctx)
+	if err != nil {
+		return model.User{}, errors.New("failed to authenticate user")
+	}
+
+	return user, nil
 }
