@@ -90,7 +90,7 @@ func helmetConfig() helmet.Config {
 		ReferrerPolicy:            "no-referrer",
 		CrossOriginEmbedderPolicy: "credentialless",
 		CrossOriginOpenerPolicy:   "same-origin",
-		CrossOriginResourcePolicy: "cross-origin-origin",
+		CrossOriginResourcePolicy: "cross-origin",
 		OriginAgentCluster:        "?1",
 		XDNSPrefetchControl:       "off",
 		XDownloadOptions:          "noopen",

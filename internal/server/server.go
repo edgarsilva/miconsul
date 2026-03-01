@@ -372,11 +372,11 @@ func (s *Server) SessionUITheme(c fiber.Ctx) string {
 	return theme
 }
 
-// SessionLang returns the user language from header Accepts-Language or session
-func (s *Server) SessionLang(c fiber.Ctx) string {
+// CurrentLocale returns the user locale resolved for the current request.
+func (s *Server) CurrentLocale(c fiber.Ctx) string {
 	sess, err := s.Session(c)
 	if err != nil {
-		lang, ok := c.Locals("lang").(string)
+		lang, ok := c.Locals("locale").(string)
 		if !ok || lang == "" {
 			lang = "es-MX"
 		}
@@ -389,12 +389,16 @@ func (s *Server) SessionLang(c fiber.Ctx) string {
 		return lang
 	}
 
-	lang, ok = c.Locals("lang").(string)
+	lang, ok = c.Locals("locale").(string)
 	if !ok || lang == "" {
 		lang = "es-MX"
 	}
 
 	sess.Set("lang", lang)
+	if err := sess.Save(); err != nil {
+		log.Warn("Failed to save session language:", err)
+	}
+
 	return lang
 }
 
@@ -427,5 +431,5 @@ func (s *Server) L(c fiber.Ctx, key string) (translation string) {
 		return ""
 	}
 
-	return s.Localizer.GetWithLocale(s.SessionLang(c), key)
+	return s.Localizer.GetWithLocale(s.CurrentLocale(c), key)
 }
