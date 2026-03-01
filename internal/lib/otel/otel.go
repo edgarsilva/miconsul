@@ -55,9 +55,9 @@ func NewUptraceTracerProvider(ctx context.Context, env *appenv.Env) (tp *sdktrac
 		dsn         = env.UptraceDSN
 		endpoint    = env.UptraceEndpoint
 		appName     = env.AppName
-		appEnv      = env.AppEnv
+		environment = env.Environment
 		appVersion  = env.AppVersion
-		serviceName = appName + "_" + appEnv
+		serviceName = appName + "_" + environment
 	)
 
 	if dsn == "" || endpoint == "" {

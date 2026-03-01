@@ -1,3 +1,4 @@
+// Package appenv provides Runtime configuration for the App
 package appenv
 
 import (
@@ -8,8 +9,9 @@ import (
 )
 
 type Env struct {
+	Environment string `env:"APP_ENV;oneof=development,test,staging,production"`
+
 	AppName     string `env:"APP_NAME"`
-	AppEnv      string `env:"APP_ENV;oneof=development,test,staging,production"`
 	AppProtocol string `env:"APP_PROTOCOL"`
 	AppDomain   string `env:"APP_DOMAIN"`
 	AppVersion  string `env:"APP_VERSION"`
@@ -17,7 +19,7 @@ type Env struct {
 
 	AppShutdownTimeout time.Duration `env:"APP_SHUTDOWN_TIMEOUT;optional;min=1s"`
 
-	CookieSecret string `env:"COOKIE_SECRET"`
+	CookieSecret string `env:"COOKIE_SECRET;regex=^.{32,}$"`
 	JWTSecret    string `env:"JWT_SECRET"`
 
 	DBPath        string `env:"DB_PATH"`

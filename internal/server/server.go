@@ -41,7 +41,7 @@ type Cache interface {
 }
 
 type Server struct {
-	AppEnv       *appenv.Env
+	Env          *appenv.Env
 	DB           *database.Database
 	wp           *ants.Pool     // <- WorkPool - handles Background Goroutines or Async Jobs (emails) with Ants
 	cj           *cronjob.Sched // <- CronJob scheduler
@@ -68,13 +68,13 @@ func New(serverOpts ...ServerOption) *Server {
 		log.Fatal("🔴 failed to start server:", err)
 	}
 
-	sessionPath := server.AppEnv.SessionDBPath
+	sessionPath := server.Env.SessionDBPath
 	server.setupSessionStore(sessionPath)
 	server.setupTracer()
 
-	env := server.AppEnv.AppEnv
-	cookieSecret := server.AppEnv.CookieSecret
-	server.App = server.newFiberApp(env, cookieSecret)
+	environment := server.Env.Environment
+	cookieSecret := server.Env.CookieSecret
+	server.App = server.newFiberApp(environment, cookieSecret)
 
 	return &server
 }
@@ -91,8 +91,8 @@ func (s *Server) applyServerOptions(serverOpts ...ServerOption) error {
 }
 
 func (s *Server) validateCriticalDeps() error {
-	if s.AppEnv == nil {
-		return errors.New("AppEnv is required")
+	if s.Env == nil {
+		return errors.New("environment config is required")
 	}
 
 	if s.DB == nil {
@@ -103,14 +103,14 @@ func (s *Server) validateCriticalDeps() error {
 }
 
 func (s *Server) validateRuntimeConfig() error {
-	appEnvName := s.AppEnv.AppEnv
-	switch appEnvName {
+	environment := s.Env.Environment
+	switch environment {
 	case "development", "test", "staging", "production":
 	default:
 		return errors.New("APP_ENV is invalid")
 	}
 
-	cookieSecret := s.AppEnv.CookieSecret
+	cookieSecret := s.Env.CookieSecret
 	if cookieSecret == "" {
 		return errors.New("COOKIE_SECRET is required")
 	}
@@ -139,14 +139,14 @@ func (s *Server) setupTracer() {
 	s.Tracer = tracer
 }
 
-func (s *Server) newFiberApp(appEnvName, cookieSecret string) *fiber.App {
+func (s *Server) newFiberApp(environment, cookieSecret string) *fiber.App {
 	fiberConfig := fiber.Config{ErrorHandler: fiberAppErrorHandler}
 	fiberApp := fiber.New(fiberConfig)
 
 	s.setupCoreMiddleware(fiberApp)
 	s.setupSecurityMiddleware(fiberApp, cookieSecret)
 	s.setupObservability(fiberApp)
-	s.setupStaticFiles(fiberApp, appEnvName)
+	s.setupStaticFiles(fiberApp, environment)
 
 	return fiberApp
 }
@@ -183,17 +183,17 @@ func (s *Server) setupObservability(app *fiber.App) {
 	})
 }
 
-func (s *Server) setupStaticFiles(app *fiber.App, appEnvName string) {
-	app.Use("/public", static.New("./public", staticConfig(appEnvName)))
+func (s *Server) setupStaticFiles(app *fiber.App, environment string) {
+	app.Use("/public", static.New("./public", staticConfig(environment)))
 }
 
-func WithAppEnv(env *appenv.Env) ServerOption {
+func WithEnv(env *appenv.Env) ServerOption {
 	return func(server *Server) error {
 		if env == nil {
-			return errors.New("failed to start server without AppEnv")
+			return errors.New("failed to start server without environment config")
 		}
 
-		server.AppEnv = env
+		server.Env = env
 		return nil
 	}
 }
@@ -201,7 +201,7 @@ func WithAppEnv(env *appenv.Env) ServerOption {
 func WithDatabase(db *database.Database) ServerOption {
 	return func(server *Server) error {
 		if db == nil {
-			return errors.New("failed to start server without Database conection")
+			return errors.New("failed to start server without Database connection")
 		}
 
 		server.DB = db
@@ -280,7 +280,7 @@ func (s *Server) AddCronJob(crontab string, fn func()) error {
 // when the a worker is available
 func (s *Server) SendToWorker(fn func()) error {
 	if s.wp == nil {
-		log.Warn("failed to add fn to run as job in worker pool, server.wp might be nil, running sinchronously")
+		log.Warn("failed to add fn to run as job in worker pool, server.wp might be nil, running synchronously")
 		fn()
 		return nil
 	}
@@ -326,11 +326,11 @@ func (s *Server) Trace(ctx context.Context, spanName string, opts ...trace.SpanS
 	return ctx, span
 }
 
-// Listen starts the fiberapp server (fiperapp.Listen()) on the specified port.
+// Listen starts the fiberapp server (fiberApp.Listen()) on the specified port.
 func (s *Server) Listen(portOverride ...int) error {
 	port := 0
-	if s.AppEnv != nil && s.AppEnv.AppPort > 0 {
-		port = s.AppEnv.AppPort
+	if s.Env != nil && s.Env.AppPort > 0 {
+		port = s.Env.AppPort
 	}
 
 	if len(portOverride) > 0 {

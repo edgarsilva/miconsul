@@ -76,7 +76,7 @@ func main() {
 	fmt.Println(" Starting localizer...")
 	localizer := localize.New("en-US", "es-MX")
 	s := server.New(
-		server.WithAppEnv(env),
+		server.WithEnv(env),
 		server.WithDatabase(db),
 		server.WithCronJob(cj),
 		server.WithWorkPool(wp),
