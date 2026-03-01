@@ -13,24 +13,8 @@ import (
 	logtocore "github.com/logto-io/go/core"
 )
 
-func (s service) newLogtoClient(c fiber.Ctx) (*logto.LogtoClient, func() error, error) {
-	sess, err := s.Session(c)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	logtoClient, saveSess := NewLogtoClient(sess, logtoConfigFromEnv(s.Env))
-	return logtoClient, saveSess, nil
-}
-
-func deferLogtoSessionSave(route string, saveSess func() error) {
-	if err := saveSess(); err != nil {
-		log.Error("failed to save session in "+route+":", err)
-	}
-}
-
 // HandleLogtoSignin redirects to Logto sign-in page
-func (s service) HandleLogtoSignin(c fiber.Ctx) error {
+func (s *service) HandleLogtoSignin(c fiber.Ctx) error {
 	logtoClient, saveSess, err := s.newLogtoClient(c)
 	if err != nil {
 		log.Error("failed to load session in logto signin:", err)

@@ -17,6 +17,7 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/log"
 	"github.com/gofiber/fiber/v3/middleware/session"
 	logto "github.com/logto-io/go/client"
 	"go.opentelemetry.io/otel/trace"
@@ -40,14 +41,14 @@ type service struct {
 	*server.Server
 }
 
-func NewService(s *server.Server) service {
-	return service{
+func NewService(s *server.Server) *service {
+	return &service{
 		Server: s,
 	}
 }
 
 // Signup creates a new user record if req.body Email & Password are valid
-func (s service) signup(email string, password string) error {
+func (s *service) signup(email string, password string) error {
 	if err := s.signupIsEmailValid(email); err != nil {
 		return err
 	}
@@ -73,7 +74,7 @@ func (s service) signup(email string, password string) error {
 }
 
 // IsEmailValidForSignup returns nil if valid, otherwise returns an error
-func (s service) signupIsEmailValid(email string) error {
+func (s *service) signupIsEmailValid(email string) error {
 	validEmail := govalidator.IsEmail(email)
 	if !validEmail {
 		return errors.New("email address is invalid")
@@ -89,7 +90,7 @@ func (s service) signupIsEmailValid(email string) error {
 }
 
 // signupIsPasswordValid returns nil if valid, otherwise returns an error
-func (s service) signupIsPasswordValid(pwd string) error {
+func (s *service) signupIsPasswordValid(pwd string) error {
 	if len(pwd) < 8 {
 		return errors.New("password is too short")
 	}
@@ -106,7 +107,7 @@ func (s service) signupIsPasswordValid(pwd string) error {
 }
 
 // userCreate creates a new row in the users table
-func (s service) userCreate(email, password, token string) (model.User, error) {
+func (s *service) userCreate(email, password, token string) (model.User, error) {
 	user := model.User{
 		Email:                 email,
 		Password:              password,
@@ -125,7 +126,7 @@ func (s service) userCreate(email, password, token string) (model.User, error) {
 }
 
 // userFetch returns a User by email
-func (s service) userFetch(ctx context.Context, email string) (model.User, error) {
+func (s *service) userFetch(ctx context.Context, email string) (model.User, error) {
 	ctx, span := s.Trace(ctx, "auth/services:userFetch")
 	defer span.End()
 
@@ -137,7 +138,7 @@ func (s service) userFetch(ctx context.Context, email string) (model.User, error
 	return user, nil
 }
 
-func (s service) FindUserByExtID(ctx context.Context, extID string) (model.User, error) {
+func (s *service) FindUserByExtID(ctx context.Context, extID string) (model.User, error) {
 	user, err := gorm.G[model.User](s.DB.GormDB()).Where("ext_id = ?", extID).Take(ctx)
 	if err != nil {
 		return model.User{}, errors.New("failed to authenticate user")
@@ -147,7 +148,7 @@ func (s service) FindUserByExtID(ctx context.Context, extID string) (model.User,
 }
 
 // userUpdatePassword updates a user password
-func (s service) userUpdatePassword(email, password, token string) (model.User, error) {
+func (s *service) userUpdatePassword(email, password, token string) (model.User, error) {
 	pwd, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
 		return model.User{}, errors.New("failed to update password")
@@ -170,7 +171,7 @@ func (s service) userUpdatePassword(email, password, token string) (model.User, 
 	return user, nil
 }
 
-func (s service) userUpdateConfirmToken(email, token string) error {
+func (s *service) userUpdateConfirmToken(email, token string) error {
 	user := model.User{
 		ConfirmEmailToken:     token,
 		ConfirmEmailExpiresAt: time.Now().Add(time.Hour * 24),
@@ -187,7 +188,7 @@ func (s service) userUpdateConfirmToken(email, token string) error {
 	return nil
 }
 
-func (s service) userPendingConfirmation(email string) error {
+func (s *service) userPendingConfirmation(email string) error {
 	user, err := gorm.G[model.User](s.DB.GormDB()).
 		Select("ID, Email, ConfirmEmailToken").
 		Where("email = ? AND confirm_email_token IS NOT null AND confirm_email_token != ''", email).
@@ -199,7 +200,7 @@ func (s service) userPendingConfirmation(email string) error {
 	return nil
 }
 
-func (s service) resetPasswordVerifyToken(token string) (email string, err error) {
+func (s *service) resetPasswordVerifyToken(token string) (email string, err error) {
 	user, err := gorm.G[model.User](s.DB.GormDB()).
 		Select("id, email").
 		Where("reset_token != '' AND reset_token IS NOT null AND reset_token = ? AND reset_token_expires_at > ?", token, time.Now()).
@@ -253,6 +254,22 @@ func (s *service) saveLogtoUser(ctx context.Context, logtoUser LogtoUser) error 
 	}
 
 	return nil
+}
+
+func (s *service) newLogtoClient(c fiber.Ctx) (*logto.LogtoClient, func() error, error) {
+	sess, err := s.Session(c)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	logtoClient, saveSess := NewLogtoClient(sess, logtoConfigFromEnv(s.Env))
+	return logtoClient, saveSess, nil
+}
+
+func deferLogtoSessionSave(route string, saveSess func() error) {
+	if err := saveSess(); err != nil {
+		log.Error("failed to save session in "+route+":", err)
+	}
 }
 
 // Authenticate an user based on Req Ctx Cookie 'Auth'
