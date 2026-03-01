@@ -4,7 +4,6 @@ package server
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"runtime"
 	"strconv"
@@ -61,7 +60,7 @@ func New(serverOpts ...ServerOption) *Server {
 	for _, fnOpt := range serverOpts {
 		err := fnOpt(&server)
 		if err != nil {
-			log.Fatal("🔴 Failed to start server... exiting")
+			log.Fatal("🔴 failed to start server: option setup error:", err)
 		}
 	}
 
@@ -157,7 +156,7 @@ func WithLocalizer(localizer *localize.Localizer) ServerOption {
 func WithWorkPool(wp *ants.Pool) ServerOption {
 	return func(server *Server) error {
 		if wp == nil {
-			fmt.Println("failed to setup workpool for sending emails and async work")
+			log.Warn("🟡 failed to set up workpool for async jobs; running synchronous fallback")
 			return nil
 		}
 
@@ -169,7 +168,7 @@ func WithWorkPool(wp *ants.Pool) ServerOption {
 func WithCronJob(cj *cronjob.Sched) ServerOption {
 	return func(server *Server) error {
 		if cj == nil {
-			fmt.Println("failed to start server cron job scheduler")
+			log.Warn("🟡 failed to set up cron scheduler; cron jobs will not run")
 			return nil
 		}
 
