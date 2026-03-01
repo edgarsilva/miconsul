@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"errors"
-	"os"
 
 	"miconsul/internal/model"
 
@@ -26,6 +25,7 @@ type LogtoStrategyDeps interface {
 	Session(c fiber.Ctx) (*session.Session, error)
 	FindUserByExtID(ctx context.Context, extID string) (model.User, error)
 	Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span)
+	LogtoConfig() *logto.LogtoConfig
 }
 
 func NewLogtoStrategy(c fiber.Ctx, deps LogtoStrategyDeps) *LogtoStrategy {
@@ -38,7 +38,7 @@ func NewLogtoStrategy(c fiber.Ctx, deps LogtoStrategyDeps) *LogtoStrategy {
 		}
 	}
 
-	client, saveSess := NewLogtoClient(sess)
+	client, saveSess := NewLogtoClient(sess, deps.LogtoConfig())
 
 	return &LogtoStrategy{
 		Logto:    client,
@@ -81,30 +81,14 @@ func (s *LogtoStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
 // session on defer or at the end of the handler.
 //
 //	e.g.
-//		logtoClient, saveSess := NewLogtoClient(sess)
+//		logtoClient, saveSess := NewLogtoClient(sess, deps.LogtoConfig())
 //		defer saveSess()
-func NewLogtoClient(sess *session.Session) (client *logto.LogtoClient, save func() error) {
+func NewLogtoClient(sess *session.Session, config *logto.LogtoConfig) (client *logto.LogtoClient, save func() error) {
 	storage := NewLogtoStorage(sess)
 	logtoClient := logto.NewLogtoClient(
-		LogtoConfig(),
+		config,
 		storage,
 	)
 
 	return logtoClient, func() error { return storage.Save() }
-}
-
-func LogtoConfig() *logto.LogtoConfig {
-	endpoint := os.Getenv("LOGTO_URL")
-	appid := os.Getenv("LOGTO_APP_ID")
-	appsecret := os.Getenv("LOGTO_APP_SECRET")
-
-	config := logto.LogtoConfig{
-		Endpoint:  endpoint,
-		AppId:     appid,
-		AppSecret: appsecret,
-		Resources: []string{"https://app.miconsul.xyz/api"},
-		Scopes:    []string{"email", "phone", "picture", "custom_data", "app:read", "app:write"},
-	}
-
-	return &config
 }

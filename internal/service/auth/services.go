@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/mailer"
 	"miconsul/internal/model"
@@ -17,6 +18,7 @@ import (
 	"github.com/asaskevich/govalidator"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/session"
+	logto "github.com/logto-io/go/client"
 	"go.opentelemetry.io/otel/trace"
 
 	"golang.org/x/crypto/bcrypt"
@@ -25,6 +27,7 @@ import (
 
 type ProtectedResource interface {
 	Session(c fiber.Ctx) (*session.Session, error)
+	AppEnv() *appenv.Env
 	GormDB() *gorm.DB
 	Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span)
 }
@@ -284,4 +287,27 @@ func (deps strategyDeps) FindUserByExtID(ctx context.Context, extID string) (mod
 	}
 
 	return user, nil
+}
+
+func (deps strategyDeps) LogtoConfig() *logto.LogtoConfig {
+	return logtoConfigFromEnv(deps.AppEnv())
+}
+
+func logtoConfigFromEnv(env *appenv.Env) *logto.LogtoConfig {
+	config := logto.LogtoConfig{
+		Resources: []string{"https://app.miconsul.xyz/api"},
+		// Keep login scopes minimal. If downstream API flows break, re-evaluate
+		// whether resource scopes (for example app:write) are actually required.
+		Scopes: []string{"email", "phone", "picture", "custom_data", "app:read"},
+	}
+
+	if env == nil {
+		return &config
+	}
+
+	config.Endpoint = env.LogtoURL
+	config.AppId = env.LogtoAppID
+	config.AppSecret = env.LogtoAppSecret
+
+	return &config
 }

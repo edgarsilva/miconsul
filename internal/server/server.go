@@ -307,6 +307,14 @@ func (s *Server) GormDB() *gorm.DB {
 	return s.DB.GormDB()
 }
 
+func (s *Server) AppEnv() *appenv.Env {
+	if s == nil {
+		return nil
+	}
+
+	return s.Env
+}
+
 func (s *Server) Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
 	if s == nil {
 		panic("server.Trace called with nil server")
