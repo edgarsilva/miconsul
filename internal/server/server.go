@@ -4,8 +4,6 @@ package server
 import (
 	"context"
 	"errors"
-	"fmt"
-	"os"
 	"runtime"
 	"strconv"
 	"time"
@@ -33,7 +31,6 @@ import (
 
 	"github.com/panjf2000/ants/v2"
 	"go.opentelemetry.io/otel"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 )
@@ -51,7 +48,6 @@ type Server struct {
 	Cache        Cache
 	SessionStore *session.Store
 	Localizer    *localize.Localizer
-	TP           *sdktrace.TracerProvider
 	Tracer       trace.Tracer
 	*fiber.App
 }
@@ -63,21 +59,35 @@ func New(serverOpts ...ServerOption) *Server {
 	for _, fnOpt := range serverOpts {
 		err := fnOpt(&server)
 		if err != nil {
-			log.Fatal("🔴 Failed to start server... exiting")
+			log.Fatal("🔴 failed to start server: option setup error:", err)
 		}
 	}
 
-	sessionPath := ""
-	if server.AppEnv != nil {
-		sessionPath = server.AppEnv.SessionDBPath
+	if server.AppEnv == nil {
+		log.Fatal("🔴 failed to start server: AppEnv is required")
 	}
+
+	if server.DB == nil {
+		log.Fatal("🔴 failed to start server: Database is required")
+	}
+
+	sessionPath := server.AppEnv.SessionDBPath
+	appEnvName := server.AppEnv.AppEnv
+	cookieSecret := server.AppEnv.CookieSecret
+	if cookieSecret == "" {
+		log.Fatal("🔴 failed to start server: COOKIE_SECRET is required")
+	}
+
 	storage := sqlite3.New(sessionConfig(sessionPath))
 	server.SessionStore = session.NewStore(session.Config{
 		Storage:      storage,
 		CookieSecure: true,
 	})
 
-	tracer := otel.Tracer("fiberapp-server")
+	tracer := server.Tracer
+	if tracer == nil {
+		tracer = otel.Tracer("fiberapp-server")
+	}
 	server.Tracer = tracer
 
 	fiberConfig := fiber.Config{ErrorHandler: fiberAppErrorHandler}
@@ -91,7 +101,7 @@ func New(serverOpts ...ServerOption) *Server {
 
 	fiberApp.Use(requestid.New())
 	fiberApp.Use(encryptcookie.New(encryptcookie.Config{
-		Key: os.Getenv("COOKIE_SECRET"),
+		Key: cookieSecret,
 	}))
 	fiberApp.Use(favicon.New(favicon.Config{
 		File: "./public/favicon.ico",
@@ -113,7 +123,7 @@ func New(serverOpts ...ServerOption) *Server {
 			"heap_objects":      mem.HeapObjects,
 		})
 	})
-	fiberApp.Use("/public", static.New("./public", staticConfig()))
+	fiberApp.Use("/public", static.New("./public", staticConfig(appEnvName)))
 
 	server.App = fiberApp
 
@@ -156,7 +166,7 @@ func WithLocalizer(localizer *localize.Localizer) ServerOption {
 func WithWorkPool(wp *ants.Pool) ServerOption {
 	return func(server *Server) error {
 		if wp == nil {
-			fmt.Println("failed to setup workpool for sending emails and async work")
+			log.Warn("🟡 failed to set up workpool for async jobs; running synchronous fallback")
 			return nil
 		}
 
@@ -168,7 +178,7 @@ func WithWorkPool(wp *ants.Pool) ServerOption {
 func WithCronJob(cj *cronjob.Sched) ServerOption {
 	return func(server *Server) error {
 		if cj == nil {
-			fmt.Println("failed to start server cron job scheduler")
+			log.Warn("🟡 failed to set up cron scheduler; cron jobs will not run")
 			return nil
 		}
 
@@ -177,13 +187,13 @@ func WithCronJob(cj *cronjob.Sched) ServerOption {
 	}
 }
 
-func WithTracerProvider(tp *sdktrace.TracerProvider) ServerOption {
+func WithTracer(tracer trace.Tracer) ServerOption {
 	return func(server *Server) error {
-		if tp == nil {
+		if tracer == nil {
 			return nil
 		}
 
-		server.TP = tp
+		server.Tracer = tracer
 		return nil
 	}
 }
@@ -241,8 +251,21 @@ func (s *Server) GormDB() *gorm.DB {
 	return s.DB.GormDB()
 }
 
-func (s *Server) Trace(ctx context.Context, spanName string) (context.Context, trace.Span) {
-	ctx, span := s.Tracer.Start(ctx, spanName)
+func (s *Server) Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
+	if s == nil {
+		panic("server.Trace called with nil server")
+	}
+
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	tracer := s.Tracer
+	if tracer == nil {
+		tracer = otel.Tracer("fiberapp-server")
+	}
+
+	ctx, span := tracer.Start(ctx, spanName, opts...)
 	return ctx, span
 }
 
@@ -264,17 +287,35 @@ func (s *Server) Listen(portOverride ...int) error {
 	return s.App.Listen(":" + strconv.Itoa(port))
 }
 
-func (s *Server) Session(c fiber.Ctx) *session.Session {
+func (s *Server) Session(c fiber.Ctx) (*session.Session, error) {
+	if s == nil {
+		err := errors.New("failed to retrieve session: server is nil")
+		log.Warn(err.Error())
+		return nil, err
+	}
+
+	if s.SessionStore == nil {
+		err := errors.New("failed to retrieve session: session store is nil")
+		log.Warn(err.Error())
+		return nil, err
+	}
+
 	sess, err := s.SessionStore.Get(c)
 	if err != nil {
 		log.Warn("Failed to retrieve session from req ctx:", err)
+		return nil, err
 	}
-	return sess
+
+	return sess, nil
 }
 
 func (s *Server) SessionDestroy(c fiber.Ctx) {
-	sess := s.Session(c)
-	err := sess.Destroy()
+	sess, err := s.Session(c)
+	if err != nil {
+		return
+	}
+
+	err = sess.Destroy()
 	if err != nil {
 		log.Info("Failed to destroy session:", err)
 	}
@@ -282,18 +323,22 @@ func (s *Server) SessionDestroy(c fiber.Ctx) {
 
 // SessionWrite sets a session value.
 func (s *Server) SessionWrite(c fiber.Ctx, k string, v any) (err error) {
-	sess := s.Session(c)
-	sess.Set(k, v)
-	defer func() {
-		err = sess.Save()
-	}()
+	sess, err := s.Session(c)
+	if err != nil {
+		return err
+	}
 
-	return nil
+	sess.Set(k, v)
+	return sess.Save()
 }
 
 // SessionRead gets a session string value by key, or returns the default value.
 func (s *Server) SessionRead(c fiber.Ctx, key string, defaultVal string) string {
-	sess := s.Session(c)
+	sess, err := s.Session(c)
+	if err != nil {
+		return defaultVal
+	}
+
 	val := sess.Get(key)
 	if val == nil {
 		return defaultVal
@@ -336,20 +381,33 @@ func (s *Server) SessionUITheme(c fiber.Ctx) string {
 	return theme
 }
 
-// SessionLang returns the user language from header Accepts-Language or session
-func (s *Server) SessionLang(c fiber.Ctx) string {
-	sess := s.Session(c)
+// CurrentLocale returns the user locale resolved for the current request.
+func (s *Server) CurrentLocale(c fiber.Ctx) string {
+	sess, err := s.Session(c)
+	if err != nil {
+		lang, ok := c.Locals("locale").(string)
+		if !ok || lang == "" {
+			lang = "es-MX"
+		}
+
+		return lang
+	}
+
 	lang, ok := sess.Get("lang").(string)
 	if ok && lang != "" {
 		return lang
 	}
 
-	lang, ok = c.Locals("lang").(string)
+	lang, ok = c.Locals("locale").(string)
 	if !ok || lang == "" {
 		lang = "es-MX"
 	}
 
 	sess.Set("lang", lang)
+	if err := sess.Save(); err != nil {
+		log.Warn("Failed to save session language:", err)
+	}
+
 	return lang
 }
 
@@ -382,5 +440,5 @@ func (s *Server) L(c fiber.Ctx, key string) (translation string) {
 		return ""
 	}
 
-	return s.Localizer.GetWithLocale(s.SessionLang(c), key)
+	return s.Localizer.GetWithLocale(s.CurrentLocale(c), key)
 }

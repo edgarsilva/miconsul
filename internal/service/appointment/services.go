@@ -29,7 +29,7 @@ func NewService(s *server.Server) service {
 
 func (s *service) RegisterCronJob() {
 	err := s.AddCronJob("0/1 * * * *", func() {
-		ctx, span := s.Tracer.Start(context.Background(), "appointment/services:RegisterCronJob>Job",
+		ctx, span := s.Trace(context.Background(), "appointment/services:RegisterCronJob>Job",
 			trace.WithAttributes(
 				attribute.String("grouping.fingerprint", "cronjob"),
 			),

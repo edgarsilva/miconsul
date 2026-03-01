@@ -23,7 +23,7 @@ func NewService(s *server.Server) service {
 }
 
 func (s service) CalcDashboardStats(ctx context.Context, cu model.User) view.DashboardStats {
-	ctx, span := s.Tracer.Start(ctx, "dashboard/services.CalcDashboardStats")
+	ctx, span := s.Trace(ctx, "dashboard/services.CalcDashboardStats")
 	defer span.End()
 
 	cacheKey := cu.ID + ".dashboard.stats"
@@ -73,7 +73,7 @@ func (s service) ReadStatsCache(cachekey string) (stats view.DashboardStats, ok 
 }
 
 func (s service) CalcMonthlyStats(ctx context.Context, cu model.User, imodel interface{}) view.DashboardStat {
-	localCtx, span := s.Tracer.Start(ctx, "dashboard/services:CalcMonthlyStats")
+	localCtx, span := s.Trace(ctx, "dashboard/services:CalcMonthlyStats")
 	defer span.End()
 
 	var cnt int64

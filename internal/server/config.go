@@ -34,19 +34,19 @@ func limiterConfig() limiter.Config {
 	}
 }
 
-func staticConfig() static.Config {
+func staticConfig(appEnv string) static.Config {
 	return static.Config{
 		Compress:      true,
 		ByteRange:     true,
 		Browse:        false,
 		IndexNames:    []string{},
-		CacheDuration: staticCacheDuration(),
+		CacheDuration: staticCacheDuration(appEnv),
 		MaxAge:        3600,
 	}
 }
 
-func staticCacheDuration() time.Duration {
-	if os.Getenv("APP_ENV") == "development" {
+func staticCacheDuration(appEnv string) time.Duration {
+	if appEnv == "development" {
 		return -10
 	}
 
@@ -55,9 +55,6 @@ func staticCacheDuration() time.Duration {
 
 func sessionConfig(path string) sqlite3.Config {
 	sessPath := path
-	if sessPath == "" {
-		sessPath = os.Getenv("SESSION_DB_PATH")
-	}
 	if sessPath == "" {
 		sessPath = "./fiber_session.sqlite3"
 	}
@@ -90,7 +87,7 @@ func helmetConfig() helmet.Config {
 		ReferrerPolicy:            "no-referrer",
 		CrossOriginEmbedderPolicy: "credentialless",
 		CrossOriginOpenerPolicy:   "same-origin",
-		CrossOriginResourcePolicy: "cross-origin-origin",
+		CrossOriginResourcePolicy: "cross-origin",
 		OriginAgentCluster:        "?1",
 		XDNSPrefetchControl:       "off",
 		XDownloadOptions:          "noopen",

@@ -80,7 +80,7 @@ func main() {
 		server.WithDatabase(db),
 		server.WithCronJob(cj),
 		server.WithWorkPool(wp),
-		// server.WithTracerProvider(tp),
+		// server.WithTracer(tp.Tracer("fiberapp-server")),
 		server.WithLocalizer(localizer),
 	)
 

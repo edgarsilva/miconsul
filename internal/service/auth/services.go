@@ -23,9 +23,9 @@ import (
 )
 
 type ProtectedResource interface {
-	Session(c fiber.Ctx) *session.Session
+	Session(c fiber.Ctx) (*session.Session, error)
 	GormDB() *gorm.DB
-	Trace(ctx context.Context, spanName string) (context.Context, trace.Span)
+	Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span)
 }
 
 type AuthStrategy interface {
@@ -122,7 +122,7 @@ func (s service) userCreate(email, password, token string) (model.User, error) {
 
 // userFetch returns a User by email
 func (s service) userFetch(ctx context.Context, email string) (model.User, error) {
-	ctx, span := s.Tracer.Start(ctx, "auth/services:userFetch")
+	ctx, span := s.Trace(ctx, "auth/services:userFetch")
 	defer span.End()
 
 	user, err := gorm.G[model.User](s.DB.GormDB()).Where("email = ?", email).Take(ctx)
