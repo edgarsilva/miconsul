@@ -23,7 +23,7 @@ import (
 )
 
 type ProtectedResource interface {
-	Session(c fiber.Ctx) *session.Session
+	Session(c fiber.Ctx) (*session.Session, error)
 	GormDB() *gorm.DB
 	Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span)
 }

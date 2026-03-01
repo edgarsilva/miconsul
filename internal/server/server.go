@@ -278,17 +278,35 @@ func (s *Server) Listen(portOverride ...int) error {
 	return s.App.Listen(":" + strconv.Itoa(port))
 }
 
-func (s *Server) Session(c fiber.Ctx) *session.Session {
+func (s *Server) Session(c fiber.Ctx) (*session.Session, error) {
+	if s == nil {
+		err := errors.New("failed to retrieve session: server is nil")
+		log.Warn(err.Error())
+		return nil, err
+	}
+
+	if s.SessionStore == nil {
+		err := errors.New("failed to retrieve session: session store is nil")
+		log.Warn(err.Error())
+		return nil, err
+	}
+
 	sess, err := s.SessionStore.Get(c)
 	if err != nil {
 		log.Warn("Failed to retrieve session from req ctx:", err)
+		return nil, err
 	}
-	return sess
+
+	return sess, nil
 }
 
 func (s *Server) SessionDestroy(c fiber.Ctx) {
-	sess := s.Session(c)
-	err := sess.Destroy()
+	sess, err := s.Session(c)
+	if err != nil {
+		return
+	}
+
+	err = sess.Destroy()
 	if err != nil {
 		log.Info("Failed to destroy session:", err)
 	}
@@ -296,18 +314,22 @@ func (s *Server) SessionDestroy(c fiber.Ctx) {
 
 // SessionWrite sets a session value.
 func (s *Server) SessionWrite(c fiber.Ctx, k string, v any) (err error) {
-	sess := s.Session(c)
-	sess.Set(k, v)
-	defer func() {
-		err = sess.Save()
-	}()
+	sess, err := s.Session(c)
+	if err != nil {
+		return err
+	}
 
-	return nil
+	sess.Set(k, v)
+	return sess.Save()
 }
 
 // SessionRead gets a session string value by key, or returns the default value.
 func (s *Server) SessionRead(c fiber.Ctx, key string, defaultVal string) string {
-	sess := s.Session(c)
+	sess, err := s.Session(c)
+	if err != nil {
+		return defaultVal
+	}
+
 	val := sess.Get(key)
 	if val == nil {
 		return defaultVal
@@ -352,7 +374,16 @@ func (s *Server) SessionUITheme(c fiber.Ctx) string {
 
 // SessionLang returns the user language from header Accepts-Language or session
 func (s *Server) SessionLang(c fiber.Ctx) string {
-	sess := s.Session(c)
+	sess, err := s.Session(c)
+	if err != nil {
+		lang, ok := c.Locals("lang").(string)
+		if !ok || lang == "" {
+			lang = "es-MX"
+		}
+
+		return lang
+	}
+
 	lang, ok := sess.Get("lang").(string)
 	if ok && lang != "" {
 		return lang

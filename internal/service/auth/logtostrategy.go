@@ -3,8 +3,9 @@ package auth
 import (
 	"context"
 	"errors"
-	"miconsul/internal/model"
 	"os"
+
+	"miconsul/internal/model"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/session"
@@ -18,17 +19,28 @@ type LogtoStrategy struct {
 	Ctx      fiber.Ctx
 	Logto    *logto.LogtoClient
 	SaveSess func()
+	SessErr  error
 	service  LogtoStrategyService
 }
 
 type LogtoStrategyService interface {
 	GormDB() *gorm.DB
-	Session(c fiber.Ctx) *session.Session
+	Session(c fiber.Ctx) (*session.Session, error)
 	Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span)
 }
 
 func NewLogtoStrategy(c fiber.Ctx, s LogtoStrategyService) *LogtoStrategy {
-	client, saveSess := LogtoClient(s.Session(c))
+	sess, err := s.Session(c)
+	if err != nil {
+		return &LogtoStrategy{
+			Ctx:      c,
+			SaveSess: func() {},
+			SessErr:  err,
+			service:  s,
+		}
+	}
+
+	client, saveSess := NewLogtoClient(sess)
 
 	return &LogtoStrategy{
 		Ctx:      c,
@@ -51,6 +63,10 @@ func (s LogtoStrategy) FindUserByExtID(ctx context.Context, extID string) (model
 }
 
 func (s *LogtoStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
+	if s.SessErr != nil {
+		return model.User{}, s.SessErr
+	}
+
 	ctx, span := s.Trace(c.Context(), "auth/services:logtoStrategy")
 	defer span.End()
 	defer s.SaveSess()
@@ -68,13 +84,13 @@ func (s *LogtoStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
 	return user, nil
 }
 
-// LogtoClient returns the LogtoClient and a save function to persist the
+// NewLogtoClient returns a Logto client and a save function to persist the
 // session on defer or at the end of the handler.
 //
 //	e.g.
-//		logtoClient, saveSess := s.LogtoClient(c)
+//		logtoClient, saveSess := NewLogtoClient(sess)
 //		defer saveSess()
-func LogtoClient(sess *session.Session) (client *logto.LogtoClient, save func()) {
+func NewLogtoClient(sess *session.Session) (client *logto.LogtoClient, save func()) {
 	storage := NewLogtoStorage(sess)
 	logtoClient := logto.NewLogtoClient(
 		LogtoConfig(),

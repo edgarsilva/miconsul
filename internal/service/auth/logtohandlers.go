@@ -1,8 +1,9 @@
 package auth
 
 import (
-	"miconsul/internal/view"
 	"net/http"
+
+	"miconsul/internal/view"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
@@ -14,7 +15,13 @@ import (
 
 // HandleLogtoSignin redirects to Logto sign-in page
 func (s service) HandleLogtoSignin(c fiber.Ctx) error {
-	logtoClient, saveSess := LogtoClient(s.Session(c))
+	sess, err := s.Session(c)
+	if err != nil {
+		log.Error("failed to load session in logto signin:", err)
+		return c.Redirect().To("/logto/signout")
+	}
+
+	logtoClient, saveSess := NewLogtoClient(sess)
 	defer saveSess()
 
 	if logtoClient.IsAuthenticated() {
@@ -34,7 +41,13 @@ func (s service) HandleLogtoSignin(c fiber.Ctx) error {
 
 // HandleLogtoCallback handles the Logto callback/webhook after login
 func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
-	logtoClient, saveSess := LogtoClient(s.Session(c))
+	sess, err := s.Session(c)
+	if err != nil {
+		log.Error("failed to load session in logto callback:", err)
+		return c.Redirect().To("/logto/signout")
+	}
+
+	logtoClient, saveSess := NewLogtoClient(sess)
 	defer saveSess()
 
 	req, err := adaptor.ConvertRequest(c, true)
@@ -72,7 +85,13 @@ func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
 }
 
 func (s *service) HandleLogtoSignout(c fiber.Ctx) error {
-	logtoClient, saveSess := LogtoClient(s.Session(c))
+	sess, err := s.Session(c)
+	if err != nil {
+		log.Error("failed to load session in logto signout:", err)
+		return c.SendStatus(fiber.StatusOK)
+	}
+
+	logtoClient, saveSess := NewLogtoClient(sess)
 	defer saveSess()
 
 	// The sign-out request is handled by Logto.
@@ -87,7 +106,13 @@ func (s *service) HandleLogtoSignout(c fiber.Ctx) error {
 
 // HandleLogtoPage renders the Logto page with two links to sign in and sign out
 func (s *service) HandleLogtoPage(c fiber.Ctx) error {
-	logtoClient, saveSess := LogtoClient(s.Session(c))
+	sess, err := s.Session(c)
+	if err != nil {
+		log.Error("failed to load session in logto page:", err)
+		return c.Redirect().To("/logto/signout")
+	}
+
+	logtoClient, saveSess := NewLogtoClient(sess)
 	defer saveSess()
 
 	// Use Logto to control the content of the home page

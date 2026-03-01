@@ -17,6 +17,10 @@ func NewLogtoStorage(session *session.Session) *LogtoStorage {
 }
 
 func (storage *LogtoStorage) GetItem(key string) string {
+	if storage == nil || storage.session == nil {
+		return ""
+	}
+
 	value := storage.session.Get(key)
 	if value == nil {
 		return ""
@@ -25,6 +29,10 @@ func (storage *LogtoStorage) GetItem(key string) string {
 }
 
 func (storage *LogtoStorage) SetItem(key, value string) {
+	if storage == nil || storage.session == nil {
+		return
+	}
+
 	storage.session.Set(key, value)
 }
 
@@ -33,5 +41,9 @@ func (storage *LogtoStorage) Session(key, value string) *session.Session {
 }
 
 func (storage *LogtoStorage) Save() {
+	if storage == nil || storage.session == nil {
+		return
+	}
+
 	storage.session.Save()
 }
