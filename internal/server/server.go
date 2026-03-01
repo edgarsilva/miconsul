@@ -68,13 +68,9 @@ func New(serverOpts ...ServerOption) *Server {
 		log.Fatal("🔴 failed to start server:", err)
 	}
 
-	sessionPath := server.Env.SessionDBPath
-	server.setupSessionStore(sessionPath)
+	server.setupSessionStore()
 	server.setupTracer()
-
-	environment := server.Env.Environment
-	cookieSecret := server.Env.CookieSecret
-	server.App = server.newFiberApp(environment, cookieSecret)
+	server.setupFiberApp()
 
 	return &server
 }
@@ -122,7 +118,8 @@ func (s *Server) validateRuntimeConfig() error {
 	return nil
 }
 
-func (s *Server) setupSessionStore(sessionPath string) {
+func (s *Server) setupSessionStore() {
+	sessionPath := s.Env.SessionDBPath
 	storage := sqlite3.New(sessionConfig(sessionPath))
 	s.SessionStore = session.NewStore(session.Config{
 		Storage:      storage,
@@ -139,7 +136,9 @@ func (s *Server) setupTracer() {
 	s.Tracer = tracer
 }
 
-func (s *Server) newFiberApp(environment, cookieSecret string) *fiber.App {
+func (s *Server) setupFiberApp() {
+	environment := s.Env.Environment
+	cookieSecret := s.Env.CookieSecret
 	fiberConfig := fiber.Config{ErrorHandler: fiberAppErrorHandler}
 	fiberApp := fiber.New(fiberConfig)
 
@@ -148,7 +147,7 @@ func (s *Server) newFiberApp(environment, cookieSecret string) *fiber.App {
 	s.setupObservability(fiberApp)
 	s.setupStaticFiles(fiberApp, environment)
 
-	return fiberApp
+	s.App = fiberApp
 }
 
 func (s *Server) setupCoreMiddleware(app *fiber.App) {
