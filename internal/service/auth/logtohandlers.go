@@ -22,7 +22,11 @@ func (s service) HandleLogtoSignin(c fiber.Ctx) error {
 	}
 
 	logtoClient, saveSess := NewLogtoClient(sess)
-	defer saveSess()
+	defer func() {
+		if err := saveSess(); err != nil {
+			log.Error("failed to save session in logto signin:", err)
+		}
+	}()
 
 	if logtoClient.IsAuthenticated() {
 		return c.Redirect().Status(fiber.StatusTemporaryRedirect).To("/")
@@ -48,7 +52,11 @@ func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
 	}
 
 	logtoClient, saveSess := NewLogtoClient(sess)
-	defer saveSess()
+	defer func() {
+		if err := saveSess(); err != nil {
+			log.Error("failed to save session in logto callback:", err)
+		}
+	}()
 
 	req, err := adaptor.ConvertRequest(c, true)
 	if err != nil {
@@ -92,7 +100,11 @@ func (s *service) HandleLogtoSignout(c fiber.Ctx) error {
 	}
 
 	logtoClient, saveSess := NewLogtoClient(sess)
-	defer saveSess()
+	defer func() {
+		if err := saveSess(); err != nil {
+			log.Error("failed to save session in logto signout:", err)
+		}
+	}()
 
 	// The sign-out request is handled by Logto.
 	// The user will be redirected to the Post Sign-out Redirect URI on signed out.
@@ -113,7 +125,11 @@ func (s *service) HandleLogtoPage(c fiber.Ctx) error {
 	}
 
 	logtoClient, saveSess := NewLogtoClient(sess)
-	defer saveSess()
+	defer func() {
+		if err := saveSess(); err != nil {
+			log.Error("failed to save session in logto page:", err)
+		}
+	}()
 
 	// Use Logto to control the content of the home page
 	authState := "You are not logged in to this website. :("

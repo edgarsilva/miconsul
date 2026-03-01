@@ -8,6 +8,7 @@ import (
 	"miconsul/internal/model"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/log"
 	"github.com/gofiber/fiber/v3/middleware/session"
 	"go.opentelemetry.io/otel/trace"
 
@@ -16,7 +17,7 @@ import (
 
 type LogtoStrategy struct {
 	Logto    *logto.LogtoClient
-	SaveSess func()
+	SaveSess func() error
 	SessErr  error
 	deps     LogtoStrategyDeps
 }
@@ -31,7 +32,7 @@ func NewLogtoStrategy(c fiber.Ctx, deps LogtoStrategyDeps) *LogtoStrategy {
 	sess, err := deps.Session(c)
 	if err != nil {
 		return &LogtoStrategy{
-			SaveSess: func() {},
+			SaveSess: func() error { return nil },
 			SessErr:  err,
 			deps:     deps,
 		}
@@ -57,7 +58,11 @@ func (s *LogtoStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
 
 	ctx, span := s.Trace(c.Context(), "auth/services:logtoStrategy")
 	defer span.End()
-	defer s.SaveSess()
+	defer func() {
+		if err := s.SaveSess(); err != nil {
+			log.Warn("failed to save logto session in auth strategy:", err)
+		}
+	}()
 
 	claims, err := s.Logto.GetIdTokenClaims()
 	if err != nil {
@@ -78,14 +83,14 @@ func (s *LogtoStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
 //	e.g.
 //		logtoClient, saveSess := NewLogtoClient(sess)
 //		defer saveSess()
-func NewLogtoClient(sess *session.Session) (client *logto.LogtoClient, save func()) {
+func NewLogtoClient(sess *session.Session) (client *logto.LogtoClient, save func() error) {
 	storage := NewLogtoStorage(sess)
 	logtoClient := logto.NewLogtoClient(
 		LogtoConfig(),
 		storage,
 	)
 
-	return logtoClient, func() { storage.Save() }
+	return logtoClient, func() error { return storage.Save() }
 }
 
 func LogtoConfig() *logto.LogtoConfig {

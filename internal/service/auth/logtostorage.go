@@ -25,7 +25,13 @@ func (storage *LogtoStorage) GetItem(key string) string {
 	if value == nil {
 		return ""
 	}
-	return value.(string)
+
+	valueStr, ok := value.(string)
+	if !ok {
+		return ""
+	}
+
+	return valueStr
 }
 
 func (storage *LogtoStorage) SetItem(key, value string) {
@@ -36,14 +42,10 @@ func (storage *LogtoStorage) SetItem(key, value string) {
 	storage.session.Set(key, value)
 }
 
-func (storage *LogtoStorage) Session(key, value string) *session.Session {
-	return storage.session
-}
-
-func (storage *LogtoStorage) Save() {
+func (storage *LogtoStorage) Save() error {
 	if storage == nil || storage.session == nil {
-		return
+		return nil
 	}
 
-	storage.session.Save()
+	return storage.session.Save()
 }
