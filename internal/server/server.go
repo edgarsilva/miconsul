@@ -56,61 +56,119 @@ type ServerOption func(*Server) error
 
 func New(serverOpts ...ServerOption) *Server {
 	server := Server{}
-	for _, fnOpt := range serverOpts {
-		err := fnOpt(&server)
-		if err != nil {
-			log.Fatal("🔴 failed to start server: option setup error:", err)
-		}
+	if err := server.applyServerOptions(serverOpts...); err != nil {
+		log.Fatal("🔴 failed to start server: option setup error:", err)
 	}
 
-	if server.AppEnv == nil {
-		log.Fatal("🔴 failed to start server: AppEnv is required")
+	if err := server.validateCriticalDeps(); err != nil {
+		log.Fatal("🔴 failed to start server:", err)
 	}
 
-	if server.DB == nil {
-		log.Fatal("🔴 failed to start server: Database is required")
+	if err := server.validateRuntimeConfig(); err != nil {
+		log.Fatal("🔴 failed to start server:", err)
 	}
 
 	sessionPath := server.AppEnv.SessionDBPath
-	appEnvName := server.AppEnv.AppEnv
+	server.setupSessionStore(sessionPath)
+	server.setupTracer()
+
+	env := server.AppEnv.AppEnv
 	cookieSecret := server.AppEnv.CookieSecret
-	if cookieSecret == "" {
-		log.Fatal("🔴 failed to start server: COOKIE_SECRET is required")
+	server.App = server.newFiberApp(env, cookieSecret)
+
+	return &server
+}
+
+func (s *Server) applyServerOptions(serverOpts ...ServerOption) error {
+	for _, fnOpt := range serverOpts {
+		err := fnOpt(s)
+		if err != nil {
+			return err
+		}
 	}
 
+	return nil
+}
+
+func (s *Server) validateCriticalDeps() error {
+	if s.AppEnv == nil {
+		return errors.New("AppEnv is required")
+	}
+
+	if s.DB == nil {
+		return errors.New("Database is required")
+	}
+
+	return nil
+}
+
+func (s *Server) validateRuntimeConfig() error {
+	appEnvName := s.AppEnv.AppEnv
+	switch appEnvName {
+	case "development", "test", "staging", "production":
+	default:
+		return errors.New("APP_ENV is invalid")
+	}
+
+	cookieSecret := s.AppEnv.CookieSecret
+	if cookieSecret == "" {
+		return errors.New("COOKIE_SECRET is required")
+	}
+
+	if len(cookieSecret) < 32 {
+		return errors.New("COOKIE_SECRET must be at least 32 characters")
+	}
+
+	return nil
+}
+
+func (s *Server) setupSessionStore(sessionPath string) {
 	storage := sqlite3.New(sessionConfig(sessionPath))
-	server.SessionStore = session.NewStore(session.Config{
+	s.SessionStore = session.NewStore(session.Config{
 		Storage:      storage,
 		CookieSecure: true,
 	})
+}
 
-	tracer := server.Tracer
+func (s *Server) setupTracer() {
+	tracer := s.Tracer
 	if tracer == nil {
 		tracer = otel.Tracer("fiberapp-server")
 	}
-	server.Tracer = tracer
 
+	s.Tracer = tracer
+}
+
+func (s *Server) newFiberApp(appEnvName, cookieSecret string) *fiber.App {
 	fiberConfig := fiber.Config{ErrorHandler: fiberAppErrorHandler}
 	fiberApp := fiber.New(fiberConfig)
-	fiberApp.Use(recover.New()) // Recover MW catches panics that might stop app execution
-	fiberApp.Use(logger.New())
 
-	fiberApp.Use(cors.New())
+	s.setupCoreMiddleware(fiberApp)
+	s.setupSecurityMiddleware(fiberApp, cookieSecret)
+	s.setupObservability(fiberApp)
+	s.setupStaticFiles(fiberApp, appEnvName)
 
-	fiberApp.Use(helmet.New(helmetConfig()))
+	return fiberApp
+}
 
-	fiberApp.Use(requestid.New())
-	fiberApp.Use(encryptcookie.New(encryptcookie.Config{
-		Key: cookieSecret,
-	}))
-	fiberApp.Use(favicon.New(favicon.Config{
-		File: "./public/favicon.ico",
-		URL:  "/favicon.ico",
-	}))
-	fiberApp.Use(healthcheck.New()) // healthcheck endpoints /livez /readyz
-	fiberApp.Use(limiter.New(limiterConfig()))
+func (s *Server) setupCoreMiddleware(app *fiber.App) {
+	app.Use(recover.New()) // Recover MW catches panics that might stop app execution
+	app.Use(logger.New())
+	app.Use(cors.New())
+	app.Use(requestid.New())
+	app.Use(healthcheck.New()) // healthcheck endpoints /livez /readyz
+}
+
+func (s *Server) setupSecurityMiddleware(app *fiber.App, cookieSecret string) {
+	app.Use(helmet.New(helmetConfig()))
+	app.Use(encryptcookie.New(encryptcookie.Config{Key: cookieSecret}))
+	app.Use(favicon.New(favicon.Config{File: "./public/favicon.ico", URL: "/favicon.ico"}))
+	app.Use(limiter.New(limiterConfig()))
+}
+
+func (s *Server) setupObservability(app *fiber.App) {
 	startedAt := time.Now()
-	fiberApp.Get("/metrics", func(c fiber.Ctx) error {
+	app.Get("/metrics", func(c fiber.Ctx) error {
 		mem := runtime.MemStats{}
 		runtime.ReadMemStats(&mem)
 
@@ -123,11 +181,10 @@ func New(serverOpts ...ServerOption) *Server {
 			"heap_objects":      mem.HeapObjects,
 		})
 	})
-	fiberApp.Use("/public", static.New("./public", staticConfig(appEnvName)))
+}
 
-	server.App = fiberApp
-
-	return &server
+func (s *Server) setupStaticFiles(app *fiber.App, appEnvName string) {
+	app.Use("/public", static.New("./public", staticConfig(appEnvName)))
 }
 
 func WithAppEnv(env *appenv.Env) ServerOption {
