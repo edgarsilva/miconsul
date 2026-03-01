@@ -4,7 +4,6 @@ package server
 import (
 	"context"
 	"errors"
-	"os"
 	"runtime"
 	"strconv"
 	"time"
@@ -64,10 +63,17 @@ func New(serverOpts ...ServerOption) *Server {
 		}
 	}
 
-	sessionPath := ""
-	if server.AppEnv != nil {
-		sessionPath = server.AppEnv.SessionDBPath
+	if server.AppEnv == nil {
+		log.Fatal("🔴 failed to start server: AppEnv is required")
 	}
+
+	if server.DB == nil {
+		log.Fatal("🔴 failed to start server: Database is required")
+	}
+
+	sessionPath := server.AppEnv.SessionDBPath
+	appEnvName := server.AppEnv.AppEnv
+	cookieSecret := server.AppEnv.CookieSecret
 	storage := sqlite3.New(sessionConfig(sessionPath))
 	server.SessionStore = session.NewStore(session.Config{
 		Storage:      storage,
@@ -90,8 +96,11 @@ func New(serverOpts ...ServerOption) *Server {
 	fiberApp.Use(helmet.New(helmetConfig()))
 
 	fiberApp.Use(requestid.New())
+	if cookieSecret == "" {
+		log.Warn("🟡 COOKIE_SECRET is empty; encrypted cookie middleware is running without a configured secret")
+	}
 	fiberApp.Use(encryptcookie.New(encryptcookie.Config{
-		Key: os.Getenv("COOKIE_SECRET"),
+		Key: encryptCookieKey(cookieSecret),
 	}))
 	fiberApp.Use(favicon.New(favicon.Config{
 		File: "./public/favicon.ico",
@@ -113,7 +122,7 @@ func New(serverOpts ...ServerOption) *Server {
 			"heap_objects":      mem.HeapObjects,
 		})
 	})
-	fiberApp.Use("/public", static.New("./public", staticConfig()))
+	fiberApp.Use("/public", static.New("./public", staticConfig(appEnvName)))
 
 	server.App = fiberApp
 

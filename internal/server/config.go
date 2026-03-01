@@ -34,30 +34,31 @@ func limiterConfig() limiter.Config {
 	}
 }
 
-func staticConfig() static.Config {
+func staticConfig(appEnv string) static.Config {
 	return static.Config{
 		Compress:      true,
 		ByteRange:     true,
 		Browse:        false,
 		IndexNames:    []string{},
-		CacheDuration: staticCacheDuration(),
+		CacheDuration: staticCacheDuration(appEnv),
 		MaxAge:        3600,
 	}
 }
 
-func staticCacheDuration() time.Duration {
-	if os.Getenv("APP_ENV") == "development" {
+func staticCacheDuration(appEnv string) time.Duration {
+	if appEnv == "development" {
 		return -10
 	}
 
 	return 300 * time.Second
 }
 
+func encryptCookieKey(secret string) string {
+	return secret
+}
+
 func sessionConfig(path string) sqlite3.Config {
 	sessPath := path
-	if sessPath == "" {
-		sessPath = os.Getenv("SESSION_DB_PATH")
-	}
 	if sessPath == "" {
 		sessPath = "./fiber_session.sqlite3"
 	}
