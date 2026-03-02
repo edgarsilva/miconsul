@@ -58,16 +58,24 @@ func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
 		return c.Redirect().To("/logto/signout")
 	}
 
-	// claims, err := logtoClient.GetIdTokenClaims()
-	// if err != nil {
-	// 	log.Error("failed to get IdTokenClaims in logto callback handler")
-	// 	return c.Redirect().To("/logto/signout")
-	// }
-
-	logtoUser, err := logtoCustomJWTClaims(logtoClient)
+	// Identity-critical fields come from ID token claims after callback verification.
+	claims, err := logtoClient.GetIdTokenClaims()
 	if err != nil {
-		log.Error("failed to get CustomClaims from logto:", err)
+		log.Error("failed to get id token claims in logto callback handler:", err)
 		return c.Redirect().To("/logto/signout")
+	}
+
+	logtoUser, err := NewLogtoUser(claims)
+	if err != nil {
+		log.Error("failed to build user from id token claims:", err)
+		return c.Redirect().To("/logto/signout")
+	}
+
+	customClaims, err := logtoCustomJWTClaims(logtoClient)
+	if err != nil {
+		log.Warn("failed to decode custom access token claims, continuing with id token claims only:", err)
+	} else {
+		logtoUser.Identities = customClaims.Identities
 	}
 
 	err = s.saveLogtoUser(c.Context(), logtoUser)

@@ -155,7 +155,9 @@ func (s *Server) setupCoreMiddleware(app *fiber.App) {
 	app.Use(logger.New())
 	app.Use(cors.New())
 	app.Use(requestid.New())
-	app.Use(healthcheck.New()) // healthcheck endpoints /livez /readyz
+	app.Get(healthcheck.LivenessEndpoint, healthcheck.New())
+	app.Get(healthcheck.ReadinessEndpoint, healthcheck.New())
+	app.Get(healthcheck.StartupEndpoint, healthcheck.New())
 }
 
 func (s *Server) setupSecurityMiddleware(app *fiber.App, cookieSecret string) {

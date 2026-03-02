@@ -12,6 +12,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	logto "github.com/logto-io/go/client"
+	logtocore "github.com/logto-io/go/core"
 )
 
 type LogtoStrategy struct {
@@ -91,4 +92,26 @@ func NewLogtoClient(sess *session.Session, config *logto.LogtoConfig) (client *l
 	)
 
 	return logtoClient, func() error { return storage.Save() }
+}
+
+func NewLogtoUser(idClaims logtocore.IdTokenClaims) (LogtoUser, error) {
+	if idClaims.Sub == "" || idClaims.Email == "" {
+		return LogtoUser{}, errors.New("missing required id token claims")
+	}
+
+	return LogtoUser{
+		UID:           idClaims.Sub,
+		Sub:           idClaims.Sub,
+		Name:          idClaims.Name,
+		Username:      idClaims.Username,
+		Picture:       idClaims.Picture,
+		Email:         idClaims.Email,
+		PhoneNumber:   idClaims.PhoneNumber,
+		Roles:         idClaims.Roles,
+		Organizations: idClaims.Organizations,
+		ISS:           idClaims.Iss,
+		AUD:           idClaims.Aud,
+		IAT:           idClaims.Iat,
+		EXP:           idClaims.Exp,
+	}, nil
 }
