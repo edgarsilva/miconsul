@@ -8,7 +8,7 @@ testdata_dir = "testdata"
 
 [build]
 # Array of commands to run before each build
-pre_cmd = ["go-localize -input locales -output internal/lib/localize"]
+pre_cmd = ["make locales/build"]
 # Just plain old shell command. You could use `make` as well.
 cmd = "go build -tags fts5 -o ./tmp/main cmd/app/main.go"
 # Array of commands to run after ^C

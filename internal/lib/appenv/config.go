@@ -35,10 +35,10 @@ type Env struct {
 	GooseDBString     string `env:"GOOSE_DBSTRING"`
 	GooseMigrationDir string `env:"GOOSE_MIGRATION_DIR"`
 
-	LogtoURL       string `env:"LOGTO_URL;optional;trimspace;format=URL;min=1"`
-	LogtoAppID     string `env:"LOGTO_APP_ID;optional;trimspace;format=IDENTIFIER;min=12"`
-	LogtoAppSecret string `env:"LOGTO_APP_SECRET;optional;trimspace;format=IDENTIFIER;min=12"`
-	LogtoResource  string `env:"LOGTO_RESOURCE;optional;trimspace;format=URL;min=1"`
+	LogtoResource  string `env:"LOGTO_RESOURCE;optional;trimspace;format=URL;regex=^.{7,}$"`
+	LogtoURL       string `env:"LOGTO_URL;optional;trimspace;format=URL;regex=^.{7,}$"`
+	LogtoAppID     string `env:"LOGTO_APP_ID;optional;trimspace;format=IDENTIFIER;regex=^.{12,}$"`
+	LogtoAppSecret string `env:"LOGTO_APP_SECRET;optional;trimspace;format=IDENTIFIER;regex=^.{12,}$"`
 
 	UptraceDSN      string `env:"UPTRACE_DSN;optional"`
 	UptraceEndpoint string `env:"UPTRACE_ENDPOINT;optional"`
