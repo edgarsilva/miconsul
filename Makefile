@@ -17,7 +17,7 @@ help: ## Show this help with available tasks
 	/^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0,5) }' $(MAKEFILE_LIST)
 
 ##@ Setup
-install: ## Installs deps 🥐 Bun, 🪿 goose and 🛕 templ
+install: install/go-localize ## Installs deps 🥐 Bun, 🪿 goose, 🛕 templ and  go-localize
 	@echo "📦 Installing dependencies"
 	@echo "🥐 Installing bun (for tailwindcss)"
 	curl -fsSL https://bun.sh/install | bash
@@ -29,6 +29,10 @@ install: ## Installs deps 🥐 Bun, 🪿 goose and 🛕 templ
 	go install github.com/pressly/goose/v3/cmd/goose@latest
 	@echo "🛕 installing Templ"
 	go install github.com/a-h/templ/cmd/templ@latest
+
+install/go-localize: ## Install go-localize CLI
+	@echo " installing go-localize"
+	go install github.com/m1/go-localize@latest
 
 ##@ Code Quality
 fmt: ## Run go fmt
@@ -198,7 +202,7 @@ docker/logs: ## Follow app logs
 docker/build: ## Rebuild the app image
 	docker compose up --no-deps --build app
 
-.PHONY: help install fmt vet lint \
+.PHONY: help install install/go-localize fmt vet lint \
 	tailwind tailwind/watch templ templ/watch locales/build \
 	ai/templ-sync \
 	build start run air/watch dev \

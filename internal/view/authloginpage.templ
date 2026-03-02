@@ -74,12 +74,33 @@ templ LoginPage(email, msg string, err error, vc *Ctx) {
 	}
 }
 
-templ LogtoPage(vc *Ctx, authState string) {
-	<div class="app-card">
-		<h1>Hello Logto</h1>
-		<div>{ authState } </div>
-		<div><a href="/logto/signin">Sign In</a></div>
-		// Add link
-		<div><a href="/logto/signout">Sign Out</a></div>
-	</div>
+templ LogtoPage(vc *Ctx, authState string, idTokenClaimsJSON string, customClaimsJSON string) {
+	@Layout(vc) {
+		<div id="content" class="container md:mx-auto md:px-4">
+			<section class="app-card p-4 md:p-6 space-y-4">
+				<div class="flex items-center justify-between gap-4">
+					<h1 class="text-xl font-semibold">Logto Claims Debug</h1>
+					<div class="flex gap-2">
+						<a class="btn btn-sm" href="/logto/signin">Sign In</a>
+						<a class="btn btn-sm btn-outline" href="/logto/signout">Sign Out</a>
+					</div>
+				</div>
+				<div class="badge badge-info badge-outline">{ authState }</div>
+
+				<div>
+					<h2 class="font-medium mb-2">ID Token Claims</h2>
+					<div class="mockup-code text-sm">
+						<pre><code>{ idTokenClaimsJSON }</code></pre>
+					</div>
+				</div>
+
+				<div>
+					<h2 class="font-medium mb-2">Access Token Custom Claims</h2>
+					<div class="mockup-code text-sm">
+						<pre><code>{ customClaimsJSON }</code></pre>
+					</div>
+				</div>
+			</section>
+		</div>
+	}
 }
