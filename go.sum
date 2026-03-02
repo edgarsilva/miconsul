@@ -16,6 +16,8 @@ github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkp
 github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
 github.com/edgarsilva/simpleenv v1.1.2 h1:ilAVQDRhKwVm0KiF/0WFCCE7XpnvSbrnZhvhpkdyAjI=
 github.com/edgarsilva/simpleenv v1.1.2/go.mod h1:xk9TSXZ88ioZ4J7qvpPrLGFcBOAAKlJ3wnnuXHv5o1E=
+github.com/edgarsilva/simpleenv v1.2.0 h1:MJ7Y20HEmdje+Z3OKAg8AcIDNC2nmFkQkIxgMNv6Kck=
+github.com/edgarsilva/simpleenv v1.2.0/go.mod h1:xk9TSXZ88ioZ4J7qvpPrLGFcBOAAKlJ3wnnuXHv5o1E=
 github.com/fxamacker/cbor/v2 v2.9.0 h1:NpKPmjDBgUfBms6tr6JZkTHtfFGcMKsw3eGcmD/sapM=
 github.com/fxamacker/cbor/v2 v2.9.0/go.mod h1:vM4b+DJCtHn+zz7h3FFp/hDAI9WNWCsZj23V5ytsSxQ=
 github.com/go-co-op/gocron/v2 v2.16.5 h1:j228Jxk7bb9CF8LKR3gS+bK3rcjRUINjlVI+ZMp26Ss=

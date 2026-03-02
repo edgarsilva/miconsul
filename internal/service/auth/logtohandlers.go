@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"miconsul/internal/view"
@@ -18,7 +19,7 @@ func (s *service) HandleLogtoSignin(c fiber.Ctx) error {
 	logtoClient, saveSess, err := s.newLogtoClient(c)
 	if err != nil {
 		log.Error("failed to load session in logto signin:", err)
-		return c.Redirect().To("/logto/signout")
+		return c.Redirect().Status(http.StatusSeeOther).To("/login?logto_error=session")
 	}
 	defer deferLogtoSessionSave("logto signin", saveSess)
 
@@ -30,7 +31,8 @@ func (s *service) HandleLogtoSignin(c fiber.Ctx) error {
 	// The user will be redirected to the RedirectURI after successful sign in.
 	signInUri, err := logtoClient.SignIn(redirectURI("/logto/callback"))
 	if err != nil {
-		return c.Redirect().To("/logto/signout")
+		log.Error("failed to build logto signin url:", err)
+		return c.Redirect().Status(http.StatusSeeOther).To("/login?logto_error=signin")
 	}
 
 	// Redirect the user to the Logto sign-in page.
@@ -42,33 +44,33 @@ func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
 	logtoClient, saveSess, err := s.newLogtoClient(c)
 	if err != nil {
 		log.Error("failed to load session in logto callback:", err)
-		return c.Redirect().To("/logto/signout")
+		return c.Redirect().Status(http.StatusSeeOther).To("/login?logto_error=session")
 	}
 	defer deferLogtoSessionSave("logto callback", saveSess)
 
 	req, err := adaptor.ConvertRequest(c, true)
 	if err != nil {
 		log.Error("failed to convert fiber request to http request with adaptor on logto callback:", err)
-		return c.Redirect().To("/logto/signout")
+		return c.Redirect().Status(http.StatusSeeOther).To("/login?logto_error=request")
 	}
 
 	err = logtoClient.HandleSignInCallback(req)
 	if err != nil {
 		log.Error("failed to verify signin in logto callback handler:", err)
-		return c.Redirect().To("/logto/signout")
+		return c.Redirect().Status(http.StatusSeeOther).To("/login?logto_error=callback")
 	}
 
 	// Identity-critical fields come from ID token claims after callback verification.
 	claims, err := logtoClient.GetIdTokenClaims()
 	if err != nil {
 		log.Error("failed to get id token claims in logto callback handler:", err)
-		return c.Redirect().To("/logto/signout")
+		return c.Redirect().Status(http.StatusSeeOther).To("/login?logto_error=id_token")
 	}
 
 	logtoUser, err := NewLogtoUser(claims)
 	if err != nil {
 		log.Error("failed to build user from id token claims:", err)
-		return c.Redirect().To("/logto/signout")
+		return c.Redirect().Status(http.StatusSeeOther).To("/login?logto_error=claims")
 	}
 
 	customClaims, err := logtoCustomJWTClaims(logtoClient)
@@ -81,7 +83,7 @@ func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
 	err = s.saveLogtoUser(c.Context(), logtoUser)
 	if err != nil {
 		log.Error(err)
-		return c.Redirect().To("/logto/signout")
+		return c.Redirect().Status(http.StatusSeeOther).To("/login?logto_error=user_sync")
 	}
 
 	// This example takes the user back to the home page.
@@ -89,10 +91,14 @@ func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
 }
 
 func (s *service) HandleLogtoSignout(c fiber.Ctx) error {
+	if err := s.SessionWrite(c, "logto_skip_redirect", "1"); err != nil {
+		log.Warn("failed to mark login redirect skip before logto signout:", err)
+	}
+
 	logtoClient, saveSess, err := s.newLogtoClient(c)
 	if err != nil {
 		log.Error("failed to load session in logto signout:", err)
-		return c.SendStatus(fiber.StatusOK)
+		return c.Redirect().Status(http.StatusSeeOther).To("/login")
 	}
 	defer deferLogtoSessionSave("logto signout", saveSess)
 
@@ -100,7 +106,12 @@ func (s *service) HandleLogtoSignout(c fiber.Ctx) error {
 	// The user will be redirected to the Post Sign-out Redirect URI on signed out.
 	signOutUri, err := logtoClient.SignOut(redirectURI("/login"))
 	if err != nil {
-		return c.SendStatus(fiber.StatusOK)
+		log.Error("failed to build logto signout url:", err)
+		return c.Redirect().Status(http.StatusSeeOther).To("/login")
+	}
+	if signOutUri == "" {
+		log.Warn("empty logto signout url, redirecting to /login")
+		return c.Redirect().Status(http.StatusSeeOther).To("/login")
 	}
 
 	return c.Redirect().Status(fiber.StatusTemporaryRedirect).To(signOutUri)
@@ -117,12 +128,32 @@ func (s *service) HandleLogtoPage(c fiber.Ctx) error {
 
 	// Use Logto to control the content of the home page
 	authState := "You are not logged in to this website. :("
+	idTokenClaimsJSON := "{}"
+	customClaimsJSON := "{}"
 	if logtoClient.IsAuthenticated() {
 		authState = "You are logged in to this website! :)"
+
+		idClaims, err := logtoClient.GetIdTokenClaims()
+		if err != nil {
+			log.Warn("failed to get id token claims in logto page:", err)
+		} else {
+			if b, err := json.MarshalIndent(idClaims, "", "  "); err == nil {
+				idTokenClaimsJSON = string(b)
+			}
+		}
+
+		customClaims, err := logtoCustomJWTClaims(logtoClient)
+		if err != nil {
+			log.Warn("failed to decode custom access token claims in logto page:", err)
+		} else {
+			if b, err := json.MarshalIndent(customClaims, "", "  "); err == nil {
+				customClaimsJSON = string(b)
+			}
+		}
 	}
 
 	vc, _ := view.NewCtx(c)
-	return view.Render(c, view.LogtoPage(vc, authState))
+	return view.Render(c, view.LogtoPage(vc, authState, idTokenClaimsJSON, customClaimsJSON))
 }
 
 func logtoCustomJWTClaims(logtoClient *logto.LogtoClient) (LogtoUser, error) {

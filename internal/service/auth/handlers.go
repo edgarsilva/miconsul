@@ -18,10 +18,6 @@ import (
 //
 // GET: /login
 func (s *service) HandleLoginPage(c fiber.Ctx) error {
-	if LogtoEnabled() {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/logto/signin")
-	}
-
 	cu, _ := s.CurrentUser(c)
 	if cu.IsLoggedIn() {
 		return c.Redirect().To("/")
@@ -29,6 +25,14 @@ func (s *service) HandleLoginPage(c fiber.Ctx) error {
 
 	email := c.Query("email", "")
 	msg := c.Query("msg", "")
+
+	redirectURL, nextMsg := s.logtoLoginPageDecision(c, msg)
+	if redirectURL != "" {
+		return c.Redirect().Status(fiber.StatusSeeOther).To(redirectURL)
+	}
+
+	msg = nextMsg
+
 	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.LoginPage(email, msg, nil, vc))
 }
@@ -180,7 +184,7 @@ func (s *service) HandleLogout(c fiber.Ctx) error {
 	handlerutils.InvalidateCookies(c, "Auth", "JWT")
 
 	redirectURL := "/login"
-	if LogtoEnabled() {
+	if logtoEnabled(s.Env) {
 		redirectURL = "/logto/signout"
 	}
 

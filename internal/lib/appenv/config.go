@@ -35,9 +35,10 @@ type Env struct {
 	GooseDBString     string `env:"GOOSE_DBSTRING"`
 	GooseMigrationDir string `env:"GOOSE_MIGRATION_DIR"`
 
-	LogtoURL       string `env:"LOGTO_URL;optional"`
-	LogtoAppID     string `env:"LOGTO_APP_ID;optional"`
-	LogtoAppSecret string `env:"LOGTO_APP_SECRET;optional"`
+	LogtoURL       string `env:"LOGTO_URL;optional;trimspace;format=URL;min=1"`
+	LogtoAppID     string `env:"LOGTO_APP_ID;optional;trimspace;format=IDENTIFIER;min=12"`
+	LogtoAppSecret string `env:"LOGTO_APP_SECRET;optional;trimspace;format=IDENTIFIER;min=12"`
+	LogtoResource  string `env:"LOGTO_RESOURCE;optional;trimspace;format=URL;min=1"`
 
 	UptraceDSN      string `env:"UPTRACE_DSN;optional"`
 	UptraceEndpoint string `env:"UPTRACE_ENDPOINT;optional"`
@@ -46,11 +47,11 @@ type Env struct {
 }
 
 func New() *Env {
-	e := &Env{AppShutdownTimeout: 10 * time.Second}
-	err := simpleenv.Load(e)
+	env := &Env{AppShutdownTimeout: 10 * time.Second}
+	err := simpleenv.Load(env)
 	if err != nil {
 		log.Fatal("failed to load loading ENV variables:", err)
 	}
 
-	return e
+	return env
 }

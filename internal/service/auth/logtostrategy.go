@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"miconsul/internal/lib/appenv"
 	"miconsul/internal/model"
 
 	"github.com/gofiber/fiber/v3"
@@ -48,10 +49,6 @@ func NewLogtoStrategy(c fiber.Ctx, deps LogtoStrategyDeps) *LogtoStrategy {
 	}
 }
 
-func (s LogtoStrategy) Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
-	return s.deps.Trace(ctx, spanName, opts...)
-}
-
 func (s *LogtoStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
 	if s.SessErr != nil {
 		return model.User{}, s.SessErr
@@ -76,6 +73,10 @@ func (s *LogtoStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
 	}
 
 	return user, nil
+}
+
+func (s LogtoStrategy) Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
+	return s.deps.Trace(ctx, spanName, opts...)
 }
 
 // NewLogtoClient returns a Logto client and a save function to persist the
@@ -114,4 +115,17 @@ func NewLogtoUser(idClaims logtocore.IdTokenClaims) (LogtoUser, error) {
 		IAT:           idClaims.Iat,
 		EXP:           idClaims.Exp,
 	}, nil
+}
+
+func logtoEnabled(env *appenv.Env) bool {
+	if env == nil {
+		return false
+	}
+
+	logtoURL := env.LogtoURL
+	logtoAppID := env.LogtoAppID
+	logtoAppSecret := env.LogtoAppSecret
+	logtoResource := env.LogtoResource
+
+	return logtoURL != "" && logtoAppID != "" && logtoAppSecret != "" && logtoResource != ""
 }

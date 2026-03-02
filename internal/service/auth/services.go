@@ -286,7 +286,7 @@ func Authenticate(c fiber.Ctx, resource ProtectedResource) (model.User, error) {
 
 func selectStrategy(c fiber.Ctx, resource ProtectedResource) AuthStrategy {
 	switch {
-	case LogtoEnabled():
+	case logtoEnabled(resource.AppEnv()):
 		return NewLogtoStrategy(c, strategyDeps{ProtectedResource: resource})
 	default:
 		return NewLocalStrategy(c, resource)
@@ -312,7 +312,7 @@ func (deps strategyDeps) LogtoConfig() *logto.LogtoConfig {
 
 func logtoConfigFromEnv(env *appenv.Env) *logto.LogtoConfig {
 	config := logto.LogtoConfig{
-		Resources: []string{"https://app.miconsul.xyz/api"},
+		Resources: []string{},
 		// Keep login scopes minimal. If downstream API flows break, re-evaluate
 		// whether resource scopes (for example app:write) are actually required.
 		Scopes: []string{"email", "phone", "picture", "custom_data", "app:read"},
@@ -325,6 +325,37 @@ func logtoConfigFromEnv(env *appenv.Env) *logto.LogtoConfig {
 	config.Endpoint = env.LogtoURL
 	config.AppId = env.LogtoAppID
 	config.AppSecret = env.LogtoAppSecret
+	config.Resources = []string{env.LogtoResource}
 
 	return &config
+}
+
+func (s *service) logtoLoginPageDecision(c fiber.Ctx, msg string) (redirectURL string, nextMsg string) {
+	if !logtoEnabled(s.Env) {
+		return "", msg
+	}
+
+	logtoError := c.Query("logto_error", "")
+	loggedOut := c.Query("logged_out", "")
+	skipAutoRedirect := s.SessionRead(c, "logto_skip_redirect", "") == "1"
+	if skipAutoRedirect {
+		_ = s.SessionWrite(c, "logto_skip_redirect", "")
+	}
+
+	if logtoError == "" && loggedOut == "" && !skipAutoRedirect {
+		return "/logto/signin", msg
+	}
+
+	if msg != "" {
+		return "", msg
+	}
+
+	switch {
+	case logtoError != "":
+		return "", "Logto sign-in failed. Please try again."
+	case loggedOut == "1" || skipAutoRedirect:
+		return "", "You have been signed out."
+	default:
+		return "", msg
+	}
 }
