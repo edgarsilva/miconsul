@@ -42,6 +42,12 @@ type service struct {
 	*server.Server
 }
 
+var (
+	errAuthInvalidCredentials  = errors.New("invalid credentials")
+	errAuthPendingConfirmation = errors.New("email pending confirmation")
+	errAuthSessionCreate       = errors.New("failed to create session")
+)
+
 func NewService(s *server.Server) *service {
 	return &service{
 		Server: s,
@@ -137,6 +143,38 @@ func (s *service) userFetch(ctx context.Context, email string) (model.User, erro
 	}
 
 	return user, nil
+}
+
+func (s *service) authenticateCredentials(ctx context.Context, email, password string) (model.User, error) {
+	user, err := s.userFetch(ctx, email)
+	if err != nil {
+		return model.User{}, errAuthInvalidCredentials
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return model.User{}, errAuthInvalidCredentials
+	}
+
+	if user.ConfirmEmailToken != "" {
+		return model.User{}, errAuthPendingConfirmation
+	}
+
+	return user, nil
+}
+
+func (s *service) issueAuthCookie(c fiber.Ctx, user model.User, rememberMe bool) error {
+	validFor := time.Duration(24)
+	if rememberMe {
+		validFor *= 7
+	}
+
+	jwt, err := JWTCreateToken(s.AppEnv(), user.Email, user.ID)
+	if err != nil {
+		return errAuthSessionCreate
+	}
+
+	c.Cookie(s.NewCookie("Auth", jwt, time.Hour*validFor))
+	return nil
 }
 
 func (s *service) FindUserByExtID(ctx context.Context, extID string) (model.User, error) {

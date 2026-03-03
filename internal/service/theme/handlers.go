@@ -8,7 +8,7 @@ import (
 )
 
 // HandleToggleTheme toggles and renders the active UI theme button.
-// POST: /api/theme/toggle
+// POST: /theme/toggle
 func (s *service) HandleToggleTheme(c fiber.Ctx) error {
 	theme := s.SessionUITheme(c)
 	theme = c.Params("theme", theme)

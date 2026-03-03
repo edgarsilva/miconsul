@@ -22,7 +22,7 @@ const (
 func (s *service) HandlePatientsPage(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect().To("/login")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
 	}
 
 	theme := s.SessionUITheme(c)
@@ -63,7 +63,7 @@ func (s *service) HandlePatientsIndexSearch(c fiber.Ctx) error {
 func (s *service) HandlePatientFormPage(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect().To("/login")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
 	}
 
 	theme := s.SessionUITheme(c)
@@ -71,7 +71,7 @@ func (s *service) HandlePatientFormPage(c fiber.Ctx) error {
 
 	id := c.Params("id", "")
 	if id == "" {
-		return c.Redirect().To("/patients?toast=That user does not exist")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/patients?toast=That user does not exist")
 	}
 
 	patient := model.Patient{}
@@ -88,7 +88,7 @@ func (s *service) HandlePatientFormPage(c fiber.Ctx) error {
 func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect().To("/login")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
 	}
 
 	patient := model.Patient{
@@ -109,12 +109,12 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 	if err != nil {
 		redirectPath := "/patients/new?toast=Failed to create new patient&level=error"
 		if !s.IsHTMX(c) {
-			return c.Redirect().To(redirectPath)
+			return c.Redirect().Status(fiber.StatusSeeOther).To(redirectPath)
 		}
 	}
 
 	if !s.IsHTMX(c) {
-		return c.Redirect().To("/patients/" + patient.ID)
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/patients/" + patient.ID)
 	}
 
 	c.Set("HX-Push-Url", "/patients/"+patient.ID)
@@ -134,7 +134,7 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect().To("/login")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
 	}
 
 	patientID := c.Params("id", "")
@@ -162,7 +162,7 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 	if err != nil {
 		redirectPath := "/patients?err=failed to update patient&level=error"
 		if !s.IsHTMX(c) {
-			return c.Redirect().To(redirectPath)
+			return c.Redirect().Status(fiber.StatusSeeOther).To(redirectPath)
 		}
 
 		c.Set("HX-Location", redirectPath)
@@ -183,7 +183,7 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 func (s *service) HandleRemovePic(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect().To("/login")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
 	}
 
 	patientID := c.Params("id", "")
@@ -257,7 +257,7 @@ func (s *service) HandleDeletePatient(c fiber.Ctx) error {
 func (s *service) HandlePatientSearch(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect().To("/login")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
 	}
 
 	queryStr := c.FormValue("query", "")
@@ -282,7 +282,7 @@ func (s *service) HandlePatientSearch(c fiber.Ctx) error {
 func (s *service) HandleMockManyPatients(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect().To("/login")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
 	}
 
 	n, err := strconv.Atoi(c.Query("n", "100000"))

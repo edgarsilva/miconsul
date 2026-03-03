@@ -116,10 +116,10 @@ func (s *service) HandleClinicsUpdate(c fiber.Ctx) error {
 
 	if s.NotHTMX(c) {
 		if err != nil {
-			return c.Redirect().To("/clinics?err=failed to update clinic")
+			return c.Redirect().Status(fiber.StatusSeeOther).To("/clinics?err=failed to update clinic")
 		}
 
-		return c.Redirect().To("/clinics/" + clinic.ID)
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/clinics/" + clinic.ID)
 	}
 
 	c.Set("HX-Push-Url", "/clinics/"+clinicID)
@@ -179,7 +179,7 @@ func (s *service) HandleClinicsIndexSearch(c fiber.Ctx) error {
 func (s *service) HandleMockManyClinics(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect().To("/login")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
 	}
 
 	n, err := strconv.Atoi(c.Query("n", "100000"))

@@ -1,8 +1,6 @@
 package auth
 
 import (
-	"net/http"
-
 	"miconsul/internal/view"
 
 	"github.com/gofiber/fiber/v3"
@@ -16,7 +14,7 @@ func (s *service) HandleLogtoSignin(c fiber.Ctx) error {
 	logtoClient, saveSess, err := s.newLogtoClient(c)
 	if err != nil {
 		log.Error("failed to load session in logto signin:", err)
-		return c.Redirect().Status(http.StatusSeeOther).To("/login?logto_error=session")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/login?logto_error=session")
 	}
 	defer deferLogtoSessionSave("logto signin", saveSess)
 
@@ -29,13 +27,13 @@ func (s *service) HandleLogtoSignin(c fiber.Ctx) error {
 	callbackURI, err := logtoRedirectURI(s.Env, "/logto/callback")
 	if err != nil {
 		log.Error("failed to compose logto callback redirect uri:", err)
-		return c.Redirect().Status(http.StatusSeeOther).To("/login?logto_error=config")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/login?logto_error=config")
 	}
 
 	signInUri, err := logtoClient.SignIn(callbackURI)
 	if err != nil {
 		log.Error("failed to build logto signin url:", err)
-		return c.Redirect().Status(http.StatusSeeOther).To("/login?logto_error=signin")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/login?logto_error=signin")
 	}
 
 	// Redirect the user to the Logto sign-in page.
@@ -48,33 +46,33 @@ func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
 	logtoClient, saveSess, err := s.newLogtoClient(c)
 	if err != nil {
 		log.Error("failed to load session in logto callback:", err)
-		return c.Redirect().Status(http.StatusSeeOther).To("/login?logto_error=session")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/login?logto_error=session")
 	}
 	defer deferLogtoSessionSave("logto callback", saveSess)
 
 	req, err := adaptor.ConvertRequest(c, true)
 	if err != nil {
 		log.Error("failed to convert fiber request to http request with adaptor on logto callback:", err)
-		return c.Redirect().Status(http.StatusSeeOther).To("/login?logto_error=request")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/login?logto_error=request")
 	}
 
 	err = logtoClient.HandleSignInCallback(req)
 	if err != nil {
 		log.Error("failed to verify signin in logto callback handler:", err)
-		return c.Redirect().Status(http.StatusSeeOther).To("/login?logto_error=callback")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/login?logto_error=callback")
 	}
 
 	// Identity-critical fields come from ID token claims after callback verification.
 	claims, err := logtoClient.GetIdTokenClaims()
 	if err != nil {
 		log.Error("failed to get id token claims in logto callback handler:", err)
-		return c.Redirect().Status(http.StatusSeeOther).To("/login?logto_error=id_token")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/login?logto_error=id_token")
 	}
 
 	logtoUser, err := NewLogtoUser(claims)
 	if err != nil {
 		log.Error("failed to build user from id token claims:", err)
-		return c.Redirect().Status(http.StatusSeeOther).To("/login?logto_error=claims")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/login?logto_error=claims")
 	}
 
 	customClaims, err := logtoCustomClaims(logtoClient, s.Env.LogtoResource)
@@ -87,11 +85,11 @@ func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
 	err = s.saveLogtoUser(c.Context(), logtoUser)
 	if err != nil {
 		log.Error(err)
-		return c.Redirect().Status(http.StatusSeeOther).To("/login?logto_error=user_sync")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/login?logto_error=user_sync")
 	}
 
 	// This example takes the user back to the home page.
-	return c.Redirect().Status(http.StatusSeeOther).To("/")
+	return c.Redirect().Status(fiber.StatusSeeOther).To("/")
 }
 
 // HandleLogtoSignout redirects to Logto sign-out flow.
@@ -104,7 +102,7 @@ func (s *service) HandleLogtoSignout(c fiber.Ctx) error {
 	logtoClient, saveSess, err := s.newLogtoClient(c)
 	if err != nil {
 		log.Error("failed to load session in logto signout:", err)
-		return c.Redirect().Status(http.StatusSeeOther).To("/login")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
 	}
 	defer deferLogtoSessionSave("logto signout", saveSess)
 
@@ -113,17 +111,17 @@ func (s *service) HandleLogtoSignout(c fiber.Ctx) error {
 	postSignOutURI, err := logtoRedirectURI(s.Env, "/login")
 	if err != nil {
 		log.Error("failed to compose post logout redirect uri:", err)
-		return c.Redirect().Status(http.StatusSeeOther).To("/login")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
 	}
 
 	signOutUri, err := logtoClient.SignOut(postSignOutURI)
 	if err != nil {
 		log.Error("failed to build logto signout url:", err)
-		return c.Redirect().Status(http.StatusSeeOther).To("/login")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
 	}
 	if signOutUri == "" {
 		log.Warn("empty logto signout url, redirecting to /login")
-		return c.Redirect().Status(http.StatusSeeOther).To("/login")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
 	}
 
 	return c.Redirect().Status(fiber.StatusTemporaryRedirect).To(signOutUri)
@@ -135,7 +133,7 @@ func (s *service) HandleLogtoPage(c fiber.Ctx) error {
 	logtoClient, saveSess, err := s.newLogtoClient(c)
 	if err != nil {
 		log.Error("failed to load session in logto page:", err)
-		return c.Redirect().To("/logto/signout")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/logto/signout")
 	}
 	defer deferLogtoSessionSave("logto page", saveSess)
 

@@ -29,7 +29,7 @@ func CmpBtnTheme(theme string) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<label class=\"swap swap-rotate\" hx-post=\"/api/theme/toggle\" hx-trigger=\"change\" hx-swap=\"none\" hx-include=\"this\"><input id=\"theme_toggle\" name=\"theme\" type=\"checkbox\" class=\"theme-controller\" value=\"dark\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<label class=\"swap swap-rotate\" hx-post=\"/theme/toggle\" hx-trigger=\"change\" hx-swap=\"none\" hx-include=\"this\"><input id=\"theme_toggle\" name=\"theme\" type=\"checkbox\" class=\"theme-controller\" value=\"dark\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

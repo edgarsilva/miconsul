@@ -50,6 +50,7 @@ func AuthRoutes(s *server.Server) {
 	a.Get("/logto/signout", a.HandleLogtoSignout)
 
 	g := a.Group("/api/auth")
+	g.Post("/login", a.HandleAPILogin)
 	g.Get("/protected", mw.MustAuthenticate(a), a.HandleShowUser)
 	g.Post("/validate", mw.MustAuthenticate(a), a.HandleValidate)
 }
@@ -144,7 +145,7 @@ func AppointmentRoutes(s *server.Server) {
 func ThemeRoutes(s *server.Server) {
 	t := theme.NewService(s)
 
-	g := s.Group("/api/theme")
+	g := s.Group("/theme")
 	g.Post("/toggle", t.HandleToggleTheme)
 }
 
@@ -162,7 +163,7 @@ func UserRoutes(s *server.Server) {
 	// API
 	api := u.Group("/api/users", mw.MustBeAdmin(u))
 	api.Get("", u.HandleAPIUsers)
-	api.Get("/make/:n", u.HandleAPIMakeUsers)
+	api.Post("/make/:n", u.HandleAPIMakeUsers)
 }
 
 func AdminRoutes(s *server.Server) {

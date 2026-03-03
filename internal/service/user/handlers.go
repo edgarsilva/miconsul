@@ -30,7 +30,7 @@ func (s *service) HandleEditPage(c fiber.Ctx) error {
 
 	userID := c.Params("id", "")
 	if userID == "" {
-		return c.Redirect().To("/")
+		return c.Redirect().Status(fiber.StatusSeeOther).To("/")
 	}
 
 	vc, _ := view.NewCtx(c)
@@ -57,7 +57,7 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 	if err != nil {
 		redirectPath := "/profile?err=failed to update profile&level=error"
 		if !s.IsHTMX(c) {
-			return c.Redirect().To(redirectPath)
+			return c.Redirect().Status(fiber.StatusSeeOther).To(redirectPath)
 		}
 	}
 
@@ -80,11 +80,13 @@ func (s *service) HandleAPIUsers(c fiber.Ctx) error {
 }
 
 // HandleAPIMakeUsers creates mock users for admin testing.
-// GET: /api/users/make/:n
+// POST: /api/users/make/:n
 func (s *service) HandleAPIMakeUsers(c fiber.Ctx) error {
-	n, err := strconv.Atoi(c.Params("n"))
-	if err != nil {
-		n = 10
+	n, err := strconv.Atoi(c.Params("n", ""))
+	if err != nil || n <= 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "n must be a positive integer",
+		})
 	}
 
 	var users []model.User
@@ -97,8 +99,12 @@ func (s *service) HandleAPIMakeUsers(c fiber.Ctx) error {
 
 	err = gorm.G[model.User](s.DB.GormDB()).CreateInBatches(c.Context(), &users, 1000)
 	if err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).SendString("Unprocessable entity")
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
+			"error": "unprocessable entity",
+		})
 	}
 
-	return c.SendStatus(fiber.StatusOK)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"created": len(users),
+	})
 }
