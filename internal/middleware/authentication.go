@@ -15,7 +15,7 @@ func MustAuthenticate(resource auth.ProtectedResource) func(c fiber.Ctx) error {
 		if err != nil {
 			switch c.Accepts("text/html", "text/plain", "application/json") {
 			case "text/plain", "application/json":
-				return c.SendStatus(fiber.StatusServiceUnavailable)
+				return c.SendStatus(fiber.StatusUnauthorized)
 			default:
 				if c.Get("HX-Request") != "true" {
 					return c.Redirect().To("/logout")
@@ -34,15 +34,28 @@ func MustAuthenticate(resource auth.ProtectedResource) func(c fiber.Ctx) error {
 func MustBeAdmin(resource auth.ProtectedResource) func(c fiber.Ctx) error {
 	return func(c fiber.Ctx) error {
 		cu, err := auth.Authenticate(c, resource)
-		if err != nil || cu.Role != model.UserRoleAdmin {
+		if err != nil {
 			switch c.Accepts("text/html", "text/plain", "application/json") {
 			case "text/html":
 				c.Set("HX-Redirect", "/logout")
 				return c.Redirect().To("/logout")
 			case "text/plain", "application/json":
-				return c.SendStatus(fiber.StatusServiceUnavailable)
+				return c.SendStatus(fiber.StatusUnauthorized)
 			default:
 				c.Set("HX-Redirect", "/logout")
+				return c.Redirect().To("/logout")
+			}
+		}
+
+		if cu.Role != model.UserRoleAdmin {
+			switch c.Accepts("text/html", "text/plain", "application/json") {
+			case "text/plain", "application/json":
+				return c.SendStatus(fiber.StatusForbidden)
+			default:
+				if c.Get("HX-Request") == "true" {
+					return c.SendStatus(fiber.StatusForbidden)
+				}
+
 				return c.Redirect().To("/logout")
 			}
 		}
