@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/url"
 	"strings"
@@ -137,6 +138,72 @@ func logtoRedirectURI(env *appenv.Env, path string) (string, error) {
 
 	uri := url.URL{Scheme: protocol, Host: domain, Path: path}
 	return uri.String(), nil
+}
+
+func logtoIDTokenClaimsJSON(logtoClient *logto.LogtoClient) string {
+	idClaims, err := logtoClient.GetIdTokenClaims()
+	if err != nil {
+		log.Warn("failed to get id token claims in logto page:", err)
+		return "{}"
+	}
+
+	b, err := json.MarshalIndent(idClaims, "", "  ")
+	if err != nil {
+		log.Warn("failed to marshal id token claims in logto page:", err)
+		return "{}"
+	}
+
+	return string(b)
+}
+
+func logtoCustomClaimsJSON(logtoClient *logto.LogtoClient, resource string) string {
+	customClaims, err := logtoCustomClaims(logtoClient, resource)
+	if err != nil {
+		log.Warn("failed to decode custom access token claims in logto page:", err)
+		return "{}"
+	}
+
+	b, err := json.MarshalIndent(customClaims, "", "  ")
+	if err != nil {
+		log.Warn("failed to marshal custom access token claims in logto page:", err)
+		return "{}"
+	}
+
+	return string(b)
+}
+
+func logtoCustomClaims(logtoClient *logto.LogtoClient, resource string) (LogtoUser, error) {
+	resource = strings.TrimSpace(resource)
+	if resource == "" {
+		return LogtoUser{}, errors.New("logto resource is not configured")
+	}
+
+	accessToken, err := logtoClient.GetAccessToken(resource)
+	if err != nil {
+		return LogtoUser{}, err
+	}
+
+	logtoUser, err := logtoDecodeAccessToken(accessToken.Token)
+	if err != nil {
+		return LogtoUser{}, err
+	}
+
+	return logtoUser, nil
+}
+
+func logtoDecodeAccessToken(token string) (LogtoUser, error) {
+	jwtObject, err := logtocore.ParseSignedJwt(token)
+	if err != nil {
+		return LogtoUser{}, err
+	}
+
+	var logtoUser LogtoUser
+	err = jwtObject.UnsafeClaimsWithoutVerification(&logtoUser)
+	if err != nil {
+		return LogtoUser{}, err
+	}
+
+	return logtoUser, nil
 }
 
 func logtoEnabled(env *appenv.Env) bool {

@@ -1,19 +1,13 @@
 package auth
 
 import (
-	"encoding/json"
-	"errors"
 	"net/http"
-	"strings"
 
 	"miconsul/internal/view"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
 	"github.com/gofiber/fiber/v3/middleware/adaptor"
-
-	logto "github.com/logto-io/go/client"
-	logtocore "github.com/logto-io/go/core"
 )
 
 // HandleLogtoSignin redirects to Logto sign-in page
@@ -81,7 +75,7 @@ func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
 		return c.Redirect().Status(http.StatusSeeOther).To("/login?logto_error=claims")
 	}
 
-	customClaims, err := logtoCustomJWTClaims(logtoClient, s.Env.LogtoResource)
+	customClaims, err := logtoCustomClaims(logtoClient, s.Env.LogtoResource)
 	if err != nil {
 		log.Warn("failed to decode custom access token claims, continuing with id token claims only:", err)
 	} else {
@@ -140,66 +134,21 @@ func (s *service) HandleLogtoPage(c fiber.Ctx) error {
 	}
 	defer deferLogtoSessionSave("logto page", saveSess)
 
-	// Use Logto to control the content of the home page
-	authState := "You are not logged in to this website. :("
-	idTokenClaimsJSON := "{}"
-	customClaimsJSON := "{}"
-	if logtoClient.IsAuthenticated() {
-		authState = "You are logged in to this website! :)"
-
-		idClaims, err := logtoClient.GetIdTokenClaims()
-		if err != nil {
-			log.Warn("failed to get id token claims in logto page:", err)
-		} else {
-			if b, err := json.MarshalIndent(idClaims, "", "  "); err == nil {
-				idTokenClaimsJSON = string(b)
-			}
-		}
-
-		customClaims, err := logtoCustomJWTClaims(logtoClient, s.Env.LogtoResource)
-		if err != nil {
-			log.Warn("failed to decode custom access token claims in logto page:", err)
-		} else {
-			if b, err := json.MarshalIndent(customClaims, "", "  "); err == nil {
-				customClaimsJSON = string(b)
-			}
-		}
+	notAuthenticated := !logtoClient.IsAuthenticated()
+	if notAuthenticated {
+		vc, _ := view.NewCtx(c)
+		return view.Render(c, view.LogtoPage(
+			vc,
+			"You are not logged in to this website. :(",
+			"{}",
+			"{}",
+		))
 	}
+
+	authState := "You are logged in to this website! :)"
+	idTokenClaimsJSON := logtoIDTokenClaimsJSON(logtoClient)
+	customClaimsJSON := logtoCustomClaimsJSON(logtoClient, s.Env.LogtoResource)
 
 	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.LogtoPage(vc, authState, idTokenClaimsJSON, customClaimsJSON))
-}
-
-func logtoCustomJWTClaims(logtoClient *logto.LogtoClient, resource string) (LogtoUser, error) {
-	resource = strings.TrimSpace(resource)
-	if resource == "" {
-		return LogtoUser{}, errors.New("logto resource is not configured")
-	}
-
-	accessToken, err := logtoClient.GetAccessToken(resource)
-	if err != nil {
-		return LogtoUser{}, err
-	}
-
-	logtoUser, err := logtoDecodeAccessToken(accessToken.Token)
-	if err != nil {
-		return LogtoUser{}, err
-	}
-
-	return logtoUser, nil
-}
-
-func logtoDecodeAccessToken(token string) (LogtoUser, error) {
-	jwtObject, err := logtocore.ParseSignedJwt(token)
-	if err != nil {
-		return LogtoUser{}, err
-	}
-
-	var logtoUser LogtoUser
-	err = jwtObject.UnsafeClaimsWithoutVerification(&logtoUser)
-	if err != nil {
-		return LogtoUser{}, err
-	}
-
-	return logtoUser, nil
 }
