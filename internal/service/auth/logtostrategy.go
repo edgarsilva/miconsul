@@ -17,31 +17,31 @@ import (
 )
 
 type LogtoStrategy struct {
-	deps LogtoStrategyDeps
+	resource LogtoStrategyResource
 }
 
-type LogtoStrategyDeps interface {
+type LogtoStrategyResource interface {
 	Session(c fiber.Ctx) (*session.Session, error)
 	FindUserByExtID(ctx context.Context, extID string) (model.User, error)
 	Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span)
 	LogtoConfig() *logto.LogtoConfig
 }
 
-func NewLogtoStrategy(deps LogtoStrategyDeps) *LogtoStrategy {
+func NewLogtoStrategy(resource LogtoStrategyResource) *LogtoStrategy {
 	return &LogtoStrategy{
-		deps: deps,
+		resource: resource,
 	}
 }
 
-func (s *LogtoStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
-	sess, err := s.deps.Session(c)
+func (lgs *LogtoStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
+	sess, err := lgs.resource.Session(c)
 	if err != nil {
 		return model.User{}, err
 	}
 
-	logtoClient, saveSess := NewLogtoClient(sess, s.deps.LogtoConfig())
+	logtoClient, saveSess := NewLogtoClient(sess, lgs.resource.LogtoConfig())
 
-	ctx, span := s.Trace(c.Context(), "auth/services:logtoStrategy")
+	ctx, span := lgs.Trace(c.Context(), "auth/services:logtoStrategy")
 	defer span.End()
 	defer func() {
 		if err := saveSess(); err != nil {
@@ -54,7 +54,7 @@ func (s *LogtoStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
 		return model.User{}, err
 	}
 
-	user, err := s.deps.FindUserByExtID(ctx, claims.Sub)
+	user, err := lgs.resource.FindUserByExtID(ctx, claims.Sub)
 	if err != nil {
 		return user, errors.New("failed to authenticate user")
 	}
@@ -62,15 +62,15 @@ func (s *LogtoStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
 	return user, nil
 }
 
-func (s LogtoStrategy) Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
-	return s.deps.Trace(ctx, spanName, opts...)
+func (lgs LogtoStrategy) Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
+	return lgs.resource.Trace(ctx, spanName, opts...)
 }
 
 // NewLogtoClient returns a Logto client and a save function to persist the
 // session on defer or at the end of the handler.
 //
 //	e.g.
-//		logtoClient, saveSess := NewLogtoClient(sess, deps.LogtoConfig())
+//		logtoClient, saveSess := NewLogtoClient(sess, resource.LogtoConfig())
 //		defer saveSess()
 func NewLogtoClient(sess *session.Session, config *logto.LogtoConfig) (client *logto.LogtoClient, save func() error) {
 	storage := NewLogtoStorage(sess)

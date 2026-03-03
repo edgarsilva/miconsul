@@ -14,18 +14,18 @@ import (
 )
 
 type LocalStrategy struct {
-	service LocalStrategyService
+	resource LocalStrategyResource
 }
 
-type LocalStrategyService interface {
+type LocalStrategyResource interface {
 	GormDB() *gorm.DB
 	NewCookie(name, value string, validFor time.Duration) *fiber.Cookie
 	AppEnv() *appenv.Env
 }
 
-func NewLocalStrategy(s LocalStrategyService) *LocalStrategy {
+func NewLocalStrategy(resource LocalStrategyResource) *LocalStrategy {
 	return &LocalStrategy{
-		service: s,
+		resource: resource,
 	}
 }
 
@@ -43,12 +43,12 @@ func (ls LocalStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
 	return user, nil
 }
 
-func (s LocalStrategy) FindUserById(ctx context.Context, uid string) (model.User, error) {
-	return gorm.G[model.User](s.service.GormDB()).Where("id = ?", uid).Take(ctx)
+func (ls LocalStrategy) FindUserById(ctx context.Context, uid string) (model.User, error) {
+	return gorm.G[model.User](ls.resource.GormDB()).Where("id = ?", uid).Take(ctx)
 }
 
 func (ls LocalStrategy) authenticateWithJWT(c fiber.Ctx, token string) (model.User, error) {
-	claims, err := decodeJWTToken(ls.service.AppEnv(), token)
+	claims, err := decodeJWTToken(ls.resource.AppEnv(), token)
 	if err != nil {
 		return model.User{}, errors.New("failed to validate JWT token")
 	}
@@ -63,7 +63,7 @@ func (ls LocalStrategy) authenticateWithJWT(c fiber.Ctx, token string) (model.Us
 		return user, errors.New("failed to find user with UID in JWT token")
 	}
 
-	refreshedJWT, err := RefreshJWTToken(ls.service.AppEnv(), token, claims)
+	refreshedJWT, err := RefreshJWTToken(ls.resource.AppEnv(), token, claims)
 	if err != nil {
 		return user, errors.New("failed to refresh JWT token")
 	}
@@ -85,5 +85,5 @@ func getToken(c fiber.Ctx) string {
 }
 
 func (ls LocalStrategy) refreshAuthCookie(c fiber.Ctx, jwt string) {
-	c.Cookie(ls.service.NewCookie("Auth", jwt, time.Hour*8))
+	c.Cookie(ls.resource.NewCookie("Auth", jwt, time.Hour*8))
 }

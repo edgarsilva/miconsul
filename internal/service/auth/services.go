@@ -288,18 +288,18 @@ func Authenticate(c fiber.Ctx, resource ProtectedResource) (model.User, error) {
 func selectStrategy(resource ProtectedResource) AuthStrategy {
 	switch {
 	case logtoEnabled(resource.AppEnv()):
-		return NewLogtoStrategy(strategyDeps{ProtectedResource: resource})
+		return NewLogtoStrategy(strategyResource{ProtectedResource: resource})
 	default:
 		return NewLocalStrategy(resource)
 	}
 }
 
-type strategyDeps struct {
+type strategyResource struct {
 	ProtectedResource
 }
 
-func (deps strategyDeps) FindUserByExtID(ctx context.Context, extID string) (model.User, error) {
-	user, err := gorm.G[model.User](deps.GormDB()).Where("ext_id = ?", extID).Take(ctx)
+func (resource strategyResource) FindUserByExtID(ctx context.Context, extID string) (model.User, error) {
+	user, err := gorm.G[model.User](resource.GormDB()).Where("ext_id = ?", extID).Take(ctx)
 	if err != nil {
 		return model.User{}, errors.New("failed to authenticate user")
 	}
@@ -307,8 +307,8 @@ func (deps strategyDeps) FindUserByExtID(ctx context.Context, extID string) (mod
 	return user, nil
 }
 
-func (deps strategyDeps) LogtoConfig() *logto.LogtoConfig {
-	return logtoConfigFromEnv(deps.AppEnv())
+func (resource strategyResource) LogtoConfig() *logto.LogtoConfig {
+	return logtoConfigFromEnv(resource.AppEnv())
 }
 
 func logtoConfigFromEnv(env *appenv.Env) *logto.LogtoConfig {
