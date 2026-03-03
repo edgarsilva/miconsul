@@ -25,15 +25,24 @@ import (
 )
 
 func main() {
-	_ = godotenv.Load(".env")
+	exitCode := 0
+	defer func() {
+		if exitCode != 0 {
+			os.Exit(exitCode)
+		}
+	}()
 
 	fmt.Println(" Starting server...")
+
+	_ = godotenv.Load(".env")
+
+	fmt.Println(" Loading environment variables...")
+	env := appenv.New()
+
 	defer func() {
 		fmt.Println("✅ All cleanup tasks completed")
 	}()
 
-	fmt.Println(" Loading environment variables...")
-	env := appenv.New()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
@@ -49,6 +58,7 @@ func main() {
 	fmt.Println(" Applying database migrations...")
 	if err := database.ApplyMigrations(db); err != nil {
 		log.Printf("failed to apply database migrations: %v", err)
+		exitCode = 1
 		return
 	}
 
@@ -97,7 +107,7 @@ func main() {
 	shutdownTimeout := env.AppShutdownTimeout
 	select {
 	case err := <-serveErr:
-		if err != nil && !isExpectedServerCloseError(err) {
+		if shouldLogServerError(err) {
 			log.Printf("server stopped with error: %v", err)
 		}
 	case <-ctx.Done():
@@ -106,7 +116,7 @@ func main() {
 		defer cancel()
 
 		err := s.ShutdownWithContext(shutdownCtx)
-		if err != nil && !errors.Is(err, context.Canceled) && !isExpectedServerCloseError(err) {
+		if shouldLogServerError(err) {
 			log.Printf("graceful shutdown error: %v", err)
 		} else {
 			fmt.Println("✅ Server shutdown completed")
@@ -114,7 +124,7 @@ func main() {
 
 		select {
 		case err := <-serveErr:
-			if err != nil && !isExpectedServerCloseError(err) {
+			if shouldLogServerError(err) {
 				log.Printf("server exit error after shutdown: %v", err)
 			}
 		case <-time.After(shutdownTimeout):
@@ -138,4 +148,8 @@ func isExpectedServerCloseError(err error) bool {
 	return strings.Contains(message, "server closed") ||
 		strings.Contains(message, "listener closed") ||
 		strings.Contains(message, "use of closed network connection")
+}
+
+func shouldLogServerError(err error) bool {
+	return err != nil && !isExpectedServerCloseError(err)
 }
