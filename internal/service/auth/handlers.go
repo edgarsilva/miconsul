@@ -19,7 +19,7 @@ import (
 func (s *service) HandleLoginPage(c fiber.Ctx) error {
 	cu, _ := s.CurrentUser(c)
 	if cu.IsLoggedIn() {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/")
+		return s.Redirect(c, "/")
 	}
 
 	email := c.Query("email", "")
@@ -27,7 +27,7 @@ func (s *service) HandleLoginPage(c fiber.Ctx) error {
 
 	redirectURL, nextMsg := s.logtoLoginPageDecision(c, msg)
 	if redirectURL != "" {
-		return c.Redirect().Status(fiber.StatusSeeOther).To(redirectURL)
+		return s.Redirect(c, redirectURL)
 	}
 
 	msg = nextMsg
@@ -62,15 +62,15 @@ func (s *service) HandleLogin(c fiber.Ctx) error {
 		return view.Render(c, view.LoginPage(email, "", err, vc))
 	}
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/?msg=Failed to login, please try again")
+		return s.Redirect(c, "/?msg=Failed to login, please try again")
 	}
 
 	rememberMe := c.FormValue("remember_me", "") != ""
 	if err := s.issueAuthCookie(c, user, rememberMe); err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/?msg=Failed to login, please try again")
+		return s.Redirect(c, "/?msg=Failed to login, please try again")
 	}
 
-	return c.Redirect().Status(fiber.StatusSeeOther).To("/?timeframe=day")
+	return s.Redirect(c, "/?timeframe=day")
 }
 
 // HandleAPILogin authenticates a user and creates an auth cookie for API clients.
@@ -117,7 +117,7 @@ func (s *service) HandleSignupPage(c fiber.Ctx) error {
 	cu, _ := s.CurrentUser(c)
 
 	if cu.IsLoggedIn() {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/todos")
+		return s.Redirect(c, "/todos")
 	}
 
 	msg := c.Query("msg", "")
@@ -153,14 +153,14 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 		token := newConfirmEmailToken()
 		s.userUpdateConfirmToken(c.Context(), email, token)
 		go mailer.ConfirmEmail(email, token)
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/login?msg=check your inbox, we'll re-send a confirmation link")
+		return s.Redirect(c, "/login?msg=check your inbox, we'll re-send a confirmation link")
 	}
 
 	if err := s.signup(c.Context(), email, password); err != nil {
 		return view.Render(c, view.SignupPage(vc, email, err))
 	}
 
-	return c.Redirect().Status(fiber.StatusSeeOther).To("/login?msg=check your inbox to confirm your email")
+	return s.Redirect(c, "/login?msg=check your inbox to confirm your email")
 }
 
 // HandleSignupConfirmEmail validates an email confirmation token.
@@ -168,7 +168,7 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 	token := c.Params("token", "")
 	if token == "" {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/login?msg=unable to confirm email, try login instead")
+		return s.Redirect(c, "/login?msg=unable to confirm email, try login instead")
 	}
 
 	user, err := gorm.G[model.User](s.DB.GormDB()).
@@ -176,7 +176,7 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
 		Take(c.Context())
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/login?msg=we couldn't verify your account, pls try again")
+		return s.Redirect(c, "/login?msg=we couldn't verify your account, pls try again")
 	}
 
 	_, err = gorm.G[model.User](s.DB.GormDB()).
@@ -184,16 +184,16 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
 		Updates(c.Context(), model.User{})
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/login?msg=Email confirmed, you should be able to login now")
+		return s.Redirect(c, "/login?msg=Email confirmed, you should be able to login now")
 	}
 
 	jwt, err := JWTCreateToken(s.AppEnv(), user.Email, user.ID)
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/login?msg=Email confirmed, you should be able to login now")
+		return s.Redirect(c, "/login?msg=Email confirmed, you should be able to login now")
 	}
 
 	c.Cookie(s.NewCookie("Auth", jwt, time.Hour*24))
-	return c.Redirect().Status(fiber.StatusSeeOther).To("/login?msg=Email confirmed, you should be able to login now")
+	return s.Redirect(c, "/login?msg=Email confirmed, you should be able to login now")
 }
 
 // HandleLogout destroys session state and redirects to login.
@@ -212,7 +212,7 @@ func (s *service) HandleLogout(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusTemporaryRedirect)
 	}
 
-	return c.Redirect().Status(fiber.StatusSeeOther).To(redirectURL)
+	return s.Redirect(c, redirectURL)
 }
 
 // HandleResetPasswordPage renders the reset password request page.
@@ -247,7 +247,7 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 
 	token, err := newResetPasswordToken()
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/resetpassword")
+		return s.Redirect(c, "/resetpassword")
 	}
 
 	user.ResetToken = token
@@ -267,12 +267,12 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 func (s *service) HandleResetPasswordChange(c fiber.Ctx) error {
 	token := c.Params("token", "")
 	if token == "" {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/resetpassword?msg=token can't be blank")
+		return s.Redirect(c, "/resetpassword?msg=token can't be blank")
 	}
 
 	email, err := s.resetPasswordVerifyToken(c.Context(), token)
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/resetpassword?msg=invalid email or token")
+		return s.Redirect(c, "/resetpassword?msg=invalid email or token")
 	}
 
 	nonce := xid.New("rpnnce")
@@ -287,23 +287,23 @@ func (s *service) HandleResetPasswordChange(c fiber.Ctx) error {
 func (s *service) HandleResetPasswordUpdate(c fiber.Ctx) error {
 	email, err := resetPasswordEmailFromRequest(c)
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/resetpassword?msg=something went wrong with the email, try again!")
+		return s.Redirect(c, "/resetpassword?msg=something went wrong with the email, try again!")
 	}
 
 	token := c.FormValue("token", "")
 	if token == "" {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/resetpassword?msg=something went wrong with the token, try again!")
+		return s.Redirect(c, "/resetpassword?msg=something went wrong with the token, try again!")
 	}
 
 	nonce := c.FormValue("nonce", "")
 	cmpNonce := s.SessionRead(c, "nonce", nonce)
 	if nonce == "" || nonce != cmpNonce {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/resetpassword?msg=something went wrong with the nonce, try again!")
+		return s.Redirect(c, "/resetpassword?msg=something went wrong with the nonce, try again!")
 	}
 
 	_, err = s.resetPasswordVerifyToken(c.Context(), token)
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/resetpassword?msg=seems like your token has expired, try again!")
+		return s.Redirect(c, "/resetpassword?msg=seems like your token has expired, try again!")
 	}
 
 	vc, _ := view.NewCtx(c)
@@ -321,10 +321,10 @@ func (s *service) HandleResetPasswordUpdate(c fiber.Ctx) error {
 
 	_, err = s.userUpdatePassword(c.Context(), email, password, token)
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/resetpassword?msg=something went wrong, try again!")
+		return s.Redirect(c, "/resetpassword?msg=something went wrong, try again!")
 	}
 
-	return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
+	return s.Redirect(c, "/login")
 }
 
 // HandleValidate validates the current authentication session.

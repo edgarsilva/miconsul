@@ -30,7 +30,7 @@ func (s *service) HandleEditPage(c fiber.Ctx) error {
 
 	userID := c.Params("id", "")
 	if userID == "" {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/")
+		return s.Redirect(c, "/")
 	}
 
 	vc, _ := view.NewCtx(c)
@@ -57,7 +57,7 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 	if err != nil {
 		redirectPath := "/profile?err=failed to update profile&level=error"
 		if !s.IsHTMX(c) {
-			return c.Redirect().Status(fiber.StatusSeeOther).To(redirectPath)
+			return s.Redirect(c, redirectPath)
 		}
 	}
 

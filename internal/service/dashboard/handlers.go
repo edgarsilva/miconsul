@@ -16,7 +16,7 @@ import (
 func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
+		return s.Redirect(c, "/login")
 	}
 
 	appointments := []model.Appointment{}

@@ -19,7 +19,7 @@ import (
 func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
+		return s.Redirect(c, "/login")
 	}
 
 	patientID := c.Query("patientId", "")
@@ -43,7 +43,7 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 func (s *service) HandleShowPage(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
+		return s.Redirect(c, "/login")
 	}
 
 	id := c.Params("id", "")
@@ -73,7 +73,7 @@ func (s *service) HandleShowPage(c fiber.Ctx) error {
 func (s *service) HandleCommencePage(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
+		return s.Redirect(c, "/login")
 	}
 
 	id := c.Params("id", "")
@@ -85,7 +85,7 @@ func (s *service) HandleCommencePage(c fiber.Ctx) error {
 		Take(c.Context())
 	if id == "" || appointment.ID == "" {
 		c.Set("HX-Location", "/appointments?toast=The appointment does not exist&level=warning")
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/appointments?toast=The appointment does not exist&level=warning")
+		return s.Redirect(c, "/appointments?toast=The appointment does not exist&level=warning")
 	}
 
 	patient := model.Patient{
@@ -111,7 +111,7 @@ func (s *service) HandleCommencePage(c fiber.Ctx) error {
 func (s *service) HandleConclude(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
+		return s.Redirect(c, "/login")
 	}
 
 	appointmentID := c.Params("id", "")
@@ -122,7 +122,7 @@ func (s *service) HandleConclude(c fiber.Ctx) error {
 	if appointmentID == "" {
 		redirectPath := "/appointments?toast=Can't find that appointment&level=error"
 		c.Set("HX-Location", redirectPath)
-		return c.Redirect().Status(fiber.StatusSeeOther).To(redirectPath)
+		return s.Redirect(c, redirectPath)
 	}
 
 	appointment := model.Appointment{
@@ -136,11 +136,11 @@ func (s *service) HandleConclude(c fiber.Ctx) error {
 	if err != nil {
 		redirectPath := "/appointments?toast=Failed to update appointment&level=error"
 		c.Set("HX-Location", redirectPath)
-		return c.Redirect().Status(fiber.StatusSeeOther).To(redirectPath)
+		return s.Redirect(c, redirectPath)
 	}
 
 	if !s.IsHTMX(c) {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/appointments")
+		return s.Redirect(c, "/appointments")
 	}
 
 	c.Set("HX-Location", "/appointments")
@@ -152,7 +152,7 @@ func (s *service) HandleConclude(c fiber.Ctx) error {
 func (s *service) HandleCreate(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
+		return s.Redirect(c, "/login")
 	}
 
 	bookedAtValue := c.FormValue("bookedAt", "")
@@ -183,7 +183,7 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 	if err != nil {
 		redirectPath := "/appointments?toast=failed to create appointment&level=error"
 		if !s.IsHTMX(c) {
-			return c.Redirect().Status(fiber.StatusSeeOther).To(redirectPath)
+			return s.Redirect(c, redirectPath)
 		}
 
 		c.Set("HX-Location", redirectPath)
@@ -194,7 +194,7 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 	s.SendBookedAlert(appointment)
 
 	if !s.IsHTMX(c) {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/appointments?toast=New appointment created")
+		return s.Redirect(c, "/appointments?toast=New appointment created")
 	}
 
 	c.Set("HX-Location", "/appointments?toast=New appointment created")
@@ -207,7 +207,7 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 func (s *service) HandleUpdate(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
+		return s.Redirect(c, "/login")
 	}
 
 	appointmentID := c.Params("id", "")
@@ -216,7 +216,7 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	}
 
 	if appointmentID == "" {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/appointments?msg=can't update without an id")
+		return s.Redirect(c, "/appointments?msg=can't update without an id")
 	}
 
 	bookedAtStr := c.FormValue("bookedAt", "")
@@ -245,7 +245,7 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	if err != nil {
 		redirectPath := "/appointments/" + appointment.ID + "?toast=failed to update appointment&level=error"
 		if !s.IsHTMX(c) {
-			return c.Redirect().Status(fiber.StatusSeeOther).To(redirectPath)
+			return s.Redirect(c, redirectPath)
 		}
 
 		c.Set("HX-Location", redirectPath)
@@ -253,7 +253,7 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	}
 
 	if !s.IsHTMX(c) {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/appointments?toast=Appointment saved")
+		return s.Redirect(c, "/appointments?toast=Appointment saved")
 	}
 
 	c.Set("HX-Location", "/appointments?toast=Appointment saved")
@@ -265,7 +265,7 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 func (s *service) HandleCancel(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
+		return s.Redirect(c, "/login")
 	}
 
 	appointmentID := c.Params("id", "")
@@ -276,7 +276,7 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 	if appointmentID == "" {
 		redirectPath := "/appointments?toast=Can't find that appointment&level=error"
 		if !s.IsHTMX(c) {
-			return c.Redirect().Status(fiber.StatusSeeOther).To(redirectPath)
+			return s.Redirect(c, redirectPath)
 		}
 
 		c.Set("HX-Location", redirectPath)
@@ -294,7 +294,7 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 	if err != nil {
 		redirectPath := "/appointments?toast=Failed to update appointment&level=error"
 		if !s.IsHTMX(c) {
-			return c.Redirect().Status(fiber.StatusSeeOther).To(redirectPath)
+			return s.Redirect(c, redirectPath)
 		}
 
 		c.Set("HX-Location", redirectPath)
@@ -302,7 +302,7 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 	}
 
 	if !s.IsHTMX(c) {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/appointments")
+		return s.Redirect(c, "/appointments")
 	}
 
 	c.Set("HX-Location", "/appointments")
@@ -315,24 +315,24 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 func (s *service) HandleDelete(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
+		return s.Redirect(c, "/login")
 	}
 
 	appointmentID := c.Params("id", "")
 	if appointmentID == "" {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/appointments?msg=can't delete without an id")
+		return s.Redirect(c, "/appointments?msg=can't delete without an id")
 	}
 
 	_, err = gorm.G[model.Appointment](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", appointmentID, cu.ID).
 		Delete(c.Context())
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/appointments?msg=failed to delete that appointment")
+		return s.Redirect(c, "/appointments?msg=failed to delete that appointment")
 	}
 
 	isHTMX := c.Get("HX-Request", "") // will be a string 'true' for HTMX requests
 	if isHTMX == "" {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/appointments")
+		return s.Redirect(c, "/appointments")
 	}
 
 	c.Set("HX-Location", "/appointments")
@@ -355,7 +355,7 @@ func (s *service) HandlePatientConfirm(c fiber.Ctx) error {
 		Updates(c.Context(), appt)
 	if err != nil {
 		redirectPath := "/login?toast=Failed to confirm appointment&level=error"
-		return c.Redirect().Status(fiber.StatusSeeOther).To(redirectPath)
+		return s.Redirect(c, redirectPath)
 	}
 
 	theme := s.SessionUITheme(c)
@@ -427,7 +427,7 @@ func (s *service) HandlePatientChangeDate(c fiber.Ctx) error {
 	appointmentID := c.Params("id", "")
 	token := c.Params("token", "")
 	if appointmentID == "" || token == "" {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/login?toast=Can't find that appointment&level=error")
+		return s.Redirect(c, "/login?toast=Can't find that appointment&level=error")
 	}
 
 	appointment := model.Appointment{
@@ -440,7 +440,7 @@ func (s *service) HandlePatientChangeDate(c fiber.Ctx) error {
 		Updates(c.Context(), appointment)
 	if err != nil {
 		redirectPath := "/login?toast=Failed to confirm appointment&level=error"
-		return c.Redirect().Status(fiber.StatusSeeOther).To(redirectPath)
+		return s.Redirect(c, redirectPath)
 	}
 
 	return c.SendString("A new date for your appointment has been requested.")
@@ -451,7 +451,7 @@ func (s *service) HandlePatientChangeDate(c fiber.Ctx) error {
 func (s *service) HandlePriceFrg(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
+		return s.Redirect(c, "/login")
 	}
 
 	id := c.Params("id", "")
@@ -477,7 +477,7 @@ func (s *service) HandlePriceFrg(c fiber.Ctx) error {
 func (s *service) HandleSearchClinics(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
+		return s.Redirect(c, "/login")
 	}
 
 	queryStr := c.FormValue("query", "")

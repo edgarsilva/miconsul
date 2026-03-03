@@ -43,7 +43,7 @@ func (s *service) HandleClinicsNewPage(c fiber.Ctx) error {
 func (s *service) HandleClinicsShowPage(c fiber.Ctx) error {
 	id := c.Params("id", "")
 	if id == "" {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/clinics?err=failed to load Clinic without ID")
+		return s.Redirect(c, "/clinics?err=failed to load Clinic without ID")
 	}
 
 	clinic, err := s.TakeClinicByID(c, id)
@@ -76,10 +76,10 @@ func (s *service) HandleClinicsCreate(c fiber.Ctx) error {
 
 	if s.NotHTMX(c) {
 		if err != nil {
-			return c.Redirect().Status(fiber.StatusSeeOther).To("/clinics?err=failed to create Clinic")
+			return s.Redirect(c, "/clinics?err=failed to create Clinic")
 		}
 
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/clinics/" + clinic.ID)
+		return s.Redirect(c, "/clinics/" + clinic.ID)
 	}
 
 	c.Set("HX-Push-Url", "/clinics/"+clinic.ID)
@@ -93,7 +93,7 @@ func (s *service) HandleClinicsCreate(c fiber.Ctx) error {
 func (s *service) HandleClinicsUpdate(c fiber.Ctx) error {
 	clinicID := cmp.Or(c.Params("id", ""), c.FormValue("id", ""))
 	if clinicID == "" {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/clinics?msg=can't update without an id")
+		return s.Redirect(c, "/clinics?msg=can't update without an id")
 	}
 
 	clinic, err := s.TakeClinicByID(c, clinicID)
@@ -116,10 +116,10 @@ func (s *service) HandleClinicsUpdate(c fiber.Ctx) error {
 
 	if s.NotHTMX(c) {
 		if err != nil {
-			return c.Redirect().Status(fiber.StatusSeeOther).To("/clinics?err=failed to update clinic")
+			return s.Redirect(c, "/clinics?err=failed to update clinic")
 		}
 
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/clinics/" + clinic.ID)
+		return s.Redirect(c, "/clinics/" + clinic.ID)
 	}
 
 	c.Set("HX-Push-Url", "/clinics/"+clinicID)
@@ -133,7 +133,7 @@ func (s *service) HandleClinicsUpdate(c fiber.Ctx) error {
 func (s *service) HandleClinicsDelete(c fiber.Ctx) error {
 	clinicID := c.Params("id", "")
 	if clinicID == "" {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/clinics?msg=can't delete without an id")
+		return s.Redirect(c, "/clinics?msg=can't delete without an id")
 	}
 
 	clinic, err := s.TakeClinicByID(c, clinicID)
@@ -145,11 +145,11 @@ func (s *service) HandleClinicsDelete(c fiber.Ctx) error {
 		Where("id = ? AND user_id = ?", clinic.ID, clinic.UserID).
 		Delete(c.Context())
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/clinics?msg=failed to delete that clinic")
+		return s.Redirect(c, "/clinics?msg=failed to delete that clinic")
 	}
 
 	if s.NotHTMX(c) {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/clinics")
+		return s.Redirect(c, "/clinics")
 	}
 
 	c.Set("HX-Location", "/clinics")
@@ -179,7 +179,7 @@ func (s *service) HandleClinicsIndexSearch(c fiber.Ctx) error {
 func (s *service) HandleMockManyClinics(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
-		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
+		return s.Redirect(c, "/login")
 	}
 
 	n, err := strconv.Atoi(c.Query("n", "100000"))
