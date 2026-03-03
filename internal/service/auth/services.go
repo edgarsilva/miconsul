@@ -49,8 +49,8 @@ func NewService(s *server.Server) *service {
 }
 
 // Signup creates a new user record if req.body Email & Password are valid
-func (s *service) signup(email string, password string) error {
-	if err := s.signupIsEmailValid(email); err != nil {
+func (s *service) signup(ctx context.Context, email string, password string) error {
+	if err := s.signupIsEmailValid(ctx, email); err != nil {
 		return err
 	}
 
@@ -64,7 +64,7 @@ func (s *service) signup(email string, password string) error {
 	}
 
 	token := randToken()
-	_, err = s.userCreate(email, string(pwd), token)
+	_, err = s.userCreate(ctx, email, string(pwd), token)
 	if err != nil {
 		return errors.New("failed to save email or password, try again")
 	}
@@ -75,14 +75,14 @@ func (s *service) signup(email string, password string) error {
 }
 
 // IsEmailValidForSignup returns nil if valid, otherwise returns an error
-func (s *service) signupIsEmailValid(email string) error {
+func (s *service) signupIsEmailValid(ctx context.Context, email string) error {
 	validEmail := govalidator.IsEmail(email)
 	if !validEmail {
 		return errors.New("email address is invalid")
 	}
 
 	user := model.User{Email: email}
-	user, err := gorm.G[model.User](s.DB.GormDB()).Where("email = ?", email).Take(context.Background())
+	user, err := gorm.G[model.User](s.DB.GormDB()).Where("email = ?", email).Take(ctx)
 	if err == nil && user.ID != "" {
 		return errors.New("email already exists, try login instead")
 	}
@@ -108,7 +108,7 @@ func (s *service) signupIsPasswordValid(pwd string) error {
 }
 
 // userCreate creates a new row in the users table
-func (s *service) userCreate(email, password, token string) (model.User, error) {
+func (s *service) userCreate(ctx context.Context, email, password, token string) (model.User, error) {
 	user := model.User{
 		Email:                 email,
 		Password:              password,
@@ -117,7 +117,7 @@ func (s *service) userCreate(email, password, token string) (model.User, error) 
 		Role:                  model.UserRoleUser,
 	}
 
-	err := gorm.G[model.User](s.DB.GormDB()).Create(context.Background(), &user)
+	err := gorm.G[model.User](s.DB.GormDB()).Create(ctx, &user)
 	if err != nil {
 		err := errors.New("faild to save email or password, try again")
 		return model.User{}, err
@@ -149,7 +149,7 @@ func (s *service) FindUserByExtID(ctx context.Context, extID string) (model.User
 }
 
 // userUpdatePassword updates a user password
-func (s *service) userUpdatePassword(email, password, token string) (model.User, error) {
+func (s *service) userUpdatePassword(ctx context.Context, email, password, token string) (model.User, error) {
 	pwd, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
 		return model.User{}, errors.New("failed to update password")
@@ -164,7 +164,7 @@ func (s *service) userUpdatePassword(email, password, token string) (model.User,
 		Select("Password", "ResetToken", "ResetTokenExpiresAt").
 		Where("email = ? AND reset_token = ? AND reset_token_expires_at > ?", email, token, time.Now()).
 		Limit(1).
-		Updates(context.Background(), user)
+		Updates(ctx, user)
 	if err != nil || rowsAffected != 1 {
 		return model.User{}, errors.New("failed to update password")
 	}
@@ -172,7 +172,7 @@ func (s *service) userUpdatePassword(email, password, token string) (model.User,
 	return user, nil
 }
 
-func (s *service) userUpdateConfirmToken(email, token string) error {
+func (s *service) userUpdateConfirmToken(ctx context.Context, email, token string) error {
 	user := model.User{
 		ConfirmEmailToken:     token,
 		ConfirmEmailExpiresAt: time.Now().Add(time.Hour * 24),
@@ -181,7 +181,7 @@ func (s *service) userUpdateConfirmToken(email, token string) error {
 		Select("ConfirmEmailToken", "ConfirmEmailExpiresAt").
 		Where("email = ?", email).
 		Limit(1).
-		Updates(context.Background(), user)
+		Updates(ctx, user)
 	if err != nil || rowsAffected != 1 {
 		return errors.New("failed to update confirm token")
 	}
@@ -189,11 +189,11 @@ func (s *service) userUpdateConfirmToken(email, token string) error {
 	return nil
 }
 
-func (s *service) userPendingConfirmation(email string) error {
+func (s *service) userPendingConfirmation(ctx context.Context, email string) error {
 	user, err := gorm.G[model.User](s.DB.GormDB()).
 		Select("ID, Email, ConfirmEmailToken").
 		Where("email = ? AND confirm_email_token IS NOT null AND confirm_email_token != ''", email).
-		Take(context.Background())
+		Take(ctx)
 	if err == nil && user.ID != "" { // If a row/record exists it means confirmation is pending and we should re-send
 		return errors.New("user pending confirmation")
 	}
@@ -201,11 +201,11 @@ func (s *service) userPendingConfirmation(email string) error {
 	return nil
 }
 
-func (s *service) resetPasswordVerifyToken(token string) (email string, err error) {
+func (s *service) resetPasswordVerifyToken(ctx context.Context, token string) (email string, err error) {
 	user, err := gorm.G[model.User](s.DB.GormDB()).
 		Select("id, email").
 		Where("reset_token != '' AND reset_token IS NOT null AND reset_token = ? AND reset_token_expires_at > ?", token, time.Now()).
-		Take(context.Background())
+		Take(ctx)
 	if err != nil {
 		return "", errors.New("password reset token not found or expired")
 	}

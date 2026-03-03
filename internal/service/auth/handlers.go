@@ -126,15 +126,15 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 		return view.Render(c, view.SignupPage(vc, email, err))
 	}
 
-	err = s.userPendingConfirmation(email)
+	err = s.userPendingConfirmation(c.Context(), email)
 	if err != nil {
 		token := randToken()
-		s.userUpdateConfirmToken(email, token)
+		s.userUpdateConfirmToken(c.Context(), email, token)
 		go mailer.ConfirmEmail(email, token)
 		return c.Redirect().To("/login?msg=check your inbox, we'll re-send a confirmation link")
 	}
 
-	if err := s.signup(email, password); err != nil {
+	if err := s.signup(c.Context(), email, password); err != nil {
 		return view.Render(c, view.SignupPage(vc, email, err))
 	}
 
@@ -255,7 +255,7 @@ func (s *service) HandleResetPasswordChange(c fiber.Ctx) error {
 		return c.Redirect().To("/resetpassword?msg=token can't be blank")
 	}
 
-	email, err := s.resetPasswordVerifyToken(token)
+	email, err := s.resetPasswordVerifyToken(c.Context(), token)
 	if err != nil {
 		return c.Redirect().To("/resetpassword?msg=invalid email or token")
 	}
@@ -287,7 +287,7 @@ func (s *service) HandleResetPasswordUpdate(c fiber.Ctx) error {
 		return c.Redirect().To("/resetpassword?msg=something went wrong with the nonce, try again!")
 	}
 
-	_, err = s.resetPasswordVerifyToken(token)
+	_, err = s.resetPasswordVerifyToken(c.Context(), token)
 	if err != nil {
 		return c.Redirect().To("/resetpassword?msg=seems like your token has expired, try again!")
 	}
@@ -305,7 +305,7 @@ func (s *service) HandleResetPasswordUpdate(c fiber.Ctx) error {
 		return view.Render(c, view.ResetPasswordChangePage(email, token, nonce, err, vc))
 	}
 
-	_, err = s.userUpdatePassword(email, password, token)
+	_, err = s.userUpdatePassword(c.Context(), email, password, token)
 	if err != nil {
 		return c.Redirect().To("/resetpassword?msg=something went wrong, try again!")
 	}
