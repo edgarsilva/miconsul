@@ -299,8 +299,8 @@ func (s *Server) SendToWorker(fn func()) error {
 
 // CurrentUser returns currently logged-in(or anon) user by User.ID from fiber.Locals("id")
 func (s *Server) CurrentUser(c fiber.Ctx) (model.User, error) {
-	userI := c.Locals("current_user")
-	cu, ok := userI.(model.User)
+	userIface := c.Locals("current_user")
+	cu, ok := userIface.(model.User)
 	if !ok {
 		return model.User{}, nil
 	}
