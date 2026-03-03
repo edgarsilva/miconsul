@@ -54,6 +54,7 @@ type Server struct {
 
 type ServerOption func(*Server) error
 
+// New constructs a Server with the provided options and core setup.
 func New(serverOpts ...ServerOption) *Server {
 	server := Server{}
 	if err := server.applyServerOptions(serverOpts...); err != nil {
@@ -194,6 +195,7 @@ func (s *Server) setupStaticFiles(app *fiber.App, environment appenv.Environment
 	app.Use("/public", static.New("./public", staticConfig(environment)))
 }
 
+// WithEnv configures the server environment.
 func WithEnv(env *appenv.Env) ServerOption {
 	return func(server *Server) error {
 		if env == nil {
@@ -205,6 +207,7 @@ func WithEnv(env *appenv.Env) ServerOption {
 	}
 }
 
+// WithDatabase configures the server database dependency.
 func WithDatabase(db *database.Database) ServerOption {
 	return func(server *Server) error {
 		if db == nil {
@@ -216,6 +219,7 @@ func WithDatabase(db *database.Database) ServerOption {
 	}
 }
 
+// WithLocalizer configures the optional localization service.
 func WithLocalizer(localizer *localize.Localizer) ServerOption {
 	return func(server *Server) error {
 		if localizer == nil {
@@ -227,6 +231,7 @@ func WithLocalizer(localizer *localize.Localizer) ServerOption {
 	}
 }
 
+// WithWorkPool configures the optional async worker pool.
 func WithWorkPool(wp *ants.Pool) ServerOption {
 	return func(server *Server) error {
 		if wp == nil {
@@ -239,6 +244,7 @@ func WithWorkPool(wp *ants.Pool) ServerOption {
 	}
 }
 
+// WithCronJob configures the optional cron scheduler.
 func WithCronJob(cj *cronjob.Sched) ServerOption {
 	return func(server *Server) error {
 		if cj == nil {
@@ -251,6 +257,7 @@ func WithCronJob(cj *cronjob.Sched) ServerOption {
 	}
 }
 
+// WithTracer configures the optional tracer implementation.
 func WithTracer(tracer trace.Tracer) ServerOption {
 	return func(server *Server) error {
 		if tracer == nil {
@@ -262,6 +269,7 @@ func WithTracer(tracer trace.Tracer) ServerOption {
 	}
 }
 
+// WithCache configures the optional cache implementation.
 func WithCache(cache Cache) ServerOption {
 	return func(server *Server) error {
 		if cache == nil {
@@ -296,27 +304,22 @@ func (s *Server) SendToWorker(fn func()) error {
 	return err
 }
 
+// GormDB returns the active gorm DB handle when available.
 func (s *Server) GormDB() *gorm.DB {
-	if s == nil || s.DB == nil {
+	if s.DB == nil {
 		return nil
 	}
 
 	return s.DB.GormDB()
 }
 
+// AppEnv returns the active application environment configuration.
 func (s *Server) AppEnv() *appenv.Env {
-	if s == nil {
-		return nil
-	}
-
 	return s.Env
 }
 
+// Trace starts a span with the configured tracer and returns updated context.
 func (s *Server) Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
-	if s == nil {
-		panic("server.Trace called with nil server")
-	}
-
 	if ctx == nil {
 		ctx = context.Background()
 	}

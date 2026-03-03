@@ -8,13 +8,8 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/session"
 )
 
+// Session retrieves the request session from the configured store.
 func (s *Server) Session(c fiber.Ctx) (*session.Session, error) {
-	if s == nil {
-		err := errors.New("failed to retrieve session: server is nil")
-		log.Warn(err.Error())
-		return nil, err
-	}
-
 	if s.SessionStore == nil {
 		err := errors.New("failed to retrieve session: session store is nil")
 		log.Warn(err.Error())

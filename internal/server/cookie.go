@@ -9,9 +9,10 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
+// NewCookie creates an application cookie with secure defaults.
 func (s *Server) NewCookie(name, value string, validFor time.Duration) *fiber.Cookie {
 	secure := false
-	if s != nil && s.Env != nil {
+	if s.Env != nil {
 		secure = appenv.IsProduction(s.Env.Environment) || strings.EqualFold(s.Env.AppProtocol, "https")
 	}
 
@@ -24,6 +25,7 @@ func (s *Server) NewCookie(name, value string, validFor time.Duration) *fiber.Co
 	}
 }
 
+// InvalidateCookies clears cookies and expires them in the response.
 func (s *Server) InvalidateCookies(c fiber.Ctx, cookieNames ...string) {
 	c.ClearCookie(cookieNames...)
 	for _, name := range cookieNames {
