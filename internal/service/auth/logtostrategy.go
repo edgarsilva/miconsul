@@ -3,6 +3,8 @@ package auth
 import (
 	"context"
 	"errors"
+	"net/url"
+	"strings"
 
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/model"
@@ -102,6 +104,39 @@ func NewLogtoUser(idClaims logtocore.IdTokenClaims) (LogtoUser, error) {
 		IAT:           idClaims.Iat,
 		EXP:           idClaims.Exp,
 	}, nil
+}
+
+// logtoRedirectURI returns a fully qualified redirect URI for Logto flows.
+func logtoRedirectURI(env *appenv.Env, path string) (string, error) {
+	if env == nil {
+		return "", errors.New("app env is required")
+	}
+
+	protocol := strings.ToLower(strings.TrimSpace(env.AppProtocol))
+	switch protocol {
+	case "http", "https":
+	default:
+		return "", errors.New("app protocol must be http or https")
+	}
+
+	domain := strings.TrimSpace(env.AppDomain)
+	if domain == "" {
+		return "", errors.New("app domain is required")
+	}
+
+	if strings.Contains(domain, "/") || strings.ContainsAny(domain, " \t\n\r") {
+		return "", errors.New("app domain is invalid")
+	}
+
+	path = strings.TrimSpace(path)
+	if path == "" {
+		path = "/"
+	} else {
+		path = "/" + strings.TrimPrefix(path, "/")
+	}
+
+	uri := url.URL{Scheme: protocol, Host: domain, Path: path}
+	return uri.String(), nil
 }
 
 func logtoEnabled(env *appenv.Env) bool {

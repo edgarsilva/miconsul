@@ -2,7 +2,9 @@ package auth
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
+	"strings"
 
 	"miconsul/internal/view"
 
@@ -29,7 +31,13 @@ func (s *service) HandleLogtoSignin(c fiber.Ctx) error {
 
 	// The sign-in request is handled by Logto.
 	// The user will be redirected to the RedirectURI after successful sign in.
-	signInUri, err := logtoClient.SignIn(redirectURI("/logto/callback"))
+	callbackURI, err := logtoRedirectURI(s.Env, "/logto/callback")
+	if err != nil {
+		log.Error("failed to compose logto callback redirect uri:", err)
+		return c.Redirect().Status(http.StatusSeeOther).To("/login?logto_error=config")
+	}
+
+	signInUri, err := logtoClient.SignIn(callbackURI)
 	if err != nil {
 		log.Error("failed to build logto signin url:", err)
 		return c.Redirect().Status(http.StatusSeeOther).To("/login?logto_error=signin")
@@ -73,7 +81,7 @@ func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
 		return c.Redirect().Status(http.StatusSeeOther).To("/login?logto_error=claims")
 	}
 
-	customClaims, err := logtoCustomJWTClaims(logtoClient)
+	customClaims, err := logtoCustomJWTClaims(logtoClient, s.Env.LogtoResource)
 	if err != nil {
 		log.Warn("failed to decode custom access token claims, continuing with id token claims only:", err)
 	} else {
@@ -104,7 +112,13 @@ func (s *service) HandleLogtoSignout(c fiber.Ctx) error {
 
 	// The sign-out request is handled by Logto.
 	// The user will be redirected to the Post Sign-out Redirect URI on signed out.
-	signOutUri, err := logtoClient.SignOut(redirectURI("/login"))
+	postSignOutURI, err := logtoRedirectURI(s.Env, "/login")
+	if err != nil {
+		log.Error("failed to compose post logout redirect uri:", err)
+		return c.Redirect().Status(http.StatusSeeOther).To("/login")
+	}
+
+	signOutUri, err := logtoClient.SignOut(postSignOutURI)
 	if err != nil {
 		log.Error("failed to build logto signout url:", err)
 		return c.Redirect().Status(http.StatusSeeOther).To("/login")
@@ -142,7 +156,7 @@ func (s *service) HandleLogtoPage(c fiber.Ctx) error {
 			}
 		}
 
-		customClaims, err := logtoCustomJWTClaims(logtoClient)
+		customClaims, err := logtoCustomJWTClaims(logtoClient, s.Env.LogtoResource)
 		if err != nil {
 			log.Warn("failed to decode custom access token claims in logto page:", err)
 		} else {
@@ -156,8 +170,13 @@ func (s *service) HandleLogtoPage(c fiber.Ctx) error {
 	return view.Render(c, view.LogtoPage(vc, authState, idTokenClaimsJSON, customClaimsJSON))
 }
 
-func logtoCustomJWTClaims(logtoClient *logto.LogtoClient) (LogtoUser, error) {
-	accessToken, err := logtoClient.GetAccessToken("https://app.miconsul.xyz/api")
+func logtoCustomJWTClaims(logtoClient *logto.LogtoClient, resource string) (LogtoUser, error) {
+	resource = strings.TrimSpace(resource)
+	if resource == "" {
+		return LogtoUser{}, errors.New("logto resource is not configured")
+	}
+
+	accessToken, err := logtoClient.GetAccessToken(resource)
 	if err != nil {
 		return LogtoUser{}, err
 	}

@@ -5,8 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	mrand "math/rand"
-	"os"
-	"strings"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -74,18 +72,4 @@ func randStringRunes(n int) string {
 	}
 
 	return string(b)
-}
-
-// redirectURI returns the full qualified redirectURI for the path passed
-//
-//	e.g.
-//		url := redirectURI("/logto/callback")
-//		-> http://localhost:3000/logto/callback
-func redirectURI(path string) string {
-	domain := os.Getenv("APP_DOMAIN")
-	protocol := os.Getenv("APP_PROTOCOL")
-	path = strings.TrimPrefix(path, "/")
-
-	url := protocol + "://" + domain + "/" + path
-	return url
 }
