@@ -96,11 +96,11 @@ func (s *service) signupIsPasswordValid(pwd string) error {
 		return errors.New("password is too short")
 	}
 
-	if strings.ContainsAny(pwd, "1234567890") {
+	if !strings.ContainsAny(pwd, "1234567890") {
 		return errors.New("password must contain at least 1 digit (numbers from 0 to 9)")
 	}
 
-	if strings.ContainsAny(pwd, "!@#$%^&*()") {
+	if !strings.ContainsAny(pwd, "!@#$%^&*()") {
 		return errors.New("password must contain at least 1 special character e.g. !@#$%^&*")
 	}
 
