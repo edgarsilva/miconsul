@@ -13,7 +13,6 @@ import (
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
-	"miconsul/internal/model"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
@@ -297,17 +296,6 @@ func (s *Server) SendToWorker(fn func()) error {
 	return err
 }
 
-// CurrentUser returns currently logged-in(or anon) user by User.ID from fiber.Locals("id")
-func (s *Server) CurrentUser(c fiber.Ctx) (model.User, error) {
-	userIface := c.Locals("current_user")
-	cu, ok := userIface.(model.User)
-	if !ok {
-		return model.User{}, nil
-	}
-
-	return cu, nil
-}
-
 func (s *Server) GormDB() *gorm.DB {
 	if s == nil || s.DB == nil {
 		return nil
@@ -360,93 +348,6 @@ func (s *Server) Listen(portOverride ...int) error {
 	return s.App.Listen(":" + strconv.Itoa(port))
 }
 
-func (s *Server) Session(c fiber.Ctx) (*session.Session, error) {
-	if s == nil {
-		err := errors.New("failed to retrieve session: server is nil")
-		log.Warn(err.Error())
-		return nil, err
-	}
-
-	if s.SessionStore == nil {
-		err := errors.New("failed to retrieve session: session store is nil")
-		log.Warn(err.Error())
-		return nil, err
-	}
-
-	sess, err := s.SessionStore.Get(c)
-	if err != nil {
-		log.Warn("Failed to retrieve session from req ctx:", err)
-		return nil, err
-	}
-
-	return sess, nil
-}
-
-func (s *Server) SessionDestroy(c fiber.Ctx) {
-	sess, err := s.Session(c)
-	if err != nil {
-		return
-	}
-
-	err = sess.Destroy()
-	if err != nil {
-		log.Info("Failed to destroy session:", err)
-	}
-}
-
-// SessionWrite sets a session value.
-func (s *Server) SessionWrite(c fiber.Ctx, k string, v any) (err error) {
-	sess, err := s.Session(c)
-	if err != nil {
-		return err
-	}
-
-	sess.Set(k, v)
-	return sess.Save()
-}
-
-// SessionRead gets a session string value by key, or returns the default value.
-func (s *Server) SessionRead(c fiber.Ctx, key string, defaultVal string) string {
-	sess, err := s.Session(c)
-	if err != nil {
-		return defaultVal
-	}
-
-	val := sess.Get(key)
-	if val == nil {
-		return defaultVal
-	}
-
-	valStr, ok := val.(string)
-	if !ok {
-		return defaultVal
-	}
-
-	return valStr
-}
-
-func (s *Server) NewCookie(name, value string, validFor time.Duration) *fiber.Cookie {
-	secure := false
-	if s != nil && s.Env != nil {
-		secure = appenv.IsProduction(s.Env.Environment) || strings.EqualFold(s.Env.AppProtocol, "https")
-	}
-
-	return &fiber.Cookie{
-		Name:     name,
-		Value:    value,
-		Expires:  time.Now().Add(validFor),
-		Secure:   secure,
-		HTTPOnly: true,
-	}
-}
-
-func (s *Server) InvalidateCookies(c fiber.Ctx, cookieNames ...string) {
-	c.ClearCookie(cookieNames...)
-	for _, name := range cookieNames {
-		c.Cookie(s.NewCookie(name, "", 0))
-	}
-}
-
 // CacheWrite writes a value to the Cache
 func (s *Server) CacheWrite(key string, src *[]byte, ttl time.Duration) error {
 	if s.Cache == nil {
@@ -463,77 +364,4 @@ func (s *Server) CacheRead(key string, dst *[]byte) error {
 		return nil
 	}
 	return s.Cache.Read(key, dst)
-}
-
-// SessionUITheme returns the user UI theme (light|dark) from the session or query
-// url param
-func (s *Server) SessionUITheme(c fiber.Ctx) string {
-	theme, ok := c.Locals("theme").(string)
-	if !ok || theme == "" {
-		theme = "light"
-	}
-
-	return theme
-}
-
-// CurrentLocale returns the user locale resolved for the current request.
-func (s *Server) CurrentLocale(c fiber.Ctx) string {
-	sess, err := s.Session(c)
-	if err != nil {
-		lang, ok := c.Locals("locale").(string)
-		if !ok || lang == "" {
-			lang = "es-MX"
-		}
-
-		return lang
-	}
-
-	lang, ok := sess.Get("lang").(string)
-	if ok && lang != "" {
-		return lang
-	}
-
-	lang, ok = c.Locals("locale").(string)
-	if !ok || lang == "" {
-		lang = "es-MX"
-	}
-
-	sess.Set("lang", lang)
-	if err := sess.Save(); err != nil {
-		log.Warn("Failed to save session language:", err)
-	}
-
-	return lang
-}
-
-// SessionID returns the user UI theme (light|dark) from the session or query
-// url param
-func (s *Server) SessionID(c fiber.Ctx) string {
-	sessionID := c.Cookies("session_id", "")
-	return sessionID
-}
-
-// TagWithSessionID returns tags the passed tag with the SessionID
-// url param
-func (s *Server) TagWithSessionID(c fiber.Ctx, tag string) string {
-	return s.SessionID(c) + ":" + tag
-}
-
-// IsHTMX returns true if the request was initiated by HTMX
-func (s *Server) IsHTMX(c fiber.Ctx) bool {
-	isHTMX := c.Get("HX-Request", "") // will be a string 'true' for HTMX requests
-	return isHTMX == "true"
-}
-
-// IsHTMX returns true if the request was initiated by HTMX
-func (s *Server) NotHTMX(c fiber.Ctx) bool {
-	return !s.IsHTMX(c)
-}
-
-func (s *Server) L(c fiber.Ctx, key string) (translation string) {
-	if s.Localizer == nil {
-		return ""
-	}
-
-	return s.Localizer.GetWithLocale(s.CurrentLocale(c), key)
 }
