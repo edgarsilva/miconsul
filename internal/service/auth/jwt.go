@@ -2,21 +2,27 @@ package auth
 
 import (
 	"errors"
-	"os"
 	"time"
+
+	"miconsul/internal/lib/appenv"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
 // JWTCreateToken returns a JWT token string for the sub and uid, optionally error
-func JWTCreateToken(sub, uid string) (string, error) {
+func JWTCreateToken(env *appenv.Env, sub, uid string) (string, error) {
+	secret, err := jwtSecretFromEnv(env)
+	if err != nil {
+		return "", err
+	}
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 		"sub": sub,
 		"uid": uid,
 		"exp": time.Now().Add(24 * time.Hour).Unix(),
 	})
 
-	tokenStr, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	tokenStr, err := token.SignedString([]byte(secret))
 	if err != nil {
 		return "", err
 	}
@@ -25,8 +31,12 @@ func JWTCreateToken(sub, uid string) (string, error) {
 }
 
 // decodeJWTToken returns the uid string from the JWT claims
-func decodeJWTToken(tokenStr string) (claims jwt.MapClaims, err error) {
-	secret := os.Getenv("JWT_SECRET")
+func decodeJWTToken(env *appenv.Env, tokenStr string) (claims jwt.MapClaims, err error) {
+	secret, err := jwtSecretFromEnv(env)
+	if err != nil {
+		return jwt.MapClaims{}, err
+	}
+
 	tokenJWT, err := jwt.Parse(tokenStr, func(token *jwt.Token) (any, error) { // Don't forget to validate the algorithm is what you expect:
 		// Don't forget to validate the algorithm is what you expect:
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -54,16 +64,13 @@ func decodeJWTToken(tokenStr string) (claims jwt.MapClaims, err error) {
 }
 
 // RefreshJWTToken returns a refreshed JWT token for the sub and uid if expiring in less than 1h and still valid, optionally error
-func RefreshJWTToken(token string, claims jwt.MapClaims) (string, error) {
+func RefreshJWTToken(env *appenv.Env, token string, claims jwt.MapClaims) (string, error) {
 	exp, err := claims.GetExpirationTime()
 	if err != nil {
 		return "", err
 	}
 
-	t1 := exp.Time
-	t2 := time.Now()
-	diff := t2.Sub(t1)
-	if diff > time.Hour {
+	if time.Until(exp.Time) > time.Hour {
 		return token, nil
 	}
 
@@ -77,10 +84,18 @@ func RefreshJWTToken(token string, claims jwt.MapClaims) (string, error) {
 		return "", errors.New("failed to parse JWT token claims, uid not found")
 	}
 
-	jwt, err := JWTCreateToken(email, uid)
+	jwt, err := JWTCreateToken(env, email, uid)
 	if err != nil {
 		return "", err
 	}
 
 	return jwt, nil
+}
+
+func jwtSecretFromEnv(env *appenv.Env) (string, error) {
+	if env == nil || env.JWTSecret == "" {
+		return "", errors.New("jwt secret not configured")
+	}
+
+	return env.JWTSecret, nil
 }

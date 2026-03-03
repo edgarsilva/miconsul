@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"miconsul/internal/lib/appenv"
+
 	"github.com/gofiber/fiber/v3"
 	"gorm.io/gorm"
 )
@@ -19,6 +21,7 @@ type LocalStrategy struct {
 type LocalStrategyService interface {
 	GormDB() *gorm.DB
 	NewCookie(name, value string, validFor time.Duration) *fiber.Cookie
+	AppEnv() *appenv.Env
 }
 
 func NewLocalStrategy(c fiber.Ctx, s LocalStrategyService) *LocalStrategy {
@@ -47,7 +50,7 @@ func (s LocalStrategy) FindUserById(ctx context.Context, uid string) (model.User
 }
 
 func (ls LocalStrategy) authenticateWithJWT(c fiber.Ctx, token string) (model.User, error) {
-	claims, err := decodeJWTToken(token)
+	claims, err := decodeJWTToken(ls.service.AppEnv(), token)
 	if err != nil {
 		return model.User{}, errors.New("failed to validate JWT token")
 	}
@@ -62,11 +65,13 @@ func (ls LocalStrategy) authenticateWithJWT(c fiber.Ctx, token string) (model.Us
 		return user, errors.New("failed to find user with UID in JWT token")
 	}
 
-	refreshedJWT, err := RefreshJWTToken(token, claims)
+	refreshedJWT, err := RefreshJWTToken(ls.service.AppEnv(), token, claims)
 	if err != nil {
 		return user, errors.New("failed to refresh JWT token")
 	}
-	ls.refreshAuthCookie(c, refreshedJWT)
+	if refreshedJWT != token {
+		ls.refreshAuthCookie(c, refreshedJWT)
+	}
 
 	return user, nil
 }

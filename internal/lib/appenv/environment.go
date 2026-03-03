@@ -1,5 +1,7 @@
 package appenv
 
+import "fmt"
+
 type Environment string
 
 const (
@@ -32,4 +34,14 @@ func IsDevOrTest(environment Environment) bool {
 
 func IsProduction(environment Environment) bool {
 	return environment == EnvironmentProduction
+}
+
+func (e *Environment) UnmarshalText(text []byte) error {
+	value := Environment(string(text))
+	if !IsValidEnvironment(value) {
+		return fmt.Errorf("invalid environment %q", value)
+	}
+
+	*e = value
+	return nil
 }

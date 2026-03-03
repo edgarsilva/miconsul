@@ -79,7 +79,7 @@ func (s *service) HandleLogin(c fiber.Ctx) error {
 	case "application/json":
 		return c.SendStatus(fiber.StatusServiceUnavailable)
 	default:
-		jwt, err := JWTCreateToken(user.Email, user.ID)
+		jwt, err := JWTCreateToken(s.AppEnv(), user.Email, user.ID)
 		if err != nil {
 			return c.Redirect().To("/?msg=Failed to login, please try again")
 		}
@@ -166,7 +166,7 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 		return c.Redirect().To("/login?msg=Email confirmed, you should be able to login now")
 	}
 
-	jwt, err := JWTCreateToken(user.Email, user.ID)
+	jwt, err := JWTCreateToken(s.AppEnv(), user.Email, user.ID)
 	if err != nil {
 		return c.Redirect().To("/login?msg=Email confirmed, you should be able to login now")
 	}
