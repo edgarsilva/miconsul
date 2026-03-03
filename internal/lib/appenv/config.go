@@ -9,7 +9,7 @@ import (
 )
 
 type Env struct {
-	Environment string `env:"APP_ENV;oneof=development,test,staging,production"`
+	Environment Environment `env:"APP_ENV;oneof=development,test,staging,production"`
 
 	AppName     string `env:"APP_NAME"`
 	AppProtocol string `env:"APP_PROTOCOL"`

@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"errors"
-	utils "miconsul/internal/lib/handlerutils"
 	"miconsul/internal/model"
 	"strings"
 	"time"
@@ -19,6 +18,7 @@ type LocalStrategy struct {
 
 type LocalStrategyService interface {
 	GormDB() *gorm.DB
+	NewCookie(name, value string, validFor time.Duration) *fiber.Cookie
 }
 
 func NewLocalStrategy(c fiber.Ctx, s LocalStrategyService) *LocalStrategy {
@@ -66,7 +66,7 @@ func (ls LocalStrategy) authenticateWithJWT(c fiber.Ctx, token string) (model.Us
 	if err != nil {
 		return user, errors.New("failed to refresh JWT token")
 	}
-	refreshAuthCookie(c, refreshedJWT)
+	ls.refreshAuthCookie(c, refreshedJWT)
 
 	return user, nil
 }
@@ -81,6 +81,6 @@ func getToken(c fiber.Ctx) string {
 	return token
 }
 
-func refreshAuthCookie(c fiber.Ctx, jwt string) {
-	c.Cookie(utils.NewCookie("Auth", jwt, time.Hour*8))
+func (ls LocalStrategy) refreshAuthCookie(c fiber.Ctx, jwt string) {
+	c.Cookie(ls.service.NewCookie("Auth", jwt, time.Hour*8))
 }

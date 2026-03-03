@@ -30,6 +30,7 @@ type ProtectedResource interface {
 	Session(c fiber.Ctx) (*session.Session, error)
 	AppEnv() *appenv.Env
 	GormDB() *gorm.DB
+	NewCookie(name, value string, validFor time.Duration) *fiber.Cookie
 	Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span)
 }
 

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 
 	"miconsul/internal/database"
@@ -100,9 +101,7 @@ func (s *Server) validateCriticalDeps() error {
 
 func (s *Server) validateRuntimeConfig() error {
 	environment := s.Env.Environment
-	switch environment {
-	case "development", "test", "staging", "production":
-	default:
+	if !appenv.IsValidEnvironment(environment) {
 		return errors.New("APP_ENV is invalid")
 	}
 
@@ -121,9 +120,10 @@ func (s *Server) validateRuntimeConfig() error {
 func (s *Server) setupSessionStore() {
 	sessionPath := s.Env.SessionDBPath
 	storage := sqlite3.New(sessionConfig(sessionPath))
+	cookieSecure := appenv.IsProduction(s.Env.Environment) || strings.EqualFold(s.Env.AppProtocol, "https")
 	s.SessionStore = session.NewStore(session.Config{
 		Storage:      storage,
-		CookieSecure: true,
+		CookieSecure: cookieSecure,
 	})
 }
 
@@ -168,6 +168,13 @@ func (s *Server) setupSecurityMiddleware(app *fiber.App, cookieSecret string) {
 }
 
 func (s *Server) setupObservability(app *fiber.App) {
+	if s.Env != nil {
+		env := s.Env.Environment
+		if !appenv.IsDevOrTest(env) {
+			return
+		}
+	}
+
 	startedAt := time.Now()
 	app.Get("/metrics", func(c fiber.Ctx) error {
 		mem := runtime.MemStats{}
@@ -184,7 +191,7 @@ func (s *Server) setupObservability(app *fiber.App) {
 	})
 }
 
-func (s *Server) setupStaticFiles(app *fiber.App, environment string) {
+func (s *Server) setupStaticFiles(app *fiber.App, environment appenv.Environment) {
 	app.Use("/public", static.New("./public", staticConfig(environment)))
 }
 
@@ -416,6 +423,28 @@ func (s *Server) SessionRead(c fiber.Ctx, key string, defaultVal string) string 
 	}
 
 	return valStr
+}
+
+func (s *Server) NewCookie(name, value string, validFor time.Duration) *fiber.Cookie {
+	secure := false
+	if s != nil && s.Env != nil {
+		secure = appenv.IsProduction(s.Env.Environment) || strings.EqualFold(s.Env.AppProtocol, "https")
+	}
+
+	return &fiber.Cookie{
+		Name:     name,
+		Value:    value,
+		Expires:  time.Now().Add(validFor),
+		Secure:   secure,
+		HTTPOnly: true,
+	}
+}
+
+func (s *Server) InvalidateCookies(c fiber.Ctx, cookieNames ...string) {
+	c.ClearCookie(cookieNames...)
+	for _, name := range cookieNames {
+		c.Cookie(s.NewCookie(name, "", 0))
+	}
 }
 
 // CacheWrite writes a value to the Cache

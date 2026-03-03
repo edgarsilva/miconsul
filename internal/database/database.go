@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"miconsul/goose/migrations"
+	"miconsul/internal/lib/appenv"
 
 	"github.com/pressly/goose/v3"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
@@ -34,9 +35,13 @@ type Database struct {
 	*gorm.DB
 }
 
-func New(DBPath string) *Database {
-	dbLogger := NewLogger()
-	dsn := DBPath + PragmaOpts
+func New(env *appenv.Env) *Database {
+	if env == nil {
+		log.Panic("Failed to connect database: environment config is nil")
+	}
+
+	dbLogger := NewLogger(env)
+	dsn := env.DBPath + PragmaOpts
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
 		Logger:      dbLogger,
 		PrepareStmt: true,
@@ -87,7 +92,7 @@ func (d *Database) Close() error {
 	return sqlDB.Close()
 }
 
-func ApplyMigrations(database *Database) error {
+func ApplyMigrations(database *Database, env *appenv.Env) error {
 	fmt.Println(" Applying migrations...")
 	if database == nil {
 		return fmt.Errorf("database is not initialized")
@@ -101,8 +106,7 @@ func ApplyMigrations(database *Database) error {
 		return fmt.Errorf("database is not initialized")
 	}
 
-	// Usage
-	if os.Getenv("APP_ENV") == "development" || os.Getenv("APP_ENV") == "production" {
+	if env != nil && (appenv.IsDevelopment(env.Environment) || appenv.IsProduction(env.Environment)) {
 		logger, _ := zap.NewProduction()
 		sugar := logger.Sugar()
 		goose.SetLogger(ZapLogger{l: sugar})
@@ -124,10 +128,10 @@ func ApplyMigrations(database *Database) error {
 	return nil
 }
 
-func NewLogger() logger.Interface {
+func NewLogger(env *appenv.Env) logger.Interface {
 	loglevel := logger.Warn
 	hideParamValues := true
-	if os.Getenv("APP_ENV") == "development" {
+	if env != nil && appenv.IsDevelopment(env.Environment) {
 		loglevel = logger.Info
 		hideParamValues = false
 	}

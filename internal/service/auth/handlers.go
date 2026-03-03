@@ -2,12 +2,12 @@ package auth
 
 import (
 	"errors"
-	"miconsul/internal/lib/handlerutils"
+	"time"
+
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/mailer"
 	"miconsul/internal/model"
 	"miconsul/internal/view"
-	"time"
 
 	"github.com/gofiber/fiber/v3"
 	"golang.org/x/crypto/bcrypt"
@@ -42,6 +42,9 @@ func (s *service) HandleLoginPage(c fiber.Ctx) error {
 //
 // POST: /login
 func (s *service) HandleLogin(c fiber.Ctx) error {
+	ctx, span := s.Trace(c.Context(), "auth/handlers:HandleLogin")
+	defer span.End()
+
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme))
 	respErr := errors.New("incorrect email and password combination")
@@ -50,9 +53,6 @@ func (s *service) HandleLogin(c fiber.Ctx) error {
 	if err != nil {
 		return view.Render(c, view.LoginPage(email, "", respErr, vc))
 	}
-
-	ctx, span := s.Trace(c.Context(), "auth/handlers:HandleLogin")
-	defer span.End()
 
 	user, err := s.userFetch(ctx, email)
 	if err != nil {
@@ -83,7 +83,7 @@ func (s *service) HandleLogin(c fiber.Ctx) error {
 		if err != nil {
 			return c.Redirect().To("/?msg=Failed to login, please try again")
 		}
-		c.Cookie(handlerutils.NewCookie("Auth", jwt, time.Hour*validFor))
+		c.Cookie(s.NewCookie("Auth", jwt, time.Hour*validFor))
 		return c.Redirect().To("/?timeframe=day")
 	}
 }
@@ -171,7 +171,7 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 		return c.Redirect().To("/login?msg=Email confirmed, you should be able to login now")
 	}
 
-	c.Cookie(handlerutils.NewCookie("Auth", jwt, time.Hour*24))
+	c.Cookie(s.NewCookie("Auth", jwt, time.Hour*24))
 	return c.Redirect().To("/login?msg=Email confirmed, you should be able to login now")
 }
 
@@ -181,7 +181,7 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 // ALL: /logout
 func (s *service) HandleLogout(c fiber.Ctx) error {
 	s.SessionDestroy(c)
-	handlerutils.InvalidateCookies(c, "Auth", "JWT")
+	s.InvalidateCookies(c, "Auth", "JWT")
 
 	redirectURL := "/login"
 	if logtoEnabled(s.Env) {

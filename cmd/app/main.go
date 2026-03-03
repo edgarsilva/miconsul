@@ -47,7 +47,7 @@ func main() {
 	defer stop()
 
 	fmt.Println(" Connecting to database...")
-	db := database.New(env.DBPath)
+	db := database.New(env)
 	defer func() {
 		fmt.Println("🔌 Closing database connections...")
 		if err := db.Close(); err != nil {
@@ -56,7 +56,7 @@ func main() {
 	}()
 
 	fmt.Println(" Applying database migrations...")
-	if err := database.ApplyMigrations(db); err != nil {
+	if err := database.ApplyMigrations(db, env); err != nil {
 		log.Printf("failed to apply database migrations: %v", err)
 		exitCode = 1
 		return

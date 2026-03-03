@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"miconsul/internal/lib/appenv"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/helmet"
 	"github.com/gofiber/fiber/v3/middleware/limiter"
@@ -34,23 +36,31 @@ func limiterConfig() limiter.Config {
 	}
 }
 
-func staticConfig(appEnv string) static.Config {
+func staticConfig(appEnv appenv.Environment) static.Config {
 	return static.Config{
 		Compress:      true,
 		ByteRange:     true,
 		Browse:        false,
 		IndexNames:    []string{},
 		CacheDuration: staticCacheDuration(appEnv),
-		MaxAge:        3600,
+		MaxAge:        staticMaxAge(appEnv),
 	}
 }
 
-func staticCacheDuration(appEnv string) time.Duration {
-	if appEnv == "development" {
-		return -10
+func staticCacheDuration(appEnv appenv.Environment) time.Duration {
+	if appenv.IsDevelopment(appEnv) {
+		return 0
 	}
 
 	return 300 * time.Second
+}
+
+func staticMaxAge(appEnv appenv.Environment) int {
+	if appenv.IsDevelopment(appEnv) {
+		return 0
+	}
+
+	return 3600
 }
 
 func sessionConfig(path string) sqlite3.Config {
@@ -72,9 +82,9 @@ func sessionConfig(path string) sqlite3.Config {
 		Table:           "fiber_storage",
 		Reset:           false,
 		GCInterval:      10 * time.Second,
-		MaxOpenConns:    100,
-		MaxIdleConns:    100,
-		ConnMaxLifetime: 1 * time.Second,
+		MaxOpenConns:    10,
+		MaxIdleConns:    10,
+		ConnMaxLifetime: 5 * time.Minute,
 	}
 }
 
@@ -107,7 +117,6 @@ func fiberAppErrorHandler(ctx fiber.Ctx, err error) error {
 	}
 
 	span := trace.SpanFromContext(ctx.Context())
-	defer span.End()
 
 	if err != nil {
 		span.RecordError(err)
