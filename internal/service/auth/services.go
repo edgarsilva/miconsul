@@ -63,7 +63,7 @@ func (s *service) signup(ctx context.Context, email string, password string) err
 		return errors.New("failed to save email or password, try again")
 	}
 
-	token := randToken()
+	token := newConfirmEmailToken()
 	_, err = s.userCreate(ctx, email, string(pwd), token)
 	if err != nil {
 		return errors.New("failed to save email or password, try again")

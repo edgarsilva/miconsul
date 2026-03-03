@@ -49,7 +49,7 @@ func (s *service) HandleLogin(c fiber.Ctx) error {
 	vc, _ := view.NewCtx(c, view.WithTheme(theme))
 	respErr := errors.New("incorrect email and password combination")
 
-	email, password, err := authParams(c)
+	email, password, err := credentialsFromRequest(c)
 	if err != nil {
 		return view.Render(c, view.LoginPage(email, "", respErr, vc))
 	}
@@ -115,7 +115,7 @@ func (s *service) HandleSignupPage(c fiber.Ctx) error {
 func (s *service) HandleSignup(c fiber.Ctx) error {
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme))
-	email, password, err := authParams(c)
+	email, password, err := credentialsFromRequest(c)
 	if err != nil {
 		return view.Render(c, view.SignupPage(vc, email, err))
 	}
@@ -128,7 +128,7 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 
 	err = s.userPendingConfirmation(c.Context(), email)
 	if err != nil {
-		token := randToken()
+		token := newConfirmEmailToken()
 		s.userUpdateConfirmToken(c.Context(), email, token)
 		go mailer.ConfirmEmail(email, token)
 		return c.Redirect().To("/login?msg=check your inbox, we'll re-send a confirmation link")
@@ -216,7 +216,7 @@ func (s *service) HandleResetPasswordPage(c fiber.Ctx) error {
 // POST: /resetpassword
 func (s *service) HandleResetPassword(c fiber.Ctx) error {
 	vc, _ := view.NewCtx(c)
-	email, err := resetPasswordEmailParam(c)
+	email, err := resetPasswordEmailFromRequest(c)
 	if err != nil {
 		errView := errors.New("email can't be blank")
 		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
@@ -228,7 +228,7 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
 	}
 
-	token, err := resetPasswordToken()
+	token, err := newResetPasswordToken()
 	if err != nil {
 		return c.Redirect().To("/resetpassword")
 	}
@@ -271,7 +271,7 @@ func (s *service) HandleResetPasswordChange(c fiber.Ctx) error {
 //
 // POST: /resetpassword/update
 func (s *service) HandleResetPasswordUpdate(c fiber.Ctx) error {
-	email, err := resetPasswordEmailParam(c)
+	email, err := resetPasswordEmailFromRequest(c)
 	if err != nil {
 		return c.Redirect().To("/resetpassword?msg=something went wrong with the email, try again!")
 	}
