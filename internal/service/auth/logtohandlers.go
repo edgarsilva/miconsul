@@ -11,6 +11,7 @@ import (
 )
 
 // HandleLogtoSignin redirects to Logto sign-in page
+// GET: /logto/signin
 func (s *service) HandleLogtoSignin(c fiber.Ctx) error {
 	logtoClient, saveSess, err := s.newLogtoClient(c)
 	if err != nil {
@@ -42,6 +43,7 @@ func (s *service) HandleLogtoSignin(c fiber.Ctx) error {
 }
 
 // HandleLogtoCallback handles the Logto callback/webhook after login
+// GET: /logto/callback
 func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
 	logtoClient, saveSess, err := s.newLogtoClient(c)
 	if err != nil {
@@ -92,6 +94,8 @@ func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
 	return c.Redirect().Status(http.StatusSeeOther).To("/")
 }
 
+// HandleLogtoSignout redirects to Logto sign-out flow.
+// GET: /logto/signout
 func (s *service) HandleLogtoSignout(c fiber.Ctx) error {
 	if err := s.SessionWrite(c, "logto_skip_redirect", "1"); err != nil {
 		log.Warn("failed to mark login redirect skip before logto signout:", err)
@@ -126,6 +130,7 @@ func (s *service) HandleLogtoSignout(c fiber.Ctx) error {
 }
 
 // HandleLogtoPage renders the Logto page with two links to sign in and sign out
+// GET: /logto
 func (s *service) HandleLogtoPage(c fiber.Ctx) error {
 	logtoClient, saveSess, err := s.newLogtoClient(c)
 	if err != nil {

@@ -18,9 +18,8 @@ const (
 	QUERY_LIMIT int = 10
 )
 
-// HandleClinicsPage renders the clinics page HTML
-//
-//	GET: /clinics
+// HandleClinicsIndexPage renders the clinics index page.
+// GET: /clinics
 func (s *service) HandleClinicsIndexPage(c fiber.Ctx) error {
 	clinics, err := s.FindClinicsByTerm(c, "")
 	if err != nil {
@@ -32,8 +31,7 @@ func (s *service) HandleClinicsIndexPage(c fiber.Ctx) error {
 }
 
 // HandleClinicsNewPage renders the new clinic HTML page
-//
-//	GET: /clinics/new
+// GET: /clinics/new
 func (s *service) HandleClinicsNewPage(c fiber.Ctx) error {
 	clinic := model.Clinic{}
 	vc, _ := view.NewCtx(c)
@@ -41,8 +39,7 @@ func (s *service) HandleClinicsNewPage(c fiber.Ctx) error {
 }
 
 // HandleClinicsShowPage renders the clinics page HTML
-//
-//	GET: /clinics/:id
+// GET: /clinics/:id
 func (s *service) HandleClinicsShowPage(c fiber.Ctx) error {
 	id := c.Params("id", "")
 	if id == "" {
@@ -59,8 +56,7 @@ func (s *service) HandleClinicsShowPage(c fiber.Ctx) error {
 }
 
 // HandleClinicsCreate inserts a new clinic record for the given user
-//
-//	POST: /clinics
+// POST: /clinics
 func (s *service) HandleClinicsCreate(c fiber.Ctx) error {
 	cu, _ := s.CurrentUser(c)
 	clinic := model.Clinic{
@@ -92,9 +88,8 @@ func (s *service) HandleClinicsCreate(c fiber.Ctx) error {
 }
 
 // HandleClinicsUpdate updates a clinic record for the CurrentUser
-//
-//	PATCH: /clinics/:id
-//	POST: /clinics/:id/patch
+// PATCH: /clinics/:id
+// POST: /clinics/:id/patch
 func (s *service) HandleClinicsUpdate(c fiber.Ctx) error {
 	clinicID := cmp.Or(c.Params("id", ""), c.FormValue("id", ""))
 	if clinicID == "" {
@@ -133,11 +128,10 @@ func (s *service) HandleClinicsUpdate(c fiber.Ctx) error {
 }
 
 // HandleClinicsDelete deletes a clinic record from the DB
-//
 // DELETE: /clinics/:id
 // POST: /clinics/:id/delete
 func (s *service) HandleClinicsDelete(c fiber.Ctx) error {
-	clinicID := c.Params("ID", "")
+	clinicID := c.Params("id", "")
 	if clinicID == "" {
 		return c.Redirect().Status(fiber.StatusSeeOther).To("/clinics?msg=can't delete without an id")
 	}
@@ -162,10 +156,9 @@ func (s *service) HandleClinicsDelete(c fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusOK)
 }
 
-// HandleClinicIndexSearch searches patients and returns an HTML fragment to be
+// HandleClinicsIndexSearch searches clinics and returns an HTML fragment to be
 // replacesd in the HTMX active search
-//
-// POST: /clinics/search
+// GET: /clinics/search
 func (s *service) HandleClinicsIndexSearch(c fiber.Ctx) error {
 	term := c.Query("term", "")
 	if len(term) > 0 && len(term) < 3 {
@@ -181,6 +174,8 @@ func (s *service) HandleClinicsIndexSearch(c fiber.Ctx) error {
 	return view.Render(c, view.ClinicsList(vc, clinics))
 }
 
+// HandleMockManyClinics creates many mock clinics for admin/testing flows.
+// GET: /clinics/makeaton
 func (s *service) HandleMockManyClinics(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {

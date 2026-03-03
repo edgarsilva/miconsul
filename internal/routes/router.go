@@ -125,7 +125,7 @@ func AppointmentRoutes(s *server.Server) {
 	g.Get("/:id/commence", a.HandleCommencePage)
 	g.Post("/:id/conclude", a.HandleConclude)
 	g.Post("/:id/cancel", a.HandleCancel)
-	g.Post("/appointments/search/clinics", a.HandleSearchClinics)
+	g.Post("/search/clinics", a.HandleSearchClinics)
 
 	g.Post("/", a.HandleCreate)
 
@@ -153,15 +153,16 @@ func UserRoutes(s *server.Server) {
 
 	// Pages
 	u.Get("/profile", mw.MustAuthenticate(u), u.HandleProfilePage)
-	u.Post("/profile", mw.MustAuthenticate(u), u.HandleProfilePage)
+	u.Post("/profile", mw.MustAuthenticate(u), u.HandleUpdateProfile)
 
 	// Admin only
 	u.Get("/admin/users", mw.MustBeAdmin(u), u.HandleIndexPage)
 	u.Get("/admin/users/:id", mw.MustBeAdmin(u), u.HandleEditPage)
 
 	// API
-	api := u.Group("/api/users")
+	api := u.Group("/api/users", mw.MustBeAdmin(u))
 	api.Get("", u.HandleAPIUsers)
+	api.Get("/make/:n", u.HandleAPIMakeUsers)
 }
 
 func AdminRoutes(s *server.Server) {

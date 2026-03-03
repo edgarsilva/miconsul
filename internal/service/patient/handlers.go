@@ -18,7 +18,6 @@ const (
 )
 
 // HandlePatientsPage renders the patients page HTML
-//
 // GET: /patients
 func (s *service) HandlePatientsPage(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
@@ -41,8 +40,7 @@ func (s *service) HandlePatientsPage(c fiber.Ctx) error {
 	return view.Render(c, view.PatientsPage(vc, patients))
 }
 
-// HandlePatientsIndexSearch GlobalFTS search for patients index page.
-//
+// HandlePatientsIndexSearch runs the index search on patients.
 // GET: /patients/search
 func (s *service) HandlePatientsIndexSearch(c fiber.Ctx) error {
 	term := c.Query("term", "")
@@ -60,8 +58,7 @@ func (s *service) HandlePatientsIndexSearch(c fiber.Ctx) error {
 	return view.Render(c, view.PatientsList(vc, patients))
 }
 
-// HandlePatientFormPage renders the patients page HTML
-//
+// HandlePatientFormPage renders the patient create/edit page.
 // GET: /patients/:id
 func (s *service) HandlePatientFormPage(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
@@ -87,7 +84,6 @@ func (s *service) HandlePatientFormPage(c fiber.Ctx) error {
 }
 
 // HandleCreatePatient inserts a new patient record for the CurrentUser
-//
 // POST: /patients
 func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
@@ -133,7 +129,6 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 }
 
 // HandleUpdatePatient updates a patient record for the CurrentUser
-//
 // PATCH: /patients/:id
 // POST: /patients/:id/patch
 func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
@@ -183,7 +178,6 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 }
 
 // HandleRemovePic removes the ProfilePic from the patient
-//
 // PATCH: /patients/:id/removepic
 // POST: /patients/:id/removepic
 func (s *service) HandleRemovePic(c fiber.Ctx) error {
@@ -192,7 +186,7 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 		return c.Redirect().To("/login")
 	}
 
-	patientID := c.Params("ID", "")
+	patientID := c.Params("id", "")
 	if patientID == "" {
 		patientID = c.FormValue("id", "")
 	}
@@ -222,8 +216,7 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 	return view.Render(c, view.PatientFormPage(patient, vc))
 }
 
-// HandleDeletePatient deletes a patient record from the DB
-//
+// HandleDeletePatient deletes a patient record from the DB.
 // DELETE: /patients/:id
 // POST: /patients/:id/delete
 func (s *service) HandleDeletePatient(c fiber.Ctx) error {
@@ -232,7 +225,7 @@ func (s *service) HandleDeletePatient(c fiber.Ctx) error {
 		return c.Redirect().Status(fiber.StatusSeeOther).To("/login")
 	}
 
-	patientID := c.Params("ID", "")
+	patientID := c.Params("id", "")
 	if patientID == "" {
 		return c.Redirect().Status(fiber.StatusSeeOther).To("/patients?msg=can't delete without an id")
 	}
@@ -260,7 +253,6 @@ func (s *service) HandleDeletePatient(c fiber.Ctx) error {
 
 // HandlePatientSearch searches patients and returns an HTML fragment to be
 // replacesd in the HTMX active search
-//
 // POST: /patients/search
 func (s *service) HandlePatientSearch(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
@@ -285,6 +277,8 @@ func (s *service) HandlePatientSearch(c fiber.Ctx) error {
 	return view.Render(c, view.PatientSearchResults(patients, vc))
 }
 
+// HandleMockManyPatients creates many mock patients for admin/testing flows.
+// GET: /patients/makeaton
 func (s *service) HandleMockManyPatients(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
@@ -318,6 +312,8 @@ func (s *service) HandleMockManyPatients(c fiber.Ctx) error {
 	return c.SendString("Rowsaffected:" + strconv.Itoa(int(result.RowsAffected)))
 }
 
+// HandlePatientProfilePicImgSrc serves a patient's profile picture file.
+// GET: /patients/:id/profilepic/:filename
 func (s *service) HandlePatientProfilePicImgSrc(c fiber.Ctx) error {
 	id := c.Params("id", "")
 	filename := c.Params("filename", "")

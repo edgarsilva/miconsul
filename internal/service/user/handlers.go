@@ -10,17 +10,11 @@ import (
 	"syreclabs.com/go/faker"
 )
 
-// HandleIndexPage list all users in a table *the index*
-//
+// HandleIndexPage renders the admin users index page.
 // GET: /admin/users
 func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	ctx, span := s.Trace(c.Context(), "user/handlers:HandleIndexPage")
 	defer span.End()
-
-	cu, err := s.CurrentUser(c)
-	if err != nil || cu.Role != model.UserRoleAdmin {
-		return c.Redirect().To("/")
-	}
 
 	users := []model.User{}
 	users, _ = gorm.G[model.User](s.DB.GormDB()).Order("id DESC").Limit(10).Find(ctx)
@@ -29,14 +23,10 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	return view.Render(c, view.UsersIndexPage(vc, users))
 }
 
-// HandleEditPage shows the edit/new form for users
-//
+// HandleEditPage renders the user edit page for admins.
 // GET: /admin/users/:id
 func (s *service) HandleEditPage(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil || cu.Role != model.UserRoleAdmin {
-		return c.Redirect().To("/")
-	}
+	cu, _ := s.CurrentUser(c)
 
 	userID := c.Params("id", "")
 	if userID == "" {
@@ -47,31 +37,23 @@ func (s *service) HandleEditPage(c fiber.Ctx) error {
 	return view.Render(c, view.UserEditPage(vc, cu))
 }
 
-// HandleProfilePage show the CurrentUser profile page
-//
+// HandleProfilePage renders the current user's profile page.
 // GET: /profile
 func (s *service) HandleProfilePage(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return c.Redirect().To("/")
-	}
+	cu, _ := s.CurrentUser(c)
 
 	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.UserEditPage(vc, cu))
 }
 
-// HandleProfilePage show the CurrentUser profile page
-//
-// GET: /profile
+// HandleUpdateProfile updates the current user's profile data.
+// POST: /profile
 func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return c.Redirect().To("/")
-	}
+	cu, _ := s.CurrentUser(c)
 
 	userUpds := model.User{}
 	c.Bind().Body(&userUpds)
-	_, err = gorm.G[model.User](s.DB.GormDB()).Where("id = ?", cu.ID).Updates(c.Context(), userUpds)
+	_, err := gorm.G[model.User](s.DB.GormDB()).Where("id = ?", cu.ID).Updates(c.Context(), userUpds)
 	if err != nil {
 		redirectPath := "/profile?err=failed to update profile&level=error"
 		if !s.IsHTMX(c) {
@@ -83,20 +65,23 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 	return view.Render(c, view.UserEditPage(vc, userUpds))
 }
 
-// handleApiUsers returns all users as JSON
-//
-// GET: /api/todos - Get all todos
-func (s *service) HandleGetUsers(c fiber.Ctx) error {
-	users, _ := gorm.G[model.User](s.DB.GormDB()).Limit(10).Find(c.Context())
+// HandleAPIUsers returns users as JSON for admin API clients.
+// GET: /api/users
+func (s *service) HandleAPIUsers(c fiber.Ctx) error {
+	users, err := gorm.G[model.User](s.DB.GormDB()).Limit(10).Find(c.Context())
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
 
 	res := struct{ Users []model.User }{
 		Users: users,
 	}
-
 	return c.Status(fiber.StatusOK).JSON(res)
 }
 
-func (s *service) HandleMakeUsers(c fiber.Ctx) error {
+// HandleAPIMakeUsers creates mock users for admin testing.
+// GET: /api/users/make/:n
+func (s *service) HandleAPIMakeUsers(c fiber.Ctx) error {
 	n, err := strconv.Atoi(c.Params("n"))
 	if err != nil {
 		n = 10
@@ -116,17 +101,4 @@ func (s *service) HandleMakeUsers(c fiber.Ctx) error {
 	}
 
 	return c.SendStatus(fiber.StatusOK)
-}
-
-// API
-//
-// handleAPIUsers returns all users as JSON
-// GET: /api/todos - Get all todos
-func (s *service) HandleAPIUsers(c fiber.Ctx) error {
-	users, _ := gorm.G[model.User](s.DB.GormDB()).Limit(10).Find(c.Context())
-
-	res := struct{ Users []model.User }{
-		Users: users,
-	}
-	return c.Status(fiber.StatusOK).JSON(res)
 }

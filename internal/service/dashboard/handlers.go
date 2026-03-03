@@ -11,8 +11,8 @@ import (
 )
 
 // HandleDashboardPage renders the home dashboard
-//
-//	GET: / or /dashboard
+// GET: /
+// GET: /dashboard
 func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {

@@ -141,9 +141,8 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 	return c.Redirect().To("/login?msg=check your inbox to confirm your email")
 }
 
-// HandleEmailConfirmation creates a new user if email and password are valid
-//
-// POST: /signup/confirmemail
+// HandleSignupConfirmEmail validates an email confirmation token.
+// GET: /signup/confirm/:token
 func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 	token := c.Params("token", "")
 	if token == "" {
@@ -175,9 +174,7 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 	return c.Redirect().To("/login?msg=Email confirmed, you should be able to login now")
 }
 
-// HandleLogout calles sessionDestroy and invalidateCookies then redirects to
-// /login
-//
+// HandleLogout destroys session state and redirects to login.
 // ALL: /logout
 func (s *service) HandleLogout(c fiber.Ctx) error {
 	s.SessionDestroy(c)
@@ -196,8 +193,7 @@ func (s *service) HandleLogout(c fiber.Ctx) error {
 	return c.Redirect().To(redirectURL)
 }
 
-// HandlePageResetPassword renders the HTML reset password page/form
-//
+// HandleResetPasswordPage renders the reset password request page.
 // GET: /resetpassword
 func (s *service) HandleResetPasswordPage(c fiber.Ctx) error {
 	vc, _ := view.NewCtx(c)
@@ -210,9 +206,8 @@ func (s *service) HandleResetPasswordPage(c fiber.Ctx) error {
 	return view.Render(c, view.ResetPasswordPage(vc, "", msg, "", nil))
 }
 
-// HandleResetPasswordForm sends a new reset password link to the email provided
+// HandleResetPassword sends a reset password link to the provided email.
 // as query param, url param or body param
-//
 // POST: /resetpassword
 func (s *service) HandleResetPassword(c fiber.Ctx) error {
 	vc, _ := view.NewCtx(c)
@@ -245,9 +240,7 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 	return view.Render(c, view.ResetPasswordPage(vc, email, "", "check your email for a reset password link", nil))
 }
 
-// HandleResetPasswordChange renders the change password form if toke/email
-// combo ase valid
-//
+// HandleResetPasswordChange renders the password change page for a valid token.
 // GET: /resetpassword/change/:token
 func (s *service) HandleResetPasswordChange(c fiber.Ctx) error {
 	token := c.Params("token", "")
@@ -268,8 +261,7 @@ func (s *service) HandleResetPasswordChange(c fiber.Ctx) error {
 }
 
 // HandleResetPasswordUpdate updates the user password in the DB
-//
-// POST: /resetpassword/update
+// POST: /resetpassword/change
 func (s *service) HandleResetPasswordUpdate(c fiber.Ctx) error {
 	email, err := resetPasswordEmailFromRequest(c)
 	if err != nil {
@@ -313,9 +305,8 @@ func (s *service) HandleResetPasswordUpdate(c fiber.Ctx) error {
 	return c.Redirect().To("/login")
 }
 
-// HandleValidate validates the uses auth session is still valid
-//
-// POST: /auth/validate
+// HandleValidate validates the current authentication session.
+// POST: /api/auth/validate
 func (s *service) HandleValidate(c fiber.Ctx) error {
 	_, err := s.CurrentUser(c)
 	if err != nil {
@@ -326,23 +317,13 @@ func (s *service) HandleValidate(c fiber.Ctx) error {
 }
 
 // HandleShowUser returns a JSON model.User if the session is valid
-//
-// GET: /auth/show
+// GET: /api/auth/protected
 func (s *service) HandleShowUser(c fiber.Ctx) error {
-	ctx, span := s.Trace(c.Context(), "auth/handlers:HandleShowUser")
+	_, span := s.Trace(c.Context(), "auth/handlers:HandleShowUser")
 	defer span.End()
 
-	id := c.Locals("uid")
-	if id == nil {
-		return c.SendStatus(fiber.StatusUnauthorized)
-	}
-
-	if len(id.(string)) == 0 {
-		return c.SendStatus(fiber.StatusUnauthorized)
-	}
-
-	user, err := gorm.G[model.User](s.DB.GormDB()).Where("id = ?", id).Take(ctx)
-	if err != nil {
+	user, err := s.CurrentUser(c)
+	if err != nil || !user.IsLoggedIn() {
 		return c.SendStatus(fiber.StatusUnauthorized)
 	}
 
