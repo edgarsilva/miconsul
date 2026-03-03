@@ -14,7 +14,6 @@ import (
 )
 
 type LocalStrategy struct {
-	Ctx     fiber.Ctx
 	service LocalStrategyService
 }
 
@@ -24,9 +23,8 @@ type LocalStrategyService interface {
 	AppEnv() *appenv.Env
 }
 
-func NewLocalStrategy(c fiber.Ctx, s LocalStrategyService) *LocalStrategy {
+func NewLocalStrategy(s LocalStrategyService) *LocalStrategy {
 	return &LocalStrategy{
-		Ctx:     c,
 		service: s,
 	}
 }

@@ -17,10 +17,7 @@ import (
 )
 
 type LogtoStrategy struct {
-	Logto    *logto.LogtoClient
-	SaveSess func() error
-	SessErr  error
-	deps     LogtoStrategyDeps
+	deps LogtoStrategyDeps
 }
 
 type LogtoStrategyDeps interface {
@@ -30,39 +27,29 @@ type LogtoStrategyDeps interface {
 	LogtoConfig() *logto.LogtoConfig
 }
 
-func NewLogtoStrategy(c fiber.Ctx, deps LogtoStrategyDeps) *LogtoStrategy {
-	sess, err := deps.Session(c)
-	if err != nil {
-		return &LogtoStrategy{
-			SaveSess: func() error { return nil },
-			SessErr:  err,
-			deps:     deps,
-		}
-	}
-
-	client, saveSess := NewLogtoClient(sess, deps.LogtoConfig())
-
+func NewLogtoStrategy(deps LogtoStrategyDeps) *LogtoStrategy {
 	return &LogtoStrategy{
-		Logto:    client,
-		SaveSess: saveSess,
-		deps:     deps,
+		deps: deps,
 	}
 }
 
 func (s *LogtoStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
-	if s.SessErr != nil {
-		return model.User{}, s.SessErr
+	sess, err := s.deps.Session(c)
+	if err != nil {
+		return model.User{}, err
 	}
+
+	logtoClient, saveSess := NewLogtoClient(sess, s.deps.LogtoConfig())
 
 	ctx, span := s.Trace(c.Context(), "auth/services:logtoStrategy")
 	defer span.End()
 	defer func() {
-		if err := s.SaveSess(); err != nil {
+		if err := saveSess(); err != nil {
 			log.Warn("failed to save logto session in auth strategy:", err)
 		}
 	}()
 
-	claims, err := s.Logto.GetIdTokenClaims()
+	claims, err := logtoClient.GetIdTokenClaims()
 	if err != nil {
 		return model.User{}, err
 	}

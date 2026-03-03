@@ -276,7 +276,7 @@ func deferLogtoSessionSave(route string, saveSess func() error) {
 // Authenticate an user based on Req Ctx Cookie 'Auth'
 // cookies
 func Authenticate(c fiber.Ctx, resource ProtectedResource) (model.User, error) {
-	strategy := selectStrategy(c, resource)
+	strategy := selectStrategy(resource)
 	user, err := strategy.Authenticate(c)
 	if err != nil {
 		return model.User{}, err
@@ -285,12 +285,12 @@ func Authenticate(c fiber.Ctx, resource ProtectedResource) (model.User, error) {
 	return user, nil
 }
 
-func selectStrategy(c fiber.Ctx, resource ProtectedResource) AuthStrategy {
+func selectStrategy(resource ProtectedResource) AuthStrategy {
 	switch {
 	case logtoEnabled(resource.AppEnv()):
-		return NewLogtoStrategy(c, strategyDeps{ProtectedResource: resource})
+		return NewLogtoStrategy(strategyDeps{ProtectedResource: resource})
 	default:
-		return NewLocalStrategy(c, resource)
+		return NewLocalStrategy(resource)
 	}
 }
 
