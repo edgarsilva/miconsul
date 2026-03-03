@@ -334,16 +334,16 @@ func (s *service) HandleShowUser(c fiber.Ctx) error {
 
 	id := c.Locals("uid")
 	if id == nil {
-		return c.Status(fiber.StatusForbidden).SendString("Forbidden")
+		return c.SendStatus(fiber.StatusUnauthorized)
 	}
 
 	if len(id.(string)) == 0 {
-		return c.Status(fiber.StatusForbidden).SendString("Forbidden")
+		return c.SendStatus(fiber.StatusUnauthorized)
 	}
 
 	user, err := gorm.G[model.User](s.DB.GormDB()).Where("id = ?", id).Take(ctx)
 	if err != nil {
-		return c.Status(fiber.StatusForbidden).SendString("Forbidden")
+		return c.SendStatus(fiber.StatusUnauthorized)
 	}
 
 	res := struct{ User model.User }{
