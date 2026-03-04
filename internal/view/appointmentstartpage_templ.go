@@ -323,7 +323,7 @@ func AppointmentStart(appointment model.Appointment, vc *Ctx) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var16 templ.SafeURL
-		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL("/appointments/" + appointment.ID + "/conclude"))
+		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL("/appointments/" + appointment.ID + "/complete"))
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentstartpage.templ`, Line: 106, Col: 72}
 		}
@@ -336,7 +336,7 @@ func AppointmentStart(appointment model.Appointment, vc *Ctx) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var17 string
-		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs("/appointments/" + appointment.ID + "/conclude")
+		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs("/appointments/" + appointment.ID + "/complete")
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentstartpage.templ`, Line: 107, Col: 62}
 		}

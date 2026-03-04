@@ -103,8 +103,8 @@ templ AppointmentStart(appointment model.Appointment, vc *Ctx) {
 				<form
 					id="patch_appointment"
 					method="POST"
-					action={ templ.URL("/appointments/" + appointment.ID + "/conclude") }
-					hx-post={ "/appointments/" + appointment.ID + "/conclude" }
+					action={ templ.URL("/appointments/" + appointment.ID + "/complete") }
+					hx-post={ "/appointments/" + appointment.ID + "/complete" }
 				>
 					<div class="px-4 py-6 sm:p-8">
 						<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
