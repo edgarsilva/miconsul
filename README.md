@@ -90,6 +90,21 @@ It will install:
 -   goose: for migrations
 -   templ: to build/compile templ files into go code
 
+### DB - Seed Data
+
+Create deterministic baseline data (including an admin user) and randomized bulk
+records for local testing:
+
+```bash
+make db/seed
+```
+
+You can also run the seeder command directly and customize amounts:
+
+```bash
+go run -tags fts5 cmd/seed/main.go --users=2 --clinics=10 --patients=20 --appointments=40
+```
+
 ```bash
 make install
 ```

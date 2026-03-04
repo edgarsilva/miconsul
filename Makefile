@@ -174,6 +174,9 @@ migrations/apply: ## Apply migrations with goose
 
 db/migrate: migrations/apply ## Alias for migrations/apply
 
+db/seed: ## Run DB seeds (baseline + randomized bulk)
+	go run -tags fts5 cmd/seed/main.go
+
 .PHONY: migrations/create/%
 migrations/create/%: ## Create a migration file: make migrations/create/add_column_to_table
 	${GOBIN}/goose create $* sql
@@ -214,6 +217,6 @@ docker/build: ## Rebuild the app image
 	ai/templ-sync \
 	build start run air/watch dev \
 	test test/unit test/integration clean \
-	db/create db/delete db/setup db/dump_schema \
+	db/create db/delete db/setup db/dump_schema db/seed \
 	migrations/apply migrate migrations/create migrations/status migrations/rollback migrations/redo \
 	docker/up docker/detached docker/down docker/logs docker/build
