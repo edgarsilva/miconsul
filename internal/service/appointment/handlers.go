@@ -116,12 +116,11 @@ func (s *service) HandleStartPage(c fiber.Ctx) error {
 	}
 
 	patient, err := s.PatientForStartPage(c.Context(), cu.ID, appointment.PatientID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.Set("HX-Location", "/appointments?toast=The appointment patient does not exist&level=warning")
+		return s.Redirect(c, "/appointments?toast=The appointment patient does not exist&level=warning")
+	}
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.Set("HX-Location", "/appointments?toast=The appointment patient does not exist&level=warning")
-			return s.Redirect(c, "/appointments?toast=The appointment patient does not exist&level=warning")
-		}
-
 		c.Set("HX-Location", "/appointments?toast=Failed to load appointment patient&level=error")
 		return s.Redirect(c, "/appointments?toast=Failed to load appointment patient&level=error")
 	}
@@ -450,25 +449,14 @@ func (s *service) HandlePatientCancelPage(c fiber.Ctx) error {
 	appointmentID := c.Params("id", "")
 	token := c.Params("token", "")
 	if appointmentID == "" || token == "" {
-		theme := s.SessionUITheme(c)
-		toast := c.Query("toast", "")
-		vc, _ := view.NewCtx(c,
-			view.WithTheme(theme), view.WithToast(toast, "", ""),
-		)
-		return view.Render(c, view.AppointmentNotFoundPage(vc))
+		return s.renderAppointmentNotFoundPage(c, c.Query("toast", ""), "")
 	}
 
 	appointment, err := s.TakeAppointmentByIDAndToken(c.Context(), appointmentID, token)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return s.renderAppointmentNotFoundPage(c, c.Query("toast", ""), "")
+	}
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			theme := s.SessionUITheme(c)
-			toast := c.Query("toast", "")
-			vc, _ := view.NewCtx(c,
-				view.WithTheme(theme), view.WithToast(toast, "", ""),
-			)
-			return view.Render(c, view.AppointmentNotFoundPage(vc))
-		}
-
 		return s.Redirect(c, "/login?toast=Failed to load appointment&level=error")
 	}
 
@@ -495,13 +483,10 @@ func (s *service) HandlePatientCancel(c fiber.Ctx) error {
 	}
 
 	appointment, err := s.TakeAppointmentByIDAndToken(c.Context(), appointmentID, token)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return s.renderAppointmentNotFoundPage(c, "Appointment not found", "warning")
+	}
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			theme := s.SessionUITheme(c)
-			vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithToast("Appointment not found", "", "warning"))
-			return view.Render(c, view.AppointmentNotFoundPage(vc))
-		}
-
 		return s.Redirect(c, "/login?toast=Failed to load appointment&level=error")
 	}
 
@@ -591,4 +576,10 @@ func (s *service) HandleSearchClinics(c fiber.Ctx) error {
 	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
 
 	return view.Render(c, view.ApptSearchClinicsFrg(vc, clinics))
+}
+
+func (s *service) renderAppointmentNotFoundPage(c fiber.Ctx, toast, level string) error {
+	theme := s.SessionUITheme(c)
+	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithToast(toast, "", level))
+	return view.Render(c, view.AppointmentNotFoundPage(vc))
 }
