@@ -35,7 +35,6 @@ func (s *service) TakePatientByID(ctx context.Context, userID, patientID string)
 }
 
 func (s *service) TakeClinicByID(ctx context.Context, userID, clinicID string) (model.Clinic, error) {
-	clinic := model.Clinic{ID: clinicID, UserID: userID}
 	clinic, err := gorm.G[model.Clinic](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", clinicID, userID).
 		Take(ctx)
@@ -51,14 +50,11 @@ func (s *service) CreateAppointment(ctx context.Context, appointment *model.Appo
 }
 
 func (s *service) TakeAppointmentByID(ctx context.Context, userID, appointmentID string) (model.Appointment, error) {
-	appointment := model.Appointment{ID: appointmentID}
-	err := s.DB.WithContext(ctx).
-		Model(&model.Appointment{}).
-		Preload("Clinic").
-		Preload("Patient").
+	appointment, err := gorm.G[model.Appointment](s.DB.GormDB()).
+		Preload("Clinic", nil).
+		Preload("Patient", nil).
 		Where("id = ? AND user_id = ?", appointmentID, userID).
-		Take(&appointment).
-		Error
+		Take(ctx)
 	if err != nil {
 		return model.Appointment{}, err
 	}
@@ -95,13 +91,11 @@ func (s *service) DeleteAppointmentByIDAndUserID(ctx context.Context, userID, ap
 }
 
 func (s *service) TakeAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) (model.Appointment, error) {
-	appointment := model.Appointment{}
-	err := s.DB.WithContext(ctx).
-		Preload("Clinic").
-		Preload("User").
+	appointment, err := gorm.G[model.Appointment](s.DB.GormDB()).
+		Preload("Clinic", nil).
+		Preload("User", nil).
 		Where("id = ? AND token = ?", appointmentID, token).
-		Take(&appointment).
-		Error
+		Take(ctx)
 	if err != nil {
 		return model.Appointment{}, err
 	}
@@ -110,7 +104,7 @@ func (s *service) TakeAppointmentByIDAndToken(ctx context.Context, appointmentID
 }
 
 func (s *service) TakePatientByIDWithLastDoneAppointment(ctx context.Context, userID, patientID string) (model.Patient, error) {
-	patient := model.Patient{ID: patientID, UserID: userID}
+	patient := model.Patient{}
 	err := s.DB.Model(&model.Patient{}).
 		Where("id = ? AND user_id = ?", patientID, userID).
 		Preload("Appointments", func(tx *gorm.DB) *gorm.DB {

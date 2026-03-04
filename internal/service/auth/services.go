@@ -87,7 +87,6 @@ func (s *service) signupIsEmailValid(ctx context.Context, email string) error {
 		return errors.New("email address is invalid")
 	}
 
-	user := model.User{Email: email}
 	user, err := gorm.G[model.User](s.DB.GormDB()).Where("email = ?", email).Take(ctx)
 	if err == nil && user.ID != "" {
 		return errors.New("email already exists, try login instead")

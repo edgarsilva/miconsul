@@ -37,7 +37,7 @@ func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 		Limit(10).
 		Find(&appointments)
 
-	clinic := model.Clinic{UserID: cu.ID, Favorite: true}
+	clinic := model.Clinic{}
 	clinic, _ = gorm.G[model.Clinic](s.DB.GormDB()).
 		Where("user_id = ? AND favorite = ?", cu.ID, true).
 		Order("created_at").
