@@ -58,7 +58,7 @@ func (s *service) HandleClinicsShowPage(c fiber.Ctx) error {
 // HandleClinicsCreate inserts a new clinic record for the given user
 // POST: /clinics
 func (s *service) HandleClinicsCreate(c fiber.Ctx) error {
-	cu, _ := s.CurrentUser(c)
+	cu := s.CurrentUser(c)
 	clinic := model.Clinic{
 		UserID: cu.ID,
 		Price:  handlerutils.StrToAmount(c.FormValue("price", "")),
@@ -79,7 +79,7 @@ func (s *service) HandleClinicsCreate(c fiber.Ctx) error {
 			return s.Redirect(c, "/clinics?err=failed to create Clinic")
 		}
 
-		return s.Redirect(c, "/clinics/" + clinic.ID)
+		return s.Redirect(c, "/clinics/"+clinic.ID)
 	}
 
 	c.Set("HX-Push-Url", "/clinics/"+clinic.ID)
@@ -119,7 +119,7 @@ func (s *service) HandleClinicsUpdate(c fiber.Ctx) error {
 			return s.Redirect(c, "/clinics?err=failed to update clinic")
 		}
 
-		return s.Redirect(c, "/clinics/" + clinic.ID)
+		return s.Redirect(c, "/clinics/"+clinic.ID)
 	}
 
 	c.Set("HX-Push-Url", "/clinics/"+clinicID)
@@ -177,10 +177,7 @@ func (s *service) HandleClinicsIndexSearch(c fiber.Ctx) error {
 // HandleMockManyClinics creates many mock clinics for admin/testing flows.
 // GET: /clinics/makeaton
 func (s *service) HandleMockManyClinics(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return s.Redirect(c, "/login")
-	}
+	cu := s.CurrentUser(c)
 
 	n, err := strconv.Atoi(c.Query("n", "100000"))
 	if err != nil {

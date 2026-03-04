@@ -21,7 +21,7 @@ func NewService(s *server.Server) service {
 }
 
 func (s service) TakeClinicByID(c fiber.Ctx, id string) (model.Clinic, error) {
-	cu, _ := s.CurrentUser(c)
+	cu := s.CurrentUser(c)
 	clinic := model.Clinic{
 		ID:     id,
 		UserID: cu.ID,
@@ -38,7 +38,7 @@ func (s service) TakeClinicByID(c fiber.Ctx, id string) (model.Clinic, error) {
 }
 
 func (s service) FindClinicsByTerm(c fiber.Ctx, term string) ([]model.Clinic, error) {
-	cu, _ := s.CurrentUser(c)
+	cu := s.CurrentUser(c)
 	clinics := []model.Clinic{}
 
 	s.DB.WithContext(c.Context()).

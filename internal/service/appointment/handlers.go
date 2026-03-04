@@ -18,16 +18,10 @@ import (
 // HandleIndexPage renders the appointments page HTML
 // GET: /appointments
 func (s *service) HandleIndexPage(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return s.Redirect(c, "/login")
-	}
+	cu := s.CurrentUser(c)
 
 	patientID := c.Query("patientId", "")
-	patient := model.Patient{}
-	if patientID != "" {
-		patient, err = s.TakePatientByID(c.Context(), cu.ID, patientID)
-	}
+	patient, err := s.TakePatientByID(c.Context(), cu.ID, patientID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.Redirect(c, "/appointments?toast=Selected patient does not exist&level=warning")
 	}
@@ -63,10 +57,7 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 // GET: /appointments/new
 // GET: /appointments/:id
 func (s *service) HandleShowPage(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return s.Redirect(c, "/login")
-	}
+	cu := s.CurrentUser(c)
 
 	appointmentID := c.Params("id", "")
 	appointment, err := s.AppointmentForShowPage(c.Context(), cu.ID, appointmentID)
@@ -101,10 +92,7 @@ func (s *service) HandleShowPage(c fiber.Ctx) error {
 // HandleStartPage renders the appointment start page HTML
 // GET: /appointments/:id/start
 func (s *service) HandleStartPage(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return s.Redirect(c, "/login")
-	}
+	cu := s.CurrentUser(c)
 
 	appointmentID := c.Params("id", "")
 	if appointmentID == "" {
@@ -145,10 +133,8 @@ func (s *service) HandleStartPage(c fiber.Ctx) error {
 // HandleComplete handles the request to mark an appointment as completed/done.
 // POST: /appointments/:id/complete
 func (s *service) HandleComplete(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return s.Redirect(c, "/login")
-	}
+	cu := s.CurrentUser(c)
+	var err error
 
 	appointmentID := c.Params("id", "")
 	if appointmentID == "" {
@@ -185,10 +171,7 @@ func (s *service) HandleComplete(c fiber.Ctx) error {
 // HandleCreate inserts a new appointment record for the CurrentUser
 // POST: /appointments
 func (s *service) HandleCreate(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return s.Redirect(c, "/login")
-	}
+	cu := s.CurrentUser(c)
 
 	bookedAtValue := c.FormValue("bookedAt", "")
 	bookedAt, err := time.Parse(view.FormTimeFormat, bookedAtValue)
@@ -244,10 +227,7 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 // PATCH: /appointments/:id
 // POST: /appointments/:id/patch
 func (s *service) HandleUpdate(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return s.Redirect(c, "/login")
-	}
+	cu := s.CurrentUser(c)
 
 	appointmentID := c.Params("id", "")
 	if appointmentID == "" {
@@ -299,10 +279,8 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 // HandleCancel cancels an appointment
 // POST: /appointments/:id/cancel
 func (s *service) HandleCancel(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return s.Redirect(c, "/login")
-	}
+	cu := s.CurrentUser(c)
+	var err error
 
 	appointmentID := c.Params("id", "")
 	if appointmentID == "" {
@@ -336,10 +314,8 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 // DELETE: /appointments/:id
 // POST: /appointments/:id/delete
 func (s *service) HandleDelete(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return s.Redirect(c, "/login")
-	}
+	cu := s.CurrentUser(c)
+	var err error
 
 	appointmentID := c.Params("id", "")
 	if appointmentID == "" {
@@ -458,10 +434,7 @@ func (s *service) HandlePatientChangeDate(c fiber.Ctx) error {
 // HandlePriceFrg renders the price input based on clinic selected
 // GET: /appointments/new/pricefrg/:id
 func (s *service) HandlePriceFrg(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return s.Redirect(c, "/login")
-	}
+	cu := s.CurrentUser(c)
 
 	clinicID := c.Params("id", "")
 	if clinicID == "" {
@@ -489,21 +462,10 @@ func (s *service) HandlePriceFrg(c fiber.Ctx) error {
 // replacesd in the HTMX active search
 // POST: /appointments/search/clinics
 func (s *service) HandleSearchClinics(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return s.Redirect(c, "/login")
-	}
+	cu := s.CurrentUser(c)
 
 	queryStr := c.FormValue("query", "")
-	clinics := []model.Clinic{}
-
-	userClinicsDBQuery := s.DB.Model(&cu)
-	if queryStr != "" {
-		userClinicsDBQuery = userClinicsDBQuery.Scopes(model.GlobalFTS(queryStr))
-	} else {
-		userClinicsDBQuery = userClinicsDBQuery.Order("created_at desc")
-	}
-	err = userClinicsDBQuery.Limit(10).Association("Clinics").Find(&clinics)
+	clinics, err := s.FindClinicsByTerm(c.Context(), cu.ID, queryStr)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}

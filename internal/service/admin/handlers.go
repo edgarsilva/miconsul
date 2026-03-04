@@ -11,7 +11,7 @@ import (
 // HandleAdminModelsPage renders a list of available model types.
 // GET: /admin/models
 func (s *service) HandleAdminModelsPage(c fiber.Ctx) error {
-	cu, _ := s.CurrentUser(c)
+	cu := s.CurrentUser(c)
 	fmt.Println("cu", cu)
 
 	dir, err := os.ReadDir("internal/model")

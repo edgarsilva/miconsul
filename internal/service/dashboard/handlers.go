@@ -14,10 +14,7 @@ import (
 // GET: /
 // GET: /dashboard
 func (s *service) HandleDashboardPage(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return s.Redirect(c, "/login")
-	}
+	cu := s.CurrentUser(c)
 
 	appointments := []model.Appointment{}
 	query := s.DB.WithContext(c.Context()).Model(model.Appointment{}).Where("user_id = ?", cu.ID)

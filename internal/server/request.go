@@ -7,14 +7,14 @@ import (
 )
 
 // CurrentUser returns currently logged-in (or anon) user from fiber locals.
-func (s *Server) CurrentUser(c fiber.Ctx) (model.User, error) {
+func (s *Server) CurrentUser(c fiber.Ctx) model.User {
 	userIface := c.Locals("current_user")
 	cu, ok := userIface.(model.User)
 	if !ok {
-		return model.User{}, nil
+		return model.User{}
 	}
 
-	return cu, nil
+	return cu
 }
 
 // IsHTMX returns true if the request was initiated by HTMX.

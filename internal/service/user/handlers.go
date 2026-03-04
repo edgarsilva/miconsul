@@ -26,7 +26,7 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 // HandleEditPage renders the user edit page for admins.
 // GET: /admin/users/:id
 func (s *service) HandleEditPage(c fiber.Ctx) error {
-	cu, _ := s.CurrentUser(c)
+	cu := s.CurrentUser(c)
 
 	userID := c.Params("id", "")
 	if userID == "" {
@@ -40,7 +40,7 @@ func (s *service) HandleEditPage(c fiber.Ctx) error {
 // HandleProfilePage renders the current user's profile page.
 // GET: /profile
 func (s *service) HandleProfilePage(c fiber.Ctx) error {
-	cu, _ := s.CurrentUser(c)
+	cu := s.CurrentUser(c)
 
 	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.UserEditPage(vc, cu))
@@ -49,7 +49,7 @@ func (s *service) HandleProfilePage(c fiber.Ctx) error {
 // HandleUpdateProfile updates the current user's profile data.
 // POST: /profile
 func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
-	cu, _ := s.CurrentUser(c)
+	cu := s.CurrentUser(c)
 
 	userUpds := model.User{}
 	c.Bind().Body(&userUpds)

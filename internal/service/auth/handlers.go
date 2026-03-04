@@ -17,7 +17,7 @@ import (
 //
 // GET: /login
 func (s *service) HandleLoginPage(c fiber.Ctx) error {
-	cu, _ := s.CurrentUser(c)
+	cu := s.CurrentUser(c)
 	if cu.IsLoggedIn() {
 		return s.Redirect(c, "/")
 	}
@@ -114,7 +114,7 @@ func (s *service) HandleAPILogin(c fiber.Ctx) error {
 //
 // GET: /signup
 func (s *service) HandleSignupPage(c fiber.Ctx) error {
-	cu, _ := s.CurrentUser(c)
+	cu := s.CurrentUser(c)
 
 	if cu.IsLoggedIn() {
 		return s.Redirect(c, "/todos")
@@ -330,11 +330,6 @@ func (s *service) HandleResetPasswordUpdate(c fiber.Ctx) error {
 // HandleValidate validates the current authentication session.
 // POST: /api/auth/validate
 func (s *service) HandleValidate(c fiber.Ctx) error {
-	_, err := s.CurrentUser(c)
-	if err != nil {
-		return c.SendStatus(fiber.StatusUnauthorized)
-	}
-
 	return c.SendStatus(fiber.StatusOK)
 }
 
@@ -344,10 +339,7 @@ func (s *service) HandleShowUser(c fiber.Ctx) error {
 	_, span := s.Trace(c.Context(), "auth/handlers:HandleShowUser")
 	defer span.End()
 
-	user, err := s.CurrentUser(c)
-	if err != nil || !user.IsLoggedIn() {
-		return c.SendStatus(fiber.StatusUnauthorized)
-	}
+	user := s.CurrentUser(c)
 
 	res := struct{ User model.User }{
 		User: user,

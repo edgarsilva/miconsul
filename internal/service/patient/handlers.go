@@ -20,10 +20,7 @@ const (
 // HandlePatientsPage renders the patients page HTML
 // GET: /patients
 func (s *service) HandlePatientsPage(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return s.Redirect(c, "/login")
-	}
+	cu := s.CurrentUser(c)
 
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
@@ -48,7 +45,7 @@ func (s *service) HandlePatientsIndexSearch(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
-	cu, _ := s.CurrentUser(c)
+	cu := s.CurrentUser(c)
 	patients, err := s.Patients(cu, term)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
@@ -61,10 +58,7 @@ func (s *service) HandlePatientsIndexSearch(c fiber.Ctx) error {
 // HandlePatientFormPage renders the patient create/edit page.
 // GET: /patients/:id
 func (s *service) HandlePatientFormPage(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return s.Redirect(c, "/login")
-	}
+	cu := s.CurrentUser(c)
 
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
@@ -86,10 +80,8 @@ func (s *service) HandlePatientFormPage(c fiber.Ctx) error {
 // HandleCreatePatient inserts a new patient record for the CurrentUser
 // POST: /patients
 func (s *service) HandleCreatePatient(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return s.Redirect(c, "/login")
-	}
+	cu := s.CurrentUser(c)
+	var err error
 
 	patient := model.Patient{
 		UserID: cu.ID,
@@ -114,7 +106,7 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 	}
 
 	if !s.IsHTMX(c) {
-		return s.Redirect(c, "/patients/" + patient.ID)
+		return s.Redirect(c, "/patients/"+patient.ID)
 	}
 
 	c.Set("HX-Push-Url", "/patients/"+patient.ID)
@@ -132,10 +124,8 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 // PATCH: /patients/:id
 // POST: /patients/:id/patch
 func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return s.Redirect(c, "/login")
-	}
+	cu := s.CurrentUser(c)
+	var err error
 
 	patientID := c.Params("id", "")
 	if patientID == "" {
@@ -170,7 +160,7 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 	}
 
 	if !s.IsHTMX(c) {
-		return s.Redirect(c, "/patients/" + patientID)
+		return s.Redirect(c, "/patients/"+patientID)
 	}
 
 	c.Set("HX-Location", "/patients/"+patientID+"?toast=Patient changes saved&level=success")
@@ -181,10 +171,8 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 // PATCH: /patients/:id/removepic
 // POST: /patients/:id/removepic
 func (s *service) HandleRemovePic(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return s.Redirect(c, "/login")
-	}
+	cu := s.CurrentUser(c)
+	var err error
 
 	patientID := c.Params("id", "")
 	if patientID == "" {
@@ -208,7 +196,7 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 			return c.SendStatus(fiber.StatusUnprocessableEntity)
 		}
 
-		return s.Redirect(c, "/patients/" + patient.ID)
+		return s.Redirect(c, "/patients/"+patient.ID)
 	}
 
 	theme := s.SessionUITheme(c)
@@ -220,10 +208,8 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 // DELETE: /patients/:id
 // POST: /patients/:id/delete
 func (s *service) HandleDeletePatient(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return s.Redirect(c, "/login")
-	}
+	cu := s.CurrentUser(c)
+	var err error
 
 	patientID := c.Params("id", "")
 	if patientID == "" {
@@ -255,10 +241,7 @@ func (s *service) HandleDeletePatient(c fiber.Ctx) error {
 // replacesd in the HTMX active search
 // POST: /patients/search
 func (s *service) HandlePatientSearch(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return s.Redirect(c, "/login")
-	}
+	cu := s.CurrentUser(c)
 
 	queryStr := c.FormValue("query", "")
 	patients := []model.Patient{}
@@ -280,10 +263,7 @@ func (s *service) HandlePatientSearch(c fiber.Ctx) error {
 // HandleMockManyPatients creates many mock patients for admin/testing flows.
 // GET: /patients/makeaton
 func (s *service) HandleMockManyPatients(c fiber.Ctx) error {
-	cu, err := s.CurrentUser(c)
-	if err != nil {
-		return s.Redirect(c, "/login")
-	}
+	cu := s.CurrentUser(c)
 
 	n, err := strconv.Atoi(c.Query("n", "100000"))
 	if err != nil {
