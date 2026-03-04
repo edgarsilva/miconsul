@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"miconsul/internal/lib"
 	"miconsul/internal/lib/libtime"
 	"miconsul/internal/lib/xid"
@@ -22,6 +23,20 @@ const (
 	ApntStatusPending     AppointmentStatus = "pending"
 	ApntStatusRescheduled AppointmentStatus = "rescheduled"
 )
+
+func (s AppointmentStatus) IsValid() bool {
+	switch s {
+	case ApntStatusDraft,
+		ApntStatusConfirmed,
+		ApntStatusDone,
+		ApntStatusCanceled,
+		ApntStatusPending,
+		ApntStatusRescheduled:
+		return true
+	default:
+		return false
+	}
+}
 
 type Appointment struct {
 	BookedAt            time.Time `gorm:"index;default:null;not null" form:"_"`
@@ -48,7 +63,7 @@ type Appointment struct {
 	UserID       string            `gorm:"index;default:null;not null"`
 	ClinicID     string            `gorm:"index;default:null;not null" form:"clinicId"`
 	PatientID    string            `gorm:"index;default:null;not null" form:"patientId"`
-	Status       AppointmentStatus `gorm:"index;default:draft;not null;type:string" form:"status"`
+	Status       AppointmentStatus `gorm:"index;default:pending;not null;type:string" form:"status"`
 	FeedEvents   []FeedEvent       `gorm:"polymorphic:FeedEventable;"`
 	Alerts       []Alert           `gorm:"polymorphic:Alertable;"`
 	Clinic       Clinic
@@ -67,6 +82,20 @@ type Appointment struct {
 
 func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	a.ID = xid.New("apnt")
+	if a.Status == "" {
+		a.Status = ApntStatusPending
+	}
+
+	return nil
+}
+
+func (a *Appointment) BeforeSave(tx *gorm.DB) error {
+	if a.Status == "" {
+		return nil
+	}
+	if !a.Status.IsValid() {
+		return errors.New("invalid appointment status")
+	}
 
 	return nil
 }

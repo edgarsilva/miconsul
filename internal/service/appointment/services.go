@@ -57,6 +57,18 @@ func (s *service) TakeClinicByID(ctx context.Context, userID, clinicID string) (
 }
 
 func (s *service) CreateAppointment(ctx context.Context, appointment *model.Appointment) error {
+	if appointment == nil {
+		return errors.New("appointment is required")
+	}
+
+	if appointment.Status == "" {
+		appointment.Status = model.ApntStatusPending
+	}
+
+	if !appointment.Status.IsValid() {
+		return errors.New("invalid appointment status")
+	}
+
 	return gorm.G[model.Appointment](s.DB.GormDB()).Create(ctx, appointment)
 }
 
@@ -78,6 +90,10 @@ func (s *service) TakeAppointmentByID(ctx context.Context, userID, appointmentID
 }
 
 func (s *service) UpdateAppointmentByIDAndUserID(ctx context.Context, userID, appointmentID string, updates model.Appointment) error {
+	if updates.Status != "" && !updates.Status.IsValid() {
+		return errors.New("invalid appointment status")
+	}
+
 	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", appointmentID, userID).
 		Updates(ctx, updates)
@@ -138,6 +154,10 @@ func (s *service) TakePatientByIDWithLastDoneAppointment(ctx context.Context, us
 }
 
 func (s *service) UpdateAppointmentByIDAndToken(ctx context.Context, appointmentID, token string, selectColumns []string, updates model.Appointment) error {
+	if updates.Status != "" && !updates.Status.IsValid() {
+		return errors.New("invalid appointment status")
+	}
+
 	selectedFields := strings.Join(selectColumns, ",")
 
 	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
