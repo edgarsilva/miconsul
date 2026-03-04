@@ -420,8 +420,12 @@ func (s *service) HandleDelete(c fiber.Ctx) error {
 // HandlePatientConfirm lets a patient mark an appointment as confirmed
 // GET: /appointments/:id/patient/confirm/:token
 func (s *service) HandlePatientConfirm(c fiber.Ctx) error {
-	apptID := c.Params("id", "")
+	appointmentID := c.Params("id", "")
 	token := c.Params("token", "")
+	if appointmentID == "" || token == "" {
+		return s.Redirect(c, "/login?toast=Failed to confirm appointment&level=error")
+	}
+
 	appt := model.Appointment{
 		// Token:       "",
 		ConfirmedAt: time.Now(),
@@ -429,7 +433,7 @@ func (s *service) HandlePatientConfirm(c fiber.Ctx) error {
 	}
 	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
 		Select("ConfirmedAt", "Status").
-		Where("id = ? AND token = ?", apptID, token).
+		Where("id = ? AND token = ?", appointmentID, token).
 		Updates(c.Context(), appt)
 	if err != nil || rowsAffected != 1 {
 		redirectPath := "/login?toast=Failed to confirm appointment&level=error"
@@ -448,10 +452,19 @@ func (s *service) HandlePatientConfirm(c fiber.Ctx) error {
 // HandlePatientCancelPage lets a patient cancel an appointment
 // GET: /appointments/:id/patient/cancel/:token
 func (s *service) HandlePatientCancelPage(c fiber.Ctx) error {
-	apptID := c.Params("id", "")
+	appointmentID := c.Params("id", "")
 	token := c.Params("token", "")
-	appt := model.Appointment{}
-	if err := s.DB.Preload("Clinic").Preload("User").Where("id = ? AND token = ?", apptID, token).Take(&appt).Error; err != nil {
+	if appointmentID == "" || token == "" {
+		theme := s.SessionUITheme(c)
+		toast := c.Query("toast", "")
+		vc, _ := view.NewCtx(c,
+			view.WithTheme(theme), view.WithToast(toast, "", ""),
+		)
+		return view.Render(c, view.AppointmentNotFoundPage(vc))
+	}
+
+	appointment, err := s.TakeAppointmentByIDAndToken(c.Context(), appointmentID, token)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			theme := s.SessionUITheme(c)
 			toast := c.Query("toast", "")
@@ -469,33 +482,32 @@ func (s *service) HandlePatientCancelPage(c fiber.Ctx) error {
 	vc, _ := view.NewCtx(c,
 		view.WithTheme(theme), view.WithToast(toast, "", ""),
 	)
-
-	if appt.ID == "" {
-		return view.Render(c, view.AppointmentNotFoundPage(vc))
-	}
-
-	return view.Render(c, view.AppointmentCancelPage(vc, appt))
+	return view.Render(c, view.AppointmentCancelPage(vc, appointment))
 }
 
 // HandlePatientCancel lets a patient cancel an appointment
 // POST: /appointments/:id/patient/cancel/:token
 func (s *service) HandlePatientCancel(c fiber.Ctx) error {
-	apptID := c.Params("id", "")
+	appointmentID := c.Params("id", "")
 	token := c.Params("token", "")
+	if appointmentID == "" || token == "" {
+		return s.Redirect(c, "/login?toast=Failed to cancel appointment&level=error")
+	}
+
 	apptUpds := model.Appointment{
 		CanceledAt: time.Now(),
 		Status:     model.ApntStatusCanceled,
 	}
 	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
 		Select("CanceledAt", "Status").
-		Where("id = ? AND token = ?", apptID, token).
+		Where("id = ? AND token = ?", appointmentID, token).
 		Updates(c.Context(), apptUpds)
 	if err != nil || rowsAffected != 1 {
 		return s.Redirect(c, "/login?toast=Failed to cancel appointment&level=error")
 	}
 
-	appt := model.Appointment{}
-	if err := s.DB.Preload("Clinic").Where("id = ? AND token = ?", apptID, token).Take(&appt).Error; err != nil {
+	appointment, err := s.TakeAppointmentByIDAndToken(c.Context(), appointmentID, token)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			theme := s.SessionUITheme(c)
 			vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithToast("Appointment not found", "", "warning"))
@@ -508,9 +520,9 @@ func (s *service) HandlePatientCancel(c fiber.Ctx) error {
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "Success!")
 	vc, _ := view.NewCtx(c,
-		view.WithTheme(theme), view.WithToast(toast, "", "sucess"),
+		view.WithTheme(theme), view.WithToast(toast, "", "success"),
 	)
-	return view.Render(c, view.AppointmentCancelPage(vc, appt))
+	return view.Render(c, view.AppointmentCancelPage(vc, appointment))
 }
 
 // HandlePatientChangeDate lets a patient mark an appointment as needs
@@ -547,10 +559,10 @@ func (s *service) HandlePriceFrg(c fiber.Ctx) error {
 		return s.Redirect(c, "/login")
 	}
 
-	id := c.Params("id", "")
+	clinicID := c.Params("id", "")
 	clinic := model.Clinic{
 		UserID: cu.ID,
-		ID:     id,
+		ID:     clinicID,
 	}
 
 	clinic, err = gorm.G[model.Clinic](s.DB.GormDB()).

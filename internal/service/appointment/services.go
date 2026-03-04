@@ -36,14 +36,15 @@ func (s *service) RegisterCronJob() {
 		defer span.End()
 
 		appointments := []model.Appointment{}
-		if err := s.DB.
+		err := s.DB.
 			WithContext(ctx).
 			Model(&model.Appointment{}).
 			Preload("Patient").
 			Preload("Clinic").
 			Scopes(model.AppointmentWithPendingAlerts).
 			Find(&appointments).
-			Error; err != nil {
+			Error
+		if err != nil {
 			fmt.Println("failed to load appointments for reminder job:", err.Error())
 			return
 		}
@@ -109,6 +110,21 @@ func (s *service) TakeAppointmentByID(ctx context.Context, userID, appointmentID
 	return appointment, nil
 }
 
+func (s *service) TakeAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) (model.Appointment, error) {
+	appointment := model.Appointment{}
+	err := s.DB.WithContext(ctx).
+		Preload("Clinic").
+		Preload("User").
+		Where("id = ? AND token = ?", appointmentID, token).
+		Take(&appointment).
+		Error
+	if err != nil {
+		return model.Appointment{}, err
+	}
+
+	return appointment, nil
+}
+
 func (s *service) AppointmentForShowPage(ctx context.Context, userID, appointmentID string) (model.Appointment, error) {
 	appointment := model.Appointment{ID: appointmentID}
 	if appointmentID == "" || appointmentID == "new" {
@@ -120,12 +136,13 @@ func (s *service) AppointmentForShowPage(ctx context.Context, userID, appointmen
 
 func (s *service) TakePatientByIDWithLastDoneAppointment(ctx context.Context, userID, patientID string) (model.Patient, error) {
 	patient := model.Patient{ID: patientID, UserID: userID}
-	if err := s.DB.Model(&model.Patient{}).
+	err := s.DB.Model(&model.Patient{}).
 		Where("id = ? AND user_id = ?", patientID, userID).
 		Preload("Appointments", func(tx *gorm.DB) *gorm.DB {
 			return tx.Limit(1).Where("status = ?", model.ApntStatusDone).Order("booked_at desc")
 		}).
-		Take(&patient).Error; err != nil {
+		Take(&patient).Error
+	if err != nil {
 		return model.Patient{}, err
 	}
 
@@ -185,8 +202,9 @@ func (s *service) SendBookedAlert(appointment model.Appointment) error {
 				Status: model.AlertFailed,
 				To:     appointment.Patient.Email,
 			}
-			if err := s.DB.Model(&appointment).Association("Alerts").Append(&alert); err != nil {
-				fmt.Println("failed to append failed booked alert:", err.Error())
+			appendErr := s.DB.Model(&appointment).Association("Alerts").Append(&alert)
+			if appendErr != nil {
+				fmt.Println("failed to append failed booked alert:", appendErr.Error())
 			}
 			return
 		}
@@ -203,8 +221,9 @@ func (s *service) SendBookedAlert(appointment model.Appointment) error {
 			Status: model.AlertSent,
 			To:     appointment.Patient.Email,
 		}
-		if err := s.DB.Model(&appointment).Association("Alerts").Append(&alert); err != nil {
-			fmt.Println("failed to append sent booked alert:", err.Error())
+		appendErr := s.DB.Model(&appointment).Association("Alerts").Append(&alert)
+		if appendErr != nil {
+			fmt.Println("failed to append sent booked alert:", appendErr.Error())
 		}
 	})
 
@@ -221,8 +240,9 @@ func (s *service) SendReminderAlert(appointment model.Appointment) error {
 				Status: model.AlertFailed,
 				To:     appointment.Patient.Email,
 			}
-			if err := s.DB.Model(&appointment).Association("Alerts").Append(&alert); err != nil {
-				fmt.Println("failed to append failed reminder alert:", err.Error())
+			appendErr := s.DB.Model(&appointment).Association("Alerts").Append(&alert)
+			if appendErr != nil {
+				fmt.Println("failed to append failed reminder alert:", appendErr.Error())
 			}
 			return
 		}
@@ -239,8 +259,9 @@ func (s *service) SendReminderAlert(appointment model.Appointment) error {
 			Status: model.AlertSent,
 			To:     appointment.Patient.Email,
 		}
-		if err := s.DB.Model(&appointment).Association("Alerts").Append(&alert); err != nil {
-			fmt.Println("failed to append sent reminder alert:", err.Error())
+		appendErr := s.DB.Model(&appointment).Association("Alerts").Append(&alert)
+		if appendErr != nil {
+			fmt.Println("failed to append sent reminder alert:", appendErr.Error())
 		}
 	})
 
