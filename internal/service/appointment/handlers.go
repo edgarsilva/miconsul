@@ -71,12 +71,14 @@ func (s *service) HandleShowPage(c fiber.Ctx) error {
 	}
 
 	clinics := []model.Clinic{}
-	if err := s.DB.Model(&cu).Order("created_at desc").Limit(10).Association("Clinics").Find(&clinics); err != nil {
+	err = s.DB.Model(&cu).Order("created_at desc").Limit(10).Association("Clinics").Find(&clinics)
+	if err != nil {
 		return s.Redirect(c, "/appointments?toast=Failed to load clinics&level=error")
 	}
 
 	patients := []model.Patient{}
-	if err := s.DB.Model(&cu).Order("created_at desc").Limit(10).Association("Patients").Find(&patients); err != nil {
+	err = s.DB.Model(&cu).Order("created_at desc").Limit(10).Association("Patients").Find(&patients)
+	if err != nil {
 		return s.Redirect(c, "/appointments?toast=Failed to load patients&level=error")
 	}
 
@@ -236,7 +238,8 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 	}
 
 	toastMsg := "New appointment created"
-	if err := s.DB.Model(&appointment).Preload("Clinic").Preload("Patient").Take(&appointment).Error; err != nil {
+	err = s.DB.Model(&appointment).Preload("Clinic").Preload("Patient").Take(&appointment).Error
+	if err != nil {
 		toastMsg = "Appointment created, but failed to load related records"
 	} else if err := s.SendBookedAlert(appointment); err != nil {
 		toastMsg = "Appointment created, but failed to queue alert"
@@ -426,16 +429,8 @@ func (s *service) HandlePatientConfirm(c fiber.Ctx) error {
 		return s.Redirect(c, "/login?toast=Failed to confirm appointment&level=error")
 	}
 
-	appt := model.Appointment{
-		// Token:       "",
-		ConfirmedAt: time.Now(),
-		Status:      model.ApntStatusConfirmed,
-	}
-	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
-		Select("ConfirmedAt", "Status").
-		Where("id = ? AND token = ?", appointmentID, token).
-		Updates(c.Context(), appt)
-	if err != nil || rowsAffected != 1 {
+	err := s.ConfirmAppointmentByIDAndToken(c.Context(), appointmentID, token)
+	if err != nil {
 		redirectPath := "/login?toast=Failed to confirm appointment&level=error"
 		return s.Redirect(c, redirectPath)
 	}
@@ -494,15 +489,8 @@ func (s *service) HandlePatientCancel(c fiber.Ctx) error {
 		return s.Redirect(c, "/login?toast=Failed to cancel appointment&level=error")
 	}
 
-	apptUpds := model.Appointment{
-		CanceledAt: time.Now(),
-		Status:     model.ApntStatusCanceled,
-	}
-	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
-		Select("CanceledAt", "Status").
-		Where("id = ? AND token = ?", appointmentID, token).
-		Updates(c.Context(), apptUpds)
-	if err != nil || rowsAffected != 1 {
+	err := s.CancelAppointmentByIDAndToken(c.Context(), appointmentID, token)
+	if err != nil {
 		return s.Redirect(c, "/login?toast=Failed to cancel appointment&level=error")
 	}
 
@@ -535,16 +523,9 @@ func (s *service) HandlePatientChangeDate(c fiber.Ctx) error {
 		return s.Redirect(c, "/login?toast=Can't find that appointment&level=error")
 	}
 
-	appointment := model.Appointment{
-		PendingAt: time.Now(),
-		Status:    model.ApntStatusPending,
-	}
-	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
-		Select("Token", "PendingAt", "Status").
-		Where("id = ? AND token = ?", appointmentID, token).
-		Updates(c.Context(), appointment)
-	if err != nil || rowsAffected != 1 {
-		redirectPath := "/login?toast=Failed to confirm appointment&level=error"
+	err := s.RequestAppointmentDateChangeByIDAndToken(c.Context(), appointmentID, token)
+	if err != nil {
+		redirectPath := "/login?toast=Failed to request appointment date change&level=error"
 		return s.Redirect(c, redirectPath)
 	}
 
@@ -600,7 +581,8 @@ func (s *service) HandleSearchClinics(c fiber.Ctx) error {
 	} else {
 		dbquery = dbquery.Order("created_at desc")
 	}
-	if err := dbquery.Limit(10).Association("Clinics").Find(&clinics); err != nil {
+	err = dbquery.Limit(10).Association("Clinics").Find(&clinics)
+	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 

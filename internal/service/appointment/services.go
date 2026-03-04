@@ -7,6 +7,7 @@ import (
 	"miconsul/internal/mailer"
 	"miconsul/internal/model"
 	"miconsul/internal/server"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
@@ -157,6 +158,47 @@ func (s *service) PatientForStartPage(ctx context.Context, userID, patientID str
 	return s.TakePatientByIDWithLastDoneAppointment(ctx, userID, patientID)
 }
 
+func (s *service) UpdateAppointmentByIDAndToken(ctx context.Context, appointmentID, token string, selectColumns []string, updates model.Appointment) error {
+	selectedFields := strings.Join(selectColumns, ",")
+
+	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
+		Select(selectedFields).
+		Where("id = ? AND token = ?", appointmentID, token).
+		Updates(ctx, updates)
+	if err != nil {
+		return err
+	}
+	if rowsAffected != 1 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
+
+func (s *service) ConfirmAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) error {
+	updates := model.Appointment{
+		ConfirmedAt: time.Now(),
+		Status:      model.ApntStatusConfirmed,
+	}
+	return s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"ConfirmedAt", "Status"}, updates)
+}
+
+func (s *service) CancelAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) error {
+	updates := model.Appointment{
+		CanceledAt: time.Now(),
+		Status:     model.ApntStatusCanceled,
+	}
+	return s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"CanceledAt", "Status"}, updates)
+}
+
+func (s *service) RequestAppointmentDateChangeByIDAndToken(ctx context.Context, appointmentID, token string) error {
+	updates := model.Appointment{
+		PendingAt: time.Now(),
+		Status:    model.ApntStatusPending,
+	}
+	return s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"PendingAt", "Status"}, updates)
+}
+
 func (s *service) GetAppointmentsBy(c fiber.Ctx, cu model.User, patientID, clinicID, timeframe string) ([]model.Appointment, error) {
 	appointments := []model.Appointment{}
 	dbquery := s.DB.Model(&model.Appointment{}).Where("user_id = ?", cu.ID)
@@ -209,10 +251,11 @@ func (s *service) SendBookedAlert(appointment model.Appointment) error {
 			return
 		}
 
-		if _, err := gorm.G[model.Appointment](s.DB.GormDB()).
+		_, updateErr := gorm.G[model.Appointment](s.DB.GormDB()).
 			Where("id = ?", appointment.ID).
-			Update(context.Background(), "BookedAlertSentAt", time.Now()); err != nil {
-			fmt.Println("failed to update BookedAlertSentAt:", err.Error())
+			Update(context.Background(), "BookedAlertSentAt", time.Now())
+		if updateErr != nil {
+			fmt.Println("failed to update BookedAlertSentAt:", updateErr.Error())
 		}
 
 		alert := model.Alert{
@@ -247,10 +290,11 @@ func (s *service) SendReminderAlert(appointment model.Appointment) error {
 			return
 		}
 
-		if _, err := gorm.G[model.Appointment](s.DB.GormDB()).
+		_, updateErr := gorm.G[model.Appointment](s.DB.GormDB()).
 			Where("id = ?", appointment.ID).
-			Update(context.Background(), "ReminderAlertSentAt", time.Now()); err != nil {
-			fmt.Println("failed to update ReminderAlertSentAt:", err.Error())
+			Update(context.Background(), "ReminderAlertSentAt", time.Now())
+		if updateErr != nil {
+			fmt.Println("failed to update ReminderAlertSentAt:", updateErr.Error())
 		}
 
 		alert := model.Alert{
