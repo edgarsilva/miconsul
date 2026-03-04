@@ -163,16 +163,14 @@ func (s *service) HandleConclude(c fiber.Ctx) error {
 		return s.Redirect(c, redirectPath)
 	}
 
-	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
-		Where("id = ? AND user_id = ?", appointmentID, cu.ID).
-		Updates(c.Context(), appointment)
-	if err != nil {
-		redirectPath := "/appointments?toast=Failed to update appointment&level=error"
+	err = s.UpdateAppointmentByIDAndUserID(c.Context(), cu.ID, appointmentID, appointment)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
 		c.Set("HX-Location", redirectPath)
 		return s.Redirect(c, redirectPath)
 	}
-	if rowsAffected != 1 {
-		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
+	if err != nil {
+		redirectPath := "/appointments?toast=Failed to update appointment&level=error"
 		c.Set("HX-Location", redirectPath)
 		return s.Redirect(c, redirectPath)
 	}
@@ -298,9 +296,16 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
-	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
-		Where("id = ? AND user_id = ?", appointmentID, cu.ID).
-		Updates(c.Context(), appointment)
+	err = s.UpdateAppointmentByIDAndUserID(c.Context(), cu.ID, appointmentID, appointment)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
+		if !s.IsHTMX(c) {
+			return s.Redirect(c, redirectPath)
+		}
+
+		c.Set("HX-Location", redirectPath)
+		return c.SendStatus(fiber.StatusNotFound)
+	}
 	if err != nil {
 		redirectPath := "/appointments/" + appointmentID + "?toast=failed to update appointment&level=error"
 		if !s.IsHTMX(c) {
@@ -309,15 +314,6 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 
 		c.Set("HX-Location", redirectPath)
 		return c.SendStatus(fiber.StatusUnprocessableEntity)
-	}
-	if rowsAffected != 1 {
-		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
-		if !s.IsHTMX(c) {
-			return s.Redirect(c, redirectPath)
-		}
-
-		c.Set("HX-Location", redirectPath)
-		return c.SendStatus(fiber.StatusNotFound)
 	}
 
 	if !s.IsHTMX(c) {
@@ -356,9 +352,16 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 		Status:     model.ApntStatusCanceled,
 		CanceledAt: time.Now(),
 	}
-	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
-		Where("id = ? AND user_id = ?", appointmentID, cu.ID).
-		Updates(c.Context(), appointment)
+	err = s.UpdateAppointmentByIDAndUserID(c.Context(), cu.ID, appointmentID, appointment)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
+		if !s.IsHTMX(c) {
+			return s.Redirect(c, redirectPath)
+		}
+
+		c.Set("HX-Location", redirectPath)
+		return c.SendStatus(fiber.StatusNotFound)
+	}
 	if err != nil {
 		redirectPath := "/appointments?toast=Failed to update appointment&level=error"
 		if !s.IsHTMX(c) {
@@ -367,15 +370,6 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 
 		c.Set("HX-Location", redirectPath)
 		return c.SendStatus(fiber.StatusUnprocessableEntity)
-	}
-	if rowsAffected != 1 {
-		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
-		if !s.IsHTMX(c) {
-			return s.Redirect(c, redirectPath)
-		}
-
-		c.Set("HX-Location", redirectPath)
-		return c.SendStatus(fiber.StatusNotFound)
 	}
 
 	if !s.IsHTMX(c) {
@@ -400,14 +394,12 @@ func (s *service) HandleDelete(c fiber.Ctx) error {
 		return s.Redirect(c, "/appointments?msg=can't delete without an id")
 	}
 
-	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
-		Where("id = ? AND user_id = ?", appointmentID, cu.ID).
-		Delete(c.Context())
+	err = s.DeleteAppointmentByIDAndUserID(c.Context(), cu.ID, appointmentID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return s.Redirect(c, "/appointments?msg=can't find that appointment")
+	}
 	if err != nil {
 		return s.Redirect(c, "/appointments?msg=failed to delete that appointment")
-	}
-	if rowsAffected != 1 {
-		return s.Redirect(c, "/appointments?msg=can't find that appointment")
 	}
 
 	isHTMX := c.Get("HX-Request", "") // will be a string 'true' for HTMX requests

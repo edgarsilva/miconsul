@@ -111,6 +111,34 @@ func (s *service) TakeAppointmentByID(ctx context.Context, userID, appointmentID
 	return appointment, nil
 }
 
+func (s *service) UpdateAppointmentByIDAndUserID(ctx context.Context, userID, appointmentID string, updates model.Appointment) error {
+	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
+		Where("id = ? AND user_id = ?", appointmentID, userID).
+		Updates(ctx, updates)
+	if err != nil {
+		return err
+	}
+	if rowsAffected != 1 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
+
+func (s *service) DeleteAppointmentByIDAndUserID(ctx context.Context, userID, appointmentID string) error {
+	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
+		Where("id = ? AND user_id = ?", appointmentID, userID).
+		Delete(ctx)
+	if err != nil {
+		return err
+	}
+	if rowsAffected != 1 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
+
 func (s *service) TakeAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) (model.Appointment, error) {
 	appointment := model.Appointment{}
 	err := s.DB.WithContext(ctx).
