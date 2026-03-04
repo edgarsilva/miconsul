@@ -57,7 +57,7 @@ func LoginPage(email, msg string, err error, vc *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div></div><div class=\"card-body\"><h2 class=\"card-title\">Miconsul<div class=\"badge badge-secondary\">INC</div></h2><form class=\"space-y-6\" action=\"/login\" method=\"POST\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div></div><div class=\"card-body\"><h2 class=\"card-title\">Miconsul<div class=\"badge badge-secondary\">INC</div></h2><form class=\"space-y-6\" action=\"/signin\" method=\"POST\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

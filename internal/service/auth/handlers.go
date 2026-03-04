@@ -15,7 +15,7 @@ import (
 
 // HandleLoginPage returns the login page html
 //
-// GET: /login
+// GET: /signin
 func (s *service) HandleLoginPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 	if cu.IsLoggedIn() {
@@ -39,7 +39,7 @@ func (s *service) HandleLoginPage(c fiber.Ctx) error {
 // HandleLogin compares hash and password and sets the user Auth session cookie
 // if the email & password combination are valid
 //
-// POST: /login
+// POST: /signin
 func (s *service) HandleLogin(c fiber.Ctx) error {
 	ctx, span := s.Trace(c.Context(), "auth/handlers:HandleLogin")
 	defer span.End()
@@ -74,7 +74,7 @@ func (s *service) HandleLogin(c fiber.Ctx) error {
 }
 
 // HandleAPILogin authenticates a user and creates an auth cookie for API clients.
-// POST: /api/auth/login
+// POST: /api/auth/signin
 func (s *service) HandleAPILogin(c fiber.Ctx) error {
 	ctx, span := s.Trace(c.Context(), "auth/handlers:HandleAPILogin")
 	defer span.End()
@@ -153,14 +153,14 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 		token := newConfirmEmailToken()
 		s.userUpdateConfirmToken(c.Context(), email, token)
 		go mailer.ConfirmEmail(email, token)
-		return s.Redirect(c, "/login?msg=check your inbox, we'll re-send a confirmation link")
+		return s.Redirect(c, "/signin?msg=check your inbox, we'll re-send a confirmation link")
 	}
 
 	if err := s.signup(c.Context(), email, password); err != nil {
 		return view.Render(c, view.SignupPage(vc, email, err))
 	}
 
-	return s.Redirect(c, "/login?msg=check your inbox to confirm your email")
+	return s.Redirect(c, "/signin?msg=check your inbox to confirm your email")
 }
 
 // HandleSignupConfirmEmail validates an email confirmation token.
@@ -168,7 +168,7 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 	token := c.Params("token", "")
 	if token == "" {
-		return s.Redirect(c, "/login?msg=unable to confirm email, try login instead")
+		return s.Redirect(c, "/signin?msg=unable to confirm email, try signin instead")
 	}
 
 	user, err := gorm.G[model.User](s.DB.GormDB()).
@@ -176,7 +176,7 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
 		Take(c.Context())
 	if err != nil {
-		return s.Redirect(c, "/login?msg=we couldn't verify your account, pls try again")
+		return s.Redirect(c, "/signin?msg=we couldn't verify your account, pls try again")
 	}
 
 	_, err = gorm.G[model.User](s.DB.GormDB()).
@@ -184,16 +184,16 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
 		Updates(c.Context(), model.User{})
 	if err != nil {
-		return s.Redirect(c, "/login?msg=Email confirmed, you should be able to login now")
+		return s.Redirect(c, "/signin?msg=Email confirmed, you should be able to signin now")
 	}
 
 	jwt, err := JWTCreateToken(s.AppEnv(), user.Email, user.ID)
 	if err != nil {
-		return s.Redirect(c, "/login?msg=Email confirmed, you should be able to login now")
+		return s.Redirect(c, "/signin?msg=Email confirmed, you should be able to signin now")
 	}
 
 	c.Cookie(s.NewCookie("Auth", jwt, time.Hour*24))
-	return s.Redirect(c, "/login?msg=Email confirmed, you should be able to login now")
+	return s.Redirect(c, "/signin?msg=Email confirmed, you should be able to signin now")
 }
 
 // HandleLogout destroys session state and redirects to login.
@@ -202,7 +202,7 @@ func (s *service) HandleLogout(c fiber.Ctx) error {
 	s.SessionDestroy(c)
 	s.InvalidateCookies(c, "Auth", "JWT")
 
-	redirectURL := "/login"
+	redirectURL := "/signin"
 	if logtoEnabled(s.Env) {
 		redirectURL = "/logto/signout"
 	}
@@ -324,7 +324,7 @@ func (s *service) HandleResetPasswordUpdate(c fiber.Ctx) error {
 		return s.Redirect(c, "/resetpassword?msg=something went wrong, try again!")
 	}
 
-	return s.Redirect(c, "/login")
+	return s.Redirect(c, "/signin")
 }
 
 // HandleValidate validates the current authentication session.

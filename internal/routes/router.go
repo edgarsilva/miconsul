@@ -32,8 +32,8 @@ func RegisterServices(s *server.Server) {
 func AuthRoutes(s *server.Server) {
 	a := auth.NewService(s)
 
-	a.Get("/login", mw.MaybeAuthenticate(a), a.HandleLoginPage)
-	a.Post("/login", a.HandleLogin)
+	a.Get("/signin", mw.MaybeAuthenticate(a), a.HandleLoginPage)
+	a.Post("/signin", a.HandleLogin)
 	a.All("/logout", a.HandleLogout)
 	a.Get("/signup", a.HandleSignupPage)
 	a.Post("/signup", a.HandleSignup)
@@ -50,7 +50,7 @@ func AuthRoutes(s *server.Server) {
 	a.Get("/logto/signout", a.HandleLogtoSignout)
 
 	g := a.Group("/api/auth")
-	g.Post("/login", a.HandleAPILogin)
+	g.Post("/signin", a.HandleAPILogin)
 	g.Get("/protected", mw.MustAuthenticate(a), a.HandleShowUser)
 	g.Post("/validate", mw.MustAuthenticate(a), a.HandleValidate)
 }

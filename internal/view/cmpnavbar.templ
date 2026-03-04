@@ -67,7 +67,7 @@ templ DesktopNav(c *Ctx) {
 				@IconSignout("")
 			</a>
 		} else {
-			<a class="btn btn-ghost" href="/login">
+			<a class="btn btn-ghost" href="/signin">
 				{ c.l("btn.login") }
 				@IconSignin("")
 			</a>
@@ -96,7 +96,7 @@ templ MobileNav(c *Ctx) {
 				</li>
 			} else {
 				<li>
-					<a href="/login" class="btn btn-ghost justify-start">
+					<a href="/signin" class="btn btn-ghost justify-start">
 						{ c.l("btn.login") }
 						@IconSignin("")
 					</a>

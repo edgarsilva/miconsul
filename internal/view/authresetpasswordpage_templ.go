@@ -57,14 +57,14 @@ func ResetPasswordPage(vc *Ctx, email, msg, success string, err error) templ.Com
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div></div><div class=\"card-body\"><h2 class=\"card-title\">Miconsul<div class=\"badge badge-secondary\">INC</div><div class=\"text-sm leading-6 ml-auto\"><a href=\"/login\" class=\"link link-secondary link-hover font-semibold underline-offset-2\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div></div><div class=\"card-body\"><h2 class=\"card-title\">Miconsul<div class=\"badge badge-secondary\">INC</div><div class=\"text-sm leading-6 ml-auto\"><a href=\"/signin\" class=\"link link-secondary link-hover font-semibold underline-offset-2\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.login_instead"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/authresetpasswordpage.templ`, Line: 21, Col: 122}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/authresetpasswordpage.templ`, Line: 21, Col: 123}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {

@@ -357,12 +357,12 @@ func (s *service) HandlePatientConfirm(c fiber.Ctx) error {
 	appointmentID := c.Params("id", "")
 	token := c.Params("token", "")
 	if appointmentID == "" || token == "" {
-		return s.Redirect(c, "/login?toast=Failed to confirm appointment&level=error")
+		return s.Redirect(c, "/signin?toast=Failed to confirm appointment&level=error")
 	}
 
 	err := s.ConfirmAppointmentByIDAndToken(c.Context(), appointmentID, token)
 	if err != nil {
-		redirectPath := "/login?toast=Failed to confirm appointment&level=error"
+		redirectPath := "/signin?toast=Failed to confirm appointment&level=error"
 		return s.Redirect(c, redirectPath)
 	}
 
@@ -389,7 +389,7 @@ func (s *service) HandlePatientCancelPage(c fiber.Ctx) error {
 		return s.renderAppointmentNotFoundPage(c, c.Query("toast", ""), "")
 	}
 	if err != nil {
-		return s.Redirect(c, "/login?toast=Failed to load appointment&level=error")
+		return s.Redirect(c, "/signin?toast=Failed to load appointment&level=error")
 	}
 
 	theme := s.SessionUITheme(c)
@@ -406,12 +406,12 @@ func (s *service) HandlePatientCancel(c fiber.Ctx) error {
 	appointmentID := c.Params("id", "")
 	token := c.Params("token", "")
 	if appointmentID == "" || token == "" {
-		return s.Redirect(c, "/login?toast=Failed to cancel appointment&level=error")
+		return s.Redirect(c, "/signin?toast=Failed to cancel appointment&level=error")
 	}
 
 	err := s.CancelAppointmentByIDAndToken(c.Context(), appointmentID, token)
 	if err != nil {
-		return s.Redirect(c, "/login?toast=Failed to cancel appointment&level=error")
+		return s.Redirect(c, "/signin?toast=Failed to cancel appointment&level=error")
 	}
 
 	appointment, err := s.TakeAppointmentByIDAndToken(c.Context(), appointmentID, token)
@@ -419,7 +419,7 @@ func (s *service) HandlePatientCancel(c fiber.Ctx) error {
 		return s.renderAppointmentNotFoundPage(c, "Appointment not found", "warning")
 	}
 	if err != nil {
-		return s.Redirect(c, "/login?toast=Failed to load appointment&level=error")
+		return s.Redirect(c, "/signin?toast=Failed to load appointment&level=error")
 	}
 
 	theme := s.SessionUITheme(c)
@@ -437,12 +437,12 @@ func (s *service) HandlePatientChangeDate(c fiber.Ctx) error {
 	appointmentID := c.Params("id", "")
 	token := c.Params("token", "")
 	if appointmentID == "" || token == "" {
-		return s.Redirect(c, "/login?toast=Can't find that appointment&level=error")
+		return s.Redirect(c, "/signin?toast=Can't find that appointment&level=error")
 	}
 
 	err := s.RequestAppointmentDateChangeByIDAndToken(c.Context(), appointmentID, token)
 	if err != nil {
-		redirectPath := "/login?toast=Failed to request appointment date change&level=error"
+		redirectPath := "/signin?toast=Failed to request appointment date change&level=error"
 		return s.Redirect(c, redirectPath)
 	}
 

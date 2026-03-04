@@ -144,14 +144,14 @@ func SignupPage(vc *Ctx, email string, err error) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, " <a href=\"/login\" class=\"link link-secondary link-hover font-semibold underline-offset-2\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, " <a href=\"/signin\" class=\"link link-secondary link-hover font-semibold underline-offset-2\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.login_instead"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/authsignuppage.templ`, Line: 60, Col: 120}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/authsignuppage.templ`, Line: 60, Col: 121}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
