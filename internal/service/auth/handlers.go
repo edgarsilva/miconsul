@@ -13,10 +13,10 @@ import (
 	"gorm.io/gorm"
 )
 
-// HandleLoginPage returns the login page html
+// HandleSigninPage returns the signin page html
 //
 // GET: /signin
-func (s *service) HandleLoginPage(c fiber.Ctx) error {
+func (s *service) HandleSigninPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 	if cu.IsLoggedIn() {
 		return s.Redirect(c, "/")
@@ -25,7 +25,7 @@ func (s *service) HandleLoginPage(c fiber.Ctx) error {
 	email := c.Query("email", "")
 	msg := c.Query("msg", "")
 
-	redirectURL, nextMsg := s.logtoLoginPageDecision(c, msg)
+	redirectURL, nextMsg := s.logtoSigninPageDecision(c, msg)
 	if redirectURL != "" {
 		return s.Redirect(c, redirectURL)
 	}
@@ -36,12 +36,12 @@ func (s *service) HandleLoginPage(c fiber.Ctx) error {
 	return view.Render(c, view.LoginPage(email, msg, nil, vc))
 }
 
-// HandleLogin compares hash and password and sets the user Auth session cookie
+// HandleSignin compares hash and password and sets the user Auth session cookie
 // if the email & password combination are valid
 //
 // POST: /signin
-func (s *service) HandleLogin(c fiber.Ctx) error {
-	ctx, span := s.Trace(c.Context(), "auth/handlers:HandleLogin")
+func (s *service) HandleSignin(c fiber.Ctx) error {
+	ctx, span := s.Trace(c.Context(), "auth/handlers:HandleSignin")
 	defer span.End()
 
 	theme := s.SessionUITheme(c)
@@ -73,10 +73,10 @@ func (s *service) HandleLogin(c fiber.Ctx) error {
 	return s.Redirect(c, "/?timeframe=day")
 }
 
-// HandleAPILogin authenticates a user and creates an auth cookie for API clients.
+// HandleAPISignin authenticates a user and creates an auth cookie for API clients.
 // POST: /api/auth/signin
-func (s *service) HandleAPILogin(c fiber.Ctx) error {
-	ctx, span := s.Trace(c.Context(), "auth/handlers:HandleAPILogin")
+func (s *service) HandleAPISignin(c fiber.Ctx) error {
+	ctx, span := s.Trace(c.Context(), "auth/handlers:HandleAPISignin")
 	defer span.End()
 
 	req := struct {

@@ -368,7 +368,7 @@ func logtoConfigFromEnv(env *appenv.Env) *logto.LogtoConfig {
 	return &config
 }
 
-func (s *service) logtoLoginPageDecision(c fiber.Ctx, msg string) (redirectURL string, nextMsg string) {
+func (s *service) logtoSigninPageDecision(c fiber.Ctx, msg string) (redirectURL string, nextMsg string) {
 	if !logtoEnabled(s.Env) {
 		return "", msg
 	}
