@@ -2,6 +2,7 @@ package appointment
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
@@ -16,6 +17,8 @@ type service struct {
 	*server.Server
 }
 
+var ErrIDRequired = errors.New("id is required")
+
 func NewService(s *server.Server) service {
 	ser := service{Server: s}
 	ser.RegisterCronJob()
@@ -24,6 +27,10 @@ func NewService(s *server.Server) service {
 }
 
 func (s *service) TakePatientByID(ctx context.Context, userID, patientID string) (model.Patient, error) {
+	if strings.TrimSpace(patientID) == "" {
+		return model.Patient{}, ErrIDRequired
+	}
+
 	patient, err := gorm.G[model.Patient](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", patientID, userID).
 		Take(ctx)
@@ -35,6 +42,10 @@ func (s *service) TakePatientByID(ctx context.Context, userID, patientID string)
 }
 
 func (s *service) TakeClinicByID(ctx context.Context, userID, clinicID string) (model.Clinic, error) {
+	if strings.TrimSpace(clinicID) == "" {
+		return model.Clinic{}, ErrIDRequired
+	}
+
 	clinic, err := gorm.G[model.Clinic](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", clinicID, userID).
 		Take(ctx)
@@ -50,6 +61,10 @@ func (s *service) CreateAppointment(ctx context.Context, appointment *model.Appo
 }
 
 func (s *service) TakeAppointmentByID(ctx context.Context, userID, appointmentID string) (model.Appointment, error) {
+	if strings.TrimSpace(appointmentID) == "" {
+		return model.Appointment{}, ErrIDRequired
+	}
+
 	appointment, err := gorm.G[model.Appointment](s.DB.GormDB()).
 		Preload("Clinic", nil).
 		Preload("Patient", nil).
@@ -104,6 +119,10 @@ func (s *service) TakeAppointmentByIDAndToken(ctx context.Context, appointmentID
 }
 
 func (s *service) TakePatientByIDWithLastDoneAppointment(ctx context.Context, userID, patientID string) (model.Patient, error) {
+	if strings.TrimSpace(patientID) == "" {
+		return model.Patient{}, ErrIDRequired
+	}
+
 	patient := model.Patient{}
 	err := s.DB.Model(&model.Patient{}).
 		Where("id = ? AND user_id = ?", patientID, userID).
@@ -208,4 +227,36 @@ func (s *service) FindClinicsByTerm(ctx context.Context, userID, term string) ([
 	}
 
 	return clinics, nil
+}
+
+func (s *service) FindRecentClinicsByUserID(ctx context.Context, userID string, limit int) ([]model.Clinic, error) {
+	clinics := []model.Clinic{}
+	err := s.DB.WithContext(ctx).
+		Model(&model.Clinic{}).
+		Where("user_id = ?", userID).
+		Order("created_at desc").
+		Limit(limit).
+		Find(&clinics).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	return clinics, nil
+}
+
+func (s *service) FindRecentPatientsByUserID(ctx context.Context, userID string, limit int) ([]model.Patient, error) {
+	patients := []model.Patient{}
+	err := s.DB.WithContext(ctx).
+		Model(&model.Patient{}).
+		Where("user_id = ?", userID).
+		Order("created_at desc").
+		Limit(limit).
+		Find(&patients).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	return patients, nil
 }

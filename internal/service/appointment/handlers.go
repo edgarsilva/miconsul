@@ -3,6 +3,7 @@ package appointment
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"miconsul/internal/lib/handlerutils"
@@ -59,6 +60,9 @@ func (s *service) HandleShowPage(c fiber.Ctx) error {
 
 	appointmentID := c.Params("id", "")
 	appointment, err := s.AppointmentForShowPage(c.Context(), cu.ID, appointmentID)
+	if errors.Is(err, ErrIDRequired) {
+		return s.Redirect(c, "/appointments?toast=Invalid appointment id&level=error")
+	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.Redirect(c, "/appointments?toast=The appointment does not exist&level=warning")
 	}
@@ -66,14 +70,12 @@ func (s *service) HandleShowPage(c fiber.Ctx) error {
 		return s.Redirect(c, "/appointments?toast=Failed to load appointment&level=error")
 	}
 
-	clinics := []model.Clinic{}
-	err = s.DB.Model(&cu).Order("created_at desc").Limit(10).Association("Clinics").Find(&clinics)
+	clinics, err := s.FindRecentClinicsByUserID(c.Context(), cu.ID, 10)
 	if err != nil {
 		return s.Redirect(c, "/appointments?toast=Failed to load clinics&level=error")
 	}
 
-	patients := []model.Patient{}
-	err = s.DB.Model(&cu).Order("created_at desc").Limit(10).Association("Patients").Find(&patients)
+	patients, err := s.FindRecentPatientsByUserID(c.Context(), cu.ID, 10)
 	if err != nil {
 		return s.Redirect(c, "/appointments?toast=Failed to load patients&level=error")
 	}
@@ -99,6 +101,10 @@ func (s *service) HandleStartPage(c fiber.Ctx) error {
 	}
 
 	appointment, err := s.TakeAppointmentByID(c.Context(), cu.ID, appointmentID)
+	if errors.Is(err, ErrIDRequired) {
+		redirectPath := "/appointments?toast=Invalid appointment id&level=error"
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
+	}
 	if errors.Is(err, gorm.ErrRecordNotFound) || appointment.ID == "" {
 		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
@@ -109,7 +115,7 @@ func (s *service) HandleStartPage(c fiber.Ctx) error {
 	}
 
 	patient, err := s.PatientForStartPage(c.Context(), cu.ID, appointment.PatientID)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
 		redirectPath := "/appointments?toast=The appointment patient does not exist&level=warning"
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
 	}
@@ -481,14 +487,11 @@ func (s *service) AppointmentForShowPage(ctx context.Context, userID, appointmen
 }
 
 func (s *service) PatientForStartPage(ctx context.Context, userID, patientID string) (model.Patient, error) {
-	if patientID == "" {
-		return model.Patient{}, gorm.ErrRecordNotFound
-	}
-
 	return s.TakePatientByIDWithLastDoneAppointment(ctx, userID, patientID)
 }
 
 func (s *service) selectedPatientFromQuery(c fiber.Ctx, userID, patientID string) (model.Patient, error) {
+	patientID = strings.TrimSpace(patientID)
 	if patientID == "" {
 		return model.Patient{}, nil
 	}
@@ -502,6 +505,7 @@ func (s *service) selectedPatientFromQuery(c fiber.Ctx, userID, patientID string
 }
 
 func (s *service) selectedClinicFromQuery(c fiber.Ctx, userID, clinicID string) (model.Clinic, error) {
+	clinicID = strings.TrimSpace(clinicID)
 	if clinicID == "" {
 		return model.Clinic{}, nil
 	}
