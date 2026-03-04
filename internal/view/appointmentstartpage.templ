@@ -96,7 +96,6 @@ templ AppointmentStart(appointment model.Appointment, vc *Ctx) {
 			</hgroup>
 			<section class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
 				<input type="hidden" name="id" value={ appointment.ID } id="mb_appointment_id"/>
-				<input type="hidden" name="status" value="done" id="mb_appointment_id"/>
 				<div class="flex justify-end p-4 pb-0 text-base-content/50">
 					@CmpTime(appointment.BookedAt)
 				</div>

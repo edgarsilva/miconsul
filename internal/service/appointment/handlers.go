@@ -158,7 +158,7 @@ func (s *service) HandleComplete(c fiber.Ctx) error {
 
 	appointment := model.Appointment{
 		UserID:       cu.ID,
-		Status:       input.Status,
+		Status:       model.ApntStatusDone,
 		Observations: input.Observations,
 		Conclusions:  input.Conclusions,
 		Summary:      input.Summary,
