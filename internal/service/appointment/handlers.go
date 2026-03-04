@@ -1,7 +1,7 @@
 package appointment
 
 import (
-	"fmt"
+	"errors"
 	"time"
 
 	"miconsul/internal/lib/handlerutils"
@@ -23,15 +23,30 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	}
 
 	patientID := c.Query("patientId", "")
-	patient, _ := s.GetPatientByID(c, patientID)
+	patient, err := s.GetPatientByID(c, patientID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return s.Redirect(c, "/appointments?toast=Selected patient does not exist&level=warning")
+	}
+	if err != nil {
+		return s.Redirect(c, "/appointments?toast=Failed to load selected patient&level=error")
+	}
 	c.Locals("patient", patient)
 
 	clinicID := c.Query("clinicId", "")
-	clinic, _ := s.GetClinicByID(c, clinicID)
+	clinic, err := s.GetClinicByID(c, clinicID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return s.Redirect(c, "/appointments?toast=Selected clinic does not exist&level=warning")
+	}
+	if err != nil {
+		return s.Redirect(c, "/appointments?toast=Failed to load selected clinic&level=error")
+	}
 	c.Locals("clinic", clinic)
 
 	timeframe := c.Query("timeframe", "day")
-	appointments, _ := s.GetAppointmentsBy(c, cu, patientID, clinicID, timeframe)
+	appointments, err := s.GetAppointmentsBy(c, cu, patientID, clinicID, timeframe)
+	if err != nil {
+		return s.Redirect(c, "/appointments?toast=Failed to load appointments&level=error")
+	}
 
 	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.AppointmentsPage(vc, appointments))
@@ -46,18 +61,24 @@ func (s *service) HandleShowPage(c fiber.Ctx) error {
 		return s.Redirect(c, "/login")
 	}
 
-	id := c.Params("id", "")
-	appointment := model.Appointment{}
-	appointment.ID = id
-	if id != "" && id != "new" {
-		appointment, _ = gorm.G[model.Appointment](s.DB.GormDB()).Where("id = ?", id).Take(c.Context())
+	appointmentID := c.Params("id", "")
+	appointment, err := s.AppointmentForShowPage(c.Context(), cu.ID, appointmentID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return s.Redirect(c, "/appointments?toast=The appointment does not exist&level=warning")
+	}
+	if err != nil {
+		return s.Redirect(c, "/appointments?toast=Failed to load appointment&level=error")
 	}
 
 	clinics := []model.Clinic{}
-	s.DB.Model(&cu).Order("created_at desc").Limit(10).Association("Clinics").Find(&clinics)
+	if err := s.DB.Model(&cu).Order("created_at desc").Limit(10).Association("Clinics").Find(&clinics); err != nil {
+		return s.Redirect(c, "/appointments?toast=Failed to load clinics&level=error")
+	}
 
 	patients := []model.Patient{}
-	s.DB.Model(&cu).Order("created_at desc").Limit(10).Association("Patients").Find(&patients)
+	if err := s.DB.Model(&cu).Order("created_at desc").Limit(10).Association("Patients").Find(&patients); err != nil {
+		return s.Redirect(c, "/appointments?toast=Failed to load patients&level=error")
+	}
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "")
@@ -68,33 +89,40 @@ func (s *service) HandleShowPage(c fiber.Ctx) error {
 	return view.Render(c, view.AppointmentPage(vc, appointment, patients, clinics))
 }
 
-// HandleCommencePage renders the appointments page HTML
-// GET: /appointments/:id/commence
-func (s *service) HandleCommencePage(c fiber.Ctx) error {
+// HandleStartPage renders the appointment start page HTML
+// GET: /appointments/:id/start
+func (s *service) HandleStartPage(c fiber.Ctx) error {
 	cu, err := s.CurrentUser(c)
 	if err != nil {
 		return s.Redirect(c, "/login")
 	}
 
-	id := c.Params("id", "")
-	appointment := model.Appointment{
-		UserID: cu.ID,
-	}
-	appointment, _ = gorm.G[model.Appointment](s.DB.GormDB()).
-		Where("id = ? AND user_id = ?", id, cu.ID).
-		Take(c.Context())
-	if id == "" || appointment.ID == "" {
+	appointmentID := c.Params("id", "")
+	if appointmentID == "" {
 		c.Set("HX-Location", "/appointments?toast=The appointment does not exist&level=warning")
 		return s.Redirect(c, "/appointments?toast=The appointment does not exist&level=warning")
 	}
 
-	patient := model.Patient{
-		UserID: cu.ID,
+	appointment, err := s.TakeAppointmentByID(c.Context(), cu.ID, appointmentID)
+	if errors.Is(err, gorm.ErrRecordNotFound) || appointment.ID == "" {
+		c.Set("HX-Location", "/appointments?toast=The appointment does not exist&level=warning")
+		return s.Redirect(c, "/appointments?toast=The appointment does not exist&level=warning")
 	}
-	patient.ID = appointment.PatientID
-	s.DB.Model(patient).Preload("Appointments", func(tx *gorm.DB) *gorm.DB {
-		return tx.Limit(1).Where("status = ?", model.ApntStatusDone).Order("booked_at desc")
-	}).Take(&patient)
+	if err != nil {
+		c.Set("HX-Location", "/appointments?toast=Failed to load appointment&level=error")
+		return s.Redirect(c, "/appointments?toast=Failed to load appointment&level=error")
+	}
+
+	patient, err := s.PatientForStartPage(c.Context(), cu.ID, appointment.PatientID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.Set("HX-Location", "/appointments?toast=The appointment patient does not exist&level=warning")
+			return s.Redirect(c, "/appointments?toast=The appointment patient does not exist&level=warning")
+		}
+
+		c.Set("HX-Location", "/appointments?toast=Failed to load appointment patient&level=error")
+		return s.Redirect(c, "/appointments?toast=Failed to load appointment patient&level=error")
+	}
 
 	appointment.Patient = patient
 
@@ -103,7 +131,7 @@ func (s *service) HandleCommencePage(c fiber.Ctx) error {
 	vc, _ := view.NewCtx(c,
 		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, "", ""),
 	)
-	return view.Render(c, view.AppointmentCommencePage(appointment, vc))
+	return view.Render(c, view.AppointmentStartPage(appointment, vc))
 }
 
 // HandleConclude handles the request to mark an appointment as concluded/done
@@ -128,13 +156,22 @@ func (s *service) HandleConclude(c fiber.Ctx) error {
 	appointment := model.Appointment{
 		UserID: cu.ID,
 	}
-	c.Bind().Body(&appointment)
+	if err := c.Bind().Body(&appointment); err != nil {
+		redirectPath := "/appointments/" + appointmentID + "?toast=Invalid appointment input&level=error"
+		c.Set("HX-Location", redirectPath)
+		return s.Redirect(c, redirectPath)
+	}
 
-	_, err = gorm.G[model.Appointment](s.DB.GormDB()).
+	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", appointmentID, cu.ID).
 		Updates(c.Context(), appointment)
 	if err != nil {
 		redirectPath := "/appointments?toast=Failed to update appointment&level=error"
+		c.Set("HX-Location", redirectPath)
+		return s.Redirect(c, redirectPath)
+	}
+	if rowsAffected != 1 {
+		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
 		c.Set("HX-Location", redirectPath)
 		return s.Redirect(c, redirectPath)
 	}
@@ -177,7 +214,15 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 		Timezone:     model.DefaultTimezone,
 		Price:        handlerutils.StrToAmount(priceValue),
 	}
-	c.Bind().Body(&appointment)
+	if err := c.Bind().Body(&appointment); err != nil {
+		redirectPath := "/appointments/new?toast=Invalid appointment input&level=error"
+		if !s.IsHTMX(c) {
+			return s.Redirect(c, redirectPath)
+		}
+
+		c.Set("HX-Location", redirectPath)
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
 
 	err = gorm.G[model.Appointment](s.DB.GormDB()).Create(c.Context(), &appointment)
 	if err != nil {
@@ -190,14 +235,18 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusUnprocessableEntity)
 	}
 
-	s.DB.Model(&appointment).Preload("Clinic").Preload("Patient").Take(&appointment)
-	s.SendBookedAlert(appointment)
-
-	if !s.IsHTMX(c) {
-		return s.Redirect(c, "/appointments?toast=New appointment created")
+	toastMsg := "New appointment created"
+	if err := s.DB.Model(&appointment).Preload("Clinic").Preload("Patient").Take(&appointment).Error; err != nil {
+		toastMsg = "Appointment created, but failed to load related records"
+	} else if err := s.SendBookedAlert(appointment); err != nil {
+		toastMsg = "Appointment created, but failed to queue alert"
 	}
 
-	c.Set("HX-Location", "/appointments?toast=New appointment created")
+	if !s.IsHTMX(c) {
+		return s.Redirect(c, "/appointments?toast="+toastMsg)
+	}
+
+	c.Set("HX-Location", "/appointments?toast="+toastMsg)
 	return c.SendStatus(fiber.StatusOK)
 }
 
@@ -237,19 +286,36 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 		BookedMinute: bookedAt.Minute(),
 		Price:        handlerutils.StrToAmount(c.FormValue("price", "")),
 	}
-	c.Bind().Body(&appointment)
+	if err := c.Bind().Body(&appointment); err != nil {
+		redirectPath := "/appointments/" + appointmentID + "?toast=Invalid appointment input&level=error"
+		if !s.IsHTMX(c) {
+			return s.Redirect(c, redirectPath)
+		}
 
-	_, err = gorm.G[model.Appointment](s.DB.GormDB()).
+		c.Set("HX-Location", redirectPath)
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", appointmentID, cu.ID).
 		Updates(c.Context(), appointment)
 	if err != nil {
-		redirectPath := "/appointments/" + appointment.ID + "?toast=failed to update appointment&level=error"
+		redirectPath := "/appointments/" + appointmentID + "?toast=failed to update appointment&level=error"
 		if !s.IsHTMX(c) {
 			return s.Redirect(c, redirectPath)
 		}
 
 		c.Set("HX-Location", redirectPath)
 		return c.SendStatus(fiber.StatusUnprocessableEntity)
+	}
+	if rowsAffected != 1 {
+		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
+		if !s.IsHTMX(c) {
+			return s.Redirect(c, redirectPath)
+		}
+
+		c.Set("HX-Location", redirectPath)
+		return c.SendStatus(fiber.StatusNotFound)
 	}
 
 	if !s.IsHTMX(c) {
@@ -288,7 +354,7 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 		Status:     model.ApntStatusCanceled,
 		CanceledAt: time.Now(),
 	}
-	_, err = gorm.G[model.Appointment](s.DB.GormDB()).
+	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", appointmentID, cu.ID).
 		Updates(c.Context(), appointment)
 	if err != nil {
@@ -299,6 +365,15 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 
 		c.Set("HX-Location", redirectPath)
 		return c.SendStatus(fiber.StatusUnprocessableEntity)
+	}
+	if rowsAffected != 1 {
+		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
+		if !s.IsHTMX(c) {
+			return s.Redirect(c, redirectPath)
+		}
+
+		c.Set("HX-Location", redirectPath)
+		return c.SendStatus(fiber.StatusNotFound)
 	}
 
 	if !s.IsHTMX(c) {
@@ -323,11 +398,14 @@ func (s *service) HandleDelete(c fiber.Ctx) error {
 		return s.Redirect(c, "/appointments?msg=can't delete without an id")
 	}
 
-	_, err = gorm.G[model.Appointment](s.DB.GormDB()).
+	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", appointmentID, cu.ID).
 		Delete(c.Context())
 	if err != nil {
 		return s.Redirect(c, "/appointments?msg=failed to delete that appointment")
+	}
+	if rowsAffected != 1 {
+		return s.Redirect(c, "/appointments?msg=can't find that appointment")
 	}
 
 	isHTMX := c.Get("HX-Request", "") // will be a string 'true' for HTMX requests
@@ -349,11 +427,11 @@ func (s *service) HandlePatientConfirm(c fiber.Ctx) error {
 		ConfirmedAt: time.Now(),
 		Status:      model.ApntStatusConfirmed,
 	}
-	_, err := gorm.G[model.Appointment](s.DB.GormDB()).
+	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
 		Select("ConfirmedAt", "Status").
 		Where("id = ? AND token = ?", apptID, token).
 		Updates(c.Context(), appt)
-	if err != nil {
+	if err != nil || rowsAffected != 1 {
 		redirectPath := "/login?toast=Failed to confirm appointment&level=error"
 		return s.Redirect(c, redirectPath)
 	}
@@ -364,10 +442,6 @@ func (s *service) HandlePatientConfirm(c fiber.Ctx) error {
 		view.WithTheme(theme), view.WithToast(toast, "", ""),
 	)
 
-	if appt.ID == "" {
-		return view.Render(c, view.AppointmentNotFoundPage(vc))
-	}
-
 	return view.Render(c, view.AppointmentConfirmPage(vc))
 }
 
@@ -377,7 +451,18 @@ func (s *service) HandlePatientCancelPage(c fiber.Ctx) error {
 	apptID := c.Params("id", "")
 	token := c.Params("token", "")
 	appt := model.Appointment{}
-	s.DB.Preload("Clinic").Preload("User").Where("id = ? AND token = ?", apptID, token).Take(&appt)
+	if err := s.DB.Preload("Clinic").Preload("User").Where("id = ? AND token = ?", apptID, token).Take(&appt).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			theme := s.SessionUITheme(c)
+			toast := c.Query("toast", "")
+			vc, _ := view.NewCtx(c,
+				view.WithTheme(theme), view.WithToast(toast, "", ""),
+			)
+			return view.Render(c, view.AppointmentNotFoundPage(vc))
+		}
+
+		return s.Redirect(c, "/login?toast=Failed to load appointment&level=error")
+	}
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "")
@@ -406,11 +491,19 @@ func (s *service) HandlePatientCancel(c fiber.Ctx) error {
 		Where("id = ? AND token = ?", apptID, token).
 		Updates(c.Context(), apptUpds)
 	if err != nil || rowsAffected != 1 {
-		fmt.Println("------>", err, rowsAffected)
+		return s.Redirect(c, "/login?toast=Failed to cancel appointment&level=error")
 	}
 
 	appt := model.Appointment{}
-	s.DB.Preload("Clinic").Where("id = ? AND token = ?", apptID, token).Take(&appt)
+	if err := s.DB.Preload("Clinic").Where("id = ? AND token = ?", apptID, token).Take(&appt).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			theme := s.SessionUITheme(c)
+			vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithToast("Appointment not found", "", "warning"))
+			return view.Render(c, view.AppointmentNotFoundPage(vc))
+		}
+
+		return s.Redirect(c, "/login?toast=Failed to load appointment&level=error")
+	}
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "Success!")
@@ -434,11 +527,11 @@ func (s *service) HandlePatientChangeDate(c fiber.Ctx) error {
 		PendingAt: time.Now(),
 		Status:    model.ApntStatusPending,
 	}
-	_, err := gorm.G[model.Appointment](s.DB.GormDB()).
+	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
 		Select("Token", "PendingAt", "Status").
 		Where("id = ? AND token = ?", appointmentID, token).
 		Updates(c.Context(), appointment)
-	if err != nil {
+	if err != nil || rowsAffected != 1 {
 		redirectPath := "/login?toast=Failed to confirm appointment&level=error"
 		return s.Redirect(c, redirectPath)
 	}
@@ -460,10 +553,16 @@ func (s *service) HandlePriceFrg(c fiber.Ctx) error {
 		ID:     id,
 	}
 
-	clinic, _ = gorm.G[model.Clinic](s.DB.GormDB()).
+	clinic, err = gorm.G[model.Clinic](s.DB.GormDB()).
 		Select("id", "price").
 		Where("id = ? AND user_id = ?", clinic.ID, clinic.UserID).
 		Take(c.Context())
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return c.SendStatus(fiber.StatusNotFound)
+	}
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
 
 	toast := c.Query("toast", "")
 	vc, _ := view.NewCtx(c, view.WithToast(toast, "", ""))
@@ -485,11 +584,13 @@ func (s *service) HandleSearchClinics(c fiber.Ctx) error {
 
 	dbquery := s.DB.Model(&cu)
 	if queryStr != "" {
-		dbquery.Scopes(model.GlobalFTS(queryStr))
+		dbquery = dbquery.Scopes(model.GlobalFTS(queryStr))
 	} else {
-		dbquery.Order("created_at desc")
+		dbquery = dbquery.Order("created_at desc")
 	}
-	dbquery.Limit(10).Association("Clinics").Find(&clinics)
+	if err := dbquery.Limit(10).Association("Clinics").Find(&clinics); err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
 
 	// time.Sleep(time.Second * 2)
 	theme := s.SessionUITheme(c)

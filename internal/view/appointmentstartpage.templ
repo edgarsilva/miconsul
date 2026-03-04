@@ -5,13 +5,13 @@ import (
 	"strconv"
 )
 
-templ AppointmentCommencePage(appointment model.Appointment, vc *Ctx) {
+templ AppointmentStartPage(appointment model.Appointment, vc *Ctx) {
 	@Layout(vc) {
 		<div class="px-4 lg:px-8">
 			@CmpBtnBack(l(vc.Locale, "btn.back"), "/appointments")
 		</div>
 		<section id="appointment_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
-			@AppointmentBegin(appointment, vc)
+			@AppointmentStart(appointment, vc)
 		</section>
 	}
 }
@@ -84,7 +84,7 @@ templ PatientCard(patient model.Patient, vc *Ctx) {
 	</div>
 }
 
-templ AppointmentBegin(appointment model.Appointment, vc *Ctx) {
+templ AppointmentStart(appointment model.Appointment, vc *Ctx) {
 	<span class="absolute top-2 right-2 loading loading-ring text-primary loading-md htmx-indicator"></span>
 	<div class="space-y-10 ">
 		@PatientCard(appointment.Patient, vc)

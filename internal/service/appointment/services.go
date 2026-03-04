@@ -2,7 +2,6 @@ package appointment
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"miconsul/internal/lib/libtime"
 	"miconsul/internal/mailer"
@@ -37,13 +36,17 @@ func (s *service) RegisterCronJob() {
 		defer span.End()
 
 		appointments := []model.Appointment{}
-		s.DB.
+		if err := s.DB.
 			WithContext(ctx).
 			Model(&model.Appointment{}).
 			Preload("Patient").
 			Preload("Clinic").
 			Scopes(model.AppointmentWithPendingAlerts).
-			Find(&appointments)
+			Find(&appointments).
+			Error; err != nil {
+			fmt.Println("failed to load appointments for reminder job:", err.Error())
+			return
+		}
 		for _, appointment := range appointments {
 			s.SendReminderAlert(appointment)
 		}
@@ -58,16 +61,15 @@ func (s *service) GetPatientByID(c fiber.Ctx, id string) (model.Patient, error) 
 		return model.Patient{}, nil
 	}
 
-	cu, _ := s.CurrentUser(c)
-	patient := model.Patient{ID: id, UserID: cu.ID}
-	patient, err := gorm.G[model.Patient](s.DB.GormDB()).
-		Where("id = ? AND user_id = ?", id, cu.ID).
-		Take(c.Context())
-
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		err := fmt.Errorf("incorrect number of patient rows, expecting: 1, got: %d", 0)
+	cu, err := s.CurrentUser(c)
+	if err != nil {
 		return model.Patient{}, err
 	}
+
+	patient := model.Patient{ID: id, UserID: cu.ID}
+	patient, err = gorm.G[model.Patient](s.DB.GormDB()).
+		Where("id = ? AND user_id = ?", id, cu.ID).
+		Take(c.Context())
 	if err != nil {
 		return model.Patient{}, err
 	}
@@ -80,15 +82,15 @@ func (s *service) GetClinicByID(c fiber.Ctx, id string) (model.Clinic, error) {
 		return model.Clinic{}, nil
 	}
 
-	cu, _ := s.CurrentUser(c)
-	clinic := model.Clinic{ID: id, UserID: cu.ID}
-	clinic, err := gorm.G[model.Clinic](s.DB.GormDB()).
-		Where("id = ? AND user_id = ?", id, cu.ID).
-		Take(c.Context())
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		err := fmt.Errorf("incorrect number of clinic rows, expecting: 1, got: %d", 0)
+	cu, err := s.CurrentUser(c)
+	if err != nil {
 		return model.Clinic{}, err
 	}
+
+	clinic := model.Clinic{ID: id, UserID: cu.ID}
+	clinic, err = gorm.G[model.Clinic](s.DB.GormDB()).
+		Where("id = ? AND user_id = ?", id, cu.ID).
+		Take(c.Context())
 	if err != nil {
 		return model.Clinic{}, err
 	}
@@ -96,33 +98,79 @@ func (s *service) GetClinicByID(c fiber.Ctx, id string) (model.Clinic, error) {
 	return clinic, nil
 }
 
+func (s *service) TakeAppointmentByID(ctx context.Context, userID, appointmentID string) (model.Appointment, error) {
+	appointment, err := gorm.G[model.Appointment](s.DB.GormDB()).
+		Where("id = ? AND user_id = ?", appointmentID, userID).
+		Take(ctx)
+	if err != nil {
+		return model.Appointment{}, err
+	}
+
+	return appointment, nil
+}
+
+func (s *service) AppointmentForShowPage(ctx context.Context, userID, appointmentID string) (model.Appointment, error) {
+	appointment := model.Appointment{ID: appointmentID}
+	if appointmentID == "" || appointmentID == "new" {
+		return appointment, nil
+	}
+
+	return s.TakeAppointmentByID(ctx, userID, appointmentID)
+}
+
+func (s *service) TakePatientByIDWithLastDoneAppointment(ctx context.Context, userID, patientID string) (model.Patient, error) {
+	patient := model.Patient{ID: patientID, UserID: userID}
+	if err := s.DB.Model(&model.Patient{}).
+		Where("id = ? AND user_id = ?", patientID, userID).
+		Preload("Appointments", func(tx *gorm.DB) *gorm.DB {
+			return tx.Limit(1).Where("status = ?", model.ApntStatusDone).Order("booked_at desc")
+		}).
+		Take(&patient).Error; err != nil {
+		return model.Patient{}, err
+	}
+
+	return patient, nil
+}
+
+func (s *service) PatientForStartPage(ctx context.Context, userID, patientID string) (model.Patient, error) {
+	if patientID == "" {
+		return model.Patient{}, gorm.ErrRecordNotFound
+	}
+
+	return s.TakePatientByIDWithLastDoneAppointment(ctx, userID, patientID)
+}
+
 func (s *service) GetAppointmentsBy(c fiber.Ctx, cu model.User, patientID, clinicID, timeframe string) ([]model.Appointment, error) {
 	appointments := []model.Appointment{}
 	dbquery := s.DB.Model(&model.Appointment{}).Where("user_id = ?", cu.ID)
 
 	if patientID != "" {
-		dbquery.Where("patient_id = ?", patientID)
+		dbquery = dbquery.Where("patient_id = ?", patientID)
 	}
 
 	if clinicID != "" {
-		dbquery.Where("clinic_id = ?", clinicID)
+		dbquery = dbquery.Where("clinic_id = ?", clinicID)
 	}
 
 	switch timeframe {
 	case "day":
-		dbquery.Scopes(model.AppointmentBookedToday)
+		dbquery = dbquery.Scopes(model.AppointmentBookedToday)
 	case "week":
-		dbquery.Scopes(model.AppointmentBookedThisWeek)
+		dbquery = dbquery.Scopes(model.AppointmentBookedThisWeek)
 	case "month":
-		dbquery.Scopes(model.AppointmentBookedThisMonth)
+		dbquery = dbquery.Scopes(model.AppointmentBookedThisMonth)
 	default:
-		dbquery.Where("booked_at > ?", libtime.BoD(time.Now()))
+		dbquery = dbquery.Where("booked_at > ?", libtime.BoD(time.Now()))
 	}
 
-	dbquery.Preload("Clinic").
+	err := dbquery.Preload("Clinic").
 		Preload("Patient").
 		Order("booked_at desc").
-		Find(&appointments)
+		Find(&appointments).
+		Error
+	if err != nil {
+		return nil, err
+	}
 
 	return appointments, nil
 }
@@ -137,13 +185,17 @@ func (s *service) SendBookedAlert(appointment model.Appointment) error {
 				Status: model.AlertFailed,
 				To:     appointment.Patient.Email,
 			}
-			s.DB.Model(&appointment).Association("Alerts").Append(&alert)
+			if err := s.DB.Model(&appointment).Association("Alerts").Append(&alert); err != nil {
+				fmt.Println("failed to append failed booked alert:", err.Error())
+			}
 			return
 		}
 
-		_, _ = gorm.G[model.Appointment](s.DB.GormDB()).
+		if _, err := gorm.G[model.Appointment](s.DB.GormDB()).
 			Where("id = ?", appointment.ID).
-			Update(context.Background(), "BookedAlertSentAt", time.Now())
+			Update(context.Background(), "BookedAlertSentAt", time.Now()); err != nil {
+			fmt.Println("failed to update BookedAlertSentAt:", err.Error())
+		}
 
 		alert := model.Alert{
 			Medium: model.AlertMediumEmail,
@@ -151,7 +203,9 @@ func (s *service) SendBookedAlert(appointment model.Appointment) error {
 			Status: model.AlertSent,
 			To:     appointment.Patient.Email,
 		}
-		s.DB.Model(&appointment).Association("Alerts").Append(&alert)
+		if err := s.DB.Model(&appointment).Association("Alerts").Append(&alert); err != nil {
+			fmt.Println("failed to append sent booked alert:", err.Error())
+		}
 	})
 
 	return err
@@ -167,13 +221,17 @@ func (s *service) SendReminderAlert(appointment model.Appointment) error {
 				Status: model.AlertFailed,
 				To:     appointment.Patient.Email,
 			}
-			s.DB.Model(&appointment).Association("Alerts").Append(&alert)
+			if err := s.DB.Model(&appointment).Association("Alerts").Append(&alert); err != nil {
+				fmt.Println("failed to append failed reminder alert:", err.Error())
+			}
 			return
 		}
 
-		_, _ = gorm.G[model.Appointment](s.DB.GormDB()).
+		if _, err := gorm.G[model.Appointment](s.DB.GormDB()).
 			Where("id = ?", appointment.ID).
-			Update(context.Background(), "ReminderAlertSentAt", time.Now())
+			Update(context.Background(), "ReminderAlertSentAt", time.Now()); err != nil {
+			fmt.Println("failed to update ReminderAlertSentAt:", err.Error())
+		}
 
 		alert := model.Alert{
 			Medium: model.AlertMediumEmail,
@@ -181,7 +239,9 @@ func (s *service) SendReminderAlert(appointment model.Appointment) error {
 			Status: model.AlertSent,
 			To:     appointment.Patient.Email,
 		}
-		s.DB.Model(&appointment).Association("Alerts").Append(&alert)
+		if err := s.DB.Model(&appointment).Association("Alerts").Append(&alert); err != nil {
+			fmt.Println("failed to append sent reminder alert:", err.Error())
+		}
 	})
 
 	return err
