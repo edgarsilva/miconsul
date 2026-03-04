@@ -90,9 +90,6 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 }
 
 func (a *Appointment) BeforeSave(tx *gorm.DB) error {
-	if a.Status == "" {
-		return nil
-	}
 	if !a.Status.IsValid() {
 		return errors.New("invalid appointment status")
 	}
