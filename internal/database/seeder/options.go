@@ -7,6 +7,8 @@ type Options struct {
 	BulkClinics      int
 	BulkPatients     int
 	BulkAppointments int
+	OwnerEmail       string
+	EnsureOwner      bool
 }
 
 func (o Options) withDefaults() Options {

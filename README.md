@@ -105,6 +105,14 @@ You can also run the seeder command directly and customize amounts:
 go run -tags fts5 cmd/seed/main.go --users=2 --clinics=10 --patients=20 --appointments=40
 ```
 
+To attach clinics/patients/appointments to a specific existing user:
+
+```bash
+go run -tags fts5 cmd/seed/main.go --owner-email="you@example.com" --users=0
+```
+
+If that user doesn't exist yet, add `--ensure-owner` to create it first.
+
 ```bash
 make install
 ```

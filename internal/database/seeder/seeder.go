@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	"miconsul/internal/lib/avatar"
@@ -18,6 +19,7 @@ const (
 	seedAdminEmail    = "admin@seed.local"
 	seedAdminPassword = "Admin123!"
 	seedAdminName     = "Seed Admin"
+	seedOwnerPassword = "SeedOwner123!"
 
 	baselineClinicExtID = "seed-baseline-clinic-main"
 )
@@ -42,14 +44,14 @@ func Run(ctx context.Context, db *gorm.DB, opts Options) (Result, error) {
 	opts = opts.withDefaults()
 	result := Result{}
 
-	adminUser, baselineResult, err := seedBaseline(ctx, db, opts.Baseline)
+	ownerUser, baselineResult, err := seedBaseline(ctx, db, opts)
 	if err != nil {
 		return Result{}, err
 	}
 	result.add(baselineResult)
 
 	if opts.RandomizedBulk {
-		bulkResult, err := seedBulk(ctx, db, adminUser, opts)
+		bulkResult, err := seedBulk(ctx, db, ownerUser, opts)
 		if err != nil {
 			return Result{}, err
 		}
@@ -59,22 +61,22 @@ func Run(ctx context.Context, db *gorm.DB, opts Options) (Result, error) {
 	return result, nil
 }
 
-func seedBaseline(ctx context.Context, db *gorm.DB, enabled bool) (model.User, Result, error) {
-	adminUser, createdAdmin, err := ensureAdminUser(ctx, db)
+func seedBaseline(ctx context.Context, db *gorm.DB, opts Options) (model.User, Result, error) {
+	ownerUser, createdOwner, err := resolveOwnerUser(ctx, db, opts)
 	if err != nil {
 		return model.User{}, Result{}, err
 	}
 
 	result := Result{}
-	if createdAdmin {
+	if createdOwner {
 		result.UsersCreated++
 	}
 
-	if !enabled {
-		return adminUser, result, nil
+	if !opts.Baseline {
+		return ownerUser, result, nil
 	}
 
-	clinic, createdClinic, err := ensureBaselineClinic(ctx, db, adminUser)
+	clinic, createdClinic, err := ensureBaselineClinic(ctx, db, ownerUser)
 	if err != nil {
 		return model.User{}, Result{}, err
 	}
@@ -82,19 +84,59 @@ func seedBaseline(ctx context.Context, db *gorm.DB, enabled bool) (model.User, R
 		result.ClinicsCreated++
 	}
 
-	patients, createdPatients, err := ensureBaselinePatients(ctx, db, adminUser)
+	patients, createdPatients, err := ensureBaselinePatients(ctx, db, ownerUser)
 	if err != nil {
 		return model.User{}, Result{}, err
 	}
 	result.PatientsCreated += createdPatients
 
-	createdAppointments, err := ensureBaselineAppointments(ctx, db, adminUser, clinic, patients)
+	createdAppointments, err := ensureBaselineAppointments(ctx, db, ownerUser, clinic, patients)
 	if err != nil {
 		return model.User{}, Result{}, err
 	}
 	result.AppointmentsCreated += createdAppointments
 
-	return adminUser, result, nil
+	return ownerUser, result, nil
+}
+
+func resolveOwnerUser(ctx context.Context, db *gorm.DB, opts Options) (model.User, bool, error) {
+	ownerEmail := strings.TrimSpace(opts.OwnerEmail)
+	if ownerEmail == "" {
+		return ensureAdminUser(ctx, db)
+	}
+
+	user := model.User{}
+	err := db.WithContext(ctx).Where("email = ?", ownerEmail).Take(&user).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		if !opts.EnsureOwner {
+			return model.User{}, false, fmt.Errorf("owner user not found: %s", ownerEmail)
+		}
+
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(seedOwnerPassword), 12)
+		if err != nil {
+			return model.User{}, false, fmt.Errorf("hash seed owner password: %w", err)
+		}
+
+		user = model.User{
+			Name:              "Seed Owner",
+			Email:             ownerEmail,
+			Password:          string(hashedPassword),
+			ProfilePic:        avatar.DicebearAvatarURL(ownerEmail),
+			Role:              model.UserRoleUser,
+			ConfirmEmailToken: "",
+		}
+
+		if err := db.WithContext(ctx).Create(&user).Error; err != nil {
+			return model.User{}, false, fmt.Errorf("create seed owner user: %w", err)
+		}
+
+		return user, true, nil
+	}
+	if err != nil {
+		return model.User{}, false, fmt.Errorf("find seed owner user: %w", err)
+	}
+
+	return user, false, nil
 }
 
 func ensureAdminUser(ctx context.Context, db *gorm.DB) (model.User, bool, error) {

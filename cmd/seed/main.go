@@ -34,6 +34,8 @@ func main() {
 	flag.IntVar(&opts.BulkClinics, "clinics", 20, "number of randomized clinics to create")
 	flag.IntVar(&opts.BulkPatients, "patients", 60, "number of randomized patients to create")
 	flag.IntVar(&opts.BulkAppointments, "appointments", 120, "number of randomized appointments to create")
+	flag.StringVar(&opts.OwnerEmail, "owner-email", "", "attach clinic/patient/appointment seed records to this existing user email")
+	flag.BoolVar(&opts.EnsureOwner, "ensure-owner", false, "create owner-email user if missing (default password: SeedOwner123!)")
 	flag.BoolVar(&skipMigrate, "skip-migrate", false, "skip running goose migrations before seeding")
 	flag.Parse()
 
