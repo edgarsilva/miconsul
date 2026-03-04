@@ -1,0 +1,42 @@
+package appointment
+
+import (
+	"context"
+	"fmt"
+
+	"miconsul/internal/model"
+
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
+)
+
+func (s *service) RegisterCronJob() {
+	err := s.AddCronJob("0/1 * * * *", func() {
+		ctx, span := s.Trace(context.Background(), "appointment/services:RegisterCronJob>Job",
+			trace.WithAttributes(
+				attribute.String("grouping.fingerprint", "cronjob"),
+			),
+		)
+		defer span.End()
+
+		appointments := []model.Appointment{}
+		err := s.DB.
+			WithContext(ctx).
+			Model(&model.Appointment{}).
+			Preload("Patient").
+			Preload("Clinic").
+			Scopes(model.AppointmentWithPendingAlerts).
+			Find(&appointments).
+			Error
+		if err != nil {
+			fmt.Println("failed to load appointments for reminder job:", err.Error())
+			return
+		}
+		for _, appointment := range appointments {
+			s.SendReminderAlert(appointment)
+		}
+	})
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}
