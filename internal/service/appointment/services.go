@@ -100,10 +100,19 @@ func (s *service) GetClinicByID(c fiber.Ctx, id string) (model.Clinic, error) {
 	return clinic, nil
 }
 
+func (s *service) CreateAppointment(ctx context.Context, appointment *model.Appointment) error {
+	return gorm.G[model.Appointment](s.DB.GormDB()).Create(ctx, appointment)
+}
+
 func (s *service) TakeAppointmentByID(ctx context.Context, userID, appointmentID string) (model.Appointment, error) {
-	appointment, err := gorm.G[model.Appointment](s.DB.GormDB()).
+	appointment := model.Appointment{ID: appointmentID}
+	err := s.DB.WithContext(ctx).
+		Model(&model.Appointment{}).
+		Preload("Clinic").
+		Preload("Patient").
 		Where("id = ? AND user_id = ?", appointmentID, userID).
-		Take(ctx)
+		Take(&appointment).
+		Error
 	if err != nil {
 		return model.Appointment{}, err
 	}

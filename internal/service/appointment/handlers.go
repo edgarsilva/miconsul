@@ -213,41 +213,31 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 		Timezone:     model.DefaultTimezone,
 		Price:        handlerutils.StrToAmount(priceValue),
 	}
-	if err := c.Bind().Body(&appointment); err != nil {
+	err = c.Bind().Body(&appointment)
+	if err != nil {
 		redirectPath := "/appointments/new?toast=Invalid appointment input&level=error"
-		if !s.IsHTMX(c) {
-			return s.Redirect(c, redirectPath)
-		}
-
-		c.Set("HX-Location", redirectPath)
-		return c.SendStatus(fiber.StatusBadRequest)
+		return s.respondRedirect(c, redirectPath, fiber.StatusBadRequest)
 	}
 
-	err = gorm.G[model.Appointment](s.DB.GormDB()).Create(c.Context(), &appointment)
+	err = s.CreateAppointment(c.Context(), &appointment)
 	if err != nil {
 		redirectPath := "/appointments?toast=failed to create appointment&level=error"
-		if !s.IsHTMX(c) {
-			return s.Redirect(c, redirectPath)
-		}
-
-		c.Set("HX-Location", redirectPath)
-		return c.SendStatus(fiber.StatusUnprocessableEntity)
+		return s.respondRedirect(c, redirectPath, fiber.StatusUnprocessableEntity)
 	}
 
 	toastMsg := "New appointment created"
-	err = s.DB.Model(&appointment).Preload("Clinic").Preload("Patient").Take(&appointment).Error
+	appointment, err = s.TakeAppointmentByID(c.Context(), cu.ID, appointment.ID)
 	if err != nil {
 		toastMsg = "Appointment created, but failed to load related records"
-	} else if err := s.SendBookedAlert(appointment); err != nil {
-		toastMsg = "Appointment created, but failed to queue alert"
+	} else {
+		err = s.SendBookedAlert(appointment)
+		if err != nil {
+			toastMsg = "Appointment created, but failed to queue alert"
+		}
 	}
 
-	if !s.IsHTMX(c) {
-		return s.Redirect(c, "/appointments?toast="+toastMsg)
-	}
-
-	c.Set("HX-Location", "/appointments?toast="+toastMsg)
-	return c.SendStatus(fiber.StatusOK)
+	redirectPath := "/appointments?toast=" + toastMsg
+	return s.respondRedirect(c, redirectPath, fiber.StatusOK)
 }
 
 // HandleUpdate updates an appointment record for the current user.
@@ -574,4 +564,13 @@ func (s *service) renderAppointmentNotFoundPage(c fiber.Ctx, toast, level string
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithToast(toast, "", level))
 	return view.Render(c, view.AppointmentNotFoundPage(vc))
+}
+
+func (s *service) respondRedirect(c fiber.Ctx, redirectPath string, htmxStatus int) error {
+	if !s.IsHTMX(c) {
+		return s.Redirect(c, redirectPath)
+	}
+
+	c.Set("HX-Location", redirectPath)
+	return c.SendStatus(htmxStatus)
 }
