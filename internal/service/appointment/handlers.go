@@ -21,20 +21,18 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
 	patientID := c.Query("patientId", "")
-	patient, err := s.TakePatientByID(c.Context(), cu.ID, patientID)
+	patient, err := s.selectedPatientFromQuery(c, cu.ID, patientID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.Redirect(c, "/appointments?toast=Selected patient does not exist&level=warning")
 	}
 	if err != nil {
 		return s.Redirect(c, "/appointments?toast=Failed to load selected patient&level=error")
 	}
+
 	c.Locals("patient", patient)
 
 	clinicID := c.Query("clinicId", "")
-	clinic := model.Clinic{}
-	if clinicID != "" {
-		clinic, err = s.TakeClinicByID(c.Context(), cu.ID, clinicID)
-	}
+	clinic, err := s.selectedClinicFromQuery(c, cu.ID, clinicID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.Redirect(c, "/appointments?toast=Selected clinic does not exist&level=warning")
 	}
@@ -134,7 +132,6 @@ func (s *service) HandleStartPage(c fiber.Ctx) error {
 // POST: /appointments/:id/complete
 func (s *service) HandleComplete(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
-	var err error
 
 	appointmentID := c.Params("id", "")
 	if appointmentID == "" {
@@ -149,7 +146,7 @@ func (s *service) HandleComplete(c fiber.Ctx) error {
 	appointment := model.Appointment{
 		UserID: cu.ID,
 	}
-	err = c.Bind().Body(&appointment)
+	err := c.Bind().Body(&appointment)
 	if err != nil {
 		redirectPath := "/appointments/" + appointmentID + "?toast=Invalid appointment input&level=error"
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
@@ -280,7 +277,6 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 // POST: /appointments/:id/cancel
 func (s *service) HandleCancel(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
-	var err error
 
 	appointmentID := c.Params("id", "")
 	if appointmentID == "" {
@@ -297,7 +293,7 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 		Status:     model.ApntStatusCanceled,
 		CanceledAt: time.Now(),
 	}
-	err = s.UpdateAppointmentByIDAndUserID(c.Context(), cu.ID, appointmentID, appointment)
+	err := s.UpdateAppointmentByIDAndUserID(c.Context(), cu.ID, appointmentID, appointment)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
@@ -315,14 +311,13 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 // POST: /appointments/:id/delete
 func (s *service) HandleDelete(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
-	var err error
 
 	appointmentID := c.Params("id", "")
 	if appointmentID == "" {
 		return s.Redirect(c, "/appointments?msg=can't delete without an id")
 	}
 
-	err = s.DeleteAppointmentByIDAndUserID(c.Context(), cu.ID, appointmentID)
+	err := s.DeleteAppointmentByIDAndUserID(c.Context(), cu.ID, appointmentID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.Redirect(c, "/appointments?msg=can't find that appointment")
 	}
@@ -491,6 +486,32 @@ func (s *service) PatientForStartPage(ctx context.Context, userID, patientID str
 	}
 
 	return s.TakePatientByIDWithLastDoneAppointment(ctx, userID, patientID)
+}
+
+func (s *service) selectedPatientFromQuery(c fiber.Ctx, userID, patientID string) (model.Patient, error) {
+	if patientID == "" {
+		return model.Patient{}, nil
+	}
+
+	patient, err := s.TakePatientByID(c.Context(), userID, patientID)
+	if err != nil {
+		return model.Patient{}, err
+	}
+
+	return patient, nil
+}
+
+func (s *service) selectedClinicFromQuery(c fiber.Ctx, userID, clinicID string) (model.Clinic, error) {
+	if clinicID == "" {
+		return model.Clinic{}, nil
+	}
+
+	clinic, err := s.TakeClinicByID(c.Context(), userID, clinicID)
+	if err != nil {
+		return model.Clinic{}, err
+	}
+
+	return clinic, nil
 }
 
 func (s *service) renderAppointmentNotFoundPage(c fiber.Ctx, toast, level string) error {

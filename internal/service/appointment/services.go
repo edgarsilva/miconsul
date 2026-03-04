@@ -24,7 +24,6 @@ func NewService(s *server.Server) service {
 }
 
 func (s *service) TakePatientByID(ctx context.Context, userID, patientID string) (model.Patient, error) {
-	patient := model.Patient{ID: patientID, UserID: userID}
 	patient, err := gorm.G[model.Patient](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", patientID, userID).
 		Take(ctx)
