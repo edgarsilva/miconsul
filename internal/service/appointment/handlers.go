@@ -149,13 +149,20 @@ func (s *service) HandleComplete(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
 	}
 
-	appointment := model.Appointment{
-		UserID: cu.ID,
-	}
-	err := c.Bind().Body(&appointment)
+	input := appointmentCompleteInput{}
+	err := c.Bind().Body(&input)
 	if err != nil {
 		redirectPath := "/appointments/" + appointmentID + "?toast=Invalid appointment input&level=error"
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
+	}
+
+	appointment := model.Appointment{
+		UserID:       cu.ID,
+		Status:       input.Status,
+		Observations: input.Observations,
+		Conclusions:  input.Conclusions,
+		Summary:      input.Summary,
+		Notes:        input.Notes,
 	}
 
 	err = s.UpdateAppointmentByIDAndUserID(c.Context(), cu.ID, appointmentID, appointment)
@@ -186,6 +193,13 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 
 	bookedAt = libtime.NewInTimezone(bookedAt, model.DefaultTimezone)
 	bookedAt = bookedAt.UTC()
+	input := appointmentUpsertInput{}
+	err = c.Bind().Body(&input)
+	if err != nil {
+		redirectPath := "/appointments/new?toast=Invalid appointment input&level=error"
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
+	}
+
 	appointment := model.Appointment{
 		Token:        xid.New("tkn_"),
 		UserID:       cu.ID,
@@ -197,11 +211,9 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 		BookedMinute: bookedAt.Minute(),
 		Timezone:     model.DefaultTimezone,
 		Price:        handlerutils.StrToAmount(priceValue),
-	}
-	err = c.Bind().Body(&appointment)
-	if err != nil {
-		redirectPath := "/appointments/new?toast=Invalid appointment input&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
+		ClinicID:     input.ClinicID,
+		PatientID:    input.PatientID,
+		Duration:     input.Duration,
 	}
 
 	err = s.CreateAppointment(c.Context(), &appointment)
@@ -249,6 +261,13 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 
 	bookedAt = libtime.NewInTimezone(bookedAt, model.DefaultTimezone)
 	bookedAt = bookedAt.UTC()
+	input := appointmentUpsertInput{}
+	err = c.Bind().Body(&input)
+	if err != nil {
+		redirectPath := "/appointments/" + appointmentID + "?toast=Invalid appointment input&level=error"
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
+	}
+
 	appointment := model.Appointment{
 		UserID:       cu.ID,
 		BookedAt:     bookedAt,
@@ -258,11 +277,9 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 		BookedHour:   bookedAt.Hour(),
 		BookedMinute: bookedAt.Minute(),
 		Price:        handlerutils.StrToAmount(c.FormValue("price", "")),
-	}
-	err = c.Bind().Body(&appointment)
-	if err != nil {
-		redirectPath := "/appointments/" + appointmentID + "?toast=Invalid appointment input&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
+		ClinicID:     input.ClinicID,
+		PatientID:    input.PatientID,
+		Duration:     input.Duration,
 	}
 
 	err = s.UpdateAppointmentByIDAndUserID(c.Context(), cu.ID, appointmentID, appointment)
