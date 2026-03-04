@@ -3,7 +3,8 @@ package clinic
 import (
 	"cmp"
 	"errors"
-	"miconsul/internal/lib/handlerutils"
+	"miconsul/internal/lib/amount"
+	"miconsul/internal/lib/avatar"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/model"
 	"miconsul/internal/view"
@@ -61,7 +62,7 @@ func (s *service) HandleClinicsCreate(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 	clinic := model.Clinic{
 		UserID: cu.ID,
-		Price:  handlerutils.StrToAmount(c.FormValue("price", "")),
+		Price:  amount.StrToAmount(c.FormValue("price", "")),
 	}
 
 	c.Bind().Body(&clinic)
@@ -103,7 +104,7 @@ func (s *service) HandleClinicsUpdate(c fiber.Ctx) error {
 
 	// If found parse the form values into the model struct
 	c.Bind().Body(&clinic)
-	clinic.Price = handlerutils.StrToAmount(c.FormValue("price", ""))
+	clinic.Price = amount.StrToAmount(c.FormValue("price", ""))
 
 	path, err := SaveProfilePicToDisk(c, clinic)
 	if err == nil {
@@ -189,7 +190,7 @@ func (s *service) HandleMockManyClinics(c fiber.Ctx) error {
 		ExtID := xid.New("prav")
 		clinics = append(clinics, model.Clinic{
 			ExtID:      ExtID,
-			ProfilePic: handlerutils.DicebearShapeAvatarURL(ExtID),
+			ProfilePic: avatar.DicebearShapeAvatarURL(ExtID),
 			Name:       faker.Company().Name(),
 			Email:      faker.Internet().Email(),
 			Phone:      faker.PhoneNumber().CellPhone(),

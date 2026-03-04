@@ -1,4 +1,4 @@
-package handlerutils
+package avatar
 
 func PravatarURL(id string) string {
 	return "https://i.pravatar.cc/150?u=" + id
@@ -17,5 +17,5 @@ func DicebearAvatarURL(id string) string {
 }
 
 func DicebearIconAvatarURL(id string) string {
-	return " https://api.dicebear.com/8.x/icons/svg?seed=" + id
+	return "https://api.dicebear.com/8.x/icons/svg?seed=" + id
 }

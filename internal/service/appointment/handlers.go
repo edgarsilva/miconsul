@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"miconsul/internal/lib/handlerutils"
+	"miconsul/internal/lib/amount"
 	"miconsul/internal/lib/libtime"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/model"
@@ -210,7 +210,7 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 		BookedHour:   bookedAt.Hour(),
 		BookedMinute: bookedAt.Minute(),
 		Timezone:     model.DefaultTimezone,
-		Price:        handlerutils.StrToAmount(priceValue),
+		Price:        amount.StrToAmount(priceValue),
 		ClinicID:     input.ClinicID,
 		PatientID:    input.PatientID,
 		Duration:     input.Duration,
@@ -276,7 +276,7 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 		BookedDay:    bookedAt.Day(),
 		BookedHour:   bookedAt.Hour(),
 		BookedMinute: bookedAt.Minute(),
-		Price:        handlerutils.StrToAmount(c.FormValue("price", "")),
+		Price:        amount.StrToAmount(c.FormValue("price", "")),
 		ClinicID:     input.ClinicID,
 		PatientID:    input.PatientID,
 		Duration:     input.Duration,

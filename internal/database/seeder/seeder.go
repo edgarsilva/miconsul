@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"time"
 
+	"miconsul/internal/lib/avatar"
 	"miconsul/internal/model"
 
 	"golang.org/x/crypto/bcrypt"
@@ -109,6 +110,7 @@ func ensureAdminUser(ctx context.Context, db *gorm.DB) (model.User, bool, error)
 			Name:              seedAdminName,
 			Email:             seedAdminEmail,
 			Password:          string(hashedPassword),
+			ProfilePic:        avatar.DicebearAvatarURL(seedAdminEmail),
 			Role:              model.UserRoleAdmin,
 			ConfirmEmailToken: "",
 		}
@@ -126,6 +128,7 @@ func ensureAdminUser(ctx context.Context, db *gorm.DB) (model.User, bool, error)
 		"name":                     seedAdminName,
 		"role":                     model.UserRoleAdmin,
 		"password":                 string(hashedPassword),
+		"profile_pic":              avatar.DicebearAvatarURL(seedAdminEmail),
 		"confirm_email_token":      "",
 		"confirm_email_expires_at": time.Time{},
 	}
@@ -146,12 +149,13 @@ func ensureBaselineClinic(ctx context.Context, db *gorm.DB, owner model.User) (m
 	err := db.WithContext(ctx).Where("ext_id = ?", baselineClinicExtID).Take(&clinic).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		clinic = model.Clinic{
-			ExtID:   baselineClinicExtID,
-			UserID:  owner.ID,
-			Name:    "Seed Family Clinic",
-			Email:   "clinic-main@seed.local",
-			Phone:   "+52-55-1111-2222",
-			Address: model.Address{City: "Monterrey", State: "NL", Country: "MX"},
+			ExtID:      baselineClinicExtID,
+			UserID:     owner.ID,
+			Name:       "Seed Family Clinic",
+			Email:      "clinic-main@seed.local",
+			Phone:      "+52-55-1111-2222",
+			ProfilePic: avatar.DicebearShapeAvatarURL(baselineClinicExtID),
+			Address:    model.Address{City: "Monterrey", State: "NL", Country: "MX"},
 		}
 		if err := db.WithContext(ctx).Create(&clinic).Error; err != nil {
 			return model.Clinic{}, false, fmt.Errorf("create baseline clinic: %w", err)
@@ -164,13 +168,14 @@ func ensureBaselineClinic(ctx context.Context, db *gorm.DB, owner model.User) (m
 	}
 
 	updates := map[string]any{
-		"user_id": owner.ID,
-		"name":    "Seed Family Clinic",
-		"email":   "clinic-main@seed.local",
-		"phone":   "+52-55-1111-2222",
-		"city":    "Monterrey",
-		"state":   "NL",
-		"country": "MX",
+		"user_id":     owner.ID,
+		"name":        "Seed Family Clinic",
+		"email":       "clinic-main@seed.local",
+		"phone":       "+52-55-1111-2222",
+		"profile_pic": avatar.DicebearShapeAvatarURL(baselineClinicExtID),
+		"city":        "Monterrey",
+		"state":       "NL",
+		"country":     "MX",
 	}
 	if err := db.WithContext(ctx).Model(&clinic).Updates(updates).Error; err != nil {
 		return model.Clinic{}, false, fmt.Errorf("update baseline clinic: %w", err)
@@ -186,28 +191,31 @@ func ensureBaselineClinic(ctx context.Context, db *gorm.DB, owner model.User) (m
 func ensureBaselinePatients(ctx context.Context, db *gorm.DB, owner model.User) ([]model.Patient, int, error) {
 	basePatients := []model.Patient{
 		{
-			ExtID:  baselinePatientExtIDs[0],
-			UserID: owner.ID,
-			Name:   "Alma Rivera",
-			Email:  "alma@seed.local",
-			Phone:  "+52-55-2000-1001",
-			Age:    31,
+			ExtID:      baselinePatientExtIDs[0],
+			UserID:     owner.ID,
+			Name:       "Alma Rivera",
+			Email:      "alma@seed.local",
+			Phone:      "+52-55-2000-1001",
+			ProfilePic: avatar.PravatarURL(baselinePatientExtIDs[0]),
+			Age:        31,
 		},
 		{
-			ExtID:  baselinePatientExtIDs[1],
-			UserID: owner.ID,
-			Name:   "Bruno Chavez",
-			Email:  "bruno@seed.local",
-			Phone:  "+52-55-2000-1002",
-			Age:    42,
+			ExtID:      baselinePatientExtIDs[1],
+			UserID:     owner.ID,
+			Name:       "Bruno Chavez",
+			Email:      "bruno@seed.local",
+			Phone:      "+52-55-2000-1002",
+			ProfilePic: avatar.PravatarURL(baselinePatientExtIDs[1]),
+			Age:        42,
 		},
 		{
-			ExtID:  baselinePatientExtIDs[2],
-			UserID: owner.ID,
-			Name:   "Carla Medina",
-			Email:  "carla@seed.local",
-			Phone:  "+52-55-2000-1003",
-			Age:    28,
+			ExtID:      baselinePatientExtIDs[2],
+			UserID:     owner.ID,
+			Name:       "Carla Medina",
+			Email:      "carla@seed.local",
+			Phone:      "+52-55-2000-1003",
+			ProfilePic: avatar.PravatarURL(baselinePatientExtIDs[2]),
+			Age:        28,
 		},
 	}
 
@@ -230,11 +238,12 @@ func ensureBaselinePatients(ctx context.Context, db *gorm.DB, owner model.User) 
 		}
 
 		updates := map[string]any{
-			"user_id": owner.ID,
-			"name":    desired.Name,
-			"email":   desired.Email,
-			"phone":   desired.Phone,
-			"age":     desired.Age,
+			"user_id":     owner.ID,
+			"name":        desired.Name,
+			"email":       desired.Email,
+			"phone":       desired.Phone,
+			"profile_pic": desired.ProfilePic,
+			"age":         desired.Age,
 		}
 		if err := db.WithContext(ctx).Model(&patient).Updates(updates).Error; err != nil {
 			return nil, 0, fmt.Errorf("update baseline patient %s: %w", desired.ExtID, err)
@@ -352,6 +361,7 @@ func createBulkUsers(ctx context.Context, db *gorm.DB, rng *rand.Rand, runID int
 			Name:              fmt.Sprintf("Seed User %d", i+1),
 			Email:             fmt.Sprintf("seed.user.%d.%d@seed.local", runID, i+1),
 			Password:          string(hashedPassword),
+			ProfilePic:        avatar.DicebearFunEmojiAvatarURL(fmt.Sprintf("seed-user-%d-%d", runID, i+1)),
 			Role:              model.UserRoleUser,
 			Timezone:          "America/Mexico_City",
 			Phone:             fmt.Sprintf("+52-55-%04d-%04d", rng.Intn(10000), rng.Intn(10000)),
@@ -373,13 +383,15 @@ func createBulkClinics(ctx context.Context, db *gorm.DB, owner model.User, rng *
 
 	clinics := make([]model.Clinic, 0, count)
 	for i := 0; i < count; i++ {
+		extID := fmt.Sprintf("seed-bulk-clinic-%d-%d", runID, i+1)
 		clinics = append(clinics, model.Clinic{
-			ExtID:   fmt.Sprintf("seed-bulk-clinic-%d-%d", runID, i+1),
-			UserID:  owner.ID,
-			Name:    fmt.Sprintf("Seed Clinic %d", i+1),
-			Email:   fmt.Sprintf("clinic.%d.%d@seed.local", runID, i+1),
-			Phone:   fmt.Sprintf("+52-81-%04d-%04d", rng.Intn(10000), rng.Intn(10000)),
-			Address: model.Address{City: "Monterrey", State: "NL", Country: "MX"},
+			ExtID:      extID,
+			UserID:     owner.ID,
+			Name:       fmt.Sprintf("Seed Clinic %d", i+1),
+			Email:      fmt.Sprintf("clinic.%d.%d@seed.local", runID, i+1),
+			Phone:      fmt.Sprintf("+52-81-%04d-%04d", rng.Intn(10000), rng.Intn(10000)),
+			ProfilePic: avatar.DicebearShapeAvatarURL(extID),
+			Address:    model.Address{City: "Monterrey", State: "NL", Country: "MX"},
 		})
 	}
 
@@ -398,12 +410,13 @@ func createBulkPatients(ctx context.Context, db *gorm.DB, owner model.User, rng 
 	patients := make([]model.Patient, 0, count)
 	for i := 0; i < count; i++ {
 		patients = append(patients, model.Patient{
-			ExtID:  fmt.Sprintf("seed-bulk-patient-%d-%d", runID, i+1),
-			UserID: owner.ID,
-			Name:   fmt.Sprintf("Seed Patient %d", i+1),
-			Email:  fmt.Sprintf("patient.%d.%d@seed.local", runID, i+1),
-			Phone:  fmt.Sprintf("+52-55-%04d-%04d", rng.Intn(10000), rng.Intn(10000)),
-			Age:    18 + rng.Intn(63),
+			ExtID:      fmt.Sprintf("seed-bulk-patient-%d-%d", runID, i+1),
+			UserID:     owner.ID,
+			Name:       fmt.Sprintf("Seed Patient %d", i+1),
+			Email:      fmt.Sprintf("patient.%d.%d@seed.local", runID, i+1),
+			Phone:      fmt.Sprintf("+52-55-%04d-%04d", rng.Intn(10000), rng.Intn(10000)),
+			ProfilePic: avatar.PravatarURL(fmt.Sprintf("seed-bulk-patient-%d-%d", runID, i+1)),
+			Age:        18 + rng.Intn(63),
 		})
 	}
 
