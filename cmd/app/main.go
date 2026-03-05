@@ -118,7 +118,11 @@ func main() {
 	)
 
 	fmt.Println(" Registering routes...")
-	routes.RegisterServices(s)
+	if err := routes.RegisterServices(s); err != nil {
+		log.Printf("failed to register routes: %v", err)
+		exitCode = 1
+		return
+	}
 
 	fmt.Println(" Setting up server...")
 

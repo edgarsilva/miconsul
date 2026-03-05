@@ -14,10 +14,14 @@ type service struct {
 	*server.Server
 }
 
-func NewService(s *server.Server) service {
+func NewService(s *server.Server) (service, error) {
+	if s == nil {
+		return service{}, errors.New("clinic service requires a non-nil server")
+	}
+
 	return service{
 		Server: s,
-	}
+	}, nil
 }
 
 func (s service) TakeClinicByID(c fiber.Ctx, id string) (model.Clinic, error) {

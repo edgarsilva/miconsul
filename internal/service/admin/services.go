@@ -16,10 +16,14 @@ type service struct {
 	*server.Server
 }
 
-func NewService(s *server.Server) service {
+func NewService(s *server.Server) (service, error) {
+	if s == nil {
+		return service{}, errors.New("admin service requires a non-nil server")
+	}
+
 	return service{
 		Server: s,
-	}
+	}, nil
 }
 
 func FindModelName(dirEntry fs.DirEntry) (string, error) {

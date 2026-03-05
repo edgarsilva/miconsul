@@ -17,7 +17,10 @@ func TestHandler(t *testing.T) {
 
 	// Inject the Fiber app into the server
 	s := &server.Server{App: fiberApp}
-	rc := theme.NewService(s)
+	rc, err := theme.NewService(s)
+	if err != nil {
+		t.Fatalf("error creating theme service. Err: %v", err)
+	}
 
 	// Define a route in the Fiber app
 	fiberApp.Get("/", rc.HandleToggleTheme)

@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"fmt"
+
 	mw "miconsul/internal/middleware"
 	"miconsul/internal/server"
 	"miconsul/internal/service/admin"
@@ -13,24 +15,41 @@ import (
 	"miconsul/internal/service/user"
 )
 
-func RegisterServices(s *server.Server) {
+func RegisterServices(s *server.Server) error {
 	// Middlewares implemented in all halders
 	s.Use(mw.LocaleLang())
 	s.Use(mw.UITheme())
 
-	// Routes
-	AuthRoutes(s)
-	UserRoutes(s)
-	AdminRoutes(s)
-	DashbordhRoutes(s)
-	ClinicsRoutes(s)
-	PatientRoutes(s)
-	AppointmentRoutes(s)
-	ThemeRoutes(s)
+	type routeBootstrap struct {
+		name string
+		fn   func(*server.Server) error
+	}
+
+	bootstraps := []routeBootstrap{
+		{name: "auth", fn: AuthRoutes},
+		{name: "user", fn: UserRoutes},
+		{name: "admin", fn: AdminRoutes},
+		{name: "dashboard", fn: DashbordhRoutes},
+		{name: "clinic", fn: ClinicsRoutes},
+		{name: "patient", fn: PatientRoutes},
+		{name: "appointment", fn: AppointmentRoutes},
+		{name: "theme", fn: ThemeRoutes},
+	}
+
+	for _, rb := range bootstraps {
+		if err := rb.fn(s); err != nil {
+			return fmt.Errorf("bootstrap %s routes: %w", rb.name, err)
+		}
+	}
+
+	return nil
 }
 
-func AuthRoutes(s *server.Server) {
-	a := auth.New(s)
+func AuthRoutes(s *server.Server) error {
+	a, err := auth.New(s)
+	if err != nil {
+		return err
+	}
 
 	a.Get("/signin", mw.MaybeAuthenticate(a), a.HandleSigninPage)
 	a.Post("/signin", a.HandleSignin)
@@ -53,19 +72,29 @@ func AuthRoutes(s *server.Server) {
 	g.Post("/signin", a.HandleAPISignin)
 	g.Get("/protected", mw.MustAuthenticate(a), a.HandleShowUser)
 	g.Post("/validate", mw.MustAuthenticate(a), a.HandleValidate)
+
+	return nil
 }
 
-func DashbordhRoutes(s *server.Server) {
-	d := dashboard.NewService(s)
+func DashbordhRoutes(s *server.Server) error {
+	d, err := dashboard.NewService(s)
+	if err != nil {
+		return err
+	}
 
 	d.Get("/", mw.MustAuthenticate(d), d.HandleDashboardPage)
 
 	g := s.Group("/dashboard", mw.MustAuthenticate(d))
 	g.Get("", d.HandleDashboardPage)
+
+	return nil
 }
 
-func ClinicsRoutes(s *server.Server) {
-	c := clinic.NewService(s)
+func ClinicsRoutes(s *server.Server) error {
+	c, err := clinic.NewService(s)
+	if err != nil {
+		return err
+	}
 
 	// Pages
 	g := c.Group("/clinics", mw.MustAuthenticate(c))
@@ -82,10 +111,15 @@ func ClinicsRoutes(s *server.Server) {
 
 	g.Post("/:id/delete", c.HandleClinicsDelete)
 	g.Delete("/:id", c.HandleClinicsDelete)
+
+	return nil
 }
 
-func PatientRoutes(s *server.Server) {
-	p := patient.NewService(s)
+func PatientRoutes(s *server.Server) error {
+	p, err := patient.NewService(s)
+	if err != nil {
+		return err
+	}
 
 	g := p.Group("/patients", mw.MustAuthenticate(p))
 	g.Get("/", p.HandlePatientsPage)
@@ -113,11 +147,18 @@ func PatientRoutes(s *server.Server) {
 	// API
 	// api := p.Group("/api/patients")
 	// api.Get("", p.HandleAPIPatients)
+
+	return nil
 }
 
-func AppointmentRoutes(s *server.Server) {
-	a := appointment.New(s)
-	a.RegisterCronJob()
+func AppointmentRoutes(s *server.Server) error {
+	a, err := appointment.New(s)
+	if err != nil {
+		return err
+	}
+	if err := a.RegisterCronJob(); err != nil {
+		return err
+	}
 
 	g := a.Group("/appointments", mw.MustAuthenticate(s))
 	g.Get("/", a.HandleIndexPage)
@@ -141,17 +182,27 @@ func AppointmentRoutes(s *server.Server) {
 	g.Get("/:id/patient/changedate/:token", a.HandlePatientChangeDate)
 	g.Get("/:id/patient/cancel/:token", a.HandlePatientCancelPage)
 	g.Post("/:id/patient/cancel/:token", a.HandlePatientCancel)
+
+	return nil
 }
 
-func ThemeRoutes(s *server.Server) {
-	t := theme.NewService(s)
+func ThemeRoutes(s *server.Server) error {
+	t, err := theme.NewService(s)
+	if err != nil {
+		return err
+	}
 
 	g := s.Group("/theme")
 	g.Post("/toggle", t.HandleToggleTheme)
+
+	return nil
 }
 
-func UserRoutes(s *server.Server) {
-	u := user.NewService(s)
+func UserRoutes(s *server.Server) error {
+	u, err := user.NewService(s)
+	if err != nil {
+		return err
+	}
 
 	// Pages
 	u.Get("/profile", mw.MustAuthenticate(u), u.HandleProfilePage)
@@ -165,12 +216,19 @@ func UserRoutes(s *server.Server) {
 	api := u.Group("/api/users", mw.MustBeAdmin(u))
 	api.Get("", u.HandleAPIUsers)
 	api.Post("/make/:n", u.HandleAPIMakeUsers)
+
+	return nil
 }
 
-func AdminRoutes(s *server.Server) {
-	a := admin.NewService(s)
+func AdminRoutes(s *server.Server) error {
+	a, err := admin.NewService(s)
+	if err != nil {
+		return err
+	}
 
 	// Pages
 	g := a.Group("/admin", mw.MustBeAdmin(a))
 	g.Get("/models", a.HandleAdminModelsPage)
+
+	return nil
 }

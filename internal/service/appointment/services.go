@@ -19,8 +19,12 @@ type service struct {
 
 var ErrIDRequired = errors.New("id is required")
 
-func New(s *server.Server) *service {
-	return &service{Server: s}
+func New(s *server.Server) (*service, error) {
+	if s == nil {
+		return nil, errors.New("appointment service requires a non-nil server")
+	}
+
+	return &service{Server: s}, nil
 }
 
 func (s *service) TakePatientByID(ctx context.Context, userID, patientID string) (model.Patient, error) {

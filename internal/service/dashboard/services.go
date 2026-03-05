@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/gob"
+	"errors"
 	"fmt"
 	"miconsul/internal/lib/libtime"
 	"miconsul/internal/model"
@@ -16,10 +17,14 @@ type service struct {
 	*server.Server
 }
 
-func NewService(s *server.Server) service {
+func NewService(s *server.Server) (service, error) {
+	if s == nil {
+		return service{}, errors.New("dashboard service requires a non-nil server")
+	}
+
 	return service{
 		Server: s,
-	}
+	}, nil
 }
 
 func (s service) CalcDashboardStats(ctx context.Context, cu model.User) view.DashboardStats {

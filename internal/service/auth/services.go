@@ -50,7 +50,14 @@ var (
 	errAuthSessionCreate       = errors.New("failed to create session")
 )
 
-func New(s *server.Server) *service {
+func New(s *server.Server) (*service, error) {
+	if s == nil {
+		return nil, errors.New("auth service requires a non-nil server")
+	}
+	if s.Env == nil {
+		return nil, errors.New("auth service requires a non-nil server env")
+	}
+
 	tracerName := s.Env.OTelTracerAuth
 	if tracerName == "" {
 		tracerName = s.Env.AppName + ".auth"
@@ -59,7 +66,7 @@ func New(s *server.Server) *service {
 	return &service{
 		Server: s,
 		tracer: otel.Tracer(tracerName),
-	}
+	}, nil
 }
 
 func (s *service) Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {

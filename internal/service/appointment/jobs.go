@@ -10,7 +10,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-func (s *service) RegisterCronJob() {
+func (s *service) RegisterCronJob() error {
 	err := s.AddCronJob("0/1 * * * *", func() {
 		ctx, span := s.Trace(context.Background(), "appointment/services:RegisterCronJob>Job",
 			trace.WithAttributes(
@@ -37,6 +37,8 @@ func (s *service) RegisterCronJob() {
 		}
 	})
 	if err != nil {
-		fmt.Println(err.Error())
+		return fmt.Errorf("failed to register appointment reminder cron job: %w", err)
 	}
+
+	return nil
 }
