@@ -41,3 +41,8 @@ This file provides repo-specific guidance for coding assistants working on this 
 - Keep changes narrowly scoped to the user request.
 - Avoid broad refactors when doing dependency upgrades.
 - For dependency updates, report changed files and test status before committing.
+
+## Git Commit Preference
+
+- Never create a git commit unless the user explicitly asks in that moment.
+- After code changes, always pause and ask whether to commit.
