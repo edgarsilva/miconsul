@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"miconsul/goose/migrations"
@@ -49,7 +50,13 @@ func New(env *appenv.Env) (*Database, error) {
 	if err != nil {
 		return nil, fmt.Errorf("database: open sqlite: %w", err)
 	}
-	if err := db.Use(otelgorm.NewPlugin()); err != nil {
+	pluginOpts := []otelgorm.Option{}
+	dbName := filepath.Base(env.DBPath)
+	if dbName != "" && dbName != "." {
+		pluginOpts = append(pluginOpts, otelgorm.WithDBName(dbName))
+	}
+
+	if err := db.Use(otelgorm.NewPlugin(pluginOpts...)); err != nil {
 		return nil, fmt.Errorf("database: register otel gorm plugin: %w", err)
 	}
 

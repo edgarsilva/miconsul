@@ -54,6 +54,7 @@ func NewStdoutTracer(ctx context.Context, name string, env *appenv.Env) (tracer 
 	if serviceName == "" {
 		serviceName = env.AppName
 	}
+	deploymentEnvironment := string(env.Environment)
 
 	exporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
 	if err != nil {
@@ -67,6 +68,7 @@ func NewStdoutTracer(ctx context.Context, name string, env *appenv.Env) (tracer 
 			resource.NewWithAttributes(
 				semconv.SchemaURL,
 				semconv.ServiceNameKey.String(serviceName),
+				semconv.DeploymentEnvironmentKey.String(deploymentEnvironment),
 			)),
 	)
 
@@ -104,6 +106,7 @@ func NewUptraceTracer(ctx context.Context, name string, env *appenv.Env) (tracer
 	if serviceName == "" {
 		serviceName = env.AppName
 	}
+	deploymentEnvironment := string(env.Environment)
 
 	if dsn == "" || endpoint == "" {
 		return nil, nil, fmt.Errorf("otel: uptrace dsn or endpoint missing")
@@ -127,6 +130,7 @@ func NewUptraceTracer(ctx context.Context, name string, env *appenv.Env) (tracer
 		resource.WithAttributes(
 			semconv.ServiceNameKey.String(serviceName),
 			semconv.ServiceVersionKey.String(appVersion),
+			semconv.DeploymentEnvironmentKey.String(deploymentEnvironment),
 		),
 	)
 	if err != nil {

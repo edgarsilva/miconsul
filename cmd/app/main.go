@@ -49,6 +49,21 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	fmt.Println(" Starting telemetry...")
+	var tracer trace.Tracer
+	tracer, shutdownTracer, err := telemetry.NewTracer(ctx, env.OTelTracerServer, env)
+	if err != nil {
+		log.Printf("failed to initialize otel tracer: %v", err)
+		exitCode = 1
+		return
+	}
+	defer func() {
+		fmt.Println("󰓾 Tracer provider shutting down...")
+		if err := shutdownTracer(); err != nil {
+			log.Printf("tracer shutdown error: %v", err)
+		}
+	}()
+
 	fmt.Println(" Connecting to database...")
 	db, err := database.New(env)
 	if err != nil {
@@ -69,21 +84,6 @@ func main() {
 		exitCode = 1
 		return
 	}
-
-	fmt.Println(" Starting telemetry...")
-	var tracer trace.Tracer
-	tracer, shutdownTracer, err := telemetry.NewTracer(ctx, env.OTelTracerServer, env)
-	if err != nil {
-		log.Printf("failed to initialize otel tracer: %v", err)
-		exitCode = 1
-		return
-	}
-	defer func() {
-		fmt.Println("󰓾 Tracer provider shutting down...")
-		if err := shutdownTracer(); err != nil {
-			log.Printf("tracer shutdown error: %v", err)
-		}
-	}()
 
 	fmt.Println(" Starting cronjobs...")
 	cj, shutdownCronjob, err := cronjob.New()
