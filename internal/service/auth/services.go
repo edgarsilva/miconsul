@@ -20,6 +20,7 @@ import (
 	"github.com/gofiber/fiber/v3/log"
 	"github.com/gofiber/fiber/v3/middleware/session"
 	logto "github.com/logto-io/go/client"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 
 	"golang.org/x/crypto/bcrypt"
@@ -40,6 +41,7 @@ type AuthStrategy interface {
 
 type service struct {
 	*server.Server
+	tracer trace.Tracer
 }
 
 var (
@@ -49,9 +51,23 @@ var (
 )
 
 func NewService(s *server.Server) *service {
+	tracerName := s.Env.OTelTracerAuth
+	if tracerName == "" {
+		tracerName = s.Env.AppName + ".auth"
+	}
+
 	return &service{
 		Server: s,
+		tracer: otel.Tracer(tracerName),
 	}
+}
+
+func (s *service) Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	return s.tracer.Start(ctx, spanName, opts...)
 }
 
 // Signup creates a new user record if req.body Email & Password are valid

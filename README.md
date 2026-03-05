@@ -90,6 +90,17 @@ It will install:
 -   goose: for migrations
 -   templ: to build/compile templ files into go code
 
+### Telemetry
+
+The app uses OpenTelemetry tracer naming with dot notation by default:
+
+-   `OTEL_SERVICE_NAME=miconsul`
+-   `OTEL_TRACER_SERVER=miconsul.server`
+-   `OTEL_TRACER_AUTH=miconsul.auth`
+
+`OTEL_SERVICE_NAME` is used as the resource `service.name` and tracer names are
+passed explicitly at bootstrap/service construction time.
+
 ### DB - Seed Data
 
 Create deterministic baseline data (including an admin user) and randomized bulk
