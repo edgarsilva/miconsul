@@ -4,7 +4,6 @@ package server
 import (
 	"context"
 	"errors"
-	"fmt"
 	"runtime"
 	"strconv"
 	"strings"
@@ -31,10 +30,6 @@ import (
 	"github.com/gofiber/storage/sqlite3/v2"
 
 	"github.com/panjf2000/ants/v2"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 )
@@ -150,74 +145,12 @@ func (s *Server) setupFiberApp() {
 
 func (s *Server) setupCoreMiddleware(app *fiber.App) {
 	app.Use(recover.New()) // Recover MW catches panics that might stop app execution
-	app.Use(s.otelMiddleware())
 	app.Use(logger.New())
 	app.Use(cors.New())
 	app.Use(requestid.New())
 	app.Get(healthcheck.LivenessEndpoint, healthcheck.New())
 	app.Get(healthcheck.ReadinessEndpoint, healthcheck.New())
 	app.Get(healthcheck.StartupEndpoint, healthcheck.New())
-}
-
-func (s *Server) otelMiddleware() fiber.Handler {
-	return func(c fiber.Ctx) error {
-		carrier := propagation.MapCarrier{
-			"traceparent": c.Get("traceparent"),
-			"tracestate":  c.Get("tracestate"),
-			"baggage":     c.Get("baggage"),
-		}
-
-		ctx := otel.GetTextMapPropagator().Extract(c.Context(), carrier)
-		spanName := fmt.Sprintf("%s %s", c.Method(), c.Path())
-		ctx, span := s.Tracer.Start(ctx, spanName,
-			trace.WithSpanKind(trace.SpanKindServer),
-			trace.WithAttributes(
-				attribute.String("http.method", c.Method()),
-				attribute.String("url.path", c.Path()),
-			),
-		)
-
-		c.SetContext(ctx)
-		err := c.Next()
-
-		statusCode := c.Response().StatusCode()
-		span.SetAttributes(attribute.Int("http.status_code", statusCode))
-		if route := c.Route(); route != nil && route.Path != "" {
-			span.SetName(fmt.Sprintf("%s %s", c.Method(), route.Path))
-			span.SetAttributes(attribute.String("http.route", route.Path))
-		}
-
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
-			span.End()
-			return err
-		}
-
-		if statusCode >= 500 {
-			span.SetStatus(codes.Error, httpStatusText(statusCode))
-		} else {
-			span.SetStatus(codes.Ok, "")
-		}
-
-		span.End()
-		return nil
-	}
-}
-
-func httpStatusText(code int) string {
-	switch code {
-	case fiber.StatusInternalServerError:
-		return "internal server error"
-	case fiber.StatusBadGateway:
-		return "bad gateway"
-	case fiber.StatusServiceUnavailable:
-		return "service unavailable"
-	case fiber.StatusGatewayTimeout:
-		return "gateway timeout"
-	default:
-		return "request failed"
-	}
 }
 
 func (s *Server) setupSecurityMiddleware(app *fiber.App, cookieSecret string) {
