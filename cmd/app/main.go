@@ -17,11 +17,13 @@ import (
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
+	"miconsul/internal/lib/telemetry"
 	"miconsul/internal/lib/workpool"
 	"miconsul/internal/routes"
 	"miconsul/internal/server"
 
 	"github.com/joho/godotenv"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func main() {
@@ -40,6 +42,7 @@ func main() {
 	env := appenv.New()
 
 	defer func() {
+		// This should be the last log on defer chain before exiting with code (0|1|etc)
 		fmt.Println("✅ All cleanup tasks completed")
 	}()
 
@@ -47,7 +50,12 @@ func main() {
 	defer stop()
 
 	fmt.Println(" Connecting to database...")
-	db := database.New(env)
+	db, err := database.New(env)
+	if err != nil {
+		log.Printf("failed to initialize database: %v", err)
+		exitCode = 1
+		return
+	}
 	defer func() {
 		fmt.Println("🔌 Closing database connections...")
 		if err := db.Close(); err != nil {
@@ -62,18 +70,33 @@ func main() {
 		return
 	}
 
-	// ctx := context.Background()
-	// tp, shutdownTracer := otel.NewUptraceTracerProvider(ctx, env)
-	// defer func() {
-	// 	fmt.Println("󰓾 Tracer provider shutting down...")
-	// 	shutdownTracer()
-	// }()
+	fmt.Println(" Starting telemetry...")
+	var tracer trace.Tracer
+	tracer, shutdownTracer, err := telemetry.NewTracer(ctx, "fiber-server", env)
+	if err != nil {
+		log.Printf("failed to initialize otel tracer: %v", err)
+		exitCode = 1
+		return
+	}
+	defer func() {
+		fmt.Println("󰓾 Tracer provider shutting down...")
+		if err := shutdownTracer(); err != nil {
+			log.Printf("tracer shutdown error: %v", err)
+		}
+	}()
 
 	fmt.Println(" Starting cronjobs...")
-	cj, shutdownCronjob := cronjob.New()
+	cj, shutdownCronjob, err := cronjob.New()
+	if err != nil {
+		log.Printf("failed to initialize cronjobs: %v", err)
+		exitCode = 1
+		return
+	}
 	defer func() {
 		fmt.Println("🕑 Cronjobs shutting down...")
-		shutdownCronjob()
+		if err := shutdownCronjob(); err != nil {
+			log.Printf("cronjob shutdown error: %v", err)
+		}
 	}()
 
 	fmt.Println(" Starting workpool...")
@@ -90,7 +113,7 @@ func main() {
 		server.WithDatabase(db),
 		server.WithCronJob(cj),
 		server.WithWorkPool(wp),
-		// server.WithTracer(tp.Tracer("fiberapp-server")),
+		server.WithTracer(tracer),
 		server.WithLocalizer(localizer),
 	)
 

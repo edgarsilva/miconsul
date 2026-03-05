@@ -114,6 +114,10 @@ func (s *Server) validateRuntimeConfig() error {
 		return errors.New("COOKIE_SECRET must be at least 32 characters")
 	}
 
+	if appenv.IsProduction(environment) && s.Tracer == nil {
+		return errors.New("tracer is required in production; pass server.WithTracer(...) to server.New(...)")
+	}
+
 	return nil
 }
 

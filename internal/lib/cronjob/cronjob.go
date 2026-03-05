@@ -1,7 +1,7 @@
 package cronjob
 
 import (
-	"log"
+	"fmt"
 	"time"
 
 	"github.com/go-co-op/gocron/v2"
@@ -11,24 +11,25 @@ type Sched struct {
 	gocron.Scheduler
 }
 
-func New() (scheduler *Sched, shutdownFn func()) {
+func New() (scheduler *Sched, shutdownFn func() error, err error) {
 	s, err := gocron.NewScheduler(gocron.WithLogger(gocron.NewLogger(gocron.LogLevelInfo)))
 	if err != nil {
-		log.Panic("Failed to start gocron scheduler", err.Error())
+		return nil, nil, fmt.Errorf("cronjob: start scheduler: %w", err)
 	}
 	s.Start()
 
 	// when you're done, shut it down
-	shutdownFn = func() {
-		err = s.Shutdown()
-		if err != nil {
-			log.Panic("Failed to gracefully Shutdown gocron scheduler", err.Error())
+	shutdownFn = func() error {
+		if err := s.Shutdown(); err != nil {
+			return fmt.Errorf("cronjob: graceful shutdown: %w", err)
 		}
+
+		return nil
 	}
 
 	return &Sched{
 		Scheduler: s,
-	}, shutdownFn
+	}, shutdownFn, nil
 }
 
 // RunCron runs the function passed as a cronjob (goroutine) at the interval

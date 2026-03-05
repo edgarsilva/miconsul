@@ -35,9 +35,9 @@ type Database struct {
 	*gorm.DB
 }
 
-func New(env *appenv.Env) *Database {
+func New(env *appenv.Env) (*Database, error) {
 	if env == nil {
-		log.Panic("Failed to connect database: environment config is nil")
+		return nil, fmt.Errorf("database: environment config is nil")
 	}
 
 	dbLogger := NewLogger(env)
@@ -47,15 +47,15 @@ func New(env *appenv.Env) *Database {
 		PrepareStmt: true,
 	})
 	if err != nil {
-		log.Panic("Failed to connect database")
+		return nil, fmt.Errorf("database: open sqlite: %w", err)
 	}
 	if err := db.Use(otelgorm.NewPlugin()); err != nil {
-		panic(err)
+		return nil, fmt.Errorf("database: register otel gorm plugin: %w", err)
 	}
 
 	return &Database{
 		DB: db,
-	}
+	}, nil
 }
 
 func (d *Database) GormDB() *gorm.DB {

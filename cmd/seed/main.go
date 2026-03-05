@@ -40,7 +40,11 @@ func main() {
 	_ = godotenv.Load(".env")
 
 	env := appenv.New()
-	db := database.New(env)
+	db, err := database.New(env)
+	if err != nil {
+		log.Printf("failed to initialize database: %v", err)
+		os.Exit(1)
+	}
 	defer func() {
 		if err := db.Close(); err != nil {
 			log.Printf("failed to close database: %v", err)
