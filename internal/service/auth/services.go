@@ -301,7 +301,9 @@ func (s *service) saveLogtoUser(ctx context.Context, logtoUser LogtoUser) error 
 		user.ProfilePic = logtoUser.Identities.Google.Details.Avatar
 	}
 	user.Phone = logtoUser.PhoneNumber
-	user.Role = model.UserRoleUser
+	if !userExists || user.Role == "" {
+		user.Role = model.UserRoleUser
+	}
 
 	if result := s.DB.WithContext(ctx).Save(&user); result.Error != nil {
 		return fmt.Errorf("failed to create or update user from logto claims, GORM error: %w", result.Error)
