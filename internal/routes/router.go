@@ -20,9 +20,14 @@ func RegisterServices(s *server.Server) error {
 	s.Use(mw.LocaleLang())
 	s.Use(mw.UITheme())
 
+	authResource, err := auth.New(s)
+	if err != nil {
+		return fmt.Errorf("bootstrap auth resource: %w", err)
+	}
+
 	type routeBootstrap struct {
 		name string
-		fn   func(*server.Server) error
+		fn   func(*server.Server, auth.ProtectedResource) error
 	}
 
 	bootstraps := []routeBootstrap{
@@ -37,7 +42,7 @@ func RegisterServices(s *server.Server) error {
 	}
 
 	for _, rb := range bootstraps {
-		if err := rb.fn(s); err != nil {
+		if err := rb.fn(s, authResource); err != nil {
 			return fmt.Errorf("bootstrap %s routes: %w", rb.name, err)
 		}
 	}
@@ -45,13 +50,13 @@ func RegisterServices(s *server.Server) error {
 	return nil
 }
 
-func AuthRoutes(s *server.Server) error {
+func AuthRoutes(s *server.Server, authResource auth.ProtectedResource) error {
 	a, err := auth.New(s)
 	if err != nil {
 		return err
 	}
 
-	a.Get("/signin", mw.MaybeAuthenticate(a), a.HandleSigninPage)
+	a.Get("/signin", mw.MaybeAuthenticate(authResource), a.HandleSigninPage)
 	a.Post("/signin", a.HandleSignin)
 	a.All("/logout", a.HandleLogout)
 	a.Get("/signup", a.HandleSignupPage)
@@ -70,36 +75,36 @@ func AuthRoutes(s *server.Server) error {
 
 	g := a.Group("/api/auth")
 	g.Post("/signin", a.HandleAPISignin)
-	g.Get("/protected", mw.MustAuthenticate(a), a.HandleShowUser)
-	g.Post("/validate", mw.MustAuthenticate(a), a.HandleValidate)
+	g.Get("/protected", mw.MustAuthenticate(authResource), a.HandleShowUser)
+	g.Post("/validate", mw.MustAuthenticate(authResource), a.HandleValidate)
 
 	return nil
 }
 
-func DashbordhRoutes(s *server.Server) error {
+func DashbordhRoutes(s *server.Server, authResource auth.ProtectedResource) error {
 	d, err := dashboard.NewService(s)
 	if err != nil {
 		return err
 	}
 
-	d.Get("/", mw.MustAuthenticate(d), d.HandleDashboardPage)
+	d.Get("/", mw.MustAuthenticate(authResource), d.HandleDashboardPage)
 
-	g := s.Group("/dashboard", mw.MustAuthenticate(d))
+	g := s.Group("/dashboard", mw.MustAuthenticate(authResource))
 	g.Get("", d.HandleDashboardPage)
 
 	return nil
 }
 
-func ClinicsRoutes(s *server.Server) error {
+func ClinicsRoutes(s *server.Server, authResource auth.ProtectedResource) error {
 	c, err := clinic.NewService(s)
 	if err != nil {
 		return err
 	}
 
 	// Pages
-	g := c.Group("/clinics", mw.MustAuthenticate(c))
+	g := c.Group("/clinics", mw.MustAuthenticate(authResource))
 	g.Get("/", c.HandleClinicsIndexPage)
-	g.Get("/makeaton", mw.MustBeAdmin(c), c.HandleMockManyClinics)
+	g.Get("/makeaton", mw.MustBeAdmin(authResource), c.HandleMockManyClinics)
 	g.Get("/search", c.HandleClinicsIndexSearch)
 	g.Get("/new", c.HandleClinicsNewPage)
 	g.Get("/:id", c.HandleClinicsShowPage)
@@ -115,15 +120,15 @@ func ClinicsRoutes(s *server.Server) error {
 	return nil
 }
 
-func PatientRoutes(s *server.Server) error {
+func PatientRoutes(s *server.Server, authResource auth.ProtectedResource) error {
 	p, err := patient.NewService(s)
 	if err != nil {
 		return err
 	}
 
-	g := p.Group("/patients", mw.MustAuthenticate(p))
+	g := p.Group("/patients", mw.MustAuthenticate(authResource))
 	g.Get("/", p.HandlePatientsPage)
-	g.Get("/makeaton", mw.MustBeAdmin(p), p.HandleMockManyPatients)
+	g.Get("/makeaton", mw.MustBeAdmin(authResource), p.HandleMockManyPatients)
 	g.Get("/search", p.HandlePatientsIndexSearch)
 	g.Post("/search", p.HandlePatientSearch)
 
@@ -151,7 +156,7 @@ func PatientRoutes(s *server.Server) error {
 	return nil
 }
 
-func AppointmentRoutes(s *server.Server) error {
+func AppointmentRoutes(s *server.Server, authResource auth.ProtectedResource) error {
 	a, err := appointment.New(s)
 	if err != nil {
 		return err
@@ -160,7 +165,7 @@ func AppointmentRoutes(s *server.Server) error {
 		return err
 	}
 
-	g := a.Group("/appointments", mw.MustAuthenticate(s))
+	g := a.Group("/appointments", mw.MustAuthenticate(authResource))
 	g.Get("/", a.HandleIndexPage)
 	g.Get("/new", a.HandleShowPage)
 	g.Get("/new/pricefrg/:id", a.HandlePriceFrg)
@@ -186,7 +191,7 @@ func AppointmentRoutes(s *server.Server) error {
 	return nil
 }
 
-func ThemeRoutes(s *server.Server) error {
+func ThemeRoutes(s *server.Server, _ auth.ProtectedResource) error {
 	t, err := theme.NewService(s)
 	if err != nil {
 		return err
@@ -198,36 +203,36 @@ func ThemeRoutes(s *server.Server) error {
 	return nil
 }
 
-func UserRoutes(s *server.Server) error {
+func UserRoutes(s *server.Server, authResource auth.ProtectedResource) error {
 	u, err := user.NewService(s)
 	if err != nil {
 		return err
 	}
 
 	// Pages
-	u.Get("/profile", mw.MustAuthenticate(u), u.HandleProfilePage)
-	u.Post("/profile", mw.MustAuthenticate(u), u.HandleUpdateProfile)
+	u.Get("/profile", mw.MustAuthenticate(authResource), u.HandleProfilePage)
+	u.Post("/profile", mw.MustAuthenticate(authResource), u.HandleUpdateProfile)
 
 	// Admin only
-	u.Get("/admin/users", mw.MustBeAdmin(u), u.HandleIndexPage)
-	u.Get("/admin/users/:id", mw.MustBeAdmin(u), u.HandleEditPage)
+	u.Get("/admin/users", mw.MustBeAdmin(authResource), u.HandleIndexPage)
+	u.Get("/admin/users/:id", mw.MustBeAdmin(authResource), u.HandleEditPage)
 
 	// API
-	api := u.Group("/api/users", mw.MustBeAdmin(u))
+	api := u.Group("/api/users", mw.MustBeAdmin(authResource))
 	api.Get("", u.HandleAPIUsers)
 	api.Post("/make/:n", u.HandleAPIMakeUsers)
 
 	return nil
 }
 
-func AdminRoutes(s *server.Server) error {
+func AdminRoutes(s *server.Server, authResource auth.ProtectedResource) error {
 	a, err := admin.NewService(s)
 	if err != nil {
 		return err
 	}
 
 	// Pages
-	g := a.Group("/admin", mw.MustBeAdmin(a))
+	g := a.Group("/admin", mw.MustBeAdmin(authResource))
 	g.Get("/models", a.HandleAdminModelsPage)
 
 	return nil
