@@ -29,7 +29,12 @@ func NewTracer(ctx context.Context, name string, env *appenv.Env) (tracer trace.
 		return tracer, shutdownFn, err
 	}
 
-	tracer, shutdownFn, err = NewUptraceTracer(ctx, name, env)
+	if env.UptraceDSN != "" && env.UptraceEndpoint != "" {
+		tracer, shutdownFn, err = NewUptraceTracer(ctx, name, env)
+		return tracer, shutdownFn, err
+	}
+
+	tracer, shutdownFn, err = NewDevTracer(ctx, name)
 	return tracer, shutdownFn, err
 }
 

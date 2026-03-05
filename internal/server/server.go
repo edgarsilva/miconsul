@@ -14,6 +14,7 @@ import (
 	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
 
+	otelfiber "github.com/gofiber/contrib/v3/otel"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
 	"github.com/gofiber/fiber/v3/middleware/cors"
@@ -145,6 +146,12 @@ func (s *Server) setupFiberApp() {
 
 func (s *Server) setupCoreMiddleware(app *fiber.App) {
 	app.Use(recover.New()) // Recover MW catches panics that might stop app execution
+	app.Use(otelfiber.Middleware(
+		otelfiber.WithNext(func(c fiber.Ctx) bool {
+			path := c.Path()
+			return strings.HasPrefix(path, "/public/") || path == "/favicon.ico"
+		}),
+	))
 	app.Use(logger.New())
 	app.Use(cors.New())
 	app.Use(requestid.New())
@@ -250,7 +257,7 @@ func WithCronJob(cj *cronjob.Sched) ServerOption {
 	}
 }
 
-// WithTracer configures the optional tracer implementation.
+// WithTracer configures the tracer implementation.
 func WithTracer(tracer trace.Tracer) ServerOption {
 	return func(server *Server) error {
 		if tracer == nil {
