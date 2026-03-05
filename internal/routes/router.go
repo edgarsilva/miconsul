@@ -30,7 +30,7 @@ func RegisterServices(s *server.Server) {
 }
 
 func AuthRoutes(s *server.Server) {
-	a := auth.NewService(s)
+	a := auth.New(s)
 
 	a.Get("/signin", mw.MaybeAuthenticate(a), a.HandleSigninPage)
 	a.Post("/signin", a.HandleSignin)
@@ -116,7 +116,8 @@ func PatientRoutes(s *server.Server) {
 }
 
 func AppointmentRoutes(s *server.Server) {
-	a := appointment.NewService(s)
+	a := appointment.New(s)
+	a.RegisterCronJob()
 
 	g := a.Group("/appointments", mw.MustAuthenticate(s))
 	g.Get("/", a.HandleIndexPage)

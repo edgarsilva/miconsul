@@ -19,11 +19,8 @@ type service struct {
 
 var ErrIDRequired = errors.New("id is required")
 
-func NewService(s *server.Server) service {
-	ser := service{Server: s}
-	ser.RegisterCronJob()
-
-	return ser
+func New(s *server.Server) *service {
+	return &service{Server: s}
 }
 
 func (s *service) TakePatientByID(ctx context.Context, userID, patientID string) (model.Patient, error) {

@@ -50,7 +50,7 @@ var (
 	errAuthSessionCreate       = errors.New("failed to create session")
 )
 
-func NewService(s *server.Server) *service {
+func New(s *server.Server) *service {
 	tracerName := s.Env.OTelTracerAuth
 	if tracerName == "" {
 		tracerName = s.Env.AppName + ".auth"
