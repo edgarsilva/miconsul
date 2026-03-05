@@ -27,7 +27,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type ProtectedResource interface {
+type AuthRuntime interface {
 	Session(c fiber.Ctx) (*session.Session, error)
 	AppEnv() *appenv.Env
 	GormDB() *gorm.DB
@@ -337,8 +337,8 @@ func deferLogtoSessionSave(route string, saveSess func() error) {
 
 // Authenticate an user based on Req Ctx Cookie 'Auth'
 // cookies
-func Authenticate(c fiber.Ctx, resource ProtectedResource) (model.User, error) {
-	strategy := selectStrategy(resource)
+func Authenticate(c fiber.Ctx, authRuntime AuthRuntime) (model.User, error) {
+	strategy := selectStrategy(authRuntime)
 	user, err := strategy.Authenticate(c)
 	if err != nil {
 		return model.User{}, err
@@ -347,17 +347,17 @@ func Authenticate(c fiber.Ctx, resource ProtectedResource) (model.User, error) {
 	return user, nil
 }
 
-func selectStrategy(resource ProtectedResource) AuthStrategy {
+func selectStrategy(authRuntime AuthRuntime) AuthStrategy {
 	switch {
-	case logtoEnabled(resource.AppEnv()):
-		return NewLogtoStrategy(strategyResource{ProtectedResource: resource})
+	case logtoEnabled(authRuntime.AppEnv()):
+		return NewLogtoStrategy(strategyResource{AuthRuntime: authRuntime})
 	default:
-		return NewLocalStrategy(resource)
+		return NewLocalStrategy(authRuntime)
 	}
 }
 
 type strategyResource struct {
-	ProtectedResource
+	AuthRuntime
 }
 
 func (resource strategyResource) FindUserByExtID(ctx context.Context, extID string) (model.User, error) {

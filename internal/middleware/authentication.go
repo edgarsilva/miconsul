@@ -9,9 +9,9 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-func MustAuthenticate(resource auth.ProtectedResource) func(c fiber.Ctx) error {
+func MustAuthenticate(authRuntime auth.AuthRuntime) func(c fiber.Ctx) error {
 	return func(c fiber.Ctx) error {
-		cu, err := auth.Authenticate(c, resource)
+		cu, err := auth.Authenticate(c, authRuntime)
 		if err != nil {
 			switch c.Accepts("text/html", "text/plain", "application/json") {
 			case "text/plain", "application/json":
@@ -31,9 +31,9 @@ func MustAuthenticate(resource auth.ProtectedResource) func(c fiber.Ctx) error {
 	}
 }
 
-func MustBeAdmin(resource auth.ProtectedResource) func(c fiber.Ctx) error {
+func MustBeAdmin(authRuntime auth.AuthRuntime) func(c fiber.Ctx) error {
 	return func(c fiber.Ctx) error {
-		cu, err := auth.Authenticate(c, resource)
+		cu, err := auth.Authenticate(c, authRuntime)
 		if err != nil {
 			switch c.Accepts("text/html", "text/plain", "application/json") {
 			case "text/html":
@@ -67,9 +67,9 @@ func MustBeAdmin(resource auth.ProtectedResource) func(c fiber.Ctx) error {
 	}
 }
 
-func MaybeAuthenticate(resource auth.ProtectedResource) func(c fiber.Ctx) error {
+func MaybeAuthenticate(authRuntime auth.AuthRuntime) func(c fiber.Ctx) error {
 	return func(c fiber.Ctx) error {
-		cu, _ := auth.Authenticate(c, resource)
+		cu, _ := auth.Authenticate(c, authRuntime)
 
 		c.Locals("current_user", cu)
 		c.Locals("uid", cu.ID)
