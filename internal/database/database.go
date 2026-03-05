@@ -93,7 +93,18 @@ func (d *Database) Close() error {
 }
 
 func ApplyMigrations(database *Database, env *appenv.Env) error {
-	fmt.Println(" Applying migrations...")
+	return applyMigrations(database, env, false)
+}
+
+func ApplyMigrationsSilent(database *Database, env *appenv.Env) error {
+	return applyMigrations(database, env, true)
+}
+
+func applyMigrations(database *Database, env *appenv.Env, silent bool) error {
+	if !silent {
+		fmt.Println(" Applying migrations...")
+	}
+
 	if database == nil {
 		return fmt.Errorf("database is not initialized")
 	}
@@ -106,7 +117,9 @@ func ApplyMigrations(database *Database, env *appenv.Env) error {
 		return fmt.Errorf("database is not initialized")
 	}
 
-	if env != nil && (appenv.IsDevelopment(env.Environment) || appenv.IsProduction(env.Environment)) {
+	if silent {
+		goose.SetLogger(NoopLogger{})
+	} else if env != nil && (appenv.IsDevelopment(env.Environment) || appenv.IsProduction(env.Environment)) {
 		logger, _ := zap.NewProduction()
 		sugar := logger.Sugar()
 		goose.SetLogger(ZapLogger{l: sugar})

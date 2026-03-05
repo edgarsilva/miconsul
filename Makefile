@@ -8,7 +8,11 @@ endif
 
 .DEFAULT_GOAL := help
 SHELL := /bin/bash
+MAKEFLAGS += --no-print-directory
 GOBIN ?= $(shell go env GOBIN)
+DB_PATH ?= database/app.sqlite
+SESSION_PATH ?= database/fiber_session.sqlite
+GOOSE_CMD ?= go run github.com/pressly/goose/v3/cmd/goose@v3.26.0
 
 ##@ Meta
 help: ## Show this help with available tasks
@@ -152,43 +156,51 @@ clean: ## Remove build artifacts
 	rm -f bin/*
 
 ##@ Database & Migrations
-db/create: ## Create DB (and run migrations)
-	$(MAKE) db/migrate
+db/create: ## Create DB (migrations run by app/seed bootstrap)
+	@echo "🧱 DB file is created automatically by migrations/bootstrap"
 
 db/delete: ## Delete DB (interactive confirmation)
-	@read -p "Delete DB (this is destructive)? [y/N] " choice; \
+	@printf "\033[33m⚠️ Delete DB (this is destructive)? [y/N]\033[0m "; \
+	read choice; \
 	if [ "$$choice" != "y" ] && [ "$$choice" != "Y" ]; then \
-		echo "Exiting..."; exit 1; \
-	else echo "deleting..."; fi
+		echo "🛑 Exiting..."; exit 1; \
+	else \
+		echo "🗑️ Deleting $(DB_PATH) and $(SESSION_PATH)..."; \
+		rm -f "$(DB_PATH)" "$(SESSION_PATH)"; \
+	fi
 
-db/setup: ## Recreate DB and apply migrations
-	$(MAKE) db/delete
-	$(MAKE) db/create
+db/setup: ## Recreate DB, apply migrations, and seed
+	@$(MAKE) db/delete
+	@$(MAKE) db/create
+	@$(MAKE) db/seed
+
+db/reset: db/setup ## Alias for full DB reset (drop/migrate/seed)
 
 db/dump_schema: ## Dump DB schema
 	sqlite3 store/app.sqlite3 .schema > goose/schema.sql
 
 migrations/apply: ## Apply migrations with goose
-	@echo "🪿 running migrations with momma goose"
-	$(GOBIN)/goose up
+	@echo "🪿 Running migrations with momma goose"
+	$(GOOSE_CMD) up
 
 db/migrate: migrations/apply ## Alias for migrations/apply
 
 db/seed: ## Run DB seeds (baseline + randomized bulk)
-	go run -tags fts5 cmd/seed/main.go
+	@echo "🌱 Running seed command"
+	@go run -tags fts5 cmd/seed/main.go
 
 .PHONY: migrations/create/%
 migrations/create/%: ## Create a migration file: make migrations/create/add_column_to_table
-	${GOBIN}/goose create $* sql
+	$(GOOSE_CMD) create $* sql
 
 migrations/status: ## Show migrations status
-	$(GOBIN)/goose status
+	$(GOOSE_CMD) status
 
 migrations/rollback: ## Roll back last migration
-	$(GOBIN)/goose down
+	$(GOOSE_CMD) down
 
 migrations/redo: ## Redo last migration
-	$(GOBIN)/goose redo
+	$(GOOSE_CMD) redo
 
 ##@ Docker
 docker/up: ## docker compose up (foreground)
@@ -217,6 +229,6 @@ docker/build: ## Rebuild the app image
 	ai/templ-sync \
 	build start run air/watch dev \
 	test test/unit test/integration clean \
-	db/create db/delete db/setup db/dump_schema db/seed \
+	db/create db/delete db/setup db/reset db/dump_schema db/seed \
 	migrations/apply migrate migrations/create migrations/status migrations/rollback migrations/redo \
 	docker/up docker/detached docker/down docker/logs docker/build

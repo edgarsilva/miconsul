@@ -119,10 +119,10 @@ make install
 
 ### DB - Create Database
 
-Creates an Sqlite file at `./database/app.sqlite` to use for the app
+Recreates the SQLite database, runs migrations, and applies seeds.
 
 ```bash
-make setup
+make db/setup
 ```
 
 ### Development
