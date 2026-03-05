@@ -40,14 +40,22 @@ type Env struct {
 	LogtoAppID     string `env:"LOGTO_APP_ID;optional;trimspace;format=IDENTIFIER;regex=^.{12,}$"`
 	LogtoAppSecret string `env:"LOGTO_APP_SECRET;optional;trimspace;format=IDENTIFIER;regex=^.{12,}$"`
 
-	UptraceDSN      string `env:"UPTRACE_DSN;optional"`
-	UptraceEndpoint string `env:"UPTRACE_ENDPOINT;optional"`
+	UptraceDSN       string `env:"UPTRACE_DSN;optional"`
+	UptraceEndpoint  string `env:"UPTRACE_ENDPOINT;optional"`
+	OTelServiceName  string `env:"OTEL_SERVICE_NAME;optional;trimspace"`
+	OTelTracerServer string `env:"OTEL_TRACER_SERVER;optional;trimspace"`
+	OTelTracerAuth   string `env:"OTEL_TRACER_AUTH;optional;trimspace"`
 
 	AssetsDir string `env:"ASSETS_DIR"`
 }
 
 func New() *Env {
-	env := &Env{AppShutdownTimeout: 10 * time.Second}
+	env := &Env{
+		AppShutdownTimeout: 10 * time.Second,
+		OTelServiceName:    "miconsul",
+		OTelTracerServer:   "miconsul.server",
+		OTelTracerAuth:     "miconsul.auth",
+	}
 	err := simpleenv.Load(env)
 	if err != nil {
 		log.Fatal("failed to load loading ENV variables:", err)

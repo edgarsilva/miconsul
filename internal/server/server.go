@@ -30,7 +30,6 @@ import (
 	"github.com/gofiber/storage/sqlite3/v2"
 
 	"github.com/panjf2000/ants/v2"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 )
@@ -70,7 +69,6 @@ func New(serverOpts ...ServerOption) *Server {
 	}
 
 	server.setupSessionStore()
-	server.setupTracer()
 	server.setupFiberApp()
 
 	return &server
@@ -96,6 +94,10 @@ func (s *Server) validateCriticalDeps() error {
 		return errors.New("Database is required")
 	}
 
+	if s.Tracer == nil {
+		return errors.New("tracer is required; pass server.WithTracer(...) to server.New(...)")
+	}
+
 	return nil
 }
 
@@ -114,10 +116,6 @@ func (s *Server) validateRuntimeConfig() error {
 		return errors.New("COOKIE_SECRET must be at least 32 characters")
 	}
 
-	if appenv.IsProduction(environment) && s.Tracer == nil {
-		return errors.New("tracer is required in production; pass server.WithTracer(...) to server.New(...)")
-	}
-
 	return nil
 }
 
@@ -129,15 +127,6 @@ func (s *Server) setupSessionStore() {
 		Storage:      storage,
 		CookieSecure: cookieSecure,
 	})
-}
-
-func (s *Server) setupTracer() {
-	tracer := s.Tracer
-	if tracer == nil {
-		tracer = otel.Tracer("fiberapp-server")
-	}
-
-	s.Tracer = tracer
 }
 
 func (s *Server) setupFiberApp() {
@@ -328,12 +317,7 @@ func (s *Server) Trace(ctx context.Context, spanName string, opts ...trace.SpanS
 		ctx = context.Background()
 	}
 
-	tracer := s.Tracer
-	if tracer == nil {
-		tracer = otel.Tracer("fiberapp-server")
-	}
-
-	ctx, span := tracer.Start(ctx, spanName, opts...)
+	ctx, span := s.Tracer.Start(ctx, spanName, opts...)
 	return ctx, span
 }
 

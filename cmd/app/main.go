@@ -72,7 +72,7 @@ func main() {
 
 	fmt.Println(" Starting telemetry...")
 	var tracer trace.Tracer
-	tracer, shutdownTracer, err := telemetry.NewTracer(ctx, "fiber-server", env)
+	tracer, shutdownTracer, err := telemetry.NewTracer(ctx, env.OTelTracerServer, env)
 	if err != nil {
 		log.Printf("failed to initialize otel tracer: %v", err)
 		exitCode = 1

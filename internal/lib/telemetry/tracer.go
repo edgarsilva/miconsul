@@ -19,10 +19,6 @@ import (
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 )
 
-const (
-	dsn = "https://bERP4WQyw5wRLuwfBcgVtg@api.uptrace.dev?grpc=4317"
-)
-
 func NewTracer(ctx context.Context, name string, env *appenv.Env) (tracer trace.Tracer, shutdownFn func() error, err error) {
 	if env == nil {
 		return nil, nil, fmt.Errorf("otel: environment config is nil")
@@ -44,7 +40,16 @@ func NewDevTracer(ctx context.Context, name string) (tracer trace.Tracer, shutdo
 	}, nil
 }
 
-func NewStdoutTracer(ctx context.Context, name string) (tracer trace.Tracer, shutdownFn func() error, err error) {
+func NewStdoutTracer(ctx context.Context, name string, env *appenv.Env) (tracer trace.Tracer, shutdownFn func() error, err error) {
+	if env == nil {
+		return nil, nil, fmt.Errorf("otel: environment config is nil")
+	}
+
+	serviceName := env.OTelServiceName
+	if serviceName == "" {
+		serviceName = env.AppName
+	}
+
 	exporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
 	if err != nil {
 		return nil, nil, fmt.Errorf("otel: create stdout exporter: %w", err)
@@ -56,7 +61,7 @@ func NewStdoutTracer(ctx context.Context, name string) (tracer trace.Tracer, shu
 		sdktrace.WithResource(
 			resource.NewWithAttributes(
 				semconv.SchemaURL,
-				semconv.ServiceNameKey.String("miconsul-fiberapp"),
+				semconv.ServiceNameKey.String(serviceName),
 			)),
 	)
 
@@ -87,11 +92,13 @@ func NewUptraceTracer(ctx context.Context, name string, env *appenv.Env) (tracer
 	var (
 		dsn         = env.UptraceDSN
 		endpoint    = env.UptraceEndpoint
-		appName     = env.AppName
-		environment = env.Environment
 		appVersion  = env.AppVersion
-		serviceName = appName + "_" + string(environment)
+		serviceName = env.OTelServiceName
 	)
+
+	if serviceName == "" {
+		serviceName = env.AppName
+	}
 
 	if dsn == "" || endpoint == "" {
 		return nil, nil, fmt.Errorf("otel: uptrace dsn or endpoint missing")
