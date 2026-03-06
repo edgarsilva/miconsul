@@ -234,6 +234,16 @@ docker/lgtm-logs: ## Follow LGTM stack logs
 docker/build: ## Rebuild the app image
 	docker compose up --no-deps --build app
 
+##@ Observability
+obs/load: ## Run continuous synthetic traffic (~39 RPM total)
+	./scripts/obs-load.sh
+
+obs/load/light: ## Run lighter synthetic traffic (~24 RPM total)
+	PUBLIC_RPM=5 PROTECTED_RPM=3 ./scripts/obs-load.sh
+
+obs/load/medium: ## Run medium synthetic traffic (~84 RPM total)
+	PUBLIC_RPM=15 PROTECTED_RPM=8 ./scripts/obs-load.sh
+
 
 .PHONY: help install install/go-localize fmt vet lint \
 	tailwind tailwind/watch templ templ/watch locales/build \
@@ -243,4 +253,5 @@ docker/build: ## Rebuild the app image
 	test test/unit test/integration clean \
 	db/create db/delete db/setup db/reset db/dump_schema db/seed \
 	migrations/apply migrate migrations/create migrations/status migrations/rollback migrations/redo \
-	docker/up docker/dev docker/detached docker/down docker/logs docker/app-logs docker/lgtm-logs docker/build
+	docker/up docker/dev docker/detached docker/down docker/logs docker/app-logs docker/lgtm-logs docker/build \
+	obs/load obs/load/light obs/load/medium
