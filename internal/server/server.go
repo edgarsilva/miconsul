@@ -4,7 +4,6 @@ package server
 import (
 	"context"
 	"errors"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -17,6 +16,7 @@ import (
 	otelfiber "github.com/gofiber/contrib/v3/otel"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
+	"github.com/gofiber/fiber/v3/middleware/adaptor"
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/encryptcookie"
 	"github.com/gofiber/fiber/v3/middleware/favicon"
@@ -31,6 +31,7 @@ import (
 	"github.com/gofiber/storage/sqlite3/v2"
 
 	"github.com/panjf2000/ants/v2"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 )
@@ -49,6 +50,7 @@ type Server struct {
 	SessionStore *session.Store
 	Localizer    *localize.Localizer
 	Tracer       trace.Tracer
+	StartedAt    time.Time
 	*fiber.App
 }
 
@@ -56,7 +58,7 @@ type ServerOption func(*Server) error
 
 // New constructs a Server with the provided options and core setup.
 func New(serverOpts ...ServerOption) *Server {
-	server := Server{}
+	server := Server{StartedAt: time.Now()}
 	if err := server.applyServerOptions(serverOpts...); err != nil {
 		log.Fatal("🔴 failed to start server: option setup error:", err)
 	}
@@ -146,6 +148,7 @@ func (s *Server) setupFiberApp() {
 
 func (s *Server) setupCoreMiddleware(app *fiber.App) {
 	app.Use(recover.New()) // Recover MW catches panics that might stop app execution
+	app.Use(requestMetricsMiddleware())
 	app.Use(otelfiber.Middleware(
 		otelfiber.WithNext(func(c fiber.Ctx) bool {
 			path := c.Path()
@@ -168,27 +171,7 @@ func (s *Server) setupSecurityMiddleware(app *fiber.App, cookieSecret string) {
 }
 
 func (s *Server) setupObservability(app *fiber.App) {
-	if s.Env != nil {
-		env := s.Env.Environment
-		if !appenv.IsDevOrTest(env) {
-			return
-		}
-	}
-
-	startedAt := time.Now()
-	app.Get("/metrics", func(c fiber.Ctx) error {
-		mem := runtime.MemStats{}
-		runtime.ReadMemStats(&mem)
-
-		return c.JSON(fiber.Map{
-			"uptime_seconds":    int(time.Since(startedAt).Seconds()),
-			"goroutines":        runtime.NumGoroutine(),
-			"alloc_bytes":       mem.Alloc,
-			"total_alloc_bytes": mem.TotalAlloc,
-			"sys_bytes":         mem.Sys,
-			"heap_objects":      mem.HeapObjects,
-		})
-	})
+	app.Get("/metrics", adaptor.HTTPHandler(promhttp.Handler()))
 }
 
 func (s *Server) setupStaticFiles(app *fiber.App, environment appenv.Environment) {

@@ -32,6 +32,7 @@ func RegisterServices(s *server.Server) error {
 
 	bootstraps := []routeBootstrap{
 		{name: "auth", fn: AuthRoutes},
+		{name: "debug", fn: DebugRoutes},
 		{name: "user", fn: UserRoutes},
 		{name: "admin", fn: AdminRoutes},
 		{name: "dashboard", fn: DashbordhRoutes},
@@ -46,6 +47,12 @@ func RegisterServices(s *server.Server) error {
 			return fmt.Errorf("bootstrap %s routes: %w", rb.name, err)
 		}
 	}
+
+	return nil
+}
+
+func DebugRoutes(s *server.Server, authSvc auth.AuthRuntime) error {
+	s.Get("/debug/runtime", mw.MustBeAdmin(authSvc), s.HandleDebugRuntime)
 
 	return nil
 }
