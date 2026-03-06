@@ -3,10 +3,10 @@ package metrics
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 
 	"miconsul/internal/lib/appenv"
+	"miconsul/internal/observability"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel"
@@ -18,7 +18,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
 
-type Meter struct {
+type HTTPMetrics struct {
 	PromHTTPDuration *prometheus.HistogramVec
 	PromHTTPRequests *prometheus.CounterVec
 
@@ -28,10 +28,10 @@ type Meter struct {
 
 var registerPromMetricsOnce sync.Once
 
-func New(ctx context.Context, env *appenv.Env) (Meter, func() error, error) {
+func New(ctx context.Context, env *appenv.Env) (HTTPMetrics, func() error, error) {
 	provider, shutdownFn, err := NewMeterProvider(ctx, env)
 	if err != nil {
-		return Meter{}, shutdownFn, err
+		return HTTPMetrics{}, shutdownFn, err
 	}
 
 	otelHTTPDuration, err := provider.Float64Histogram(
@@ -39,7 +39,7 @@ func New(ctx context.Context, env *appenv.Env) (Meter, func() error, error) {
 		metricapi.WithDescription("HTTP request duration in seconds."),
 	)
 	if err != nil {
-		return Meter{}, shutdownFn, err
+		return HTTPMetrics{}, shutdownFn, err
 	}
 
 	otelHTTPRequests, err := provider.Int64Counter(
@@ -47,7 +47,7 @@ func New(ctx context.Context, env *appenv.Env) (Meter, func() error, error) {
 		metricapi.WithDescription("Total number of HTTP requests."),
 	)
 	if err != nil {
-		return Meter{}, shutdownFn, err
+		return HTTPMetrics{}, shutdownFn, err
 	}
 
 	promHTTPDuration := prometheus.NewHistogramVec(
@@ -71,11 +71,12 @@ func New(ctx context.Context, env *appenv.Env) (Meter, func() error, error) {
 		[]string{"route", "method", "status_group"},
 	)
 
+	// Compatibility fallback for pull-based environments (/metrics scrape).
 	registerPromMetricsOnce.Do(func() {
 		prometheus.MustRegister(promHTTPDuration, promHTTPRequests)
 	})
 
-	return Meter{
+	return HTTPMetrics{
 		PromHTTPDuration: promHTTPDuration,
 		PromHTTPRequests: promHTTPRequests,
 		HTTPDuration:     otelHTTPDuration,
@@ -100,7 +101,7 @@ func NewMeterProvider(ctx context.Context, env *appenv.Env) (metric.Meter, func(
 	}
 
 	otlpOpts := []otlpmetricgrpc.Option{otlpmetricgrpc.WithEndpoint(endpoint)}
-	if env.OTelOTLPInsecure || isInternalOTLPEndpoint(endpoint) {
+	if env.OTelOTLPInsecure || observability.IsInternalOTLPEndpoint(endpoint) {
 		otlpOpts = append(otlpOpts, otlpmetricgrpc.WithInsecure())
 	}
 
@@ -140,9 +141,4 @@ func NewMeterProvider(ctx context.Context, env *appenv.Env) (metric.Meter, func(
 	}
 
 	return meter, shutdown, nil
-}
-
-func isInternalOTLPEndpoint(endpoint string) bool {
-	host := strings.ToLower(endpoint)
-	return strings.Contains(host, "localhost") || strings.Contains(host, "127.0.0.1") || strings.Contains(host, "lgtm") || strings.Contains(host, "tempo")
 }

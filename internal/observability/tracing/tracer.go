@@ -3,9 +3,9 @@ package tracing
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"miconsul/internal/lib/appenv"
+	"miconsul/internal/observability"
 
 	"go.opentelemetry.io/contrib/propagators/aws/xray"
 	"go.opentelemetry.io/otel"
@@ -113,7 +113,7 @@ func NewOTLPTracer(ctx context.Context, name string, env *appenv.Env) (tracer tr
 
 	otlpOpts := []otlptracegrpc.Option{otlptracegrpc.WithEndpoint(endpoint)}
 
-	if env.OTelOTLPInsecure || isInternalOTLPEndpoint(endpoint) {
+	if env.OTelOTLPInsecure || observability.IsInternalOTLPEndpoint(endpoint) {
 		otlpOpts = append(otlpOpts, otlptracegrpc.WithInsecure())
 	}
 
@@ -167,9 +167,4 @@ func NewOTLPTracer(ctx context.Context, name string, env *appenv.Env) (tracer tr
 
 		return nil
 	}, nil
-}
-
-func isInternalOTLPEndpoint(endpoint string) bool {
-	host := strings.ToLower(endpoint)
-	return strings.Contains(host, "localhost") || strings.Contains(host, "127.0.0.1") || strings.Contains(host, "lgtm") || strings.Contains(host, "tempo")
 }

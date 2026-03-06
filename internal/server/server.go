@@ -51,7 +51,7 @@ type Server struct {
 	SessionStore *session.Store
 	Localizer    *localize.Localizer
 	Tracer       trace.Tracer
-	Metrics      obsmetrics.Meter
+	Metrics      obsmetrics.HTTPMetrics
 	StartedAt    time.Time
 	*fiber.App
 }
@@ -255,7 +255,7 @@ func WithTracer(tracer trace.Tracer) ServerOption {
 }
 
 // WithMetrics configures the HTTP metrics instruments.
-func WithMetrics(meter obsmetrics.Meter) ServerOption {
+func WithMetrics(meter obsmetrics.HTTPMetrics) ServerOption {
 	return func(server *Server) error {
 		server.Metrics = meter
 		return nil
