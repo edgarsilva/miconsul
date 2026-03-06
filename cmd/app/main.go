@@ -17,8 +17,9 @@ import (
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
-	"miconsul/internal/lib/telemetry"
 	"miconsul/internal/lib/workpool"
+	"miconsul/internal/observability/metrics"
+	"miconsul/internal/observability/tracing"
 	"miconsul/internal/routes"
 	"miconsul/internal/server"
 
@@ -51,7 +52,7 @@ func main() {
 
 	fmt.Println(" Starting telemetry...")
 	var tracer trace.Tracer
-	tracer, shutdownTracer, err := telemetry.NewTracer(ctx, env.OTelTracerServer, env)
+	tracer, shutdownTracer, err := tracing.NewTracer(ctx, env.OTelTracerServer, env)
 	if err != nil {
 		log.Printf("failed to initialize otel tracer: %v", err)
 		exitCode = 1
@@ -61,6 +62,20 @@ func main() {
 		fmt.Println("󰓾 Tracer provider shutting down...")
 		if err := shutdownTracer(); err != nil {
 			log.Printf("tracer shutdown error: %v", err)
+		}
+	}()
+
+	fmt.Println(" Starting metrics telemetry...")
+	httpMetrics, shutdownMetrics, err := metrics.New(ctx, env)
+	if err != nil {
+		log.Printf("failed to initialize otel meter provider: %v", err)
+		exitCode = 1
+		return
+	}
+	defer func() {
+		fmt.Println("󰓾 Meter provider shutting down...")
+		if err := shutdownMetrics(); err != nil {
+			log.Printf("meter provider shutdown error: %v", err)
 		}
 	}()
 
@@ -114,6 +129,7 @@ func main() {
 		server.WithCronJob(cj),
 		server.WithWorkPool(wp),
 		server.WithTracer(tracer),
+		server.WithMetrics(httpMetrics),
 		server.WithLocalizer(localizer),
 	)
 

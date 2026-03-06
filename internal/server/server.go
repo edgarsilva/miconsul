@@ -12,6 +12,7 @@ import (
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
+	obsmetrics "miconsul/internal/observability/metrics"
 
 	otelfiber "github.com/gofiber/contrib/v3/otel"
 	"github.com/gofiber/fiber/v3"
@@ -50,6 +51,7 @@ type Server struct {
 	SessionStore *session.Store
 	Localizer    *localize.Localizer
 	Tracer       trace.Tracer
+	Metrics      obsmetrics.Meter
 	StartedAt    time.Time
 	*fiber.App
 }
@@ -148,7 +150,7 @@ func (s *Server) setupFiberApp() {
 
 func (s *Server) setupCoreMiddleware(app *fiber.App) {
 	app.Use(recover.New()) // Recover MW catches panics that might stop app execution
-	app.Use(requestMetricsMiddleware())
+	app.Use(s.requestMetricsMiddleware())
 	app.Use(otelfiber.Middleware(
 		otelfiber.WithNext(func(c fiber.Ctx) bool {
 			path := c.Path()
@@ -248,6 +250,14 @@ func WithTracer(tracer trace.Tracer) ServerOption {
 		}
 
 		server.Tracer = tracer
+		return nil
+	}
+}
+
+// WithMetrics configures the HTTP metrics instruments.
+func WithMetrics(meter obsmetrics.Meter) ServerOption {
+	return func(server *Server) error {
+		server.Metrics = meter
 		return nil
 	}
 }

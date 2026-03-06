@@ -4,42 +4,22 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel/attribute"
+	metricapi "go.opentelemetry.io/otel/metric"
+	obsmetrics "miconsul/internal/observability/metrics"
 )
 
-var (
-	registerMetricsOnce sync.Once
+// requestMetricsMiddleware records HTTP request metrics using both pull and push paths.
+func (s *Server) requestMetricsMiddleware() func(c fiber.Ctx) error {
+	obsmetrics.RegisterPrometheusCollectors(s.Metrics)
 
-	httpRequestDurationSeconds = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name: "http_request_duration_seconds",
-			Help: "HTTP request duration in seconds.",
-			Buckets: []float64{
-				0.005, 0.01, 0.025, 0.05, 0.075,
-				0.1, 0.15, 0.2, 0.3, 0.5,
-				0.75, 1, 1.5, 2, 3, 5, 10,
-			},
-		},
-		[]string{"route", "method", "status_group"},
-	)
-
-	httpRequestsTotal = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "http_requests_total",
-			Help: "Total number of HTTP requests.",
-		},
-		[]string{"route", "method", "status_group"},
-	)
-)
-
-func requestMetricsMiddleware() func(c fiber.Ctx) error {
-	registerMetricsOnce.Do(func() {
-		prometheus.MustRegister(httpRequestDurationSeconds, httpRequestsTotal)
-	})
+	otelHTTPDuration := s.Metrics.HTTPDuration
+	otelHTTPRequests := s.Metrics.HTTPRequests
+	promHTTPDuration := s.Metrics.PromHTTPDuration
+	promHTTPRequests := s.Metrics.PromHTTPRequests
 
 	return func(c fiber.Ctx) error {
 		path := c.Path()
@@ -60,13 +40,31 @@ func requestMetricsMiddleware() func(c fiber.Ctx) error {
 		method := c.Method()
 
 		elapsedSeconds := time.Since(startedAt).Seconds()
-		httpRequestDurationSeconds.WithLabelValues(routePath, method, statusGroup).Observe(elapsedSeconds)
-		httpRequestsTotal.WithLabelValues(routePath, method, statusGroup).Inc()
+
+		// Pull path: exposed at /metrics for Prometheus scraper ingestion.
+		if promHTTPDuration != nil && promHTTPRequests != nil {
+			promHTTPDuration.WithLabelValues(routePath, method, statusGroup).Observe(elapsedSeconds)
+			promHTTPRequests.WithLabelValues(routePath, method, statusGroup).Inc()
+		}
+
+		// Push path: emitted via OTLP to the collector/exporter pipeline.
+		if otelHTTPDuration != nil && otelHTTPRequests != nil {
+			// Keep labels aligned across pull/push (route, method, status_group) for query parity.
+			attrs := []attribute.KeyValue{
+				attribute.String("route", routePath),
+				attribute.String("method", method),
+				attribute.String("status_group", statusGroup),
+			}
+
+			otelHTTPDuration.Record(c.Context(), elapsedSeconds, metricapi.WithAttributes(attrs...))
+			otelHTTPRequests.Add(c.Context(), 1, metricapi.WithAttributes(attrs...))
+		}
 
 		return err
 	}
 }
 
+// HandleDebugRuntime returns runtime process stats for admin-only diagnostics.
 func (s *Server) HandleDebugRuntime(c fiber.Ctx) error {
 	mem := runtime.MemStats{}
 	runtime.ReadMemStats(&mem)
