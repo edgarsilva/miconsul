@@ -71,22 +71,16 @@ func New(ctx context.Context, env *appenv.Env) (Meter, func() error, error) {
 		[]string{"route", "method", "status_group"},
 	)
 
+	registerPromMetricsOnce.Do(func() {
+		prometheus.MustRegister(promHTTPDuration, promHTTPRequests)
+	})
+
 	return Meter{
 		PromHTTPDuration: promHTTPDuration,
 		PromHTTPRequests: promHTTPRequests,
 		HTTPDuration:     otelHTTPDuration,
 		HTTPRequests:     otelHTTPRequests,
 	}, shutdownFn, nil
-}
-
-func RegisterPrometheusCollectors(meter Meter) {
-	if meter.PromHTTPDuration == nil || meter.PromHTTPRequests == nil {
-		return
-	}
-
-	registerPromMetricsOnce.Do(func() {
-		prometheus.MustRegister(meter.PromHTTPDuration, meter.PromHTTPRequests)
-	})
 }
 
 func NewMeterProvider(ctx context.Context, env *appenv.Env) (metric.Meter, func() error, error) {

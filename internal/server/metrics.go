@@ -9,13 +9,10 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"go.opentelemetry.io/otel/attribute"
 	metricapi "go.opentelemetry.io/otel/metric"
-	obsmetrics "miconsul/internal/observability/metrics"
 )
 
 // requestMetricsMiddleware records HTTP request metrics using both pull and push paths.
 func (s *Server) requestMetricsMiddleware() func(c fiber.Ctx) error {
-	obsmetrics.RegisterPrometheusCollectors(s.Metrics)
-
 	otelHTTPDuration := s.Metrics.HTTPDuration
 	otelHTTPRequests := s.Metrics.HTTPRequests
 	promHTTPDuration := s.Metrics.PromHTTPDuration
@@ -42,21 +39,25 @@ func (s *Server) requestMetricsMiddleware() func(c fiber.Ctx) error {
 		elapsedSeconds := time.Since(startedAt).Seconds()
 
 		// Pull path: exposed at /metrics for Prometheus scraper ingestion.
-		if promHTTPDuration != nil && promHTTPRequests != nil {
+		if promHTTPDuration != nil {
 			promHTTPDuration.WithLabelValues(routePath, method, statusGroup).Observe(elapsedSeconds)
+		}
+		if promHTTPRequests != nil {
 			promHTTPRequests.WithLabelValues(routePath, method, statusGroup).Inc()
 		}
 
 		// Push path: emitted via OTLP to the collector/exporter pipeline.
-		if otelHTTPDuration != nil && otelHTTPRequests != nil {
-			// Keep labels aligned across pull/push (route, method, status_group) for query parity.
-			attrs := []attribute.KeyValue{
-				attribute.String("route", routePath),
-				attribute.String("method", method),
-				attribute.String("status_group", statusGroup),
-			}
+		// Keep labels aligned across pull/push (route, method, status_group) for query parity.
+		attrs := []attribute.KeyValue{
+			attribute.String("route", routePath),
+			attribute.String("method", method),
+			attribute.String("status_group", statusGroup),
+		}
 
+		if otelHTTPDuration != nil {
 			otelHTTPDuration.Record(c.Context(), elapsedSeconds, metricapi.WithAttributes(attrs...))
+		}
+		if otelHTTPRequests != nil {
 			otelHTTPRequests.Add(c.Context(), 1, metricapi.WithAttributes(attrs...))
 		}
 
