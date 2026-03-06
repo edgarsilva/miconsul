@@ -18,6 +18,7 @@ type Env struct {
 	AppPort     int    `env:"APP_PORT;min=1;max=65535"`
 
 	AppShutdownTimeout time.Duration `env:"APP_SHUTDOWN_TIMEOUT;optional;min=1s"`
+	RateLimiterEnabled bool          `env:"RATE_LIMITER_ENABLED;optional"`
 
 	CookieSecret string `env:"COOKIE_SECRET;regex=^.{32,}$"`
 	JWTSecret    string `env:"JWT_SECRET"`
@@ -52,6 +53,7 @@ type Env struct {
 func New() *Env {
 	env := &Env{
 		AppShutdownTimeout: 10 * time.Second,
+		RateLimiterEnabled: true,
 		OTelServiceName:    "miconsul",
 		OTelTracerServer:   "miconsul.server",
 		OTelTracerAuth:     "miconsul.auth",

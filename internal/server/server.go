@@ -169,7 +169,11 @@ func (s *Server) setupSecurityMiddleware(app *fiber.App, cookieSecret string) {
 	app.Use(helmet.New(helmetConfig()))
 	app.Use(encryptcookie.New(encryptcookie.Config{Key: cookieSecret}))
 	app.Use(favicon.New(favicon.Config{File: "./public/favicon.ico", URL: "/favicon.ico"}))
-	app.Use(limiter.New(limiterConfig()))
+
+	rateLimiterEnabled := s.Env.RateLimiterEnabled && !appenv.IsDevelopment(s.Env.Environment)
+	if rateLimiterEnabled {
+		app.Use(limiter.New(limiterConfig()))
+	}
 }
 
 func (s *Server) setupObservability(app *fiber.App) {
