@@ -954,12 +954,12 @@ func AppointmentLi(vc *Ctx, appointment model.Appointment) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = CmpTimeInTimezone(appointment.BookedAt, appointment.Timezone, "font-semibold", "text-info").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpTimeInTimezone(appointment.BookedAt, appointment.LocalTimezone(), "font-semibold", "text-info").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if !appointment.RescheduledAt.IsZero() {
-			templ_7745c5c3_Err = CmpTimeInTimezone(appointment.RescheduledAt, appointment.Timezone, "font-semibold text-warning").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpTimeInTimezone(appointment.RescheduledAt, appointment.LocalTimezone(), "font-semibold text-warning").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1312,9 +1312,9 @@ func AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.Pa
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var80 string
-				templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.JoinStringErrs(libtime.InTimezone(time.Now(), "MexicoCity").Format("2006-01-02T15:04"))
+				templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.JoinStringErrs(libtime.InTimezone(time.Now(), model.DefaultTimezone).Format("2006-01-02T15:04"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 308, Col: 90}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/appointmentspage.templ`, Line: 308, Col: 98}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var80))
 				if templ_7745c5c3_Err != nil {

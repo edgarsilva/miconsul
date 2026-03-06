@@ -218,9 +218,9 @@ templ AppointmentLi(vc *Ctx, appointment model.Appointment) {
 						}
 					</dt>
 					<dd class="flex flex-col">
-						@CmpTimeInTimezone(appointment.BookedAt, appointment.Timezone, "font-semibold", "text-info")
+						@CmpTimeInTimezone(appointment.BookedAt, appointment.LocalTimezone(), "font-semibold", "text-info")
 						if !appointment.RescheduledAt.IsZero() {
-							@CmpTimeInTimezone(appointment.RescheduledAt, appointment.Timezone, "font-semibold text-warning")
+							@CmpTimeInTimezone(appointment.RescheduledAt, appointment.LocalTimezone(), "font-semibold text-warning")
 						}
 					</dd>
 				</div>
@@ -305,7 +305,7 @@ templ AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.P
 										type="datetime-local"
 										name="bookedAt"
 										if appointment.BookedAt.IsZero() {
-											value={ libtime.InTimezone(time.Now(), "MexicoCity").Format("2006-01-02T15:04") }
+										value={ libtime.InTimezone(time.Now(), model.DefaultTimezone).Format("2006-01-02T15:04") }
 										} else {
 											value={ appointment.BookedAtInLocalTime().Format("2006-01-02T15:04") }
 										}

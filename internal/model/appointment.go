@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const DefaultTimezone = "MexicoCity"
+const DefaultTimezone = string(libtime.AmericaMexicoCity)
 
 type AppointmentStatus string
 
@@ -160,6 +160,10 @@ func AppointmentBookedThisMonth(db *gorm.DB) *gorm.DB {
 
 func (a *Appointment) LocalTimezone() string {
 	if a.Timezone == "" {
+		return DefaultTimezone
+	}
+
+	if _, err := time.LoadLocation(a.Timezone); err != nil {
 		return DefaultTimezone
 	}
 
