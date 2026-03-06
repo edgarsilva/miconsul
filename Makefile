@@ -105,7 +105,7 @@ air/watch: ## Run in dev mode with air (installs if missing)
 	    fi; \
 	fi
 
-dev: ## Start tailwind/watch, templ/watch, and air/watch in parallel
+dev: docker/up ## Start infra, then tailwind/watch, templ/watch, and air/watch
 	$(MAKE) -j3 tailwind/watch templ/watch air/watch
 
 ##@ Tests
@@ -203,9 +203,13 @@ migrations/redo: ## Redo last migration
 	$(GOOSE_CMD) redo
 
 ##@ Docker
-docker/up: ## docker compose up (foreground)
-	@echo " Docker services up"
-	docker compose up
+docker/up: ## Start docker infra services (without app)
+	@echo " Docker infra services up"
+	docker compose up -d lgtm
+
+docker/dev: ## Start all docker services including app
+	@echo " All docker services up"
+	docker compose up -d
 
 docker/detached: ## docker compose up -d
 	@echo " Docker up detached"
@@ -215,9 +219,17 @@ docker/down: ## docker compose down
 	@echo " Docker down"
 	docker compose down
 
-docker/logs: ## Follow app logs
-	@echo " Docker app logs "
+docker/logs: ## Follow logs for all docker services
+	@echo " Docker all service logs"
+	docker compose logs -f
+
+docker/app-logs: ## Follow app container logs
+	@echo " Docker app logs"
 	docker compose logs app -f
+
+docker/lgtm-logs: ## Follow LGTM stack logs
+	@echo " Docker LGTM logs"
+	docker compose logs lgtm -f
 
 docker/build: ## Rebuild the app image
 	docker compose up --no-deps --build app
@@ -231,4 +243,4 @@ docker/build: ## Rebuild the app image
 	test test/unit test/integration clean \
 	db/create db/delete db/setup db/reset db/dump_schema db/seed \
 	migrations/apply migrate migrations/create migrations/status migrations/rollback migrations/redo \
-	docker/up docker/detached docker/down docker/logs docker/build
+	docker/up docker/dev docker/detached docker/down docker/logs docker/app-logs docker/lgtm-logs docker/build

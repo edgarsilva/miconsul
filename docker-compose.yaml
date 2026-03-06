@@ -1,22 +1,36 @@
 name: miconsul
 
 services:
-    app:
-        build: .
-        volumes:
-            - ./store:/app/store
-        ports:
-            - 3000:3000
-        healthcheck:
-            test: ["CMD-SHELL", "curl -f http://localhost:3000/livez || exit 1"]
-            interval: 30s
-            timeout: 5s
-            retries: 5
-        env_file:
-            - ./.env
-        environment:
-            APP_ENV: ${APP_ENV}
-            DB_PATH: /app/store/app.sqlite
+  app:
+    build: .
+    depends_on:
+      lgtm:
+        condition: service_started
+    volumes:
+      - ./store:/app/store
+    ports:
+      - 3000:3000
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/livez || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    env_file:
+      - ./.env
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      DB_PATH: /app/store/app.sqlite
+      OTEL_EXPORTER_OTLP_ENDPOINT: lgtm:4317
+      OTEL_EXPORTER_OTLP_INSECURE: "true"
+
+  lgtm:
+    image: grafana/otel-lgtm:latest
+    ports:
+      - 3001:3000
+      - 4317:4317
+      - 4318:4318
+    volumes:
+      - lgtm-data:/data
 
 volumes:
-    appstore:
+  lgtm-data:

@@ -3,6 +3,7 @@ package telemetry
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"miconsul/internal/lib/appenv"
 
@@ -24,13 +25,13 @@ func NewTracer(ctx context.Context, name string, env *appenv.Env) (tracer trace.
 		return nil, nil, fmt.Errorf("otel: environment config is nil")
 	}
 
-	if appenv.IsDevelopment(env.Environment) {
-		tracer, shutdownFn, err = NewDevTracer(ctx, name)
+	if env.OTelOTLPEndpoint != "" {
+		tracer, shutdownFn, err = NewOTLPTracer(ctx, name, env)
 		return tracer, shutdownFn, err
 	}
 
-	if env.UptraceDSN != "" && env.UptraceEndpoint != "" {
-		tracer, shutdownFn, err = NewUptraceTracer(ctx, name, env)
+	if appenv.IsDevelopment(env.Environment) {
+		tracer, shutdownFn, err = NewDevTracer(ctx, name)
 		return tracer, shutdownFn, err
 	}
 
@@ -91,14 +92,13 @@ func NewStdoutTracer(ctx context.Context, name string, env *appenv.Env) (tracer 
 	}, nil
 }
 
-func NewUptraceTracer(ctx context.Context, name string, env *appenv.Env) (tracer trace.Tracer, shutdownFn func() error, err error) {
+func NewOTLPTracer(ctx context.Context, name string, env *appenv.Env) (tracer trace.Tracer, shutdownFn func() error, err error) {
 	if env == nil {
 		return nil, nil, fmt.Errorf("otel: environment config is nil")
 	}
 
 	var (
-		dsn         = env.UptraceDSN
-		endpoint    = env.UptraceEndpoint
+		endpoint    = env.OTelOTLPEndpoint
 		appVersion  = env.AppVersion
 		serviceName = env.OTelServiceName
 	)
@@ -108,19 +108,22 @@ func NewUptraceTracer(ctx context.Context, name string, env *appenv.Env) (tracer
 	}
 	deploymentEnvironment := string(env.Environment)
 
-	if dsn == "" || endpoint == "" {
-		return nil, nil, fmt.Errorf("otel: uptrace dsn or endpoint missing")
+	if endpoint == "" {
+		return nil, nil, fmt.Errorf("otel: otlp endpoint missing")
+	}
+
+	otlpOpts := []otlptracegrpc.Option{otlptracegrpc.WithEndpoint(endpoint)}
+
+	if env.OTelOTLPInsecure || isInternalOTLPEndpoint(endpoint) {
+		otlpOpts = append(otlpOpts, otlptracegrpc.WithInsecure())
 	}
 
 	exporter, err := otlptracegrpc.New(
 		ctx,
-		otlptracegrpc.WithEndpoint(endpoint),
-		otlptracegrpc.WithHeaders(map[string]string{
-			"uptrace-dsn": dsn,
-		}),
+		otlpOpts...,
 	)
 	if err != nil {
-		return nil, nil, fmt.Errorf("otel: create uptrace exporter: %w", err)
+		return nil, nil, fmt.Errorf("otel: create otlp exporter: %w", err)
 	}
 
 	resource, err := resource.New(
@@ -165,4 +168,9 @@ func NewUptraceTracer(ctx context.Context, name string, env *appenv.Env) (tracer
 
 		return nil
 	}, nil
+}
+
+func isInternalOTLPEndpoint(endpoint string) bool {
+	host := strings.ToLower(endpoint)
+	return strings.Contains(host, "localhost") || strings.Contains(host, "127.0.0.1") || strings.Contains(host, "lgtm") || strings.Contains(host, "tempo")
 }

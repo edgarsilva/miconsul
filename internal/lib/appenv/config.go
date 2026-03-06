@@ -40,8 +40,8 @@ type Env struct {
 	LogtoAppID     string `env:"LOGTO_APP_ID;optional;trimspace;format=IDENTIFIER;regex=^.{12,}$"`
 	LogtoAppSecret string `env:"LOGTO_APP_SECRET;optional;trimspace;format=IDENTIFIER;regex=^.{12,}$"`
 
-	UptraceDSN       string `env:"UPTRACE_DSN;optional"`
-	UptraceEndpoint  string `env:"UPTRACE_ENDPOINT;optional"`
+	OTelOTLPEndpoint string `env:"OTEL_EXPORTER_OTLP_ENDPOINT;optional;trimspace"`
+	OTelOTLPInsecure bool   `env:"OTEL_EXPORTER_OTLP_INSECURE;optional"`
 	OTelServiceName  string `env:"OTEL_SERVICE_NAME;optional;trimspace"`
 	OTelTracerServer string `env:"OTEL_TRACER_SERVER;optional;trimspace"`
 	OTelTracerAuth   string `env:"OTEL_TRACER_AUTH;optional;trimspace"`
