@@ -12,6 +12,7 @@ import (
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
+	obslogging "miconsul/internal/observability/logging"
 	obsmetrics "miconsul/internal/observability/metrics"
 
 	otelfiber "github.com/gofiber/contrib/v3/otel"
@@ -51,6 +52,7 @@ type Server struct {
 	SessionStore *session.Store
 	Localizer    *localize.Localizer
 	Tracer       trace.Tracer
+	RequestLog   obslogging.Logger
 	Metrics      obsmetrics.HTTPMetrics
 	StartedAt    time.Time
 	*fiber.App
@@ -107,8 +109,7 @@ func (s *Server) validateCriticalDeps() error {
 }
 
 func (s *Server) validateRuntimeConfig() error {
-	environment := s.Env.Environment
-	if !appenv.IsValidEnvironment(environment) {
+	if !appenv.IsValidEnvironment(s.Env.Environment) {
 		return errors.New("APP_ENV is invalid")
 	}
 
@@ -150,7 +151,7 @@ func (s *Server) setupFiberApp() {
 
 func (s *Server) setupCoreMiddleware(app *fiber.App) {
 	app.Use(recover.New()) // Recover MW catches panics that might stop app execution
-	app.Use(s.requestMetricsMiddleware())
+	app.Use(RequestMetricsMiddleware(s.Metrics))
 	app.Use(otelfiber.Middleware(
 		otelfiber.WithNext(func(c fiber.Ctx) bool {
 			path := c.Path()
@@ -160,6 +161,7 @@ func (s *Server) setupCoreMiddleware(app *fiber.App) {
 	app.Use(logger.New())
 	app.Use(cors.New())
 	app.Use(requestid.New())
+	app.Use(RequestLoggerMiddleware(s.RequestLog))
 	app.Get(healthcheck.LivenessEndpoint, healthcheck.New())
 	app.Get(healthcheck.ReadinessEndpoint, healthcheck.New())
 	app.Get(healthcheck.StartupEndpoint, healthcheck.New())
@@ -262,6 +264,14 @@ func WithTracer(tracer trace.Tracer) ServerOption {
 func WithMetrics(meter obsmetrics.HTTPMetrics) ServerOption {
 	return func(server *Server) error {
 		server.Metrics = meter
+		return nil
+	}
+}
+
+// WithRequestLogger configures the optional OTLP request logger.
+func WithRequestLogger(logger obslogging.Logger) ServerOption {
+	return func(server *Server) error {
+		server.RequestLog = logger
 		return nil
 	}
 }

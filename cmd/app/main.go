@@ -18,6 +18,7 @@ import (
 	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
 	"miconsul/internal/lib/workpool"
+	"miconsul/internal/observability/logging"
 	"miconsul/internal/observability/metrics"
 	"miconsul/internal/observability/tracing"
 	"miconsul/internal/routes"
@@ -79,6 +80,20 @@ func main() {
 		}
 	}()
 
+	fmt.Println(" Starting logs telemetry...")
+	requestLogger, shutdownLogs, err := logging.New(ctx, env)
+	if err != nil {
+		log.Printf("failed to initialize otel logger provider: %v", err)
+		exitCode = 1
+		return
+	}
+	defer func() {
+		fmt.Println("󰓾 Logger provider shutting down...")
+		if err := shutdownLogs(); err != nil {
+			log.Printf("logger provider shutdown error: %v", err)
+		}
+	}()
+
 	fmt.Println(" Connecting to database...")
 	db, err := database.New(env)
 	if err != nil {
@@ -130,6 +145,7 @@ func main() {
 		server.WithWorkPool(wp),
 		server.WithTracer(tracer),
 		server.WithMetrics(httpMetrics),
+		server.WithRequestLogger(requestLogger),
 		server.WithLocalizer(localizer),
 	)
 

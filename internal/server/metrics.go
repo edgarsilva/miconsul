@@ -6,17 +6,19 @@ import (
 	"strings"
 	"time"
 
+	obsmetrics "miconsul/internal/observability/metrics"
+
 	"github.com/gofiber/fiber/v3"
 	"go.opentelemetry.io/otel/attribute"
 	metricapi "go.opentelemetry.io/otel/metric"
 )
 
 // requestMetricsMiddleware records HTTP request metrics using both pull and push paths.
-func (s *Server) requestMetricsMiddleware() func(c fiber.Ctx) error {
-	otelHTTPDuration := s.Metrics.HTTPDuration
-	otelHTTPRequests := s.Metrics.HTTPRequests
-	promHTTPDuration := s.Metrics.PromHTTPDuration
-	promHTTPRequests := s.Metrics.PromHTTPRequests
+func RequestMetricsMiddleware(metrics obsmetrics.HTTPMetrics) func(c fiber.Ctx) error {
+	otelHTTPDuration := metrics.HTTPDuration
+	otelHTTPRequests := metrics.HTTPRequests
+	promHTTPDuration := metrics.PromHTTPDuration
+	promHTTPRequests := metrics.PromHTTPRequests
 
 	return func(c fiber.Ctx) error {
 		path := c.Path()
