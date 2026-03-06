@@ -63,12 +63,12 @@ func (ls LocalStrategy) authenticateWithJWT(c fiber.Ctx, token string) (model.Us
 		return user, errors.New("failed to find user with UID in JWT token")
 	}
 
-	refreshedJWT, err := RefreshJWTToken(ls.resource.AppEnv(), token, claims)
+	refreshedJWT, validFor, err := RefreshJWTToken(ls.resource.AppEnv(), token, claims)
 	if err != nil {
 		return user, errors.New("failed to refresh JWT token")
 	}
 	if refreshedJWT != token {
-		ls.refreshAuthCookie(c, refreshedJWT)
+		ls.refreshAuthCookie(c, refreshedJWT, validFor)
 	}
 
 	return user, nil
@@ -84,6 +84,10 @@ func getToken(c fiber.Ctx) string {
 	return token
 }
 
-func (ls LocalStrategy) refreshAuthCookie(c fiber.Ctx, jwt string) {
-	c.Cookie(ls.resource.NewCookie("Auth", jwt, time.Hour*8))
+func (ls LocalStrategy) refreshAuthCookie(c fiber.Ctx, jwt string, validFor time.Duration) {
+	if validFor <= 0 {
+		validFor = defaultAuthTokenTTL
+	}
+
+	c.Cookie(ls.resource.NewCookie("Auth", jwt, validFor))
 }

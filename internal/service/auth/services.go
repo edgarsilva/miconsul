@@ -184,21 +184,6 @@ func (s *service) authenticateCredentials(ctx context.Context, email, password s
 	return user, nil
 }
 
-func (s *service) issueAuthCookie(c fiber.Ctx, user model.User, rememberMe bool) error {
-	validFor := time.Duration(24)
-	if rememberMe {
-		validFor *= 7
-	}
-
-	jwt, err := JWTCreateToken(s.AppEnv(), user.Email, user.ID)
-	if err != nil {
-		return errAuthSessionCreate
-	}
-
-	c.Cookie(s.NewCookie("Auth", jwt, time.Hour*validFor))
-	return nil
-}
-
 func (s *service) FindUserByExtID(ctx context.Context, extID string) (model.User, error) {
 	user, err := gorm.G[model.User](s.DB.GormDB()).Where("ext_id = ?", extID).Take(ctx)
 	if err != nil {

@@ -9,17 +9,31 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+const (
+	defaultAuthTokenTTL  = 24 * time.Hour
+	rememberAuthTokenTTL = 7 * 24 * time.Hour
+)
+
 // JWTCreateToken returns a JWT token string for the sub and uid, optionally error
 func JWTCreateToken(env *appenv.Env, sub, uid string) (string, error) {
+	return JWTCreateTokenWithTTL(env, sub, uid, defaultAuthTokenTTL, false)
+}
+
+func JWTCreateTokenWithTTL(env *appenv.Env, sub, uid string, validFor time.Duration, rememberMe bool) (string, error) {
 	secret, err := jwtSecretFromEnv(env)
 	if err != nil {
 		return "", err
 	}
 
+	if validFor <= 0 {
+		validFor = defaultAuthTokenTTL
+	}
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 		"sub": sub,
 		"uid": uid,
-		"exp": time.Now().Add(24 * time.Hour).Unix(),
+		"rmb": rememberMe,
+		"exp": time.Now().Add(validFor).Unix(),
 	})
 
 	tokenStr, err := token.SignedString([]byte(secret))
@@ -64,32 +78,52 @@ func decodeJWTToken(env *appenv.Env, tokenStr string) (claims jwt.MapClaims, err
 }
 
 // RefreshJWTToken returns a refreshed JWT token for the sub and uid if expiring in less than 1h and still valid, optionally error
-func RefreshJWTToken(env *appenv.Env, token string, claims jwt.MapClaims) (string, error) {
+func RefreshJWTToken(env *appenv.Env, token string, claims jwt.MapClaims) (string, time.Duration, error) {
 	exp, err := claims.GetExpirationTime()
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
 	if time.Until(exp.Time) > time.Hour {
-		return token, nil
+		return token, time.Until(exp.Time), nil
 	}
 
 	email, err := claims.GetSubject()
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
 	uid, ok := claims["uid"].(string)
 	if !ok {
-		return "", errors.New("failed to parse JWT token claims, uid not found")
+		return "", 0, errors.New("failed to parse JWT token claims, uid not found")
 	}
 
-	jwt, err := JWTCreateToken(env, email, uid)
+	rememberMe := rememberMeFromClaims(claims)
+	validFor := authTokenTTL(rememberMe)
+
+	jwt, err := JWTCreateTokenWithTTL(env, email, uid, validFor, rememberMe)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
-	return jwt, nil
+	return jwt, validFor, nil
+}
+
+func authTokenTTL(rememberMe bool) time.Duration {
+	if rememberMe {
+		return rememberAuthTokenTTL
+	}
+
+	return defaultAuthTokenTTL
+}
+
+func rememberMeFromClaims(claims jwt.MapClaims) bool {
+	rememberMe, ok := claims["rmb"].(bool)
+	if ok {
+		return rememberMe
+	}
+
+	return false
 }
 
 func jwtSecretFromEnv(env *appenv.Env) (string, error) {
