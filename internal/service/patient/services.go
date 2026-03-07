@@ -41,20 +41,19 @@ func (s service) Patients(cu model.User, term string) ([]model.Patient, error) {
 	return patients, err
 }
 
-func (s service) TakePatientByID(ctx context.Context, patientID string) (model.Patient, error) {
-	patient := model.Patient{ID: patientID}
-	err := s.DB.WithContext(ctx).Model(&model.Patient{}).Take(&patient).Error
-	if err != nil {
-		return model.Patient{}, err
-	}
-
-	return patient, nil
-}
-
 func (s service) TakePatientByIDAndUserID(ctx context.Context, userID, patientID string) (model.Patient, error) {
 	return gorm.G[model.Patient](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", patientID, userID).
 		Take(ctx)
+}
+
+func (s service) PatientForShowPage(ctx context.Context, userID, patientID string) (model.Patient, error) {
+	patient := model.Patient{}
+	if patientID == "" || patientID == "new" {
+		return patient, nil
+	}
+
+	return s.TakePatientByIDAndUserID(ctx, userID, patientID)
 }
 
 func (s service) FindRecentPatientsByUser(ctx context.Context, cu model.User, limit int) ([]model.Patient, error) {

@@ -7,6 +7,7 @@ import (
 	"miconsul/internal/model"
 	"miconsul/internal/view"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
@@ -65,16 +66,12 @@ func (s *service) HandlePatientFormPage(c fiber.Ctx) error {
 		return s.Redirect(c, "/patients?toast=That user does not exist")
 	}
 
-	patient := model.Patient{}
-	if id != "new" {
-		var err error
-		patient, err = s.TakePatientByID(c.Context(), id)
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return s.Redirect(c, "/patients?toast=Patient does not exist&level=warning")
-		}
-		if err != nil {
-			return s.Redirect(c, "/patients?toast=Failed to load patient&level=error")
-		}
+	patient, err := s.PatientForShowPage(c.Context(), cu.ID, id)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return s.Redirect(c, "/patients?toast=Patient does not exist&level=warning")
+	}
+	if err != nil {
+		return s.Redirect(c, "/patients?toast=Failed to load patient&level=error")
 	}
 
 	return view.Render(c, view.PatientFormPage(patient, vc))
@@ -84,42 +81,34 @@ func (s *service) HandlePatientFormPage(c fiber.Ctx) error {
 // POST: /patients
 func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
-	var err error
 
 	patient := model.Patient{
 		UserID: cu.ID,
 	}
-	err = c.Bind().Body(&patient)
-	if err != nil {
+	if err := c.Bind().Body(&patient); err != nil {
 		redirectPath := "/patients/new?toast=Invalid patient input&level=error"
-		if !s.IsHTMX(c) {
-			return s.Redirect(c, redirectPath)
-		}
-
-		c.Set("HX-Location", redirectPath)
-		return c.SendStatus(fiber.StatusBadRequest)
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
 	}
 
 	patient.Sanitize()
 
-	err = s.CreatePatient(c.Context(), &patient)
-	if err == nil {
-		path, picErr := SaveProfilePicToDisk(c, patient)
-		if picErr != nil {
-			log.Error(picErr)
-		} else {
-			patient.ProfilePic = path
-		}
-	}
-
-	if err != nil {
+	if err := s.CreatePatient(c.Context(), &patient); err != nil {
 		redirectPath := "/patients/new?toast=Failed to create new patient&level=error"
-		if !s.IsHTMX(c) {
-			return s.Redirect(c, redirectPath)
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusUnprocessableEntity)
+	}
+
+	path, picErr := SaveProfilePicToDisk(c, patient)
+	if picErr != nil {
+		log.Error(picErr)
+	} else {
+		patient.ProfilePic = path
+		profilePicUpdate := model.Patient{ProfilePic: path}
+		if err := s.UpdatePatientByIDAndUserID(c.Context(), cu.ID, patient.ID, profilePicUpdate); err != nil {
+			log.Error(err)
 		}
 	}
 
-	if !s.IsHTMX(c) {
+	if s.NotHTMX(c) {
 		return s.Redirect(c, "/patients/"+patient.ID)
 	}
 
@@ -132,6 +121,15 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 		view.WithToast("New patient created", "", ""),
 	)
 	return view.Render(c, view.PatientFormPage(patient, vc))
+}
+
+func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string, htmxStatus int) error {
+	if s.NotHTMX(c) {
+		return s.Redirect(c, redirectPath)
+	}
+
+	c.Set("HX-Location", redirectPath)
+	return c.SendStatus(htmxStatus)
 }
 
 // HandleUpdatePatient updates a patient record for the CurrentUser
@@ -332,10 +330,23 @@ func (s *service) HandleMockManyPatients(c fiber.Ctx) error {
 // HandlePatientProfilePicImgSrc serves a patient's profile picture file.
 // GET: /patients/:id/profilepic/:filename
 func (s *service) HandlePatientProfilePicImgSrc(c fiber.Ctx) error {
+	cu := s.CurrentUser(c)
+
 	id := c.Params("id", "")
 	filename := c.Params("filename", "")
 	if id == "" || filename == "" {
 		return c.SendStatus(fiber.StatusNotFound)
+	}
+	if !strings.HasPrefix(filename, id+"_ppic_") {
+		return c.SendStatus(fiber.StatusNotFound)
+	}
+
+	_, err := s.TakePatientByIDAndUserID(c.Context(), cu.ID, id)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return c.SendStatus(fiber.StatusNotFound)
+	}
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
 	path, err := ProfilePicPath(filename)
