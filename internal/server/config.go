@@ -2,9 +2,9 @@ package server
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"miconsul/internal/lib/appenv"
@@ -27,6 +27,11 @@ const csp = "default-src 'self';base-uri 'self';font-src 'self' https: data:;" +
 	"script-src-attr 'none';" +
 	"style-src 'self' https:;" +
 	"upgrade-insecure-requests"
+
+var (
+	errorPagesOnce sync.Once
+	errorPages     = map[int]string{}
+)
 
 func limiterConfig() limiter.Config {
 	return limiter.Config{
@@ -105,6 +110,36 @@ func helmetConfig() helmet.Config {
 	}
 }
 
+func loadErrorPages() {
+	errorPagesOnce.Do(func() {
+		if page, err := os.ReadFile("./public/404.html"); err == nil {
+			errorPages[fiber.StatusNotFound] = string(page)
+		}
+
+		if page, err := os.ReadFile("./public/500.html"); err == nil {
+			errorPages[fiber.StatusInternalServerError] = string(page)
+		}
+	})
+}
+
+func sendErrorPage(ctx fiber.Ctx, code int) error {
+	loadErrorPages()
+
+	if page, ok := errorPages[code]; ok && page != "" {
+		return ctx.Status(code).Type("html", "utf-8").SendString(page)
+	}
+
+	if page, ok := errorPages[fiber.StatusInternalServerError]; ok && page != "" {
+		return ctx.Status(code).Type("html", "utf-8").SendString(page)
+	}
+
+	if code >= fiber.StatusInternalServerError {
+		return ctx.Status(code).SendString("Internal Server Error")
+	}
+
+	return ctx.Status(code).SendString("Not Found")
+}
+
 // recoverConfig returns recover middleware config object with the yield func
 // executed with the request ctx to trace the panic error
 func fiberAppErrorHandler(ctx fiber.Ctx, err error) error {
@@ -123,13 +158,9 @@ func fiberAppErrorHandler(ctx fiber.Ctx, err error) error {
 		span.SetStatus(codes.Error, err.Error())
 	}
 
-	// Send custom error page
-	err = ctx.Status(code).SendFile(fmt.Sprintf("./public/%d.html", code))
-	if err != nil {
-		// In case SendFile fails
+	if sendErr := sendErrorPage(ctx, code); sendErr != nil {
 		return ctx.Status(fiber.StatusInternalServerError).SendString("Internal Server Error")
 	}
 
-	// Return from handler
 	return nil
 }
