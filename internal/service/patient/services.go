@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"miconsul/internal/model"
 	"miconsul/internal/server"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -22,6 +23,8 @@ type service struct {
 var ErrIDRequired = errors.New("id is required")
 
 var ErrInvalidFilename = errors.New("invalid filename")
+
+var ErrProfilePicNotProvided = errors.New("profile picture not provided")
 
 func NewService(s *server.Server) (service, error) {
 	if s == nil {
@@ -107,7 +110,15 @@ func (s service) UpdatePatientByID(ctx context.Context, userID, patientID string
 	if err != nil {
 		return err
 	}
-	if rowsAffected != 1 {
+	if rowsAffected == 1 {
+		return nil
+	}
+
+	exists, err := s.patientExistsByID(ctx, userID, patientID)
+	if err != nil {
+		return err
+	}
+	if !exists {
 		return gorm.ErrRecordNotFound
 	}
 
@@ -145,11 +156,37 @@ func (s service) ClearPatientProfilePic(ctx context.Context, userID, patientID s
 	if err != nil {
 		return err
 	}
-	if rowsAffected != 1 {
+	if rowsAffected == 1 {
+		return nil
+	}
+
+	exists, err := s.patientExistsByID(ctx, userID, patientID)
+	if err != nil {
+		return err
+	}
+	if !exists {
 		return gorm.ErrRecordNotFound
 	}
 
 	return nil
+}
+
+func (s service) patientExistsByID(ctx context.Context, userID, patientID string) (bool, error) {
+	patientID = strings.TrimSpace(patientID)
+	if patientID == "" {
+		return false, ErrIDRequired
+	}
+
+	var count int64
+	err := s.DB.WithContext(ctx).
+		Model(&model.Patient{}).
+		Where("id = ? AND user_id = ?", patientID, userID).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
 }
 
 func (s service) CreatePatientsInBatches(ctx context.Context, patients []model.Patient, batchSize int) (int64, error) {
@@ -164,7 +201,7 @@ func (s service) CreatePatientsInBatches(ctx context.Context, patients []model.P
 func SaveProfilePicToDisk(c fiber.Ctx, patient model.Patient) (string, error) {
 	profilePic, err := c.FormFile("profilePic")
 	if err != nil {
-		return "", fmt.Errorf("failed to grab profilePic from form: %w", err)
+		return "", profilePicFormFileErr(err)
 	}
 
 	if patient.ID == "" {
@@ -214,6 +251,26 @@ func ProfilePicPath(filename string) (string, error) {
 	}
 
 	return filepath.Join(path, filename), nil
+}
+
+func profilePicFormFileErr(err error) error {
+	if isMissingProfilePicErr(err) {
+		return ErrProfilePicNotProvided
+	}
+
+	return fmt.Errorf("failed to grab profilePic from form: %w", err)
+}
+
+func isMissingProfilePicErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, http.ErrMissingFile) {
+		return true
+	}
+
+	errMsg := strings.ToLower(strings.TrimSpace(err.Error()))
+	return strings.Contains(errMsg, "no uploaded file") || strings.Contains(errMsg, "no such file")
 }
 
 func IsSafeProfilePicFilenameForPatient(patientID, filename string) bool {

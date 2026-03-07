@@ -107,7 +107,9 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 
 	path, picErr := SaveProfilePicToDisk(c, patient)
 	if picErr != nil {
-		log.Error(picErr)
+		if !errors.Is(picErr, ErrProfilePicNotProvided) {
+			log.Error(picErr)
+		}
 	} else {
 		patient.ProfilePic = path
 		profilePicUpdate := model.Patient{ProfilePic: path}
@@ -167,7 +169,9 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 
 	path, picErr := SaveProfilePicToDisk(c, patient)
 	if picErr != nil {
-		log.Error(picErr)
+		if !errors.Is(picErr, ErrProfilePicNotProvided) {
+			log.Error(picErr)
+		}
 	} else {
 		patient.ProfilePic = path
 	}
