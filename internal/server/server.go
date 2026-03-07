@@ -164,7 +164,9 @@ func setupCoreMiddleware(s *Server) {
 	app.Use(otelfiber.Middleware(
 		otelfiber.WithNext(func(c fiber.Ctx) bool {
 			path := c.Path()
-			return strings.HasPrefix(path, "/public/") || path == "/favicon.ico"
+			return strings.HasPrefix(path, "/public/") ||
+				strings.HasPrefix(path, "/.well-known/") ||
+				path == "/favicon.ico"
 		}),
 	))
 	app.Use(logger.New())
@@ -195,6 +197,7 @@ func setupObservability(s *Server) {
 func setupStaticFiles(s *Server) {
 	app := s.App
 	app.Use("/public", static.New("./public", staticConfig(s.Env.Environment)))
+	app.Use("/.well-known", static.New("./public/.well-known", staticConfig(s.Env.Environment)))
 }
 
 func setupHealthcheckRoutes(s *Server) {

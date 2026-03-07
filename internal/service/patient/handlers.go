@@ -6,6 +6,7 @@ import (
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/model"
 	"miconsul/internal/view"
+	"os"
 	"strconv"
 	"strings"
 
@@ -288,9 +289,15 @@ func (s *service) HandlePatientSearch(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
 	queryStr := strings.TrimSpace(c.FormValue("query", ""))
+	if len(queryStr) > 0 && len(queryStr) < 3 {
+		redirectPath := "/patients?toast=Search term must be at least 3 characters&level=warning"
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
+	}
+
 	patients, err := s.SearchPatientsByUser(c.Context(), cu, queryStr, QUERY_LIMIT)
 	if err != nil {
-		return c.SendStatus(fiber.StatusInternalServerError)
+		redirectPath := "/patients?toast=Failed to search patients&level=error"
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusInternalServerError)
 	}
 
 	theme := s.SessionUITheme(c)
@@ -366,5 +373,16 @@ func (s *service) HandlePatientProfilePicImgSrc(c fiber.Ctx) error {
 	if err != nil {
 		return c.SendStatus(fiber.StatusNotFound)
 	}
+	fileInfo, err := os.Stat(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return c.SendStatus(fiber.StatusNotFound)
+	}
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+	if fileInfo.IsDir() {
+		return c.SendStatus(fiber.StatusNotFound)
+	}
+
 	return c.SendFile(path)
 }

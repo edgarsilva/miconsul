@@ -1,0 +1,11 @@
+{
+  "name": "miconsul",
+  "version": "1.0.0",
+  "environment": "development",
+  "links": {
+    "health": "/livez",
+    "readiness": "/readyz",
+    "metrics": "/metrics"
+  },
+  "status": "ok"
+}
