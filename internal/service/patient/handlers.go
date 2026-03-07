@@ -18,30 +18,15 @@ const (
 	QUERY_LIMIT int = 10
 )
 
-// HandlePatientsPage renders the patients page HTML
+// HandleIndexPage renders the patients index page HTML.
 // GET: /patients
-func (s *service) HandlePatientsPage(c fiber.Ctx) error {
+func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
 
-	id := c.Params("id", "")
-	patient := model.Patient{ID: id}
-	if id != "" && id != "new" {
-		err := s.DB.Model(&model.Patient{}).Take(&patient).Error
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return s.Redirect(c, "/patients?toast=Patient does not exist&level=warning")
-		}
-		if err != nil {
-			return s.Redirect(c, "/patients?toast=Failed to load patient&level=error")
-		}
-
-		return view.Render(c, view.PatientFormPage(patient, vc))
-	}
-
-	patients := []model.Patient{}
-	err := s.DB.Model(&cu).Order("created_at desc").Limit(QUERY_LIMIT).Association("Patients").Find(&patients)
+	patients, err := s.FindRecentPatientsByUser(c.Context(), cu, QUERY_LIMIT)
 	if err != nil {
 		return s.Redirect(c, "/patients?toast=Failed to load patients&level=error")
 	}
@@ -82,8 +67,8 @@ func (s *service) HandlePatientFormPage(c fiber.Ctx) error {
 
 	patient := model.Patient{}
 	if id != "new" {
-		patient.ID = id
-		err := s.DB.Model(&model.Patient{}).First(&patient).Error
+		var err error
+		patient, err = s.TakePatientByID(c.Context(), id)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return s.Redirect(c, "/patients?toast=Patient does not exist&level=warning")
 		}
@@ -117,7 +102,7 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 
 	patient.Sanitize()
 
-	err = gorm.G[model.Patient](s.DB.GormDB()).Create(c.Context(), &patient)
+	err = s.CreatePatient(c.Context(), &patient)
 	if err == nil {
 		path, picErr := SaveProfilePicToDisk(c, patient)
 		if picErr != nil {
@@ -186,9 +171,7 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 		patient.ProfilePic = path
 	}
 
-	_, err = gorm.G[model.Patient](s.DB.GormDB()).
-		Where("id = ? AND user_id = ?", patientID, cu.ID).
-		Updates(c.Context(), patient)
+	err = s.UpdatePatientByIDAndUserID(c.Context(), cu.ID, patientID, patient)
 	if err != nil {
 		redirectPath := "/patients?err=failed to update patient&level=error"
 		if !s.IsHTMX(c) {
@@ -226,9 +209,7 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 	patient := model.Patient{
 		UserID: cu.ID,
 	}
-	_, err = gorm.G[model.Patient](s.DB.GormDB()).
-		Where("id = ? AND user_id = ?", patientID, cu.ID).
-		Update(c.Context(), "profile_pic", "")
+	err = s.ClearPatientProfilePic(c.Context(), cu.ID, patientID)
 	if err != nil {
 		redirectPath := "/patients?toast=Failed to remove profile picture&level=error"
 		if s.NotHTMX(c) {
@@ -239,9 +220,7 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusUnprocessableEntity)
 	}
 
-	patient, err = gorm.G[model.Patient](s.DB.GormDB()).
-		Where("id = ? AND user_id = ?", patientID, cu.ID).
-		Take(c.Context())
+	patient, err = s.TakePatientByIDAndUserID(c.Context(), cu.ID, patientID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		redirectPath := "/patients?toast=Patient does not exist&level=warning"
 		if s.NotHTMX(c) {
@@ -282,9 +261,7 @@ func (s *service) HandleDeletePatient(c fiber.Ctx) error {
 		return s.Redirect(c, "/patients?msg=can't delete without an id")
 	}
 
-	_, err = gorm.G[model.Patient](s.DB.GormDB()).
-		Where("id = ? AND user_id = ?", patientID, cu.ID).
-		Delete(c.Context())
+	err = s.DeletePatientByIDAndUserID(c.Context(), cu.ID, patientID)
 	if err != nil {
 		return s.Redirect(c, "/patients?msg=failed to delete that patient")
 	}
@@ -310,16 +287,7 @@ func (s *service) HandlePatientSearch(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
 	queryStr := c.FormValue("query", "")
-	patients := []model.Patient{}
-
-	dbquery := s.DB.WithContext(c.Context()).Model(&cu)
-	if queryStr != "" {
-		dbquery.Scopes(model.GlobalFTS(queryStr))
-	} else {
-		dbquery.Order("created_at desc")
-	}
-
-	err := dbquery.Limit(QUERY_LIMIT).Association("Patients").Find(&patients)
+	patients, err := s.SearchPatientsByUser(c.Context(), cu, queryStr, QUERY_LIMIT)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
@@ -353,12 +321,12 @@ func (s *service) HandleMockManyPatients(c fiber.Ctx) error {
 		})
 	}
 
-	result := s.DB.CreateInBatches(&patients, 1000)
-	if err := result.Error; err != nil {
+	rowsAffected, err := s.CreatePatientsInBatches(c.Context(), patients, 1000)
+	if err != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).SendString("Unprocessable entity")
 	}
 
-	return c.SendString("Rowsaffected:" + strconv.Itoa(int(result.RowsAffected)))
+	return c.SendString("Rowsaffected:" + strconv.Itoa(int(rowsAffected)))
 }
 
 // HandlePatientProfilePicImgSrc serves a patient's profile picture file.

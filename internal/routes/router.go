@@ -134,7 +134,7 @@ func PatientRoutes(s *server.Server, authSvc auth.AuthRuntime) error {
 	}
 
 	g := p.Group("/patients", mw.MustAuthenticate(authSvc))
-	g.Get("/", p.HandlePatientsPage)
+	g.Get("/", p.HandleIndexPage)
 	g.Get("/makeaton", mw.MustBeAdmin(authSvc), p.HandleMockManyPatients)
 	g.Get("/search", p.HandlePatientsIndexSearch)
 	g.Post("/search", p.HandlePatientSearch)
@@ -151,7 +151,7 @@ func PatientRoutes(s *server.Server, authSvc auth.AuthRuntime) error {
 	g.Post("/:id/delete", p.HandleDeletePatient)
 	g.Delete("/:id", p.HandleDeletePatient)
 
-	// g.Get("/:id", p.HandlePatientsPage)
+	// g.Get("/:id", p.HandleIndexPage)
 
 	// Fragments
 	// g.Get("/fragment/footer", u.HandleFooterFragment)
