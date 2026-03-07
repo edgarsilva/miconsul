@@ -39,7 +39,7 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 // GET: /patients/search
 func (s *service) HandlePatientsIndexSearch(c fiber.Ctx) error {
 	term := c.Query("term", "")
-	if len(term) < 3 {
+	if len(term) > 0 && len(term) < 3 {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
@@ -85,14 +85,16 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 	patient := model.Patient{
 		UserID: cu.ID,
 	}
-	if err := c.Bind().Body(&patient); err != nil {
+	err := c.Bind().Body(&patient)
+	if err != nil {
 		redirectPath := "/patients/new?toast=Invalid patient input&level=error"
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
 	}
 
 	patient.Sanitize()
 
-	if err := s.CreatePatient(c.Context(), &patient); err != nil {
+	err = s.CreatePatient(c.Context(), &patient)
+	if err != nil {
 		redirectPath := "/patients/new?toast=Failed to create new patient&level=error"
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusUnprocessableEntity)
 	}
@@ -103,7 +105,8 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 	} else {
 		patient.ProfilePic = path
 		profilePicUpdate := model.Patient{ProfilePic: path}
-		if err := s.UpdatePatientByIDAndUserID(c.Context(), cu.ID, patient.ID, profilePicUpdate); err != nil {
+		err = s.UpdatePatientByIDAndUserID(c.Context(), cu.ID, patient.ID, profilePicUpdate)
+		if err != nil {
 			log.Error(err)
 		}
 	}
@@ -137,7 +140,6 @@ func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string, htmxStat
 // POST: /patients/:id/patch
 func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
-	var err error
 
 	patientID := c.Params("id", "")
 	if patientID == "" {
@@ -149,15 +151,10 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 	}
 
 	patient := model.Patient{ID: patientID, UserID: cu.ID}
-	err = c.Bind().Body(&patient)
+	err := c.Bind().Body(&patient)
 	if err != nil {
 		redirectPath := "/patients/" + patientID + "?toast=Invalid patient input&level=error"
-		if !s.IsHTMX(c) {
-			return s.Redirect(c, redirectPath)
-		}
-
-		c.Set("HX-Location", redirectPath)
-		return c.SendStatus(fiber.StatusBadRequest)
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
 	}
 
 	patient.Sanitize()
@@ -170,17 +167,16 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 	}
 
 	err = s.UpdatePatientByIDAndUserID(c.Context(), cu.ID, patientID, patient)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		redirectPath := "/patients?toast=Patient does not exist&level=warning"
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
+	}
 	if err != nil {
 		redirectPath := "/patients?err=failed to update patient&level=error"
-		if !s.IsHTMX(c) {
-			return s.Redirect(c, redirectPath)
-		}
-
-		c.Set("HX-Location", redirectPath)
-		return c.SendStatus(fiber.StatusUnprocessableEntity)
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusUnprocessableEntity)
 	}
 
-	if !s.IsHTMX(c) {
+	if s.NotHTMX(c) {
 		return s.Redirect(c, "/patients/"+patientID)
 	}
 
@@ -193,7 +189,6 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 // POST: /patients/:id/removepic
 func (s *service) HandleRemovePic(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
-	var err error
 
 	patientID := c.Params("id", "")
 	if patientID == "" {
@@ -207,35 +202,24 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 	patient := model.Patient{
 		UserID: cu.ID,
 	}
-	err = s.ClearPatientProfilePic(c.Context(), cu.ID, patientID)
+	err := s.ClearPatientProfilePic(c.Context(), cu.ID, patientID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		redirectPath := "/patients?toast=Patient does not exist&level=warning"
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
+	}
 	if err != nil {
 		redirectPath := "/patients?toast=Failed to remove profile picture&level=error"
-		if s.NotHTMX(c) {
-			return s.Redirect(c, redirectPath)
-		}
-
-		c.Set("HX-Location", redirectPath)
-		return c.SendStatus(fiber.StatusUnprocessableEntity)
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusUnprocessableEntity)
 	}
 
 	patient, err = s.TakePatientByIDAndUserID(c.Context(), cu.ID, patientID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		redirectPath := "/patients?toast=Patient does not exist&level=warning"
-		if s.NotHTMX(c) {
-			return s.Redirect(c, redirectPath)
-		}
-
-		c.Set("HX-Location", redirectPath)
-		return c.SendStatus(fiber.StatusNotFound)
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
 	}
 	if err != nil {
 		redirectPath := "/patients?toast=Failed to load patient&level=error"
-		if s.NotHTMX(c) {
-			return s.Redirect(c, redirectPath)
-		}
-
-		c.Set("HX-Location", redirectPath)
-		return c.SendStatus(fiber.StatusInternalServerError)
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusInternalServerError)
 	}
 
 	if !s.IsHTMX(c) {
@@ -252,14 +236,16 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 // POST: /patients/:id/delete
 func (s *service) HandleDeletePatient(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
-	var err error
 
 	patientID := c.Params("id", "")
 	if patientID == "" {
 		return s.Redirect(c, "/patients?msg=can't delete without an id")
 	}
 
-	err = s.DeletePatientByIDAndUserID(c.Context(), cu.ID, patientID)
+	err := s.DeletePatientByIDAndUserID(c.Context(), cu.ID, patientID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return s.Redirect(c, "/patients?toast=Patient does not exist&level=warning")
+	}
 	if err != nil {
 		return s.Redirect(c, "/patients?msg=failed to delete that patient")
 	}
@@ -299,14 +285,21 @@ func (s *service) HandlePatientSearch(c fiber.Ctx) error {
 // GET: /patients/makeaton
 func (s *service) HandleMockManyPatients(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
+	const (
+		defaultMockPatients = 1000
+		maxMockPatients     = 10000
+	)
 
-	n, err := strconv.Atoi(c.Query("n", "100000"))
-	if err != nil {
-		n = 100000
+	n, err := strconv.Atoi(c.Query("n", strconv.Itoa(defaultMockPatients)))
+	if err != nil || n <= 0 {
+		n = defaultMockPatients
+	}
+	if n > maxMockPatients {
+		n = maxMockPatients
 	}
 
-	var patients []model.Patient
-	for i := 0; i <= n; i++ {
+	patients := []model.Patient{}
+	for i := 0; i < n; i++ {
 		ExtID := xid.New("prav")
 		patients = append(patients, model.Patient{
 			ExtID:      ExtID,

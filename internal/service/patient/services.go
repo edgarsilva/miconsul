@@ -66,7 +66,7 @@ func (s service) FindRecentPatientsByUser(ctx context.Context, cu model.User, li
 		Find(&patients)
 
 	if err != nil {
-		return nil, err
+		return []model.Patient{}, err
 	}
 
 	return patients, nil
@@ -84,7 +84,7 @@ func (s service) SearchPatientsByUser(ctx context.Context, cu model.User, query 
 
 	err := dbquery.Limit(limit).Association("Patients").Find(&patients)
 	if err != nil {
-		return nil, err
+		return []model.Patient{}, err
 	}
 
 	return patients, nil
@@ -95,27 +95,45 @@ func (s service) CreatePatient(ctx context.Context, patient *model.Patient) erro
 }
 
 func (s service) UpdatePatientByIDAndUserID(ctx context.Context, userID, patientID string, patient model.Patient) error {
-	_, err := gorm.G[model.Patient](s.DB.GormDB()).
+	rowsAffected, err := gorm.G[model.Patient](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", patientID, userID).
 		Updates(ctx, patient)
+	if err != nil {
+		return err
+	}
+	if rowsAffected != 1 {
+		return gorm.ErrRecordNotFound
+	}
 
-	return err
+	return nil
 }
 
 func (s service) DeletePatientByIDAndUserID(ctx context.Context, userID, patientID string) error {
-	_, err := gorm.G[model.Patient](s.DB.GormDB()).
+	rowsAffected, err := gorm.G[model.Patient](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", patientID, userID).
 		Delete(ctx)
+	if err != nil {
+		return err
+	}
+	if rowsAffected != 1 {
+		return gorm.ErrRecordNotFound
+	}
 
-	return err
+	return nil
 }
 
 func (s service) ClearPatientProfilePic(ctx context.Context, userID, patientID string) error {
-	_, err := gorm.G[model.Patient](s.DB.GormDB()).
+	rowsAffected, err := gorm.G[model.Patient](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", patientID, userID).
 		Update(ctx, "profile_pic", "")
+	if err != nil {
+		return err
+	}
+	if rowsAffected != 1 {
+		return gorm.ErrRecordNotFound
+	}
 
-	return err
+	return nil
 }
 
 func (s service) CreatePatientsInBatches(ctx context.Context, patients []model.Patient, batchSize int) (int64, error) {
