@@ -3,6 +3,7 @@ package logging
 import (
 	"context"
 	"fmt"
+	"sync/atomic"
 	"time"
 
 	"miconsul/internal/lib/appenv"
@@ -26,9 +27,19 @@ type HTTPEvent struct {
 	Err        error
 }
 
+type DBQueryEvent struct {
+	SQL        string
+	Rows       int64
+	DurationMS float64
+	TraceID    string
+	Err        error
+}
+
 type Logger struct {
 	emitter otellog.Logger
 }
+
+var globalLogger atomic.Value
 
 func New(ctx context.Context, env *appenv.Env) (Logger, func() error, error) {
 	if env == nil {
@@ -84,7 +95,10 @@ func New(ctx context.Context, env *appenv.Env) (Logger, func() error, error) {
 		return nil
 	}
 
-	return Logger{emitter: provider.Logger(env.AppName + ".http")}, shutdown, nil
+	logger := Logger{emitter: provider.Logger(env.AppName + ".http")}
+	globalLogger.Store(logger)
+
+	return logger, shutdown, nil
 }
 
 func (l Logger) Enabled() bool {
@@ -127,4 +141,55 @@ func (l Logger) EmitHTTP(ctx context.Context, event HTTPEvent) {
 	rec.AddAttributes(attrs...)
 
 	l.emitter.Emit(ctx, rec)
+}
+
+func (l Logger) EmitDBQuery(ctx context.Context, event DBQueryEvent) {
+	if l.emitter == nil {
+		return
+	}
+
+	rec := otellog.Record{}
+	rec.SetTimestamp(time.Now())
+	rec.SetObservedTimestamp(time.Now())
+	rec.SetEventName("db_query")
+	rec.SetBody(otellog.StringValue("db_query"))
+
+	if event.Err != nil {
+		rec.SetSeverity(otellog.SeverityError)
+		rec.SetSeverityText("ERROR")
+	} else {
+		rec.SetSeverity(otellog.SeverityInfo)
+		rec.SetSeverityText("INFO")
+	}
+
+	attrs := []otellog.KeyValue{
+		otellog.String("event", "db_query"),
+		otellog.String("sql", event.SQL),
+		otellog.Int64("rows", event.Rows),
+		otellog.Float64("duration_ms", event.DurationMS),
+	}
+	if event.TraceID != "" {
+		attrs = append(attrs, otellog.String("trace_id", event.TraceID))
+	}
+	if event.Err != nil {
+		rec.SetErr(event.Err)
+		attrs = append(attrs, otellog.String("error", event.Err.Error()))
+	}
+	rec.AddAttributes(attrs...)
+
+	l.emitter.Emit(ctx, rec)
+}
+
+func EmitDBQuery(ctx context.Context, event DBQueryEvent) {
+	v := globalLogger.Load()
+	if v == nil {
+		return
+	}
+
+	logger, ok := v.(Logger)
+	if !ok {
+		return
+	}
+
+	logger.EmitDBQuery(ctx, event)
 }

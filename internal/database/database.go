@@ -156,7 +156,7 @@ func NewLogger(env *appenv.Env) logger.Interface {
 		hideParamValues = false
 	}
 
-	newLogger := logger.New(
+	baseLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags),
 		logger.Config{
 			SlowThreshold:             150 * time.Millisecond,
@@ -167,5 +167,5 @@ func NewLogger(env *appenv.Env) logger.Interface {
 		},
 	)
 
-	return newLogger
+	return NewGormObsLogger(baseLogger)
 }
