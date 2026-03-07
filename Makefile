@@ -235,14 +235,20 @@ docker/build: ## Rebuild the app image
 	docker compose up --no-deps --build app
 
 ##@ Observability
-obs/load: ## Run continuous synthetic traffic (~39 RPM total)
-	./scripts/obs-load.sh
+obs/load: ## Run continuous synthetic traffic (~40 RPM total)
+	$(MAKE) obs/load/medium
 
-obs/load/light: ## Run lighter synthetic traffic (~24 RPM total)
-	PUBLIC_RPM=5 PROTECTED_RPM=3 ./scripts/obs-load.sh
+obs/load/light: ## Run lighter synthetic traffic (~20 RPM total)
+	PUBLIC_RPM=12 PROTECTED_RPM=8 ./scripts/obs_load.sh
 
-obs/load/medium: ## Run medium synthetic traffic (~84 RPM total)
-	PUBLIC_RPM=15 PROTECTED_RPM=8 ./scripts/obs-load.sh
+obs/load/medium: ## Run medium synthetic traffic (~40 RPM total)
+	PUBLIC_RPM=24 PROTECTED_RPM=16 ./scripts/obs_load.sh
+
+obs/load/heavy: ## Run heavier synthetic traffic (~80 RPM total)
+	PUBLIC_RPM=48 PROTECTED_RPM=32 ./scripts/obs_load.sh
+
+load/test: ## Run authenticated oha load test (30s, 30 concurrency)
+	./scripts/load_test.sh
 
 
 .PHONY: help install install/go-localize fmt vet lint \
@@ -254,4 +260,4 @@ obs/load/medium: ## Run medium synthetic traffic (~84 RPM total)
 	db/create db/delete db/setup db/reset db/dump_schema db/seed \
 	migrations/apply migrate migrations/create migrations/status migrations/rollback migrations/redo \
 	docker/up docker/dev docker/detached docker/down docker/logs docker/app-logs docker/lgtm-logs docker/build \
-	obs/load obs/load/light obs/load/medium
+	obs/load obs/load/light obs/load/medium obs/load/heavy load/test
