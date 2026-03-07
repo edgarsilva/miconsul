@@ -87,14 +87,14 @@ func (s *service) HandlePatientFormPage(c fiber.Ctx) error {
 func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
-	patient := model.Patient{
-		UserID: cu.ID,
-	}
-	err := c.Bind().Body(&patient)
+	input := patientUpsertInput{}
+	err := c.Bind().Body(&input)
 	if err != nil {
 		redirectPath := "/patients/new?toast=Invalid patient input&level=error"
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
 	}
+
+	patient := input.toPatient("", cu.ID)
 
 	patient.Sanitize()
 
@@ -157,12 +157,14 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, "/patients?toast=Can't update without an id&level=error", fiber.StatusBadRequest)
 	}
 
-	patient := model.Patient{ID: patientID, UserID: cu.ID}
-	err := c.Bind().Body(&patient)
+	input := patientUpsertInput{}
+	err := c.Bind().Body(&input)
 	if err != nil {
 		redirectPath := "/patients/" + patientID + "?toast=Invalid patient input&level=error"
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
 	}
+
+	patient := input.toPatient(patientID, cu.ID)
 
 	patient.Sanitize()
 
