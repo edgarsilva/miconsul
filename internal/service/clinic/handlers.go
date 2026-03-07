@@ -161,12 +161,12 @@ func (s *service) HandleClinicsDelete(c fiber.Ctx) error {
 // replacesd in the HTMX active search
 // GET: /clinics/search
 func (s *service) HandleClinicsIndexSearch(c fiber.Ctx) error {
-	term := c.Query("term", "")
-	if len(term) > 0 && len(term) < 3 {
+	searchTerm := c.Query("searchTerm", "")
+	if len(searchTerm) > 0 && len(searchTerm) < 3 {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
-	clinics, err := s.FindClinicsByTerm(c, term)
+	clinics, err := s.FindClinicsByTerm(c, searchTerm)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}

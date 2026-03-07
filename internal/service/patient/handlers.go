@@ -39,14 +39,13 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 // HandlePatientsIndexSearch runs the index search on patients.
 // GET: /patients/search
 func (s *service) HandlePatientsIndexSearch(c fiber.Ctx) error {
-	term := strings.TrimSpace(c.Query("term", ""))
-	if len(term) > 0 && len(term) < 3 {
-		redirectPath := "/patients?toast=Search term must be at least 3 characters&level=warning"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
+	searchTerm, searchErr := normalizeSearchTerm(c.Query("searchTerm", ""))
+	if searchErr != nil {
+		return s.respondWithRedirect(c, "/patients?toast=Search term must be at least 3 characters&level=warning", fiber.StatusBadRequest)
 	}
 
 	cu := s.CurrentUser(c)
-	patients, err := s.SearchPatientsByUser(c.Context(), cu, term, QUERY_LIMIT)
+	patients, err := s.SearchPatientsByUser(c.Context(), cu, searchTerm, QUERY_LIMIT)
 	if err != nil {
 		redirectPath := "/patients?toast=Failed to search patients&level=error"
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusInternalServerError)
@@ -276,8 +275,8 @@ func (s *service) HandleDeletePatient(c fiber.Ctx) error {
 		return s.Redirect(c, "/patients")
 	}
 
-	term := strings.TrimSpace(c.Query("term", ""))
-	patients, err := s.SearchPatientsByUser(c.Context(), cu, term, QUERY_LIMIT)
+	searchTerm := strings.TrimSpace(c.Query("searchTerm", ""))
+	patients, err := s.SearchPatientsByUser(c.Context(), cu, searchTerm, QUERY_LIMIT)
 	if err != nil {
 		return s.respondWithRedirect(c, "/patients?toast=Failed to load patients&level=error", fiber.StatusInternalServerError)
 	}
@@ -293,13 +292,12 @@ func (s *service) HandleDeletePatient(c fiber.Ctx) error {
 func (s *service) HandlePatientSearch(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
-	queryStr := strings.TrimSpace(c.FormValue("query", ""))
-	if len(queryStr) > 0 && len(queryStr) < 3 {
-		redirectPath := "/patients?toast=Search term must be at least 3 characters&level=warning"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
+	searchTerm, searchErr := normalizeSearchTerm(c.FormValue("searchTerm", ""))
+	if searchErr != nil {
+		return s.respondWithRedirect(c, "/patients?toast=Search term must be at least 3 characters&level=warning", fiber.StatusBadRequest)
 	}
 
-	patients, err := s.SearchPatientsByUser(c.Context(), cu, queryStr, QUERY_LIMIT)
+	patients, err := s.SearchPatientsByUser(c.Context(), cu, searchTerm, QUERY_LIMIT)
 	if err != nil {
 		redirectPath := "/patients?toast=Failed to search patients&level=error"
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusInternalServerError)
@@ -308,6 +306,15 @@ func (s *service) HandlePatientSearch(c fiber.Ctx) error {
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
 	return view.Render(c, view.PatientSearchResults(patients, vc))
+}
+
+func normalizeSearchTerm(raw string) (string, error) {
+	term := strings.TrimSpace(raw)
+	if len(term) > 0 && len(term) < 3 {
+		return "", errors.New("search term must be at least 3 chars")
+	}
+
+	return term, nil
 }
 
 // HandleMockManyPatients creates many mock patients for admin/testing flows.

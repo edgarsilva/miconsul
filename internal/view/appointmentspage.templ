@@ -409,7 +409,7 @@ templ ClinicSearch(vc *Ctx, clinics []model.Clinic) {
 			<input
 				class="grow"
 				type="search"
-				name="query"
+				name="searchTerm"
 				placeholder={ l(vc.Locale, "str.search_clinics") }
 				hx-post="/appointments/search/clinics"
 				hx-trigger="input changed delay:300ms, search"
@@ -489,7 +489,7 @@ templ PatientSearch(vc *Ctx, patients []model.Patient) {
 			<input
 				class="grow"
 				type="search"
-				name="query"
+				name="searchTerm"
 				placeholder={ l(vc.Locale, "str.search_patients") }
 				hx-post="/patients/search"
 				hx-trigger="input changed delay:300ms, search"

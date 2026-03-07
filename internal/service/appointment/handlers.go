@@ -482,8 +482,8 @@ func (s *service) HandlePriceFrg(c fiber.Ctx) error {
 func (s *service) HandleSearchClinics(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
-	queryStr := c.FormValue("query", "")
-	clinics, err := s.FindClinicsByTerm(c.Context(), cu.ID, queryStr)
+	searchTerm := c.FormValue("searchTerm", "")
+	clinics, err := s.FindClinicsByTerm(c.Context(), cu.ID, searchTerm)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
