@@ -11,7 +11,7 @@ import (
 )
 
 func (s *service) RegisterCronJob() error {
-	err := s.AddCronJob("0/1 * * * *", func() {
+	err := s.AddCronJobOnce("appointment:reminder", "0/1 * * * *", func() {
 		ctx, span := s.Trace(context.Background(), "appointment/services:RegisterCronJob>Job",
 			trace.WithAttributes(
 				attribute.String("grouping.fingerprint", "cronjob"),

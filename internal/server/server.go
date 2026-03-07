@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"miconsul/internal/database"
@@ -54,6 +55,8 @@ type Server struct {
 	Tracer       trace.Tracer
 	RequestLog   obslogging.Logger
 	Metrics      obsmetrics.HTTPMetrics
+	cronJobMu    sync.Mutex
+	cronJobKeys  map[string]struct{}
 	StartedAt    time.Time
 	*fiber.App
 }
@@ -62,7 +65,10 @@ type ServerOption func(*Server) error
 
 // New constructs a Server with the provided options and core setup.
 func New(serverOpts ...ServerOption) *Server {
-	server := Server{StartedAt: time.Now()}
+	server := Server{
+		StartedAt:   time.Now(),
+		cronJobKeys: map[string]struct{}{},
+	}
 	if err := server.applyServerOptions(serverOpts...); err != nil {
 		log.Fatal("🔴 failed to start server: option setup error:", err)
 	}
@@ -296,6 +302,28 @@ func (s *Server) AddCronJob(crontab string, fn func()) error {
 
 	_, err := s.cj.RunCron(crontab, false, fn)
 	return err
+}
+
+// AddCronJobOnce registers a cron job exactly once per process for the given key.
+// Repeated calls with the same key are no-op.
+func (s *Server) AddCronJobOnce(key, crontab string, fn func()) error {
+	if strings.TrimSpace(key) == "" {
+		return errors.New("failed to add cron job once: key is required")
+	}
+
+	s.cronJobMu.Lock()
+	defer s.cronJobMu.Unlock()
+
+	if _, exists := s.cronJobKeys[key]; exists {
+		return nil
+	}
+
+	if err := s.AddCronJob(crontab, fn); err != nil {
+		return err
+	}
+
+	s.cronJobKeys[key] = struct{}{}
+	return nil
 }
 
 // SendToWorker passes fn as a job for a worker in the workpool, to be executed as a go routine
