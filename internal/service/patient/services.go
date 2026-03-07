@@ -7,6 +7,7 @@ import (
 	"miconsul/internal/model"
 	"miconsul/internal/server"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -19,6 +20,8 @@ type service struct {
 }
 
 var ErrIDRequired = errors.New("id is required")
+
+var ErrInvalidFilename = errors.New("invalid filename")
 
 func NewService(s *server.Server) (service, error) {
 	if s == nil {
@@ -168,7 +171,15 @@ func SaveProfilePicToDisk(c fiber.Ctx, patient model.Patient) (string, error) {
 		return "", errors.New("failed to save profile pic without patient.ID")
 	}
 
-	filename := patient.ID + "_ppic_" + profilePic.Filename
+	originalFilename := strings.TrimSpace(profilePic.Filename)
+	originalFilename = strings.ReplaceAll(originalFilename, "\\", "/")
+	originalFilename = path.Base(originalFilename)
+	safeFilename := cleanFilenameSegment(originalFilename)
+	if safeFilename == "" || safeFilename == "." || safeFilename == ".." {
+		return "", ErrInvalidFilename
+	}
+
+	filename := patient.ID + "_ppic_" + safeFilename
 	path, err := ProfilePicPath(filename)
 	if err != nil {
 		return "", fmt.Errorf("failed to save profile pic without an ASSETS_DIR: %w", err)
@@ -185,6 +196,10 @@ func SaveProfilePicToDisk(c fiber.Ctx, patient model.Patient) (string, error) {
 }
 
 func ProfilePicPath(filename string) (string, error) {
+	if !isSafeFilename(filename) {
+		return "", ErrInvalidFilename
+	}
+
 	assetsDir := os.Getenv("ASSETS_DIR")
 	if assetsDir == "" {
 		return "", errors.New("failed to find assets directory")
@@ -198,5 +213,55 @@ func ProfilePicPath(filename string) (string, error) {
 		}
 	}
 
-	return path + "/" + filename, nil
+	return filepath.Join(path, filename), nil
+}
+
+func IsSafeProfilePicFilenameForPatient(patientID, filename string) bool {
+	patientID = strings.TrimSpace(patientID)
+	if patientID == "" || !isSafeFilename(filename) {
+		return false
+	}
+
+	return strings.HasPrefix(filename, patientID+"_ppic_")
+}
+
+func isSafeFilename(filename string) bool {
+	filename = strings.TrimSpace(filename)
+	if filename == "" || filename == "." || filename == ".." {
+		return false
+	}
+	if strings.ContainsAny(filename, "/\\") {
+		return false
+	}
+	if strings.Contains(filename, "\x00") {
+		return false
+	}
+
+	return cleanFilenameSegment(filename) == filename
+}
+
+func cleanFilenameSegment(v string) string {
+	v = strings.TrimSpace(v)
+	if v == "" {
+		return ""
+	}
+
+	b := strings.Builder{}
+	b.Grow(len(v))
+	for _, r := range v {
+		switch {
+		case r >= 'a' && r <= 'z':
+			b.WriteRune(r)
+		case r >= 'A' && r <= 'Z':
+			b.WriteRune(r)
+		case r >= '0' && r <= '9':
+			b.WriteRune(r)
+		case r == '.', r == '-', r == '_':
+			b.WriteRune(r)
+		case r == ' ':
+			b.WriteRune('_')
+		}
+	}
+
+	return b.String()
 }

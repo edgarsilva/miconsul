@@ -347,7 +347,7 @@ func (s *service) HandlePatientProfilePicImgSrc(c fiber.Ctx) error {
 	if id == "" || filename == "" {
 		return c.SendStatus(fiber.StatusNotFound)
 	}
-	if !strings.HasPrefix(filename, id+"_ppic_") {
+	if !IsSafeProfilePicFilenameForPatient(id, filename) {
 		return c.SendStatus(fiber.StatusNotFound)
 	}
 
