@@ -101,6 +101,11 @@ The app uses OpenTelemetry tracer naming with dot notation by default:
 `OTEL_SERVICE_NAME` is used as the resource `service.name` and tracer names are
 passed explicitly at bootstrap/service construction time.
 
+For a practical local verification checklist (traffic generation, Grafana
+queries, and units reference), see:
+
+- `docs/observability-runbook.md`
+
 ### DB - Seed Data
 
 Create deterministic baseline data (including an admin user) and randomized bulk
