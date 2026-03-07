@@ -71,38 +71,34 @@ func New(serverOpts ...ServerOption) *Server {
 		StartedAt:   time.Now(),
 		cronJobKeys: map[string]struct{}{},
 	}
-	if err := server.applyServerOptions(serverOpts...); err != nil {
-		log.Fatal("🔴 failed to start server: option setup error:", err)
+
+	for _, fnOpt := range serverOpts {
+		if err := fnOpt(&server); err != nil {
+			log.Fatal("🔴 failed to start server: option setup error:", err)
+		}
 	}
 
-	if err := server.validateCriticalDeps(); err != nil {
+	if err := validateCriticalDeps(&server); err != nil {
 		log.Fatal("🔴 failed to start server:", err)
 	}
 
-	if err := server.validateRuntimeConfig(); err != nil {
+	if err := validateRuntimeConfig(&server); err != nil {
 		log.Fatal("🔴 failed to start server:", err)
 	}
 
-	server.setupSessionStore()
-	server.setupFiberApp()
+	setupSessionStore(&server)
+	setupFiberApp(&server)
 	server.ReadyAt = time.Now()
 	server.BootstrapDuration = server.ReadyAt.Sub(server.StartedAt)
 
 	return &server
 }
 
-func (s *Server) applyServerOptions(serverOpts ...ServerOption) error {
-	for _, fnOpt := range serverOpts {
-		err := fnOpt(s)
-		if err != nil {
-			return err
-		}
+func validateCriticalDeps(s *Server) error {
+	if s == nil {
+		return errors.New("server is required")
 	}
 
-	return nil
-}
-
-func (s *Server) validateCriticalDeps() error {
 	if s.Env == nil {
 		return errors.New("environment config is required")
 	}
@@ -118,7 +114,11 @@ func (s *Server) validateCriticalDeps() error {
 	return nil
 }
 
-func (s *Server) validateRuntimeConfig() error {
+func validateRuntimeConfig(s *Server) error {
+	if s == nil {
+		return errors.New("server is required")
+	}
+
 	if !appenv.IsValidEnvironment(s.Env.Environment) {
 		return errors.New("APP_ENV is invalid")
 	}
@@ -135,7 +135,7 @@ func (s *Server) validateRuntimeConfig() error {
 	return nil
 }
 
-func (s *Server) setupSessionStore() {
+func setupSessionStore(s *Server) {
 	sessionPath := s.Env.SessionDBPath
 	storage := sqlite3.New(sessionConfig(sessionPath))
 	cookieSecure := appenv.IsProduction(s.Env.Environment) || strings.EqualFold(s.Env.AppProtocol, "https")
@@ -145,22 +145,20 @@ func (s *Server) setupSessionStore() {
 	})
 }
 
-func (s *Server) setupFiberApp() {
-	environment := s.Env.Environment
-	cookieSecret := s.Env.CookieSecret
+func setupFiberApp(s *Server) {
 	fiberConfig := fiber.Config{ErrorHandler: fiberAppErrorHandler}
-	fiberApp := fiber.New(fiberConfig)
+	s.App = fiber.New(fiberConfig)
 
-	s.setupCoreMiddleware(fiberApp)
-	s.setupSecurityMiddleware(fiberApp, cookieSecret)
-	s.setupObservability(fiberApp)
-	s.setupStaticFiles(fiberApp, environment)
-	s.setupHealthcheckRoutes(fiberApp)
-
-	s.App = fiberApp
+	setupCoreMiddleware(s)
+	setupSecurityMiddleware(s)
+	setupObservability(s)
+	setupStaticFiles(s)
+	setupHealthcheckRoutes(s)
 }
 
-func (s *Server) setupCoreMiddleware(app *fiber.App) {
+func setupCoreMiddleware(s *Server) {
+	app := s.App
+
 	app.Use(recover.New()) // Recover MW catches panics that might stop app execution
 	app.Use(RequestMetricsMiddleware(s.Metrics))
 	app.Use(otelfiber.Middleware(
@@ -175,7 +173,10 @@ func (s *Server) setupCoreMiddleware(app *fiber.App) {
 	app.Use(RequestLoggerMiddleware(s.RequestLog))
 }
 
-func (s *Server) setupSecurityMiddleware(app *fiber.App, cookieSecret string) {
+func setupSecurityMiddleware(s *Server) {
+	app := s.App
+	cookieSecret := s.Env.CookieSecret
+
 	app.Use(helmet.New(helmetConfig()))
 	app.Use(encryptcookie.New(encryptcookie.Config{Key: cookieSecret}))
 	app.Use(favicon.New(favicon.Config{File: "./public/favicon.ico", URL: "/favicon.ico"}))
@@ -186,15 +187,19 @@ func (s *Server) setupSecurityMiddleware(app *fiber.App, cookieSecret string) {
 	}
 }
 
-func (s *Server) setupObservability(app *fiber.App) {
+func setupObservability(s *Server) {
+	app := s.App
 	app.Get("/metrics", adaptor.HTTPHandler(promhttp.Handler()))
 }
 
-func (s *Server) setupStaticFiles(app *fiber.App, environment appenv.Environment) {
-	app.Use("/public", static.New("./public", staticConfig(environment)))
+func setupStaticFiles(s *Server) {
+	app := s.App
+	app.Use("/public", static.New("./public", staticConfig(s.Env.Environment)))
 }
 
-func (s *Server) setupHealthcheckRoutes(app *fiber.App) {
+func setupHealthcheckRoutes(s *Server) {
+	app := s.App
+
 	app.Get(healthcheck.LivenessEndpoint, healthcheck.New(healthcheck.Config{
 		Probe: livenessProbe(s),
 	}))
