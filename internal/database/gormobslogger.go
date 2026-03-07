@@ -23,19 +23,20 @@ var (
 )
 
 type GormObsLogger struct {
-	base logger.Interface
+	base      logger.Interface
+	obsLogger obslogging.Logger
 }
 
-func NewGormObsLogger(base logger.Interface) logger.Interface {
+func NewGormObsLogger(base logger.Interface, obsLogger obslogging.Logger) logger.Interface {
 	if base == nil {
 		base = logger.Default
 	}
 
-	return GormObsLogger{base: base}
+	return GormObsLogger{base: base, obsLogger: obsLogger}
 }
 
 func (l GormObsLogger) LogMode(level logger.LogLevel) logger.Interface {
-	return GormObsLogger{base: l.base.LogMode(level)}
+	return GormObsLogger{base: l.base.LogMode(level), obsLogger: l.obsLogger}
 }
 
 func (l GormObsLogger) Info(ctx context.Context, msg string, data ...any) {
@@ -61,7 +62,7 @@ func (l GormObsLogger) Trace(ctx context.Context, begin time.Time, fc func() (st
 	traceID := traceIDFromContext(ctx)
 	durationMS := float64(time.Since(begin).Microseconds()) / 1000.0
 
-	obslogging.EmitDBQuery(ctx, obslogging.DBQueryEvent{
+	l.obsLogger.EmitDBQuery(ctx, obslogging.DBQueryEvent{
 		SQL:        cleanSQL,
 		Rows:       rows,
 		DurationMS: durationMS,

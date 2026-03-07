@@ -81,7 +81,7 @@ func main() {
 	}()
 
 	fmt.Println(" Starting logs telemetry...")
-	requestLogger, shutdownLogs, err := logging.New(ctx, env)
+	obsLogger, shutdownLogs, err := logging.New(ctx, env)
 	if err != nil {
 		log.Printf("failed to initialize otel logger provider: %v", err)
 		exitCode = 1
@@ -95,7 +95,7 @@ func main() {
 	}()
 
 	fmt.Println(" Connecting to database...")
-	db, err := database.New(env)
+	db, err := database.New(env, obsLogger)
 	if err != nil {
 		log.Printf("failed to initialize database: %v", err)
 		exitCode = 1
@@ -145,7 +145,7 @@ func main() {
 		server.WithWorkPool(wp),
 		server.WithTracer(tracer),
 		server.WithMetrics(httpMetrics),
-		server.WithRequestLogger(requestLogger),
+		server.WithRequestLogger(obsLogger),
 		server.WithLocalizer(localizer),
 	)
 

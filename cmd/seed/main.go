@@ -10,6 +10,7 @@ import (
 	"miconsul/internal/database"
 	"miconsul/internal/database/seeder"
 	"miconsul/internal/lib/appenv"
+	obslogging "miconsul/internal/observability/logging"
 
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
@@ -40,7 +41,7 @@ func main() {
 	_ = godotenv.Load(".env")
 
 	env := appenv.New()
-	db, err := database.New(env)
+	db, err := database.New(env, obslogging.Logger{})
 	if err != nil {
 		log.Printf("failed to initialize database: %v", err)
 		os.Exit(1)

@@ -3,7 +3,6 @@ package logging
 import (
 	"context"
 	"fmt"
-	"sync/atomic"
 	"time"
 
 	"miconsul/internal/lib/appenv"
@@ -36,10 +35,9 @@ type DBQueryEvent struct {
 }
 
 type Logger struct {
-	emitter otellog.Logger
+	httpEmitter otellog.Logger
+	dbEmitter   otellog.Logger
 }
-
-var globalLogger atomic.Value
 
 func New(ctx context.Context, env *appenv.Env) (Logger, func() error, error) {
 	if env == nil {
@@ -95,18 +93,20 @@ func New(ctx context.Context, env *appenv.Env) (Logger, func() error, error) {
 		return nil
 	}
 
-	logger := Logger{emitter: provider.Logger(env.AppName + ".http")}
-	globalLogger.Store(logger)
+	logger := Logger{
+		httpEmitter: provider.Logger(env.AppName + ".http"),
+		dbEmitter:   provider.Logger(env.AppName + ".db"),
+	}
 
 	return logger, shutdown, nil
 }
 
 func (l Logger) Enabled() bool {
-	return l.emitter != nil
+	return l.httpEmitter != nil || l.dbEmitter != nil
 }
 
 func (l Logger) EmitHTTP(ctx context.Context, event HTTPEvent) {
-	if l.emitter == nil {
+	if l.httpEmitter == nil {
 		return
 	}
 
@@ -140,11 +140,11 @@ func (l Logger) EmitHTTP(ctx context.Context, event HTTPEvent) {
 	}
 	rec.AddAttributes(attrs...)
 
-	l.emitter.Emit(ctx, rec)
+	l.httpEmitter.Emit(ctx, rec)
 }
 
 func (l Logger) EmitDBQuery(ctx context.Context, event DBQueryEvent) {
-	if l.emitter == nil {
+	if l.dbEmitter == nil {
 		return
 	}
 
@@ -177,19 +177,5 @@ func (l Logger) EmitDBQuery(ctx context.Context, event DBQueryEvent) {
 	}
 	rec.AddAttributes(attrs...)
 
-	l.emitter.Emit(ctx, rec)
-}
-
-func EmitDBQuery(ctx context.Context, event DBQueryEvent) {
-	v := globalLogger.Load()
-	if v == nil {
-		return
-	}
-
-	logger, ok := v.(Logger)
-	if !ok {
-		return
-	}
-
-	logger.EmitDBQuery(ctx, event)
+	l.dbEmitter.Emit(ctx, rec)
 }

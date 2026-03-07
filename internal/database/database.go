@@ -13,6 +13,7 @@ import (
 
 	"miconsul/goose/migrations"
 	"miconsul/internal/lib/appenv"
+	obslogging "miconsul/internal/observability/logging"
 
 	"github.com/pressly/goose/v3"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
@@ -36,12 +37,12 @@ type Database struct {
 	*gorm.DB
 }
 
-func New(env *appenv.Env) (*Database, error) {
+func New(env *appenv.Env, obsLogger obslogging.Logger) (*Database, error) {
 	if env == nil {
 		return nil, fmt.Errorf("database: environment config is nil")
 	}
 
-	dbLogger := NewLogger(env)
+	dbLogger := NewLogger(env, obsLogger)
 	dsn := env.DBPath + PragmaOpts
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
 		Logger:      dbLogger,
@@ -148,7 +149,7 @@ func applyMigrations(database *Database, env *appenv.Env, silent bool) error {
 	return nil
 }
 
-func NewLogger(env *appenv.Env) logger.Interface {
+func NewLogger(env *appenv.Env, obsLogger obslogging.Logger) logger.Interface {
 	loglevel := logger.Warn
 	hideParamValues := true
 	if env != nil && appenv.IsDevelopment(env.Environment) {
@@ -167,5 +168,5 @@ func NewLogger(env *appenv.Env) logger.Interface {
 		},
 	)
 
-	return NewGormObsLogger(baseLogger)
+	return NewGormObsLogger(baseLogger, obsLogger)
 }
