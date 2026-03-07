@@ -60,6 +60,7 @@ func (l GormObsLogger) Trace(ctx context.Context, begin time.Time, fc func() (st
 	l.base.Trace(ctx, begin, fcCached, err)
 
 	cleanSQL := sanitizeSQLForLog(sql)
+	dbOperation := extractDBOperation(sql)
 	traceID := traceIDFromContext(ctx)
 	durationMS := float64(time.Since(begin).Microseconds()) / 1000.0
 
@@ -79,6 +80,7 @@ func (l GormObsLogger) Trace(ctx context.Context, begin time.Time, fc func() (st
 
 	attrs := []otellog.KeyValue{
 		otellog.String("event", "db_query"),
+		otellog.String("db_operation", dbOperation),
 		otellog.String("sql", cleanSQL),
 		otellog.Int64("rows", rows),
 		otellog.Float64("duration_ms", durationMS),
@@ -124,4 +126,24 @@ func sanitizeSQLForLog(query string) string {
 	}
 
 	return query
+}
+
+func extractDBOperation(query string) string {
+	query = strings.TrimSpace(query)
+	if query == "" {
+		return "UNKNOWN"
+	}
+
+	parts := strings.Fields(query)
+	if len(parts) == 0 {
+		return "UNKNOWN"
+	}
+
+	op := strings.ToUpper(parts[0])
+	switch op {
+	case "SELECT", "INSERT", "UPDATE", "DELETE":
+		return op
+	default:
+		return "OTHER"
+	}
 }

@@ -16,14 +16,29 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
 )
 
+// Provider owns the OTLP logging transport pipeline.
+//
+// It encapsulates exporter/processor/resource configuration and is used to
+// create scoped Logger emitters.
 type Provider struct {
 	provider *sdklog.LoggerProvider
 }
 
+// Logger is a scoped OTLP log emitter.
+//
+// It intentionally does not encode domain-specific event schemas.
+// Callers (e.g. server request middleware, DB logger wrappers) are responsible
+// for shaping records and attributes before emission.
 type Logger struct {
 	emitter otellog.Logger
 }
 
+// NewProvider creates the OTLP logging transport pipeline.
+//
+// Contract:
+//   - Provider owns transport/export concerns (exporter, processor, resource).
+//   - Scoped Logger instances are created from the Provider.
+//   - Event shaping is owned by callers, not this package.
 func NewProvider(ctx context.Context, env *appenv.Env) (Provider, func() error, error) {
 	if env == nil {
 		return Provider{}, nil, fmt.Errorf("otel logs: environment config is nil")
@@ -81,6 +96,11 @@ func NewProvider(ctx context.Context, env *appenv.Env) (Provider, func() error, 
 	return Provider{provider: provider}, shutdown, nil
 }
 
+// NewLogger returns a scoped logger emitter from a Provider.
+//
+// Scope names are typically signal/source oriented, e.g.:
+//   - miconsul.http
+//   - miconsul.db
 func NewLogger(provider Provider, scopeName string) Logger {
 	if provider.provider == nil {
 		return Logger{}
