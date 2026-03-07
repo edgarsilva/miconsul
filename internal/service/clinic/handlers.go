@@ -3,13 +3,14 @@ package clinic
 import (
 	"cmp"
 	"errors"
+	"strconv"
+	"strings"
+
 	"miconsul/internal/lib/amount"
 	"miconsul/internal/lib/avatar"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/model"
 	"miconsul/internal/view"
-	"strconv"
-	"strings"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
@@ -83,25 +84,8 @@ func (s *service) HandleClinicsCreate(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, "/clinics/new?toast=Failed to create clinic&level=error", fiber.StatusUnprocessableEntity)
 	}
 
-	path, picErr := SaveProfilePicToDisk(c, clinic)
-	if picErr == nil {
-		clinic.ProfilePic = path
-		profilePicUpdate := model.Clinic{ProfilePic: path}
-		err = s.UpdateClinicByID(c.Context(), cu.ID, clinic.ID, profilePicUpdate)
-		if err != nil {
-			log.Error(err)
-		}
-	} else if !errors.Is(picErr, ErrProfilePicNotProvided) {
-		log.Error(picErr)
-	}
-
-	if s.NotHTMX(c) {
-		return s.Redirect(c, "/clinics/"+clinic.ID)
-	}
-
-	c.Set("HX-Push-Url", "/clinics/"+clinic.ID)
-	vc, _ := view.NewCtx(c)
-	return view.Render(c, view.ClinicPage(vc, clinic))
+	s.attachClinicProfilePicBestEffort(c, cu.ID, &clinic)
+	return s.respondWithClinicPage(c, clinic)
 }
 
 // HandleClinicsUpdate updates a clinic record for the CurrentUser
@@ -133,12 +117,7 @@ func (s *service) HandleClinicsUpdate(c fiber.Ctx) error {
 
 	clinic = input.toClinic(clinic.ID, clinic.UserID, amount.StrToAmount(c.FormValue("price", "")))
 
-	path, picErr := SaveProfilePicToDisk(c, clinic)
-	if picErr == nil {
-		clinic.ProfilePic = path
-	} else if !errors.Is(picErr, ErrProfilePicNotProvided) {
-		log.Error(picErr)
-	}
+	s.attachClinicProfilePicBestEffort(c, cu.ID, &clinic)
 
 	err = s.UpdateClinicByID(c.Context(), cu.ID, clinicID, clinic)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -148,13 +127,7 @@ func (s *service) HandleClinicsUpdate(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, "/clinics?toast=Failed to update clinic&level=error", fiber.StatusUnprocessableEntity)
 	}
 
-	if s.NotHTMX(c) {
-		return s.Redirect(c, "/clinics/"+clinic.ID)
-	}
-
-	c.Set("HX-Push-Url", "/clinics/"+clinicID)
-	vc, _ := view.NewCtx(c)
-	return view.Render(c, view.ClinicPage(vc, clinic))
+	return s.respondWithClinicPage(c, clinic)
 }
 
 // HandleClinicsDelete deletes a clinic record from the DB
@@ -210,15 +183,6 @@ func (s *service) HandleClinicsIndexSearch(c fiber.Ctx) error {
 	return view.Render(c, view.ClinicsList(vc, clinics))
 }
 
-func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string, htmxStatus int) error {
-	if s.NotHTMX(c) {
-		return s.Redirect(c, redirectPath)
-	}
-
-	c.Set("HX-Location", redirectPath)
-	return c.SendStatus(htmxStatus)
-}
-
 // HandleMockManyClinics creates many mock clinics for admin/testing flows.
 // GET: /clinics/makeaton
 func (s *service) HandleMockManyClinics(c fiber.Ctx) error {
@@ -248,4 +212,41 @@ func (s *service) HandleMockManyClinics(c fiber.Ctx) error {
 	}
 
 	return c.SendString("Rowsaffected:" + strconv.Itoa(int(result.RowsAffected)))
+}
+
+func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string, htmxStatus int) error {
+	if s.NotHTMX(c) {
+		return s.Redirect(c, redirectPath)
+	}
+
+	c.Set("HX-Location", redirectPath)
+	return c.SendStatus(htmxStatus)
+}
+
+func (s *service) respondWithClinicPage(c fiber.Ctx, clinic model.Clinic) error {
+	if s.NotHTMX(c) {
+		return s.Redirect(c, "/clinics/"+clinic.ID)
+	}
+
+	c.Set("HX-Push-Url", "/clinics/"+clinic.ID)
+	vc, _ := view.NewCtx(c)
+	return view.Render(c, view.ClinicPage(vc, clinic))
+}
+
+func (s *service) attachClinicProfilePicBestEffort(c fiber.Ctx, userID string, clinic *model.Clinic) {
+	path, picErr := SaveProfilePicToDisk(c, *clinic)
+	if errors.Is(picErr, ErrProfilePicNotProvided) {
+		return
+	}
+	if picErr != nil {
+		log.Error(picErr)
+		return
+	}
+
+	clinic.ProfilePic = path
+	profilePicUpdate := model.Clinic{ProfilePic: path}
+	err := s.UpdateClinicByID(c.Context(), userID, clinic.ID, profilePicUpdate)
+	if err != nil {
+		log.Error(err)
+	}
 }
