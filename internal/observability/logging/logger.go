@@ -3,7 +3,6 @@ package logging
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/observability"
@@ -17,35 +16,21 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
 )
 
-type HTTPEvent struct {
-	Route      string
-	Method     string
-	Status     int
-	DurationMS float64
-	TraceID    string
-	Err        error
-}
-
-type DBQueryEvent struct {
-	SQL        string
-	Rows       int64
-	DurationMS float64
-	TraceID    string
-	Err        error
+type Provider struct {
+	provider *sdklog.LoggerProvider
 }
 
 type Logger struct {
-	httpEmitter otellog.Logger
-	dbEmitter   otellog.Logger
+	emitter otellog.Logger
 }
 
-func New(ctx context.Context, env *appenv.Env) (Logger, func() error, error) {
+func NewProvider(ctx context.Context, env *appenv.Env) (Provider, func() error, error) {
 	if env == nil {
-		return Logger{}, nil, fmt.Errorf("otel logs: environment config is nil")
+		return Provider{}, nil, fmt.Errorf("otel logs: environment config is nil")
 	}
 
 	if env.OTelOTLPEndpoint == "" {
-		return Logger{}, func() error { return nil }, nil
+		return Provider{}, func() error { return nil }, nil
 	}
 
 	serviceName := env.OTelServiceName
@@ -60,7 +45,7 @@ func New(ctx context.Context, env *appenv.Env) (Logger, func() error, error) {
 
 	exporter, err := otlploggrpc.New(ctx, otlpOpts...)
 	if err != nil {
-		return Logger{}, nil, fmt.Errorf("otel logs: create otlp exporter: %w", err)
+		return Provider{}, nil, fmt.Errorf("otel logs: create otlp exporter: %w", err)
 	}
 
 	res, err := resource.New(
@@ -74,7 +59,7 @@ func New(ctx context.Context, env *appenv.Env) (Logger, func() error, error) {
 		),
 	)
 	if err != nil {
-		return Logger{}, nil, fmt.Errorf("otel logs: create resource: %w", err)
+		return Provider{}, nil, fmt.Errorf("otel logs: create resource: %w", err)
 	}
 
 	processor := sdklog.NewBatchProcessor(exporter)
@@ -93,89 +78,25 @@ func New(ctx context.Context, env *appenv.Env) (Logger, func() error, error) {
 		return nil
 	}
 
-	logger := Logger{
-		httpEmitter: provider.Logger(env.AppName + ".http"),
-		dbEmitter:   provider.Logger(env.AppName + ".db"),
+	return Provider{provider: provider}, shutdown, nil
+}
+
+func NewLogger(provider Provider, scopeName string) Logger {
+	if provider.provider == nil {
+		return Logger{}
 	}
 
-	return logger, shutdown, nil
+	return Logger{emitter: provider.provider.Logger(scopeName)}
 }
 
 func (l Logger) Enabled() bool {
-	return l.httpEmitter != nil || l.dbEmitter != nil
+	return l.emitter != nil
 }
 
-func (l Logger) EmitHTTP(ctx context.Context, event HTTPEvent) {
-	if l.httpEmitter == nil {
+func (l Logger) Emit(ctx context.Context, record otellog.Record) {
+	if l.emitter == nil {
 		return
 	}
 
-	rec := otellog.Record{}
-	rec.SetTimestamp(time.Now())
-	rec.SetObservedTimestamp(time.Now())
-	rec.SetEventName("http_request")
-	rec.SetBody(otellog.StringValue("http_request"))
-
-	if event.Status >= 500 {
-		rec.SetSeverity(otellog.SeverityError)
-		rec.SetSeverityText("ERROR")
-	} else {
-		rec.SetSeverity(otellog.SeverityInfo)
-		rec.SetSeverityText("INFO")
-	}
-
-	attrs := []otellog.KeyValue{
-		otellog.String("event", "http_request"),
-		otellog.String("route", event.Route),
-		otellog.String("method", event.Method),
-		otellog.Int("status", event.Status),
-		otellog.Float64("duration_ms", event.DurationMS),
-	}
-	if event.TraceID != "" {
-		attrs = append(attrs, otellog.String("trace_id", event.TraceID))
-	}
-	if event.Err != nil {
-		rec.SetErr(event.Err)
-		attrs = append(attrs, otellog.String("error", event.Err.Error()))
-	}
-	rec.AddAttributes(attrs...)
-
-	l.httpEmitter.Emit(ctx, rec)
-}
-
-func (l Logger) EmitDBQuery(ctx context.Context, event DBQueryEvent) {
-	if l.dbEmitter == nil {
-		return
-	}
-
-	rec := otellog.Record{}
-	rec.SetTimestamp(time.Now())
-	rec.SetObservedTimestamp(time.Now())
-	rec.SetEventName("db_query")
-	rec.SetBody(otellog.StringValue("db_query"))
-
-	if event.Err != nil {
-		rec.SetSeverity(otellog.SeverityError)
-		rec.SetSeverityText("ERROR")
-	} else {
-		rec.SetSeverity(otellog.SeverityInfo)
-		rec.SetSeverityText("INFO")
-	}
-
-	attrs := []otellog.KeyValue{
-		otellog.String("event", "db_query"),
-		otellog.String("sql", event.SQL),
-		otellog.Int64("rows", event.Rows),
-		otellog.Float64("duration_ms", event.DurationMS),
-	}
-	if event.TraceID != "" {
-		attrs = append(attrs, otellog.String("trace_id", event.TraceID))
-	}
-	if event.Err != nil {
-		rec.SetErr(event.Err)
-		attrs = append(attrs, otellog.String("error", event.Err.Error()))
-	}
-	rec.AddAttributes(attrs...)
-
-	l.dbEmitter.Emit(ctx, rec)
+	l.emitter.Emit(ctx, record)
 }

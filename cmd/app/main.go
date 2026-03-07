@@ -81,12 +81,14 @@ func main() {
 	}()
 
 	fmt.Println(" Starting logs telemetry...")
-	obsLogger, shutdownLogs, err := logging.New(ctx, env)
+	logProvider, shutdownLogs, err := logging.NewProvider(ctx, env)
 	if err != nil {
 		log.Printf("failed to initialize otel logger provider: %v", err)
 		exitCode = 1
 		return
 	}
+	requestLogger := logging.NewLogger(logProvider, env.AppName+".http")
+	dbLogger := logging.NewLogger(logProvider, env.AppName+".db")
 	defer func() {
 		fmt.Println("󰓾 Logger provider shutting down...")
 		if err := shutdownLogs(); err != nil {
@@ -95,7 +97,7 @@ func main() {
 	}()
 
 	fmt.Println(" Connecting to database...")
-	db, err := database.New(env, obsLogger)
+	db, err := database.New(env, dbLogger)
 	if err != nil {
 		log.Printf("failed to initialize database: %v", err)
 		exitCode = 1
@@ -145,7 +147,7 @@ func main() {
 		server.WithWorkPool(wp),
 		server.WithTracer(tracer),
 		server.WithMetrics(httpMetrics),
-		server.WithRequestLogger(obsLogger),
+		server.WithRequestLogger(requestLogger),
 		server.WithLocalizer(localizer),
 	)
 

@@ -8,6 +8,7 @@ import (
 
 	obslogging "miconsul/internal/observability/logging"
 
+	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm/logger"
 )
@@ -62,13 +63,36 @@ func (l GormObsLogger) Trace(ctx context.Context, begin time.Time, fc func() (st
 	traceID := traceIDFromContext(ctx)
 	durationMS := float64(time.Since(begin).Microseconds()) / 1000.0
 
-	l.obsLogger.EmitDBQuery(ctx, obslogging.DBQueryEvent{
-		SQL:        cleanSQL,
-		Rows:       rows,
-		DurationMS: durationMS,
-		TraceID:    traceID,
-		Err:        err,
-	})
+	rec := otellog.Record{}
+	rec.SetTimestamp(time.Now())
+	rec.SetObservedTimestamp(time.Now())
+	rec.SetEventName("db_query")
+	rec.SetBody(otellog.StringValue("db_query"))
+
+	if err != nil {
+		rec.SetSeverity(otellog.SeverityError)
+		rec.SetSeverityText("ERROR")
+	} else {
+		rec.SetSeverity(otellog.SeverityInfo)
+		rec.SetSeverityText("INFO")
+	}
+
+	attrs := []otellog.KeyValue{
+		otellog.String("event", "db_query"),
+		otellog.String("sql", cleanSQL),
+		otellog.Int64("rows", rows),
+		otellog.Float64("duration_ms", durationMS),
+	}
+	if traceID != "" {
+		attrs = append(attrs, otellog.String("trace_id", traceID))
+	}
+	if err != nil {
+		rec.SetErr(err)
+		attrs = append(attrs, otellog.String("error", err.Error()))
+	}
+	rec.AddAttributes(attrs...)
+
+	l.obsLogger.Emit(ctx, rec)
 }
 
 func traceIDFromContext(ctx context.Context) string {
