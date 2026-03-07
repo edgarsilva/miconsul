@@ -38,15 +38,17 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 // HandlePatientsIndexSearch runs the index search on patients.
 // GET: /patients/search
 func (s *service) HandlePatientsIndexSearch(c fiber.Ctx) error {
-	term := c.Query("term", "")
+	term := strings.TrimSpace(c.Query("term", ""))
 	if len(term) > 0 && len(term) < 3 {
-		return c.SendStatus(fiber.StatusBadRequest)
+		redirectPath := "/patients?toast=Search term must be at least 3 characters&level=warning"
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
 	}
 
 	cu := s.CurrentUser(c)
-	patients, err := s.Patients(cu, term)
+	patients, err := s.SearchPatientsByUser(c.Context(), cu, term, QUERY_LIMIT)
 	if err != nil {
-		return c.SendStatus(fiber.StatusInternalServerError)
+		redirectPath := "/patients?toast=Failed to search patients&level=error"
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusInternalServerError)
 	}
 
 	vc, _ := view.NewCtx(c)
@@ -61,12 +63,15 @@ func (s *service) HandlePatientFormPage(c fiber.Ctx) error {
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
 
-	id := c.Params("id", "")
+	id := strings.TrimSpace(c.Params("id", ""))
 	if id == "" {
 		return s.Redirect(c, "/patients?toast=That user does not exist")
 	}
 
 	patient, err := s.PatientForShowPage(c.Context(), cu.ID, id)
+	if errors.Is(err, ErrIDRequired) {
+		return s.Redirect(c, "/patients?toast=That user does not exist&level=warning")
+	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.Redirect(c, "/patients?toast=Patient does not exist&level=warning")
 	}
@@ -105,7 +110,7 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 	} else {
 		patient.ProfilePic = path
 		profilePicUpdate := model.Patient{ProfilePic: path}
-		err = s.UpdatePatientByIDAndUserID(c.Context(), cu.ID, patient.ID, profilePicUpdate)
+		err = s.UpdatePatientByID(c.Context(), cu.ID, patient.ID, profilePicUpdate)
 		if err != nil {
 			log.Error(err)
 		}
@@ -141,9 +146,9 @@ func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string, htmxStat
 func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
-	patientID := c.Params("id", "")
+	patientID := strings.TrimSpace(c.Params("id", ""))
 	if patientID == "" {
-		patientID = c.FormValue("id", "")
+		patientID = strings.TrimSpace(c.FormValue("id", ""))
 	}
 
 	if patientID == "" {
@@ -166,7 +171,11 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 		patient.ProfilePic = path
 	}
 
-	err = s.UpdatePatientByIDAndUserID(c.Context(), cu.ID, patientID, patient)
+	err = s.UpdatePatientByID(c.Context(), cu.ID, patientID, patient)
+	if errors.Is(err, ErrIDRequired) {
+		redirectPath := "/patients?toast=Can't update without an id&level=error"
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
+	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		redirectPath := "/patients?toast=Patient does not exist&level=warning"
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
@@ -190,9 +199,9 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 func (s *service) HandleRemovePic(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
-	patientID := c.Params("id", "")
+	patientID := strings.TrimSpace(c.Params("id", ""))
 	if patientID == "" {
-		patientID = c.FormValue("id", "")
+		patientID = strings.TrimSpace(c.FormValue("id", ""))
 	}
 
 	if patientID == "" {
@@ -203,6 +212,10 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 		UserID: cu.ID,
 	}
 	err := s.ClearPatientProfilePic(c.Context(), cu.ID, patientID)
+	if errors.Is(err, ErrIDRequired) {
+		redirectPath := "/patients?toast=Can't remove profile picture without an id&level=error"
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
+	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		redirectPath := "/patients?toast=Patient does not exist&level=warning"
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
@@ -212,7 +225,7 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusUnprocessableEntity)
 	}
 
-	patient, err = s.TakePatientByIDAndUserID(c.Context(), cu.ID, patientID)
+	patient, err = s.TakePatientByID(c.Context(), cu.ID, patientID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		redirectPath := "/patients?toast=Patient does not exist&level=warning"
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
@@ -237,26 +250,30 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 func (s *service) HandleDeletePatient(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
-	patientID := c.Params("id", "")
+	patientID := strings.TrimSpace(c.Params("id", ""))
 	if patientID == "" {
-		return s.Redirect(c, "/patients?msg=can't delete without an id")
+		return s.respondWithRedirect(c, "/patients?toast=Can't delete without an id&level=error", fiber.StatusBadRequest)
 	}
 
-	err := s.DeletePatientByIDAndUserID(c.Context(), cu.ID, patientID)
+	err := s.DeletePatientByID(c.Context(), cu.ID, patientID)
+	if errors.Is(err, ErrIDRequired) {
+		return s.respondWithRedirect(c, "/patients?toast=Can't delete without an id&level=error", fiber.StatusBadRequest)
+	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.Redirect(c, "/patients?toast=Patient does not exist&level=warning")
+		return s.respondWithRedirect(c, "/patients?toast=Patient does not exist&level=warning", fiber.StatusNotFound)
 	}
 	if err != nil {
-		return s.Redirect(c, "/patients?msg=failed to delete that patient")
+		return s.respondWithRedirect(c, "/patients?toast=Failed to delete patient&level=error", fiber.StatusUnprocessableEntity)
 	}
 
 	if s.NotHTMX(c) {
 		return s.Redirect(c, "/patients")
 	}
 
-	patients, err := s.Patients(cu, c.Query("term", ""))
+	term := strings.TrimSpace(c.Query("term", ""))
+	patients, err := s.SearchPatientsByUser(c.Context(), cu, term, QUERY_LIMIT)
 	if err != nil {
-		return c.SendStatus(fiber.StatusInternalServerError)
+		return s.respondWithRedirect(c, "/patients?toast=Failed to load patients&level=error", fiber.StatusInternalServerError)
 	}
 
 	theme := s.SessionUITheme(c)
@@ -270,7 +287,7 @@ func (s *service) HandleDeletePatient(c fiber.Ctx) error {
 func (s *service) HandlePatientSearch(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
-	queryStr := c.FormValue("query", "")
+	queryStr := strings.TrimSpace(c.FormValue("query", ""))
 	patients, err := s.SearchPatientsByUser(c.Context(), cu, queryStr, QUERY_LIMIT)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
@@ -325,8 +342,8 @@ func (s *service) HandleMockManyPatients(c fiber.Ctx) error {
 func (s *service) HandlePatientProfilePicImgSrc(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
-	id := c.Params("id", "")
-	filename := c.Params("filename", "")
+	id := strings.TrimSpace(c.Params("id", ""))
+	filename := strings.TrimSpace(c.Params("filename", ""))
 	if id == "" || filename == "" {
 		return c.SendStatus(fiber.StatusNotFound)
 	}
@@ -334,7 +351,10 @@ func (s *service) HandlePatientProfilePicImgSrc(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusNotFound)
 	}
 
-	_, err := s.TakePatientByIDAndUserID(c.Context(), cu.ID, id)
+	_, err := s.TakePatientByID(c.Context(), cu.ID, id)
+	if errors.Is(err, ErrIDRequired) {
+		return c.SendStatus(fiber.StatusNotFound)
+	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return c.SendStatus(fiber.StatusNotFound)
 	}
