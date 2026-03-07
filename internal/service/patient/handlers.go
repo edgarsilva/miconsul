@@ -155,7 +155,7 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 	}
 
 	if patientID == "" {
-		return s.Redirect(c, "/patients?msg=can't update without an id")
+		return s.respondWithRedirect(c, "/patients?toast=Can't update without an id&level=error", fiber.StatusBadRequest)
 	}
 
 	patient := model.Patient{ID: patientID, UserID: cu.ID}
@@ -186,7 +186,7 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
 	}
 	if err != nil {
-		redirectPath := "/patients?err=failed to update patient&level=error"
+		redirectPath := "/patients?toast=Failed to update patient&level=error"
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusUnprocessableEntity)
 	}
 
@@ -210,7 +210,8 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 	}
 
 	if patientID == "" {
-		return c.SendStatus(fiber.StatusUnprocessableEntity)
+		redirectPath := "/patients?toast=Can't remove profile picture without an id&level=error"
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
 	}
 
 	patient := model.Patient{
@@ -240,7 +241,7 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusInternalServerError)
 	}
 
-	if !s.IsHTMX(c) {
+	if s.NotHTMX(c) {
 		return s.Redirect(c, "/patients/"+patient.ID)
 	}
 
