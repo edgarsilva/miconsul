@@ -483,7 +483,7 @@ func (s *service) HandleSearchClinics(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
 	searchTerm := c.FormValue("searchTerm", "")
-	clinics, err := s.FindClinicsByTerm(c.Context(), cu.ID, searchTerm)
+	clinics, err := s.FindClinicsBySearchTerm(c.Context(), cu.ID, searchTerm)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}

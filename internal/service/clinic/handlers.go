@@ -9,8 +9,10 @@ import (
 	"miconsul/internal/model"
 	"miconsul/internal/view"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/log"
 	"gorm.io/gorm"
 	"syreclabs.com/go/faker"
 )
@@ -22,7 +24,8 @@ const (
 // HandleClinicsIndexPage renders the clinics index page.
 // GET: /clinics
 func (s *service) HandleClinicsIndexPage(c fiber.Ctx) error {
-	clinics, err := s.FindClinicsByTerm(c, "")
+	cu := s.CurrentUser(c)
+	clinics, err := s.FindClinicsBySearchTerm(c.Context(), cu, "")
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
@@ -42,14 +45,21 @@ func (s *service) HandleClinicsNewPage(c fiber.Ctx) error {
 // HandleClinicsShowPage renders the clinics page HTML
 // GET: /clinics/:id
 func (s *service) HandleClinicsShowPage(c fiber.Ctx) error {
-	id := c.Params("id", "")
+	cu := s.CurrentUser(c)
+	id := strings.TrimSpace(c.Params("id", ""))
 	if id == "" {
-		return s.Redirect(c, "/clinics?err=failed to load Clinic without ID")
+		return s.Redirect(c, "/clinics?toast=Failed to load clinic without ID&level=error")
 	}
 
-	clinic, err := s.TakeClinicByID(c, id)
+	clinic, err := s.TakeClinicByID(c.Context(), cu.ID, id)
+	if errors.Is(err, ErrIDRequired) {
+		return s.Redirect(c, "/clinics?toast=Failed to load clinic without ID&level=error")
+	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return fiber.ErrNotFound
+	}
+	if err != nil {
+		return s.Redirect(c, "/clinics?toast=Failed to load clinic&level=error")
 	}
 
 	vc, _ := view.NewCtx(c)
@@ -60,26 +70,32 @@ func (s *service) HandleClinicsShowPage(c fiber.Ctx) error {
 // POST: /clinics
 func (s *service) HandleClinicsCreate(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
-	clinic := model.Clinic{
-		UserID: cu.ID,
-		Price:  amount.StrToAmount(c.FormValue("price", "")),
+	price := amount.StrToAmount(c.FormValue("price", ""))
+	input := clinicUpsertInput{}
+	err := c.Bind().Body(&input)
+	if err != nil {
+		return s.respondWithRedirect(c, "/clinics/new?toast=Invalid clinic input&level=error", fiber.StatusBadRequest)
+	}
+	clinic := input.toClinic("", cu.ID, price)
+
+	err = s.CreateClinic(c.Context(), &clinic)
+	if err != nil {
+		return s.respondWithRedirect(c, "/clinics/new?toast=Failed to create clinic&level=error", fiber.StatusUnprocessableEntity)
 	}
 
-	c.Bind().Body(&clinic)
-
-	err := gorm.G[model.Clinic](s.DB.GormDB()).Create(c.Context(), &clinic)
-	if err == nil {
-		path, err := SaveProfilePicToDisk(c, clinic)
-		if err == nil {
-			clinic.ProfilePic = path
+	path, picErr := SaveProfilePicToDisk(c, clinic)
+	if picErr == nil {
+		clinic.ProfilePic = path
+		profilePicUpdate := model.Clinic{ProfilePic: path}
+		err = s.UpdateClinicByID(c.Context(), cu.ID, clinic.ID, profilePicUpdate)
+		if err != nil {
+			log.Error(err)
 		}
+	} else if !errors.Is(picErr, ErrProfilePicNotProvided) {
+		log.Error(picErr)
 	}
 
 	if s.NotHTMX(c) {
-		if err != nil {
-			return s.Redirect(c, "/clinics?err=failed to create Clinic")
-		}
-
 		return s.Redirect(c, "/clinics/"+clinic.ID)
 	}
 
@@ -92,34 +108,47 @@ func (s *service) HandleClinicsCreate(c fiber.Ctx) error {
 // PATCH: /clinics/:id
 // POST: /clinics/:id/patch
 func (s *service) HandleClinicsUpdate(c fiber.Ctx) error {
+	cu := s.CurrentUser(c)
 	clinicID := cmp.Or(c.Params("id", ""), c.FormValue("id", ""))
 	if clinicID == "" {
-		return s.Redirect(c, "/clinics?msg=can't update without an id")
+		return s.respondWithRedirect(c, "/clinics?toast=Can't update without an id&level=error", fiber.StatusBadRequest)
 	}
 
-	clinic, err := s.TakeClinicByID(c, clinicID)
+	clinic, err := s.TakeClinicByID(c.Context(), cu.ID, clinicID)
+	if errors.Is(err, ErrIDRequired) {
+		return s.respondWithRedirect(c, "/clinics?toast=Can't update without an id&level=error", fiber.StatusBadRequest)
+	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return fiber.ErrNotFound
 	}
-
-	// If found parse the form values into the model struct
-	c.Bind().Body(&clinic)
-	clinic.Price = amount.StrToAmount(c.FormValue("price", ""))
-
-	path, err := SaveProfilePicToDisk(c, clinic)
-	if err == nil {
-		clinic.ProfilePic = path
+	if err != nil {
+		return s.respondWithRedirect(c, "/clinics?toast=Failed to load clinic&level=error", fiber.StatusInternalServerError)
 	}
 
-	_, err = gorm.G[model.Clinic](s.DB.GormDB()).
-		Where("id = ? AND user_id = ?", clinic.ID, clinic.UserID).
-		Updates(c.Context(), clinic)
+	input := clinicUpsertInput{}
+	err = c.Bind().Body(&input)
+	if err != nil {
+		return s.respondWithRedirect(c, "/clinics/"+clinicID+"?toast=Invalid clinic input&level=error", fiber.StatusBadRequest)
+	}
+
+	clinic = input.toClinic(clinic.ID, clinic.UserID, amount.StrToAmount(c.FormValue("price", "")))
+
+	path, picErr := SaveProfilePicToDisk(c, clinic)
+	if picErr == nil {
+		clinic.ProfilePic = path
+	} else if !errors.Is(picErr, ErrProfilePicNotProvided) {
+		log.Error(picErr)
+	}
+
+	err = s.UpdateClinicByID(c.Context(), cu.ID, clinicID, clinic)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return s.respondWithRedirect(c, "/clinics?toast=Clinic does not exist&level=warning", fiber.StatusNotFound)
+	}
+	if err != nil {
+		return s.respondWithRedirect(c, "/clinics?toast=Failed to update clinic&level=error", fiber.StatusUnprocessableEntity)
+	}
 
 	if s.NotHTMX(c) {
-		if err != nil {
-			return s.Redirect(c, "/clinics?err=failed to update clinic")
-		}
-
 		return s.Redirect(c, "/clinics/"+clinic.ID)
 	}
 
@@ -132,21 +161,26 @@ func (s *service) HandleClinicsUpdate(c fiber.Ctx) error {
 // DELETE: /clinics/:id
 // POST: /clinics/:id/delete
 func (s *service) HandleClinicsDelete(c fiber.Ctx) error {
-	clinicID := c.Params("id", "")
+	cu := s.CurrentUser(c)
+	clinicID := strings.TrimSpace(c.Params("id", ""))
 	if clinicID == "" {
-		return s.Redirect(c, "/clinics?msg=can't delete without an id")
+		return s.respondWithRedirect(c, "/clinics?toast=Can't delete without an id&level=error", fiber.StatusBadRequest)
 	}
 
-	clinic, err := s.TakeClinicByID(c, clinicID)
+	_, err := s.TakeClinicByID(c.Context(), cu.ID, clinicID)
+	if errors.Is(err, ErrIDRequired) {
+		return s.respondWithRedirect(c, "/clinics?toast=Can't delete without an id&level=error", fiber.StatusBadRequest)
+	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return fiber.ErrNotFound
 	}
-
-	_, err = gorm.G[model.Clinic](s.DB.GormDB()).
-		Where("id = ? AND user_id = ?", clinic.ID, clinic.UserID).
-		Delete(c.Context())
 	if err != nil {
-		return s.Redirect(c, "/clinics?msg=failed to delete that clinic")
+		return s.respondWithRedirect(c, "/clinics?toast=Failed to load clinic&level=error", fiber.StatusInternalServerError)
+	}
+
+	err = s.DeleteClinicByID(c.Context(), cu.ID, clinicID)
+	if err != nil {
+		return s.respondWithRedirect(c, "/clinics?toast=Failed to delete clinic&level=error", fiber.StatusUnprocessableEntity)
 	}
 
 	if s.NotHTMX(c) {
@@ -161,18 +195,28 @@ func (s *service) HandleClinicsDelete(c fiber.Ctx) error {
 // replacesd in the HTMX active search
 // GET: /clinics/search
 func (s *service) HandleClinicsIndexSearch(c fiber.Ctx) error {
-	searchTerm := c.Query("searchTerm", "")
+	searchTerm := strings.TrimSpace(c.Query("searchTerm", ""))
 	if len(searchTerm) > 0 && len(searchTerm) < 3 {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
-	clinics, err := s.FindClinicsByTerm(c, searchTerm)
+	cu := s.CurrentUser(c)
+	clinics, err := s.FindClinicsBySearchTerm(c.Context(), cu, searchTerm)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
 	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.ClinicsList(vc, clinics))
+}
+
+func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string, htmxStatus int) error {
+	if s.NotHTMX(c) {
+		return s.Redirect(c, redirectPath)
+	}
+
+	c.Set("HX-Location", redirectPath)
+	return c.SendStatus(htmxStatus)
 }
 
 // HandleMockManyClinics creates many mock clinics for admin/testing flows.

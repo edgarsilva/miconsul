@@ -234,17 +234,18 @@ func (s *service) FindAppointmentsBy(ctx context.Context, userID, patientID, cli
 	return appointments, nil
 }
 
-func (s *service) FindClinicsByTerm(ctx context.Context, userID, term string) ([]model.Clinic, error) {
+func (s *service) FindClinicsBySearchTerm(ctx context.Context, userID, searchTerm string) ([]model.Clinic, error) {
 	clinics := []model.Clinic{}
+	searchTerm = strings.TrimSpace(searchTerm)
 	err := s.DB.WithContext(ctx).
 		Model(&model.Clinic{}).
 		Where("user_id = ?", userID).
-		Scopes(model.GlobalFTS(term)).
+		Scopes(model.GlobalFTS(searchTerm)).
 		Limit(10).
 		Find(&clinics).
 		Error
 	if err != nil {
-		return nil, err
+		return []model.Clinic{}, err
 	}
 
 	return clinics, nil
