@@ -252,10 +252,14 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 
 	user.ResetToken = token
 	user.ResetTokenExpiresAt = time.Now().Add(time.Hour * 1)
-	_, _ = gorm.G[model.User](s.DB.GormDB()).
+	rowsAffected, err := gorm.G[model.User](s.DB.GormDB()).
 		Select("ResetToken", "ResetTokenExpiresAt").
 		Where("id = ?", user.ID).
 		Updates(c.Context(), user)
+	if err != nil || rowsAffected != 1 {
+		errView := errors.New("failed to create reset password token")
+		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
+	}
 
 	go mailer.ResetPassword(email, token)
 
