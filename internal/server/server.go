@@ -45,19 +45,21 @@ type Cache interface {
 }
 
 type Server struct {
-	Env          *appenv.Env
-	DB           *database.Database
-	wp           *ants.Pool     // <- WorkPool - handles Background Goroutines or Async Jobs (emails) with Ants
-	cj           *cronjob.Sched // <- CronJob scheduler
-	Cache        Cache
-	SessionStore *session.Store
-	Localizer    *localize.Localizer
-	Tracer       trace.Tracer
-	RequestLog   obslogging.Logger
-	Metrics      obsmetrics.HTTPMetrics
-	cronJobMu    sync.Mutex
-	cronJobKeys  map[string]struct{}
-	StartedAt    time.Time
+	Env               *appenv.Env
+	DB                *database.Database
+	wp                *ants.Pool     // <- WorkPool - handles Background Goroutines or Async Jobs (emails) with Ants
+	cj                *cronjob.Sched // <- CronJob scheduler
+	Cache             Cache
+	SessionStore      *session.Store
+	Localizer         *localize.Localizer
+	Tracer            trace.Tracer
+	RequestLog        obslogging.Logger
+	Metrics           obsmetrics.HTTPMetrics
+	cronJobMu         sync.Mutex
+	cronJobKeys       map[string]struct{}
+	StartedAt         time.Time
+	ReadyAt           time.Time
+	BootstrapDuration time.Duration
 	*fiber.App
 }
 
@@ -83,6 +85,8 @@ func New(serverOpts ...ServerOption) *Server {
 
 	server.setupSessionStore()
 	server.setupFiberApp()
+	server.ReadyAt = time.Now()
+	server.BootstrapDuration = server.ReadyAt.Sub(server.StartedAt)
 
 	return &server
 }
@@ -151,6 +155,7 @@ func (s *Server) setupFiberApp() {
 	s.setupSecurityMiddleware(fiberApp, cookieSecret)
 	s.setupObservability(fiberApp)
 	s.setupStaticFiles(fiberApp, environment)
+	s.setupHealthcheckRoutes(fiberApp)
 
 	s.App = fiberApp
 }
@@ -168,9 +173,6 @@ func (s *Server) setupCoreMiddleware(app *fiber.App) {
 	app.Use(cors.New())
 	app.Use(requestid.New())
 	app.Use(RequestLoggerMiddleware(s.RequestLog))
-	app.Get(healthcheck.LivenessEndpoint, healthcheck.New())
-	app.Get(healthcheck.ReadinessEndpoint, healthcheck.New())
-	app.Get(healthcheck.StartupEndpoint, healthcheck.New())
 }
 
 func (s *Server) setupSecurityMiddleware(app *fiber.App, cookieSecret string) {
@@ -190,6 +192,18 @@ func (s *Server) setupObservability(app *fiber.App) {
 
 func (s *Server) setupStaticFiles(app *fiber.App, environment appenv.Environment) {
 	app.Use("/public", static.New("./public", staticConfig(environment)))
+}
+
+func (s *Server) setupHealthcheckRoutes(app *fiber.App) {
+	app.Get(healthcheck.LivenessEndpoint, healthcheck.New(healthcheck.Config{
+		Probe: livenessProbe(s),
+	}))
+	app.Get(healthcheck.ReadinessEndpoint, healthcheck.New(healthcheck.Config{
+		Probe: readinessProbe(s),
+	}))
+	app.Get(healthcheck.StartupEndpoint, healthcheck.New(healthcheck.Config{
+		Probe: startupProbe(s),
+	}))
 }
 
 // WithEnv configures the server environment.
