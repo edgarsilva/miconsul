@@ -1,6 +1,7 @@
 package patient
 
 import (
+	"errors"
 	"miconsul/internal/lib/avatar"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/model"
@@ -28,12 +29,23 @@ func (s *service) HandlePatientsPage(c fiber.Ctx) error {
 	id := c.Params("id", "")
 	patient := model.Patient{ID: id}
 	if id != "" && id != "new" {
-		s.DB.Model(&model.Patient{}).Take(&patient)
+		err := s.DB.Model(&model.Patient{}).Take(&patient).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return s.Redirect(c, "/patients?toast=Patient does not exist&level=warning")
+		}
+		if err != nil {
+			return s.Redirect(c, "/patients?toast=Failed to load patient&level=error")
+		}
+
 		return view.Render(c, view.PatientFormPage(patient, vc))
 	}
 
 	patients := []model.Patient{}
-	s.DB.Model(&cu).Order("created_at desc").Limit(QUERY_LIMIT).Association("Patients").Find(&patients)
+	err := s.DB.Model(&cu).Order("created_at desc").Limit(QUERY_LIMIT).Association("Patients").Find(&patients)
+	if err != nil {
+		return s.Redirect(c, "/patients?toast=Failed to load patients&level=error")
+	}
+
 	return view.Render(c, view.PatientsPage(vc, patients))
 }
 
@@ -71,7 +83,13 @@ func (s *service) HandlePatientFormPage(c fiber.Ctx) error {
 	patient := model.Patient{}
 	if id != "new" {
 		patient.ID = id
-		s.DB.Model(&model.Patient{}).First(&patient)
+		err := s.DB.Model(&model.Patient{}).First(&patient).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return s.Redirect(c, "/patients?toast=Patient does not exist&level=warning")
+		}
+		if err != nil {
+			return s.Redirect(c, "/patients?toast=Failed to load patient&level=error")
+		}
 	}
 
 	return view.Render(c, view.PatientFormPage(patient, vc))
@@ -86,14 +104,25 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 	patient := model.Patient{
 		UserID: cu.ID,
 	}
-	c.Bind().Body(&patient)
+	err = c.Bind().Body(&patient)
+	if err != nil {
+		redirectPath := "/patients/new?toast=Invalid patient input&level=error"
+		if !s.IsHTMX(c) {
+			return s.Redirect(c, redirectPath)
+		}
+
+		c.Set("HX-Location", redirectPath)
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
 	patient.Sanitize()
 
 	err = gorm.G[model.Patient](s.DB.GormDB()).Create(c.Context(), &patient)
 	if err == nil {
-		path, err := SaveProfilePicToDisk(c, patient)
-		if err == nil {
-			log.Error(err)
+		path, picErr := SaveProfilePicToDisk(c, patient)
+		if picErr != nil {
+			log.Error(picErr)
+		} else {
 			patient.ProfilePic = path
 		}
 	}
@@ -137,12 +166,23 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 	}
 
 	patient := model.Patient{ID: patientID, UserID: cu.ID}
-	c.Bind().Body(&patient)
+	err = c.Bind().Body(&patient)
+	if err != nil {
+		redirectPath := "/patients/" + patientID + "?toast=Invalid patient input&level=error"
+		if !s.IsHTMX(c) {
+			return s.Redirect(c, redirectPath)
+		}
+
+		c.Set("HX-Location", redirectPath)
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
 	patient.Sanitize()
 
-	path, err := SaveProfilePicToDisk(c, patient)
-	if err == nil {
-		log.Error(err)
+	path, picErr := SaveProfilePicToDisk(c, patient)
+	if picErr != nil {
+		log.Error(picErr)
+	} else {
 		patient.ProfilePic = path
 	}
 
@@ -189,13 +229,39 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 	_, err = gorm.G[model.Patient](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", patientID, cu.ID).
 		Update(c.Context(), "profile_pic", "")
-	patient, _ = gorm.G[model.Patient](s.DB.GormDB()).Where("id = ?", patientID).Take(c.Context())
-
-	if !s.IsHTMX(c) {
-		if err != nil {
-			return c.SendStatus(fiber.StatusUnprocessableEntity)
+	if err != nil {
+		redirectPath := "/patients?toast=Failed to remove profile picture&level=error"
+		if s.NotHTMX(c) {
+			return s.Redirect(c, redirectPath)
 		}
 
+		c.Set("HX-Location", redirectPath)
+		return c.SendStatus(fiber.StatusUnprocessableEntity)
+	}
+
+	patient, err = gorm.G[model.Patient](s.DB.GormDB()).
+		Where("id = ? AND user_id = ?", patientID, cu.ID).
+		Take(c.Context())
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		redirectPath := "/patients?toast=Patient does not exist&level=warning"
+		if s.NotHTMX(c) {
+			return s.Redirect(c, redirectPath)
+		}
+
+		c.Set("HX-Location", redirectPath)
+		return c.SendStatus(fiber.StatusNotFound)
+	}
+	if err != nil {
+		redirectPath := "/patients?toast=Failed to load patient&level=error"
+		if s.NotHTMX(c) {
+			return s.Redirect(c, redirectPath)
+		}
+
+		c.Set("HX-Location", redirectPath)
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	if !s.IsHTMX(c) {
 		return s.Redirect(c, "/patients/"+patient.ID)
 	}
 
@@ -253,7 +319,10 @@ func (s *service) HandlePatientSearch(c fiber.Ctx) error {
 		dbquery.Order("created_at desc")
 	}
 
-	dbquery.Limit(QUERY_LIMIT).Association("Patients").Find(&patients)
+	err := dbquery.Limit(QUERY_LIMIT).Association("Patients").Find(&patients)
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
 
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
