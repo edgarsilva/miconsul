@@ -87,6 +87,11 @@ func (s service) SearchPatientsByUser(ctx context.Context, cu model.User, query 
 }
 
 func (s service) CreatePatient(ctx context.Context, patient *model.Patient) error {
+	err := normalizePatientWriteInput(patient)
+	if err != nil {
+		return err
+	}
+
 	return gorm.G[model.Patient](s.DB.GormDB()).Create(ctx, patient)
 }
 
@@ -94,6 +99,10 @@ func (s service) UpdatePatientByID(ctx context.Context, userID, patientID string
 	patientID = strings.TrimSpace(patientID)
 	if patientID == "" {
 		return ErrIDRequired
+	}
+	err := normalizePatientWriteInput(&patient)
+	if err != nil {
+		return err
 	}
 
 	rowsAffected, err := gorm.G[model.Patient](s.DB.GormDB()).
@@ -188,4 +197,26 @@ func (s service) CreatePatientsInBatches(ctx context.Context, patients []model.P
 	}
 
 	return result.RowsAffected, nil
+}
+
+func normalizePatientWriteInput(patient *model.Patient) error {
+	if patient == nil {
+		return errors.New("patient is required")
+	}
+
+	patient.Name = strings.TrimSpace(patient.Name)
+	patient.Email = strings.ToLower(strings.TrimSpace(patient.Email))
+	patient.Phone = strings.TrimSpace(patient.Phone)
+
+	if len(patient.Name) > 120 {
+		return errors.New("name exceeds max length")
+	}
+	if len(patient.Email) > 254 {
+		return errors.New("email exceeds max length")
+	}
+	if len(patient.Phone) > 40 {
+		return errors.New("phone exceeds max length")
+	}
+
+	return nil
 }
