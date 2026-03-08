@@ -11,8 +11,8 @@ const (
 	EnvironmentProduction  Environment = "production"
 )
 
-func IsValidEnvironment(environment Environment) bool {
-	switch environment {
+func (e Environment) IsValid() bool {
+	switch e {
 	case EnvironmentDevelopment, EnvironmentTest, EnvironmentStaging, EnvironmentProduction:
 		return true
 	default:
@@ -20,45 +20,25 @@ func IsValidEnvironment(environment Environment) bool {
 	}
 }
 
-func (e Environment) IsValid() bool {
-	return IsValidEnvironment(e)
-}
-
-func IsDevelopment(environment Environment) bool {
-	return environment == EnvironmentDevelopment
-}
-
 func (e Environment) IsDevelopment() bool {
-	return IsDevelopment(e)
-}
-
-func IsTest(environment Environment) bool {
-	return environment == EnvironmentTest
+	return e == EnvironmentDevelopment
 }
 
 func (e Environment) IsTest() bool {
-	return IsTest(e)
-}
-
-func IsDevOrTest(environment Environment) bool {
-	return IsDevelopment(environment) || IsTest(environment)
+	return e == EnvironmentTest
 }
 
 func (e Environment) IsDevOrTest() bool {
-	return IsDevOrTest(e)
-}
-
-func IsProduction(environment Environment) bool {
-	return environment == EnvironmentProduction
+	return e.IsDevelopment() || e.IsTest()
 }
 
 func (e Environment) IsProduction() bool {
-	return IsProduction(e)
+	return e == EnvironmentProduction
 }
 
 func (e *Environment) UnmarshalText(text []byte) error {
 	value := Environment(string(text))
-	if !IsValidEnvironment(value) {
+	if !value.IsValid() {
 		return fmt.Errorf("invalid environment %q", value)
 	}
 
