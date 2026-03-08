@@ -196,8 +196,8 @@ func setupObservability(s *Server) {
 
 func setupStaticFiles(s *Server) {
 	app := s.App
-	app.Use("/public", static.New("./public", staticConfig(s.Env.Environment)))
-	app.Use("/.well-known", static.New("./public/.well-known", staticConfig(s.Env.Environment)))
+	app.Use("/public", static.New("./public", staticConfig(s.Env)))
+	app.Use("/.well-known", static.New("./public/.well-known", staticConfig(s.Env)))
 }
 
 func setupHealthcheckRoutes(s *Server) {

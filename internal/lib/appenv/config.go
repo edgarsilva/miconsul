@@ -71,7 +71,7 @@ func (e *Env) IsDevelopment() bool {
 		return false
 	}
 
-	return e.Environment.IsDevelopment()
+	return e.Environment == EnvironmentDevelopment
 }
 
 func (e *Env) IsTest() bool {
@@ -79,7 +79,7 @@ func (e *Env) IsTest() bool {
 		return false
 	}
 
-	return e.Environment.IsTest()
+	return e.Environment == EnvironmentTest
 }
 
 func (e *Env) IsDevOrTest() bool {
@@ -87,7 +87,7 @@ func (e *Env) IsDevOrTest() bool {
 		return false
 	}
 
-	return e.Environment.IsDevOrTest()
+	return e.Environment == EnvironmentDevelopment || e.Environment == EnvironmentTest
 }
 
 func (e *Env) IsProduction() bool {
@@ -95,7 +95,7 @@ func (e *Env) IsProduction() bool {
 		return false
 	}
 
-	return e.Environment.IsProduction()
+	return e.Environment == EnvironmentProduction
 }
 
 func (e *Env) IsValidEnvironment() bool {

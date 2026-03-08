@@ -41,27 +41,27 @@ func limiterConfig() limiter.Config {
 	}
 }
 
-func staticConfig(appEnv appenv.Environment) static.Config {
+func staticConfig(env *appenv.Env) static.Config {
 	return static.Config{
 		Compress:      true,
 		ByteRange:     true,
 		Browse:        false,
 		IndexNames:    []string{},
-		CacheDuration: staticCacheDuration(appEnv),
-		MaxAge:        staticMaxAge(appEnv),
+		CacheDuration: staticCacheDuration(env),
+		MaxAge:        staticMaxAge(env),
 	}
 }
 
-func staticCacheDuration(appEnv appenv.Environment) time.Duration {
-	if appEnv.IsDevelopment() {
+func staticCacheDuration(env *appenv.Env) time.Duration {
+	if env != nil && env.IsDevelopment() {
 		return 0
 	}
 
 	return 300 * time.Second
 }
 
-func staticMaxAge(appEnv appenv.Environment) int {
-	if appEnv.IsDevelopment() {
+func staticMaxAge(env *appenv.Env) int {
+	if env != nil && env.IsDevelopment() {
 		return 0
 	}
 
