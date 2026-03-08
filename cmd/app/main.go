@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"miconsul/internal/database"
+	"miconsul/internal/lib"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
@@ -42,6 +43,7 @@ func main() {
 
 	fmt.Println(" Loading environment variables...")
 	env := appenv.New()
+	lib.SetAppBaseURL(env.AppProtocol, env.AppDomain)
 
 	defer func() {
 		// This should be the last log on defer chain before exiting with code (0|1|etc)

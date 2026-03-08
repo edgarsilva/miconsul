@@ -53,7 +53,7 @@ func staticConfig(appEnv appenv.Environment) static.Config {
 }
 
 func staticCacheDuration(appEnv appenv.Environment) time.Duration {
-	if appenv.IsDevelopment(appEnv) {
+	if appEnv.IsDevelopment() {
 		return 0
 	}
 
@@ -61,7 +61,7 @@ func staticCacheDuration(appEnv appenv.Environment) time.Duration {
 }
 
 func staticMaxAge(appEnv appenv.Environment) int {
-	if appenv.IsDevelopment(appEnv) {
+	if appEnv.IsDevelopment() {
 		return 0
 	}
 

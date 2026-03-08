@@ -4,8 +4,6 @@ import (
 	"strings"
 	"time"
 
-	"miconsul/internal/lib/appenv"
-
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -13,7 +11,7 @@ import (
 func (s *Server) NewCookie(name, value string, validFor time.Duration) *fiber.Cookie {
 	secure := false
 	if s.Env != nil {
-		secure = appenv.IsProduction(s.Env.Environment) || strings.EqualFold(s.Env.AppProtocol, "https")
+		secure = s.Env.IsProduction() || strings.EqualFold(s.Env.AppProtocol, "https")
 	}
 
 	return &fiber.Cookie{

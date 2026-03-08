@@ -119,7 +119,7 @@ func validateRuntimeConfig(s *Server) error {
 		return errors.New("server is required")
 	}
 
-	if !appenv.IsValidEnvironment(s.Env.Environment) {
+	if !s.Env.IsValidEnvironment() {
 		return errors.New("APP_ENV is invalid")
 	}
 
@@ -138,7 +138,7 @@ func validateRuntimeConfig(s *Server) error {
 func setupSessionStore(s *Server) {
 	sessionPath := s.Env.SessionDBPath
 	storage := sqlite3.New(sessionConfig(sessionPath))
-	cookieSecure := appenv.IsProduction(s.Env.Environment) || strings.EqualFold(s.Env.AppProtocol, "https")
+	cookieSecure := s.Env.IsProduction() || strings.EqualFold(s.Env.AppProtocol, "https")
 	s.SessionStore = session.NewStore(session.Config{
 		Storage:      storage,
 		CookieSecure: cookieSecure,
@@ -183,7 +183,7 @@ func setupSecurityMiddleware(s *Server) {
 	app.Use(encryptcookie.New(encryptcookie.Config{Key: cookieSecret}))
 	app.Use(favicon.New(favicon.Config{File: "./public/favicon.ico", URL: "/favicon.ico"}))
 
-	rateLimiterEnabled := s.Env.RateLimiterEnabled && !appenv.IsDevelopment(s.Env.Environment)
+	rateLimiterEnabled := s.Env.RateLimiterEnabled && !s.Env.IsDevelopment()
 	if rateLimiterEnabled {
 		app.Use(limiter.New(limiterConfig()))
 	}

@@ -15,7 +15,7 @@ import (
 
 const patientsDir = "/patients"
 
-func SaveProfilePicToDisk(c fiber.Ctx, patient model.Patient) (string, error) {
+func SaveProfilePicToDisk(c fiber.Ctx, patient model.Patient, assetsDir string) (string, error) {
 	profilePic, err := c.FormFile("profilePic")
 	if err != nil {
 		return "", profilePicFormFileErr(err)
@@ -34,7 +34,7 @@ func SaveProfilePicToDisk(c fiber.Ctx, patient model.Patient) (string, error) {
 	}
 
 	filename := patient.ID + "_ppic_" + safeFilename
-	path, err := ProfilePicPath(filename)
+	path, err := ProfilePicPath(filename, assetsDir)
 	if err != nil {
 		return "", fmt.Errorf("failed to save profile pic without an ASSETS_DIR: %w", err)
 	}
@@ -48,22 +48,19 @@ func SaveProfilePicToDisk(c fiber.Ctx, patient model.Patient) (string, error) {
 	return imgsrc, nil
 }
 
-func ProfilePicPath(filename string) (string, error) {
+func ProfilePicPath(filename, assetsDir string) (string, error) {
 	if !isSafeFilename(filename) {
 		return "", ErrInvalidFilename
 	}
 
-	assetsDir := os.Getenv("ASSETS_DIR")
+	assetsDir = strings.TrimSpace(assetsDir)
 	if assetsDir == "" {
 		return "", errors.New("failed to find assets directory")
 	}
 
 	path := filepath.Join(assetsDir, patientsDir)
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		err := os.Mkdir(path, os.ModeDir|0755)
-		if err != nil {
-			return "", errors.New("failed to create assets/patients dir")
-		}
+	if err := os.MkdirAll(path, 0o755); err != nil {
+		return "", errors.New("failed to create assets/patients dir")
 	}
 
 	return filepath.Join(path, filename), nil

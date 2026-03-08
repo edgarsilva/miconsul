@@ -20,20 +20,40 @@ func IsValidEnvironment(environment Environment) bool {
 	}
 }
 
+func (e Environment) IsValid() bool {
+	return IsValidEnvironment(e)
+}
+
 func IsDevelopment(environment Environment) bool {
 	return environment == EnvironmentDevelopment
+}
+
+func (e Environment) IsDevelopment() bool {
+	return IsDevelopment(e)
 }
 
 func IsTest(environment Environment) bool {
 	return environment == EnvironmentTest
 }
 
+func (e Environment) IsTest() bool {
+	return IsTest(e)
+}
+
 func IsDevOrTest(environment Environment) bool {
 	return IsDevelopment(environment) || IsTest(environment)
 }
 
+func (e Environment) IsDevOrTest() bool {
+	return IsDevOrTest(e)
+}
+
 func IsProduction(environment Environment) bool {
 	return environment == EnvironmentProduction
+}
+
+func (e Environment) IsProduction() bool {
+	return IsProduction(e)
 }
 
 func (e *Environment) UnmarshalText(text []byte) error {

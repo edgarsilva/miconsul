@@ -127,7 +127,7 @@ func applyMigrations(database *Database, env *appenv.Env, silent bool) error {
 
 	if silent {
 		goose.SetLogger(NoopLogger{})
-	} else if env != nil && (appenv.IsDevelopment(env.Environment) || appenv.IsProduction(env.Environment)) {
+	} else if env != nil && (env.IsDevelopment() || env.IsProduction()) {
 		logger, _ := zap.NewProduction()
 		sugar := logger.Sugar()
 		goose.SetLogger(ZapLogger{l: sugar})
@@ -152,7 +152,7 @@ func applyMigrations(database *Database, env *appenv.Env, silent bool) error {
 func NewLogger(env *appenv.Env, obsLogger obslogging.Logger) logger.Interface {
 	loglevel := logger.Warn
 	hideParamValues := true
-	if env != nil && appenv.IsDevelopment(env.Environment) {
+	if env != nil && env.IsDevelopment() {
 		loglevel = logger.Info
 		hideParamValues = false
 	}

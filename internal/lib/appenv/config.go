@@ -65,3 +65,43 @@ func New() *Env {
 
 	return env
 }
+
+func (e *Env) IsDevelopment() bool {
+	if e == nil {
+		return false
+	}
+
+	return e.Environment.IsDevelopment()
+}
+
+func (e *Env) IsTest() bool {
+	if e == nil {
+		return false
+	}
+
+	return e.Environment.IsTest()
+}
+
+func (e *Env) IsDevOrTest() bool {
+	if e == nil {
+		return false
+	}
+
+	return e.Environment.IsDevOrTest()
+}
+
+func (e *Env) IsProduction() bool {
+	if e == nil {
+		return false
+	}
+
+	return e.Environment.IsProduction()
+}
+
+func (e *Env) IsValidEnvironment() bool {
+	if e == nil {
+		return false
+	}
+
+	return e.Environment.IsValid()
+}

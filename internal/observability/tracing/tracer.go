@@ -29,7 +29,7 @@ func NewTracer(ctx context.Context, name string, env *appenv.Env) (tracer trace.
 		return tracer, shutdownFn, err
 	}
 
-	if appenv.IsDevelopment(env.Environment) {
+	if env.IsDevelopment() {
 		tracer, shutdownFn, err = NewDevTracer(ctx, name)
 		return tracer, shutdownFn, err
 	}

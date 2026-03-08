@@ -3,12 +3,29 @@ package lib
 
 import (
 	net "net/url"
-	"os"
+	"strings"
+	"sync"
 )
 
+var (
+	appURLMu       sync.RWMutex
+	appURLProtocol string
+	appURLDomain   string
+)
+
+func SetAppBaseURL(protocol, domain string) {
+	appURLMu.Lock()
+	defer appURLMu.Unlock()
+
+	appURLProtocol = strings.TrimSpace(protocol)
+	appURLDomain = strings.TrimSpace(domain)
+}
+
 func AppURL(paths ...string) string {
-	scheme := os.Getenv("APP_PROTOCOL")
-	domain := os.Getenv("APP_DOMAIN")
+	appURLMu.RLock()
+	scheme := appURLProtocol
+	domain := appURLDomain
+	appURLMu.RUnlock()
 
 	u := net.URL{
 		Scheme: scheme,

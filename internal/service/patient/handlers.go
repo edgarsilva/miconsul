@@ -104,7 +104,7 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusUnprocessableEntity)
 	}
 
-	path, picErr := SaveProfilePicToDisk(c, patient)
+	path, picErr := SaveProfilePicToDisk(c, patient, s.Env.AssetsDir)
 	if picErr != nil {
 		if !errors.Is(picErr, ErrProfilePicNotProvided) {
 			log.Error(picErr)
@@ -168,7 +168,7 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 
 	patient.Sanitize()
 
-	path, picErr := SaveProfilePicToDisk(c, patient)
+	path, picErr := SaveProfilePicToDisk(c, patient, s.Env.AssetsDir)
 	if picErr != nil {
 		if !errors.Is(picErr, ErrProfilePicNotProvided) {
 			log.Error(picErr)
@@ -383,7 +383,7 @@ func (s *service) HandlePatientProfilePicImgSrc(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	path, err := ProfilePicPath(filename)
+	path, err := ProfilePicPath(filename, s.Env.AssetsDir)
 	if err != nil {
 		return c.SendStatus(fiber.StatusNotFound)
 	}
