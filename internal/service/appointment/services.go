@@ -95,25 +95,81 @@ func (s *service) TakeAppointmentByID(ctx context.Context, userID, appointmentID
 	return appointment, nil
 }
 
-func (s *service) UpdateAppointmentByIDAndUserID(ctx context.Context, userID, appointmentID string, updates model.Appointment) error {
-	if updates.Status != "" && !updates.Status.IsValid() {
+func (s *service) UpdateAppointmentByID(ctx context.Context, userID, appointmentID string, updates appointmentPatchUpdates) error {
+	if strings.TrimSpace(appointmentID) == "" {
+		return ErrIDRequired
+	}
+
+	columns := []string{
+		"BookedAt",
+		"BookedYear",
+		"BookedMonth",
+		"BookedDay",
+		"BookedHour",
+		"BookedMinute",
+		"Price",
+		"ClinicID",
+		"PatientID",
+		"Duration",
+	}
+
+	return s.updateAppointmentColumnsByID(ctx, userID, appointmentID, columns, &updates)
+}
+
+func (s *service) CompleteAppointmentByID(ctx context.Context, userID, appointmentID string, updates appointmentCompleteUpdates) error {
+	if strings.TrimSpace(appointmentID) == "" {
+		return ErrIDRequired
+	}
+
+	if !updates.Status.IsValid() {
 		return errors.New("invalid appointment status")
 	}
 
-	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
-		Where("id = ? AND user_id = ?", appointmentID, userID).
-		Updates(ctx, updates)
-	if err != nil {
-		return err
+	columns := []string{"Status", "Observations", "Conclusions", "Summary", "Notes"}
+
+	return s.updateAppointmentColumnsByID(ctx, userID, appointmentID, columns, &updates)
+}
+
+func (s *service) CancelAppointmentByID(ctx context.Context, userID, appointmentID string, updates appointmentCancelUpdates) error {
+	if strings.TrimSpace(appointmentID) == "" {
+		return ErrIDRequired
 	}
-	if rowsAffected != 1 {
+
+	if !updates.Status.IsValid() {
+		return errors.New("invalid appointment status")
+	}
+
+	columns := []string{"Status", "CanceledAt"}
+
+	return s.updateAppointmentColumnsByID(ctx, userID, appointmentID, columns, &updates)
+}
+
+func (s *service) updateAppointmentColumnsByID(ctx context.Context, userID, appointmentID string, columns []string, updates any) error {
+	if len(columns) == 0 {
+		return errors.New("columns are required")
+	}
+
+	result := s.DB.WithContext(ctx).
+		Model(&model.Appointment{}).
+		Where("id = ? AND user_id = ?", appointmentID, userID).
+		Select(columns).
+		Omit("UserID", "Clinic", "Patient", "User", "FeedEvents", "Alerts").
+		Updates(updates)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected != 1 {
 		return gorm.ErrRecordNotFound
 	}
 
 	return nil
 }
 
-func (s *service) DeleteAppointmentByIDAndUserID(ctx context.Context, userID, appointmentID string) error {
+func (s *service) DeleteAppointmentByID(ctx context.Context, userID, appointmentID string) error {
+	if strings.TrimSpace(appointmentID) == "" {
+		return ErrIDRequired
+	}
+
 	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", appointmentID, userID).
 		Delete(ctx)

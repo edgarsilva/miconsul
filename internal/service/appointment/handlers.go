@@ -156,8 +156,7 @@ func (s *service) HandleComplete(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
 	}
 
-	appointment := model.Appointment{
-		UserID:       cu.ID,
+	appointment := appointmentCompleteUpdates{
 		Status:       model.ApntStatusDone,
 		Observations: input.Observations,
 		Conclusions:  input.Conclusions,
@@ -165,7 +164,7 @@ func (s *service) HandleComplete(c fiber.Ctx) error {
 		Notes:        input.Notes,
 	}
 
-	err = s.UpdateAppointmentByIDAndUserID(c.Context(), cu.ID, appointmentID, appointment)
+	err = s.CompleteAppointmentByID(c.Context(), cu.ID, appointmentID, appointment)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
@@ -268,8 +267,7 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
 	}
 
-	appointment := model.Appointment{
-		UserID:       cu.ID,
+	appointment := appointmentPatchUpdates{
 		BookedAt:     bookedAt,
 		BookedYear:   bookedAt.Year(),
 		BookedMonth:  int(bookedAt.Month()),
@@ -282,7 +280,7 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 		Duration:     input.Duration,
 	}
 
-	err = s.UpdateAppointmentByIDAndUserID(c.Context(), cu.ID, appointmentID, appointment)
+	err = s.UpdateAppointmentByID(c.Context(), cu.ID, appointmentID, appointment)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
@@ -311,12 +309,11 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
 	}
 
-	appointment := model.Appointment{
-		UserID:     cu.ID,
+	appointment := appointmentCancelUpdates{
 		Status:     model.ApntStatusCanceled,
 		CanceledAt: time.Now(),
 	}
-	err := s.UpdateAppointmentByIDAndUserID(c.Context(), cu.ID, appointmentID, appointment)
+	err := s.CancelAppointmentByID(c.Context(), cu.ID, appointmentID, appointment)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
@@ -340,7 +337,7 @@ func (s *service) HandleDelete(c fiber.Ctx) error {
 		return s.Redirect(c, "/appointments?msg=can't delete without an id")
 	}
 
-	err := s.DeleteAppointmentByIDAndUserID(c.Context(), cu.ID, appointmentID)
+	err := s.DeleteAppointmentByID(c.Context(), cu.ID, appointmentID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.Redirect(c, "/appointments?msg=can't find that appointment")
 	}

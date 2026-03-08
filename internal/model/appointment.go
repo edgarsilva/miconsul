@@ -2,11 +2,12 @@ package model
 
 import (
 	"errors"
+	"strconv"
+	"time"
+
 	"miconsul/internal/lib"
 	"miconsul/internal/lib/libtime"
 	"miconsul/internal/lib/xid"
-	"strconv"
-	"time"
 
 	"gorm.io/gorm"
 )
@@ -90,6 +91,11 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 }
 
 func (a *Appointment) BeforeSave(tx *gorm.DB) error {
+	// Partial update we should ignore it, Gorm by default ignores Zero values
+	if a.Status == "" {
+		return nil
+	}
+
 	if !a.Status.IsValid() {
 		return errors.New("invalid appointment status")
 	}
