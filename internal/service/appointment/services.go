@@ -19,6 +19,11 @@ type service struct {
 
 var ErrIDRequired = errors.New("id is required")
 
+const (
+	defaultWorkerContextTimeout  = 10 * time.Second
+	defaultCronJobContextTimeout = 45 * time.Second
+)
+
 func New(s *server.Server) (*service, error) {
 	if s == nil {
 		return nil, errors.New("appointment service requires a non-nil server")
@@ -281,4 +286,12 @@ func (s *service) FindRecentPatientsByUserID(ctx context.Context, userID string,
 	}
 
 	return patients, nil
+}
+
+func (s *service) newWorkerContext() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), defaultWorkerContextTimeout)
+}
+
+func (s *service) newCronJobContext() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), defaultCronJobContextTimeout)
 }

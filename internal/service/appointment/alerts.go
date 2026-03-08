@@ -1,7 +1,6 @@
 package appointment
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -13,6 +12,9 @@ import (
 
 func (s *service) SendBookedAlert(appointment model.Appointment) error {
 	err := s.SendToWorker(func() {
+		ctx, cancel := s.newWorkerContext()
+		defer cancel()
+
 		err := mailer.SendAppointmentBookedEmail(appointment)
 		if err != nil {
 			alert := model.Alert{
@@ -21,7 +23,7 @@ func (s *service) SendBookedAlert(appointment model.Appointment) error {
 				Status: model.AlertFailed,
 				To:     appointment.Patient.Email,
 			}
-			appendErr := s.DB.Model(&appointment).Association("Alerts").Append(&alert)
+			appendErr := s.DB.WithContext(ctx).Model(&appointment).Association("Alerts").Append(&alert)
 			if appendErr != nil {
 				fmt.Println("failed to append failed booked alert:", appendErr.Error())
 			}
@@ -30,7 +32,7 @@ func (s *service) SendBookedAlert(appointment model.Appointment) error {
 
 		_, updateErr := gorm.G[model.Appointment](s.DB.GormDB()).
 			Where("id = ?", appointment.ID).
-			Update(context.Background(), "BookedAlertSentAt", time.Now())
+			Update(ctx, "BookedAlertSentAt", time.Now())
 		if updateErr != nil {
 			fmt.Println("failed to update BookedAlertSentAt:", updateErr.Error())
 		}
@@ -41,7 +43,7 @@ func (s *service) SendBookedAlert(appointment model.Appointment) error {
 			Status: model.AlertSent,
 			To:     appointment.Patient.Email,
 		}
-		appendErr := s.DB.Model(&appointment).Association("Alerts").Append(&alert)
+		appendErr := s.DB.WithContext(ctx).Model(&appointment).Association("Alerts").Append(&alert)
 		if appendErr != nil {
 			fmt.Println("failed to append sent booked alert:", appendErr.Error())
 		}
@@ -52,6 +54,9 @@ func (s *service) SendBookedAlert(appointment model.Appointment) error {
 
 func (s *service) SendReminderAlert(appointment model.Appointment) error {
 	err := s.SendToWorker(func() {
+		ctx, cancel := s.newWorkerContext()
+		defer cancel()
+
 		err := mailer.SendAppointmentReminderEmail(appointment)
 		if err != nil {
 			alert := model.Alert{
@@ -60,7 +65,7 @@ func (s *service) SendReminderAlert(appointment model.Appointment) error {
 				Status: model.AlertFailed,
 				To:     appointment.Patient.Email,
 			}
-			appendErr := s.DB.Model(&appointment).Association("Alerts").Append(&alert)
+			appendErr := s.DB.WithContext(ctx).Model(&appointment).Association("Alerts").Append(&alert)
 			if appendErr != nil {
 				fmt.Println("failed to append failed reminder alert:", appendErr.Error())
 			}
@@ -69,7 +74,7 @@ func (s *service) SendReminderAlert(appointment model.Appointment) error {
 
 		_, updateErr := gorm.G[model.Appointment](s.DB.GormDB()).
 			Where("id = ?", appointment.ID).
-			Update(context.Background(), "ReminderAlertSentAt", time.Now())
+			Update(ctx, "ReminderAlertSentAt", time.Now())
 		if updateErr != nil {
 			fmt.Println("failed to update ReminderAlertSentAt:", updateErr.Error())
 		}
@@ -80,7 +85,7 @@ func (s *service) SendReminderAlert(appointment model.Appointment) error {
 			Status: model.AlertSent,
 			To:     appointment.Patient.Email,
 		}
-		appendErr := s.DB.Model(&appointment).Association("Alerts").Append(&alert)
+		appendErr := s.DB.WithContext(ctx).Model(&appointment).Association("Alerts").Append(&alert)
 		if appendErr != nil {
 			fmt.Println("failed to append sent reminder alert:", appendErr.Error())
 		}
