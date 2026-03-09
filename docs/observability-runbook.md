@@ -1,7 +1,7 @@
 # Observability Runbook
 
 This runbook captures the baseline commands and queries used to validate the
-local LGTM setup (Loki, Tempo, Prometheus, Grafana).
+local LGTM setup (Loki, Grafana, Tempo, Prometheus(Mimir too if needed)).
 
 ## Prerequisites
 
@@ -23,6 +23,28 @@ Run an authenticated benchmark load test:
 
 ```bash
 make load/test
+```
+
+## Quick Query Pack
+
+After 1-2 minutes of smoke traffic, these three queries should return data.
+
+- Metrics (Prometheus):
+
+```promql
+sum(rate(http_requests_total{job="miconsul"}[5m]))
+```
+
+- Logs (Loki):
+
+```logql
+{service_name="miconsul"} | event=`http_request`
+```
+
+- Traces (Tempo):
+
+```traceql
+{ resource.service.name = "miconsul" }
 ```
 
 ## Metrics Queries (Prometheus)
@@ -62,7 +84,7 @@ sum by (route) (increase(http_requests_total{job="miconsul"}[5m]))
 - Overall p95 latency (ms):
 
 ```promql
-1000 * histogram_quantile(
+histogram_quantile(
   0.95,
   sum by (le) (rate(http_request_duration_seconds_bucket{job="miconsul"}[5m]))
 )
@@ -71,7 +93,7 @@ sum by (route) (increase(http_requests_total{job="miconsul"}[5m]))
 - Per-route p95 latency (ms):
 
 ```promql
-1000 * histogram_quantile(
+histogram_quantile(
   0.95,
   sum by (le, route) (rate(http_request_duration_seconds_bucket{job="miconsul"}[5m]))
 )
@@ -131,4 +153,4 @@ Use `trace_id` from logs to jump into the trace in Grafana Explore.
 - `60 * rate(...)` -> requests/minute (`req/min`)
 - `increase(counter[5m])` -> total count during the 5-minute window
 - `http_request_duration_seconds*` -> seconds
-- `1000 * ...duration_seconds...` -> milliseconds
+- `1000 * ...duration_seconds...` -> milliseconds ([!NOTE] No longer needed grafana shows them correctly)
