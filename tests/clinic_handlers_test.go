@@ -147,4 +147,40 @@ func TestClinicHandlers(t *testing.T) {
 			t.Fatalf("expected search results to include clinic")
 		}
 	})
+
+	t.Run("cross-user update and delete are scoped", func(t *testing.T) {
+		owner := h.createUser(model.UserRoleUser)
+		ownerClinic := h.createClinic(owner.ID, "Owner Clinic")
+
+		resp, _ := h.doRequest(requestOptions{
+			method:    http.MethodPost,
+			path:      "/clinics/" + ownerClinic.ID + "/patch",
+			authToken: token,
+			htmx:      true,
+			body: url.Values{
+				"name": {"Hijacked Clinic"},
+			},
+		})
+		if resp.StatusCode != http.StatusNotFound {
+			t.Fatalf("expected 404 for cross-user clinic update, got %d", resp.StatusCode)
+		}
+
+		resp, _ = h.doRequest(requestOptions{
+			method:    http.MethodDelete,
+			path:      "/clinics/" + ownerClinic.ID,
+			authToken: token,
+			htmx:      true,
+		})
+		if resp.StatusCode != http.StatusNotFound {
+			t.Fatalf("expected 404 for cross-user clinic delete, got %d", resp.StatusCode)
+		}
+
+		unchanged, err := gorm.G[model.Clinic](h.db.GormDB()).Where("id = ?", ownerClinic.ID).Take(t.Context())
+		if err != nil {
+			t.Fatalf("load owner clinic after cross-user attempts: %v", err)
+		}
+		if unchanged.Name != "Owner Clinic" {
+			t.Fatalf("expected owner clinic name unchanged, got %q", unchanged.Name)
+		}
+	})
 }

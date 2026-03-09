@@ -164,4 +164,45 @@ func TestAppointmentHandlers(t *testing.T) {
 			t.Fatalf("expected redirect for unknown appointment delete, got %d", resp.StatusCode)
 		}
 	})
+
+	t.Run("cross-user update and delete are scoped", func(t *testing.T) {
+		owner := h.createUser(model.UserRoleUser)
+		ownerPatient := h.createPatient(owner.ID, "Owner Patient")
+		ownerClinic := h.createClinic(owner.ID, "Owner Clinic")
+		ownerAppt := h.createAppointment(owner.ID, ownerPatient.ID, ownerClinic.ID)
+
+		resp, _ := h.doRequest(requestOptions{
+			method:    http.MethodPost,
+			path:      "/appointments/" + ownerAppt.ID + "/patch",
+			authToken: token,
+			htmx:      true,
+			body: url.Values{
+				"clinicId":  {ownerClinic.ID},
+				"patientId": {ownerPatient.ID},
+				"duration":  {"30"},
+				"bookedAt":  {time.Now().Add(3 * time.Hour).Format("2006-01-02T15:04")},
+			},
+		})
+		if resp.StatusCode != http.StatusNotFound {
+			t.Fatalf("expected 404 for cross-user appointment update, got %d", resp.StatusCode)
+		}
+
+		resp, _ = h.doRequest(requestOptions{
+			method:    http.MethodDelete,
+			path:      "/appointments/" + ownerAppt.ID,
+			authToken: token,
+			htmx:      true,
+		})
+		if resp.StatusCode != http.StatusFound && resp.StatusCode != http.StatusSeeOther {
+			t.Fatalf("expected redirect for cross-user appointment delete, got %d", resp.StatusCode)
+		}
+
+		unchanged, err := gorm.G[model.Appointment](h.db.GormDB()).Where("id = ?", ownerAppt.ID).Take(t.Context())
+		if err != nil {
+			t.Fatalf("load owner appointment after cross-user attempts: %v", err)
+		}
+		if unchanged.UserID != owner.ID {
+			t.Fatalf("expected appointment ownership unchanged, got %q", unchanged.UserID)
+		}
+	})
 }
