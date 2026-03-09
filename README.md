@@ -1,5 +1,7 @@
 # Miconsul: patient appointment planner and notification center
 
+[![Tests](https://github.com/edgarsilva/miconsul/actions/workflows/tests.yml/badge.svg)](https://github.com/edgarsilva/miconsul/actions/workflows/tests.yml)
+
 Based on my GoScaffold project which allows you to quickly set-up Ready to
 deploy Web application projects using Go, SQLite with GORM, Templ with HTMX
 and DaisyUI/TailwindCSS:
@@ -152,6 +154,11 @@ MICON_TEST_SQLITE_INMEMORY=1 go test ./...
 For test strategy and harness details, see:
 
 - `docs/testing.md`
+
+CI quality gate (required on pull requests):
+
+- `go test ./...`
+- `go test -race ./...`
 
 Quick commands:
 
