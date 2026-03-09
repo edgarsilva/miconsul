@@ -51,6 +51,24 @@ The CI gate runs:
 
 This keeps route regressions and concurrency issues visible before merge.
 
+## Coverage Baseline
+
+Current global baseline (2026-03-09):
+
+- `total: 0.2%` (`go tool cover -func=coverage/c.out`)
+
+Generate and review coverage locally:
+
+```bash
+go test ./... -coverprofile=coverage/c.out
+go tool cover -func=coverage/c.out
+```
+
+Notes:
+
+- This baseline is informational for now; no coverage threshold gate is enforced yet.
+- Next step is to introduce phased coverage gates in CI (global first, then package-level targets).
+
 ## Testing Maintenance Loop
 
 - Any bugfix touching handlers/routes must add or update at least one regression test in the corresponding `tests/<service>_handlers_test.go` file.

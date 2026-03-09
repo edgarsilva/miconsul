@@ -177,6 +177,9 @@ make test/v
 # integration tests package
 make test/integration
 
+# generate browser-friendly HTML coverage report
+make test/coverage/html
+
 # full suite using in-memory sqlite harness mode
 MICON_TEST_SQLITE_INMEMORY=1 make test
 ```

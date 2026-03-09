@@ -138,7 +138,18 @@ test/integration: ## Run integration tests
 	go test -v ./tests/... -coverprofile=coverage/int_c.out
 
 test/coverage: ## Coverage
-	go test ./... -coverprofile=coverage/c.out && go tool cover -func=coverage/c.out
+	mkdir -p coverage
+	rm -f coverage/c.out
+	go test ./... -covermode=atomic -coverprofile=coverage/c.out
+	go tool cover -func=coverage/c.out > coverage/summary.txt
+	@tail -n 1 coverage/summary.txt
+
+test/coverage/html: test/coverage ## Generate HTML coverage report
+	go tool cover -html=coverage/c.out -o coverage/c.html
+	@echo "Coverage HTML generated at coverage/c.html"
+	@xdg-open coverage/c.html >/dev/null 2>&1 || \
+		python3 -m webbrowser coverage/c.html >/dev/null 2>&1 || \
+		echo "Open coverage/c.html manually in your browser"
 
 ##@ Test Coverage
 cover:
@@ -260,7 +271,7 @@ load/test: ## Run authenticated oha load test (30s, 30 concurrency)
 	ai/templ-sync \
 	build start run air/watch dev \
 	test test/unit test/integration clean \
-	test/race test/v test/unit/v test/unit/c test/coverage \
+	test/race test/v test/unit/v test/unit/c test/coverage test/coverage/html \
 	db/create db/delete db/setup db/reset db/dump_schema db/seed \
 	migrations/apply migrate migrations/create migrations/status migrations/rollback migrations/redo \
 	docker/up docker/dev docker/detached docker/down docker/logs docker/app-logs docker/lgtm-logs docker/build \
