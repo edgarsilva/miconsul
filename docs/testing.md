@@ -12,14 +12,13 @@ route behavior confidence, and safe iterative refactors.
 ## Current Baseline
 
 - Reusable integration harness: `tests/helpers_test.go`
-- Route regression coverage: `tests/regression_routes_test.go`
+- Cross-service regression coverage: `tests/regression_routes_test.go`
+- Service-focused handler suites in `tests/*_handlers_test.go`
 
 Covered regressions currently include:
 
-- `/profile` POST update persistence
-- patch/delete routes for appointment, patient, and clinic
-- `/api/users` auth gating behavior
 - `/appointments/search/clinics` route behavior
+- cross-service patch/delete flows for patient and appointment
 
 ## Harness Design
 
@@ -51,6 +50,43 @@ The CI gate runs:
 - `go test -race ./...`
 
 This keeps route regressions and concurrency issues visible before merge.
+
+## Testing Maintenance Loop
+
+- Any bugfix touching handlers/routes must add or update at least one regression test in the corresponding `tests/<service>_handlers_test.go` file.
+- If a handler/route change ships without test updates, the PR description must include a short rationale.
+
+## Handler Suite Migration Checklist
+
+Use this checklist when replacing broad route tests with service-focused handler
+test suites.
+
+- Create `tests/<service>_handlers_test.go` and group route behavior by
+  handler intent.
+- Move service-specific assertions out of
+  `tests/regression_routes_test.go` once equivalent coverage exists.
+- Keep cross-service/regression scenarios in
+  `tests/regression_routes_test.go`.
+- Assert both response behavior (status, redirects, HTMX headers) and
+  persistence side effects where relevant.
+- Include auth/role-gating cases for protected routes.
+- Run verification before merging:
+  - `go test ./tests -run Test<Service>Handlers -count=1`
+  - `go test ./...`
+  - `go test -race ./...`
+
+### Migration Status
+
+- Done: `appointment`, `patient`, `clinic`, `user`, `theme`, `dashboard`,
+  `admin`
+- Pending: `auth`
+
+### Definition of Done
+
+- No duplicated service-specific assertions remain in
+  `tests/regression_routes_test.go`.
+- Handler suite naming/style is consistent (`tests/<service>_handlers_test.go`).
+- CI gate is green (`go test ./...` and `go test -race ./...`).
 
 ## Next Expansion
 

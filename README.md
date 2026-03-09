@@ -155,6 +155,8 @@ For test strategy and harness details, see:
 
 - `docs/testing.md`
 
+Maintenance rule: handler/route bugfixes should include a regression test update in the matching `tests/<service>_handlers_test.go` suite.
+
 CI quality gate (required on pull requests):
 
 - `go test ./...`
