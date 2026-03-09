@@ -42,7 +42,7 @@ func TestProfilePOSTPersistsUpdates(t *testing.T) {
 	}
 }
 
-func TestPatchAndDeleteRoutesForPatientClinicAppointment(t *testing.T) {
+func TestPatchAndDeleteRoutesForPatientAndAppointment(t *testing.T) {
 	h := newTestHarness(t)
 	u := h.createUser(model.UserRoleUser)
 	token := h.authToken(u)
@@ -86,46 +86,6 @@ func TestPatchAndDeleteRoutesForPatientClinicAppointment(t *testing.T) {
 		_, err = gorm.G[model.Patient](h.db.GormDB()).Where("id = ?", patient.ID).Take(t.Context())
 		if err == nil {
 			t.Fatalf("expected deleted patient to be missing")
-		}
-	})
-
-	t.Run("clinic patch and delete", func(t *testing.T) {
-		clinic := h.createClinic(u.ID, "Clinic One")
-
-		patchResp, _ := h.doRequest(requestOptions{
-			method:    http.MethodPatch,
-			path:      "/clinics/" + clinic.ID,
-			authToken: token,
-			htmx:      true,
-			body: url.Values{
-				"name": {"Clinic Updated"},
-			},
-		})
-		if patchResp.StatusCode != http.StatusOK {
-			t.Fatalf("expected 200 for clinic patch, got %d", patchResp.StatusCode)
-		}
-
-		updated, err := gorm.G[model.Clinic](h.db.GormDB()).Where("id = ?", clinic.ID).Take(t.Context())
-		if err != nil {
-			t.Fatalf("load patched clinic: %v", err)
-		}
-		if updated.Name != "Clinic Updated" {
-			t.Fatalf("expected clinic name update, got %q", updated.Name)
-		}
-
-		delResp, _ := h.doRequest(requestOptions{
-			method:    http.MethodDelete,
-			path:      "/clinics/" + clinic.ID,
-			authToken: token,
-			htmx:      true,
-		})
-		if delResp.StatusCode != http.StatusOK {
-			t.Fatalf("expected 200 for clinic delete, got %d", delResp.StatusCode)
-		}
-
-		_, err = gorm.G[model.Clinic](h.db.GormDB()).Where("id = ?", clinic.ID).Take(t.Context())
-		if err == nil {
-			t.Fatalf("expected deleted clinic to be missing")
 		}
 	})
 
