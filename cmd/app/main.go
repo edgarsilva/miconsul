@@ -99,7 +99,7 @@ func main() {
 	}()
 
 	fmt.Println(" Connecting to database...")
-	db, err := database.New(env, dbLogger)
+	db, err := database.New(env, dbLogger, nil)
 	if err != nil {
 		log.Printf("failed to initialize database: %v", err)
 		exitCode = 1
