@@ -91,7 +91,7 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 }
 
 func (a *Appointment) BeforeSave(tx *gorm.DB) error {
-	// Partial update we should ignore it, Gorm by default ignores Zero values
+	// Allow partial updates where status is intentionally omitted.
 	if a.Status == "" {
 		return nil
 	}
