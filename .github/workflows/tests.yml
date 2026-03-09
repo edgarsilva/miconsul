@@ -89,7 +89,13 @@ jobs:
           mkdir -p coverage
           go test ./... -covermode=atomic -coverprofile=coverage/c.out
           go tool cover -func=coverage/c.out > coverage/summary.txt
-          tail -n 1 coverage/summary.txt
+          total_line=$(tail -n 1 coverage/summary.txt)
+          echo "$total_line"
+          {
+            echo "## Coverage (Phase 1: report-only)"
+            echo ""
+            echo "\`$total_line\`"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
