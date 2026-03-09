@@ -47,3 +47,8 @@ This file provides repo-specific guidance for coding assistants working on this 
 
 - Never create a git commit unless the user explicitly asks in that moment.
 - After code changes, always pause and ask whether to commit.
+
+## Branch Workflow
+
+- Start every feature/fix/refactor on a new branch created from a freshly synced `main`.
+- Avoid continuing development directly on `main`; keep `main` aligned with `origin/main` between workstreams.
