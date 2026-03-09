@@ -7,8 +7,10 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"miconsul/goose/migrations"
@@ -23,27 +25,31 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-const PragmaOpts = "?mode=rwc" +
-	"&_journal_mode=WAL" +
-	"&_synchronous=NORMAL" +
-	"&_busy_timeout=10000" +
-	"&_cache_size=-16384" +
-	"&_temp_store=MEMORY" +
-	"&_wal_autocheckpoint=1000" +
-	"&_journal_size_limit=67108864" +
-	"&_mmap_size=268435456"
+var defaultSQLiteParams = map[string]string{
+	"mode":                "rwc",
+	"_journal_mode":       "WAL",
+	"_synchronous":        "NORMAL",
+	"_busy_timeout":       "10000",
+	"_cache_size":         "-16384",
+	"_temp_store":         "MEMORY",
+	"_wal_autocheckpoint": "1000",
+	"_journal_size_limit": "67108864",
+	"_mmap_size":          "268435456",
+}
 
 type Database struct {
 	*gorm.DB
 }
 
-func New(env *appenv.Env, obsLogger obslogging.Logger) (*Database, error) {
+type SQLiteOptions map[string]string
+
+func New(env *appenv.Env, obsLogger obslogging.Logger, opts SQLiteOptions) (*Database, error) {
 	if env == nil {
 		return nil, fmt.Errorf("database: environment config is nil")
 	}
 
 	dbLogger := NewLogger(env, obsLogger)
-	dsn := env.DBPath + PragmaOpts
+	dsn := buildSQLiteDSN(env.DBPath, opts)
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
 		Logger:      dbLogger,
 		PrepareStmt: true,
@@ -64,6 +70,44 @@ func New(env *appenv.Env, obsLogger obslogging.Logger) (*Database, error) {
 	return &Database{
 		DB: db,
 	}, nil
+}
+
+func buildSQLiteDSN(dbPath string, opts SQLiteOptions) string {
+	dsn := strings.TrimSpace(dbPath)
+	if dsn == "" {
+		dsn = "database/app.sqlite"
+	}
+
+	base, rawQuery, _ := strings.Cut(dsn, "?")
+	queryParams, err := url.ParseQuery(rawQuery)
+	if err != nil {
+		queryParams = url.Values{}
+	}
+
+	for key, value := range defaultSQLiteParams {
+		if strings.TrimSpace(queryParams.Get(key)) == "" {
+			queryParams.Set(key, value)
+		}
+	}
+
+	for key, value := range opts {
+		key = strings.TrimSpace(key)
+		if key == "" {
+			continue
+		}
+		value = strings.TrimSpace(value)
+		if value == "" {
+			continue
+		}
+		queryParams.Set(key, value)
+	}
+
+	encoded := queryParams.Encode()
+	if encoded == "" {
+		return base
+	}
+
+	return base + "?" + encoded
 }
 
 func (d *Database) GormDB() *gorm.DB {

@@ -83,7 +83,9 @@ func isMissingProfilePicErr(err error) bool {
 	}
 
 	errMsg := strings.ToLower(strings.TrimSpace(err.Error()))
-	return strings.Contains(errMsg, "no uploaded file") || strings.Contains(errMsg, "no such file")
+	return strings.Contains(errMsg, "no uploaded file") ||
+		strings.Contains(errMsg, "no such file") ||
+		strings.Contains(errMsg, "not multipart/form-data")
 }
 
 func IsSafeProfilePicFilenameForPatient(patientID, filename string) bool {

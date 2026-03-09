@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -44,6 +45,19 @@ func newTestHarness(t *testing.T) *testHarness {
 	t.Helper()
 
 	tmpDir := t.TempDir()
+	useInMemoryDB := strings.EqualFold(strings.TrimSpace(os.Getenv("MICON_TEST_SQLITE_INMEMORY")), "1") ||
+		strings.EqualFold(strings.TrimSpace(os.Getenv("MICON_TEST_SQLITE_INMEMORY")), "true")
+
+	dbPath := filepath.Join(tmpDir, "app.db")
+	dbOpts := database.SQLiteOptions(nil)
+	if useInMemoryDB {
+		dbPath = fmt.Sprintf("file:miconsul_test_%d", time.Now().UnixNano())
+		dbOpts = database.SQLiteOptions{
+			"mode":  "memory",
+			"cache": "shared",
+		}
+	}
+
 	env := &appenv.Env{
 		Environment:        appenv.EnvironmentTest,
 		AppName:            "miconsul-test",
@@ -53,18 +67,29 @@ func newTestHarness(t *testing.T) *testHarness {
 		AppShutdownTimeout: 2 * time.Second,
 		CookieSecret:       strings.Repeat("a", 32),
 		JWTSecret:          strings.Repeat("b", 32),
-		DBPath:             filepath.Join(tmpDir, "app.db"),
+		DBPath:             dbPath,
 		SessionDBPath:      filepath.Join(tmpDir, "session.db"),
 		AssetsDir:          tmpDir,
 	}
 
-	db, err := database.New(env, logging.Logger{})
+	db, err := database.New(env, logging.Logger{}, dbOpts)
 	if err != nil {
 		t.Fatalf("create test database: %v", err)
 	}
 	t.Cleanup(func() {
 		_ = db.Close()
 	})
+
+	if useInMemoryDB {
+		sqlDB, err := db.SQLDB()
+		if err != nil {
+			t.Fatalf("get sql db handle: %v", err)
+		}
+		if sqlDB != nil {
+			sqlDB.SetMaxOpenConns(1)
+			sqlDB.SetMaxIdleConns(1)
+		}
+	}
 
 	if err := db.AutoMigrate(
 		&model.User{},
