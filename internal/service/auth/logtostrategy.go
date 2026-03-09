@@ -20,29 +20,22 @@ import (
 )
 
 type LogtoStrategy struct {
-	resource LogtoStrategyResource
+	runtime Runtime
 }
 
-type LogtoStrategyResource interface {
-	Session(c fiber.Ctx) (*session.Session, error)
-	FindUserByExtID(ctx context.Context, extID string) (model.User, error)
-	Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span)
-	LogtoConfig() *logto.LogtoConfig
-}
-
-func NewLogtoStrategy(resource LogtoStrategyResource) *LogtoStrategy {
+func NewLogtoStrategy(runtime Runtime) *LogtoStrategy {
 	return &LogtoStrategy{
-		resource: resource,
+		runtime: runtime,
 	}
 }
 
 func (lgs *LogtoStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
-	sess, err := lgs.resource.Session(c)
+	sess, err := lgs.runtime.Session(c)
 	if err != nil {
 		return model.User{}, err
 	}
 
-	logtoClient, saveSess := NewLogtoClient(sess, lgs.resource.LogtoConfig())
+	logtoClient, saveSess := NewLogtoClient(sess, LogtoConfig(lgs.runtime.AppEnv()))
 
 	ctx, span := lgs.Trace(c.Context(), "auth/services:logtoStrategy")
 	defer span.End()
@@ -57,7 +50,7 @@ func (lgs *LogtoStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
 		return model.User{}, err
 	}
 
-	user, err := lgs.resource.FindUserByExtID(ctx, claims.Sub)
+	user, err := TakeUserByExtID(ctx, lgs.runtime, claims.Sub)
 	if err != nil {
 		return user, errors.New("failed to authenticate user")
 	}
@@ -66,7 +59,27 @@ func (lgs *LogtoStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
 }
 
 func (lgs LogtoStrategy) Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
-	return lgs.resource.Trace(ctx, spanName, opts...)
+	return lgs.runtime.Trace(ctx, spanName, opts...)
+}
+
+func LogtoConfig(env *appenv.Env) *logto.LogtoConfig {
+	config := logto.LogtoConfig{
+		Resources: []string{},
+		// Keep login scopes minimal. If downstream API flows break, re-evaluate
+		// whether resource scopes (for example app:write) are actually required.
+		Scopes: []string{"email", "phone", "picture", "custom_data", "app:read"},
+	}
+
+	if env == nil {
+		return &config
+	}
+
+	config.Endpoint = env.LogtoURL
+	config.AppId = env.LogtoAppID
+	config.AppSecret = env.LogtoAppSecret
+	config.Resources = []string{env.LogtoResource}
+
+	return &config
 }
 
 // NewLogtoClient returns a Logto client and a save function to persist the

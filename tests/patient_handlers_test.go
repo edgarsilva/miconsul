@@ -3,6 +3,7 @@ package tests
 import (
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 
 	"miconsul/internal/model"
@@ -64,6 +65,45 @@ func TestPatientHandlers(t *testing.T) {
 		}
 		if got := resp.Header.Get("HX-Location"); got == "" {
 			t.Fatalf("expected HX-Location redirect for htmx patient not found")
+		}
+	})
+
+	t.Run("update returns bad request for malformed input", func(t *testing.T) {
+		patient := h.createPatient(u.ID, "Patient Malformed")
+
+		resp, _ := h.doRequest(requestOptions{
+			method:     http.MethodPost,
+			path:       "/patients/" + patient.ID + "/patch",
+			authToken:  token,
+			htmx:       true,
+			contentTyp: "application/json",
+			body: url.Values{
+				"name": {"Malformed"},
+			},
+		})
+
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Fatalf("expected 400 for malformed patient input, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("update returns unprocessable for invalid boundaries", func(t *testing.T) {
+		patient := h.createPatient(u.ID, "Patient Invalid")
+
+		resp, _ := h.doRequest(requestOptions{
+			method:    http.MethodPost,
+			path:      "/patients/" + patient.ID + "/patch",
+			authToken: token,
+			htmx:      true,
+			body: url.Values{
+				"name":  {strings.Repeat("a", 121)},
+				"phone": {"555-0100"},
+				"age":   {"30"},
+			},
+		})
+
+		if resp.StatusCode != http.StatusUnprocessableEntity {
+			t.Fatalf("expected 422 for invalid patient boundaries, got %d", resp.StatusCode)
 		}
 	})
 }

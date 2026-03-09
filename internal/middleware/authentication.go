@@ -9,7 +9,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-func MustAuthenticate(authRuntime auth.AuthRuntime) func(c fiber.Ctx) error {
+func MustAuthenticate(authRuntime auth.Runtime) func(c fiber.Ctx) error {
 	return func(c fiber.Ctx) error {
 		cu, err := auth.Authenticate(c, authRuntime)
 		if err != nil {
@@ -31,7 +31,7 @@ func MustAuthenticate(authRuntime auth.AuthRuntime) func(c fiber.Ctx) error {
 	}
 }
 
-func MustBeAdmin(authRuntime auth.AuthRuntime) func(c fiber.Ctx) error {
+func MustBeAdmin(authRuntime auth.Runtime) func(c fiber.Ctx) error {
 	return func(c fiber.Ctx) error {
 		cu, err := auth.Authenticate(c, authRuntime)
 		if err != nil {
@@ -67,7 +67,7 @@ func MustBeAdmin(authRuntime auth.AuthRuntime) func(c fiber.Ctx) error {
 	}
 }
 
-func MaybeAuthenticate(authRuntime auth.AuthRuntime) func(c fiber.Ctx) error {
+func MaybeAuthenticate(authRuntime auth.Runtime) func(c fiber.Ctx) error {
 	return func(c fiber.Ctx) error {
 		cu, _ := auth.Authenticate(c, authRuntime)
 

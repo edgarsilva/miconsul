@@ -11,11 +11,12 @@ import (
 // HandleLogtoSignin redirects to Logto sign-in page
 // GET: /logto/signin
 func (s *service) HandleLogtoSignin(c fiber.Ctx) error {
-	logtoClient, saveSess, err := s.newLogtoClient(c)
+	sess, err := s.Session(c)
 	if err != nil {
 		log.Error("failed to load session in logto signin:", err)
 		return s.Redirect(c, "/signin?logto_error=session")
 	}
+	logtoClient, saveSess := NewLogtoClient(sess, LogtoConfig(s.Env))
 	defer deferLogtoSessionSave("logto signin", saveSess)
 
 	if logtoClient.IsAuthenticated() {
@@ -43,11 +44,12 @@ func (s *service) HandleLogtoSignin(c fiber.Ctx) error {
 // HandleLogtoCallback handles the Logto callback/webhook after login
 // GET: /logto/callback
 func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
-	logtoClient, saveSess, err := s.newLogtoClient(c)
+	sess, err := s.Session(c)
 	if err != nil {
 		log.Error("failed to load session in logto callback:", err)
 		return s.Redirect(c, "/signin?logto_error=session")
 	}
+	logtoClient, saveSess := NewLogtoClient(sess, LogtoConfig(s.Env))
 	defer deferLogtoSessionSave("logto callback", saveSess)
 
 	req, err := adaptor.ConvertRequest(c, true)
@@ -99,11 +101,12 @@ func (s *service) HandleLogtoSignout(c fiber.Ctx) error {
 		log.Warn("failed to mark login redirect skip before logto signout:", err)
 	}
 
-	logtoClient, saveSess, err := s.newLogtoClient(c)
+	sess, err := s.Session(c)
 	if err != nil {
 		log.Error("failed to load session in logto signout:", err)
 		return s.Redirect(c, "/logto/signin")
 	}
+	logtoClient, saveSess := NewLogtoClient(sess, LogtoConfig(s.Env))
 	defer deferLogtoSessionSave("logto signout", saveSess)
 
 	// The sign-out request is handled by Logto.
@@ -130,11 +133,12 @@ func (s *service) HandleLogtoSignout(c fiber.Ctx) error {
 // HandleLogtoPage renders the Logto page with two links to sign in and sign out
 // GET: /logto
 func (s *service) HandleLogtoPage(c fiber.Ctx) error {
-	logtoClient, saveSess, err := s.newLogtoClient(c)
+	sess, err := s.Session(c)
 	if err != nil {
 		log.Error("failed to load session in logto page:", err)
 		return s.Redirect(c, "/logto/signout")
 	}
+	logtoClient, saveSess := NewLogtoClient(sess, LogtoConfig(s.Env))
 	defer deferLogtoSessionSave("logto page", saveSess)
 
 	notAuthenticated := !logtoClient.IsAuthenticated()
@@ -154,4 +158,10 @@ func (s *service) HandleLogtoPage(c fiber.Ctx) error {
 
 	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.LogtoPage(vc, authState, idTokenClaimsJSON, customClaimsJSON))
+}
+
+func deferLogtoSessionSave(route string, saveSess func() error) {
+	if err := saveSess(); err != nil {
+		log.Error("failed to save session in "+route+":", err)
+	}
 }

@@ -17,7 +17,7 @@ import (
 
 type routeBootstrap struct {
 	name string
-	fn   func(*server.Server, auth.AuthRuntime) error
+	fn   func(*server.Server, auth.Runtime) error
 }
 
 func RegisterServices(s *server.Server) error {
@@ -51,13 +51,13 @@ func RegisterServices(s *server.Server) error {
 	return nil
 }
 
-func DebugRoutes(s *server.Server, authSvc auth.AuthRuntime) error {
+func DebugRoutes(s *server.Server, authSvc auth.Runtime) error {
 	s.Get("/debug/runtime", mw.MustBeAdmin(authSvc), s.HandleDebugRuntime)
 
 	return nil
 }
 
-func AuthRoutes(s *server.Server, authSvc auth.AuthRuntime) error {
+func AuthRoutes(s *server.Server, authSvc auth.Runtime) error {
 	a, err := auth.New(s)
 	if err != nil {
 		return err
@@ -88,7 +88,7 @@ func AuthRoutes(s *server.Server, authSvc auth.AuthRuntime) error {
 	return nil
 }
 
-func DashbordhRoutes(s *server.Server, authSvc auth.AuthRuntime) error {
+func DashbordhRoutes(s *server.Server, authSvc auth.Runtime) error {
 	d, err := dashboard.NewService(s)
 	if err != nil {
 		return err
@@ -102,7 +102,7 @@ func DashbordhRoutes(s *server.Server, authSvc auth.AuthRuntime) error {
 	return nil
 }
 
-func ClinicsRoutes(s *server.Server, authSvc auth.AuthRuntime) error {
+func ClinicsRoutes(s *server.Server, authSvc auth.Runtime) error {
 	c, err := clinic.NewService(s)
 	if err != nil {
 		return err
@@ -127,7 +127,7 @@ func ClinicsRoutes(s *server.Server, authSvc auth.AuthRuntime) error {
 	return nil
 }
 
-func PatientRoutes(s *server.Server, authSvc auth.AuthRuntime) error {
+func PatientRoutes(s *server.Server, authSvc auth.Runtime) error {
 	p, err := patient.NewService(s)
 	if err != nil {
 		return err
@@ -163,7 +163,7 @@ func PatientRoutes(s *server.Server, authSvc auth.AuthRuntime) error {
 	return nil
 }
 
-func AppointmentRoutes(s *server.Server, authSvc auth.AuthRuntime) error {
+func AppointmentRoutes(s *server.Server, authSvc auth.Runtime) error {
 	a, err := appointment.New(s)
 	if err != nil {
 		return err
@@ -198,7 +198,7 @@ func AppointmentRoutes(s *server.Server, authSvc auth.AuthRuntime) error {
 	return nil
 }
 
-func ThemeRoutes(s *server.Server, _ auth.AuthRuntime) error {
+func ThemeRoutes(s *server.Server, _ auth.Runtime) error {
 	t, err := theme.NewService(s)
 	if err != nil {
 		return err
@@ -210,7 +210,7 @@ func ThemeRoutes(s *server.Server, _ auth.AuthRuntime) error {
 	return nil
 }
 
-func UserRoutes(s *server.Server, authSvc auth.AuthRuntime) error {
+func UserRoutes(s *server.Server, authSvc auth.Runtime) error {
 	u, err := user.NewService(s)
 	if err != nil {
 		return err
@@ -232,7 +232,7 @@ func UserRoutes(s *server.Server, authSvc auth.AuthRuntime) error {
 	return nil
 }
 
-func AdminRoutes(s *server.Server, authSvc auth.AuthRuntime) error {
+func AdminRoutes(s *server.Server, authSvc auth.Runtime) error {
 	a, err := admin.NewService(s)
 	if err != nil {
 		return err

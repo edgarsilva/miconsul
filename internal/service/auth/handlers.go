@@ -2,6 +2,8 @@ package auth
 
 import (
 	"errors"
+	"net/url"
+	"strings"
 	"time"
 
 	"miconsul/internal/lib/xid"
@@ -62,12 +64,12 @@ func (s *service) HandleSignin(c fiber.Ctx) error {
 		return view.Render(c, view.LoginPage(email, "", err, vc))
 	}
 	if err != nil {
-		return s.Redirect(c, "/?msg=Failed to login, please try again")
+		return s.respondWithRedirect(c, "/", "Failed to login, please try again")
 	}
 
 	rememberMe := c.FormValue("remember_me", "") != ""
 	if err := s.issueAuthCookie(c, user, rememberMe); err != nil {
-		return s.Redirect(c, "/?msg=Failed to login, please try again")
+		return s.respondWithRedirect(c, "/", "Failed to login, please try again")
 	}
 
 	return s.Redirect(c, "/?timeframe=day")
@@ -85,29 +87,29 @@ func (s *service) HandleAPISignin(c fiber.Ctx) error {
 		RememberMe bool   `json:"remember_me" form:"remember_me"`
 	}{}
 	if err := c.Bind().Body(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
+		return apiError(c, fiber.StatusBadRequest, "invalid request body")
 	}
 
 	if req.Email == "" || req.Password == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "email and password can't be blank"})
+		return apiError(c, fiber.StatusBadRequest, "email and password can't be blank")
 	}
 
 	user, err := s.authenticateCredentials(ctx, req.Email, req.Password)
 	if errors.Is(err, errAuthInvalidCredentials) {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid credentials"})
+		return apiError(c, fiber.StatusUnauthorized, "invalid credentials")
 	}
 	if errors.Is(err, errAuthPendingConfirmation) {
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "email pending confirmation"})
+		return apiError(c, fiber.StatusForbidden, "email pending confirmation")
 	}
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "authentication failed"})
+		return apiError(c, fiber.StatusInternalServerError, "authentication failed")
 	}
 
 	if err := s.issueAuthCookie(c, user, req.RememberMe); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to create session"})
+		return apiError(c, fiber.StatusInternalServerError, "failed to create session")
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{"ok": true})
+	return apiOK(c, fiber.Map{"ok": true})
 }
 
 // HandleSignupPage returns the Signup form page html
@@ -153,14 +155,14 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 		token := newConfirmEmailToken()
 		s.userUpdateConfirmToken(c.Context(), email, token)
 		go mailer.ConfirmEmail(email, token)
-		return s.Redirect(c, "/signin?msg=check your inbox, we'll re-send a confirmation link")
+		return s.respondWithRedirect(c, "/signin", "check your inbox, we'll re-send a confirmation link")
 	}
 
 	if err := s.signup(c.Context(), email, password); err != nil {
 		return view.Render(c, view.SignupPage(vc, email, err))
 	}
 
-	return s.Redirect(c, "/signin?msg=check your inbox to confirm your email")
+	return s.respondWithRedirect(c, "/signin", "check your inbox to confirm your email")
 }
 
 // HandleSignupConfirmEmail validates an email confirmation token.
@@ -168,7 +170,7 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 	token := c.Params("token", "")
 	if token == "" {
-		return s.Redirect(c, "/signin?msg=unable to confirm email, try signin instead")
+		return s.respondWithRedirect(c, "/signin", "unable to confirm email, try signin instead")
 	}
 
 	user, err := gorm.G[model.User](s.DB.GormDB()).
@@ -176,7 +178,7 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
 		Take(c.Context())
 	if err != nil {
-		return s.Redirect(c, "/signin?msg=we couldn't verify your account, pls try again")
+		return s.respondWithRedirect(c, "/signin", "we couldn't verify your account, pls try again")
 	}
 
 	_, err = gorm.G[model.User](s.DB.GormDB()).
@@ -184,16 +186,37 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
 		Updates(c.Context(), model.User{})
 	if err != nil {
-		return s.Redirect(c, "/signin?msg=Email confirmed, you should be able to signin now")
+		return s.respondWithRedirect(c, "/signin", "Email confirmed, you should be able to signin now")
 	}
 
 	jwt, err := JWTCreateToken(s.AppEnv(), user.Email, user.ID)
 	if err != nil {
-		return s.Redirect(c, "/signin?msg=Email confirmed, you should be able to signin now")
+		return s.respondWithRedirect(c, "/signin", "Email confirmed, you should be able to signin now")
 	}
 
 	c.Cookie(s.NewCookie("Auth", jwt, time.Hour*24))
-	return s.Redirect(c, "/signin?msg=Email confirmed, you should be able to signin now")
+	return s.respondWithRedirect(c, "/signin", "Email confirmed, you should be able to signin now")
+}
+
+func apiError(c fiber.Ctx, status int, message string) error {
+	return c.Status(status).JSON(fiber.Map{"error": message})
+}
+
+func apiOK(c fiber.Ctx, payload fiber.Map) error {
+	return c.Status(fiber.StatusOK).JSON(payload)
+}
+
+func (s *service) respondWithRedirect(c fiber.Ctx, path, message string) error {
+	if strings.TrimSpace(message) == "" {
+		return s.Redirect(c, path)
+	}
+
+	sep := "?"
+	if strings.Contains(path, "?") {
+		sep = "&"
+	}
+
+	return s.Redirect(c, path+sep+"msg="+url.QueryEscape(message))
 }
 
 // HandleLogout destroys session state and redirects to login.

@@ -35,17 +35,26 @@ After 1-2 minutes of smoke traffic, these three queries should return data.
 sum(rate(http_requests_total{job="miconsul"}[5m]))
 ```
 
+Expected result: non-empty series, typically `> 0` after `make obs/load/light`
+for ~2 minutes.
+
 - Logs (Loki):
 
 ```logql
 {service_name="miconsul"} | event=`http_request`
 ```
 
+Expected result: recent `http_request` log lines within the last 2-5 minutes
+after smoke traffic starts.
+
 - Traces (Tempo):
 
 ```traceql
 { resource.service.name = "miconsul" }
 ```
+
+Expected result: at least one trace for `miconsul` in the selected time range
+after smoke traffic starts.
 
 ## Metrics Queries (Prometheus)
 
