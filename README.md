@@ -36,46 +36,74 @@ I've added `make` recipes/targets for the most common tasks, you can list them b
 running `make`.
 
 ```bash
-
 $ make
-Available recipes:
-    build                     # Build the app
-    clean                     # Clean builds
-    default                   # Display this list of recipes
-    dev                       # Start app in dev mode
-    fmt                       # Run Go formatter/linter
-    install                   # Install deps 🥐 Bun, 🪿 goose and 🛕 templ
-    integration-test          # Run integration-test
-    run                       # Run the app
-    start                     # Start the app
-    tailwind                  # Generate Tailwind styles
-    templ                     # Generate templ files
-    test                      # Run tests
-    unit-test                 # Run unit-tests
-    vet                       # Run Go vet to detect possible issues
 
-    [db]
-    db-create                 # Create Database
-    db-delete                 # Deletes the DB giving you a choice.
-    db-dump-schema            # Dumps the DB schema to ./database/schema.sql
-    db-migrate                # Migrates the DB to latest migration
-    db-setup                  # Set up the DB by running delete, create and migrate
-    migration-create arg_name # Creates a new migration for the DB
-    migration-redo            # Redo the last migration
-    migration-rollback        # Rollbacks last migration
-    migration-status          # Lists the DB migration status
+Meta
+  help                        Show this help with available tasks
 
-    [docker]
-    docker-down               # Terminates the docker services
-    docker-logs               # Shows DB service logs
-    docker-up                 # Starts the docker services
-    docker-up-detached        # Starts the docker services detached
+Setup
+  install                     Installs deps 🥐 Bun, 🪿 goose, 🛕 templ and  go-localize
+  install/go-localize         Install go-localize CLI
 
-    [migration]
-    migration-create arg_name # Creates a new migration for the DB
-    migration-redo            # Redo the last migration
-    migration-rollback        # Rollbacks last migration
-    migration-status          # Lists the DB migration status
+Code Quality
+  fmt                         Run go fmt
+  vet                         Run go vet (after fmt)
+  lint                        Alias for vet
+
+Frontend
+  tailwind/build              Build Tailwind CSS
+  tailwind/watch              Watch Tailwind CSS
+  templ/build                 Generate Templ files (depends on tailwind)
+  templ/watch                 Watch Templ
+  locales/build               Build locales with go-localize
+  locales/normalize           Remove volatile timestamp from generated locales file
+
+Build & Run
+  build                       Build Go binary with fts5
+  start                       Start the built binary
+  run                         Run via go run (generates Templ first)
+  air/watch                   Run in dev mode with air (installs if missing)
+  dev                         Start infra, then tailwind/watch, templ/watch, and air/watch
+
+Tests
+  test                        Run all tests
+  test/race                   Run all tests with race detector
+  test/v                      Verbose tests
+  test/unit                   Run unit tests
+  test/unit/c                 Run unit tests
+  test/unit/v                 Run unit tests in verbose mode
+  test/integration            Run integration tests
+  test/coverage               Coverage
+
+Database & Migrations
+  db/create                   Create DB (migrations run by app/seed bootstrap)
+  db/delete                   Delete DB (interactive confirmation)
+  db/setup                    Recreate DB, apply migrations, and seed
+  db/reset                    Alias for full DB reset (drop/migrate/seed)
+  db/dump_schema              Dump DB schema
+  migrations/apply            Apply migrations with goose
+  db/migrate                  Alias for migrations/apply
+  db/seed                     Run DB seeds (baseline + randomized bulk)
+  migrations/status           Show migrations status
+  migrations/rollback         Roll back last migration
+  migrations/redo             Redo last migration
+
+Docker
+  docker/up                   Start docker infra services (without app)
+  docker/dev                  Start all docker services including app
+  docker/detached             docker compose up -d
+  docker/down                 docker compose down
+  docker/logs                 Follow logs for all docker services
+  docker/app-logs             Follow app container logs
+  docker/lgtm-logs            Follow LGTM stack logs
+  docker/build                Rebuild the app image
+
+Observability
+  obs/load                    Run continuous synthetic traffic (~40 RPM total)
+  obs/load/light              Run lighter synthetic traffic (~20 RPM total)
+  obs/load/medium             Run medium synthetic traffic (~40 RPM total)
+  obs/load/heavy              Run heavier synthetic traffic (~80 RPM total)
+  load/test                   Run authenticated oha load test (30s, 30 concurrency)
 ```
 
 ### Install dependencies and tooling (not Go itself)
@@ -124,6 +152,25 @@ MICON_TEST_SQLITE_INMEMORY=1 go test ./...
 For test strategy and harness details, see:
 
 - `docs/testing.md`
+
+Quick commands:
+
+```bash
+# full suite
+make test
+
+# race detector pass
+make test/race
+
+# verbose tests
+make test/v
+
+# integration tests package
+make test/integration
+
+# full suite using in-memory sqlite harness mode
+MICON_TEST_SQLITE_INMEMORY=1 make test
+```
 
 ### DB - Seed Data
 

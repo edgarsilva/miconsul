@@ -109,14 +109,17 @@ dev: docker/up ## Start infra, then tailwind/watch, templ/watch, and air/watch
 	$(MAKE) -j3 tailwind/watch templ/watch air/watch
 
 ##@ Tests
-test: ## Run all tests with coverage
+test: ## Run all tests
 	@echo "Testing all"
-	go test -race ./internal/...
-	go test ./..
+	go test ./...
+
+test/race: ## Run all tests with race detector
+	@echo "Testing all with race detector"
+	go test -race ./...
 
 test/v: ## Verbose tests
 	@echo "Testing all verbose"
-	go test ./... -race -v
+	go test ./... -v
 
 test/unit: ## Run unit tests
 	@echo "Testing unit"
@@ -135,7 +138,7 @@ test/integration: ## Run integration tests
 	go test -v ./tests/... -coverprofile=coverage/int_c.out
 
 test/coverage: ## Coverage
-	go test ./... -race -coverprofile=coverage.out && go tool cover -func=coverage/c.out
+	go test ./... -coverprofile=coverage/c.out && go tool cover -func=coverage/c.out
 
 ##@ Test Coverage
 cover:
@@ -257,6 +260,7 @@ load/test: ## Run authenticated oha load test (30s, 30 concurrency)
 	ai/templ-sync \
 	build start run air/watch dev \
 	test test/unit test/integration clean \
+	test/race test/v test/unit/v test/unit/c test/coverage \
 	db/create db/delete db/setup db/reset db/dump_schema db/seed \
 	migrations/apply migrate migrations/create migrations/status migrations/rollback migrations/redo \
 	docker/up docker/dev docker/detached docker/down docker/logs docker/app-logs docker/lgtm-logs docker/build \
