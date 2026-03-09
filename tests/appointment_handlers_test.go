@@ -36,6 +36,27 @@ func TestAppointmentHandlers(t *testing.T) {
 		}
 	})
 
+	t.Run("update returns bad request for malformed input", func(t *testing.T) {
+		patient := h.createPatient(u.ID, "Patient Bad Request")
+		clinic := h.createClinic(u.ID, "Clinic Bad Request")
+		appt := h.createAppointment(u.ID, patient.ID, clinic.ID)
+
+		resp, _ := h.doRequest(requestOptions{
+			method:     http.MethodPost,
+			path:       "/appointments/" + appt.ID + "/patch",
+			authToken:  token,
+			htmx:       true,
+			contentTyp: "application/json",
+			body: url.Values{
+				"duration": {"30"},
+			},
+		})
+
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Fatalf("expected 400 for malformed appointment input, got %d", resp.StatusCode)
+		}
+	})
+
 	t.Run("cancel updates status and canceled timestamp", func(t *testing.T) {
 		patient := h.createPatient(u.ID, "Patient Cancel")
 		clinic := h.createClinic(u.ID, "Clinic Cancel")
@@ -109,6 +130,25 @@ func TestAppointmentHandlers(t *testing.T) {
 		}
 		if got := resp.Header.Get("HX-Location"); got == "" {
 			t.Fatalf("expected HX-Location redirect for htmx cancel not found response")
+		}
+	})
+
+	t.Run("complete unknown appointment returns not found", func(t *testing.T) {
+		resp, _ := h.doRequest(requestOptions{
+			method:    http.MethodPost,
+			path:      "/appointments/apnt_missing/complete",
+			authToken: token,
+			htmx:      true,
+			body: url.Values{
+				"summary": {"complete missing"},
+			},
+		})
+
+		if resp.StatusCode != http.StatusNotFound {
+			t.Fatalf("expected 404 for unknown appointment complete, got %d", resp.StatusCode)
+		}
+		if got := resp.Header.Get("HX-Location"); got == "" {
+			t.Fatalf("expected HX-Location redirect for htmx complete not found response")
 		}
 	})
 
