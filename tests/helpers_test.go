@@ -21,6 +21,7 @@ import (
 	"miconsul/internal/service/auth"
 
 	"go.opentelemetry.io/otel"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -152,6 +153,32 @@ func (h *testHarness) createUser(role model.UserRole) model.User {
 	}
 	if err := gorm.G[model.User](h.db.GormDB()).Create(h.t.Context(), &u); err != nil {
 		h.t.Fatalf("create user fixture: %v", err)
+	}
+
+	return u
+}
+
+func (h *testHarness) createAuthUser(email, password string, role model.UserRole) model.User {
+	h.t.Helper()
+
+	if strings.TrimSpace(email) == "" {
+		email = "auth-" + time.Now().Format("150405.000000") + "@example.com"
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+	if err != nil {
+		h.t.Fatalf("hash auth user password: %v", err)
+	}
+
+	u := model.User{
+		Name:              "Auth User",
+		Email:             email,
+		Password:          string(hash),
+		Role:              role,
+		ConfirmEmailToken: "",
+	}
+	if err := gorm.G[model.User](h.db.GormDB()).Create(h.t.Context(), &u); err != nil {
+		h.t.Fatalf("create auth user fixture: %v", err)
 	}
 
 	return u
