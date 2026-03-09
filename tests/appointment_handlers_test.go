@@ -62,4 +62,66 @@ func TestAppointmentHandlers(t *testing.T) {
 			t.Fatalf("expected canceled timestamp to be set")
 		}
 	})
+
+	t.Run("complete updates status and completion notes", func(t *testing.T) {
+		patient := h.createPatient(u.ID, "Patient Complete")
+		clinic := h.createClinic(u.ID, "Clinic Complete")
+		appt := h.createAppointment(u.ID, patient.ID, clinic.ID)
+
+		resp, _ := h.doRequest(requestOptions{
+			method:    http.MethodPost,
+			path:      "/appointments/" + appt.ID + "/complete",
+			authToken: token,
+			htmx:      true,
+			body: url.Values{
+				"summary":      {"Procedure completed"},
+				"observations": {"Patient recovered well"},
+				"conclusions":  {"Follow-up in two weeks"},
+				"notes":        {"No complications"},
+			},
+		})
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("expected 200 for appointment complete, got %d", resp.StatusCode)
+		}
+
+		updated, err := gorm.G[model.Appointment](h.db.GormDB()).Where("id = ?", appt.ID).Take(t.Context())
+		if err != nil {
+			t.Fatalf("load completed appointment: %v", err)
+		}
+		if updated.Status != model.ApntStatusDone {
+			t.Fatalf("expected done status, got %q", updated.Status)
+		}
+		if updated.Summary != "Procedure completed" || updated.Notes != "No complications" {
+			t.Fatalf("expected completion notes to persist, got summary=%q notes=%q", updated.Summary, updated.Notes)
+		}
+	})
+
+	t.Run("cancel unknown appointment returns not found", func(t *testing.T) {
+		resp, _ := h.doRequest(requestOptions{
+			method:    http.MethodPost,
+			path:      "/appointments/apnt_missing/cancel",
+			authToken: token,
+			htmx:      true,
+		})
+
+		if resp.StatusCode != http.StatusNotFound {
+			t.Fatalf("expected 404 for unknown appointment cancel, got %d", resp.StatusCode)
+		}
+		if got := resp.Header.Get("HX-Location"); got == "" {
+			t.Fatalf("expected HX-Location redirect for htmx cancel not found response")
+		}
+	})
+
+	t.Run("delete unknown appointment redirects", func(t *testing.T) {
+		resp, _ := h.doRequest(requestOptions{
+			method:    http.MethodDelete,
+			path:      "/appointments/apnt_missing",
+			authToken: token,
+			htmx:      true,
+		})
+
+		if resp.StatusCode != http.StatusFound && resp.StatusCode != http.StatusSeeOther {
+			t.Fatalf("expected redirect for unknown appointment delete, got %d", resp.StatusCode)
+		}
+	})
 }
