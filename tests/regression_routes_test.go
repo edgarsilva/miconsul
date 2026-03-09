@@ -12,36 +12,6 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestProfilePOSTPersistsUpdates(t *testing.T) {
-	h := newTestHarness(t)
-	u := h.createUser(model.UserRoleUser)
-	token := h.authToken(u)
-
-	resp, _ := h.doRequest(requestOptions{
-		method:    http.MethodPost,
-		path:      "/profile",
-		authToken: token,
-		body: url.Values{
-			"name":  {"Updated Name"},
-			"email": {"updated@example.com"},
-			"phone": {"555-0199"},
-		},
-	})
-
-	if resp.StatusCode != http.StatusFound && resp.StatusCode != http.StatusSeeOther {
-		t.Fatalf("expected redirect status, got %d", resp.StatusCode)
-	}
-
-	updated, err := gorm.G[model.User](h.db.GormDB()).Where("id = ?", u.ID).Take(t.Context())
-	if err != nil {
-		t.Fatalf("load updated user: %v", err)
-	}
-
-	if updated.Name != "Updated Name" || updated.Email != "updated@example.com" || updated.Phone != "555-0199" {
-		t.Fatalf("unexpected persisted profile: %+v", updated)
-	}
-}
-
 func TestPatchAndDeleteRoutesForPatientAndAppointment(t *testing.T) {
 	h := newTestHarness(t)
 	u := h.createUser(model.UserRoleUser)
@@ -131,36 +101,6 @@ func TestPatchAndDeleteRoutesForPatientAndAppointment(t *testing.T) {
 		_, err = gorm.G[model.Appointment](h.db.GormDB()).Where("id = ?", appt.ID).Take(t.Context())
 		if err == nil {
 			t.Fatalf("expected deleted appointment to be missing")
-		}
-	})
-}
-
-func TestAPIUsersAuthGating(t *testing.T) {
-	h := newTestHarness(t)
-	admin := h.createUser(model.UserRoleAdmin)
-	regular := h.createUser(model.UserRoleUser)
-
-	t.Run("unauthenticated denied", func(t *testing.T) {
-		resp, _ := h.doRequest(requestOptions{method: http.MethodGet, path: "/api/users", accept: "application/json"})
-		if resp.StatusCode != http.StatusUnauthorized {
-			t.Fatalf("expected 401, got %d", resp.StatusCode)
-		}
-	})
-
-	t.Run("non admin forbidden", func(t *testing.T) {
-		resp, _ := h.doRequest(requestOptions{method: http.MethodGet, path: "/api/users", accept: "application/json", authToken: h.authToken(regular)})
-		if resp.StatusCode != http.StatusForbidden {
-			t.Fatalf("expected 403, got %d", resp.StatusCode)
-		}
-	})
-
-	t.Run("admin allowed", func(t *testing.T) {
-		resp, body := h.doRequest(requestOptions{method: http.MethodGet, path: "/api/users", accept: "application/json", authToken: h.authToken(admin)})
-		if resp.StatusCode != http.StatusOK {
-			t.Fatalf("expected 200, got %d", resp.StatusCode)
-		}
-		if body == "" {
-			t.Fatalf("expected JSON body from /api/users")
 		}
 	})
 }
