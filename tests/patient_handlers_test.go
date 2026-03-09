@@ -47,6 +47,29 @@ func TestPatientHandlers(t *testing.T) {
 		}
 	})
 
+	t.Run("update with unchanged values remains success", func(t *testing.T) {
+		patient := h.createPatient(u.ID, "Patient Stable")
+
+		resp, _ := h.doRequest(requestOptions{
+			method:    http.MethodPost,
+			path:      "/patients/" + patient.ID + "/patch",
+			authToken: token,
+			htmx:      true,
+			body: url.Values{
+				"name":  {"Patient Stable"},
+				"phone": {"555-0100"},
+				"age":   {"30"},
+			},
+		})
+
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("expected 200 for unchanged patient update, got %d", resp.StatusCode)
+		}
+		if got := resp.Header.Get("HX-Location"); got == "" {
+			t.Fatalf("expected HX-Location for unchanged patient update")
+		}
+	})
+
 	t.Run("update returns not found for unknown patient", func(t *testing.T) {
 		resp, _ := h.doRequest(requestOptions{
 			method:    http.MethodPost,

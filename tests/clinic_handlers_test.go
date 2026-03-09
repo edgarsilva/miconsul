@@ -73,6 +73,29 @@ func TestClinicHandlers(t *testing.T) {
 		}
 	})
 
+	t.Run("update with unchanged values remains success", func(t *testing.T) {
+		clinic := h.createClinic(u.ID, "Clinic Stable")
+
+		resp, _ := h.doRequest(requestOptions{
+			method:    http.MethodPost,
+			path:      "/clinics/" + clinic.ID + "/patch",
+			authToken: token,
+			htmx:      true,
+			body: url.Values{
+				"name":  {"Clinic Stable"},
+				"email": {""},
+				"phone": {""},
+			},
+		})
+
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("expected 200 for unchanged clinic update, got %d", resp.StatusCode)
+		}
+		if got := resp.Header.Get("HX-Push-Url"); got == "" {
+			t.Fatalf("expected HX-Push-Url for unchanged clinic update")
+		}
+	})
+
 	t.Run("delete missing id route is method not allowed", func(t *testing.T) {
 		resp, _ := h.doRequest(requestOptions{method: http.MethodDelete, path: "/clinics/", authToken: token, htmx: true})
 		if resp.StatusCode != http.StatusMethodNotAllowed {
