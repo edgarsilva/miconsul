@@ -106,6 +106,25 @@ queries, and units reference), see:
 
 - `docs/observability-runbook.md`
 
+### Testing
+
+The test suite now includes a reusable integration harness and focused
+regression coverage for high-risk routes.
+
+- Default test DB mode is file-backed SQLite (stable local behavior).
+- Optional in-memory mode can be enabled for faster ephemeral runs:
+
+```bash
+MICON_TEST_SQLITE_INMEMORY=1 go test ./...
+```
+
+`MICON` in `MICON_TEST_SQLITE_INMEMORY` is a short project prefix from
+`miconsul`, used to avoid collisions with generic env var names.
+
+For test strategy and harness details, see:
+
+- `docs/testing.md`
+
 ### DB - Seed Data
 
 Create deterministic baseline data (including an admin user) and randomized bulk
