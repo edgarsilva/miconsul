@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/mailer"
 	"miconsul/internal/model"
@@ -17,27 +16,12 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"github.com/gofiber/fiber/v3"
-	"github.com/gofiber/fiber/v3/log"
-	"github.com/gofiber/fiber/v3/middleware/session"
-	logto "github.com/logto-io/go/client"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
-
-type AuthRuntime interface {
-	Session(c fiber.Ctx) (*session.Session, error)
-	AppEnv() *appenv.Env
-	GormDB() *gorm.DB
-	NewCookie(name, value string, validFor time.Duration) *fiber.Cookie
-	Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span)
-}
-
-type AuthStrategy interface {
-	Authenticate(c fiber.Ctx) (model.User, error)
-}
 
 type service struct {
 	*server.Server
@@ -184,15 +168,6 @@ func (s *service) authenticateCredentials(ctx context.Context, email, password s
 	return user, nil
 }
 
-func (s *service) FindUserByExtID(ctx context.Context, extID string) (model.User, error) {
-	user, err := gorm.G[model.User](s.DB.GormDB()).Where("ext_id = ?", extID).Take(ctx)
-	if err != nil {
-		return model.User{}, errors.New("failed to authenticate user")
-	}
-
-	return user, nil
-}
-
 // userUpdatePassword updates a user password
 func (s *service) userUpdatePassword(ctx context.Context, email, password, token string) (model.User, error) {
 	pwd, err := bcrypt.GenerateFromPassword([]byte(password), 12)
@@ -302,80 +277,6 @@ func (s *service) saveLogtoUser(ctx context.Context, logtoUser LogtoUser) error 
 	}
 
 	return nil
-}
-
-func (s *service) newLogtoClient(c fiber.Ctx) (*logto.LogtoClient, func() error, error) {
-	sess, err := s.Session(c)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	logtoClient, saveSess := NewLogtoClient(sess, logtoConfigFromEnv(s.Env))
-	return logtoClient, saveSess, nil
-}
-
-func deferLogtoSessionSave(route string, saveSess func() error) {
-	if err := saveSess(); err != nil {
-		log.Error("failed to save session in "+route+":", err)
-	}
-}
-
-// Authenticate an user based on Req Ctx Cookie 'Auth'
-// cookies
-func Authenticate(c fiber.Ctx, authRuntime AuthRuntime) (model.User, error) {
-	strategy := selectStrategy(authRuntime)
-	user, err := strategy.Authenticate(c)
-	if err != nil {
-		return model.User{}, err
-	}
-
-	return user, nil
-}
-
-func selectStrategy(authRuntime AuthRuntime) AuthStrategy {
-	switch {
-	case logtoEnabled(authRuntime.AppEnv()):
-		return NewLogtoStrategy(strategyResource{AuthRuntime: authRuntime})
-	default:
-		return NewLocalStrategy(authRuntime)
-	}
-}
-
-type strategyResource struct {
-	AuthRuntime
-}
-
-func (resource strategyResource) FindUserByExtID(ctx context.Context, extID string) (model.User, error) {
-	user, err := gorm.G[model.User](resource.GormDB()).Where("ext_id = ?", extID).Take(ctx)
-	if err != nil {
-		return model.User{}, errors.New("failed to authenticate user")
-	}
-
-	return user, nil
-}
-
-func (resource strategyResource) LogtoConfig() *logto.LogtoConfig {
-	return logtoConfigFromEnv(resource.AppEnv())
-}
-
-func logtoConfigFromEnv(env *appenv.Env) *logto.LogtoConfig {
-	config := logto.LogtoConfig{
-		Resources: []string{},
-		// Keep login scopes minimal. If downstream API flows break, re-evaluate
-		// whether resource scopes (for example app:write) are actually required.
-		Scopes: []string{"email", "phone", "picture", "custom_data", "app:read"},
-	}
-
-	if env == nil {
-		return &config
-	}
-
-	config.Endpoint = env.LogtoURL
-	config.AppId = env.LogtoAppID
-	config.AppSecret = env.LogtoAppSecret
-	config.Resources = []string{env.LogtoResource}
-
-	return &config
 }
 
 func (s *service) logtoSigninPageDecision(c fiber.Ctx, msg string) (redirectURL string, nextMsg string) {

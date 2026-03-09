@@ -21,6 +21,7 @@ This file provides repo-specific guidance for coding assistants working on this 
   - `c.Redirect().To(...)` and `c.Redirect().Status(...).To(...)`
   - `c.Bind().Body(...)` instead of legacy body parser helpers
 - Prefer `c.Context()` when passing request context to non-Fiber libraries (DB, tracing, etc.).
+- In service/handler files, keep primary exported handlers/entrypoints near the top and move private helpers/utilities to the bottom.
 
 ## templ Guidance Source
 
