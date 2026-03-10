@@ -139,17 +139,18 @@ test/integration: ## Run integration tests
 
 test/coverage: ## Coverage
 	mkdir -p coverage
-	rm -f coverage/c.out
+	rm -f coverage/c.out coverage/c.filtered.out coverage/summary.filtered.txt
 	go test ./... -covermode=atomic -coverprofile=coverage/c.out
-	go tool cover -func=coverage/c.out > coverage/summary.txt
-	@tail -n 1 coverage/summary.txt
+	awk 'NR==1 || ($$0 !~ /internal\/lib\/localize\// && $$0 !~ /_templ\.go:/)' coverage/c.out > coverage/c.filtered.out
+	go tool cover -func=coverage/c.filtered.out > coverage/summary.filtered.txt
+	@echo "Filtered total (excludes localize + *_templ.go): $$(tail -n 1 coverage/summary.filtered.txt)"
 
 test/coverage/html: test/coverage ## Generate HTML coverage report
-	go tool cover -html=coverage/c.out -o coverage/c.html
-	@echo "Coverage HTML generated at coverage/c.html"
-	@xdg-open coverage/c.html >/dev/null 2>&1 || \
-		python3 -m webbrowser coverage/c.html >/dev/null 2>&1 || \
-		echo "Open coverage/c.html manually in your browser"
+	go tool cover -html=coverage/c.filtered.out -o coverage/c.filtered.html
+	@echo "Coverage HTML generated at coverage/c.filtered.html"
+	@xdg-open coverage/c.filtered.html >/dev/null 2>&1 || \
+		python3 -m webbrowser coverage/c.filtered.html >/dev/null 2>&1 || \
+		echo "Open coverage/c.filtered.html manually in your browser"
 
 ##@ Test Coverage
 cover:

@@ -47,5 +47,8 @@ public/**/*.fiber.*
 
 # Generated local coverage artifacts
 coverage/c.out
+coverage/c.filtered.out
 coverage/c.html
+coverage/c.filtered.html
 coverage/summary.txt
+coverage/summary.filtered.txt

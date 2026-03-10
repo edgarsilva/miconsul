@@ -88,13 +88,14 @@ jobs:
         run: |
           mkdir -p coverage
           go test ./... -covermode=atomic -coverprofile=coverage/c.out
-          go tool cover -func=coverage/c.out > coverage/summary.txt
-          total_line=$(tail -n 1 coverage/summary.txt)
-          echo "$total_line"
+          awk 'NR==1 || ($0 !~ /internal\/lib\/localize\// && $0 !~ /_templ\.go:/)' coverage/c.out > coverage/c.filtered.out
+          go tool cover -func=coverage/c.filtered.out > coverage/summary.filtered.txt
+          filtered_total_line=$(tail -n 1 coverage/summary.filtered.txt)
+          echo "$filtered_total_line"
           {
             echo "## Coverage (Phase 1: report-only)"
             echo ""
-            echo "\`$total_line\`"
+            echo "- Filtered total (excludes localize + *_templ.go): \`$filtered_total_line\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload coverage artifacts
@@ -103,7 +104,8 @@ jobs:
           name: coverage-artifacts
           path: |
             coverage/c.out
-            coverage/summary.txt
+            coverage/c.filtered.out
+            coverage/summary.filtered.txt
 
   go-tests:
     runs-on: ubuntu-latest

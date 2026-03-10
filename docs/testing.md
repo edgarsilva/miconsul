@@ -57,11 +57,17 @@ Current global baseline (2026-03-09):
 
 - `total: 0.2%` (`go tool cover -func=coverage/c.out`)
 
+Coverage reporting uses a filtered total as the engineer-facing metric:
+
+- filtered total from `coverage/c.filtered.out` (excludes generated files under `internal/lib/localize` and `*_templ.go`)
+- raw profile remains available at `coverage/c.out` for debugging
+
 Generate and review coverage locally:
 
 ```bash
 go test ./... -coverprofile=coverage/c.out
-go tool cover -func=coverage/c.out
+awk 'NR==1 || ($0 !~ /internal\/lib\/localize\// && $0 !~ /_templ\.go:/)' coverage/c.out > coverage/c.filtered.out
+go tool cover -func=coverage/c.filtered.out
 ```
 
 Notes:
