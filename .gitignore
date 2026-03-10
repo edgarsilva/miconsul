@@ -52,3 +52,4 @@ coverage/c.html
 coverage/c.filtered.html
 coverage/summary.txt
 coverage/summary.filtered.txt
+coverage/pkg_coverage.txt

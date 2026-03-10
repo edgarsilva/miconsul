@@ -61,6 +61,7 @@ Coverage reporting uses a filtered total as the engineer-facing metric:
 
 - filtered total from `coverage/c.filtered.out` (excludes generated files under `internal/lib/localize` and `*_templ.go`)
 - raw profile remains available at `coverage/c.out` for debugging
+- package leaderboard from `coverage/pkg_coverage.txt` to prioritize low-coverage packages
 
 Generate and review coverage locally:
 
@@ -68,6 +69,7 @@ Generate and review coverage locally:
 go test ./... -coverprofile=coverage/c.out
 awk 'NR==1 || ($0 !~ /internal\/lib\/localize\// && $0 !~ /_templ\.go:/)' coverage/c.out > coverage/c.filtered.out
 go tool cover -func=coverage/c.filtered.out
+make test/coverage/leaderboard
 ```
 
 Notes:

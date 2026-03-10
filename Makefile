@@ -139,11 +139,14 @@ test/integration: ## Run integration tests
 
 test/coverage: ## Coverage
 	mkdir -p coverage
-	rm -f coverage/c.out coverage/c.filtered.out coverage/summary.filtered.txt
+	rm -f coverage/c.out coverage/c.filtered.out coverage/summary.filtered.txt coverage/pkg_coverage.txt
 	go test ./... -covermode=atomic -coverprofile=coverage/c.out
 	awk 'NR==1 || ($$0 !~ /internal\/lib\/localize\// && $$0 !~ /_templ\.go:/)' coverage/c.out > coverage/c.filtered.out
 	go tool cover -func=coverage/c.filtered.out > coverage/summary.filtered.txt
+	awk 'NR>1 {split($$1,a,":"); file=a[1]; pkg=file; sub(/\/[^\/]+$$/,"",pkg); stmts=$$2+0; cnt=$$3+0; total[pkg]+=stmts; if (cnt>0) covered[pkg]+=stmts} END {for (p in total) {pct=(total[p]>0)?(100*covered[p]/total[p]):0; printf "%06.2f%% %4d/%-4d %s\n", pct, covered[p], total[p], p}}' coverage/c.filtered.out | sort -n > coverage/pkg_coverage.txt
 	@echo "Filtered total (excludes localize + *_templ.go): $$(tail -n 1 coverage/summary.filtered.txt)"
+	@echo "Lowest covered packages (filtered):"
+	@awk 'NR<=10 {print}' coverage/pkg_coverage.txt
 
 test/coverage/html: test/coverage ## Generate HTML coverage report
 	go tool cover -html=coverage/c.filtered.out -o coverage/c.filtered.html
@@ -151,6 +154,10 @@ test/coverage/html: test/coverage ## Generate HTML coverage report
 	@xdg-open coverage/c.filtered.html >/dev/null 2>&1 || \
 		python3 -m webbrowser coverage/c.filtered.html >/dev/null 2>&1 || \
 		echo "Open coverage/c.filtered.html manually in your browser"
+
+test/coverage/leaderboard: test/coverage ## Show package coverage leaderboard
+	@echo "Full package coverage leaderboard (filtered):"
+	@cat coverage/pkg_coverage.txt
 
 ##@ Test Coverage
 cover:
