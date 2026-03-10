@@ -65,6 +65,25 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 		}
 	})
 
+	t.Run("HandleSigninPage renders when logto reports error", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		svc.Env.LogtoURL = "https://logto.example.com"
+		svc.Env.LogtoAppID = "app-id"
+		svc.Env.LogtoAppSecret = "secret"
+		svc.Env.LogtoResource = "https://api.example.com"
+
+		app := fiber.New()
+		app.Get("/signin", svc.HandleSigninPage)
+
+		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/signin?logto_error=denied", nil))
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != fiber.StatusOK {
+			t.Fatalf("expected 200 login page render, got %d", resp.StatusCode)
+		}
+	})
+
 	t.Run("HandleSignin returns login page on invalid credentials", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 
@@ -105,6 +124,29 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 		}
 		if !strings.Contains(resp.Header.Get("Set-Cookie"), "Auth=") {
 			t.Fatalf("expected auth cookie to be set")
+		}
+	})
+
+	t.Run("HandleSignin redirects when cookie issuance fails", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		seedAuthUser(t, svc, "jwtfail@example.com", "Password1!", "")
+		svc.Env.JWTSecret = ""
+
+		app := fiber.New()
+		app.Post("/signin", svc.HandleSignin)
+
+		form := url.Values{"email": {"jwtfail@example.com"}, "password": {"Password1!"}}
+		req := httptest.NewRequest(http.MethodPost, "/signin", strings.NewReader(form.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		resp, err := app.Test(req)
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != fiber.StatusSeeOther {
+			t.Fatalf("expected 303 redirect on cookie failure, got %d", resp.StatusCode)
+		}
+		if got := resp.Header.Get("Location"); !strings.HasPrefix(got, "/?") {
+			t.Fatalf("expected redirect to root with msg, got %q", got)
 		}
 	})
 
@@ -188,6 +230,25 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 			t.Fatalf("expected auth cookie to be set")
 		}
 	})
+
+	t.Run("HandleAPISignin returns 500 when cookie issuance fails", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		seedAuthUser(t, svc, "apijwtfail@example.com", "Password1!", "")
+		svc.Env.JWTSecret = ""
+
+		app := fiber.New()
+		app.Post("/api/auth/signin", svc.HandleAPISignin)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/signin", strings.NewReader(`{"email":"apijwtfail@example.com","password":"Password1!"}`))
+		req.Header.Set("Content-Type", "application/json")
+		resp, err := app.Test(req)
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != fiber.StatusInternalServerError {
+			t.Fatalf("expected 500, got %d", resp.StatusCode)
+		}
+	})
 }
 
 func TestAuthHandlersLogoutAndSessionEndpoints(t *testing.T) {
@@ -224,6 +285,28 @@ func TestAuthHandlersLogoutAndSessionEndpoints(t *testing.T) {
 		}
 		if got := resp.Header.Get("HX-Redirect"); got != "/signin" {
 			t.Fatalf("expected HX-Redirect /signin, got %q", got)
+		}
+	})
+
+	t.Run("HandleLogout redirects to logto signout when enabled", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		svc.Env.LogtoURL = "https://logto.example.com"
+		svc.Env.LogtoAppID = "app-id"
+		svc.Env.LogtoAppSecret = "secret"
+		svc.Env.LogtoResource = "https://api.example.com"
+
+		app := fiber.New()
+		app.All("/logout", svc.HandleLogout)
+
+		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/logout", nil))
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != fiber.StatusSeeOther {
+			t.Fatalf("expected 303, got %d", resp.StatusCode)
+		}
+		if got := resp.Header.Get("Location"); got != "/logto/signout" {
+			t.Fatalf("expected /logto/signout redirect, got %q", got)
 		}
 	})
 
@@ -315,6 +398,34 @@ func TestAuthHandlersSignupPaths(t *testing.T) {
 		}
 		if got := resp.Header.Get("Location"); got != "/todos" {
 			t.Fatalf("expected /todos redirect, got %q", got)
+		}
+	})
+
+	t.Run("HandleSignupPage renders for anonymous user", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		app := fiber.New()
+		app.Get("/signup", svc.HandleSignupPage)
+
+		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/signup", nil))
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != fiber.StatusOK {
+			t.Fatalf("expected 200, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("HandleSignupPage renders message query", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		app := fiber.New()
+		app.Get("/signup", svc.HandleSignupPage)
+
+		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/signup?msg=hello", nil))
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != fiber.StatusOK {
+			t.Fatalf("expected 200, got %d", resp.StatusCode)
 		}
 	})
 
@@ -485,6 +596,22 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		}
 	})
 
+	t.Run("HandleResetPassword validates blank email", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		app := fiber.New()
+		app.Post("/resetpassword", svc.HandleResetPassword)
+
+		req := httptest.NewRequest(http.MethodPost, "/resetpassword", strings.NewReader(""))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		resp, err := app.Test(req)
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != fiber.StatusOK {
+			t.Fatalf("expected 200 with validation error, got %d", resp.StatusCode)
+		}
+	})
+
 	t.Run("HandleResetPassword creates token for existing user", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		seedAuthUserWithOptions(t, svc, authUserSeedOptions{
@@ -518,6 +645,27 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		}
 		if resp.StatusCode != fiber.StatusSeeOther {
 			t.Fatalf("expected 303, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("HandleResetPasswordChange renders page for valid token", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		seedAuthUserWithOptions(t, svc, authUserSeedOptions{
+			Email:               "change@example.com",
+			Password:            "Password1!",
+			ResetToken:          "change-ok-token",
+			ResetTokenExpiresAt: time.Now().Add(time.Hour),
+		})
+
+		app := fiber.New()
+		app.Get("/resetpassword/change/:token", svc.HandleResetPasswordChange)
+
+		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/resetpassword/change/change-ok-token", nil))
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != fiber.StatusOK {
+			t.Fatalf("expected 200 render, got %d", resp.StatusCode)
 		}
 	})
 
@@ -588,6 +736,92 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		}
 		if resp2.StatusCode != fiber.StatusOK {
 			t.Fatalf("expected 200 form error for mismatch, got %d", resp2.StatusCode)
+		}
+	})
+
+	t.Run("HandleResetPasswordUpdate redirects when token verify fails", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		app := fiber.New()
+		app.Post("/resetpassword/change", svc.HandleResetPasswordUpdate)
+
+		form := url.Values{
+			"email":    {"unknown@example.com"},
+			"token":    {"missing-token"},
+			"nonce":    {"nonce-3"},
+			"password": {"Password1!"},
+			"confirm":  {"Password1!"},
+		}
+		req := httptest.NewRequest(http.MethodPost, "/resetpassword/change", strings.NewReader(form.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		resp, err := app.Test(req)
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != fiber.StatusSeeOther {
+			t.Fatalf("expected 303 for expired token path, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("HandleResetPasswordUpdate redirects when update fails", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		seedAuthUserWithOptions(t, svc, authUserSeedOptions{
+			Email:               "updatefail@example.com",
+			Password:            "Password1!",
+			ResetToken:          "update-ok-token",
+			ResetTokenExpiresAt: time.Now().Add(time.Hour),
+		})
+
+		app := fiber.New()
+		app.Post("/resetpassword/change", svc.HandleResetPasswordUpdate)
+
+		form := url.Values{
+			"email":    {"different@example.com"},
+			"token":    {"update-ok-token"},
+			"nonce":    {"nonce-4"},
+			"password": {"Password1!"},
+			"confirm":  {"Password1!"},
+		}
+		req := httptest.NewRequest(http.MethodPost, "/resetpassword/change", strings.NewReader(form.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		resp, err := app.Test(req)
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != fiber.StatusSeeOther {
+			t.Fatalf("expected 303 on update failure, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("HandleResetPasswordUpdate redirects to signin on success", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		seedAuthUserWithOptions(t, svc, authUserSeedOptions{
+			Email:               "updatesuccess@example.com",
+			Password:            "Password1!",
+			ResetToken:          "update-success-token",
+			ResetTokenExpiresAt: time.Now().Add(time.Hour),
+		})
+
+		app := fiber.New()
+		app.Post("/resetpassword/change", svc.HandleResetPasswordUpdate)
+
+		form := url.Values{
+			"email":    {"updatesuccess@example.com"},
+			"token":    {"update-success-token"},
+			"nonce":    {"nonce-5"},
+			"password": {"NewPassword1!"},
+			"confirm":  {"NewPassword1!"},
+		}
+		req := httptest.NewRequest(http.MethodPost, "/resetpassword/change", strings.NewReader(form.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		resp, err := app.Test(req)
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != fiber.StatusSeeOther {
+			t.Fatalf("expected 303 on success, got %d", resp.StatusCode)
+		}
+		if got := resp.Header.Get("Location"); got != "/signin" {
+			t.Fatalf("expected /signin redirect, got %q", got)
 		}
 	})
 }
