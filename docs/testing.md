@@ -106,6 +106,21 @@ test suites.
 - Handler suite naming/style is consistent (`tests/<service>_handlers_test.go`).
 - CI gate is green (`go test ./...` and `go test -race ./...`).
 
+## Negative Path Matrix (Appointment + Clinic)
+
+These status expectations are covered in handler suites and should remain
+consistent unless route contracts change.
+
+| Endpoint Class | 400 | 401 | 403 | 404 | 422 |
+| --- | --- | --- | --- | --- | --- |
+| Appointment update/create flows | malformed bind/input | unauthenticated JSON clients | n/a | unknown or cross-user record | invalid create payload (missing required relationships) |
+| Clinic update/delete/search flows | malformed bind/short search term | unauthenticated JSON clients | n/a | unknown or cross-user record | invalid clinic boundaries |
+
+Exceptions:
+
+- `403` is not expected on appointment/clinic routes because these routes are
+  auth-gated (`MustAuthenticate`) but not role-gated (`MustBeAdmin`).
+
 ## Next Expansion
 
 - Replace low-value generic handler tests with service-focused handler tests.

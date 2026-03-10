@@ -39,6 +39,23 @@ func TestClinicHandlers(t *testing.T) {
 		}
 	})
 
+	t.Run("unauthenticated update returns unauthorized for json clients", func(t *testing.T) {
+		clinic := h.createClinic(u.ID, "Clinic Auth")
+
+		resp, _ := h.doRequest(requestOptions{
+			method: http.MethodPost,
+			path:   "/clinics/" + clinic.ID + "/patch",
+			accept: "application/json",
+			body: url.Values{
+				"name": {"Blocked"},
+			},
+		})
+
+		if resp.StatusCode != http.StatusUnauthorized {
+			t.Fatalf("expected 401 for unauthenticated clinic update, got %d", resp.StatusCode)
+		}
+	})
+
 	t.Run("update htmx persists and sets push url", func(t *testing.T) {
 		clinic := h.createClinic(u.ID, "Clinic One")
 
@@ -93,6 +110,24 @@ func TestClinicHandlers(t *testing.T) {
 		}
 		if got := resp.Header.Get("HX-Push-Url"); got == "" {
 			t.Fatalf("expected HX-Push-Url for unchanged clinic update")
+		}
+	})
+
+	t.Run("update returns unprocessable for invalid boundaries", func(t *testing.T) {
+		clinic := h.createClinic(u.ID, "Clinic Invalid")
+
+		resp, _ := h.doRequest(requestOptions{
+			method:    http.MethodPost,
+			path:      "/clinics/" + clinic.ID + "/patch",
+			authToken: token,
+			htmx:      true,
+			body: url.Values{
+				"name": {strings.Repeat("a", 121)},
+			},
+		})
+
+		if resp.StatusCode != http.StatusUnprocessableEntity {
+			t.Fatalf("expected 422 for invalid clinic boundaries, got %d", resp.StatusCode)
 		}
 	})
 

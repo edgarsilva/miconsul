@@ -36,6 +36,26 @@ func TestAppointmentHandlers(t *testing.T) {
 		}
 	})
 
+	t.Run("unauthenticated update returns unauthorized for json clients", func(t *testing.T) {
+		patient := h.createPatient(u.ID, "Patient Auth")
+		clinic := h.createClinic(u.ID, "Clinic Auth")
+		appt := h.createAppointment(u.ID, patient.ID, clinic.ID)
+
+		resp, _ := h.doRequest(requestOptions{
+			method: http.MethodPost,
+			path:   "/appointments/" + appt.ID + "/patch",
+			accept: "application/json",
+			body: url.Values{
+				"duration": {"30"},
+				"bookedAt": {time.Now().Add(2 * time.Hour).Format("2006-01-02T15:04")},
+			},
+		})
+
+		if resp.StatusCode != http.StatusUnauthorized {
+			t.Fatalf("expected 401 for unauthenticated appointment update, got %d", resp.StatusCode)
+		}
+	})
+
 	t.Run("update returns bad request for malformed input", func(t *testing.T) {
 		patient := h.createPatient(u.ID, "Patient Bad Request")
 		clinic := h.createClinic(u.ID, "Clinic Bad Request")
@@ -54,6 +74,24 @@ func TestAppointmentHandlers(t *testing.T) {
 
 		if resp.StatusCode != http.StatusBadRequest {
 			t.Fatalf("expected 400 for malformed appointment input, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("create returns unprocessable for missing required relationships", func(t *testing.T) {
+		resp, _ := h.doRequest(requestOptions{
+			method:    http.MethodPost,
+			path:      "/appointments/",
+			authToken: token,
+			htmx:      true,
+			body: url.Values{
+				"clinicId":  {""},
+				"patientId": {""},
+				"duration":  {"30"},
+			},
+		})
+
+		if resp.StatusCode != http.StatusUnprocessableEntity {
+			t.Fatalf("expected 422 for invalid appointment create payload, got %d", resp.StatusCode)
 		}
 	})
 
