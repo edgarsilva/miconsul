@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -91,6 +92,46 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 		app.Post("/signin", svc.HandleSignin)
 
 		form := url.Values{"email": {"missing@example.com"}, "password": {"BadPassword1!"}}
+		req := httptest.NewRequest(http.MethodPost, "/signin", strings.NewReader(form.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		resp, err := app.Test(req)
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != fiber.StatusOK {
+			t.Fatalf("expected 200 login re-render, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("HandleSignin returns login page when credentials are missing", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+
+		app := fiber.New()
+		app.Post("/signin", svc.HandleSignin)
+
+		req := httptest.NewRequest(http.MethodPost, "/signin", strings.NewReader("email=only@example.com"))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		resp, err := app.Test(req)
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != fiber.StatusOK {
+			t.Fatalf("expected 200 login re-render, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("HandleSignin returns pending-confirmation message", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		seedAuthUserWithOptions(t, svc, authUserSeedOptions{
+			Email:        "signinpending@example.com",
+			Password:     "Password1!",
+			ConfirmToken: "confirm-token",
+		})
+
+		app := fiber.New()
+		app.Post("/signin", svc.HandleSignin)
+
+		form := url.Values{"email": {"signinpending@example.com"}, "password": {"Password1!"}}
 		req := httptest.NewRequest(http.MethodPost, "/signin", strings.NewReader(form.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		resp, err := app.Test(req)
@@ -249,6 +290,7 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 			t.Fatalf("expected 500, got %d", resp.StatusCode)
 		}
 	})
+
 }
 
 func TestAuthHandlersLogoutAndSessionEndpoints(t *testing.T) {
@@ -446,6 +488,22 @@ func TestAuthHandlersSignupPaths(t *testing.T) {
 		}
 	})
 
+	t.Run("HandleSignup returns form error when credentials are missing", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		app := fiber.New()
+		app.Post("/signup", svc.HandleSignup)
+
+		req := httptest.NewRequest(http.MethodPost, "/signup", strings.NewReader(""))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		resp, err := app.Test(req)
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != fiber.StatusOK {
+			t.Fatalf("expected 200 signup re-render, got %d", resp.StatusCode)
+		}
+	})
+
 	t.Run("HandleSignup rejects password mismatch", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		app := fiber.New()
@@ -560,6 +618,55 @@ func TestAuthHandlersSignupConfirmEmailPaths(t *testing.T) {
 		}
 		if !strings.Contains(resp.Header.Get("Set-Cookie"), "Auth=") {
 			t.Fatalf("expected auth cookie on successful confirmation")
+		}
+	})
+
+	t.Run("confirm token update error still redirects to signin", func(t *testing.T) {
+		svc := newAuthServiceForTestsWithUserUpdateError(t)
+		seedAuthUserWithOptions(t, svc, authUserSeedOptions{
+			Email:                 "confirm-update-err@example.com",
+			Password:              "Password1!",
+			ConfirmToken:          "confirm-update-err",
+			ConfirmTokenExpiresAt: time.Now().Add(time.Hour),
+		})
+
+		app := fiber.New()
+		app.Get("/signup/confirm/:token", svc.HandleSignupConfirmEmail)
+
+		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/signup/confirm/confirm-update-err", nil))
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != fiber.StatusSeeOther {
+			t.Fatalf("expected 303 redirect, got %d", resp.StatusCode)
+		}
+		if cookie := resp.Header.Get("Set-Cookie"); cookie != "" {
+			t.Fatalf("did not expect auth cookie when update fails, got %q", cookie)
+		}
+	})
+
+	t.Run("jwt creation error after confirm still redirects", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		svc.Env.JWTSecret = ""
+		seedAuthUserWithOptions(t, svc, authUserSeedOptions{
+			Email:                 "confirm-jwt-err@example.com",
+			Password:              "Password1!",
+			ConfirmToken:          "confirm-jwt-err",
+			ConfirmTokenExpiresAt: time.Now().Add(time.Hour),
+		})
+
+		app := fiber.New()
+		app.Get("/signup/confirm/:token", svc.HandleSignupConfirmEmail)
+
+		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/signup/confirm/confirm-jwt-err", nil))
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != fiber.StatusSeeOther {
+			t.Fatalf("expected 303 redirect, got %d", resp.StatusCode)
+		}
+		if cookie := resp.Header.Get("Set-Cookie"); cookie != "" {
+			t.Fatalf("did not expect auth cookie when jwt fails, got %q", cookie)
 		}
 	})
 }
@@ -824,6 +931,28 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 			t.Fatalf("expected /signin redirect, got %q", got)
 		}
 	})
+
+	t.Run("HandleResetPassword shows error when reset token update fails", func(t *testing.T) {
+		svc := newAuthServiceForTestsNoLegacyColumns(t)
+		seedAuthUserWithOptions(t, svc, authUserSeedOptions{
+			Email:    "reset-update-err@example.com",
+			Password: "Password1!",
+		})
+
+		app := fiber.New()
+		app.Post("/resetpassword", svc.HandleResetPassword)
+
+		form := url.Values{"email": {"reset-update-err@example.com"}}
+		req := httptest.NewRequest(http.MethodPost, "/resetpassword", strings.NewReader(form.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		resp, err := app.Test(req)
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != fiber.StatusOK {
+			t.Fatalf("expected 200 with update error message, got %d", resp.StatusCode)
+		}
+	})
 }
 
 func TestRespondWithRedirect(t *testing.T) {
@@ -896,6 +1025,48 @@ func newAuthServiceForTests(t *testing.T) *service {
 		t.Fatalf("new auth service: %v", err)
 	}
 
+	return svc
+}
+
+func newAuthServiceForTestsNoLegacyColumns(t *testing.T) *service {
+	t.Helper()
+
+	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", strings.ReplaceAll(t.Name(), "/", "_"))
+	gdb, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open sqlite: %v", err)
+	}
+
+	if err := gdb.AutoMigrate(&model.User{}); err != nil {
+		t.Fatalf("migrate user model: %v", err)
+	}
+
+	srv := &server.Server{
+		Env: &appenv.Env{
+			AppName:   "miconsul",
+			JWTSecret: strings.Repeat("x", 32),
+		},
+		DB: &database.Database{DB: gdb},
+	}
+
+	svc, err := New(srv)
+	if err != nil {
+		t.Fatalf("new auth service: %v", err)
+	}
+
+	return svc
+}
+
+func newAuthServiceForTestsWithUserUpdateError(t *testing.T) *service {
+	t.Helper()
+	svc := newAuthServiceForTests(t)
+	if err := svc.DB.Callback().Update().Before("gorm:update").Register("test_force_user_update_error", func(db *gorm.DB) {
+		if db.Statement != nil && db.Statement.Table == "users" {
+			db.AddError(errors.New("forced user update error"))
+		}
+	}); err != nil {
+		t.Fatalf("register update callback: %v", err)
+	}
 	return svc
 }
 
