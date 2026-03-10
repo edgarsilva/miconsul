@@ -129,7 +129,7 @@ test/coverage: ## Coverage
 	@awk '$$3 ~ /^miconsul\/internal\/service\// {print}' coverage/pkg_coverage.txt > coverage/service_pkg_coverage.txt
 	@printf "\033[32m✅ Filtered total: %s\033[0m\n" "$$(awk '/^total:/{print $$NF}' coverage/summary.filtered.txt)"
 	@printf "\033[33m📉 Lowest covered packages (filtered):\033[0m\n"
-	@awk 'NR<=10 {print}' coverage/pkg_coverage.txt
+	@awk 'NR<=15 {print}' coverage/pkg_coverage.txt
 
 test/coverage/html: test/coverage ## Generate HTML coverage report
 	go tool cover -html=coverage/all.filtered.out -o coverage/all.filtered.html
