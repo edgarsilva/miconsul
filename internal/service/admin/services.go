@@ -3,33 +3,72 @@ package admin
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"io/fs"
-	"log"
-	"miconsul/internal/server"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
+
+	"miconsul/internal/server"
 )
 
 type service struct {
 	*server.Server
+	modelNameProvider modelNameProvider
+}
+
+type modelNameProvider interface {
+	ListModelNames() ([]string, error)
+}
+
+type fileModelNameProvider struct {
+	modelsDir string
 }
 
 func NewService(s *server.Server) (service, error) {
+	return NewServiceWithModelNameProvider(s, nil)
+}
+
+func NewServiceWithModelNameProvider(s *server.Server, provider modelNameProvider) (service, error) {
 	if s == nil {
 		return service{}, errors.New("admin service requires a non-nil server")
 	}
+	if provider == nil {
+		modelsDir, err := resolveModelsDir()
+		if err != nil {
+			return service{}, err
+		}
+		provider = fileModelNameProvider{modelsDir: modelsDir}
+	}
 
 	return service{
-		Server: s,
+		Server:            s,
+		modelNameProvider: provider,
 	}, nil
 }
 
-func FindModelName(dirEntry fs.DirEntry) (string, error) {
-	filename := dirEntry.Name()
+func (provider fileModelNameProvider) ListModelNames() ([]string, error) {
+	dirEntries, err := os.ReadDir(provider.modelsDir)
+	if err != nil {
+		return nil, err
+	}
 
-	f, err := os.Open("internal/model/" + filename)
+	models := make([]string, 0, len(dirEntries))
+	for _, entry := range dirEntries {
+		modelName, err := findModelName(provider.modelsDir, entry)
+		if err != nil {
+			continue
+		}
+		models = append(models, modelName)
+	}
+
+	return models, nil
+}
+
+func findModelName(modelsDir string, dirEntry fs.DirEntry) (string, error) {
+	filename := filepath.Join(modelsDir, dirEntry.Name())
+
+	f, err := os.Open(filename)
 	if err != nil {
 		return "", err
 	}
@@ -40,7 +79,6 @@ func FindModelName(dirEntry fs.DirEntry) (string, error) {
 	modelName := ""
 	for scanner.Scan() {
 		line := scanner.Text()
-		fmt.Println(line)
 		if strings.Contains(line, "--model:") {
 			parts := strings.Split(line, ":")
 			if len(parts) < 2 {
@@ -52,22 +90,18 @@ func FindModelName(dirEntry fs.DirEntry) (string, error) {
 	}
 
 	if modelName == "" {
-		return "", errors.New("model name not found in " + filename)
+		return "", errors.New("model name not found in " + dirEntry.Name())
 	}
 
 	return modelName, nil
 }
 
-func FindFile(path string) (string, error) {
-	err := filepath.WalkDir(path, func(path string, info fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		return nil
-	})
-	if err != nil {
-		log.Println(err)
+func resolveModelsDir() (string, error) {
+	_, currentFile, _, ok := runtime.Caller(0)
+	if !ok {
+		return "", errors.New("failed to resolve admin service source path")
 	}
 
-	return "", nil
+	modelsDir := filepath.Clean(filepath.Join(filepath.Dir(currentFile), "../../model"))
+	return modelsDir, nil
 }
