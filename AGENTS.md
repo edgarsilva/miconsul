@@ -22,6 +22,7 @@ This file provides repo-specific guidance for coding assistants working on this 
   - `c.Bind().Body(...)` instead of legacy body parser helpers
 - Prefer `c.Context()` when passing request context to non-Fiber libraries (DB, tracing, etc.).
 - In service/handler files, keep primary exported handlers/entrypoints near the top and move private helpers/utilities to the bottom.
+- Avoid introducing runtime `os.Getenv` reads in application/service code; route configuration access through `internal/lib/appenv` instead. If you encounter new `os.Getenv` usage outside mailer or env-loading boundaries, warn and offer to move it into `appenv.Env`.
 
 ## templ Guidance Source
 
@@ -47,6 +48,7 @@ This file provides repo-specific guidance for coding assistants working on this 
 
 - Never create a git commit unless the user explicitly asks in that moment.
 - After code changes, always pause and ask whether to commit.
+- Always let the user review changes before committing; do not commit immediately after implementation unless the user explicitly requests commit at that point.
 
 ## Branch Workflow
 

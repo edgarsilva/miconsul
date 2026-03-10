@@ -39,6 +39,23 @@ func TestClinicHandlers(t *testing.T) {
 		}
 	})
 
+	t.Run("unauthenticated update returns unauthorized for json clients", func(t *testing.T) {
+		clinic := h.createClinic(u.ID, "Clinic Auth")
+
+		resp, _ := h.doRequest(requestOptions{
+			method: http.MethodPost,
+			path:   "/clinics/" + clinic.ID + "/patch",
+			accept: "application/json",
+			body: url.Values{
+				"name": {"Blocked"},
+			},
+		})
+
+		if resp.StatusCode != http.StatusUnauthorized {
+			t.Fatalf("expected 401 for unauthenticated clinic update, got %d", resp.StatusCode)
+		}
+	})
+
 	t.Run("update htmx persists and sets push url", func(t *testing.T) {
 		clinic := h.createClinic(u.ID, "Clinic One")
 
@@ -70,6 +87,47 @@ func TestClinicHandlers(t *testing.T) {
 		}
 		if updated.Name != "Clinic Updated" {
 			t.Fatalf("expected clinic name update, got %q", updated.Name)
+		}
+	})
+
+	t.Run("update with unchanged values remains success", func(t *testing.T) {
+		clinic := h.createClinic(u.ID, "Clinic Stable")
+
+		resp, _ := h.doRequest(requestOptions{
+			method:    http.MethodPost,
+			path:      "/clinics/" + clinic.ID + "/patch",
+			authToken: token,
+			htmx:      true,
+			body: url.Values{
+				"name":  {"Clinic Stable"},
+				"email": {""},
+				"phone": {""},
+			},
+		})
+
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("expected 200 for unchanged clinic update, got %d", resp.StatusCode)
+		}
+		if got := resp.Header.Get("HX-Push-Url"); got == "" {
+			t.Fatalf("expected HX-Push-Url for unchanged clinic update")
+		}
+	})
+
+	t.Run("update returns unprocessable for invalid boundaries", func(t *testing.T) {
+		clinic := h.createClinic(u.ID, "Clinic Invalid")
+
+		resp, _ := h.doRequest(requestOptions{
+			method:    http.MethodPost,
+			path:      "/clinics/" + clinic.ID + "/patch",
+			authToken: token,
+			htmx:      true,
+			body: url.Values{
+				"name": {strings.Repeat("a", 121)},
+			},
+		})
+
+		if resp.StatusCode != http.StatusUnprocessableEntity {
+			t.Fatalf("expected 422 for invalid clinic boundaries, got %d", resp.StatusCode)
 		}
 	})
 
@@ -145,6 +203,42 @@ func TestClinicHandlers(t *testing.T) {
 		}
 		if !strings.Contains(body, "Bright Dental") {
 			t.Fatalf("expected search results to include clinic")
+		}
+	})
+
+	t.Run("cross-user update and delete are scoped", func(t *testing.T) {
+		owner := h.createUser(model.UserRoleUser)
+		ownerClinic := h.createClinic(owner.ID, "Owner Clinic")
+
+		resp, _ := h.doRequest(requestOptions{
+			method:    http.MethodPost,
+			path:      "/clinics/" + ownerClinic.ID + "/patch",
+			authToken: token,
+			htmx:      true,
+			body: url.Values{
+				"name": {"Hijacked Clinic"},
+			},
+		})
+		if resp.StatusCode != http.StatusNotFound {
+			t.Fatalf("expected 404 for cross-user clinic update, got %d", resp.StatusCode)
+		}
+
+		resp, _ = h.doRequest(requestOptions{
+			method:    http.MethodDelete,
+			path:      "/clinics/" + ownerClinic.ID,
+			authToken: token,
+			htmx:      true,
+		})
+		if resp.StatusCode != http.StatusNotFound {
+			t.Fatalf("expected 404 for cross-user clinic delete, got %d", resp.StatusCode)
+		}
+
+		unchanged, err := gorm.G[model.Clinic](h.db.GormDB()).Where("id = ?", ownerClinic.ID).Take(t.Context())
+		if err != nil {
+			t.Fatalf("load owner clinic after cross-user attempts: %v", err)
+		}
+		if unchanged.Name != "Owner Clinic" {
+			t.Fatalf("expected owner clinic name unchanged, got %q", unchanged.Name)
 		}
 	})
 }

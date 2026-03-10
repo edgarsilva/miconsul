@@ -137,8 +137,53 @@ test/integration: ## Run integration tests
 	@echo "Testing integration"
 	go test -v ./tests/... -coverprofile=coverage/int_c.out
 
+test/integration/coverage: ## Integration coverage against service packages
+	@mkdir -p coverage
+	@rm -f coverage/int_c.out coverage/int_c.filtered.out coverage/int_summary.filtered.txt coverage/int_pkg_coverage.txt
+	@printf "\033[36m🧪 Running integration coverage (service-only)...\033[0m\n"
+	@go test ./tests/... -covermode=atomic -coverpkg=./internal/service/... -coverprofile=coverage/int_c.out
+	@printf "\033[35m🧹 Filtering generated files from integration profile...\033[0m\n"
+	@awk 'NR==1 || ($$0 !~ /internal\/lib\/localize\// && $$0 !~ /_templ\.go:/)' coverage/int_c.out > coverage/int_c.filtered.out
+	@go tool cover -func=coverage/int_c.filtered.out > coverage/int_summary.filtered.txt
+	@awk 'NR>1 {split($$1,a,":"); file=a[1]; pkg=file; sub(/\/[^\/]+$$/,"",pkg); stmts=$$2+0; cnt=$$3+0; total[pkg]+=stmts; if (cnt>0) covered[pkg]+=stmts} END {for (p in total) {pct=(total[p]>0)?(100*covered[p]/total[p]):0; printf "%06.2f%% %4d/%-4d %s\n", pct, covered[p], total[p], p}}' coverage/int_c.filtered.out | sort -n > coverage/int_pkg_coverage.txt
+	@printf "\033[32m✅ Integration filtered total: %s\033[0m\n" "$$(awk '/^total:/{print $$NF}' coverage/int_summary.filtered.txt)"
+	@printf "\033[33m📉 Lowest covered service packages (filtered):\033[0m\n"
+	@awk 'NR<=10 {print}' coverage/int_pkg_coverage.txt
+
+test/integration/coverage/html: test/integration/coverage ## Generate integration coverage HTML report
+	go tool cover -html=coverage/int_c.filtered.out -o coverage/int_c.filtered.html
+	@echo "Integration coverage HTML generated at coverage/int_c.filtered.html"
+	@xdg-open coverage/int_c.filtered.html >/dev/null 2>&1 || \
+		python3 -m webbrowser coverage/int_c.filtered.html >/dev/null 2>&1 || \
+		echo "Open coverage/int_c.filtered.html manually in your browser"
+
+test/integration/coverage/leaderboard: test/integration/coverage ## Show integration service coverage leaderboard
+	@echo "Full integration service coverage leaderboard (filtered):"
+	@cat coverage/int_pkg_coverage.txt
+
 test/coverage: ## Coverage
-	go test ./... -coverprofile=coverage/c.out && go tool cover -func=coverage/c.out
+	@mkdir -p coverage
+	@rm -f coverage/c.out coverage/c.filtered.out coverage/summary.filtered.txt coverage/pkg_coverage.txt
+	@printf "\033[36m🧪 Running full-suite coverage...\033[0m\n"
+	@go test ./... -covermode=atomic -coverprofile=coverage/c.out
+	@printf "\033[35m🧹 Filtering generated files from coverage profile...\033[0m\n"
+	@awk 'NR==1 || ($$0 !~ /internal\/lib\/localize\// && $$0 !~ /_templ\.go:/)' coverage/c.out > coverage/c.filtered.out
+	@go tool cover -func=coverage/c.filtered.out > coverage/summary.filtered.txt
+	@awk 'NR>1 {split($$1,a,":"); file=a[1]; pkg=file; sub(/\/[^\/]+$$/,"",pkg); stmts=$$2+0; cnt=$$3+0; total[pkg]+=stmts; if (cnt>0) covered[pkg]+=stmts} END {for (p in total) {pct=(total[p]>0)?(100*covered[p]/total[p]):0; printf "%06.2f%% %4d/%-4d %s\n", pct, covered[p], total[p], p}}' coverage/c.filtered.out | sort -n > coverage/pkg_coverage.txt
+	@printf "\033[32m✅ Filtered total: %s\033[0m\n" "$$(awk '/^total:/{print $$NF}' coverage/summary.filtered.txt)"
+	@printf "\033[33m📉 Lowest covered packages (filtered):\033[0m\n"
+	@awk 'NR<=10 {print}' coverage/pkg_coverage.txt
+
+test/coverage/html: test/coverage ## Generate HTML coverage report
+	go tool cover -html=coverage/c.filtered.out -o coverage/c.filtered.html
+	@echo "Coverage HTML generated at coverage/c.filtered.html"
+	@xdg-open coverage/c.filtered.html >/dev/null 2>&1 || \
+		python3 -m webbrowser coverage/c.filtered.html >/dev/null 2>&1 || \
+		echo "Open coverage/c.filtered.html manually in your browser"
+
+test/coverage/leaderboard: test/coverage ## Show package coverage leaderboard
+	@echo "Full package coverage leaderboard (filtered):"
+	@cat coverage/pkg_coverage.txt
 
 ##@ Test Coverage
 cover:
@@ -260,7 +305,9 @@ load/test: ## Run authenticated oha load test (30s, 30 concurrency)
 	ai/templ-sync \
 	build start run air/watch dev \
 	test test/unit test/integration clean \
-	test/race test/v test/unit/v test/unit/c test/coverage \
+	test/race test/v test/unit/v test/unit/c \
+	test/coverage test/coverage/html test/coverage/leaderboard \
+	test/integration/coverage test/integration/coverage/html test/integration/coverage/leaderboard \
 	db/create db/delete db/setup db/reset db/dump_schema db/seed \
 	migrations/apply migrate migrations/create migrations/status migrations/rollback migrations/redo \
 	docker/up docker/dev docker/detached docker/down docker/logs docker/app-logs docker/lgtm-logs docker/build \

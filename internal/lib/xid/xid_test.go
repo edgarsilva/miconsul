@@ -49,6 +49,16 @@ func TestValidate(t *testing.T) {
 	})
 }
 
+func TestPure(t *testing.T) {
+	id := Pure()
+	if len(id) != length {
+		t.Fatalf("expected Pure() length %d, got %d", length, len(id))
+	}
+	if err := Validate("", id); err != nil {
+		t.Fatalf("expected Pure() id to validate: %v", err)
+	}
+}
+
 func BenchmarkNewXID(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_ = New("tdo")

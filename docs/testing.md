@@ -51,6 +51,41 @@ The CI gate runs:
 
 This keeps route regressions and concurrency issues visible before merge.
 
+## Coverage Baseline
+
+Current global baseline (2026-03-09):
+
+- `total: 0.2%` (`go tool cover -func=coverage/c.out`)
+
+Coverage reporting uses a filtered total as the engineer-facing metric:
+
+- filtered total from `coverage/c.filtered.out` (excludes generated files under `internal/lib/localize` and `*_templ.go`)
+- raw profile remains available at `coverage/c.out` for debugging
+- package leaderboard from `coverage/pkg_coverage.txt` to prioritize low-coverage packages
+- integration filtered profile from `coverage/int_c.filtered.out` (tests suite measured against `./internal/service/...`)
+- integration package leaderboard from `coverage/int_pkg_coverage.txt`
+
+CI summary reports both filtered metrics:
+
+- full-suite filtered total (`go test ./...`)
+- integration-suite filtered total (`go test ./tests/... -coverpkg=./internal/service/...`)
+
+Generate and review coverage locally:
+
+```bash
+go test ./... -coverprofile=coverage/c.out
+awk 'NR==1 || ($0 !~ /internal\/lib\/localize\// && $0 !~ /_templ\.go:/)' coverage/c.out > coverage/c.filtered.out
+go tool cover -func=coverage/c.filtered.out
+make test/coverage/leaderboard
+make test/integration/coverage
+make test/integration/coverage/leaderboard
+```
+
+Notes:
+
+- This baseline is informational for now; no coverage threshold gate is enforced yet.
+- Next step is to introduce phased coverage gates in CI (global first, then package-level targets).
+
 ## Testing Maintenance Loop
 
 - Any bugfix touching handlers/routes must add or update at least one regression test in the corresponding `tests/<service>_handlers_test.go` file.
@@ -87,6 +122,21 @@ test suites.
   `tests/regression_routes_test.go`.
 - Handler suite naming/style is consistent (`tests/<service>_handlers_test.go`).
 - CI gate is green (`go test ./...` and `go test -race ./...`).
+
+## Negative Path Matrix (Appointment + Clinic)
+
+These status expectations are covered in handler suites and should remain
+consistent unless route contracts change.
+
+| Endpoint Class | 400 | 401 | 403 | 404 | 422 |
+| --- | --- | --- | --- | --- | --- |
+| Appointment update/create flows | malformed bind/input | unauthenticated JSON clients | n/a | unknown or cross-user record | invalid create payload (missing required relationships) |
+| Clinic update/delete/search flows | malformed bind/short search term | unauthenticated JSON clients | n/a | unknown or cross-user record | invalid clinic boundaries |
+
+Exceptions:
+
+- `403` is not expected on appointment/clinic routes because these routes are
+  auth-gated (`MustAuthenticate`) but not role-gated (`MustBeAdmin`).
 
 ## Next Expansion
 

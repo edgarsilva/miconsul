@@ -65,6 +65,26 @@ func TestBuildSQLiteDSNAppliesOptionOverrides(t *testing.T) {
 	}
 }
 
+func TestBuildSQLiteDSNUsesDefaultPathWhenBlank(t *testing.T) {
+	dsn := buildSQLiteDSN("   ", nil)
+	base, params := splitDSN(t, dsn)
+	if base != "database/app.sqlite" {
+		t.Fatalf("expected default base path, got %q", base)
+	}
+	assertDefaultSQLiteParams(t, params)
+}
+
+func TestBuildSQLiteDSNIgnoresBlankOptionKeysAndValues(t *testing.T) {
+	dsn := buildSQLiteDSN("database/app.sqlite", SQLiteOptions{"": "x", "cache": "", "mode": "memory"})
+	_, params := splitDSN(t, dsn)
+	if got := params.Get("mode"); got != "memory" {
+		t.Fatalf("expected mode override to memory, got %q", got)
+	}
+	if got := params.Get("cache"); got != "" {
+		t.Fatalf("expected blank cache option to be ignored, got %q", got)
+	}
+}
+
 func splitDSN(t *testing.T, dsn string) (string, url.Values) {
 	t.Helper()
 

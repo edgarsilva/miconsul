@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  go-tests:
+  lint-static:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,8 +20,116 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - name: Run unit and integration tests
-        run: go test ./...
+      - name: Run lint/static checks
+        run: go vet ./...
+
+  unit-service-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Run unit and service tests
+        run: go test ./internal/... -count=1
+
+  integration-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Run integration tests
+        run: go test ./tests/... -count=1
+
+  race-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
 
       - name: Run race detector
-        run: go test -race ./...
+        run: go test -race ./... -count=1
+
+  coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Generate coverage profile and summary
+        run: |
+          mkdir -p coverage
+
+          # Full suite filtered coverage
+          go test ./... -covermode=atomic -coverprofile=coverage/c.out
+          awk 'NR==1 || ($0 !~ /internal\/lib\/localize\// && $0 !~ /_templ\.go:/)' coverage/c.out > coverage/c.filtered.out
+          go tool cover -func=coverage/c.filtered.out > coverage/summary.filtered.txt
+          filtered_total_line=$(tail -n 1 coverage/summary.filtered.txt)
+          echo "$filtered_total_line"
+
+          # Integration suite filtered coverage against service packages only
+          go test ./tests/... -covermode=atomic -coverpkg=./internal/service/... -coverprofile=coverage/int_c.out
+          awk 'NR==1 || ($0 !~ /internal\/lib\/localize\// && $0 !~ /_templ\.go:/)' coverage/int_c.out > coverage/int_c.filtered.out
+          go tool cover -func=coverage/int_c.filtered.out > coverage/int_summary.filtered.txt
+          integration_filtered_total_line=$(tail -n 1 coverage/int_summary.filtered.txt)
+          echo "$integration_filtered_total_line"
+
+          {
+            echo "## Coverage (Phase 1: report-only)"
+            echo ""
+            echo "- Full-suite filtered total (excludes localize + *_templ.go): \`$filtered_total_line\`"
+            echo "- Integration-suite filtered total (service-only; tests/... with -coverpkg=./internal/service/...): \`$integration_filtered_total_line\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-artifacts
+          path: |
+            coverage/c.out
+            coverage/c.filtered.out
+            coverage/summary.filtered.txt
+            coverage/int_c.out
+            coverage/int_c.filtered.out
+            coverage/int_summary.filtered.txt
+
+  go-tests:
+    runs-on: ubuntu-latest
+    needs:
+      - lint-static
+      - unit-service-tests
+      - integration-tests
+      - race-tests
+      - coverage
+
+    steps:
+      - name: Confirm test workflow gates passed
+        run: echo "All test workflow stages completed successfully."
