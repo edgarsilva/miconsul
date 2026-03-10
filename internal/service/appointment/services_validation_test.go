@@ -60,7 +60,7 @@ func TestServiceInputValidation(t *testing.T) {
 		if err := svc.CancelAppointmentByID(ctx, "usr_1", "apnt_1", appointmentCancelUpdates{Status: model.AppointmentStatus("invalid")}); err == nil {
 			t.Fatalf("expected cancel invalid status error")
 		}
-		if err := svc.UpdateAppointmentByIDAndToken(ctx, "apnt_1", "tok", []string{"Status"}, model.Appointment{Status: model.AppointmentStatus("invalid")}); err == nil {
+		if err := svc.UpdateAppointmentByIDAndToken(ctx, "apnt_1", "tok", []string{"Status"}, appointmentTokenUpdates{Status: model.AppointmentStatus("invalid")}); err == nil {
 			t.Fatalf("expected token update invalid status error")
 		}
 	})
