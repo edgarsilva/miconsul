@@ -81,13 +81,15 @@ jobs:
       - name: Generate coverage profile and summary
         run: |
           make test/coverage
+          make test/coverage/gate-global-65
+          make test/coverage/gate-service-floor-65
           filtered_total_line=$(tail -n 1 coverage/summary.filtered.txt)
           service_lowest=$(head -n 10 coverage/service_pkg_coverage.txt)
 
           {
             echo "## Coverage"
             echo ""
-            echo "- Unified filtered total (internal + tests, excludes localize + *_templ.go): \`$filtered_total_line\`"
+            echo "- Coverage total (generated files excluded): \`$filtered_total_line\`"
             echo ""
             echo "### Lowest service package coverage (filtered)"
             echo "\`\`\`"

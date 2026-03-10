@@ -127,7 +127,7 @@ test/coverage: ## Coverage
 	@go tool cover -func=coverage/all.filtered.out > coverage/summary.filtered.txt
 	@awk 'NR>1 {split($$1,a,":"); file=a[1]; block=$$1; stmts=$$2+0; cnt=$$3+0; if (!(block in seen)) {seen[block]=1; blockStmts[block]=stmts; blockFile[block]=file} if (cnt>0) blockCovered[block]=1} END {for (b in seen) {pkg=blockFile[b]; sub(/\/[^\/]+$$/,"",pkg); total[pkg]+=blockStmts[b]; if (blockCovered[b]) covered[pkg]+=blockStmts[b]} for (p in total) {pct=(total[p]>0)?(100*covered[p]/total[p]):0; printf "%06.2f%% %4d/%-4d %s\n", pct, covered[p], total[p], p}}' coverage/all.filtered.out | sort -n > coverage/pkg_coverage.txt
 	@awk '$$3 ~ /^miconsul\/internal\/service\// {print}' coverage/pkg_coverage.txt > coverage/service_pkg_coverage.txt
-	@printf "\033[32m✅ Filtered total: %s\033[0m\n" "$$(awk '/^total:/{print $$NF}' coverage/summary.filtered.txt)"
+	@printf "\033[32m✅ Coverage total: %s (generated files excluded)\033[0m\n" "$$(awk '/^total:/{print $$NF}' coverage/summary.filtered.txt)"
 	@printf "\033[33m📉 Lowest covered packages (filtered):\033[0m\n"
 	@awk 'NR<=15 {print}' coverage/pkg_coverage.txt
 
@@ -141,6 +141,26 @@ test/coverage/html: test/coverage ## Generate HTML coverage report
 test/coverage/service-leaderboard: test/coverage ## Show service package coverage leaderboard
 	@echo "Service package coverage leaderboard (filtered):"
 	@cat coverage/service_pkg_coverage.txt
+
+test/coverage/gate-global-65: ## Fail if unified filtered coverage is < 65%
+	@test -f coverage/summary.filtered.txt || (echo "Run make test/coverage first" && exit 1)
+	@pct=$$(awk '/^total:/{gsub("%","",$$NF); print $$NF}' coverage/summary.filtered.txt); \
+	if awk "BEGIN {exit !($$pct >= 65)}"; then \
+		echo "✅ Unified filtered coverage gate passed: $$pct% (>= 65%)"; \
+	else \
+		echo "❌ Unified filtered coverage gate failed: $$pct% (< 65%)"; \
+		exit 1; \
+	fi
+
+test/coverage/gate-service-floor-65: ## Fail if any service package coverage is < 65%
+	@test -f coverage/service_pkg_coverage.txt || (echo "Run make test/coverage first" && exit 1)
+	@violations=$$(awk '$$1+0 < 65 {print}' coverage/service_pkg_coverage.txt); \
+	if [ -n "$$violations" ]; then \
+		echo "❌ Service floor gate failed (< 65%):"; \
+		printf "%s\n" "$$violations"; \
+		exit 1; \
+	fi; \
+	echo "✅ Service floor gate passed (all internal/service/* >= 65%)"
 
 ##@ Cleanup
 clean: ## Remove build artifacts
@@ -250,6 +270,7 @@ load/test: ## Run authenticated oha load test (30s, 30 concurrency)
 	build start run air/watch dev \
 	test test/race clean \
 	test/coverage test/coverage/html test/coverage/service-leaderboard \
+	test/coverage/gate-global-65 test/coverage/gate-service-floor-65 \
 	db/create db/delete db/setup db/reset db/dump_schema db/seed \
 	migrations/apply migrate migrations/create migrations/status migrations/rollback migrations/redo \
 	docker/up docker/dev docker/detached docker/down docker/logs docker/app-logs docker/lgtm-logs docker/build \

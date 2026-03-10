@@ -19,6 +19,28 @@ func TestPatientServiceDBFlows(t *testing.T) {
 	svc, user := newPatientServiceForTests(t)
 	ctx := context.Background()
 
+	t.Run("id guards and show page helper", func(t *testing.T) {
+		if _, err := svc.TakePatientByID(ctx, user.ID, " "); err != ErrIDRequired {
+			t.Fatalf("expected ErrIDRequired from TakePatientByID, got %v", err)
+		}
+
+		showPatient, err := svc.PatientForShowPage(ctx, user.ID, "")
+		if err != nil {
+			t.Fatalf("expected empty show page patient without error, got %v", err)
+		}
+		if showPatient.ID != "" {
+			t.Fatalf("expected zero patient id for empty show page id, got %q", showPatient.ID)
+		}
+
+		showPatient, err = svc.PatientForShowPage(ctx, user.ID, "new")
+		if err != nil {
+			t.Fatalf("expected new show page patient without error, got %v", err)
+		}
+		if showPatient.ID != "" {
+			t.Fatalf("expected zero patient id for new show page id, got %q", showPatient.ID)
+		}
+	})
+
 	base := model.Patient{UserID: user.ID, Name: "Alpha", Age: 28, Phone: "111", Email: "alpha@example.com"}
 	if err := svc.CreatePatient(ctx, &base); err != nil {
 		t.Fatalf("create base patient: %v", err)
@@ -89,6 +111,33 @@ func TestPatientServiceDBFlows(t *testing.T) {
 		}
 		if err := svc.DeletePatientByID(ctx, user.ID, base.ID); err != gorm.ErrRecordNotFound {
 			t.Fatalf("expected not found on repeated delete, got %v", err)
+		}
+	})
+
+	t.Run("patient exists helper branches", func(t *testing.T) {
+		p := model.Patient{UserID: user.ID, Name: "Exists", Age: 20, Phone: "444", Email: "exists@example.com"}
+		if err := svc.CreatePatient(ctx, &p); err != nil {
+			t.Fatalf("create patient for exists helper: %v", err)
+		}
+
+		exists, err := svc.patientExistsByID(ctx, user.ID, p.ID)
+		if err != nil {
+			t.Fatalf("patient exists check: %v", err)
+		}
+		if !exists {
+			t.Fatalf("expected patient to exist")
+		}
+
+		exists, err = svc.patientExistsByID(ctx, user.ID, "missing")
+		if err != nil {
+			t.Fatalf("missing patient exists check: %v", err)
+		}
+		if exists {
+			t.Fatalf("expected missing patient to not exist")
+		}
+
+		if _, err := svc.patientExistsByID(ctx, user.ID, " "); err != ErrIDRequired {
+			t.Fatalf("expected ErrIDRequired for blank patient id, got %v", err)
 		}
 	})
 }

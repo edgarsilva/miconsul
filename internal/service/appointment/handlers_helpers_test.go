@@ -2,6 +2,7 @@ package appointment
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -9,6 +10,7 @@ import (
 	"miconsul/internal/server"
 
 	"github.com/gofiber/fiber/v3"
+	"gorm.io/gorm"
 )
 
 func TestAppointmentForShowPage(t *testing.T) {
@@ -62,6 +64,81 @@ func TestPatientAndClinicSelectionHelpers(t *testing.T) {
 	if resp.StatusCode != fiber.StatusNoContent {
 		t.Fatalf("expected status 204, got %d", resp.StatusCode)
 	}
+}
+
+func TestSelectionHelpersBranchesAndNotFoundPage(t *testing.T) {
+	svc, user, clinic, patient := newAppointmentServiceForTests(t)
+
+	t.Run("selected helpers return entities when ids exist", func(t *testing.T) {
+		app := fiber.New()
+		app.Get("/", func(c fiber.Ctx) error {
+			gotPatient, err := svc.selectedPatientFromQuery(c, user.ID, patient.ID)
+			if err != nil {
+				t.Fatalf("expected selected patient success, got %v", err)
+			}
+			if gotPatient.ID != patient.ID {
+				t.Fatalf("expected patient id %q, got %q", patient.ID, gotPatient.ID)
+			}
+
+			gotClinic, err := svc.selectedClinicFromQuery(c, user.ID, clinic.ID)
+			if err != nil {
+				t.Fatalf("expected selected clinic success, got %v", err)
+			}
+			if gotClinic.ID != clinic.ID {
+				t.Fatalf("expected clinic id %q, got %q", clinic.ID, gotClinic.ID)
+			}
+
+			return c.SendStatus(fiber.StatusNoContent)
+		})
+
+		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/", nil))
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != fiber.StatusNoContent {
+			t.Fatalf("expected 204, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("selected helpers bubble not-found errors for missing ids", func(t *testing.T) {
+		app := fiber.New()
+		app.Get("/", func(c fiber.Ctx) error {
+			_, err := svc.selectedPatientFromQuery(c, user.ID, "missing")
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				t.Fatalf("expected patient record not found, got %v", err)
+			}
+
+			_, err = svc.selectedClinicFromQuery(c, user.ID, "missing")
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				t.Fatalf("expected clinic record not found, got %v", err)
+			}
+
+			return c.SendStatus(fiber.StatusNoContent)
+		})
+
+		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/", nil))
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != fiber.StatusNoContent {
+			t.Fatalf("expected 204, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("renders appointment not found page", func(t *testing.T) {
+		app := fiber.New()
+		app.Get("/", func(c fiber.Ctx) error {
+			return svc.renderAppointmentNotFoundPage(c, "Missing appointment", "warning")
+		})
+
+		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/", nil))
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != fiber.StatusOK {
+			t.Fatalf("expected 200, got %d", resp.StatusCode)
+		}
+	})
 }
 
 func TestRespondWithRedirect(t *testing.T) {
