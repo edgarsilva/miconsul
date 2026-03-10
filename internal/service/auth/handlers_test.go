@@ -94,7 +94,7 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 		form := url.Values{"email": {"missing@example.com"}, "password": {"BadPassword1!"}}
 		req := httptest.NewRequest(http.MethodPost, "/signin", strings.NewReader(form.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -111,7 +111,7 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 
 		req := httptest.NewRequest(http.MethodPost, "/signin", strings.NewReader("email=only@example.com"))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -134,7 +134,7 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 		form := url.Values{"email": {"signinpending@example.com"}, "password": {"Password1!"}}
 		req := httptest.NewRequest(http.MethodPost, "/signin", strings.NewReader(form.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -153,7 +153,7 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 		form := url.Values{"email": {"ok@example.com"}, "password": {"Password1!"}}
 		req := httptest.NewRequest(http.MethodPost, "/signin", strings.NewReader(form.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -179,7 +179,7 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 		form := url.Values{"email": {"jwtfail@example.com"}, "password": {"Password1!"}}
 		req := httptest.NewRequest(http.MethodPost, "/signin", strings.NewReader(form.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -224,7 +224,7 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 
 		req := httptest.NewRequest(http.MethodPost, "/api/auth/signin", strings.NewReader(`{"email":"missing@example.com","password":"Password1!"}`))
 		req.Header.Set("Content-Type", "application/json")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -242,7 +242,7 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 
 		req := httptest.NewRequest(http.MethodPost, "/api/auth/signin", strings.NewReader(`{"email":"pending@example.com","password":"Password1!"}`))
 		req.Header.Set("Content-Type", "application/json")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -260,7 +260,7 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 
 		req := httptest.NewRequest(http.MethodPost, "/api/auth/signin", strings.NewReader(`{"email":"api@example.com","password":"Password1!","remember_me":true}`))
 		req.Header.Set("Content-Type", "application/json")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -282,7 +282,7 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 
 		req := httptest.NewRequest(http.MethodPost, "/api/auth/signin", strings.NewReader(`{"email":"apijwtfail@example.com","password":"Password1!"}`))
 		req.Header.Set("Content-Type", "application/json")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -318,7 +318,7 @@ func TestAuthHandlersLogoutAndSessionEndpoints(t *testing.T) {
 
 		req := httptest.NewRequest(http.MethodGet, "/logout", nil)
 		req.Header.Set("HX-Request", "true")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -409,7 +409,7 @@ func TestAuthHandlersResetPasswordShortCircuits(t *testing.T) {
 
 		req := httptest.NewRequest(http.MethodPost, "/resetpassword/change", strings.NewReader(""))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -479,7 +479,7 @@ func TestAuthHandlersSignupPaths(t *testing.T) {
 		form := url.Values{"email": {"bad-email"}, "password": {"Password1!"}, "confirm": {"Password1!"}}
 		req := httptest.NewRequest(http.MethodPost, "/signup", strings.NewReader(form.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -495,7 +495,7 @@ func TestAuthHandlersSignupPaths(t *testing.T) {
 
 		req := httptest.NewRequest(http.MethodPost, "/signup", strings.NewReader(""))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -512,7 +512,7 @@ func TestAuthHandlersSignupPaths(t *testing.T) {
 		form := url.Values{"email": {"new@example.com"}, "password": {"Password1!"}, "confirm": {"Different1!"}}
 		req := httptest.NewRequest(http.MethodPost, "/signup", strings.NewReader(form.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -535,7 +535,7 @@ func TestAuthHandlersSignupPaths(t *testing.T) {
 		form := url.Values{"email": {"pending2@example.com"}, "password": {"Password1!"}, "confirm": {"Password1!"}}
 		req := httptest.NewRequest(http.MethodPost, "/signup", strings.NewReader(form.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -555,7 +555,7 @@ func TestAuthHandlersSignupPaths(t *testing.T) {
 		form := url.Values{"email": {"brandnew@example.com"}, "password": {"Password1!"}, "confirm": {"Password1!"}}
 		req := httptest.NewRequest(http.MethodPost, "/signup", strings.NewReader(form.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -694,7 +694,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		form := url.Values{"email": {"missing@example.com"}}
 		req := httptest.NewRequest(http.MethodPost, "/resetpassword", strings.NewReader(form.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -710,7 +710,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 
 		req := httptest.NewRequest(http.MethodPost, "/resetpassword", strings.NewReader(""))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -732,7 +732,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		form := url.Values{"email": {"reset@example.com"}}
 		req := httptest.NewRequest(http.MethodPost, "/resetpassword", strings.NewReader(form.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -860,7 +860,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		}
 		req := httptest.NewRequest(http.MethodPost, "/resetpassword/change", strings.NewReader(form.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -890,7 +890,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		}
 		req := httptest.NewRequest(http.MethodPost, "/resetpassword/change", strings.NewReader(form.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -920,7 +920,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		}
 		req := httptest.NewRequest(http.MethodPost, "/resetpassword/change", strings.NewReader(form.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -945,7 +945,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		form := url.Values{"email": {"reset-update-err@example.com"}}
 		req := httptest.NewRequest(http.MethodPost, "/resetpassword", strings.NewReader(form.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		resp, err := app.Test(req)
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}

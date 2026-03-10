@@ -159,29 +159,24 @@ Maintenance rule: handler/route bugfixes should include a regression test update
 
 CI quality gate (required on pull requests):
 
-- `go test ./...`
-- `go test -race ./...`
+- `make test`
+- `make test/race`
+- `make test/coverage`
 
 Quick commands:
 
 ```bash
-# full suite
+# default safety check (race-enabled)
 make test
 
-# race detector pass
-make test/race
+# fast local loop without race detector
+make test/quick
 
-# verbose tests
-make test/v
+# canonical coverage KPI (internal + integration tests)
+make test/coverage
 
-# integration tests package
-make test/integration
-
-# integration coverage against service packages
-make test/integration/coverage
-
-# package coverage leaderboard from integration suite
-make test/integration/coverage/leaderboard
+# service package coverage leaderboard (diagnostic)
+make test/coverage/service-leaderboard
 
 # generate browser-friendly HTML coverage report
 make test/coverage/html
