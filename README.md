@@ -177,6 +177,12 @@ make test/v
 # integration tests package
 make test/integration
 
+# integration coverage against service packages
+make test/integration/coverage
+
+# package coverage leaderboard from integration suite
+make test/integration/coverage/leaderboard
+
 # generate browser-friendly HTML coverage report
 make test/coverage/html
 

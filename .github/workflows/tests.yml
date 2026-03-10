@@ -87,15 +87,26 @@ jobs:
       - name: Generate coverage profile and summary
         run: |
           mkdir -p coverage
+
+          # Full suite filtered coverage
           go test ./... -covermode=atomic -coverprofile=coverage/c.out
           awk 'NR==1 || ($0 !~ /internal\/lib\/localize\// && $0 !~ /_templ\.go:/)' coverage/c.out > coverage/c.filtered.out
           go tool cover -func=coverage/c.filtered.out > coverage/summary.filtered.txt
           filtered_total_line=$(tail -n 1 coverage/summary.filtered.txt)
           echo "$filtered_total_line"
+
+          # Integration suite filtered coverage against service packages only
+          go test ./tests/... -covermode=atomic -coverpkg=./internal/service/... -coverprofile=coverage/int_c.out
+          awk 'NR==1 || ($0 !~ /internal\/lib\/localize\// && $0 !~ /_templ\.go:/)' coverage/int_c.out > coverage/int_c.filtered.out
+          go tool cover -func=coverage/int_c.filtered.out > coverage/int_summary.filtered.txt
+          integration_filtered_total_line=$(tail -n 1 coverage/int_summary.filtered.txt)
+          echo "$integration_filtered_total_line"
+
           {
             echo "## Coverage (Phase 1: report-only)"
             echo ""
-            echo "- Filtered total (excludes localize + *_templ.go): \`$filtered_total_line\`"
+            echo "- Full-suite filtered total (excludes localize + *_templ.go): \`$filtered_total_line\`"
+            echo "- Integration-suite filtered total (service-only; tests/... with -coverpkg=./internal/service/...): \`$integration_filtered_total_line\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload coverage artifacts
@@ -106,6 +117,9 @@ jobs:
             coverage/c.out
             coverage/c.filtered.out
             coverage/summary.filtered.txt
+            coverage/int_c.out
+            coverage/int_c.filtered.out
+            coverage/int_summary.filtered.txt
 
   go-tests:
     runs-on: ubuntu-latest
