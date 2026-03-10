@@ -23,4 +23,11 @@ func TestAppURL(t *testing.T) {
 			t.Fatalf("AppURL() = %q, want %q", got, "http://localhost:3000/dashboard")
 		}
 	})
+
+	t.Run("returns base url when path join fails", func(t *testing.T) {
+		SetAppBaseURL("https", "example.com")
+		if got := AppURL("%zz"); got != "https://example.com" {
+			t.Fatalf("AppURL() = %q, want %q", got, "https://example.com")
+		}
+	})
 }

@@ -138,14 +138,16 @@ test/integration: ## Run integration tests
 	go test -v ./tests/... -coverprofile=coverage/int_c.out
 
 test/integration/coverage: ## Integration coverage against service packages
-	mkdir -p coverage
-	rm -f coverage/int_c.out coverage/int_c.filtered.out coverage/int_summary.filtered.txt coverage/int_pkg_coverage.txt
-	go test ./tests/... -covermode=atomic -coverpkg=./internal/service/... -coverprofile=coverage/int_c.out
-	awk 'NR==1 || ($$0 !~ /internal\/lib\/localize\// && $$0 !~ /_templ\.go:/)' coverage/int_c.out > coverage/int_c.filtered.out
-	go tool cover -func=coverage/int_c.filtered.out > coverage/int_summary.filtered.txt
-	awk 'NR>1 {split($$1,a,":"); file=a[1]; pkg=file; sub(/\/[^\/]+$$/,"",pkg); stmts=$$2+0; cnt=$$3+0; total[pkg]+=stmts; if (cnt>0) covered[pkg]+=stmts} END {for (p in total) {pct=(total[p]>0)?(100*covered[p]/total[p]):0; printf "%06.2f%% %4d/%-4d %s\n", pct, covered[p], total[p], p}}' coverage/int_c.filtered.out | sort -n > coverage/int_pkg_coverage.txt
-	@echo "Integration filtered total (service-only; excludes localize + *_templ.go): $$(tail -n 1 coverage/int_summary.filtered.txt)"
-	@echo "Lowest covered service packages from integration suite (filtered):"
+	@mkdir -p coverage
+	@rm -f coverage/int_c.out coverage/int_c.filtered.out coverage/int_summary.filtered.txt coverage/int_pkg_coverage.txt
+	@printf "\033[36m🧪 Running integration coverage (service-only)...\033[0m\n"
+	@go test ./tests/... -covermode=atomic -coverpkg=./internal/service/... -coverprofile=coverage/int_c.out
+	@printf "\033[35m🧹 Filtering generated files from integration profile...\033[0m\n"
+	@awk 'NR==1 || ($$0 !~ /internal\/lib\/localize\// && $$0 !~ /_templ\.go:/)' coverage/int_c.out > coverage/int_c.filtered.out
+	@go tool cover -func=coverage/int_c.filtered.out > coverage/int_summary.filtered.txt
+	@awk 'NR>1 {split($$1,a,":"); file=a[1]; pkg=file; sub(/\/[^\/]+$$/,"",pkg); stmts=$$2+0; cnt=$$3+0; total[pkg]+=stmts; if (cnt>0) covered[pkg]+=stmts} END {for (p in total) {pct=(total[p]>0)?(100*covered[p]/total[p]):0; printf "%06.2f%% %4d/%-4d %s\n", pct, covered[p], total[p], p}}' coverage/int_c.filtered.out | sort -n > coverage/int_pkg_coverage.txt
+	@printf "\033[32m✅ Integration filtered total: %s\033[0m\n" "$$(awk '/^total:/{print $$NF}' coverage/int_summary.filtered.txt)"
+	@printf "\033[33m📉 Lowest covered service packages (filtered):\033[0m\n"
 	@awk 'NR<=10 {print}' coverage/int_pkg_coverage.txt
 
 test/integration/coverage/html: test/integration/coverage ## Generate integration coverage HTML report
@@ -160,14 +162,16 @@ test/integration/coverage/leaderboard: test/integration/coverage ## Show integra
 	@cat coverage/int_pkg_coverage.txt
 
 test/coverage: ## Coverage
-	mkdir -p coverage
-	rm -f coverage/c.out coverage/c.filtered.out coverage/summary.filtered.txt coverage/pkg_coverage.txt
-	go test ./... -covermode=atomic -coverprofile=coverage/c.out
-	awk 'NR==1 || ($$0 !~ /internal\/lib\/localize\// && $$0 !~ /_templ\.go:/)' coverage/c.out > coverage/c.filtered.out
-	go tool cover -func=coverage/c.filtered.out > coverage/summary.filtered.txt
-	awk 'NR>1 {split($$1,a,":"); file=a[1]; pkg=file; sub(/\/[^\/]+$$/,"",pkg); stmts=$$2+0; cnt=$$3+0; total[pkg]+=stmts; if (cnt>0) covered[pkg]+=stmts} END {for (p in total) {pct=(total[p]>0)?(100*covered[p]/total[p]):0; printf "%06.2f%% %4d/%-4d %s\n", pct, covered[p], total[p], p}}' coverage/c.filtered.out | sort -n > coverage/pkg_coverage.txt
-	@echo "Filtered total (excludes localize + *_templ.go): $$(tail -n 1 coverage/summary.filtered.txt)"
-	@echo "Lowest covered packages (filtered):"
+	@mkdir -p coverage
+	@rm -f coverage/c.out coverage/c.filtered.out coverage/summary.filtered.txt coverage/pkg_coverage.txt
+	@printf "\033[36m🧪 Running full-suite coverage...\033[0m\n"
+	@go test ./... -covermode=atomic -coverprofile=coverage/c.out
+	@printf "\033[35m🧹 Filtering generated files from coverage profile...\033[0m\n"
+	@awk 'NR==1 || ($$0 !~ /internal\/lib\/localize\// && $$0 !~ /_templ\.go:/)' coverage/c.out > coverage/c.filtered.out
+	@go tool cover -func=coverage/c.filtered.out > coverage/summary.filtered.txt
+	@awk 'NR>1 {split($$1,a,":"); file=a[1]; pkg=file; sub(/\/[^\/]+$$/,"",pkg); stmts=$$2+0; cnt=$$3+0; total[pkg]+=stmts; if (cnt>0) covered[pkg]+=stmts} END {for (p in total) {pct=(total[p]>0)?(100*covered[p]/total[p]):0; printf "%06.2f%% %4d/%-4d %s\n", pct, covered[p], total[p], p}}' coverage/c.filtered.out | sort -n > coverage/pkg_coverage.txt
+	@printf "\033[32m✅ Filtered total: %s\033[0m\n" "$$(awk '/^total:/{print $$NF}' coverage/summary.filtered.txt)"
+	@printf "\033[33m📉 Lowest covered packages (filtered):\033[0m\n"
 	@awk 'NR<=10 {print}' coverage/pkg_coverage.txt
 
 test/coverage/html: test/coverage ## Generate HTML coverage report

@@ -42,7 +42,12 @@ func main() {
 	_ = godotenv.Load(".env")
 
 	fmt.Println(" Loading environment variables...")
-	env := appenv.New()
+	env, err := appenv.New()
+	if err != nil {
+		log.Printf("failed to load environment config: %v", err)
+		exitCode = 1
+		return
+	}
 	lib.SetAppBaseURL(env.AppProtocol, env.AppDomain)
 
 	defer func() {

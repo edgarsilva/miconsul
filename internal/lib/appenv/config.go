@@ -2,7 +2,7 @@
 package appenv
 
 import (
-	"log"
+	"fmt"
 	"time"
 
 	"github.com/edgarsilva/simpleenv"
@@ -50,7 +50,7 @@ type Env struct {
 	AssetsDir string `env:"ASSETS_DIR"`
 }
 
-func New() *Env {
+func New() (*Env, error) {
 	env := &Env{
 		AppShutdownTimeout: 10 * time.Second,
 		RateLimiterEnabled: true,
@@ -60,10 +60,10 @@ func New() *Env {
 	}
 	err := simpleenv.Load(env)
 	if err != nil {
-		log.Fatal("failed to load loading ENV variables:", err)
+		return nil, fmt.Errorf("failed to load ENV variables: %w", err)
 	}
 
-	return env
+	return env, nil
 }
 
 func (e *Env) IsDevelopment() bool {

@@ -40,7 +40,11 @@ func logStep(icon string, color string, msg string) {
 func main() {
 	_ = godotenv.Load(".env")
 
-	env := appenv.New()
+	env, err := appenv.New()
+	if err != nil {
+		log.Printf("failed to load environment config: %v", err)
+		os.Exit(1)
+	}
 	db, err := database.New(env, obslogging.Logger{}, nil)
 	if err != nil {
 		log.Printf("failed to initialize database: %v", err)

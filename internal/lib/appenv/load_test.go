@@ -1,6 +1,7 @@
 package appenv
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -77,6 +78,52 @@ func TestEnvLoadInvalidDuration(t *testing.T) {
 	env := &Env{AppShutdownTimeout: 10 * time.Second}
 	if err := simpleenv.Load(env); err == nil {
 		t.Fatalf("expected invalid duration error")
+	}
+}
+
+func TestNewLoadsEnvironment(t *testing.T) {
+	setRequiredEnv(t)
+
+	env, err := New()
+	if err != nil {
+		t.Fatalf("unexpected New error: %v", err)
+	}
+	if env == nil {
+		t.Fatalf("expected non-nil env")
+	}
+	if env.AppName != "miconsul" {
+		t.Fatalf("expected app name from env, got %q", env.AppName)
+	}
+	if env.RateLimiterEnabled != true {
+		t.Fatalf("expected default rate limiter enabled true")
+	}
+}
+
+func TestNewReturnsErrorOnLoadFailure(t *testing.T) {
+	setRequiredEnv(t)
+	t.Setenv("COOKIE_SECRET", "too-short")
+
+	env, err := New()
+	if err == nil {
+		t.Fatalf("expected New to return error when env vars are invalid")
+	}
+	if env != nil {
+		t.Fatalf("expected nil env on load failure")
+	}
+}
+
+func TestNewReturnsErrorWhenRequiredEnvMissing(t *testing.T) {
+	setRequiredEnv(t)
+	if err := os.Unsetenv("APP_NAME"); err != nil {
+		t.Fatalf("unset APP_NAME: %v", err)
+	}
+
+	env, err := New()
+	if err == nil {
+		t.Fatalf("expected New to return error when required env vars are missing")
+	}
+	if env != nil {
+		t.Fatalf("expected nil env on load failure")
 	}
 }
 
