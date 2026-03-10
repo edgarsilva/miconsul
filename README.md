@@ -166,11 +166,8 @@ CI quality gate (required on pull requests):
 Quick commands:
 
 ```bash
-# default safety check (race-enabled)
+# default test suite
 make test
-
-# fast local loop without race detector
-make test/quick
 
 # canonical coverage KPI (internal + integration tests)
 make test/coverage

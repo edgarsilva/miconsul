@@ -110,11 +110,7 @@ dev: docker/up ## Start infra, then tailwind/watch, templ/watch, and air/watch
 
 ##@ Tests
 test: ## Run all tests
-	@echo "Testing all (race-enabled)"
-	go test -race ./internal/... ./tests/...
-
-test/quick: ## Run all tests without race detector
-	@echo "Testing all (quick)"
+	@echo "Testing all"
 	go test ./internal/... ./tests/...
 
 test/race: ## Run all tests with race detector
@@ -252,7 +248,7 @@ load/test: ## Run authenticated oha load test (30s, 30 concurrency)
 	locales/normalize \
 	ai/templ-sync \
 	build start run air/watch dev \
-	test test/quick test/race clean \
+	test test/race clean \
 	test/coverage test/coverage/html test/coverage/service-leaderboard \
 	db/create db/delete db/setup db/reset db/dump_schema db/seed \
 	migrations/apply migrate migrations/create migrations/status migrations/rollback migrations/redo \
