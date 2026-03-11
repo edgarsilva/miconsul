@@ -31,3 +31,23 @@ func TestLoggerProviderGuardsAndNoEndpointPath(t *testing.T) {
 	}
 	logger.Emit(t.Context(), otellog.Record{})
 }
+
+func TestLoggerProviderOTLPBranch(t *testing.T) {
+	env := &appenv.Env{
+		AppName:          "miconsul",
+		OTelOTLPEndpoint: "localhost:4317",
+		OTelOTLPInsecure: true,
+	}
+
+	provider, shutdown, err := NewProvider(t.Context(), env)
+	if err != nil {
+		t.Fatalf("expected otlp provider setup to succeed: %v", err)
+	}
+	logger := NewLogger(provider, "miconsul.test.otlp")
+	if !logger.Enabled() {
+		t.Fatalf("expected logger to be enabled with otlp provider")
+	}
+	if shutdown != nil {
+		_ = shutdown()
+	}
+}
