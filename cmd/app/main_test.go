@@ -6,10 +6,16 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
-	"github.com/gofiber/fiber/v3"
+	"miconsul/internal/lib/appenv"
+	"miconsul/internal/observability/logging"
 )
 
 func TestIsExpectedServerCloseError(t *testing.T) {
@@ -71,61 +77,245 @@ func TestShouldLogServerError(t *testing.T) {
 	}
 }
 
-func TestServerLifecycleSmoke(t *testing.T) {
-	app := fiber.New()
+func TestSetupEnv(t *testing.T) {
+	t.Run("loads env from process and returns parsed config", func(t *testing.T) {
+		useTempWorkingDir(t)
+		setRequiredEnv(t, map[string]string{})
 
-	addr, err := reserveAddress()
-	if err != nil {
-		t.Fatalf("reserve address: %v", err)
-	}
-
-	serveErr := make(chan error, 1)
-	go func() {
-		serveErr <- app.Listen(addr)
-	}()
-
-	if err := waitForServerReady(addr, 2*time.Second); err != nil {
-		t.Fatalf("server did not become ready: %v", err)
-	}
-
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-
-	err = app.ShutdownWithContext(shutdownCtx)
-	if shouldLogServerError(err) {
-		t.Fatalf("shutdown returned unexpected error: %v", err)
-	}
-
-	select {
-	case err = <-serveErr:
-		if shouldLogServerError(err) {
-			t.Fatalf("listen exited with unexpected error: %v", err)
+		env, err := setupEnv()
+		if err != nil {
+			t.Fatalf("setupEnv() unexpected error: %v", err)
 		}
-	case <-time.After(2 * time.Second):
-		t.Fatal("timed out waiting for listen to exit")
-	}
-}
+		if env == nil {
+			t.Fatal("setupEnv() expected non-nil env")
+		}
+		if env.AppName != "miconsul-test" {
+			t.Fatalf("setupEnv() AppName = %q, want %q", env.AppName, "miconsul-test")
+		}
+	})
 
-func reserveAddress() (string, error) {
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		return "", err
-	}
-	defer ln.Close()
+	t.Run("returns error when required env is missing", func(t *testing.T) {
+		useTempWorkingDir(t)
+		setRequiredEnv(t, map[string]string{"APP_NAME": ""})
 
-	return ln.Addr().String(), nil
-}
-
-func waitForServerReady(addr string, timeout time.Duration) error {
-	deadline := time.Now().Add(timeout)
-	for time.Now().Before(deadline) {
-		conn, err := net.DialTimeout("tcp", addr, 50*time.Millisecond)
+		env, err := setupEnv()
 		if err == nil {
-			_ = conn.Close()
-			return nil
+			t.Fatal("setupEnv() expected error")
 		}
-		time.Sleep(20 * time.Millisecond)
+		if env != nil {
+			t.Fatal("setupEnv() expected nil env on error")
+		}
+	})
+}
+
+func TestSetupTelemetry(t *testing.T) {
+	t.Run("builds telemetry runtime with real constructors", func(t *testing.T) {
+		env := &appenv.Env{
+			Environment:      appenv.EnvironmentDevelopment,
+			AppName:          "miconsul-test",
+			AppVersion:       "test",
+			OTelTracerServer: "miconsul.server",
+		}
+
+		telemetry, err := setupTelemetry(context.Background(), env)
+		if err != nil {
+			t.Fatalf("setupTelemetry() unexpected error: %v", err)
+		}
+		if telemetry.tracer == nil {
+			t.Fatal("setupTelemetry() expected tracer")
+		}
+		if telemetry.shutdownTracer == nil || telemetry.shutdownMetrics == nil || telemetry.shutdownLogs == nil {
+			t.Fatal("setupTelemetry() expected shutdown callbacks")
+		}
+		if err := telemetry.shutdownTracer(); err != nil {
+			t.Fatalf("setupTelemetry() shutdown tracer error: %v", err)
+		}
+		if err := telemetry.shutdownMetrics(); err != nil {
+			t.Fatalf("setupTelemetry() shutdown metrics error: %v", err)
+		}
+		if err := telemetry.shutdownLogs(); err != nil {
+			t.Fatalf("setupTelemetry() shutdown logs error: %v", err)
+		}
+	})
+
+	t.Run("returns error for nil env", func(t *testing.T) {
+		_, err := setupTelemetry(context.Background(), nil)
+		if err == nil {
+			t.Fatal("setupTelemetry() expected error")
+		}
+	})
+}
+
+func TestSetupDB(t *testing.T) {
+	t.Run("creates sqlite db and applies migrations", func(t *testing.T) {
+		env := &appenv.Env{DBPath: filepath.Join(t.TempDir(), "app.sqlite")}
+
+		db, err := setupDB(env, logging.Logger{})
+		if err != nil {
+			if strings.Contains(err.Error(), "no such module: fts5") {
+				return
+			}
+			t.Fatalf("setupDB() unexpected error: %v", err)
+		}
+		t.Cleanup(func() {
+			_ = db.Close()
+		})
+
+		sqlDB, err := db.SQLDB()
+		if err != nil {
+			t.Fatalf("setupDB() SQLDB error: %v", err)
+		}
+		if err := sqlDB.Ping(); err != nil {
+			t.Fatalf("setupDB() ping error: %v", err)
+		}
+
+		var tableCount int
+		if err := db.Raw("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'goose_db_version'").Scan(&tableCount).Error; err != nil {
+			t.Fatalf("setupDB() verify goose table failed: %v", err)
+		}
+		if tableCount != 1 {
+			t.Fatalf("setupDB() expected goose_db_version table, got count %d", tableCount)
+		}
+	})
+
+	t.Run("returns error for nil env", func(t *testing.T) {
+		_, err := setupDB(nil, logging.Logger{})
+		if err == nil {
+			t.Fatal("setupDB() expected error")
+		}
+	})
+}
+
+func TestRunServerLifecycle(t *testing.T) {
+	t.Parallel()
+
+	t.Run("does not shutdown when listen exits immediately", func(t *testing.T) {
+		t.Parallel()
+
+		runner := newFakeRunner(errors.New("listen failed"))
+
+		done := make(chan struct{})
+		go func() {
+			runServerLifecycle(context.Background(), runner, 8080, 200*time.Millisecond)
+			close(done)
+		}()
+
+		runner.unblockListen()
+		<-done
+
+		if runner.shutdownCalled() {
+			t.Fatal("runServerLifecycle() expected no shutdown call")
+		}
+	})
+
+	t.Run("attempts graceful shutdown when context is canceled", func(t *testing.T) {
+		t.Parallel()
+
+		runner := newFakeRunner(net.ErrClosed)
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+
+		runServerLifecycle(ctx, runner, 8080, 200*time.Millisecond)
+
+		if !runner.shutdownCalled() {
+			t.Fatal("runServerLifecycle() expected shutdown call")
+		}
+	})
+}
+
+type fakeRunner struct {
+	listenErr error
+
+	startedListen chan struct{}
+	listenBlock   chan struct{}
+
+	shutdownOnce sync.Once
+	shutdownHits atomic.Int32
+}
+
+func newFakeRunner(listenErr error) *fakeRunner {
+	return &fakeRunner{
+		listenErr:     listenErr,
+		startedListen: make(chan struct{}),
+		listenBlock:   make(chan struct{}),
+	}
+}
+
+func (r *fakeRunner) Listen(_ ...int) error {
+	close(r.startedListen)
+	<-r.listenBlock
+	return r.listenErr
+}
+
+func (r *fakeRunner) ShutdownWithContext(context.Context) error {
+	r.shutdownHits.Add(1)
+	r.shutdownOnce.Do(func() {
+		close(r.listenBlock)
+	})
+
+	return nil
+}
+
+func (r *fakeRunner) unblockListen() {
+	<-r.startedListen
+	r.shutdownOnce.Do(func() {
+		close(r.listenBlock)
+	})
+}
+
+func (r *fakeRunner) shutdownCalled() bool {
+	return r.shutdownHits.Load() > 0
+}
+
+func useTempWorkingDir(t *testing.T) {
+	t.Helper()
+
+	originalWD, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
 	}
 
-	return fmt.Errorf("server at %s not reachable within %s", addr, timeout)
+	tmpDir := t.TempDir()
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("chdir temp dir: %v", err)
+	}
+
+	t.Cleanup(func() {
+		if err := os.Chdir(originalWD); err != nil {
+			t.Fatalf("restore working dir: %v", err)
+		}
+	})
+}
+
+func setRequiredEnv(t *testing.T, overrides map[string]string) {
+	t.Helper()
+
+	values := map[string]string{
+		"APP_ENV":             "development",
+		"APP_NAME":            "miconsul-test",
+		"APP_PROTOCOL":        "http",
+		"APP_DOMAIN":          "localhost",
+		"APP_VERSION":         "test",
+		"APP_PORT":            "3000",
+		"COOKIE_SECRET":       "0123456789abcdef0123456789abcdef",
+		"JWT_SECRET":          "jwt-test-secret",
+		"DB_PATH":             filepath.Join(t.TempDir(), "env_app.sqlite"),
+		"SESSION_DB_PATH":     filepath.Join(t.TempDir(), "env_session.sqlite"),
+		"EMAIL_SENDER":        "test",
+		"EMAIL_SECRET":        "test",
+		"EMAIL_FROM_ADDRESS":  "test@example.com",
+		"EMAIL_SMTP_URL":      "smtp://localhost:1025",
+		"GOOSE_DRIVER":        "sqlite3",
+		"GOOSE_DBSTRING":      "file:test.sqlite",
+		"GOOSE_MIGRATION_DIR": ".",
+		"ASSETS_DIR":          "assets",
+	}
+
+	for key, value := range overrides {
+		values[key] = value
+	}
+
+	for key, value := range values {
+		t.Setenv(key, value)
+	}
 }

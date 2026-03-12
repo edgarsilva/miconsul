@@ -29,6 +29,21 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+type telemetryRuntime struct {
+	tracer          trace.Tracer
+	httpMetrics     metrics.HTTPMetrics
+	requestLogger   logging.Logger
+	dbLogger        logging.Logger
+	shutdownTracer  func() error
+	shutdownMetrics func() error
+	shutdownLogs    func() error
+}
+
+type serverRunner interface {
+	Listen(portOverride ...int) error
+	ShutdownWithContext(ctx context.Context) error
+}
+
 func main() {
 	exitCode := 0
 	defer func() {
@@ -39,16 +54,13 @@ func main() {
 
 	fmt.Println(" Starting server...")
 
-	_ = godotenv.Load(".env")
-
 	fmt.Println(" Loading environment variables...")
-	env, err := appenv.New()
+	env, err := setupEnv()
 	if err != nil {
 		log.Printf("failed to load environment config: %v", err)
 		exitCode = 1
 		return
 	}
-	lib.SetAppBaseURL(env.AppProtocol, env.AppDomain)
 
 	defer func() {
 		// This should be the last log on defer chain before exiting with code (0|1|etc)
@@ -59,52 +71,33 @@ func main() {
 	defer stop()
 
 	fmt.Println(" Starting telemetry...")
-	var tracer trace.Tracer
-	tracer, shutdownTracer, err := tracing.NewTracer(ctx, env.OTelTracerServer, env)
+	telemetry, err := setupTelemetry(ctx, env)
 	if err != nil {
-		log.Printf("failed to initialize otel tracer: %v", err)
+		log.Printf("failed to initialize telemetry: %v", err)
 		exitCode = 1
 		return
 	}
 	defer func() {
 		fmt.Println("󰓾 Tracer provider shutting down...")
-		if err := shutdownTracer(); err != nil {
+		if err := telemetry.shutdownTracer(); err != nil {
 			log.Printf("tracer shutdown error: %v", err)
 		}
 	}()
-
-	fmt.Println(" Starting metrics telemetry...")
-	httpMetrics, shutdownMetrics, err := metrics.New(ctx, env)
-	if err != nil {
-		log.Printf("failed to initialize otel meter provider: %v", err)
-		exitCode = 1
-		return
-	}
 	defer func() {
 		fmt.Println("󰓾 Meter provider shutting down...")
-		if err := shutdownMetrics(); err != nil {
+		if err := telemetry.shutdownMetrics(); err != nil {
 			log.Printf("meter provider shutdown error: %v", err)
 		}
 	}()
-
-	fmt.Println(" Starting logs telemetry...")
-	logProvider, shutdownLogs, err := logging.NewProvider(ctx, env)
-	if err != nil {
-		log.Printf("failed to initialize otel logger provider: %v", err)
-		exitCode = 1
-		return
-	}
-	requestLogger := logging.NewLogger(logProvider, env.AppName+".http")
-	dbLogger := logging.NewLogger(logProvider, env.AppName+".db")
 	defer func() {
 		fmt.Println("󰓾 Logger provider shutting down...")
-		if err := shutdownLogs(); err != nil {
+		if err := telemetry.shutdownLogs(); err != nil {
 			log.Printf("logger provider shutdown error: %v", err)
 		}
 	}()
 
 	fmt.Println(" Connecting to database...")
-	db, err := database.New(env, dbLogger, nil)
+	db, err := setupDB(env, telemetry.dbLogger)
 	if err != nil {
 		log.Printf("failed to initialize database: %v", err)
 		exitCode = 1
@@ -116,13 +109,6 @@ func main() {
 			log.Printf("failed to close database: %v", err)
 		}
 	}()
-
-	fmt.Println(" Applying database migrations...")
-	if err := database.ApplyMigrations(db, env); err != nil {
-		log.Printf("failed to apply database migrations: %v", err)
-		exitCode = 1
-		return
-	}
 
 	fmt.Println(" Starting cronjobs...")
 	cj, shutdownCronjob, err := cronjob.New()
@@ -146,17 +132,7 @@ func main() {
 	}()
 
 	fmt.Println(" Starting localizer...")
-	localizer := localize.New("en-US", "es-MX")
-	s := server.New(
-		server.WithEnv(env),
-		server.WithDatabase(db),
-		server.WithCronJob(cj),
-		server.WithWorkPool(wp),
-		server.WithTracer(tracer),
-		server.WithMetrics(httpMetrics),
-		server.WithRequestLogger(requestLogger),
-		server.WithLocalizer(localizer),
-	)
+	s := setupServer(env, db, cj, wp, telemetry, localize.New("en-US", "es-MX"))
 
 	fmt.Println(" Registering routes...")
 	if err := routes.RegisterServices(s); err != nil {
@@ -166,13 +142,90 @@ func main() {
 	}
 
 	fmt.Println(" Setting up server...")
+	runServerLifecycle(ctx, s, env.AppPort, env.AppShutdownTimeout)
 
+	fmt.Println("🧹 Running cleanup tasks...")
+}
+
+func setupEnv() (*appenv.Env, error) {
+	_ = godotenv.Load(".env")
+
+	env, err := appenv.New()
+	if err != nil {
+		return nil, err
+	}
+
+	lib.SetAppBaseURL(env.AppProtocol, env.AppDomain)
+	return env, nil
+}
+
+func setupTelemetry(ctx context.Context, env *appenv.Env) (telemetryRuntime, error) {
+	if env == nil {
+		return telemetryRuntime{}, fmt.Errorf("environment config is required")
+	}
+
+	tracer, shutdownTracer, err := tracing.NewTracer(ctx, env.OTelTracerServer, env)
+	if err != nil {
+		return telemetryRuntime{}, fmt.Errorf("initialize otel tracer: %w", err)
+	}
+
+	fmt.Println(" Starting metrics telemetry...")
+	httpMetrics, shutdownMetrics, err := metrics.New(ctx, env)
+	if err != nil {
+		return telemetryRuntime{}, fmt.Errorf("initialize otel meter provider: %w", err)
+	}
+
+	fmt.Println(" Starting logs telemetry...")
+	logProvider, shutdownLogs, err := logging.NewProvider(ctx, env)
+	if err != nil {
+		return telemetryRuntime{}, fmt.Errorf("initialize otel logger provider: %w", err)
+	}
+
+	return telemetryRuntime{
+		tracer:          tracer,
+		httpMetrics:     httpMetrics,
+		requestLogger:   logging.NewLogger(logProvider, env.AppName+".http"),
+		dbLogger:        logging.NewLogger(logProvider, env.AppName+".db"),
+		shutdownTracer:  shutdownTracer,
+		shutdownMetrics: shutdownMetrics,
+		shutdownLogs:    shutdownLogs,
+	}, nil
+}
+
+func setupDB(env *appenv.Env, dbLogger logging.Logger) (*database.Database, error) {
+	db, err := database.New(env, dbLogger, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(" Applying database migrations...")
+	if err := database.ApplyMigrations(db, env); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+
+	return db, nil
+}
+
+func setupServer(env *appenv.Env, db *database.Database, cj *cronjob.Sched, wp *workpool.Pool, telemetry telemetryRuntime, localizer *localize.Localizer) *server.Server {
+	return server.New(
+		server.WithEnv(env),
+		server.WithDatabase(db),
+		server.WithCronJob(cj),
+		server.WithWorkPool(wp.AntsPool()),
+		server.WithTracer(telemetry.tracer),
+		server.WithMetrics(telemetry.httpMetrics),
+		server.WithRequestLogger(telemetry.requestLogger),
+		server.WithLocalizer(localizer),
+	)
+}
+
+func runServerLifecycle(ctx context.Context, s serverRunner, port int, shutdownTimeout time.Duration) {
 	serveErr := make(chan error, 1)
 	go func() {
-		serveErr <- s.Listen(env.AppPort)
+		serveErr <- s.Listen(port)
 	}()
 
-	shutdownTimeout := env.AppShutdownTimeout
 	select {
 	case err := <-serveErr:
 		if shouldLogServerError(err) {
@@ -199,8 +252,6 @@ func main() {
 			log.Printf("listen exit timed out after %s", shutdownTimeout)
 		}
 	}
-
-	fmt.Println("🧹 Running cleanup tasks...")
 }
 
 func isExpectedServerCloseError(err error) bool {
