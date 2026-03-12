@@ -111,17 +111,17 @@ dev: docker/up ## Start infra, then tailwind/watch, templ/watch, and air/watch
 ##@ Tests
 test: ## Run all tests
 	@echo "Testing all"
-	go test ./internal/... ./tests/...
+	go test ./cmd/... ./internal/... ./tests/...
 
 test/race: ## Run all tests with race detector
 	@echo "Testing all with race detector"
-	go test -race ./internal/... ./tests/...
+	go test -race ./cmd/... ./internal/... ./tests/...
 
 test/coverage: ## Coverage
 	@mkdir -p coverage
 	@rm -f coverage/all.out coverage/all.filtered.out coverage/summary.filtered.txt coverage/pkg_coverage.txt coverage/service_pkg_coverage.txt
-	@printf "\033[36m🧪 Running unified coverage (internal + integration tests)...\033[0m\n"
-	@go test ./internal/... ./tests/... -covermode=atomic -coverpkg=./internal/... -coverprofile=coverage/all.out
+	@printf "\033[36m🧪 Running unified coverage (cmd + internal + integration tests)...\033[0m\n"
+	@go test ./cmd/... ./internal/... ./tests/... -covermode=atomic -coverpkg=./cmd/...,./internal/... -coverprofile=coverage/all.out
 	@printf "\033[35m🧹 Filtering generated files from coverage profile...\033[0m\n"
 	@awk 'NR==1 || ($$0 !~ /internal\/lib\/localize\// && $$0 !~ /_templ\.go:/)' coverage/all.out > coverage/all.filtered.out
 	@go tool cover -func=coverage/all.filtered.out > coverage/summary.filtered.txt

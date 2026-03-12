@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,8 +15,17 @@ import (
 	"testing"
 	"time"
 
+	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
+	"miconsul/internal/lib/cronjob"
+	"miconsul/internal/lib/localize"
+	"miconsul/internal/lib/workpool"
 	"miconsul/internal/observability/logging"
+	"miconsul/internal/observability/metrics"
+
+	"go.opentelemetry.io/otel/trace/noop"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func TestIsExpectedServerCloseError(t *testing.T) {
@@ -186,6 +196,53 @@ func TestSetupDB(t *testing.T) {
 	})
 }
 
+func TestSetupServer(t *testing.T) {
+	setWorkingDirToRepoRoot(t)
+
+	gormDB, err := gorm.Open(sqlite.Open("file:cmd_app_setup_server?mode=memory&cache=shared"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open sqlite: %v", err)
+	}
+
+	wp, shutdownWorkPool := workpool.New(1)
+	t.Cleanup(shutdownWorkPool)
+
+	localizer := localize.New("en-US", "es-MX")
+	telemetry := telemetryRuntime{
+		tracer:        noop.NewTracerProvider().Tracer("test"),
+		httpMetrics:   metrics.HTTPMetrics{},
+		requestLogger: logging.Logger{},
+	}
+
+	s := setupServer(
+		&appenv.Env{Environment: appenv.EnvironmentDevelopment, CookieSecret: "0123456789abcdef0123456789abcdef", AppProtocol: "http"},
+		&database.Database{DB: gormDB},
+		&cronjob.Sched{},
+		wp,
+		telemetry,
+		localizer,
+	)
+
+	if s == nil {
+		t.Fatal("setupServer() expected non-nil server")
+	}
+	if s.App == nil {
+		t.Fatal("setupServer() expected non-nil app")
+	}
+	if s.SessionStore == nil {
+		t.Fatal("setupServer() expected non-nil session store")
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/metrics", nil)
+	resp, err := s.App.Test(req)
+	if err != nil {
+		t.Fatalf("setupServer() metrics request failed: %v", err)
+	}
+	if resp.StatusCode == http.StatusNotFound {
+		t.Fatalf("setupServer() expected /metrics to be registered, got status %d", resp.StatusCode)
+	}
+}
+
 func TestRunServerLifecycle(t *testing.T) {
 	t.Parallel()
 
@@ -317,5 +374,45 @@ func setRequiredEnv(t *testing.T, overrides map[string]string) {
 
 	for key, value := range values {
 		t.Setenv(key, value)
+	}
+}
+
+func setWorkingDirToRepoRoot(t *testing.T) {
+	t.Helper()
+
+	originalWD, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("get working directory: %v", err)
+	}
+
+	root, err := findRepoRoot(originalWD)
+	if err != nil {
+		t.Fatalf("find repo root: %v", err)
+	}
+
+	if err := os.Chdir(root); err != nil {
+		t.Fatalf("chdir repo root: %v", err)
+	}
+
+	t.Cleanup(func() {
+		if err := os.Chdir(originalWD); err != nil {
+			t.Fatalf("restore working directory: %v", err)
+		}
+	})
+}
+
+func findRepoRoot(start string) (string, error) {
+	dir := start
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return dir, nil
+		}
+
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return "", os.ErrNotExist
+		}
+
+		dir = parent
 	}
 }
