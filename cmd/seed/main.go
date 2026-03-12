@@ -38,10 +38,16 @@ type seedRuntimeDeps struct {
 
 var logStepWriter io.Writer = os.Stdout
 
+var (
+	runSeedForMain  = runSeed
+	seedExitForMain = os.Exit
+	seedLogForMain  = log.Printf
+)
+
 func main() {
-	if err := runSeed(context.Background(), os.Args[1:], defaultSeedRuntimeDeps()); err != nil {
-		log.Printf("seed failed: %v", err)
-		os.Exit(1)
+	if err := runSeedForMain(context.Background(), os.Args[1:], defaultSeedRuntimeDeps()); err != nil {
+		seedLogForMain("seed failed: %v", err)
+		seedExitForMain(1)
 	}
 }
 

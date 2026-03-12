@@ -44,18 +44,31 @@ type serverRunner interface {
 	ShutdownWithContext(ctx context.Context) error
 }
 
+var (
+	setupEnvForMain       = setupEnv
+	setupTelemetryForMain = setupTelemetry
+	setupDBForMain        = setupDB
+	newCronjobForMain     = cronjob.New
+	newWorkpoolForMain    = workpool.New
+	setupServerForMain    = setupServer
+	registerRoutesForMain = routes.RegisterServices
+	runLifecycleForMain   = runServerLifecycle
+	exitForMain           = os.Exit
+	notifyContextForMain  = signal.NotifyContext
+)
+
 func main() {
 	exitCode := 0
 	defer func() {
 		if exitCode != 0 {
-			os.Exit(exitCode)
+			exitForMain(exitCode)
 		}
 	}()
 
 	fmt.Println(" Starting server...")
 
 	fmt.Println(" Loading environment variables...")
-	env, err := setupEnv()
+	env, err := setupEnvForMain()
 	if err != nil {
 		log.Printf("failed to load environment config: %v", err)
 		exitCode = 1
@@ -67,11 +80,11 @@ func main() {
 		fmt.Println("✅ All cleanup tasks completed")
 	}()
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	ctx, stop := notifyContextForMain(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
 	fmt.Println(" Starting telemetry...")
-	telemetry, err := setupTelemetry(ctx, env)
+	telemetry, err := setupTelemetryForMain(ctx, env)
 	if err != nil {
 		log.Printf("failed to initialize telemetry: %v", err)
 		exitCode = 1
@@ -97,7 +110,7 @@ func main() {
 	}()
 
 	fmt.Println(" Connecting to database...")
-	db, err := setupDB(env, telemetry.dbLogger)
+	db, err := setupDBForMain(env, telemetry.dbLogger)
 	if err != nil {
 		log.Printf("failed to initialize database: %v", err)
 		exitCode = 1
@@ -111,7 +124,7 @@ func main() {
 	}()
 
 	fmt.Println(" Starting cronjobs...")
-	cj, shutdownCronjob, err := cronjob.New()
+	cj, shutdownCronjob, err := newCronjobForMain()
 	if err != nil {
 		log.Printf("failed to initialize cronjobs: %v", err)
 		exitCode = 1
@@ -125,24 +138,24 @@ func main() {
 	}()
 
 	fmt.Println(" Starting workpool...")
-	wp, shutdownWorkPool := workpool.New(10)
+	wp, shutdownWorkPool := newWorkpoolForMain(10)
 	defer func() {
 		fmt.Println("🐜 Ants workpool shutting down...")
 		shutdownWorkPool()
 	}()
 
 	fmt.Println(" Starting localizer...")
-	s := setupServer(env, db, cj, wp, telemetry, localize.New("en-US", "es-MX"))
+	s := setupServerForMain(env, db, cj, wp, telemetry, localize.New("en-US", "es-MX"))
 
 	fmt.Println(" Registering routes...")
-	if err := routes.RegisterServices(s); err != nil {
+	if err := registerRoutesForMain(s); err != nil {
 		log.Printf("failed to register routes: %v", err)
 		exitCode = 1
 		return
 	}
 
 	fmt.Println(" Setting up server...")
-	runServerLifecycle(ctx, s, env.AppPort, env.AppShutdownTimeout)
+	runLifecycleForMain(ctx, s, env.AppPort, env.AppShutdownTimeout)
 
 	fmt.Println("🧹 Running cleanup tasks...")
 }
