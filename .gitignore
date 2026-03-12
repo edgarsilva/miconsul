@@ -58,3 +58,7 @@ coverage/int_c.filtered.out
 coverage/int_c.filtered.html
 coverage/int_summary.filtered.txt
 coverage/int_pkg_coverage.txt
+coverage/all.out
+coverage/all.filtered.out
+coverage/all.filtered.html
+coverage/service_pkg_coverage.txt

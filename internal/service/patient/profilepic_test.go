@@ -1,10 +1,17 @@
 package patient
 
 import (
+	"bytes"
 	"errors"
+	"mime/multipart"
 	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"testing"
+
+	"miconsul/internal/model"
+
+	"github.com/gofiber/fiber/v3"
 )
 
 func TestCleanFilenameSegment(t *testing.T) {
@@ -116,6 +123,54 @@ func TestProfilePicPath(t *testing.T) {
 	t.Run("fails with blank assets directory", func(t *testing.T) {
 		if _, err := ProfilePicPath("pat_1_ppic_photo.png", "   "); err == nil {
 			t.Fatalf("expected blank assets dir error")
+		}
+	})
+}
+
+func TestSaveProfilePicToDisk(t *testing.T) {
+	t.Run("returns ErrProfilePicNotProvided when form file missing", func(t *testing.T) {
+		app := fiber.New()
+		app.Post("/", func(c fiber.Ctx) error {
+			_, err := SaveProfilePicToDisk(c, model.Patient{ID: "pat_1"}, t.TempDir())
+			if !errors.Is(err, ErrProfilePicNotProvided) {
+				t.Fatalf("expected ErrProfilePicNotProvided, got %v", err)
+			}
+			return c.SendStatus(fiber.StatusNoContent)
+		})
+
+		req := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(nil))
+		if _, err := app.Test(req); err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+	})
+
+	t.Run("fails when patient id is blank", func(t *testing.T) {
+		app := fiber.New()
+		app.Post("/", func(c fiber.Ctx) error {
+			_, err := SaveProfilePicToDisk(c, model.Patient{}, t.TempDir())
+			if err == nil {
+				t.Fatalf("expected missing patient id error")
+			}
+			return c.SendStatus(fiber.StatusNoContent)
+		})
+
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+		part, err := writer.CreateFormFile("profilePic", "avatar.png")
+		if err != nil {
+			t.Fatalf("create multipart file: %v", err)
+		}
+		if _, err := part.Write([]byte("png-data")); err != nil {
+			t.Fatalf("write multipart file: %v", err)
+		}
+		if err := writer.Close(); err != nil {
+			t.Fatalf("close multipart writer: %v", err)
+		}
+
+		req := httptest.NewRequest(http.MethodPost, "/", body)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+		if _, err := app.Test(req); err != nil {
+			t.Fatalf("request failed: %v", err)
 		}
 	})
 }

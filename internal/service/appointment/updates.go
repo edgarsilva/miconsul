@@ -31,3 +31,10 @@ type appointmentCancelUpdates struct {
 	Status     model.AppointmentStatus
 	CanceledAt time.Time
 }
+
+type appointmentTokenUpdates struct {
+	Status      model.AppointmentStatus
+	ConfirmedAt time.Time
+	CanceledAt  time.Time
+	PendingAt   time.Time
+}

@@ -215,21 +215,29 @@ func (s *service) TakePatientByIDWithLastDoneAppointment(ctx context.Context, us
 	return patient, nil
 }
 
-func (s *service) UpdateAppointmentByIDAndToken(ctx context.Context, appointmentID, token string, selectColumns []string, updates model.Appointment) error {
+func (s *service) UpdateAppointmentByIDAndToken(ctx context.Context, appointmentID, token string, selectColumns []string, updates appointmentTokenUpdates) error {
+	if strings.TrimSpace(appointmentID) == "" {
+		return ErrIDRequired
+	}
+
+	if len(selectColumns) == 0 {
+		return errors.New("columns are required")
+	}
+
 	if updates.Status != "" && !updates.Status.IsValid() {
 		return errors.New("invalid appointment status")
 	}
 
-	selectedFields := strings.Join(selectColumns, ",")
-
-	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
-		Select(selectedFields).
+	result := s.DB.WithContext(ctx).
+		Model(&model.Appointment{}).
 		Where("id = ? AND token = ?", appointmentID, token).
-		Updates(ctx, updates)
-	if err != nil {
-		return err
+		Select(selectColumns).
+		Omit("UserID", "Clinic", "Patient", "User", "FeedEvents", "Alerts").
+		Updates(&updates)
+	if result.Error != nil {
+		return result.Error
 	}
-	if rowsAffected != 1 {
+	if result.RowsAffected != 1 {
 		return gorm.ErrRecordNotFound
 	}
 
@@ -237,7 +245,7 @@ func (s *service) UpdateAppointmentByIDAndToken(ctx context.Context, appointment
 }
 
 func (s *service) ConfirmAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) error {
-	updates := model.Appointment{
+	updates := appointmentTokenUpdates{
 		ConfirmedAt: time.Now(),
 		Status:      model.ApntStatusConfirmed,
 	}
@@ -245,7 +253,7 @@ func (s *service) ConfirmAppointmentByIDAndToken(ctx context.Context, appointmen
 }
 
 func (s *service) CancelAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) error {
-	updates := model.Appointment{
+	updates := appointmentTokenUpdates{
 		CanceledAt: time.Now(),
 		Status:     model.ApntStatusCanceled,
 	}
@@ -253,7 +261,7 @@ func (s *service) CancelAppointmentByIDAndToken(ctx context.Context, appointment
 }
 
 func (s *service) RequestAppointmentDateChangeByIDAndToken(ctx context.Context, appointmentID, token string) error {
-	updates := model.Appointment{
+	updates := appointmentTokenUpdates{
 		PendingAt: time.Now(),
 		Status:    model.ApntStatusPending,
 	}
