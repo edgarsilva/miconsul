@@ -22,6 +22,7 @@ import (
 	"miconsul/internal/lib/workpool"
 	"miconsul/internal/observability/logging"
 	"miconsul/internal/observability/metrics"
+	"miconsul/internal/server"
 
 	"go.opentelemetry.io/otel/trace/noop"
 	"gorm.io/driver/sqlite"
@@ -280,6 +281,124 @@ func TestRunServerLifecycle(t *testing.T) {
 	})
 }
 
+func TestMainSuccessPath(t *testing.T) {
+	restore := installMainTestHooks()
+	defer restore()
+
+	lifecycleCalled := false
+	shutdownTracerCalled := false
+	shutdownMetricsCalled := false
+	shutdownLogsCalled := false
+	shutdownCronCalled := false
+	shutdownWorkPoolCalled := false
+	exitCode := 0
+
+	setupEnvForMain = func() (*appenv.Env, error) {
+		return &appenv.Env{AppPort: 3000, AppShutdownTimeout: 10 * time.Millisecond}, nil
+	}
+	setupTelemetryForMain = func(context.Context, *appenv.Env) (telemetryRuntime, error) {
+		return telemetryRuntime{
+			shutdownTracer:  func() error { shutdownTracerCalled = true; return nil },
+			shutdownMetrics: func() error { shutdownMetricsCalled = true; return nil },
+			shutdownLogs:    func() error { shutdownLogsCalled = true; return nil },
+		}, nil
+	}
+	setupDBForMain = func(*appenv.Env, logging.Logger) (*database.Database, error) {
+		return &database.Database{}, nil
+	}
+	newCronjobForMain = func() (*cronjob.Sched, func() error, error) {
+		return &cronjob.Sched{}, func() error { shutdownCronCalled = true; return nil }, nil
+	}
+	newWorkpoolForMain = func(int) (*workpool.Pool, func()) {
+		return &workpool.Pool{}, func() { shutdownWorkPoolCalled = true }
+	}
+	setupServerForMain = func(*appenv.Env, *database.Database, *cronjob.Sched, *workpool.Pool, telemetryRuntime, *localize.Localizer) *server.Server {
+		return &server.Server{}
+	}
+	registerRoutesForMain = func(*server.Server) error { return nil }
+	runLifecycleForMain = func(context.Context, serverRunner, int, time.Duration) { lifecycleCalled = true }
+	notifyContextForMain = func(context.Context, ...os.Signal) (context.Context, context.CancelFunc) {
+		return context.WithCancel(context.Background())
+	}
+	exitForMain = func(code int) { exitCode = code }
+
+	main()
+
+	if exitCode != 0 {
+		t.Fatalf("main() exit code = %d, want 0", exitCode)
+	}
+	if !lifecycleCalled {
+		t.Fatal("main() expected run lifecycle call")
+	}
+	if !shutdownTracerCalled || !shutdownMetricsCalled || !shutdownLogsCalled {
+		t.Fatalf("main() expected telemetry shutdown calls, got tracer=%v metrics=%v logs=%v", shutdownTracerCalled, shutdownMetricsCalled, shutdownLogsCalled)
+	}
+	if !shutdownCronCalled {
+		t.Fatal("main() expected cron shutdown call")
+	}
+	if !shutdownWorkPoolCalled {
+		t.Fatal("main() expected workpool shutdown call")
+	}
+}
+
+func TestMainSetupEnvFailure(t *testing.T) {
+	restore := installMainTestHooks()
+	defer restore()
+
+	exitCode := 0
+	setupEnvForMain = func() (*appenv.Env, error) { return nil, errors.New("env failed") }
+	exitForMain = func(code int) { exitCode = code }
+
+	main()
+
+	if exitCode != 1 {
+		t.Fatalf("main() exit code = %d, want 1", exitCode)
+	}
+}
+
+func TestMainRegisterRoutesFailure(t *testing.T) {
+	restore := installMainTestHooks()
+	defer restore()
+
+	exitCode := 0
+	setupEnvForMain = func() (*appenv.Env, error) {
+		return &appenv.Env{AppPort: 3000, AppShutdownTimeout: 10 * time.Millisecond}, nil
+	}
+	setupTelemetryForMain = func(context.Context, *appenv.Env) (telemetryRuntime, error) {
+		return telemetryRuntime{
+			shutdownTracer:  func() error { return nil },
+			shutdownMetrics: func() error { return nil },
+			shutdownLogs:    func() error { return nil },
+		}, nil
+	}
+	setupDBForMain = func(*appenv.Env, logging.Logger) (*database.Database, error) {
+		return &database.Database{}, nil
+	}
+	newCronjobForMain = func() (*cronjob.Sched, func() error, error) {
+		return &cronjob.Sched{}, func() error { return nil }, nil
+	}
+	newWorkpoolForMain = func(int) (*workpool.Pool, func()) {
+		return &workpool.Pool{}, func() {}
+	}
+	setupServerForMain = func(*appenv.Env, *database.Database, *cronjob.Sched, *workpool.Pool, telemetryRuntime, *localize.Localizer) *server.Server {
+		return &server.Server{}
+	}
+	registerRoutesForMain = func(*server.Server) error { return errors.New("routes failed") }
+	runLifecycleForMain = func(context.Context, serverRunner, int, time.Duration) {
+		t.Fatal("main() should not run lifecycle when route registration fails")
+	}
+	notifyContextForMain = func(context.Context, ...os.Signal) (context.Context, context.CancelFunc) {
+		return context.WithCancel(context.Background())
+	}
+	exitForMain = func(code int) { exitCode = code }
+
+	main()
+
+	if exitCode != 1 {
+		t.Fatalf("main() exit code = %d, want 1", exitCode)
+	}
+}
+
 type fakeRunner struct {
 	listenErr error
 
@@ -414,5 +533,31 @@ func findRepoRoot(start string) (string, error) {
 		}
 
 		dir = parent
+	}
+}
+
+func installMainTestHooks() func() {
+	oldSetupEnv := setupEnvForMain
+	oldSetupTelemetry := setupTelemetryForMain
+	oldSetupDB := setupDBForMain
+	oldNewCronjob := newCronjobForMain
+	oldNewWorkpool := newWorkpoolForMain
+	oldSetupServer := setupServerForMain
+	oldRegisterRoutes := registerRoutesForMain
+	oldRunLifecycle := runLifecycleForMain
+	oldExit := exitForMain
+	oldNotifyContext := notifyContextForMain
+
+	return func() {
+		setupEnvForMain = oldSetupEnv
+		setupTelemetryForMain = oldSetupTelemetry
+		setupDBForMain = oldSetupDB
+		newCronjobForMain = oldNewCronjob
+		newWorkpoolForMain = oldNewWorkpool
+		setupServerForMain = oldSetupServer
+		registerRoutesForMain = oldRegisterRoutes
+		runLifecycleForMain = oldRunLifecycle
+		exitForMain = oldExit
+		notifyContextForMain = oldNotifyContext
 	}
 }
