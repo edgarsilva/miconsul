@@ -78,6 +78,30 @@ func TestRunWithRandomizedBulk(t *testing.T) {
 	}
 }
 
+func TestRunWithBaselineAndLargeBulk(t *testing.T) {
+	db := newSeederDB(t)
+
+	result, err := Run(t.Context(), db, Options{
+		Baseline:         true,
+		RandomizedBulk:   true,
+		BulkUsers:        200,
+		BulkClinics:      200,
+		BulkPatients:     200,
+		BulkAppointments: 200,
+	})
+	if err != nil {
+		t.Fatalf("baseline + large bulk run failed: %v", err)
+	}
+
+	if result.UsersCreated != 201 || result.ClinicsCreated != 201 || result.PatientsCreated != 203 || result.AppointmentsCreated != 203 {
+		t.Fatalf("unexpected baseline + large bulk result: %#v", result)
+	}
+
+	assertBaselineClinicExists(t, db)
+	assertBaselinePatientsExist(t, db)
+	assertBaselineAppointmentsExist(t, db)
+}
+
 func TestCreateBulkAppointmentsGuards(t *testing.T) {
 	db := newSeederDB(t)
 	owner := model.User{Email: "owner-guard@example.com", Password: "hash", Role: model.UserRoleUser}
@@ -116,4 +140,35 @@ func newSeederDB(t *testing.T) *gorm.DB {
 	}
 
 	return db
+}
+
+func assertBaselineClinicExists(t *testing.T, db *gorm.DB) {
+	t.Helper()
+
+	clinic := model.Clinic{}
+	if err := db.WithContext(t.Context()).Where("ext_id = ?", baselineClinicExtID).Take(&clinic).Error; err != nil {
+		t.Fatalf("expected baseline clinic %q to exist: %v", baselineClinicExtID, err)
+	}
+}
+
+func assertBaselinePatientsExist(t *testing.T, db *gorm.DB) {
+	t.Helper()
+
+	for _, extID := range baselinePatientExtIDs {
+		patient := model.Patient{}
+		if err := db.WithContext(t.Context()).Where("ext_id = ?", extID).Take(&patient).Error; err != nil {
+			t.Fatalf("expected baseline patient %q to exist: %v", extID, err)
+		}
+	}
+}
+
+func assertBaselineAppointmentsExist(t *testing.T, db *gorm.DB) {
+	t.Helper()
+
+	for _, extID := range baselineAppointmentExtIDs {
+		appointment := model.Appointment{}
+		if err := db.WithContext(t.Context()).Where("ext_id = ?", extID).Take(&appointment).Error; err != nil {
+			t.Fatalf("expected baseline appointment %q to exist: %v", extID, err)
+		}
+	}
 }
