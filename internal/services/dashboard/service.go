@@ -9,7 +9,7 @@ import (
 	"miconsul/internal/lib/libtime"
 	"miconsul/internal/model"
 	"miconsul/internal/server"
-	"miconsul/internal/view"
+	"miconsul/internal/views"
 	"time"
 )
 

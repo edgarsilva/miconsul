@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"miconsul/internal/view"
+	"miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"

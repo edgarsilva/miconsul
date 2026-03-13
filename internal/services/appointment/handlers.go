@@ -10,7 +10,7 @@ import (
 	"miconsul/internal/lib/libtime"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/model"
-	"miconsul/internal/view"
+	"miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"
 	"gorm.io/gorm"

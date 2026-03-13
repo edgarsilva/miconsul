@@ -5,7 +5,7 @@ import (
 	"miconsul/internal/lib/avatar"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/model"
-	"miconsul/internal/view"
+	"miconsul/internal/views"
 	"os"
 	"strconv"
 	"strings"

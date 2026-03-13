@@ -3,7 +3,7 @@ package user
 import (
 	"errors"
 	"miconsul/internal/model"
-	"miconsul/internal/view"
+	"miconsul/internal/views"
 	"strconv"
 	"strings"
 
