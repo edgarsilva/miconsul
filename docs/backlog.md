@@ -1,13 +1,12 @@
 # Backlog
 
-## Now
+## Done
 
 - Auth session-first user hydration
-  - Check session/store for current user before decoding JWT on every request.
-  - Persist `CurrentUser` in session after successful authentication.
-  - Preserve security guarantees and avoid stale user data.
-
-## Done
+  - Added session-first auth snapshot hydration before JWT + DB fallback.
+  - Persisted request identity snapshot after successful authentication.
+  - Kept boundaries explicit: auth resolves identity, middleware binds locals, CurrentUser reads locals only.
+  - Hardened session snapshot by storing token digest (SHA-256), not raw JWT.
 
 - Auth provider decoupling
   - Moved provider signin metadata behind `Authenticator.Metadata()`.
