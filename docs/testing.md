@@ -62,13 +62,13 @@ Coverage reporting uses a filtered total as the engineer-facing metric:
 - filtered total from `coverage/c.filtered.out` (excludes generated files under `internal/lib/localize` and `*_templ.go`)
 - raw profile remains available at `coverage/c.out` for debugging
 - package leaderboard from `coverage/pkg_coverage.txt` to prioritize low-coverage packages
-- integration filtered profile from `coverage/int_c.filtered.out` (tests suite measured against `./internal/service/...`)
+- integration filtered profile from `coverage/int_c.filtered.out` (tests suite measured against `./internal/services/...`)
 - integration package leaderboard from `coverage/int_pkg_coverage.txt`
 
 CI summary reports both filtered metrics:
 
 - full-suite filtered total (`go test ./...`)
-- integration-suite filtered total (`go test ./tests/... -coverpkg=./internal/service/...`)
+- integration-suite filtered total (`go test ./tests/... -coverpkg=./internal/services/...`)
 
 Generate and review coverage locally:
 

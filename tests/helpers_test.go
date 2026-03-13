@@ -18,7 +18,7 @@ import (
 	"miconsul/internal/observability/logging"
 	"miconsul/internal/routes"
 	"miconsul/internal/server"
-	"miconsul/internal/service/auth"
+	"miconsul/internal/services/auth"
 
 	"go.opentelemetry.io/otel"
 	"golang.org/x/crypto/bcrypt"

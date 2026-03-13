@@ -149,7 +149,7 @@ test/coverage/gate-service-floor-65: ## Fail if any service package coverage is 
 		printf "%s\n" "$$violations"; \
 		exit 1; \
 	fi; \
-	echo "✅ Service floor gate passed (all internal/service/* >= 65%)"
+	echo "✅ Service floor gate passed (all internal/services/* >= 65%)"
 
 ##@ Cleanup
 clean: ## Remove build artifacts

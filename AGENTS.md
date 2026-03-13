@@ -8,7 +8,7 @@ This file provides repo-specific guidance for coding assistants working on this 
 - App entrypoint: `cmd/app/main.go`.
 - HTTP server and middleware: `internal/server/`.
 - Routes: `internal/routes/router.go`.
-- Services/handlers: `internal/service/**`.
+- Services/handlers: `internal/services/**`.
 - templ views: `internal/view/*.templ` (generated files are `*_templ.go`).
 - Email templates: `internal/mailer/*.templ`.
 
