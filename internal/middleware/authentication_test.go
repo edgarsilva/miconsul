@@ -29,6 +29,14 @@ func (rt testAuthRuntime) Session(c fiber.Ctx) (*session.Session, error) {
 	return nil, errors.New("not implemented in middleware tests")
 }
 
+func (rt testAuthRuntime) SessionWrite(c fiber.Ctx, k string, v any) error {
+	return nil
+}
+
+func (rt testAuthRuntime) SessionRead(c fiber.Ctx, key string, defaultVal string) string {
+	return defaultVal
+}
+
 func (rt testAuthRuntime) AppEnv() *appenv.Env { return rt.env }
 func (rt testAuthRuntime) GormDB() *gorm.DB    { return rt.db }
 

@@ -16,6 +16,8 @@ import (
 
 type Runtime interface {
 	Session(c fiber.Ctx) (*session.Session, error)
+	SessionWrite(c fiber.Ctx, k string, v any) error
+	SessionRead(c fiber.Ctx, key string, defaultVal string) string
 	AppEnv() *appenv.Env
 	GormDB() *gorm.DB
 	NewCookie(name, value string, validFor time.Duration) *fiber.Cookie
@@ -37,8 +39,8 @@ type AuthenticatorMeta struct {
 	SignedOutMessage       string
 }
 
-// Authenticate an user based on Req Ctx Cookie 'Auth'
-// cookies
+// Authenticate resolves request identity (session snapshot/JWT strategy fallback)
+// and returns the current user for this request.
 func Authenticate(c fiber.Ctx, rt Runtime) (model.User, error) {
 	authenticator := selectAuthenticator(rt)
 	user, err := authenticator.Authenticate(c)

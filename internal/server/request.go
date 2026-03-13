@@ -6,7 +6,8 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-// CurrentUser returns currently logged-in (or anon) user from fiber locals.
+// CurrentUser returns request-scoped user from fiber locals only.
+// Auth/session resolution is handled by auth.Authenticate + middleware binding.
 func (s *Server) CurrentUser(c fiber.Ctx) model.User {
 	userIface := c.Locals("current_user")
 	cu, ok := userIface.(model.User)
