@@ -30,8 +30,6 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 		return s.Redirect(c, "/appointments?toast=Failed to load selected patient&level=error")
 	}
 
-	c.Locals("patient", patient)
-
 	clinicID := c.Query("clinicId", "")
 	clinic, err := s.selectedClinicFromQuery(c, cu.ID, clinicID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -40,8 +38,6 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	if err != nil {
 		return s.Redirect(c, "/appointments?toast=Failed to load selected clinic&level=error")
 	}
-	c.Locals("clinic", clinic)
-
 	timeframe := c.Query("timeframe", "day")
 	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, patientID, clinicID, timeframe)
 	if err != nil {
@@ -49,7 +45,7 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	}
 
 	vc, _ := view.NewCtx(c)
-	return view.Render(c, view.AppointmentsPage(vc, appointments))
+	return view.Render(c, view.AppointmentsPage(vc, appointments, patient, clinic))
 }
 
 // HandleShowPage renders the appointment create/edit page.

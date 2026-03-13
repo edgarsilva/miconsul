@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-templ AppointmentsPage(vc *Ctx, appointments []model.Appointment) {
+templ AppointmentsPage(vc *Ctx, appointments []model.Appointment, selectedPatient model.Patient, selectedClinic model.Clinic) {
 	@LayoutWithBackBtn(vc, "/") {
 		<section class="grow flex flex-col px-0 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<div
@@ -28,7 +28,7 @@ templ AppointmentsPage(vc *Ctx, appointments []model.Appointment) {
 						{ l(vc.Locale, "btn.new") }
 					</a>
 				</hgroup>
-				@AppointmentsSection(vc, appointments, false)
+				@AppointmentsSection(vc, appointments, false, selectedPatient, selectedClinic)
 			</div>
 		</section>
 	}
@@ -47,7 +47,7 @@ templ AppointmentPage(vc *Ctx, appointment model.Appointment, patients []model.P
 	}
 }
 
-templ AppointmentsSection(c *Ctx, appointments []model.Appointment, showTitle bool) {
+templ AppointmentsSection(c *Ctx, appointments []model.Appointment, showTitle bool, selectedPatient model.Patient, selectedClinic model.Clinic) {
 	<section id="appointments_section" class="app-card col-span-2 flex flex-col pt-4">
 		<div
 			class="relative items-center flex justify-between border-b border-base-content/10 pb-2"
@@ -64,9 +64,7 @@ templ AppointmentsSection(c *Ctx, appointments []model.Appointment, showTitle bo
 						href={ templ.URL(c.Path() + QueryParams(c, "patientId=")) }
 						class="badge badge-secondary badge-outline gap-2 hover:bg-secondary hover:text-secondary-content"
 					>
-						if patient, ok := c.Locals("patient").(model.Patient); ok {
-							{ patient.Email }
-						}
+						{ selectedPatient.Email }
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="inline-block w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
 					</a>
 				}
@@ -75,9 +73,7 @@ templ AppointmentsSection(c *Ctx, appointments []model.Appointment, showTitle bo
 						href={ templ.URL(c.Path() + QueryParams(c, "clinicId=")) }
 						class="badge badge-secondary badge-outline gap-2 hover:bg-secondary hover:text-secondary-content"
 					>
-						if clinic, ok := c.Locals("clinic").(model.Clinic); ok {
-							{ clinic.Name }
-						}
+						{ selectedClinic.Name }
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="inline-block w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
 					</a>
 				}
