@@ -30,7 +30,7 @@ type seedRuntimeDeps struct {
 	loadDotEnv      func(filenames ...string) error
 	loadEnv         func() (*appenv.Env, error)
 	openDB          func(env *appenv.Env) (*database.Database, error)
-	applyMigrations func(db *database.Database, env *appenv.Env) error
+	applyMigrations func(db *database.Database) error
 	runSeeder       func(ctx context.Context, db *gorm.DB, opts seeder.Options) (seeder.Result, error)
 	logPrintf       func(format string, v ...any)
 	logStep         func(icon string, color string, msg string)
@@ -58,10 +58,12 @@ func defaultSeedRuntimeDeps() seedRuntimeDeps {
 		openDB: func(env *appenv.Env) (*database.Database, error) {
 			return database.New(env, obslogging.Logger{}, nil)
 		},
-		applyMigrations: database.ApplyMigrationsSilent,
-		runSeeder:       seeder.Run,
-		logPrintf:       log.Printf,
-		logStep:         logStep,
+		applyMigrations: func(db *database.Database) error {
+			return database.ApplyMigrationsSilent(db, obslogging.Logger{})
+		},
+		runSeeder: seeder.Run,
+		logPrintf: log.Printf,
+		logStep:   logStep,
 	}
 }
 
@@ -105,7 +107,7 @@ func runSeed(ctx context.Context, args []string, deps seedRuntimeDeps) error {
 
 	if !skipMigrate {
 		deps.logStep("🪿", ansiBlue, "Applying schema migrations")
-		if err := deps.applyMigrations(db, env); err != nil {
+		if err := deps.applyMigrations(db); err != nil {
 			return fmt.Errorf("apply migrations: %w", err)
 		}
 	} else {

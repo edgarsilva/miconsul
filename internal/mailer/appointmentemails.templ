@@ -1,8 +1,11 @@
 package mailer
 
-import "miconsul/internal/model"
+import (
+	"miconsul/internal/lib/appenv"
+	"miconsul/internal/model"
+)
 
-templ AppointmentBookedEmail(appointment model.Appointment) {
+templ AppointmentBookedEmail(env *appenv.Env, appointment model.Appointment) {
 	<html dir="ltr" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office" lang="en">
 		<head>
 			<meta charset="UTF-8"/>
@@ -140,7 +143,7 @@ templ AppointmentBookedEmail(appointment model.Appointment) {
 																				style="border-style:solid;border-color:#3f78bc;background:#6fa8dc;border-width:0px;display:inline-block;border-radius:15px;width:100%;mso-hide:all;"
 																			>
 																				<a
-																					href={ templ.URL(appointment.ConfirmURL()) }
+																									href={ templ.URL(env.AppURL(appointment.ConfirmPath())) }
 																					class="es-button"
 																					target="_blank"
 																					style="mso-style-priority:100 !important;text-decoration:none;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;color:#FFFFFF;font-size:20px;display:inline-block;background:#6fa8dc;border-radius:15px;font-family:Oswald, sans-serif;font-weight:normal;font-style:normal;line-height:24px;width:auto;text-align:center;padding:10px 0px 10px 0px;mso-padding-alt:0;mso-border-alt:10px solid #6fa8dc;width:100%;display:inline-block;"
@@ -170,7 +173,7 @@ templ AppointmentBookedEmail(appointment model.Appointment) {
 																				style="border-style:solid;border-color:#666666;background:#cccccc;border-width:0px;display:inline-block;border-radius:15px;width:100%;mso-hide:all"
 																			>
 																				<a
-																					href={ templ.URL(appointment.RescheduledURL()) }
+																									href={ templ.URL(env.AppURL(appointment.RescheduledPath())) }
 																					class="es-button"
 																					target="_blank"
 																					style="mso-style-priority:100 !important;text-decoration:none;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;color:#FFFFFF;font-size:20px;display:inline-block;background:#cccccc;border-radius:15px;font-family:Oswald, sans-serif;font-weight:normal;font-style:normal;line-height:24px;width:auto;text-align:center;padding:10px 0px 10px 0px;mso-padding-alt:0;mso-border-alt:10px solid #cccccc;width:100%;display:inline-block;"
@@ -369,7 +372,7 @@ templ AppointmentBookedEmail(appointment model.Appointment) {
 	</html>
 }
 
-templ AppointmentReminderEmail(appointment model.Appointment) {
+templ AppointmentReminderEmail(env *appenv.Env, appointment model.Appointment) {
 	<html dir="ltr" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office" lang="en">
 		<head>
 			<meta charset="UTF-8"/>
@@ -501,7 +504,7 @@ templ AppointmentReminderEmail(appointment model.Appointment) {
 																				style="border-style:solid;border-color:#3f78bc;background:#6fa8dc;border-width:0px;display:inline-block;border-radius:15px;width:100%;mso-hide:all;"
 																			>
 																				<a
-																					href={ templ.URL(appointment.ConfirmURL()) }
+																									href={ templ.URL(env.AppURL(appointment.ConfirmPath())) }
 																					class="es-button"
 																					target="_blank"
 																					style="mso-style-priority:100 !important;text-decoration:none;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;color:#FFFFFF;font-size:20px;display:inline-block;background:#6fa8dc;border-radius:15px;font-family:Oswald, sans-serif;font-weight:normal;font-style:normal;line-height:24px;width:auto;text-align:center;padding:10px 0px 10px 0px;mso-padding-alt:0;mso-border-alt:10px solid #6fa8dc;width:100%;display:inline-block;"
@@ -531,7 +534,7 @@ templ AppointmentReminderEmail(appointment model.Appointment) {
 																				style="border-style:solid;border-color:#666666;background:#cccccc;border-width:0px;display:inline-block;border-radius:15px;width:100%;mso-hide:all"
 																			>
 																				<a
-																					href={ templ.URL(appointment.RescheduledURL()) }
+																									href={ templ.URL(env.AppURL(appointment.RescheduledPath())) }
 																					class="es-button"
 																					target="_blank"
 																					style="mso-style-priority:100 !important;text-decoration:none;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;color:#FFFFFF;font-size:20px;display:inline-block;background:#cccccc;border-radius:15px;font-family:Oswald, sans-serif;font-weight:normal;font-style:normal;line-height:24px;width:auto;text-align:center;padding:10px 0px 10px 0px;mso-padding-alt:0;mso-border-alt:10px solid #cccccc;width:100%;display:inline-block;"

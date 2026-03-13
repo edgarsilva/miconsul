@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	"miconsul/internal/lib"
 	"miconsul/internal/lib/libtime"
 	"miconsul/internal/lib/xid"
 
@@ -113,24 +112,12 @@ func (a *Appointment) ConfirmPath() string {
 	return "/appointments/" + a.ID + "/patient/confirm/" + a.Token
 }
 
-func (a *Appointment) ConfirmURL() string {
-	return lib.AppURL(a.ConfirmPath())
-}
-
 func (a *Appointment) CancelPath() string {
 	return "/appointments/" + a.ID + "/patient/cancel/" + a.Token
 }
 
-func (a *Appointment) CancelURL() string {
-	return lib.AppURL(a.CancelPath())
-}
-
 func (a *Appointment) RescheduledPath() string {
 	return "/appointments/" + a.ID + "/patient/reschedule/" + a.Token
-}
-
-func (a *Appointment) RescheduledURL() string {
-	return lib.AppURL(a.RescheduledPath())
 }
 
 // Scopes

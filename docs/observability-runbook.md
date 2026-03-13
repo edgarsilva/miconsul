@@ -9,6 +9,38 @@ local LGTM setup (Loki, Grafana, Tempo, Prometheus(Mimir too if needed)).
 - LGTM stack running (`make docker/up`)
 - Grafana available on `http://localhost:3001`
 
+## Telemetry Configuration
+
+The app emits traces, metrics, and logs through OpenTelemetry when OTLP is
+configured.
+
+Core environment variables:
+
+- `OTEL_EXPORTER_OTLP_ENDPOINT` (required to enable OTLP export)
+- `OTEL_EXPORTER_OTLP_INSECURE` (optional; useful for local docker stack)
+- `OTEL_SERVICE_NAME` (defaults to `miconsul`)
+- `OTEL_TRACER_SERVER` (defaults to `miconsul.server`)
+- `OTEL_TRACER_AUTH` (defaults to `miconsul.auth`)
+
+Without `OTEL_EXPORTER_OTLP_ENDPOINT`, telemetry SDKs initialize in no-op mode
+for export, so app behavior is unchanged but no remote signal export occurs.
+
+## Signals Emitted by App
+
+- HTTP metrics: request count and duration histograms used by Prometheus
+  queries in this runbook.
+- HTTP logs (`event=http_request`): emitted by request logging middleware.
+- DB logs (`event=db_query`): emitted by GORM logger wrapper.
+- Traces: emitted by Fiber OTEL middleware and service spans.
+
+Useful log fields for correlation:
+
+- `trace_id`
+- `route`
+- `status`
+- `duration_ms`
+- `db_operation`
+
 ## Traffic Generation
 
 Use steady synthetic traffic for dashboards:

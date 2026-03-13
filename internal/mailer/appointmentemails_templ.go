@@ -8,9 +8,12 @@ package mailer
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "miconsul/internal/model"
+import (
+	"miconsul/internal/lib/appenv"
+	"miconsul/internal/model"
+)
 
-func AppointmentBookedEmail(appointment model.Appointment) templ.Component {
+func AppointmentBookedEmail(env *appenv.Env, appointment model.Appointment) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -38,7 +41,7 @@ func AppointmentBookedEmail(appointment model.Appointment) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(appointment.BookedAt.Format(ViewTimeFormat))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 122, Col: 335}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 125, Col: 335}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -49,9 +52,9 @@ func AppointmentBookedEmail(appointment model.Appointment) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 templ.SafeURL
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(appointment.ConfirmURL()))
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(env.AppURL(appointment.ConfirmPath())))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 143, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 146, Col: 80}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -64,7 +67,7 @@ func AppointmentBookedEmail(appointment model.Appointment) templ.Component {
 		var templ_7745c5c3_Var4 templ.SafeURL
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(waURL(appointment.Clinic.Phone, "Me gustaria cambiar la fecha de mi cita.")))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 158, Col: 114}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 161, Col: 114}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -75,9 +78,9 @@ func AppointmentBookedEmail(appointment model.Appointment) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 templ.SafeURL
-		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(appointment.RescheduledURL()))
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(env.AppURL(appointment.RescheduledPath())))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 173, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 176, Col: 84}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -90,7 +93,7 @@ func AppointmentBookedEmail(appointment model.Appointment) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(appointment.Clinic.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 226, Col: 261}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 229, Col: 261}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -103,7 +106,7 @@ func AppointmentBookedEmail(appointment model.Appointment) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(appointment.Clinic.Line1)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 227, Col: 261}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 230, Col: 261}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -116,7 +119,7 @@ func AppointmentBookedEmail(appointment model.Appointment) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(appointment.Clinic.City)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 228, Col: 260}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 231, Col: 260}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -129,7 +132,7 @@ func AppointmentBookedEmail(appointment model.Appointment) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(appointment.Clinic.State)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 228, Col: 290}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 231, Col: 290}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -142,7 +145,7 @@ func AppointmentBookedEmail(appointment model.Appointment) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(appointment.Clinic.Phone)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 230, Col: 266}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 233, Col: 266}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -155,7 +158,7 @@ func AppointmentBookedEmail(appointment model.Appointment) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(appointment.Clinic.Email)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 231, Col: 268}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 234, Col: 268}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -169,7 +172,7 @@ func AppointmentBookedEmail(appointment model.Appointment) templ.Component {
 	})
 }
 
-func AppointmentReminderEmail(appointment model.Appointment) templ.Component {
+func AppointmentReminderEmail(env *appenv.Env, appointment model.Appointment) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -197,7 +200,7 @@ func AppointmentReminderEmail(appointment model.Appointment) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(appointment.BookedAt.Format(ViewTimeFormat))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 483, Col: 335}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 486, Col: 335}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -208,9 +211,9 @@ func AppointmentReminderEmail(appointment model.Appointment) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var14 templ.SafeURL
-		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(appointment.ConfirmURL()))
+		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(env.AppURL(appointment.ConfirmPath())))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 504, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 507, Col: 80}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -223,7 +226,7 @@ func AppointmentReminderEmail(appointment model.Appointment) templ.Component {
 		var templ_7745c5c3_Var15 templ.SafeURL
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(waURL(appointment.Clinic.Phone, "Me gustaria cambiar la fecha de mi cita.")))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 519, Col: 114}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 522, Col: 114}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -234,9 +237,9 @@ func AppointmentReminderEmail(appointment model.Appointment) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var16 templ.SafeURL
-		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(appointment.RescheduledURL()))
+		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(env.AppURL(appointment.RescheduledPath())))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 534, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 537, Col: 84}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -249,7 +252,7 @@ func AppointmentReminderEmail(appointment model.Appointment) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(appointment.Clinic.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 587, Col: 261}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 590, Col: 261}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -262,7 +265,7 @@ func AppointmentReminderEmail(appointment model.Appointment) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(appointment.Clinic.Line1)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 588, Col: 261}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 591, Col: 261}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -275,7 +278,7 @@ func AppointmentReminderEmail(appointment model.Appointment) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(appointment.Clinic.City)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 589, Col: 260}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 592, Col: 260}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -288,7 +291,7 @@ func AppointmentReminderEmail(appointment model.Appointment) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(appointment.Clinic.State)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 589, Col: 290}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 592, Col: 290}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -301,7 +304,7 @@ func AppointmentReminderEmail(appointment model.Appointment) templ.Component {
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(appointment.Clinic.Phone)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 591, Col: 266}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 594, Col: 266}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
@@ -314,7 +317,7 @@ func AppointmentReminderEmail(appointment model.Appointment) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(appointment.Clinic.Email)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 592, Col: 268}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/mailer/appointmentemails.templ`, Line: 595, Col: 268}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
