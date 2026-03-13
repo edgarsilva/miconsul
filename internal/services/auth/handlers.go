@@ -374,3 +374,33 @@ func (s *service) HandleShowUser(c fiber.Ctx) error {
 
 	return c.JSON(res)
 }
+
+func (s *service) logtoSigninPageDecision(c fiber.Ctx, msg string) (redirectURL string, nextMsg string) {
+	if !logtoEnabled(s.Env) {
+		return "", msg
+	}
+
+	logtoError := c.Query("logto_error", "")
+	loggedOut := c.Query("logged_out", "")
+	skipAutoRedirect := s.SessionRead(c, "logto_skip_redirect", "") == "1"
+	if skipAutoRedirect {
+		_ = s.SessionWrite(c, "logto_skip_redirect", "")
+	}
+
+	if logtoError == "" && loggedOut == "" && !skipAutoRedirect {
+		return "/logto/signin", msg
+	}
+
+	if msg != "" {
+		return "", msg
+	}
+
+	switch {
+	case logtoError != "":
+		return "", "Logto sign-in failed. Please try again."
+	case loggedOut == "1" || skipAutoRedirect:
+		return "", "You have been signed out."
+	default:
+		return "", msg
+	}
+}

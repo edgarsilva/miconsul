@@ -15,10 +15,8 @@ import (
 	"miconsul/internal/server"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/gofiber/fiber/v3"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
-
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -119,6 +117,18 @@ func (s *service) signupIsPasswordValid(pwd string) error {
 	return nil
 }
 
+func (s *service) userPendingConfirmation(ctx context.Context, email string) error {
+	user, err := gorm.G[model.User](s.DB.GormDB()).
+		Select("ID, Email, ConfirmEmailToken").
+		Where("email = ? AND confirm_email_token IS NOT null AND confirm_email_token != ''", email).
+		Take(ctx)
+	if err == nil && user.ID != "" { // If a row/record exists it means confirmation is pending and we should re-send
+		return errors.New("user pending confirmation")
+	}
+
+	return nil
+}
+
 // userCreate creates a new row in the users table
 func (s *service) userCreate(ctx context.Context, email, password, token string) (model.User, error) {
 	user := model.User{
@@ -209,18 +219,6 @@ func (s *service) userUpdateConfirmToken(ctx context.Context, email, token strin
 	return nil
 }
 
-func (s *service) userPendingConfirmation(ctx context.Context, email string) error {
-	user, err := gorm.G[model.User](s.DB.GormDB()).
-		Select("ID, Email, ConfirmEmailToken").
-		Where("email = ? AND confirm_email_token IS NOT null AND confirm_email_token != ''", email).
-		Take(ctx)
-	if err == nil && user.ID != "" { // If a row/record exists it means confirmation is pending and we should re-send
-		return errors.New("user pending confirmation")
-	}
-
-	return nil
-}
-
 func (s *service) resetPasswordVerifyToken(ctx context.Context, token string) (email string, err error) {
 	user, err := gorm.G[model.User](s.DB.GormDB()).
 		Select("id, email").
@@ -245,13 +243,9 @@ func (s *service) saveLogtoUser(ctx context.Context, logtoUser LogtoUser) error 
 	userExists := user.ID != ""
 	extIDMatchesUID := user.ExtID == logtoUser.UID
 	if userExists && extIDMatchesUID {
-		// user exists and has the same extID as the logtoUser, user is now logged in
 		return nil
 	}
 
-	// user does not exist or has a different extID
-	// since user has a different extID and logtoUser.UID
-	// we need to create a new user or update the existing one ExtID
 	if user.Password == "" {
 		rndPwd, err := bcrypt.GenerateFromPassword([]byte(xid.New("rpwd")), 8)
 		if err != nil {
@@ -277,34 +271,4 @@ func (s *service) saveLogtoUser(ctx context.Context, logtoUser LogtoUser) error 
 	}
 
 	return nil
-}
-
-func (s *service) logtoSigninPageDecision(c fiber.Ctx, msg string) (redirectURL string, nextMsg string) {
-	if !logtoEnabled(s.Env) {
-		return "", msg
-	}
-
-	logtoError := c.Query("logto_error", "")
-	loggedOut := c.Query("logged_out", "")
-	skipAutoRedirect := s.SessionRead(c, "logto_skip_redirect", "") == "1"
-	if skipAutoRedirect {
-		_ = s.SessionWrite(c, "logto_skip_redirect", "")
-	}
-
-	if logtoError == "" && loggedOut == "" && !skipAutoRedirect {
-		return "/logto/signin", msg
-	}
-
-	if msg != "" {
-		return "", msg
-	}
-
-	switch {
-	case logtoError != "":
-		return "", "Logto sign-in failed. Please try again."
-	case loggedOut == "1" || skipAutoRedirect:
-		return "", "You have been signed out."
-	default:
-		return "", msg
-	}
 }
