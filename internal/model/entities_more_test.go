@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"miconsul/internal/lib"
-
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -70,20 +68,19 @@ func TestAppointmentBeforeSaveAndHelpers(t *testing.T) {
 		t.Fatalf("unexpected price input value %q", got)
 	}
 
-	lib.SetAppBaseURL("https", "example.com")
 	apnt.ID = "apnt_1"
 	apnt.Token = "tok_1"
-	if got := apnt.ConfirmURL(); !strings.Contains(got, "/appointments/apnt_1/patient/confirm/tok_1") {
-		t.Fatalf("unexpected confirm url %q", got)
+	if got := apnt.ConfirmPath(); got != "/appointments/apnt_1/patient/confirm/tok_1" {
+		t.Fatalf("unexpected confirm path %q", got)
 	}
-	if got := apnt.CancelURL(); !strings.Contains(got, "/appointments/apnt_1/patient/cancel/tok_1") {
-		t.Fatalf("unexpected cancel url %q", got)
+	if got := apnt.CancelPath(); got != "/appointments/apnt_1/patient/cancel/tok_1" {
+		t.Fatalf("unexpected cancel path %q", got)
 	}
 	if got := apnt.RescheduledPath(); got == "" {
 		t.Fatalf("expected non-empty rescheduled path")
 	}
-	if got := apnt.RescheduledURL(); !strings.Contains(got, "/appointments/apnt_1/patient/reschedule/tok_1") {
-		t.Fatalf("unexpected rescheduled url %q", got)
+	if got := apnt.RescheduledPath(); got != "/appointments/apnt_1/patient/reschedule/tok_1" {
+		t.Fatalf("unexpected rescheduled path %q", got)
 	}
 
 	apnt.BookedAt = time.Date(2026, 1, 2, 15, 4, 0, 0, time.UTC)

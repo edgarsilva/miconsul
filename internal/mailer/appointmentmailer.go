@@ -5,13 +5,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"miconsul/internal/lib/appenv"
 	"miconsul/internal/model"
 	"os"
 
 	"gopkg.in/gomail.v2"
 )
 
-func SendAppointmentBookedEmail(appointment model.Appointment) error {
+func SendAppointmentBookedEmail(env *appenv.Env, appointment model.Appointment) error {
 	if appointment.Patient.ID == "" || appointment.Clinic.ID == "" {
 		fmt.Println(errors.New("appointment Clinic or Patient association is missing, they must be Preloaded"))
 	}
@@ -23,7 +24,7 @@ func SendAppointmentBookedEmail(appointment model.Appointment) error {
 	m.SetHeader("Subject", "Miconsul:"+l("es-MX", "email.confirm_appointment_title"))
 
 	emailHTML := bytes.Buffer{}
-	if err := AppointmentBookedEmail(appointment).Render(context.Background(), &emailHTML); err != nil {
+	if err := AppointmentBookedEmail(env, appointment).Render(context.Background(), &emailHTML); err != nil {
 		fmt.Println(errors.New("couldn't create HTML from templ comp to send email"))
 	}
 	m.SetBody("text/html", emailHTML.String())
@@ -39,7 +40,7 @@ func SendAppointmentBookedEmail(appointment model.Appointment) error {
 	return nil
 }
 
-func SendAppointmentReminderEmail(appointment model.Appointment) error {
+func SendAppointmentReminderEmail(env *appenv.Env, appointment model.Appointment) error {
 	if appointment.Patient.ID == "" || appointment.Clinic.ID == "" {
 		return errors.New("appointment Clinic or Patient association is missing, they must be Preloaded")
 	}
@@ -51,7 +52,7 @@ func SendAppointmentReminderEmail(appointment model.Appointment) error {
 	m.SetHeader("Subject", "Miconsul:"+l("es-MX", "email.confirm_appointment_title"))
 
 	emailHTML := bytes.Buffer{}
-	if err := AppointmentReminderEmail(appointment).Render(context.Background(), &emailHTML); err != nil {
+	if err := AppointmentReminderEmail(env, appointment).Render(context.Background(), &emailHTML); err != nil {
 		return errors.New("couldn't create HTML from templ comp to send email")
 	}
 	m.SetBody("text/html", emailHTML.String())

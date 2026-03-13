@@ -15,7 +15,7 @@ func (s *service) SendBookedAlert(appointment model.Appointment) error {
 		ctx, cancel := s.newWorkerContext()
 		defer cancel()
 
-		err := mailer.SendAppointmentBookedEmail(appointment)
+		err := mailer.SendAppointmentBookedEmail(s.Env, appointment)
 		if err != nil {
 			alert := model.Alert{
 				Medium: model.AlertMediumEmail,
@@ -57,7 +57,7 @@ func (s *service) SendReminderAlert(appointment model.Appointment) error {
 		ctx, cancel := s.newWorkerContext()
 		defer cancel()
 
-		err := mailer.SendAppointmentReminderEmail(appointment)
+		err := mailer.SendAppointmentReminderEmail(s.Env, appointment)
 		if err != nil {
 			alert := model.Alert{
 				Medium: model.AlertMediumEmail,

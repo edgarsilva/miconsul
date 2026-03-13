@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"miconsul/internal/database"
-	"miconsul/internal/lib"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
@@ -168,7 +167,6 @@ func setupEnv() (*appenv.Env, error) {
 		return nil, err
 	}
 
-	lib.SetAppBaseURL(env.AppProtocol, env.AppDomain)
 	return env, nil
 }
 
