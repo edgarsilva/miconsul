@@ -9,7 +9,7 @@ import (
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/mailer"
 	"miconsul/internal/model"
-	"miconsul/internal/views"
+	view "miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"
 	"gorm.io/gorm"

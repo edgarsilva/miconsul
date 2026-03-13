@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"miconsul/internal/server"
-	"miconsul/internal/views"
+	view "miconsul/internal/views"
 )
 
 func TestSerializeDeserializeRoundTrip(t *testing.T) {

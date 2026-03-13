@@ -10,7 +10,7 @@ import (
 	"miconsul/internal/lib/avatar"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/model"
-	"miconsul/internal/views"
+	view "miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"

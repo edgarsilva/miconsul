@@ -1,7 +1,7 @@
 package theme
 
 import (
-	"miconsul/internal/views"
+	view "miconsul/internal/views"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
