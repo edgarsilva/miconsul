@@ -25,6 +25,7 @@ func MustAuthenticate(authRuntime auth.Runtime) func(c fiber.Ctx) error {
 			}
 		}
 
+		// Bind resolved identity to request locals for downstream handlers/views.
 		c.Locals("current_user", cu)
 		c.Locals("uid", cu.ID)
 		return c.Next()
@@ -60,6 +61,7 @@ func MustBeAdmin(authRuntime auth.Runtime) func(c fiber.Ctx) error {
 			}
 		}
 
+		// Bind resolved identity to request locals for downstream handlers/views.
 		c.Locals("current_user", cu)
 		c.Locals("uid", cu.ID)
 
@@ -71,6 +73,7 @@ func MaybeAuthenticate(authRuntime auth.Runtime) func(c fiber.Ctx) error {
 	return func(c fiber.Ctx) error {
 		cu, _ := auth.Authenticate(c, authRuntime)
 
+		// Bind resolved identity to request locals for downstream handlers/views.
 		c.Locals("current_user", cu)
 		c.Locals("uid", cu.ID)
 
