@@ -2,6 +2,7 @@ package view
 
 import (
 	"errors"
+
 	"miconsul/internal/lib/localize"
 	"miconsul/internal/model"
 
@@ -39,7 +40,7 @@ func l(lang, key string) string {
 	return locales.GetWithLocale(lang, key)
 }
 
-func extLoc(c fiber.Ctx) string {
+func localeFromLocals(c fiber.Ctx) string {
 	iloc := c.Locals("locale")
 	loc, ok := iloc.(string)
 	if !ok {
@@ -77,7 +78,7 @@ func NewCtx(c fiber.Ctx, ctxOpts ...ContextOption) (*Ctx, error) {
 	ctx := Ctx{
 		Ctx:         c,
 		CurrentUser: currentUserFromLocals(c),
-		Locale:      extLoc(c),
+		Locale:      localeFromLocals(c),
 		Theme:       themeFromLocals(c),
 		Toast: Toast{
 			Msg:   c.Query("toast", ""),
