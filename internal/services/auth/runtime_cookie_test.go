@@ -138,6 +138,14 @@ func (m mockRuntime) Session(c fiber.Ctx) (*session.Session, error) {
 	return nil, errors.New("not implemented")
 }
 
+func (m mockRuntime) SessionWrite(c fiber.Ctx, k string, v any) error {
+	return nil
+}
+
+func (m mockRuntime) SessionRead(c fiber.Ctx, key string, defaultVal string) string {
+	return defaultVal
+}
+
 func (m mockRuntime) AppEnv() *appenv.Env {
 	return m.env
 }
