@@ -375,31 +375,21 @@ func (s *service) HandleShowUser(c fiber.Ctx) error {
 	return c.JSON(res)
 }
 
-const (
-	externalProviderSigninPath  = "/logto/signin"
-	providerSigninErrorQueryKey = "logto_error"
-	providerLoggedOutQueryKey   = "logged_out"
-	providerSkipRedirectSession = "logto_skip_redirect"
-)
-
-func shouldUseExternalProviderSignin(s *service) bool {
-	return logtoEnabled(s.Env)
-}
-
 func (s *service) providerSigninRedirect(c fiber.Ctx, msg string) (redirectURL string, nextMsg string) {
-	if !shouldUseExternalProviderSignin(s) {
+	meta := selectAuthenticator(s).Metadata()
+	if !meta.Enabled {
 		return "", msg
 	}
 
-	providerError := c.Query(providerSigninErrorQueryKey, "")
-	loggedOut := c.Query(providerLoggedOutQueryKey, "")
-	skipAutoRedirect := s.SessionRead(c, providerSkipRedirectSession, "") == "1"
+	providerError := c.Query(meta.ErrorQueryKey, "")
+	loggedOut := c.Query(meta.LoggedOutQueryKey, "")
+	skipAutoRedirect := s.SessionRead(c, meta.SkipRedirectSessionKey, "") == "1"
 	if skipAutoRedirect {
-		_ = s.SessionWrite(c, providerSkipRedirectSession, "")
+		_ = s.SessionWrite(c, meta.SkipRedirectSessionKey, "")
 	}
 
 	if providerError == "" && loggedOut == "" && !skipAutoRedirect {
-		return externalProviderSigninPath, msg
+		return meta.SigninPath, msg
 	}
 
 	if msg != "" {
@@ -408,9 +398,9 @@ func (s *service) providerSigninRedirect(c fiber.Ctx, msg string) (redirectURL s
 
 	switch {
 	case providerError != "":
-		return "", "Logto sign-in failed. Please try again."
+		return "", meta.ErrorMessage
 	case loggedOut == "1" || skipAutoRedirect:
-		return "", "You have been signed out."
+		return "", meta.SignedOutMessage
 	default:
 		return "", msg
 	}
