@@ -1,0 +1,417 @@
+package auth
+
+import (
+	"errors"
+	"net/url"
+	"strings"
+	"time"
+
+	"miconsul/internal/lib/xid"
+	"miconsul/internal/mailer"
+	"miconsul/internal/model"
+	view "miconsul/internal/views"
+
+	"github.com/gofiber/fiber/v3"
+	"gorm.io/gorm"
+)
+
+// HandleSigninPage returns the signin page html
+//
+// GET: /signin
+func (s *service) HandleSigninPage(c fiber.Ctx) error {
+	cu := s.CurrentUser(c)
+	if cu.IsLoggedIn() {
+		return s.Redirect(c, "/")
+	}
+
+	email := c.Query("email", "")
+	msg := c.Query("msg", "")
+
+	redirectURL, nextMsg := s.providerSigninRedirect(c, msg)
+	if redirectURL != "" {
+		return s.Redirect(c, redirectURL)
+	}
+
+	msg = nextMsg
+
+	vc, _ := view.NewCtx(c)
+	return view.Render(c, view.LoginPage(email, msg, nil, vc))
+}
+
+// HandleSignin compares hash and password and sets the user Auth session cookie
+// if the email & password combination are valid
+//
+// POST: /signin
+func (s *service) HandleSignin(c fiber.Ctx) error {
+	ctx, span := s.Trace(c.Context(), "auth/handlers:HandleSignin")
+	defer span.End()
+
+	theme := s.SessionUITheme(c)
+	vc, _ := view.NewCtx(c, view.WithTheme(theme))
+	respErr := errors.New("incorrect email and password combination")
+
+	email, password, err := credentialsFromRequest(c)
+	if err != nil {
+		return view.Render(c, view.LoginPage(email, "", respErr, vc))
+	}
+
+	user, err := s.authenticateCredentials(ctx, email, password)
+	if errors.Is(err, errAuthInvalidCredentials) {
+		return view.Render(c, view.LoginPage(email, "", respErr, vc))
+	}
+	if errors.Is(err, errAuthPendingConfirmation) {
+		err := errors.New("email pending confirmation, check your inbox")
+		return view.Render(c, view.LoginPage(email, "", err, vc))
+	}
+	if err != nil {
+		return s.respondWithRedirect(c, "/", "Failed to login, please try again")
+	}
+
+	rememberMe := c.FormValue("remember_me", "") != ""
+	if err := s.issueAuthCookie(c, user, rememberMe); err != nil {
+		return s.respondWithRedirect(c, "/", "Failed to login, please try again")
+	}
+
+	return s.Redirect(c, "/?timeframe=day")
+}
+
+// HandleAPISignin authenticates a user and creates an auth cookie for API clients.
+// POST: /api/auth/signin
+func (s *service) HandleAPISignin(c fiber.Ctx) error {
+	ctx, span := s.Trace(c.Context(), "auth/handlers:HandleAPISignin")
+	defer span.End()
+
+	req := struct {
+		Email      string `json:"email" form:"email"`
+		Password   string `json:"password" form:"password"`
+		RememberMe bool   `json:"remember_me" form:"remember_me"`
+	}{}
+	if err := c.Bind().Body(&req); err != nil {
+		return apiError(c, fiber.StatusBadRequest, "invalid request body")
+	}
+
+	if req.Email == "" || req.Password == "" {
+		return apiError(c, fiber.StatusBadRequest, "email and password can't be blank")
+	}
+
+	user, err := s.authenticateCredentials(ctx, req.Email, req.Password)
+	if errors.Is(err, errAuthInvalidCredentials) {
+		return apiError(c, fiber.StatusUnauthorized, "invalid credentials")
+	}
+	if errors.Is(err, errAuthPendingConfirmation) {
+		return apiError(c, fiber.StatusForbidden, "email pending confirmation")
+	}
+	if err != nil {
+		return apiError(c, fiber.StatusInternalServerError, "authentication failed")
+	}
+
+	if err := s.issueAuthCookie(c, user, req.RememberMe); err != nil {
+		return apiError(c, fiber.StatusInternalServerError, "failed to create session")
+	}
+
+	return apiOK(c, fiber.Map{"ok": true})
+}
+
+// HandleSignupPage returns the Signup form page html
+//
+// GET: /signup
+func (s *service) HandleSignupPage(c fiber.Ctx) error {
+	cu := s.CurrentUser(c)
+
+	if cu.IsLoggedIn() {
+		return s.Redirect(c, "/todos")
+	}
+
+	msg := c.Query("msg", "")
+	err := errors.New(msg)
+	if msg == "" {
+		err = nil
+	}
+	theme := s.SessionUITheme(c)
+	vc, _ := view.NewCtx(c, view.WithTheme(theme))
+
+	return view.Render(c, view.SignupPage(vc, "", err))
+}
+
+// HandleSignup creates a new user if email and password are valid
+//
+// POST: /signup
+func (s *service) HandleSignup(c fiber.Ctx) error {
+	theme := s.SessionUITheme(c)
+	vc, _ := view.NewCtx(c, view.WithTheme(theme))
+	email, password, err := credentialsFromRequest(c)
+	if err != nil {
+		return view.Render(c, view.SignupPage(vc, email, err))
+	}
+
+	confirm := c.FormValue("confirm", "")
+	if confirm == "" || password != confirm {
+		err := errors.New("passwords don't match")
+		return view.Render(c, view.SignupPage(vc, email, err))
+	}
+
+	err = s.userPendingConfirmation(c.Context(), email)
+	if err != nil {
+		token := newConfirmEmailToken()
+		s.userUpdateConfirmToken(c.Context(), email, token)
+		go mailer.ConfirmEmail(email, token)
+		return s.respondWithRedirect(c, "/signin", "check your inbox, we'll re-send a confirmation link")
+	}
+
+	if err := s.signup(c.Context(), email, password); err != nil {
+		return view.Render(c, view.SignupPage(vc, email, err))
+	}
+
+	return s.respondWithRedirect(c, "/signin", "check your inbox to confirm your email")
+}
+
+// HandleSignupConfirmEmail validates an email confirmation token.
+// GET: /signup/confirm/:token
+func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
+	token := c.Params("token", "")
+	if token == "" {
+		return s.respondWithRedirect(c, "/signin", "unable to confirm email, try signin instead")
+	}
+
+	user, err := gorm.G[model.User](s.DB.GormDB()).
+		Select("id, email, confirm_email_token").
+		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
+		Take(c.Context())
+	if err != nil {
+		return s.respondWithRedirect(c, "/signin", "we couldn't verify your account, pls try again")
+	}
+
+	_, err = gorm.G[model.User](s.DB.GormDB()).
+		Select("ConfirmEmailToken", "ConfirmEmailExpiresAt").
+		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
+		Updates(c.Context(), model.User{})
+	if err != nil {
+		return s.respondWithRedirect(c, "/signin", "Email confirmed, you should be able to signin now")
+	}
+
+	jwt, err := JWTCreateToken(s.AppEnv(), user.Email, user.ID)
+	if err != nil {
+		return s.respondWithRedirect(c, "/signin", "Email confirmed, you should be able to signin now")
+	}
+
+	c.Cookie(s.NewCookie("Auth", jwt, time.Hour*24))
+	return s.respondWithRedirect(c, "/signin", "Email confirmed, you should be able to signin now")
+}
+
+func apiError(c fiber.Ctx, status int, message string) error {
+	return c.Status(status).JSON(fiber.Map{"error": message})
+}
+
+func apiOK(c fiber.Ctx, payload fiber.Map) error {
+	return c.Status(fiber.StatusOK).JSON(payload)
+}
+
+func (s *service) respondWithRedirect(c fiber.Ctx, path, message string) error {
+	if strings.TrimSpace(message) == "" {
+		return s.Redirect(c, path)
+	}
+
+	sep := "?"
+	if strings.Contains(path, "?") {
+		sep = "&"
+	}
+
+	return s.Redirect(c, path+sep+"msg="+url.QueryEscape(message))
+}
+
+// HandleLogout destroys session state and redirects to login.
+// ALL: /logout
+func (s *service) HandleLogout(c fiber.Ctx) error {
+	s.SessionDestroy(c)
+	s.InvalidateCookies(c, "Auth", "JWT")
+
+	redirectURL := "/signin"
+	if logtoEnabled(s.Env) {
+		redirectURL = "/logto/signout"
+	}
+
+	if c.Get("HX-Request") == "true" {
+		c.Set("HX-Redirect", redirectURL)
+		return c.SendStatus(fiber.StatusTemporaryRedirect)
+	}
+
+	return s.Redirect(c, redirectURL)
+}
+
+// HandleResetPasswordPage renders the reset password request page.
+// GET: /resetpassword
+func (s *service) HandleResetPasswordPage(c fiber.Ctx) error {
+	vc, _ := view.NewCtx(c)
+
+	msg := s.SessionRead(c, "msg", "")
+	if msg == "" {
+		msg = c.Query("msg", "")
+	}
+
+	return view.Render(c, view.ResetPasswordPage(vc, "", msg, "", nil))
+}
+
+// HandleResetPassword sends a reset password link to the provided email.
+// as query param, url param or body param
+// POST: /resetpassword
+func (s *service) HandleResetPassword(c fiber.Ctx) error {
+	vc, _ := view.NewCtx(c)
+	email, err := resetPasswordEmailFromRequest(c)
+	if err != nil {
+		errView := errors.New("email can't be blank")
+		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
+	}
+
+	user, err := gorm.G[model.User](s.DB.GormDB()).Select("id", "name").Where("email = ?", email).Take(c.Context())
+	if err != nil {
+		errView := errors.New("user not found with that email")
+		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
+	}
+
+	token, err := newResetPasswordToken()
+	if err != nil {
+		return s.Redirect(c, "/resetpassword")
+	}
+
+	user.ResetToken = token
+	user.ResetTokenExpiresAt = time.Now().Add(time.Hour * 1)
+	rowsAffected, err := gorm.G[model.User](s.DB.GormDB()).
+		Select("ResetToken", "ResetTokenExpiresAt").
+		Where("id = ?", user.ID).
+		Updates(c.Context(), user)
+	if err != nil || rowsAffected != 1 {
+		errView := errors.New("failed to create reset password token")
+		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
+	}
+
+	go mailer.ResetPassword(email, token)
+
+	return view.Render(c, view.ResetPasswordPage(vc, email, "", "check your email for a reset password link", nil))
+}
+
+// HandleResetPasswordChange renders the password change page for a valid token.
+// GET: /resetpassword/change/:token
+func (s *service) HandleResetPasswordChange(c fiber.Ctx) error {
+	token := c.Params("token", "")
+	if token == "" {
+		return s.Redirect(c, "/resetpassword?msg=token can't be blank")
+	}
+
+	email, err := s.resetPasswordVerifyToken(c.Context(), token)
+	if err != nil {
+		return s.Redirect(c, "/resetpassword?msg=invalid email or token")
+	}
+
+	nonce := xid.New("rpnnce")
+	s.SessionWrite(c, "nonce", nonce)
+
+	vc, _ := view.NewCtx(c)
+	return view.Render(c, view.ResetPasswordChangePage(email, token, nonce, nil, vc))
+}
+
+// HandleResetPasswordUpdate updates the user password in the DB
+// POST: /resetpassword/change
+func (s *service) HandleResetPasswordUpdate(c fiber.Ctx) error {
+	email, err := resetPasswordEmailFromRequest(c)
+	if err != nil {
+		return s.Redirect(c, "/resetpassword?msg=something went wrong with the email, try again!")
+	}
+
+	token := c.FormValue("token", "")
+	if token == "" {
+		return s.Redirect(c, "/resetpassword?msg=something went wrong with the token, try again!")
+	}
+
+	nonce := c.FormValue("nonce", "")
+	cmpNonce := s.SessionRead(c, "nonce", nonce)
+	if nonce == "" || nonce != cmpNonce {
+		return s.Redirect(c, "/resetpassword?msg=something went wrong with the nonce, try again!")
+	}
+
+	_, err = s.resetPasswordVerifyToken(c.Context(), token)
+	if err != nil {
+		return s.Redirect(c, "/resetpassword?msg=seems like your token has expired, try again!")
+	}
+
+	vc, _ := view.NewCtx(c)
+	password := c.FormValue("password", "")
+	if password == "" {
+		err := errors.New("password can't be blank")
+		return view.Render(c, view.ResetPasswordChangePage(email, token, nonce, err, vc))
+	}
+
+	confirm := c.FormValue("confirm", "")
+	if confirm == "" || password != confirm {
+		err := errors.New("passwords don't match")
+		return view.Render(c, view.ResetPasswordChangePage(email, token, nonce, err, vc))
+	}
+
+	_, err = s.userUpdatePassword(c.Context(), email, password, token)
+	if err != nil {
+		return s.Redirect(c, "/resetpassword?msg=something went wrong, try again!")
+	}
+
+	return s.Redirect(c, "/signin")
+}
+
+// HandleValidate validates the current authentication session.
+// POST: /api/auth/validate
+func (s *service) HandleValidate(c fiber.Ctx) error {
+	return c.SendStatus(fiber.StatusOK)
+}
+
+// HandleShowUser returns a JSON model.User if the session is valid
+// GET: /api/auth/protected
+func (s *service) HandleShowUser(c fiber.Ctx) error {
+	_, span := s.Trace(c.Context(), "auth/handlers:HandleShowUser")
+	defer span.End()
+
+	user := s.CurrentUser(c)
+
+	res := struct{ User model.User }{
+		User: user,
+	}
+
+	return c.JSON(res)
+}
+
+const (
+	externalProviderSigninPath  = "/logto/signin"
+	providerSigninErrorQueryKey = "logto_error"
+	providerLoggedOutQueryKey   = "logged_out"
+	providerSkipRedirectSession = "logto_skip_redirect"
+)
+
+func shouldUseExternalProviderSignin(s *service) bool {
+	return logtoEnabled(s.Env)
+}
+
+func (s *service) providerSigninRedirect(c fiber.Ctx, msg string) (redirectURL string, nextMsg string) {
+	if !shouldUseExternalProviderSignin(s) {
+		return "", msg
+	}
+
+	providerError := c.Query(providerSigninErrorQueryKey, "")
+	loggedOut := c.Query(providerLoggedOutQueryKey, "")
+	skipAutoRedirect := s.SessionRead(c, providerSkipRedirectSession, "") == "1"
+	if skipAutoRedirect {
+		_ = s.SessionWrite(c, providerSkipRedirectSession, "")
+	}
+
+	if providerError == "" && loggedOut == "" && !skipAutoRedirect {
+		return externalProviderSigninPath, msg
+	}
+
+	if msg != "" {
+		return "", msg
+	}
+
+	switch {
+	case providerError != "":
+		return "", "Logto sign-in failed. Please try again."
+	case loggedOut == "1" || skipAutoRedirect:
+		return "", "You have been signed out."
+	default:
+		return "", msg
+	}
+}

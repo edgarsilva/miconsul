@@ -5,14 +5,14 @@ import (
 
 	mw "miconsul/internal/middleware"
 	"miconsul/internal/server"
-	"miconsul/internal/service/admin"
-	"miconsul/internal/service/appointment"
-	"miconsul/internal/service/auth"
-	"miconsul/internal/service/clinic"
-	"miconsul/internal/service/dashboard"
-	"miconsul/internal/service/patient"
-	"miconsul/internal/service/theme"
-	"miconsul/internal/service/user"
+	"miconsul/internal/services/admin"
+	"miconsul/internal/services/appointment"
+	"miconsul/internal/services/auth"
+	"miconsul/internal/services/clinic"
+	"miconsul/internal/services/dashboard"
+	"miconsul/internal/services/patient"
+	"miconsul/internal/services/theme"
+	"miconsul/internal/services/user"
 )
 
 type routeBootstrap struct {
