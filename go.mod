@@ -3,7 +3,7 @@ module miconsul
 go 1.26
 
 require (
-	github.com/a-h/templ v0.3.943
+	github.com/a-h/templ v0.3.1001
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/edgarsilva/simpleenv v1.2.0
 	github.com/go-co-op/gocron/v2 v2.16.5
@@ -32,7 +32,6 @@ require (
 	go.opentelemetry.io/otel/sdk/log v0.18.0
 	go.opentelemetry.io/otel/sdk/metric v1.42.0
 	go.opentelemetry.io/otel/trace v1.42.0
-	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.48.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gorm.io/driver/sqlite v1.6.0

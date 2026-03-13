@@ -7,11 +7,6 @@
   - Persist `CurrentUser` in session after successful authentication.
   - Preserve security guarantees and avoid stale user data.
 
-## Later
-
-- Templ toolchain alignment
-  - Align `github.com/a-h/templ` module version with the generator used locally to avoid version skew warnings.
-
 ## Done
 
 - Auth provider decoupling
@@ -23,3 +18,7 @@
   - Codified in `AGENTS.md` to keep `handlers.go` + `service.go` cohesive.
   - Explicitly requires splitting only for clearly standalone/reused concerns.
   - Reinforced separation of structural refactors from behavior changes.
+
+- Templ toolchain alignment
+  - Aligned `github.com/a-h/templ` module dependency with the generator version.
+  - Verified with `go test ./...`.
