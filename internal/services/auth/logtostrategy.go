@@ -62,6 +62,18 @@ func (lgs LogtoStrategy) Trace(ctx context.Context, spanName string, opts ...tra
 	return lgs.runtime.Trace(ctx, spanName, opts...)
 }
 
+func (lgs LogtoStrategy) Metadata() AuthenticatorMeta {
+	return AuthenticatorMeta{
+		Enabled:                logtoEnabled(lgs.runtime.AppEnv()),
+		SigninPath:             "/logto/signin",
+		ErrorQueryKey:          "logto_error",
+		LoggedOutQueryKey:      "logged_out",
+		SkipRedirectSessionKey: "logto_skip_redirect",
+		ErrorMessage:           "Logto sign-in failed. Please try again.",
+		SignedOutMessage:       "You have been signed out.",
+	}
+}
+
 func LogtoConfig(env *appenv.Env) *logto.LogtoConfig {
 	config := logto.LogtoConfig{
 		Resources: []string{},

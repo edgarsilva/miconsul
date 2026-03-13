@@ -24,6 +24,17 @@ type Runtime interface {
 
 type Authenticator interface {
 	Authenticate(c fiber.Ctx) (model.User, error)
+	Metadata() AuthenticatorMeta
+}
+
+type AuthenticatorMeta struct {
+	Enabled                bool
+	SigninPath             string
+	ErrorQueryKey          string
+	LoggedOutQueryKey      string
+	SkipRedirectSessionKey string
+	ErrorMessage           string
+	SignedOutMessage       string
 }
 
 // Authenticate an user based on Req Ctx Cookie 'Auth'
