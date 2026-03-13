@@ -10,7 +10,6 @@ import (
 	"miconsul/internal/lib/appenv"
 	obslogging "miconsul/internal/observability/logging"
 
-	"go.uber.org/zap"
 	"gorm.io/gorm/logger"
 )
 
@@ -25,10 +24,10 @@ func TestNewLoggerAndDatabaseHelpers(t *testing.T) {
 		t.Fatalf("expected production logger")
 	}
 
-	if err := ApplyMigrations(nil, nil); err == nil {
+	if err := ApplyMigrations(nil, obslogging.Logger{}); err == nil {
 		t.Fatalf("expected migrations to fail for nil database")
 	}
-	if err := ApplyMigrationsSilent(&Database{}, nil); err == nil {
+	if err := ApplyMigrationsSilent(&Database{}, obslogging.Logger{}); err == nil {
 		t.Fatalf("expected silent migrations to fail for nil sql handle")
 	}
 
@@ -42,15 +41,10 @@ func TestNewLoggerAndDatabaseHelpers(t *testing.T) {
 	}
 }
 
-func TestZapAndNoopLoggerAdapters(t *testing.T) {
-	z, err := zap.NewDevelopment()
-	if err != nil {
-		t.Fatalf("new zap logger: %v", err)
-	}
-	defer z.Sync()
-
-	adapter := ZapLogger{l: z.Sugar()}
+func TestGooseAndNoopLoggerAdapters(t *testing.T) {
+	adapter := NewGooseLogger(obslogging.Logger{})
 	adapter.Printf("hello %s", "db")
+	adapter.Fatalf("fatal %s", "db")
 
 	NoopLogger{}.Printf("ignored")
 	NoopLogger{}.Fatalf("ignored")

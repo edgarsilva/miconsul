@@ -19,7 +19,6 @@ import (
 
 	"github.com/pressly/goose/v3"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
-	"go.uber.org/zap"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -144,15 +143,15 @@ func (d *Database) Close() error {
 	return sqlDB.Close()
 }
 
-func ApplyMigrations(database *Database, env *appenv.Env) error {
-	return applyMigrations(database, env, false)
+func ApplyMigrations(database *Database, obsLogger obslogging.Logger) error {
+	return applyMigrations(database, obsLogger, false)
 }
 
-func ApplyMigrationsSilent(database *Database, env *appenv.Env) error {
-	return applyMigrations(database, env, true)
+func ApplyMigrationsSilent(database *Database, obsLogger obslogging.Logger) error {
+	return applyMigrations(database, obsLogger, true)
 }
 
-func applyMigrations(database *Database, env *appenv.Env, silent bool) error {
+func applyMigrations(database *Database, obsLogger obslogging.Logger, silent bool) error {
 	if !silent {
 		fmt.Println(" Applying migrations...")
 	}
@@ -171,10 +170,8 @@ func applyMigrations(database *Database, env *appenv.Env, silent bool) error {
 
 	if silent {
 		goose.SetLogger(NoopLogger{})
-	} else if env != nil && (env.IsDevelopment() || env.IsProduction()) {
-		logger, _ := zap.NewProduction()
-		sugar := logger.Sugar()
-		goose.SetLogger(ZapLogger{l: sugar})
+	} else {
+		goose.SetLogger(NewGooseLogger(obsLogger))
 	}
 
 	goose.SetBaseFS(migrations.FS)

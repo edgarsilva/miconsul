@@ -104,7 +104,7 @@ func TestRunSeed(t *testing.T) {
 			openDB: func(*appenv.Env) (*database.Database, error) {
 				return testDB, nil
 			},
-			applyMigrations: func(*database.Database, *appenv.Env) error {
+			applyMigrations: func(*database.Database) error {
 				migrationsCalled = true
 				return nil
 			},
@@ -155,7 +155,7 @@ func TestRunSeed(t *testing.T) {
 			openDB: func(*appenv.Env) (*database.Database, error) {
 				return testDB, nil
 			},
-			applyMigrations: func(*database.Database, *appenv.Env) error {
+			applyMigrations: func(*database.Database) error {
 				migrationsCalled = true
 				return nil
 			},
@@ -203,7 +203,7 @@ func TestRunSeed(t *testing.T) {
 			openDB: func(*appenv.Env) (*database.Database, error) {
 				return testDB, nil
 			},
-			applyMigrations: func(*database.Database, *appenv.Env) error {
+			applyMigrations: func(*database.Database) error {
 				return expectedErr
 			},
 			runSeeder: func(context.Context, *gorm.DB, seeder.Options) (seeder.Result, error) {
@@ -232,7 +232,7 @@ func TestRunSeed(t *testing.T) {
 			openDB: func(*appenv.Env) (*database.Database, error) {
 				return testDB, nil
 			},
-			applyMigrations: func(*database.Database, *appenv.Env) error {
+			applyMigrations: func(*database.Database) error {
 				return nil
 			},
 			runSeeder: func(context.Context, *gorm.DB, seeder.Options) (seeder.Result, error) {
@@ -260,7 +260,7 @@ func TestRunSeed(t *testing.T) {
 			openDB: func(*appenv.Env) (*database.Database, error) {
 				return nil, nil
 			},
-			applyMigrations: func(*database.Database, *appenv.Env) error { return nil },
+			applyMigrations: func(*database.Database) error { return nil },
 			runSeeder: func(context.Context, *gorm.DB, seeder.Options) (seeder.Result, error) {
 				return seeder.Result{}, nil
 			},
@@ -286,7 +286,7 @@ func TestRunSeed(t *testing.T) {
 			openDB: func(*appenv.Env) (*database.Database, error) {
 				return nil, expectedErr
 			},
-			applyMigrations: func(*database.Database, *appenv.Env) error { return nil },
+			applyMigrations: func(*database.Database) error { return nil },
 			runSeeder: func(context.Context, *gorm.DB, seeder.Options) (seeder.Result, error) {
 				return seeder.Result{}, nil
 			},

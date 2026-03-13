@@ -210,7 +210,7 @@ func setupDB(env *appenv.Env, dbLogger logging.Logger) (*database.Database, erro
 	}
 
 	fmt.Println(" Applying database migrations...")
-	if err := database.ApplyMigrations(db, env); err != nil {
+	if err := database.ApplyMigrations(db, dbLogger); err != nil {
 		_ = db.Close()
 		return nil, err
 	}
