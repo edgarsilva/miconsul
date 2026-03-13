@@ -14,6 +14,11 @@
   - Split files only when a concern is clearly standalone and reused, to avoid fragmentation.
   - Keep structural refactors separate from behavior changes.
 
+- Auth session-first user hydration
+  - Check session/store for current user before decoding JWT on every request.
+  - Persist `CurrentUser` in session after successful authentication.
+  - Preserve security guarantees and avoid stale user data.
+
 ## Later
 
 - Templ toolchain alignment
