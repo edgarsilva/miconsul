@@ -27,7 +27,7 @@ func (s *service) HandleSigninPage(c fiber.Ctx) error {
 	email := c.Query("email", "")
 	msg := c.Query("msg", "")
 
-	redirectURL, nextMsg := s.logtoSigninPageDecision(c, msg)
+	redirectURL, nextMsg := s.providerSigninRedirect(c, msg)
 	if redirectURL != "" {
 		return s.Redirect(c, redirectURL)
 	}
@@ -375,20 +375,31 @@ func (s *service) HandleShowUser(c fiber.Ctx) error {
 	return c.JSON(res)
 }
 
-func (s *service) logtoSigninPageDecision(c fiber.Ctx, msg string) (redirectURL string, nextMsg string) {
-	if !logtoEnabled(s.Env) {
+const (
+	externalProviderSigninPath  = "/logto/signin"
+	providerSigninErrorQueryKey = "logto_error"
+	providerLoggedOutQueryKey   = "logged_out"
+	providerSkipRedirectSession = "logto_skip_redirect"
+)
+
+func shouldUseExternalProviderSignin(s *service) bool {
+	return logtoEnabled(s.Env)
+}
+
+func (s *service) providerSigninRedirect(c fiber.Ctx, msg string) (redirectURL string, nextMsg string) {
+	if !shouldUseExternalProviderSignin(s) {
 		return "", msg
 	}
 
-	logtoError := c.Query("logto_error", "")
-	loggedOut := c.Query("logged_out", "")
-	skipAutoRedirect := s.SessionRead(c, "logto_skip_redirect", "") == "1"
+	providerError := c.Query(providerSigninErrorQueryKey, "")
+	loggedOut := c.Query(providerLoggedOutQueryKey, "")
+	skipAutoRedirect := s.SessionRead(c, providerSkipRedirectSession, "") == "1"
 	if skipAutoRedirect {
-		_ = s.SessionWrite(c, "logto_skip_redirect", "")
+		_ = s.SessionWrite(c, providerSkipRedirectSession, "")
 	}
 
-	if logtoError == "" && loggedOut == "" && !skipAutoRedirect {
-		return "/logto/signin", msg
+	if providerError == "" && loggedOut == "" && !skipAutoRedirect {
+		return externalProviderSigninPath, msg
 	}
 
 	if msg != "" {
@@ -396,7 +407,7 @@ func (s *service) logtoSigninPageDecision(c fiber.Ctx, msg string) (redirectURL 
 	}
 
 	switch {
-	case logtoError != "":
+	case providerError != "":
 		return "", "Logto sign-in failed. Please try again."
 	case loggedOut == "1" || skipAutoRedirect:
 		return "", "You have been signed out."

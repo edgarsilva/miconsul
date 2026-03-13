@@ -162,7 +162,7 @@ func TestSaveLogtoUserPaths(t *testing.T) {
 	})
 }
 
-func TestLogtoSigninPageDecisionBranches(t *testing.T) {
+func TestProviderSigninRedirectBranches(t *testing.T) {
 	svc := newAuthServiceForTests(t)
 	svc.Env.LogtoURL = "https://logto.example.com"
 	svc.Env.LogtoAppID = "appid"
@@ -170,14 +170,14 @@ func TestLogtoSigninPageDecisionBranches(t *testing.T) {
 	svc.Env.LogtoResource = "https://api.example.com"
 
 	runWithCtx(t, http.MethodGet, "/signin", "/signin?logto_error=denied", nil, func(c fiber.Ctx) {
-		redirectURL, msg := svc.logtoSigninPageDecision(c, "")
+		redirectURL, msg := svc.providerSigninRedirect(c, "")
 		if redirectURL != "" || msg == "" {
 			t.Fatalf("expected message-only branch for logto_error")
 		}
 	})
 
 	runWithCtx(t, http.MethodGet, "/signin", "/signin?logged_out=1", nil, func(c fiber.Ctx) {
-		redirectURL, msg := svc.logtoSigninPageDecision(c, "")
+		redirectURL, msg := svc.providerSigninRedirect(c, "")
 		if redirectURL != "" || msg == "" {
 			t.Fatalf("expected signed-out message branch")
 		}
