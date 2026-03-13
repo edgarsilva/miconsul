@@ -43,6 +43,10 @@ func (ls LocalStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
 	return user, nil
 }
 
+func (ls LocalStrategy) Metadata() AuthenticatorMeta {
+	return AuthenticatorMeta{}
+}
+
 func (ls LocalStrategy) FindUserById(ctx context.Context, uid string) (model.User, error) {
 	return gorm.G[model.User](ls.resource.GormDB()).Where("id = ?", uid).Take(ctx)
 }

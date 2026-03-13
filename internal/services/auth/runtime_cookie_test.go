@@ -24,6 +24,10 @@ func TestSelectAuthenticator(t *testing.T) {
 	if _, ok := local.(*LocalStrategy); !ok {
 		t.Fatalf("expected LocalStrategy when logto is disabled")
 	}
+	localMeta := local.Metadata()
+	if localMeta.Enabled {
+		t.Fatalf("expected local metadata to be disabled")
+	}
 
 	logto := selectAuthenticator(mockRuntime{env: &appenv.Env{
 		LogtoURL:       "https://logto.example.com",
@@ -33,6 +37,16 @@ func TestSelectAuthenticator(t *testing.T) {
 	}})
 	if _, ok := logto.(*LogtoStrategy); !ok {
 		t.Fatalf("expected LogtoStrategy when logto is enabled")
+	}
+	logtoMeta := logto.Metadata()
+	if !logtoMeta.Enabled {
+		t.Fatalf("expected logto metadata to be enabled")
+	}
+	if logtoMeta.SigninPath != "/logto/signin" {
+		t.Fatalf("expected logto signin path /logto/signin, got %q", logtoMeta.SigninPath)
+	}
+	if logtoMeta.ErrorQueryKey != "logto_error" {
+		t.Fatalf("expected logto error key logto_error, got %q", logtoMeta.ErrorQueryKey)
 	}
 }
 
