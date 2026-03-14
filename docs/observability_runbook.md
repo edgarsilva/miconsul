@@ -55,6 +55,31 @@ What these scenarios validate:
 - DB down path: readiness fails when the DB handle is closed
 - slow/blocked DB path: readiness fails while DB is lock-blocked beyond probe timeout
 
+## Debug Health Details Contract
+
+Internal diagnostics endpoint:
+
+- `GET /debug/health/details` (admin-only)
+
+Contract guarantees:
+
+- always returns the same JSON keys (stable schema)
+- avoids `null` values
+- timestamps are RFC3339 UTC strings; empty string means unavailable
+
+Response keys:
+
+- `status`
+- `started_at`
+- `ready_at`
+- `bootstrap_duration_ms`
+- `uptime_seconds`
+- `version`
+- `environment`
+- `checks.livez`
+- `checks.readyz`
+- `checks.startupz`
+
 ## Telemetry Configuration
 
 The app emits traces, metrics, and logs through OpenTelemetry when OTLP is
