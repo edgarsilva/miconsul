@@ -59,7 +59,7 @@ What these scenarios validate:
 
 Internal diagnostics endpoint:
 
-- `GET /debug/health/details` (admin-only)
+- `GET /debug/health` (admin-only)
 
 Contract guarantees:
 

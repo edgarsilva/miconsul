@@ -85,9 +85,9 @@ func TestHandleDebugHealthDetails(t *testing.T) {
 	s.ReadyAt = time.Now().Add(-2 * time.Second)
 	s.BootstrapDuration = 500 * time.Millisecond
 
-	s.App.Get("/debug/health/details", s.HandleDebugHealthDetails)
+	s.App.Get("/debug/health", s.HandleDebugHealthDetails)
 
-	resp, err := s.App.Test(httptest.NewRequest(http.MethodGet, "/debug/health/details", nil))
+	resp, err := s.App.Test(httptest.NewRequest(http.MethodGet, "/debug/health", nil))
 	if err != nil {
 		t.Fatalf("health details request failed: %v", err)
 	}
@@ -139,9 +139,9 @@ func TestHandleDebugHealthDetailsDegradedWhenReadinessFails(t *testing.T) {
 		t.Fatalf("close sql db: %v", err)
 	}
 
-	s.App.Get("/debug/health/details", s.HandleDebugHealthDetails)
+	s.App.Get("/debug/health", s.HandleDebugHealthDetails)
 
-	resp, err := s.App.Test(httptest.NewRequest(http.MethodGet, "/debug/health/details", nil))
+	resp, err := s.App.Test(httptest.NewRequest(http.MethodGet, "/debug/health", nil))
 	if err != nil {
 		t.Fatalf("health details request failed: %v", err)
 	}

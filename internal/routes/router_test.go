@@ -105,7 +105,7 @@ func TestDebugRoutesProtectEndpoint(t *testing.T) {
 		t.Fatalf("expected 401 for unauthenticated debug route, got %d", resp.StatusCode)
 	}
 
-	req = httptest.NewRequest(http.MethodGet, "/debug/health/details", nil)
+	req = httptest.NewRequest(http.MethodGet, "/debug/health", nil)
 	req.Header.Set("Accept", "application/json")
 	resp, err = s.App.Test(req)
 	if err != nil {
