@@ -56,3 +56,8 @@ This file provides repo-specific guidance for coding assistants working on this 
 
 - Start every feature/fix/refactor on a new branch created from a freshly synced `main`.
 - Avoid continuing development directly on `main`; keep `main` aligned with `origin/main` between workstreams.
+
+## Pull Request Workflow
+
+- Never merge a pull request on behalf of the user unless they explicitly ask for merge in that moment.
+- Default behavior after opening a PR: share the PR URL, wait for user review, and let the user merge manually.
