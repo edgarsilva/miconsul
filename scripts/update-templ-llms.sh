@@ -4,8 +4,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 AI_DIR="${ROOT_DIR}/docs/ai"
 SOURCE_URL="https://templ.guide/llms.md"
-UPSTREAM_FILE="${AI_DIR}/templ-llms.upstream.md"
-META_FILE="${AI_DIR}/templ-llms.meta.txt"
+UPSTREAM_FILE="${AI_DIR}/templ_llms_upstream.md"
+META_FILE="${AI_DIR}/templ_llms_meta.txt"
 
 mkdir -p "${AI_DIR}"
 
@@ -23,7 +23,7 @@ fetched_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 cat > "${META_FILE}" <<EOF
 source_url=${SOURCE_URL}
 fetched_at_utc=${fetched_at}
-upstream_file=docs/ai/templ-llms.upstream.md
+upstream_file=docs/ai/templ_llms_upstream.md
 bytes=${bytes}
 lines=${lines}
 sha256=${sha256}
@@ -31,4 +31,4 @@ EOF
 
 printf "Updated %s\n" "${UPSTREAM_FILE}"
 printf "Updated %s\n" "${META_FILE}"
-printf "Note: keep docs/ai/templ-llms.compact.md aligned with upstream rules.\n"
+printf "Note: keep docs/ai/templ_llms_compact.md aligned with upstream rules.\n"

@@ -121,7 +121,7 @@ make obs/load/medium
 make obs/load/heavy
 ```
 
-Runbook: `docs/observability-runbook.md`.
+Runbook: `docs/observability_runbook.md`.
 
 ## Architecture
 
