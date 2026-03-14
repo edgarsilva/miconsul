@@ -16,6 +16,7 @@ import (
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/cronjob"
+	"miconsul/internal/lib/jobs"
 	"miconsul/internal/lib/localize"
 	"miconsul/internal/lib/workpool"
 	"miconsul/internal/observability/logging"
@@ -49,6 +50,7 @@ var (
 	setupDBForMain        = setupDB
 	newCronjobForMain     = cronjob.New
 	newWorkpoolForMain    = workpool.New
+	setupJobsForMain      = jobs.New
 	setupServerForMain    = setupServer
 	registerRoutesForMain = routes.RegisterServices
 	runLifecycleForMain   = runServerLifecycle
@@ -143,8 +145,22 @@ func main() {
 		shutdownWorkPool()
 	}()
 
+	fmt.Println(" Starting jobs runtime...")
+	jobsRuntime, err := setupJobsForMain(env)
+	if err != nil {
+		log.Printf("failed to initialize jobs runtime: %v", err)
+		exitCode = 1
+		return
+	}
+	defer func() {
+		fmt.Println("📬 Jobs runtime shutting down...")
+		if err := jobsRuntime.Shutdown(); err != nil {
+			log.Printf("jobs runtime shutdown error: %v", err)
+		}
+	}()
+
 	fmt.Println(" Starting localizer...")
-	s := setupServerForMain(env, db, cj, wp, telemetry, localize.New("en-US", "es-MX"))
+	s := setupServerForMain(env, db, cj, wp, jobsRuntime, telemetry, localize.New("en-US", "es-MX"))
 
 	fmt.Println(" Registering routes...")
 	if err := registerRoutesForMain(s); err != nil {
@@ -218,12 +234,13 @@ func setupDB(env *appenv.Env, dbLogger logging.Logger) (*database.Database, erro
 	return db, nil
 }
 
-func setupServer(env *appenv.Env, db *database.Database, cj *cronjob.Sched, wp *workpool.Pool, telemetry telemetryRuntime, localizer *localize.Localizer) *server.Server {
+func setupServer(env *appenv.Env, db *database.Database, cj *cronjob.Sched, wp *workpool.Pool, jobsRuntime *jobs.Runtime, telemetry telemetryRuntime, localizer *localize.Localizer) *server.Server {
 	return server.New(
 		server.WithEnv(env),
 		server.WithDatabase(db),
 		server.WithCronJob(cj),
 		server.WithWorkPool(wp.AntsPool()),
+		server.WithJobs(jobsRuntime),
 		server.WithTracer(telemetry.tracer),
 		server.WithMetrics(telemetry.httpMetrics),
 		server.WithRequestLogger(telemetry.requestLogger),

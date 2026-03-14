@@ -10,6 +10,7 @@ import (
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/cronjob"
+	"miconsul/internal/lib/jobs"
 	"miconsul/internal/lib/localize"
 	obslogging "miconsul/internal/observability/logging"
 	obsmetrics "miconsul/internal/observability/metrics"
@@ -151,6 +152,9 @@ func TestSetupFunctionsAndOptions(t *testing.T) {
 	if err := WithCache(nil)(s); err != nil {
 		t.Fatalf("expected WithCache nil noop: %v", err)
 	}
+	if err := WithJobs(nil)(s); err != nil {
+		t.Fatalf("expected WithJobs nil noop: %v", err)
+	}
 
 	if err := WithLocalizer(localize.New("es-MX", "en-US"))(s); err != nil {
 		t.Fatalf("set localizer: %v", err)
@@ -247,6 +251,14 @@ func TestWithOptionSetters(t *testing.T) {
 	}
 	if s.Cache == nil {
 		t.Fatalf("expected cache to be set")
+	}
+
+	jobsRuntime := &jobs.Runtime{}
+	if err := WithJobs(jobsRuntime)(s); err != nil {
+		t.Fatalf("with jobs runtime error: %v", err)
+	}
+	if got := s.JobsRuntime(); got != jobsRuntime {
+		t.Fatalf("expected jobs runtime to be set")
 	}
 
 }

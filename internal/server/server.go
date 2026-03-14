@@ -12,6 +12,7 @@ import (
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/cronjob"
+	"miconsul/internal/lib/jobs"
 	"miconsul/internal/lib/localize"
 	obslogging "miconsul/internal/observability/logging"
 	obsmetrics "miconsul/internal/observability/metrics"
@@ -50,6 +51,7 @@ type Server struct {
 	DB                *database.Database
 	wp                *ants.Pool     // <- WorkPool - handles Background Goroutines or Async Jobs (emails) with Ants
 	cj                *cronjob.Sched // <- CronJob scheduler
+	jobs              *jobs.Runtime
 	Cache             Cache
 	SessionStore      *session.Store
 	Localizer         *localize.Localizer
@@ -302,6 +304,19 @@ func WithCronJob(cj *cronjob.Sched) ServerOption {
 	}
 }
 
+// WithJobs configures the optional jobs runtime.
+func WithJobs(j *jobs.Runtime) ServerOption {
+	return func(server *Server) error {
+		if j == nil {
+			log.Warn("🟡 failed to set up jobs runtime; background jobs will not run")
+			return nil
+		}
+
+		server.jobs = j
+		return nil
+	}
+}
+
 // WithTracer configures the tracer implementation.
 func WithTracer(tracer trace.Tracer) ServerOption {
 	return func(server *Server) error {
@@ -385,6 +400,15 @@ func (s *Server) SendToWorker(fn func()) error {
 
 	err := s.wp.Submit(fn)
 	return err
+}
+
+// JobsRuntime returns the active background jobs runtime when available.
+func (s *Server) JobsRuntime() *jobs.Runtime {
+	if s == nil {
+		return nil
+	}
+
+	return s.jobs
 }
 
 // GormDB returns the active gorm DB handle when available.

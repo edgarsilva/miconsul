@@ -206,7 +206,7 @@ migrations/redo: ## Redo last migration
 ##@ Docker
 docker/up: ## Start docker infra services (without app)
 	@echo " Docker infra services up"
-	docker compose up -d lgtm
+	docker compose up -d lgtm valkey
 
 docker/dev: ## Start all docker services including app
 	@echo " All docker services up"
@@ -231,6 +231,10 @@ docker/app-logs: ## Follow app container logs
 docker/lgtm-logs: ## Follow LGTM stack logs
 	@echo " Docker LGTM logs"
 	docker compose logs lgtm -f
+
+docker/valkey-logs: ## Follow Valkey logs
+	@echo " Docker Valkey logs"
+	docker compose logs valkey -f
 
 docker/build: ## Rebuild the app image
 	docker compose up --no-deps --build app
@@ -263,4 +267,5 @@ load/test: ## Run authenticated oha load test (30s, 30 concurrency)
 	db/create db/delete db/setup db/reset db/dump_schema db/seed \
 	migrations/apply migrate migrations/create migrations/status migrations/rollback migrations/redo \
 	docker/up docker/dev docker/detached docker/down docker/logs docker/app-logs docker/lgtm-logs docker/build \
+	docker/valkey-logs \
 	obs/load obs/load/light obs/load/medium obs/load/heavy load/test

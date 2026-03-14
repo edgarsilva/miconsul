@@ -18,6 +18,7 @@ import (
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/cronjob"
+	"miconsul/internal/lib/jobs"
 	"miconsul/internal/lib/localize"
 	"miconsul/internal/lib/workpool"
 	"miconsul/internal/observability/logging"
@@ -220,6 +221,7 @@ func TestSetupServer(t *testing.T) {
 		&database.Database{DB: gormDB},
 		&cronjob.Sched{},
 		wp,
+		&jobs.Runtime{},
 		telemetry,
 		localizer,
 	)
@@ -312,7 +314,10 @@ func TestMainSuccessPath(t *testing.T) {
 	newWorkpoolForMain = func(int) (*workpool.Pool, func()) {
 		return &workpool.Pool{}, func() { shutdownWorkPoolCalled = true }
 	}
-	setupServerForMain = func(*appenv.Env, *database.Database, *cronjob.Sched, *workpool.Pool, telemetryRuntime, *localize.Localizer) *server.Server {
+	setupJobsForMain = func(*appenv.Env) (*jobs.Runtime, error) {
+		return &jobs.Runtime{}, nil
+	}
+	setupServerForMain = func(*appenv.Env, *database.Database, *cronjob.Sched, *workpool.Pool, *jobs.Runtime, telemetryRuntime, *localize.Localizer) *server.Server {
 		return &server.Server{}
 	}
 	registerRoutesForMain = func(*server.Server) error { return nil }
@@ -380,7 +385,10 @@ func TestMainRegisterRoutesFailure(t *testing.T) {
 	newWorkpoolForMain = func(int) (*workpool.Pool, func()) {
 		return &workpool.Pool{}, func() {}
 	}
-	setupServerForMain = func(*appenv.Env, *database.Database, *cronjob.Sched, *workpool.Pool, telemetryRuntime, *localize.Localizer) *server.Server {
+	setupJobsForMain = func(*appenv.Env) (*jobs.Runtime, error) {
+		return &jobs.Runtime{}, nil
+	}
+	setupServerForMain = func(*appenv.Env, *database.Database, *cronjob.Sched, *workpool.Pool, *jobs.Runtime, telemetryRuntime, *localize.Localizer) *server.Server {
 		return &server.Server{}
 	}
 	registerRoutesForMain = func(*server.Server) error { return errors.New("routes failed") }
@@ -542,6 +550,7 @@ func installMainTestHooks() func() {
 	oldSetupDB := setupDBForMain
 	oldNewCronjob := newCronjobForMain
 	oldNewWorkpool := newWorkpoolForMain
+	oldSetupJobs := setupJobsForMain
 	oldSetupServer := setupServerForMain
 	oldRegisterRoutes := registerRoutesForMain
 	oldRunLifecycle := runLifecycleForMain
@@ -554,6 +563,7 @@ func installMainTestHooks() func() {
 		setupDBForMain = oldSetupDB
 		newCronjobForMain = oldNewCronjob
 		newWorkpoolForMain = oldNewWorkpool
+		setupJobsForMain = oldSetupJobs
 		setupServerForMain = oldSetupServer
 		registerRoutesForMain = oldRegisterRoutes
 		runLifecycleForMain = oldRunLifecycle
