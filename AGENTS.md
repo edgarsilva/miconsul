@@ -25,6 +25,10 @@ This file provides repo-specific guidance for coding assistants working on this 
 - Avoid code fragmentation: keep module logic cohesive in `handlers.go` (transport) and `service.go` (business orchestration); split only when a concern is clearly standalone and reused.
 - Keep structural refactors separate from behavior changes.
 - Avoid introducing runtime `os.Getenv` reads in application/service code; route configuration access through `internal/lib/appenv` instead. If you encounter new `os.Getenv` usage outside mailer or env-loading boundaries, warn and offer to move it into `appenv.Env`.
+- Request locals boundary:
+  - `c.Locals(...)` writes are allowed in middleware auth/session identity binding.
+  - `c.Locals(...)` reads are allowed only in `internal/views/ctx.go` and `internal/server/request.go`.
+  - Everywhere else should use `s.CurrentUser(c)` and view context APIs instead of reading locals directly.
 
 ## templ Guidance Source
 
@@ -56,3 +60,8 @@ This file provides repo-specific guidance for coding assistants working on this 
 
 - Start every feature/fix/refactor on a new branch created from a freshly synced `main`.
 - Avoid continuing development directly on `main`; keep `main` aligned with `origin/main` between workstreams.
+
+## Pull Request Workflow
+
+- Never merge a pull request on behalf of the user unless they explicitly ask for merge in that moment.
+- Default behavior after opening a PR: share the PR URL, wait for user review, and let the user merge manually.

@@ -55,6 +55,58 @@ What these scenarios validate:
 - DB down path: readiness fails when the DB handle is closed
 - slow/blocked DB path: readiness fails while DB is lock-blocked beyond probe timeout
 
+## Debug Health Details Contract
+
+Internal diagnostics endpoint:
+
+- `GET /debug/health` (admin-only)
+
+Contract guarantees:
+
+- always returns the same JSON keys (stable schema)
+- avoids `null` values
+- timestamps are RFC3339 UTC strings; empty string means unavailable
+
+Response keys:
+
+- `status`
+- `started_at`
+- `ready_at`
+- `bootstrap_duration_ms`
+- `uptime_seconds`
+- `version`
+- `environment`
+- `checks.livez`
+- `checks.readyz`
+- `checks.startupz`
+
+## Troubleshooting: `readyz` Fails While `livez` Passes
+
+Interpretation:
+
+- the process is up (`/livez`), but dependency-readiness path is degraded (`/readyz`)
+- in this app, `/readyz` includes a DB round-trip (`SELECT 1`), so DB availability/latency/lock pressure is the first suspect
+
+Quick triage:
+
+```bash
+curl -sS -o /dev/null -w "livez:%{http_code}\n" http://localhost:3000/livez
+curl -sS -o /dev/null -w "readyz:%{http_code}\n" http://localhost:3000/readyz
+curl -sS http://localhost:3000/debug/health -H "Authorization: Bearer <ADMIN_JWT>" | jq
+```
+
+What to check next:
+
+- logs: filter `event=http_request` with `route=/readyz` and inspect `status`, `duration_ms`, and `error`
+- DB health: verify DB file/path permissions, lock contention, and recent migration activity
+- startup baseline: inspect `event=server_startup` and compare `bootstrap_duration_ms` against normal deploys
+
+Recovery actions:
+
+- if DB is unavailable or locked, restore DB availability first; app restart alone may not fix root cause
+- if DB recovered but readiness still fails, restart app and re-check `/readyz` and `/debug/health`
+- escalate when `/readyz` remains failing for 3+ checks or latency remains elevated after dependency recovery
+
 ## Telemetry Configuration
 
 The app emits traces, metrics, and logs through OpenTelemetry when OTLP is
