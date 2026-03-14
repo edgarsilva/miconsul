@@ -35,6 +35,7 @@ import (
 
 	"github.com/panjf2000/ants/v2"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 )
@@ -90,6 +91,7 @@ func New(serverOpts ...ServerOption) *Server {
 	setupFiberApp(&server)
 	server.ReadyAt = time.Now()
 	server.BootstrapDuration = server.ReadyAt.Sub(server.StartedAt)
+	emitStartupBootstrapLog(&server)
 
 	return &server
 }
@@ -212,6 +214,30 @@ func setupHealthcheckRoutes(s *Server) {
 	app.Get(healthcheck.StartupEndpoint, healthcheck.New(healthcheck.Config{
 		Probe: startupProbe(s),
 	}))
+}
+
+func emitStartupBootstrapLog(s *Server) {
+	if !s.RequestLog.Enabled() {
+		return
+	}
+
+	rec := otellog.Record{}
+	rec.SetTimestamp(time.Now())
+	rec.SetObservedTimestamp(time.Now())
+	rec.SetEventName("server_startup")
+	rec.SetBody(otellog.StringValue("server_startup"))
+	rec.SetSeverity(otellog.SeverityInfo)
+	rec.SetSeverityText("INFO")
+	rec.AddAttributes(
+		otellog.String("event", "server_startup"),
+		otellog.String("started_at", s.StartedAt.UTC().Format(time.RFC3339)),
+		otellog.String("ready_at", s.ReadyAt.UTC().Format(time.RFC3339)),
+		otellog.Int64("bootstrap_duration_ms", s.BootstrapDuration.Milliseconds()),
+		otellog.String("version", s.Env.AppVersion),
+		otellog.String("environment", string(s.Env.Environment)),
+	)
+
+	s.RequestLog.Emit(context.Background(), rec)
 }
 
 // WithEnv configures the server environment.
