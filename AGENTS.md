@@ -28,7 +28,7 @@ This file provides repo-specific guidance for coding assistants working on this 
 
 ## templ Guidance Source
 
-- For templ syntax/rules, use: `docs/ai/templ-llms.compact.md`.
+- For templ syntax/rules, use: `docs/ai/templ_llms_compact.md`.
 - Only load that document when the task touches templ/view/email templates.
 - If task is not templ-related, skip it to keep context focused.
 

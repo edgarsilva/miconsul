@@ -9,6 +9,52 @@ local LGTM setup (Loki, Grafana, Tempo, Prometheus(Mimir too if needed)).
 - LGTM stack running (`make docker/up`)
 - Grafana available on `http://localhost:3001`
 
+## Health Probe Monitoring Profile (Uptime Kuma)
+
+Use HTTP(s) monitors with follow-redirects disabled and response status checks
+enabled.
+
+- `/livez`
+  - interval: `30s`
+  - timeout: `5s`
+  - retries: `2`
+  - intent: process uptime and HTTP serving path
+- `/readyz`
+  - interval: `45s`
+  - timeout: `5s`
+  - retries: `3`
+  - intent: traffic readiness (includes DB query path)
+- `/startupz` (optional)
+  - interval: `2m`
+  - timeout: `5s`
+  - retries: `1`
+  - intent: post-restart bootstrap confirmation
+
+Alert routing labels:
+
+- `probe=livez` for uptime incidents
+- `probe=readyz` for dependency/service health incidents
+- `probe=startupz` for restart/bootstrap incidents
+
+Suggested trigger conditions:
+
+- `readyz`: alert on 3 consecutive failures
+- `livez`: alert on any failure sustained for 1-2 checks
+
+## Local Probe Verification
+
+Run focused probe tests:
+
+```bash
+go test ./internal/server -run 'Test(LivenessReadinessStartupProbes|ReadinessProbeFailsWhenDatabaseClosed|ReadinessProbeFailsWhenDatabaseIsLockedBeyondProbeTimeout)'
+```
+
+What these scenarios validate:
+
+- startup/restart path: startup probe transitions to healthy after grace period
+- DB down path: readiness fails when the DB handle is closed
+- slow/blocked DB path: readiness fails while DB is lock-blocked beyond probe timeout
+
 ## Telemetry Configuration
 
 The app emits traces, metrics, and logs through OpenTelemetry when OTLP is
