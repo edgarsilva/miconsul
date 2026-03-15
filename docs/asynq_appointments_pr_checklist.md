@@ -1,71 +1,73 @@
-# PR Checklist - Asynq Migration (Appointments) + Queue UI
+# PR Checklist - Asynq Migration (Appointments) + Jobs UI
 
 ## Phase 0 - Branch + Baseline
-- [ ] Confirm clean tree (`git status --short --branch`)
-- [ ] Sync main (`git fetch origin && git checkout main && git pull --ff-only origin main`)
-- [ ] Create feature branch (`git checkout -b feat/asynq-appointments-queue-ui`)
-- [ ] Capture baseline behavior (booked alert + reminder flow)
-- [ ] Baseline tests green (`go test ./...`)
+- [x] Confirm clean tree (`git status --short --branch`)
+- [x] Sync main (`git fetch origin && git checkout main && git pull --ff-only origin main`)
+- [x] Create feature branch (`git checkout -b feat/asynq-appointments-queue-ui`)
+- [x] Capture baseline behavior (booked alert + reminder flow)
+- [x] Baseline tests green (`go test ./...`)
 
 ### Exit Criteria
-- [ ] Branch is created from up-to-date `main`
-- [ ] Baseline behavior is documented and reproducible
+- [x] Branch is created from up-to-date `main`
+- [x] Baseline behavior is documented and reproducible
 
 ### Commit
-- [ ] No commit required (setup only)
+- [x] No commit required (setup only)
 
 ---
 
 ## Phase 1 - Git Housekeeping (First)
-- [ ] Confirm branch tracking and divergence (`git status --short --branch`)
-- [ ] Review working tree for accidental/unrelated files (`git status --short`)
-- [ ] Keep only intended feature files for this workstream
-- [ ] Verify no unintended generated/binary artifacts are present
-- [ ] Record housekeeping note in PR description
+- [x] Confirm branch tracking and divergence (`git status --short --branch`)
+- [x] Review working tree for accidental/unrelated files (`git status --short`)
+- [x] Keep only intended feature files for this workstream
+- [x] Verify no unintended generated/binary artifacts are present
+- [x] Record housekeeping note in commit trail (PR note optional)
 
 ### Exit Criteria
-- [ ] Working tree scope is clean and intentional
-- [ ] Housekeeping note is added to PR description
+- [x] Working tree scope is clean and intentional
+- [x] Housekeeping note is documented in commits/checklist
 
 ### Commit
-- [ ] `chore(git): housekeeping for asynq migration branch` (only if repo files actually changed)
+- [x] Housekeeping captured in existing phase commits (no dedicated chore commit needed)
 
 ---
 
-## Phase 2 - Queue Infra Wiring (No Appointment Behavior Change)
-- [ ] Add dependency `github.com/hibiken/asynq`
-- [ ] Add queue config to `internal/lib/appenv` (host, port, password, db, UI toggle/path)
-- [ ] Add Valkey service in `docker-compose.yaml`
-- [ ] Wire Asynq client/server/scheduler startup and graceful shutdown in `cmd/app/main.go`
-- [ ] Keep old cron/worker active during transition
+## Phase 2 - Jobs Infra Wiring (No Appointment Behavior Change)
+- [x] Add dependency `github.com/hibiken/asynq`
+- [x] Add jobs/valkey config to `internal/lib/appenv` (`JOBS_*`, `VALKEY_*`)
+- [x] Add Valkey service in `docker-compose.yaml`
+- [x] Wire Asynq client/server/scheduler startup and graceful shutdown in `cmd/app/main.go`
+- [x] Keep old cron/worker active during transition
 
 ### Exit Criteria
-- [ ] App boots with queue infra enabled
-- [ ] No appointment flow behavior changes yet
+- [x] App boots with jobs infra enabled
+- [x] No appointment flow behavior changes yet
 
 ### Commit
-- [ ] `chore(queue): add asynq/valkey config and bootstrap wiring`
+- [x] `chore(jobs): add valkey-backed jobs runtime and bootstrap wiring`
 
 ---
 
-## Phase 3 - Queue Module Foundation
-- [ ] Create `internal/lib/queue` package
-- [ ] Define task types/constants
-- [ ] Define payload structs
-- [ ] Add enqueue helpers (`EnqueueBookedAlert`, `EnqueueReminderAlert`, etc.)
-- [ ] Add server mux/handler registration
-- [ ] Add scheduler registration entrypoint
+## Phase 3 - Jobs Module Foundation (Infra-Only)
+- [x] Promote jobs package to first-class infra: `internal/jobs`
+- [x] Keep jobs package domain-agnostic (no appointment task constants/payloads in infra)
+- [x] Add generic enqueue API in jobs runtime (`EnqueueTask`)
+- [x] Add server bridge (`s.EnqueueTask(...)`) returning `(jobs.EnqueueInfo, error)`
+- [x] Move appointment task contracts to domain package (`internal/services/appointment/tasks.go`)
+- [x] Add server mux/handler registration entrypoint in jobs runtime
+- [x] Add scheduler registration entrypoint in jobs runtime
 
 ### Exit Criteria
-- [ ] Queue module compiles and supports enqueue/consume path
+- [x] Jobs module compiles and supports enqueue path
+- [x] Jobs module supports handler/scheduler registration path
 
 ### Commit
-- [ ] `feat(queue): add queue task contracts enqueue and handler registration`
+- [x] `refactor(jobs): promote infra package and unify enqueue info API`
 
 ---
 
 ## Phase 4 - Booked Alert Migration
-- [ ] Replace `SendToWorker(...)` booked-alert path with Asynq enqueue in `internal/services/appointment/alerts.go`
+- [ ] Replace `SendToWorker(...)` booked-alert path with `s.EnqueueTask(...)` in `internal/services/appointment/alerts.go`
 - [ ] Add booked-alert task handler
 - [ ] Preserve DB semantics (`BookedAlertSentAt` + alert status row)
 - [ ] Add idempotency guard (no-op if already sent)
@@ -84,6 +86,7 @@
 - [ ] Sweep task enqueues per-appointment reminder tasks
 - [ ] Preserve DB semantics (`ReminderAlertSentAt` + alert status rows)
 - [ ] Add idempotency guard in reminder handler
+- [ ] Remove appointment cron registration from router wiring once scheduler path is active
 
 ### Exit Criteria
 - [ ] Reminder discovery and dispatch run via Asynq scheduler/tasks
@@ -94,8 +97,8 @@
 
 ---
 
-## Phase 6 - Queue Web UI (Embedded Admin Route)
-- [ ] Expose Asynq monitor UI at `/debug/queue`
+## Phase 6 - Jobs Web UI (Embedded Admin Route)
+- [ ] Expose Asynq monitor UI at `/admin/jobs`
 - [ ] Protect route with `MustBeAdmin`
 - [ ] Gate by env/config toggle for non-local environments
 
@@ -103,7 +106,7 @@
 - [ ] Admin can inspect active/scheduled/retry/dead tasks in app route
 
 ### Commit
-- [ ] `feat(debug): add admin-protected asynq ui route`
+- [ ] `feat(debug): add admin-protected jobs ui route`
 
 ---
 
@@ -122,8 +125,8 @@
 
 ## Phase 8 - Tests, Docs, Verification
 - [ ] Update tests that assumed cron/Ants behavior
-- [ ] Add queue-focused tests (enqueue path + idempotent handlers)
-- [ ] Update docs/runbook (Valkey startup, queue UI, retry/dead task inspection)
+- [ ] Add jobs-focused tests (enqueue path + idempotent handlers)
+- [ ] Update docs/runbook (Valkey startup, jobs UI, retry/dead task inspection)
 - [ ] Regenerate templ only if `.templ` files changed (`make templ`)
 - [ ] Run full tests (`go test ./...`)
 
@@ -132,14 +135,14 @@
 - [ ] CI/local test suite is green
 
 ### Commit
-- [ ] `test/docs(queue): update async tests and queue operations runbook`
+- [ ] `test/docs(jobs): update async tests and jobs operations runbook`
 
 ---
 
 ## Final Acceptance Checklist
-- [ ] `/debug/queue` monitor route works and is admin-protected
+- [ ] `/admin/jobs` monitor route works and is admin-protected
 - [ ] New appointment enqueue creates durable booked-alert task
 - [ ] Reminder sweep runs via Asynq scheduler and enqueues reminder tasks
 - [ ] Job processing updates alert status + sent timestamps correctly
-- [ ] Queue survives app restarts with Valkey backend
+- [ ] Jobs runtime survives app restarts with Valkey backend
 - [ ] `go test ./...` passes
