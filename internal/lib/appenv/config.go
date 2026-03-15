@@ -48,12 +48,11 @@ type Env struct {
 	OTelTracerAuth   string `env:"OTEL_TRACER_AUTH;optional;trimspace"`
 
 	JobsEnabled    bool   `env:"JOBS_ENABLED;optional"`
+	JobsUIEnabled  bool   `env:"JOBS_UI_ENABLED;optional"`
 	ValkeyHost     string `env:"VALKEY_HOST;optional;trimspace"`
 	ValkeyPort     int    `env:"VALKEY_PORT;optional;min=1;max=65535"`
-	ValkeyPassword string `env:"VALKEY_PASSWORD;optional"`
+	ValkeyPassword string `env:"VALKEY_PASSWORD;optional;allowempty"`
 	ValkeyDB       int    `env:"VALKEY_DB;optional;min=0;max=15"`
-	JobsUIEnabled  bool   `env:"JOBS_UI_ENABLED;optional"`
-	JobsUIPath     string `env:"JOBS_UI_PATH;optional;trimspace"`
 
 	AssetsDir string `env:"ASSETS_DIR"`
 }
@@ -66,11 +65,10 @@ func New() (*Env, error) {
 		OTelTracerServer:   "miconsul.server",
 		OTelTracerAuth:     "miconsul.auth",
 		JobsEnabled:        false,
+		JobsUIEnabled:      false,
 		ValkeyHost:         "127.0.0.1",
 		ValkeyPort:         6379,
 		ValkeyDB:           0,
-		JobsUIEnabled:      true,
-		JobsUIPath:         "/debug/queue",
 	}
 	err := simpleenv.Load(env)
 	if err != nil {

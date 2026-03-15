@@ -13,6 +13,10 @@ import (
 	"miconsul/internal/services/patient"
 	"miconsul/internal/services/theme"
 	"miconsul/internal/services/user"
+
+	"github.com/gofiber/fiber/v3"
+	"github.com/hibiken/asynq"
+	"github.com/hibiken/asynqmon"
 )
 
 type routeBootstrap struct {
@@ -239,9 +243,28 @@ func AdminRoutes(s *server.Server, authSvc auth.Runtime) error {
 		return err
 	}
 
-	// Pages
-	g := a.Group("/admin", mw.MustBeAdmin(authSvc))
+	g := s.Group("/admin", mw.MustBeAdmin(authSvc))
 	g.Get("/models", a.HandleAdminModelsPage)
 
+	if s.AppEnv().JobsUIEnabled {
+		jobsHandler := asynqmon.New(asynqmon.Options{
+			RootPath: "/admin/jobs",
+			RedisConnOpt: asynq.RedisClientOpt{
+				Addr:     s.AppEnv().ValkeyAddress(),
+				Password: s.AppEnv().ValkeyPassword,
+				DB:       s.AppEnv().ValkeyDB,
+			},
+		})
+
+		s.All("/admin/jobs/*", mw.MustBeAdmin(authSvc), jobsUICSPMiddleware(), jobsHandler)
+	}
+
 	return nil
+}
+
+func jobsUICSPMiddleware() fiber.Handler {
+	return func(c fiber.Ctx) error {
+		c.Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'")
+		return c.Next()
+	}
 }

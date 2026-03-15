@@ -1,6 +1,7 @@
 package appointment
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -12,7 +13,7 @@ import (
 
 func (s *service) SendBookedAlert(appointment model.Appointment) error {
 	err := s.SendToWorker(func() {
-		ctx, cancel := s.newWorkerContext()
+		ctx, cancel := context.WithTimeout(context.Background(), defaultWorkerContextTimeout)
 		defer cancel()
 
 		err := mailer.SendAppointmentBookedEmail(s.Env, appointment)
@@ -54,7 +55,7 @@ func (s *service) SendBookedAlert(appointment model.Appointment) error {
 
 func (s *service) SendReminderAlert(appointment model.Appointment) error {
 	err := s.SendToWorker(func() {
-		ctx, cancel := s.newWorkerContext()
+		ctx, cancel := context.WithTimeout(context.Background(), defaultWorkerContextTimeout)
 		defer cancel()
 
 		err := mailer.SendAppointmentReminderEmail(s.Env, appointment)

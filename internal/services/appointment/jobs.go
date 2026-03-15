@@ -1,6 +1,7 @@
 package appointment
 
 import (
+	"context"
 	"fmt"
 
 	"miconsul/internal/model"
@@ -11,7 +12,7 @@ import (
 
 func (s *service) RegisterCronJob() error {
 	err := s.AddCronJobOnce("appointment:reminder", "0/1 * * * *", func() {
-		jobCtx, cancel := s.newCronJobContext()
+		jobCtx, cancel := context.WithTimeout(context.Background(), defaultCronJobContextTimeout)
 		defer cancel()
 
 		ctx, span := s.Trace(jobCtx, "appointment.cron.reminder_job",

@@ -29,7 +29,12 @@ func New(s *server.Server) (*service, error) {
 		return nil, errors.New("appointment service requires a non-nil server")
 	}
 
-	return &service{Server: s}, nil
+	svc := &service{Server: s}
+	if err := svc.bootstrapJobs(); err != nil {
+		return nil, err
+	}
+
+	return svc, nil
 }
 
 func (s *service) TakePatientByID(ctx context.Context, userID, patientID string) (model.Patient, error) {
@@ -350,12 +355,4 @@ func (s *service) FindRecentPatientsByUserID(ctx context.Context, userID string,
 	}
 
 	return patients, nil
-}
-
-func (s *service) newWorkerContext() (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.Background(), defaultWorkerContextTimeout)
-}
-
-func (s *service) newCronJobContext() (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.Background(), defaultCronJobContextTimeout)
 }
