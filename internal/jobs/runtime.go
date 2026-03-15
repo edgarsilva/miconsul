@@ -3,7 +3,9 @@ package jobs
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strings"
+	"sync"
 
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/valkey"
@@ -17,6 +19,10 @@ type Runtime struct {
 	server    *asynq.Server
 	scheduler *asynq.Scheduler
 	mux       *asynq.ServeMux
+
+	registrationMu      sync.Mutex
+	registeredHandlers  map[string]struct{}
+	registeredSchedules map[string]string
 }
 
 var (
@@ -51,8 +57,10 @@ func New(env *appenv.Env) (*Runtime, error) {
 			Concurrency: 10,
 			Queues:      map[string]int{"default": 1},
 		}),
-		scheduler: asynq.NewScheduler(redisOpt, &asynq.SchedulerOpts{}),
-		mux:       asynq.NewServeMux(),
+		scheduler:           asynq.NewScheduler(redisOpt, &asynq.SchedulerOpts{}),
+		mux:                 asynq.NewServeMux(),
+		registeredHandlers:  map[string]struct{}{},
+		registeredSchedules: map[string]string{},
 	}
 
 	if err := runtime.server.Start(runtime.mux); err != nil {
@@ -81,7 +89,19 @@ func (r *Runtime) RegisterTaskHandler(taskType string, handler asynq.Handler) er
 		return ErrHandlerRequired
 	}
 
+	r.registrationMu.Lock()
+	defer r.registrationMu.Unlock()
+
+	if r.registeredHandlers == nil {
+		r.registeredHandlers = map[string]struct{}{}
+	}
+	if _, exists := r.registeredHandlers[taskType]; exists {
+		log.Printf("jobs runtime: duplicate task handler registration skipped for %q", taskType)
+		return nil
+	}
+
 	r.mux.Handle(taskType, handler)
+	r.registeredHandlers[taskType] = struct{}{}
 	return nil
 }
 
@@ -95,6 +115,19 @@ func (r *Runtime) RegisterScheduledTask(spec, taskType string, payload any, opts
 		return "", ErrScheduleSpecMissing
 	}
 
+	registrationKey := scheduledTaskRegistrationKey(spec, taskType)
+
+	r.registrationMu.Lock()
+	defer r.registrationMu.Unlock()
+
+	if r.registeredSchedules == nil {
+		r.registeredSchedules = map[string]string{}
+	}
+	if entryID, exists := r.registeredSchedules[registrationKey]; exists {
+		log.Printf("jobs runtime: duplicate scheduled task registration skipped for %q", registrationKey)
+		return entryID, nil
+	}
+
 	task, err := newTask(taskType, payload, opts...)
 	if err != nil {
 		return "", err
@@ -104,8 +137,13 @@ func (r *Runtime) RegisterScheduledTask(spec, taskType string, payload any, opts
 	if err != nil {
 		return "", fmt.Errorf("register scheduled task %s: %w", taskType, err)
 	}
+	r.registeredSchedules[registrationKey] = entryID
 
 	return entryID, nil
+}
+
+func scheduledTaskRegistrationKey(spec, taskType string) string {
+	return strings.TrimSpace(spec) + "::" + strings.TrimSpace(taskType)
 }
 
 func (r *Runtime) Enabled() bool {

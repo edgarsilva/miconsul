@@ -62,6 +62,17 @@ func TestRegisterTaskHandlerGuards(t *testing.T) {
 			t.Fatalf("register task handler error = %v, want %v", err, ErrHandlerRequired)
 		}
 	})
+
+	t.Run("skips duplicate task handler registrations", func(t *testing.T) {
+		runtime := &Runtime{enabled: true, mux: asynq.NewServeMux(), registeredHandlers: map[string]struct{}{}}
+		handler := asynq.HandlerFunc(func(context.Context, *asynq.Task) error { return nil })
+		if err := runtime.RegisterTaskHandler("appointment:booked_alert", handler); err != nil {
+			t.Fatalf("first register task handler error: %v", err)
+		}
+		if err := runtime.RegisterTaskHandler("appointment:booked_alert", handler); err != nil {
+			t.Fatalf("duplicate register task handler error: %v", err)
+		}
+	})
 }
 
 func TestRegisterScheduledTaskGuards(t *testing.T) {
@@ -80,6 +91,23 @@ func TestRegisterScheduledTaskGuards(t *testing.T) {
 		_, err := runtime.RegisterScheduledTask("", "appointment:reminder_sweep", map[string]any{})
 		if !errors.Is(err, ErrScheduleSpecMissing) {
 			t.Fatalf("register scheduled task error = %v, want %v", err, ErrScheduleSpecMissing)
+		}
+	})
+
+	t.Run("skips duplicate schedule registrations", func(t *testing.T) {
+		registrationKey := scheduledTaskRegistrationKey("@every 1m", "appointment:reminder_sweep")
+		runtime := &Runtime{
+			enabled:             true,
+			scheduler:           &asynq.Scheduler{},
+			registeredSchedules: map[string]string{registrationKey: "entry-1"},
+		}
+
+		entryID, err := runtime.RegisterScheduledTask("@every 1m", "appointment:reminder_sweep", map[string]any{})
+		if err != nil {
+			t.Fatalf("duplicate register scheduled task error: %v", err)
+		}
+		if entryID != "entry-1" {
+			t.Fatalf("entryID = %q, want %q", entryID, "entry-1")
 		}
 	})
 }
