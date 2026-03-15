@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"miconsul/internal/database"
+	"miconsul/internal/jobs"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/cronjob"
-	"miconsul/internal/lib/jobs"
 	"miconsul/internal/lib/localize"
 	obslogging "miconsul/internal/observability/logging"
 	obsmetrics "miconsul/internal/observability/metrics"
@@ -409,6 +409,11 @@ func (s *Server) JobsRuntime() *jobs.Runtime {
 	}
 
 	return s.jobs
+}
+
+// EnqueueTask enqueues a background task through the jobs runtime.
+func (s *Server) EnqueueTask(ctx context.Context, taskType string, payload any) (jobs.EnqueueInfo, error) {
+	return s.JobsRuntime().EnqueueTask(ctx, taskType, payload)
 }
 
 // GormDB returns the active gorm DB handle when available.

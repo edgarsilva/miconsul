@@ -14,9 +14,9 @@ import (
 	"time"
 
 	"miconsul/internal/database"
+	"miconsul/internal/jobs"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/cronjob"
-	"miconsul/internal/lib/jobs"
 	"miconsul/internal/lib/localize"
 	"miconsul/internal/lib/workpool"
 	"miconsul/internal/observability/logging"

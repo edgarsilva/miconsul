@@ -2,15 +2,16 @@ package server
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
 	"miconsul/internal/database"
+	"miconsul/internal/jobs"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/cronjob"
-	"miconsul/internal/lib/jobs"
 	"miconsul/internal/lib/localize"
 	obslogging "miconsul/internal/observability/logging"
 	obsmetrics "miconsul/internal/observability/metrics"
@@ -223,6 +224,15 @@ func TestCronAndWorkerHelpers(t *testing.T) {
 	wp.Release()
 	if err := s.SendToWorker(func() {}); err == nil {
 		t.Fatalf("expected worker submit error after pool release")
+	}
+}
+
+func TestEnqueueTask(t *testing.T) {
+	s := &Server{}
+
+	_, err := s.EnqueueTask(context.Background(), "appointment:booked_alert", map[string]any{"appointment_id": "a1"})
+	if !errors.Is(err, jobs.ErrRuntimeUnavailable) {
+		t.Fatalf("enqueue error = %v, want %v", err, jobs.ErrRuntimeUnavailable)
 	}
 }
 
