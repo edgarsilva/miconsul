@@ -3,6 +3,7 @@ package routes
 import (
 	"fmt"
 
+	"miconsul/internal/jobs"
 	mw "miconsul/internal/middleware"
 	"miconsul/internal/server"
 	"miconsul/internal/services/admin"
@@ -15,8 +16,6 @@ import (
 	"miconsul/internal/services/user"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/hibiken/asynq"
-	"github.com/hibiken/asynqmon"
 )
 
 type routeBootstrap struct {
@@ -243,20 +242,9 @@ func AdminRoutes(s *server.Server, authSvc auth.Runtime) error {
 		return err
 	}
 
-	g := s.Group("/admin", mw.MustBeAdmin(authSvc))
-	g.Get("/models", a.HandleAdminModelsPage)
-
 	if s.AppEnv().JobsUIEnabled {
-		jobsHandler := asynqmon.New(asynqmon.Options{
-			RootPath: "/admin/jobs",
-			RedisConnOpt: asynq.RedisClientOpt{
-				Addr:     s.AppEnv().ValkeyAddress(),
-				Password: s.AppEnv().ValkeyPassword,
-				DB:       s.AppEnv().ValkeyDB,
-			},
-		})
-
-		s.All("/admin/jobs/*", mw.MustBeAdmin(authSvc), jobsUICSPMiddleware(), jobsHandler)
+		jobsHandler := jobs.NewMonitorHandler("/admin/jobs", s.AppEnv())
+		a.All("/admin/jobs/*", mw.MustBeAdmin(authSvc), jobsUICSPMiddleware(), jobsHandler)
 	}
 
 	return nil
