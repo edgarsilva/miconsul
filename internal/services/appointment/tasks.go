@@ -2,7 +2,7 @@ package appointment
 
 const (
 	TaskBookedAlert   = "appointment:booked_alert"
-	TaskReminderAlert = "appointment:reminder_alert"
+	TaskReminder      = "appointment:reminder"
 	TaskReminderSweep = "appointment:reminder_sweep"
 )
 

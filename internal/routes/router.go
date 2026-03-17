@@ -172,9 +172,6 @@ func AppointmentRoutes(s *server.Server, authSvc auth.Runtime) error {
 	if err != nil {
 		return err
 	}
-	if err := a.RegisterCronJob(); err != nil {
-		return err
-	}
 
 	g := a.Group("/appointments", mw.MustAuthenticate(authSvc))
 	g.Get("/", a.HandleIndexPage)

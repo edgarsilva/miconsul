@@ -2,46 +2,106 @@ package appointment
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
+	"time"
 
+	"miconsul/internal/jobs"
 	"miconsul/internal/model"
 
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
+	"github.com/hibiken/asynq"
+	"gorm.io/gorm"
 )
 
-func (s *service) RegisterCronJob() error {
-	err := s.AddCronJobOnce("appointment:reminder", "0/1 * * * *", func() {
-		jobCtx, cancel := context.WithTimeout(context.Background(), defaultCronJobContextTimeout)
-		defer cancel()
+const reminderSweepSchedule = "@every 1m"
 
-		ctx, span := s.Trace(jobCtx, "appointment.cron.reminder_job",
-			trace.WithAttributes(
-				attribute.String("grouping.fingerprint", "cronjob"),
-			),
-		)
-		defer span.End()
-
-		appointments := []model.Appointment{}
-		err := s.DB.
-			WithContext(ctx).
-			Model(&model.Appointment{}).
-			Preload("Patient").
-			Preload("Clinic").
-			Scopes(model.AppointmentWithPendingAlerts).
-			Find(&appointments).
-			Error
-		if err != nil {
-			fmt.Println("failed to load appointments for reminder job:", err.Error())
-			return
-		}
-		for _, appointment := range appointments {
-			s.SendReminderAlert(appointment)
-		}
-	})
-	if err != nil {
-		return fmt.Errorf("failed to register appointment reminder cron job: %w", err)
+func (s *service) bootstrapJobs() error {
+	if s == nil {
+		return nil
 	}
 
+	if err := s.registerReminderSweepHandler(); err != nil {
+		if errors.Is(err, jobs.ErrRuntimeUnavailable) {
+			return nil
+		}
+		return err
+	}
+
+	if err := s.registerReminderHandler(); err != nil {
+		if errors.Is(err, jobs.ErrRuntimeUnavailable) {
+			return nil
+		}
+		return err
+	}
+
+	if _, err := s.RegisterScheduledTask(reminderSweepSchedule, TaskReminderSweep, TaskReminderSweepPayload{}); err != nil {
+		if errors.Is(err, jobs.ErrRuntimeUnavailable) {
+			return nil
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (s *service) registerReminderSweepHandler() error {
+	return s.RegisterTaskHandler(TaskReminderSweep, asynq.HandlerFunc(s.handleReminderSweepTask))
+}
+
+func (s *service) registerReminderHandler() error {
+	return s.RegisterTaskHandler(TaskReminder, asynq.HandlerFunc(s.handleReminderTask))
+}
+
+func (s *service) handleReminderSweepTask(ctx context.Context, _ *asynq.Task) error {
+	st := time.Now()
+	year, month, day := st.Date()
+	et := time.Date(year, month, day, st.Hour(), st.Minute(), 0, 0, st.Location()).Add(2 * time.Hour)
+
+	appointments, err := gorm.G[model.Appointment](s.DB.GormDB()).
+		Where("booked_at > ?", st).
+		Where("booked_at <= ?", et).
+		Where("reminder_alert_sent_at IS NULL").
+		Find(ctx)
+	if err != nil {
+		return fmt.Errorf("load appointments for reminder sweep: %w", err)
+	}
+
+	for _, appointment := range appointments {
+		if _, err := s.EnqueueTask(ctx, TaskReminder, TaskAppointmentPayload{AppointmentID: appointment.ID}); err != nil {
+			log.Printf("appointment jobs: enqueue reminder failed for %s: %v", appointment.ID, err)
+		}
+	}
+
+	return nil
+}
+
+func (s *service) handleReminderTask(ctx context.Context, task *asynq.Task) error {
+	payload := TaskAppointmentPayload{}
+	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
+		return fmt.Errorf("decode reminder payload: %w", err)
+	}
+	if payload.AppointmentID == "" {
+		return errors.New("appointment_id is required")
+	}
+
+	appointment, err := gorm.G[model.Appointment](s.DB.GormDB()).
+		Preload("Patient", nil).
+		Preload("Clinic", nil).
+		Where("id = ?", payload.AppointmentID).
+		First(ctx)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("load appointment for reminder: %w", err)
+	}
+
+	if !appointment.ReminderAlertSentAt.IsZero() {
+		return nil
+	}
+
+	s.sendReminderNow(ctx, appointment)
 	return nil
 }

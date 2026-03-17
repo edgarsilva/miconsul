@@ -53,44 +53,52 @@ func (s *service) SendBookedAlert(appointment model.Appointment) error {
 	return err
 }
 
-func (s *service) SendReminderAlert(appointment model.Appointment) error {
+func (s *service) SendReminder(appointment model.Appointment) error {
 	err := s.SendToWorker(func() {
 		ctx, cancel := context.WithTimeout(context.Background(), defaultWorkerContextTimeout)
 		defer cancel()
 
-		err := mailer.SendAppointmentReminderEmail(s.Env, appointment)
-		if err != nil {
-			alert := model.Alert{
-				Medium: model.AlertMediumEmail,
-				Name:   "appointment_reminder",
-				Status: model.AlertFailed,
-				To:     appointment.Patient.Email,
-			}
-			appendErr := s.DB.WithContext(ctx).Model(&appointment).Association("Alerts").Append(&alert)
-			if appendErr != nil {
-				fmt.Println("failed to append failed reminder alert:", appendErr.Error())
-			}
-			return
-		}
+		s.sendReminderNow(ctx, appointment)
+	})
 
-		_, updateErr := gorm.G[model.Appointment](s.DB.GormDB()).
-			Where("id = ?", appointment.ID).
-			Update(ctx, "ReminderAlertSentAt", time.Now())
-		if updateErr != nil {
-			fmt.Println("failed to update ReminderAlertSentAt:", updateErr.Error())
-		}
+	return err
+}
 
+func (s *service) SendReminderAlert(appointment model.Appointment) error {
+	return s.SendReminder(appointment)
+}
+
+func (s *service) sendReminderNow(ctx context.Context, appointment model.Appointment) {
+	err := mailer.SendAppointmentReminderEmail(s.Env, appointment)
+	if err != nil {
 		alert := model.Alert{
 			Medium: model.AlertMediumEmail,
 			Name:   "appointment_reminder",
-			Status: model.AlertSent,
+			Status: model.AlertFailed,
 			To:     appointment.Patient.Email,
 		}
 		appendErr := s.DB.WithContext(ctx).Model(&appointment).Association("Alerts").Append(&alert)
 		if appendErr != nil {
-			fmt.Println("failed to append sent reminder alert:", appendErr.Error())
+			fmt.Println("failed to append failed reminder alert:", appendErr.Error())
 		}
-	})
+		return
+	}
 
-	return err
+	_, updateErr := gorm.G[model.Appointment](s.DB.GormDB()).
+		Where("id = ?", appointment.ID).
+		Update(ctx, "ReminderAlertSentAt", time.Now())
+	if updateErr != nil {
+		fmt.Println("failed to update ReminderAlertSentAt:", updateErr.Error())
+	}
+
+	alert := model.Alert{
+		Medium: model.AlertMediumEmail,
+		Name:   "appointment_reminder",
+		Status: model.AlertSent,
+		To:     appointment.Patient.Email,
+	}
+	appendErr := s.DB.WithContext(ctx).Model(&appointment).Association("Alerts").Append(&alert)
+	if appendErr != nil {
+		fmt.Println("failed to append sent reminder alert:", appendErr.Error())
+	}
 }

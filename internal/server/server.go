@@ -33,6 +33,7 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/session"
 	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/gofiber/storage/sqlite3/v2"
+	"github.com/hibiken/asynq"
 
 	"github.com/panjf2000/ants/v2"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -414,6 +415,16 @@ func (s *Server) JobsRuntime() *jobs.Runtime {
 // EnqueueTask enqueues a background task through the jobs runtime.
 func (s *Server) EnqueueTask(ctx context.Context, taskType string, payload any) (jobs.EnqueueInfo, error) {
 	return s.JobsRuntime().EnqueueTask(ctx, taskType, payload)
+}
+
+// RegisterTaskHandler registers a task handler in the jobs runtime.
+func (s *Server) RegisterTaskHandler(taskType string, handler asynq.Handler) error {
+	return s.JobsRuntime().RegisterTaskHandler(taskType, handler)
+}
+
+// RegisterScheduledTask registers a recurring task in the jobs runtime scheduler.
+func (s *Server) RegisterScheduledTask(spec, taskType string, payload any, opts ...asynq.Option) (string, error) {
+	return s.JobsRuntime().RegisterScheduledTask(spec, taskType, payload, opts...)
 }
 
 // GormDB returns the active gorm DB handle when available.
