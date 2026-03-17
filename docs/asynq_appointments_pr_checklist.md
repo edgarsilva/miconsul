@@ -82,37 +82,38 @@
 ---
 
 ## Phase 5 - Reminder Pipeline Migration
-- [ ] Replace `RegisterCronJob` reminder scan with Asynq scheduler task (every 1m)
-- [ ] Sweep task enqueues per-appointment reminder tasks
-- [ ] Preserve DB semantics (`ReminderAlertSentAt` + alert status rows)
-- [ ] Add idempotency guard in reminder handler
-- [ ] Remove appointment cron registration from router wiring once scheduler path is active
+- [x] Replace `RegisterCronJob` reminder scan with Asynq scheduler task (every 1m)
+- [x] Sweep task enqueues per-appointment reminder tasks
+- [x] Preserve DB semantics (`ReminderAlertSentAt` + alert status rows)
+- [x] Add idempotency guard in reminder handler
+- [x] Remove appointment cron registration from router wiring once scheduler path is active
 
 ### Exit Criteria
-- [ ] Reminder discovery and dispatch run via Asynq scheduler/tasks
-- [ ] Retries/re-runs do not create duplicate sends
+- [x] Reminder discovery and dispatch run via Asynq scheduler/tasks
+- [x] Retries/re-runs do not create duplicate sends
 
 ### Commit
-- [ ] `refactor(appointment): migrate reminder scan and sends to asynq scheduler`
+- [x] `refactor(appointment): migrate reminder flow to jobs runtime`
 
 ---
 
 ## Phase 6 - Jobs Web UI (Embedded Admin Route)
-- [ ] Expose Asynq monitor UI at `/admin/jobs`
-- [ ] Protect route with `MustBeAdmin`
-- [ ] Gate by env/config toggle for non-local environments
+- [x] Expose Asynq monitor UI at `/admin/jobs`
+- [x] Protect route with `MustBeAdmin`
+- [x] Gate by env/config toggle for non-local environments
 
 ### Exit Criteria
-- [ ] Admin can inspect active/scheduled/retry/dead tasks in app route
+- [x] Admin can inspect active/scheduled/retry/dead tasks in app route
 
 ### Commit
-- [ ] `feat(debug): add admin-protected jobs ui route`
+- [x] `feat(jobs): mount admin monitor UI and schedule reminder sweep`
+- [x] `refactor(jobs): centralize monitor handler wiring`
 
 ---
 
 ## Phase 7 - Remove Legacy Paths
 - [ ] Remove Ants worker wiring that is no longer used
-- [ ] Remove legacy appointment cron registration
+- [x] Remove legacy appointment cron registration
 - [ ] Clean dead code and stale bootstrap hooks
 
 ### Exit Criteria
@@ -124,11 +125,11 @@
 ---
 
 ## Phase 8 - Tests, Docs, Verification
-- [ ] Update tests that assumed cron/Ants behavior
-- [ ] Add jobs-focused tests (enqueue path + idempotent handlers)
+- [x] Update tests that assumed cron/Ants behavior
+- [x] Add jobs-focused tests (enqueue path + idempotent handlers)
 - [ ] Update docs/runbook (Valkey startup, jobs UI, retry/dead task inspection)
 - [ ] Regenerate templ only if `.templ` files changed (`make templ`)
-- [ ] Run full tests (`go test ./...`)
+- [x] Run full tests (`go test ./...`)
 
 ### Exit Criteria
 - [ ] Acceptance criteria are met
@@ -140,9 +141,9 @@
 ---
 
 ## Final Acceptance Checklist
-- [ ] `/admin/jobs` monitor route works and is admin-protected
+- [x] `/admin/jobs` monitor route works and is admin-protected
 - [ ] New appointment enqueue creates durable booked-alert task
-- [ ] Reminder sweep runs via Asynq scheduler and enqueues reminder tasks
-- [ ] Job processing updates alert status + sent timestamps correctly
+- [x] Reminder sweep runs via Asynq scheduler and enqueues reminder tasks
+- [x] Job processing updates alert status + sent timestamps correctly
 - [ ] Jobs runtime survives app restarts with Valkey backend
-- [ ] `go test ./...` passes
+- [x] `go test ./...` passes

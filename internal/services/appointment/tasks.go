@@ -4,6 +4,8 @@ const (
 	TaskBookedAlert   = "appointment:booked_alert"
 	TaskReminder      = "appointment:reminder"
 	TaskReminderSweep = "appointment:reminder_sweep"
+
+	ReminderSweepSchedule = "@every 1m"
 )
 
 type TaskAppointmentPayload struct {

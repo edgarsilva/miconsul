@@ -15,8 +15,6 @@ import (
 	"gorm.io/gorm"
 )
 
-const reminderSweepSchedule = "@every 1m"
-
 func (s *service) bootstrapJobs() error {
 	if s == nil {
 		return nil
@@ -36,7 +34,7 @@ func (s *service) bootstrapJobs() error {
 		return err
 	}
 
-	if _, err := s.RegisterScheduledTask(reminderSweepSchedule, TaskReminderSweep, TaskReminderSweepPayload{}); err != nil {
+	if _, err := s.RegisterScheduledTask(ReminderSweepSchedule, TaskReminderSweep, TaskReminderSweepPayload{}); err != nil {
 		if errors.Is(err, jobs.ErrRuntimeUnavailable) {
 			return nil
 		}
