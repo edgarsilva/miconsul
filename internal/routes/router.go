@@ -3,6 +3,7 @@ package routes
 import (
 	"fmt"
 
+	"miconsul/internal/jobs"
 	mw "miconsul/internal/middleware"
 	"miconsul/internal/server"
 	"miconsul/internal/services/admin"
@@ -13,6 +14,8 @@ import (
 	"miconsul/internal/services/patient"
 	"miconsul/internal/services/theme"
 	"miconsul/internal/services/user"
+
+	"github.com/gofiber/fiber/v3"
 )
 
 type routeBootstrap struct {
@@ -169,9 +172,6 @@ func AppointmentRoutes(s *server.Server, authSvc auth.Runtime) error {
 	if err != nil {
 		return err
 	}
-	if err := a.RegisterCronJob(); err != nil {
-		return err
-	}
 
 	g := a.Group("/appointments", mw.MustAuthenticate(authSvc))
 	g.Get("/", a.HandleIndexPage)
@@ -239,9 +239,17 @@ func AdminRoutes(s *server.Server, authSvc auth.Runtime) error {
 		return err
 	}
 
-	// Pages
-	g := a.Group("/admin", mw.MustBeAdmin(authSvc))
-	g.Get("/models", a.HandleAdminModelsPage)
+	if s.AppEnv().JobsUIEnabled {
+		jobsHandler := jobs.NewMonitorHandler("/admin/jobs", s.AppEnv())
+		a.All("/admin/jobs/*", mw.MustBeAdmin(authSvc), jobsUICSPMiddleware(), jobsHandler)
+	}
 
 	return nil
+}
+
+func jobsUICSPMiddleware() fiber.Handler {
+	return func(c fiber.Ctx) error {
+		c.Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'")
+		return c.Next()
+	}
 }

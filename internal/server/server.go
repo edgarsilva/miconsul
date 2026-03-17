@@ -6,12 +6,11 @@ import (
 	"errors"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"miconsul/internal/database"
+	"miconsul/internal/jobs"
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
 	obslogging "miconsul/internal/observability/logging"
 	obsmetrics "miconsul/internal/observability/metrics"
@@ -32,6 +31,7 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/session"
 	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/gofiber/storage/sqlite3/v2"
+	"github.com/hibiken/asynq"
 
 	"github.com/panjf2000/ants/v2"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -48,16 +48,14 @@ type Cache interface {
 type Server struct {
 	Env               *appenv.Env
 	DB                *database.Database
-	wp                *ants.Pool     // <- WorkPool - handles Background Goroutines or Async Jobs (emails) with Ants
-	cj                *cronjob.Sched // <- CronJob scheduler
+	wp                *ants.Pool // <- WorkPool - handles Background Goroutines or Async Jobs (emails) with Ants
+	jobs              *jobs.Runtime
 	Cache             Cache
 	SessionStore      *session.Store
 	Localizer         *localize.Localizer
 	Tracer            trace.Tracer
 	RequestLog        obslogging.Logger
 	Metrics           obsmetrics.HTTPMetrics
-	cronJobMu         sync.Mutex
-	cronJobKeys       map[string]struct{}
 	StartedAt         time.Time
 	ReadyAt           time.Time
 	BootstrapDuration time.Duration
@@ -69,8 +67,7 @@ type ServerOption func(*Server) error
 // New constructs a Server with the provided options and core setup.
 func New(serverOpts ...ServerOption) *Server {
 	server := Server{
-		StartedAt:   time.Now(),
-		cronJobKeys: map[string]struct{}{},
+		StartedAt: time.Now(),
 	}
 
 	for _, fnOpt := range serverOpts {
@@ -289,15 +286,15 @@ func WithWorkPool(wp *ants.Pool) ServerOption {
 	}
 }
 
-// WithCronJob configures the optional cron scheduler.
-func WithCronJob(cj *cronjob.Sched) ServerOption {
+// WithJobs configures the optional jobs runtime.
+func WithJobs(j *jobs.Runtime) ServerOption {
 	return func(server *Server) error {
-		if cj == nil {
-			log.Warn("🟡 failed to set up cron scheduler; cron jobs will not run")
+		if j == nil {
+			log.Warn("🟡 failed to set up jobs runtime; background jobs will not run")
 			return nil
 		}
 
-		server.cj = cj
+		server.jobs = j
 		return nil
 	}
 }
@@ -342,38 +339,6 @@ func WithCache(cache Cache) ServerOption {
 	}
 }
 
-// AddCronJob passes fn as a job(fn) to run at a cron interval
-func (s *Server) AddCronJob(crontab string, fn func()) error {
-	if s.cj == nil {
-		return errors.New("failed to add new cron job, server.cj might be nil, cron job is not running")
-	}
-
-	_, err := s.cj.RunCron(crontab, false, fn)
-	return err
-}
-
-// AddCronJobOnce registers a cron job exactly once per process for the given key.
-// Repeated calls with the same key are no-op.
-func (s *Server) AddCronJobOnce(key, crontab string, fn func()) error {
-	if strings.TrimSpace(key) == "" {
-		return errors.New("failed to add cron job once: key is required")
-	}
-
-	s.cronJobMu.Lock()
-	defer s.cronJobMu.Unlock()
-
-	if _, exists := s.cronJobKeys[key]; exists {
-		return nil
-	}
-
-	if err := s.AddCronJob(crontab, fn); err != nil {
-		return err
-	}
-
-	s.cronJobKeys[key] = struct{}{}
-	return nil
-}
-
 // SendToWorker passes fn as a job for a worker in the workpool, to be executed as a go routine
 // when the a worker is available
 func (s *Server) SendToWorker(fn func()) error {
@@ -385,6 +350,30 @@ func (s *Server) SendToWorker(fn func()) error {
 
 	err := s.wp.Submit(fn)
 	return err
+}
+
+// JobsRuntime returns the active background jobs runtime when available.
+func (s *Server) JobsRuntime() *jobs.Runtime {
+	if s == nil {
+		return nil
+	}
+
+	return s.jobs
+}
+
+// EnqueueTask enqueues a background task through the jobs runtime.
+func (s *Server) EnqueueTask(ctx context.Context, taskType string, payload any) (jobs.EnqueueInfo, error) {
+	return s.JobsRuntime().EnqueueTask(ctx, taskType, payload)
+}
+
+// RegisterTaskHandler registers a task handler in the jobs runtime.
+func (s *Server) RegisterTaskHandler(taskType string, handler asynq.Handler) error {
+	return s.JobsRuntime().RegisterTaskHandler(taskType, handler)
+}
+
+// RegisterScheduledTask registers a recurring task in the jobs runtime scheduler.
+func (s *Server) RegisterScheduledTask(spec, taskType string, payload any, opts ...asynq.Option) (string, error) {
+	return s.JobsRuntime().RegisterScheduledTask(spec, taskType, payload, opts...)
 }
 
 // GormDB returns the active gorm DB handle when available.

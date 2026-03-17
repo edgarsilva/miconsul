@@ -1,7 +1,6 @@
 package appointment
 
 import (
-	"strings"
 	"testing"
 	"time"
 
@@ -25,17 +24,5 @@ func TestSendReminderAlertExecutesWorkerPath(t *testing.T) {
 
 	if err := svc.SendReminderAlert(apnt); err != nil {
 		t.Fatalf("expected reminder worker enqueue success, got %v", err)
-	}
-}
-
-func TestRegisterCronJobReturnsWrappedErrorWithoutCronRunner(t *testing.T) {
-	svc, _, _, _ := newAppointmentServiceForTests(t)
-
-	err := svc.RegisterCronJob()
-	if err == nil {
-		t.Fatalf("expected register cron job error when cron runner is nil")
-	}
-	if !strings.Contains(err.Error(), "failed to register appointment reminder cron job") {
-		t.Fatalf("expected wrapped register cron error, got %v", err)
 	}
 }

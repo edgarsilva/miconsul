@@ -15,18 +15,8 @@ import (
 	"testing"
 	"time"
 
-	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/lib/cronjob"
-	"miconsul/internal/lib/localize"
-	"miconsul/internal/lib/workpool"
 	"miconsul/internal/observability/logging"
-	"miconsul/internal/observability/metrics"
-	"miconsul/internal/server"
-
-	"go.opentelemetry.io/otel/trace/noop"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 func TestIsExpectedServerCloseError(t *testing.T) {
@@ -197,50 +187,66 @@ func TestSetupDB(t *testing.T) {
 	})
 }
 
-func TestSetupServer(t *testing.T) {
+func TestBootstrapServer(t *testing.T) {
 	setWorkingDirToRepoRoot(t)
+	setRequiredEnv(t, map[string]string{})
+	skipIfNoFTS5(t)
 
-	gormDB, err := gorm.Open(sqlite.Open("file:cmd_app_setup_server?mode=memory&cache=shared"), &gorm.Config{})
+	result, err := bootstrapServer(context.Background())
 	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
+		t.Fatalf("bootstrapServer() unexpected error: %v", err)
 	}
+	t.Cleanup(result.cleanup)
 
-	wp, shutdownWorkPool := workpool.New(1)
-	t.Cleanup(shutdownWorkPool)
-
-	localizer := localize.New("en-US", "es-MX")
-	telemetry := telemetryRuntime{
-		tracer:        noop.NewTracerProvider().Tracer("test"),
-		httpMetrics:   metrics.HTTPMetrics{},
-		requestLogger: logging.Logger{},
+	if result.server == nil {
+		t.Fatal("bootstrapServer() expected non-nil server")
 	}
-
-	s := setupServer(
-		&appenv.Env{Environment: appenv.EnvironmentDevelopment, CookieSecret: "0123456789abcdef0123456789abcdef", AppProtocol: "http"},
-		&database.Database{DB: gormDB},
-		&cronjob.Sched{},
-		wp,
-		telemetry,
-		localizer,
-	)
-
-	if s == nil {
-		t.Fatal("setupServer() expected non-nil server")
+	if result.server.App == nil {
+		t.Fatal("bootstrapServer() expected non-nil app")
 	}
-	if s.App == nil {
-		t.Fatal("setupServer() expected non-nil app")
-	}
-	if s.SessionStore == nil {
-		t.Fatal("setupServer() expected non-nil session store")
+	if result.server.SessionStore == nil {
+		t.Fatal("bootstrapServer() expected non-nil session store")
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "/metrics", nil)
-	resp, err := s.App.Test(req)
+	resp, err := result.server.App.Test(req)
 	if err != nil {
-		t.Fatalf("setupServer() metrics request failed: %v", err)
+		t.Fatalf("bootstrapServer() metrics request failed: %v", err)
 	}
 	if resp.StatusCode == http.StatusNotFound {
-		t.Fatalf("setupServer() expected /metrics to be registered, got status %d", resp.StatusCode)
+		t.Fatalf("bootstrapServer() expected /metrics to be registered, got status %d", resp.StatusCode)
+	}
+}
+
+func TestBootstrapServerSetupEnvFailure(t *testing.T) {
+	setWorkingDirToRepoRoot(t)
+	setRequiredEnv(t, map[string]string{"APP_NAME": ""})
+
+	result, err := bootstrapServer(context.Background())
+	if err == nil {
+		t.Fatal("bootstrapServer() expected error")
+	}
+	result.cleanup()
+}
+
+func TestSetupWorkpool(t *testing.T) {
+	pool, shutdown := setupWorkpool(1)
+	if pool == nil {
+		t.Fatal("setupWorkpool() expected pool")
+	}
+	if pool.AntsPool() == nil {
+		t.Fatal("setupWorkpool() expected ants pool")
+	}
+	shutdown()
+}
+
+func TestSetupJobs(t *testing.T) {
+	runtime, err := setupJobs(&appenv.Env{JobsEnabled: false})
+	if err != nil {
+		t.Fatalf("setupJobs() unexpected error: %v", err)
+	}
+	if runtime == nil {
+		t.Fatal("setupJobs() expected runtime")
 	}
 }
 
@@ -279,124 +285,6 @@ func TestRunServerLifecycle(t *testing.T) {
 			t.Fatal("runServerLifecycle() expected shutdown call")
 		}
 	})
-}
-
-func TestMainSuccessPath(t *testing.T) {
-	restore := installMainTestHooks()
-	defer restore()
-
-	lifecycleCalled := false
-	shutdownTracerCalled := false
-	shutdownMetricsCalled := false
-	shutdownLogsCalled := false
-	shutdownCronCalled := false
-	shutdownWorkPoolCalled := false
-	exitCode := 0
-
-	setupEnvForMain = func() (*appenv.Env, error) {
-		return &appenv.Env{AppPort: 3000, AppShutdownTimeout: 10 * time.Millisecond}, nil
-	}
-	setupTelemetryForMain = func(context.Context, *appenv.Env) (telemetryRuntime, error) {
-		return telemetryRuntime{
-			shutdownTracer:  func() error { shutdownTracerCalled = true; return nil },
-			shutdownMetrics: func() error { shutdownMetricsCalled = true; return nil },
-			shutdownLogs:    func() error { shutdownLogsCalled = true; return nil },
-		}, nil
-	}
-	setupDBForMain = func(*appenv.Env, logging.Logger) (*database.Database, error) {
-		return &database.Database{}, nil
-	}
-	newCronjobForMain = func() (*cronjob.Sched, func() error, error) {
-		return &cronjob.Sched{}, func() error { shutdownCronCalled = true; return nil }, nil
-	}
-	newWorkpoolForMain = func(int) (*workpool.Pool, func()) {
-		return &workpool.Pool{}, func() { shutdownWorkPoolCalled = true }
-	}
-	setupServerForMain = func(*appenv.Env, *database.Database, *cronjob.Sched, *workpool.Pool, telemetryRuntime, *localize.Localizer) *server.Server {
-		return &server.Server{}
-	}
-	registerRoutesForMain = func(*server.Server) error { return nil }
-	runLifecycleForMain = func(context.Context, serverRunner, int, time.Duration) { lifecycleCalled = true }
-	notifyContextForMain = func(context.Context, ...os.Signal) (context.Context, context.CancelFunc) {
-		return context.WithCancel(context.Background())
-	}
-	exitForMain = func(code int) { exitCode = code }
-
-	main()
-
-	if exitCode != 0 {
-		t.Fatalf("main() exit code = %d, want 0", exitCode)
-	}
-	if !lifecycleCalled {
-		t.Fatal("main() expected run lifecycle call")
-	}
-	if !shutdownTracerCalled || !shutdownMetricsCalled || !shutdownLogsCalled {
-		t.Fatalf("main() expected telemetry shutdown calls, got tracer=%v metrics=%v logs=%v", shutdownTracerCalled, shutdownMetricsCalled, shutdownLogsCalled)
-	}
-	if !shutdownCronCalled {
-		t.Fatal("main() expected cron shutdown call")
-	}
-	if !shutdownWorkPoolCalled {
-		t.Fatal("main() expected workpool shutdown call")
-	}
-}
-
-func TestMainSetupEnvFailure(t *testing.T) {
-	restore := installMainTestHooks()
-	defer restore()
-
-	exitCode := 0
-	setupEnvForMain = func() (*appenv.Env, error) { return nil, errors.New("env failed") }
-	exitForMain = func(code int) { exitCode = code }
-
-	main()
-
-	if exitCode != 1 {
-		t.Fatalf("main() exit code = %d, want 1", exitCode)
-	}
-}
-
-func TestMainRegisterRoutesFailure(t *testing.T) {
-	restore := installMainTestHooks()
-	defer restore()
-
-	exitCode := 0
-	setupEnvForMain = func() (*appenv.Env, error) {
-		return &appenv.Env{AppPort: 3000, AppShutdownTimeout: 10 * time.Millisecond}, nil
-	}
-	setupTelemetryForMain = func(context.Context, *appenv.Env) (telemetryRuntime, error) {
-		return telemetryRuntime{
-			shutdownTracer:  func() error { return nil },
-			shutdownMetrics: func() error { return nil },
-			shutdownLogs:    func() error { return nil },
-		}, nil
-	}
-	setupDBForMain = func(*appenv.Env, logging.Logger) (*database.Database, error) {
-		return &database.Database{}, nil
-	}
-	newCronjobForMain = func() (*cronjob.Sched, func() error, error) {
-		return &cronjob.Sched{}, func() error { return nil }, nil
-	}
-	newWorkpoolForMain = func(int) (*workpool.Pool, func()) {
-		return &workpool.Pool{}, func() {}
-	}
-	setupServerForMain = func(*appenv.Env, *database.Database, *cronjob.Sched, *workpool.Pool, telemetryRuntime, *localize.Localizer) *server.Server {
-		return &server.Server{}
-	}
-	registerRoutesForMain = func(*server.Server) error { return errors.New("routes failed") }
-	runLifecycleForMain = func(context.Context, serverRunner, int, time.Duration) {
-		t.Fatal("main() should not run lifecycle when route registration fails")
-	}
-	notifyContextForMain = func(context.Context, ...os.Signal) (context.Context, context.CancelFunc) {
-		return context.WithCancel(context.Background())
-	}
-	exitForMain = func(code int) { exitCode = code }
-
-	main()
-
-	if exitCode != 1 {
-		t.Fatalf("main() exit code = %d, want 1", exitCode)
-	}
 }
 
 type fakeRunner struct {
@@ -536,28 +424,17 @@ func findRepoRoot(start string) (string, error) {
 	}
 }
 
-func installMainTestHooks() func() {
-	oldSetupEnv := setupEnvForMain
-	oldSetupTelemetry := setupTelemetryForMain
-	oldSetupDB := setupDBForMain
-	oldNewCronjob := newCronjobForMain
-	oldNewWorkpool := newWorkpoolForMain
-	oldSetupServer := setupServerForMain
-	oldRegisterRoutes := registerRoutesForMain
-	oldRunLifecycle := runLifecycleForMain
-	oldExit := exitForMain
-	oldNotifyContext := notifyContextForMain
+func skipIfNoFTS5(t *testing.T) {
+	t.Helper()
 
-	return func() {
-		setupEnvForMain = oldSetupEnv
-		setupTelemetryForMain = oldSetupTelemetry
-		setupDBForMain = oldSetupDB
-		newCronjobForMain = oldNewCronjob
-		newWorkpoolForMain = oldNewWorkpool
-		setupServerForMain = oldSetupServer
-		registerRoutesForMain = oldRegisterRoutes
-		runLifecycleForMain = oldRunLifecycle
-		exitForMain = oldExit
-		notifyContextForMain = oldNotifyContext
+	db, err := setupDB(&appenv.Env{DBPath: filepath.Join(t.TempDir(), "fts5_probe.sqlite")}, logging.Logger{})
+	if err != nil {
+		if strings.Contains(err.Error(), "no such module: fts5") {
+			t.Skip("sqlite fts5 extension is not available in this environment")
+		}
+
+		t.Fatalf("fts5 probe failed: %v", err)
 	}
+
+	_ = db.Close()
 }

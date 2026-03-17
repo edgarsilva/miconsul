@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"miconsul/internal/database"
+	"miconsul/internal/jobs"
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
 	"miconsul/internal/lib/workpool"
 	"miconsul/internal/observability/logging"
@@ -43,120 +43,129 @@ type serverRunner interface {
 	ShutdownWithContext(ctx context.Context) error
 }
 
-var (
-	setupEnvForMain       = setupEnv
-	setupTelemetryForMain = setupTelemetry
-	setupDBForMain        = setupDB
-	newCronjobForMain     = cronjob.New
-	newWorkpoolForMain    = workpool.New
-	setupServerForMain    = setupServer
-	registerRoutesForMain = routes.RegisterServices
-	runLifecycleForMain   = runServerLifecycle
-	exitForMain           = os.Exit
-	notifyContextForMain  = signal.NotifyContext
-)
+type bootstrapResult struct {
+	env     *appenv.Env
+	server  *server.Server
+	cleanup func()
+}
 
 func main() {
-	exitCode := 0
-	defer func() {
-		if exitCode != 0 {
-			exitForMain(exitCode)
-		}
-	}()
-
 	fmt.Println(" Starting server...")
 
-	fmt.Println(" Loading environment variables...")
-	env, err := setupEnvForMain()
-	if err != nil {
-		log.Printf("failed to load environment config: %v", err)
-		exitCode = 1
-		return
-	}
-
-	defer func() {
-		// This should be the last log on defer chain before exiting with code (0|1|etc)
-		fmt.Println("✅ All cleanup tasks completed")
-	}()
-
-	ctx, stop := notifyContextForMain(context.Background(), os.Interrupt, syscall.SIGTERM)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	runtime, err := bootstrapServer(ctx)
+	if err != nil {
+		runtime.cleanup()
+		os.Exit(1)
+	}
+	defer runtime.cleanup()
+
+	fmt.Println(" Setting up server...")
+	runServerLifecycle(ctx, runtime.server, runtime.env.AppPort, runtime.env.AppShutdownTimeout)
+}
+
+func bootstrapServer(ctx context.Context) (bootstrapResult, error) {
+	result := bootstrapResult{cleanup: func() {}}
+	cleanupFns := []func(){}
+	pushCleanup := func(fn func()) {
+		cleanupFns = append(cleanupFns, fn)
+	}
+	result.cleanup = func() {
+		fmt.Println("🧹 Running cleanup tasks...")
+		for i := len(cleanupFns) - 1; i >= 0; i-- {
+			cleanupFns[i]()
+		}
+		fmt.Println("✅ All cleanup tasks completed")
+	}
+
+	fmt.Println(" Loading environment variables...")
+	env, err := setupEnv()
+	if err != nil {
+		log.Printf("failed to load environment config: %v", err)
+		return result, err
+	}
+	result.env = env
+
 	fmt.Println(" Starting telemetry...")
-	telemetry, err := setupTelemetryForMain(ctx, env)
+	telemetry, err := setupTelemetry(ctx, env)
 	if err != nil {
 		log.Printf("failed to initialize telemetry: %v", err)
-		exitCode = 1
-		return
+		return result, err
 	}
-	defer func() {
+	pushCleanup(func() {
 		fmt.Println("󰓾 Tracer provider shutting down...")
 		if err := telemetry.shutdownTracer(); err != nil {
 			log.Printf("tracer shutdown error: %v", err)
 		}
-	}()
-	defer func() {
+	})
+	pushCleanup(func() {
 		fmt.Println("󰓾 Meter provider shutting down...")
 		if err := telemetry.shutdownMetrics(); err != nil {
 			log.Printf("meter provider shutdown error: %v", err)
 		}
-	}()
-	defer func() {
+	})
+	pushCleanup(func() {
 		fmt.Println("󰓾 Logger provider shutting down...")
 		if err := telemetry.shutdownLogs(); err != nil {
 			log.Printf("logger provider shutdown error: %v", err)
 		}
-	}()
+	})
 
 	fmt.Println(" Connecting to database...")
-	db, err := setupDBForMain(env, telemetry.dbLogger)
+	db, err := setupDB(env, telemetry.dbLogger)
 	if err != nil {
 		log.Printf("failed to initialize database: %v", err)
-		exitCode = 1
-		return
+		return result, err
 	}
-	defer func() {
+	pushCleanup(func() {
 		fmt.Println("🔌 Closing database connections...")
 		if err := db.Close(); err != nil {
 			log.Printf("failed to close database: %v", err)
 		}
-	}()
-
-	fmt.Println(" Starting cronjobs...")
-	cj, shutdownCronjob, err := newCronjobForMain()
-	if err != nil {
-		log.Printf("failed to initialize cronjobs: %v", err)
-		exitCode = 1
-		return
-	}
-	defer func() {
-		fmt.Println("🕑 Cronjobs shutting down...")
-		if err := shutdownCronjob(); err != nil {
-			log.Printf("cronjob shutdown error: %v", err)
-		}
-	}()
+	})
 
 	fmt.Println(" Starting workpool...")
-	wp, shutdownWorkPool := newWorkpoolForMain(10)
-	defer func() {
+	wp, shutdownWorkPool := setupWorkpool(10)
+	pushCleanup(func() {
 		fmt.Println("🐜 Ants workpool shutting down...")
 		shutdownWorkPool()
-	}()
+	})
+
+	fmt.Println(" Starting jobs runtime...")
+	jobsRuntime, err := setupJobs(env)
+	if err != nil {
+		log.Printf("failed to initialize jobs runtime: %v", err)
+		return result, err
+	}
+	pushCleanup(func() {
+		fmt.Println("📬 Jobs runtime shutting down...")
+		if err := jobsRuntime.Shutdown(); err != nil {
+			log.Printf("jobs runtime shutdown error: %v", err)
+		}
+	})
 
 	fmt.Println(" Starting localizer...")
-	s := setupServerForMain(env, db, cj, wp, telemetry, localize.New("en-US", "es-MX"))
+	s := server.New(
+		server.WithEnv(env),
+		server.WithDatabase(db),
+		server.WithWorkPool(wp.AntsPool()),
+		server.WithJobs(jobsRuntime),
+		server.WithTracer(telemetry.tracer),
+		server.WithMetrics(telemetry.httpMetrics),
+		server.WithRequestLogger(telemetry.requestLogger),
+		server.WithLocalizer(localize.New("en-US", "es-MX")),
+	)
+	result.server = s
 
 	fmt.Println(" Registering routes...")
-	if err := registerRoutesForMain(s); err != nil {
+	if err := setupRoutes(s); err != nil {
 		log.Printf("failed to register routes: %v", err)
-		exitCode = 1
-		return
+		return result, err
 	}
 
-	fmt.Println(" Setting up server...")
-	runLifecycleForMain(ctx, s, env.AppPort, env.AppShutdownTimeout)
-
-	fmt.Println("🧹 Running cleanup tasks...")
+	return result, nil
 }
 
 func setupEnv() (*appenv.Env, error) {
@@ -218,17 +227,16 @@ func setupDB(env *appenv.Env, dbLogger logging.Logger) (*database.Database, erro
 	return db, nil
 }
 
-func setupServer(env *appenv.Env, db *database.Database, cj *cronjob.Sched, wp *workpool.Pool, telemetry telemetryRuntime, localizer *localize.Localizer) *server.Server {
-	return server.New(
-		server.WithEnv(env),
-		server.WithDatabase(db),
-		server.WithCronJob(cj),
-		server.WithWorkPool(wp.AntsPool()),
-		server.WithTracer(telemetry.tracer),
-		server.WithMetrics(telemetry.httpMetrics),
-		server.WithRequestLogger(telemetry.requestLogger),
-		server.WithLocalizer(localizer),
-	)
+func setupWorkpool(size int) (*workpool.Pool, func()) {
+	return workpool.New(size)
+}
+
+func setupJobs(env *appenv.Env) (*jobs.Runtime, error) {
+	return jobs.New(env)
+}
+
+func setupRoutes(s *server.Server) error {
+	return routes.RegisterServices(s)
 }
 
 func runServerLifecycle(ctx context.Context, s serverRunner, port int, shutdownTimeout time.Duration) {

@@ -2,14 +2,15 @@ package server
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
 	"miconsul/internal/database"
+	"miconsul/internal/jobs"
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
 	obslogging "miconsul/internal/observability/logging"
 	obsmetrics "miconsul/internal/observability/metrics"
@@ -145,11 +146,11 @@ func TestSetupFunctionsAndOptions(t *testing.T) {
 	if err := WithWorkPool(nil)(s); err != nil {
 		t.Fatalf("expected WithWorkPool nil noop: %v", err)
 	}
-	if err := WithCronJob(nil)(s); err != nil {
-		t.Fatalf("expected WithCronJob nil noop: %v", err)
-	}
 	if err := WithCache(nil)(s); err != nil {
 		t.Fatalf("expected WithCache nil noop: %v", err)
+	}
+	if err := WithJobs(nil)(s); err != nil {
+		t.Fatalf("expected WithJobs nil noop: %v", err)
 	}
 
 	if err := WithLocalizer(localize.New("es-MX", "en-US"))(s); err != nil {
@@ -163,32 +164,8 @@ func TestSetupFunctionsAndOptions(t *testing.T) {
 	}
 }
 
-func TestCronAndWorkerHelpers(t *testing.T) {
-	s := &Server{cronJobKeys: map[string]struct{}{}}
-
-	if err := s.AddCronJob("* * * * *", func() {}); err == nil {
-		t.Fatalf("expected AddCronJob to fail without scheduler")
-	}
-	if err := s.AddCronJobOnce("", "* * * * *", func() {}); err == nil {
-		t.Fatalf("expected AddCronJobOnce to fail without key")
-	}
-
-	cj, shutdown, err := cronjob.New()
-	if err != nil {
-		t.Fatalf("new cron scheduler: %v", err)
-	}
-	defer func() { _ = shutdown() }()
-
-	s.cj = cj
-	if err := s.AddCronJob("* * * * *", func() {}); err != nil {
-		t.Fatalf("expected AddCronJob success, got %v", err)
-	}
-	if err := s.AddCronJobOnce("job1", "* * * * *", func() {}); err != nil {
-		t.Fatalf("expected AddCronJobOnce first registration success, got %v", err)
-	}
-	if err := s.AddCronJobOnce("job1", "* * * * *", func() {}); err != nil {
-		t.Fatalf("expected AddCronJobOnce duplicate no-op success, got %v", err)
-	}
+func TestWorkerHelpers(t *testing.T) {
+	s := &Server{}
 
 	ran := false
 	if err := s.SendToWorker(func() { ran = true }); err != nil {
@@ -222,6 +199,15 @@ func TestCronAndWorkerHelpers(t *testing.T) {
 	}
 }
 
+func TestEnqueueTask(t *testing.T) {
+	s := &Server{}
+
+	_, err := s.EnqueueTask(context.Background(), "appointment:booked_alert", map[string]any{"appointment_id": "a1"})
+	if !errors.Is(err, jobs.ErrRuntimeUnavailable) {
+		t.Fatalf("enqueue error = %v, want %v", err, jobs.ErrRuntimeUnavailable)
+	}
+}
+
 func TestWithOptionSetters(t *testing.T) {
 	s := &Server{}
 	env := &appenv.Env{Environment: appenv.EnvironmentDevelopment, CookieSecret: "12345678901234567890123456789012"}
@@ -247,6 +233,14 @@ func TestWithOptionSetters(t *testing.T) {
 	}
 	if s.Cache == nil {
 		t.Fatalf("expected cache to be set")
+	}
+
+	jobsRuntime := &jobs.Runtime{}
+	if err := WithJobs(jobsRuntime)(s); err != nil {
+		t.Fatalf("with jobs runtime error: %v", err)
+	}
+	if got := s.JobsRuntime(); got != jobsRuntime {
+		t.Fatalf("expected jobs runtime to be set")
 	}
 
 }

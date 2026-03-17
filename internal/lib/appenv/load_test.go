@@ -17,6 +17,11 @@ func TestEnvLoadOptionalDefaults(t *testing.T) {
 		OTelServiceName:    "miconsul",
 		OTelTracerServer:   "miconsul.server",
 		OTelTracerAuth:     "miconsul.auth",
+		JobsEnabled:        false,
+		JobsUIEnabled:      false,
+		ValkeyHost:         "127.0.0.1",
+		ValkeyPort:         6379,
+		ValkeyDB:           0,
 	}
 
 	if err := simpleenv.Load(env); err != nil {
@@ -32,6 +37,18 @@ func TestEnvLoadOptionalDefaults(t *testing.T) {
 	if env.OTelServiceName != "miconsul" {
 		t.Fatalf("expected default OTel service name, got %q", env.OTelServiceName)
 	}
+	if env.JobsEnabled {
+		t.Fatalf("expected default jobs enabled false")
+	}
+	if env.JobsUIEnabled {
+		t.Fatalf("expected default jobs ui enabled false")
+	}
+	if env.ValkeyHost != "127.0.0.1" {
+		t.Fatalf("expected default valkey host, got %q", env.ValkeyHost)
+	}
+	if env.ValkeyPort != 6379 {
+		t.Fatalf("expected default valkey port 6379, got %d", env.ValkeyPort)
+	}
 }
 
 func TestEnvLoadOptionalOverrides(t *testing.T) {
@@ -41,6 +58,11 @@ func TestEnvLoadOptionalOverrides(t *testing.T) {
 	t.Setenv("OTEL_SERVICE_NAME", "  test-service  ")
 	t.Setenv("OTEL_TRACER_SERVER", "  tracer.server  ")
 	t.Setenv("OTEL_TRACER_AUTH", "  tracer.auth  ")
+	t.Setenv("JOBS_ENABLED", "true")
+	t.Setenv("JOBS_UI_ENABLED", "true")
+	t.Setenv("VALKEY_HOST", "  valkey  ")
+	t.Setenv("VALKEY_PORT", "6380")
+	t.Setenv("VALKEY_DB", "2")
 
 	env := &Env{
 		AppShutdownTimeout: 10 * time.Second,
@@ -48,6 +70,11 @@ func TestEnvLoadOptionalOverrides(t *testing.T) {
 		OTelServiceName:    "miconsul",
 		OTelTracerServer:   "miconsul.server",
 		OTelTracerAuth:     "miconsul.auth",
+		JobsEnabled:        false,
+		JobsUIEnabled:      false,
+		ValkeyHost:         "127.0.0.1",
+		ValkeyPort:         6379,
+		ValkeyDB:           0,
 	}
 
 	if err := simpleenv.Load(env); err != nil {
@@ -68,6 +95,21 @@ func TestEnvLoadOptionalOverrides(t *testing.T) {
 	}
 	if env.OTelTracerAuth != "tracer.auth" {
 		t.Fatalf("expected trimmed tracer auth, got %q", env.OTelTracerAuth)
+	}
+	if !env.JobsEnabled {
+		t.Fatalf("expected parsed jobs enabled true")
+	}
+	if !env.JobsUIEnabled {
+		t.Fatalf("expected parsed jobs ui enabled true")
+	}
+	if env.ValkeyHost != "valkey" {
+		t.Fatalf("expected trimmed valkey host, got %q", env.ValkeyHost)
+	}
+	if env.ValkeyPort != 6380 {
+		t.Fatalf("expected parsed valkey port 6380, got %d", env.ValkeyPort)
+	}
+	if env.ValkeyDB != 2 {
+		t.Fatalf("expected parsed valkey db 2, got %d", env.ValkeyDB)
 	}
 }
 

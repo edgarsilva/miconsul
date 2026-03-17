@@ -1,15 +1,14 @@
 package appointment
 
 import (
+	"context"
 	"testing"
 	"time"
 )
 
-func TestServiceContextHelpers(t *testing.T) {
-	svc := &service{}
-
-	t.Run("newWorkerContext has timeout and supports cancellation", func(t *testing.T) {
-		ctx, cancel := svc.newWorkerContext()
+func TestServiceContextTimeoutDefaults(t *testing.T) {
+	t.Run("worker timeout defaults to expected window", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), defaultWorkerContextTimeout)
 		defer cancel()
 
 		deadline, ok := ctx.Deadline()
@@ -30,8 +29,8 @@ func TestServiceContextHelpers(t *testing.T) {
 		}
 	})
 
-	t.Run("newCronJobContext has timeout and supports cancellation", func(t *testing.T) {
-		ctx, cancel := svc.newCronJobContext()
+	t.Run("cron timeout defaults to expected window", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), defaultCronJobContextTimeout)
 		defer cancel()
 
 		deadline, ok := ctx.Deadline()
