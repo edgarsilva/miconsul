@@ -67,14 +67,14 @@
 ---
 
 ## Phase 4 - Booked Alert Migration
-- [ ] Replace `SendToWorker(...)` booked-alert path with `s.EnqueueTask(...)` in `internal/services/appointment/alerts.go`
-- [ ] Add booked-alert task handler
-- [ ] Preserve DB semantics (`BookedAlertSentAt` + alert status row)
-- [ ] Add idempotency guard (no-op if already sent)
+- [x] Replace `SendToWorker(...)` booked-alert path with `s.EnqueueTask(...)` in `internal/services/appointment/alerts.go`
+- [x] Add booked-alert task handler
+- [x] Preserve DB semantics (`BookedAlertSentAt` + alert status row)
+- [x] Add idempotency guard (no-op if already sent)
 
 ### Exit Criteria
-- [ ] Appointment creation enqueues durable booked-alert task
-- [ ] Duplicate executions do not double-send
+- [x] Appointment creation enqueues durable booked-alert task
+- [x] Duplicate executions do not double-send
 
 ### Commit
 - [ ] `refactor(appointment): move booked alert dispatch to asynq`
@@ -127,7 +127,7 @@
 ## Phase 8 - Tests, Docs, Verification
 - [x] Update tests that assumed cron/Ants behavior
 - [x] Add jobs-focused tests (enqueue path + idempotent handlers)
-- [ ] Update docs/runbook (Valkey startup, jobs UI, retry/dead task inspection)
+- [x] Update docs/runbook (Valkey startup, jobs UI, retry/dead task inspection)
 - [ ] Regenerate templ only if `.templ` files changed (`make templ`)
 - [x] Run full tests (`go test ./...`)
 
@@ -142,7 +142,7 @@
 
 ## Final Acceptance Checklist
 - [x] `/admin/jobs` monitor route works and is admin-protected
-- [ ] New appointment enqueue creates durable booked-alert task
+- [x] New appointment enqueue creates durable booked-alert task
 - [x] Reminder sweep runs via Asynq scheduler and enqueues reminder tasks
 - [x] Job processing updates alert status + sent timestamps correctly
 - [ ] Jobs runtime survives app restarts with Valkey backend

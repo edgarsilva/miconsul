@@ -1,10 +1,14 @@
 package appointment
 
 import (
+	"context"
+	"encoding/json"
 	"testing"
 	"time"
 
 	"miconsul/internal/model"
+
+	"github.com/hibiken/asynq"
 )
 
 func TestSendReminderAlertExecutesWorkerPath(t *testing.T) {
@@ -24,5 +28,32 @@ func TestSendReminderAlertExecutesWorkerPath(t *testing.T) {
 
 	if err := svc.SendReminderAlert(apnt); err != nil {
 		t.Fatalf("expected reminder worker enqueue success, got %v", err)
+	}
+}
+
+func TestHandleBookedAlertTaskSkipsWhenAlreadySent(t *testing.T) {
+	svc, user, clinic, patient := newAppointmentServiceForTests(t)
+
+	apnt := model.Appointment{
+		UserID:            user.ID,
+		ClinicID:          clinic.ID,
+		PatientID:         patient.ID,
+		BookedAt:          time.Now().Add(time.Hour),
+		Token:             "tok_booked",
+		Patient:           patient,
+		BookedAlertSentAt: time.Now(),
+	}
+	if err := svc.CreateAppointment(t.Context(), &apnt); err != nil {
+		t.Fatalf("create appointment: %v", err)
+	}
+
+	payload, err := json.Marshal(TaskAppointmentPayload{AppointmentID: apnt.ID})
+	if err != nil {
+		t.Fatalf("marshal payload: %v", err)
+	}
+
+	task := asynq.NewTask(TaskBookedAlert, payload)
+	if err := svc.handleBookedAlertTask(context.Background(), task); err != nil {
+		t.Fatalf("expected idempotent skip, got %v", err)
 	}
 }

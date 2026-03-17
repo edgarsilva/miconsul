@@ -123,6 +123,8 @@ make obs/load/heavy
 
 Runbook: `docs/observability_runbook.md`.
 
+Jobs operations runbook: `docs/jobs_runbook.md`.
+
 ## Architecture
 
 Project entry points:
