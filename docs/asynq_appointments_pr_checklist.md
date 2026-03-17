@@ -77,7 +77,7 @@
 - [x] Duplicate executions do not double-send
 
 ### Commit
-- [ ] `refactor(appointment): move booked alert dispatch to asynq`
+- [x] `refactor(appointment): dispatch booked alerts via jobs with worker fallback`
 
 ---
 
@@ -120,7 +120,7 @@
 - [x] Single appointment reminder async path remains (Asynq + Valkey)
 
 ### Commit
-- [ ] `chore(appointment): remove legacy cron paths and stale wiring`
+- [x] `chore(appointment): remove legacy cron paths and stale wiring`
 
 ---
 
@@ -128,15 +128,15 @@
 - [x] Update tests that assumed cron/Ants behavior
 - [x] Add jobs-focused tests (enqueue path + idempotent handlers)
 - [x] Update docs/runbook (Valkey startup, jobs UI, retry/dead task inspection)
-- [ ] Regenerate templ only if `.templ` files changed (`make templ`)
+- [x] Regenerate templ only if `.templ` files changed (`make templ`) (not needed; no `.templ` changes)
 - [x] Run full tests (`go test ./...`)
 
 ### Exit Criteria
 - [ ] Acceptance criteria are met
-- [ ] CI/local test suite is green
+- [x] CI/local test suite is green
 
 ### Commit
-- [ ] `test/docs(jobs): update async tests and jobs operations runbook`
+- [x] `test/docs(jobs): update async tests and jobs operations runbook`
 
 ---
 
