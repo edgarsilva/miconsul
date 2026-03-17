@@ -16,7 +16,6 @@ import (
 	"miconsul/internal/database"
 	"miconsul/internal/jobs"
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
 	"miconsul/internal/lib/workpool"
 	"miconsul/internal/observability/logging"
@@ -127,19 +126,6 @@ func bootstrapServer(ctx context.Context) (bootstrapResult, error) {
 		}
 	})
 
-	fmt.Println(" Starting cronjobs...")
-	cj, shutdownCronjob, err := setupCronjob()
-	if err != nil {
-		log.Printf("failed to initialize cronjobs: %v", err)
-		return result, err
-	}
-	pushCleanup(func() {
-		fmt.Println("🕑 Cronjobs shutting down...")
-		if err := shutdownCronjob(); err != nil {
-			log.Printf("cronjob shutdown error: %v", err)
-		}
-	})
-
 	fmt.Println(" Starting workpool...")
 	wp, shutdownWorkPool := setupWorkpool(10)
 	pushCleanup(func() {
@@ -164,7 +150,6 @@ func bootstrapServer(ctx context.Context) (bootstrapResult, error) {
 	s := server.New(
 		server.WithEnv(env),
 		server.WithDatabase(db),
-		server.WithCronJob(cj),
 		server.WithWorkPool(wp.AntsPool()),
 		server.WithJobs(jobsRuntime),
 		server.WithTracer(telemetry.tracer),
@@ -240,10 +225,6 @@ func setupDB(env *appenv.Env, dbLogger logging.Logger) (*database.Database, erro
 	}
 
 	return db, nil
-}
-
-func setupCronjob() (*cronjob.Sched, func() error, error) {
-	return cronjob.New()
 }
 
 func setupWorkpool(size int) (*workpool.Pool, func()) {

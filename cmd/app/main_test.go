@@ -229,22 +229,6 @@ func TestBootstrapServerSetupEnvFailure(t *testing.T) {
 	result.cleanup()
 }
 
-func TestSetupCronjob(t *testing.T) {
-	cj, shutdown, err := setupCronjob()
-	if err != nil {
-		t.Fatalf("setupCronjob() unexpected error: %v", err)
-	}
-	if cj == nil {
-		t.Fatal("setupCronjob() expected scheduler")
-	}
-	if shutdown == nil {
-		t.Fatal("setupCronjob() expected shutdown callback")
-	}
-	if err := shutdown(); err != nil {
-		t.Fatalf("setupCronjob() shutdown unexpected error: %v", err)
-	}
-}
-
 func TestSetupWorkpool(t *testing.T) {
 	pool, shutdown := setupWorkpool(1)
 	if pool == nil {

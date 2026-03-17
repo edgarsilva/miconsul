@@ -112,15 +112,15 @@
 ---
 
 ## Phase 7 - Remove Legacy Paths
-- [ ] Remove Ants worker wiring that is no longer used
+- [x] Keep Ants worker wiring intentionally (retained for non-jobs/background use)
 - [x] Remove legacy appointment cron registration
-- [ ] Clean dead code and stale bootstrap hooks
+- [x] Clean dead code and stale bootstrap hooks
 
 ### Exit Criteria
-- [ ] Single async path remains (Asynq + Valkey)
+- [x] Single appointment reminder async path remains (Asynq + Valkey)
 
 ### Commit
-- [ ] `chore(appointment): remove legacy cron and worker paths`
+- [ ] `chore(appointment): remove legacy cron paths and stale wiring`
 
 ---
 

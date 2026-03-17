@@ -13,7 +13,6 @@ import (
 
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/model"
 	"miconsul/internal/observability/logging"
 	"miconsul/internal/routes"
@@ -121,18 +120,9 @@ func newTestHarness(t *testing.T) *testHarness {
 		_ = os.Remove("public/favicon.ico")
 	})
 
-	cj, shutdownCron, err := cronjob.New()
-	if err != nil {
-		t.Fatalf("create cron scheduler: %v", err)
-	}
-	t.Cleanup(func() {
-		_ = shutdownCron()
-	})
-
 	s := server.New(
 		server.WithEnv(env),
 		server.WithDatabase(db),
-		server.WithCronJob(cj),
 		server.WithTracer(otel.Tracer("tests")),
 	)
 

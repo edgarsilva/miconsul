@@ -6,13 +6,11 @@ import (
 	"errors"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"miconsul/internal/database"
 	"miconsul/internal/jobs"
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/lib/cronjob"
 	"miconsul/internal/lib/localize"
 	obslogging "miconsul/internal/observability/logging"
 	obsmetrics "miconsul/internal/observability/metrics"
@@ -50,8 +48,7 @@ type Cache interface {
 type Server struct {
 	Env               *appenv.Env
 	DB                *database.Database
-	wp                *ants.Pool     // <- WorkPool - handles Background Goroutines or Async Jobs (emails) with Ants
-	cj                *cronjob.Sched // <- CronJob scheduler
+	wp                *ants.Pool // <- WorkPool - handles Background Goroutines or Async Jobs (emails) with Ants
 	jobs              *jobs.Runtime
 	Cache             Cache
 	SessionStore      *session.Store
@@ -59,8 +56,6 @@ type Server struct {
 	Tracer            trace.Tracer
 	RequestLog        obslogging.Logger
 	Metrics           obsmetrics.HTTPMetrics
-	cronJobMu         sync.Mutex
-	cronJobKeys       map[string]struct{}
 	StartedAt         time.Time
 	ReadyAt           time.Time
 	BootstrapDuration time.Duration
@@ -72,8 +67,7 @@ type ServerOption func(*Server) error
 // New constructs a Server with the provided options and core setup.
 func New(serverOpts ...ServerOption) *Server {
 	server := Server{
-		StartedAt:   time.Now(),
-		cronJobKeys: map[string]struct{}{},
+		StartedAt: time.Now(),
 	}
 
 	for _, fnOpt := range serverOpts {
@@ -292,19 +286,6 @@ func WithWorkPool(wp *ants.Pool) ServerOption {
 	}
 }
 
-// WithCronJob configures the optional cron scheduler.
-func WithCronJob(cj *cronjob.Sched) ServerOption {
-	return func(server *Server) error {
-		if cj == nil {
-			log.Warn("🟡 failed to set up cron scheduler; cron jobs will not run")
-			return nil
-		}
-
-		server.cj = cj
-		return nil
-	}
-}
-
 // WithJobs configures the optional jobs runtime.
 func WithJobs(j *jobs.Runtime) ServerOption {
 	return func(server *Server) error {
@@ -356,38 +337,6 @@ func WithCache(cache Cache) ServerOption {
 		server.Cache = cache
 		return nil
 	}
-}
-
-// AddCronJob passes fn as a job(fn) to run at a cron interval
-func (s *Server) AddCronJob(crontab string, fn func()) error {
-	if s.cj == nil {
-		return errors.New("failed to add new cron job, server.cj might be nil, cron job is not running")
-	}
-
-	_, err := s.cj.RunCron(crontab, false, fn)
-	return err
-}
-
-// AddCronJobOnce registers a cron job exactly once per process for the given key.
-// Repeated calls with the same key are no-op.
-func (s *Server) AddCronJobOnce(key, crontab string, fn func()) error {
-	if strings.TrimSpace(key) == "" {
-		return errors.New("failed to add cron job once: key is required")
-	}
-
-	s.cronJobMu.Lock()
-	defer s.cronJobMu.Unlock()
-
-	if _, exists := s.cronJobKeys[key]; exists {
-		return nil
-	}
-
-	if err := s.AddCronJob(crontab, fn); err != nil {
-		return err
-	}
-
-	s.cronJobKeys[key] = struct{}{}
-	return nil
 }
 
 // SendToWorker passes fn as a job for a worker in the workpool, to be executed as a go routine
