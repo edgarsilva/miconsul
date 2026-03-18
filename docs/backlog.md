@@ -2,6 +2,12 @@
 
 ## Icebox
 
+- [devx/build] Clarify setup targets and toolchain ownership
+  - Rename `make install` to `make install/deps` and keep `install` as alias.
+  - Keep toolchain installation outside Make defaults; assume Bun is preinstalled.
+  - Add clear missing-tool checks/messages for required CLIs.
+  - Keep optional CLI installers under dedicated setup targets.
+
 - [external/runtime] Uptime Kuma monitor setup (when environment is ready)
   - Configure monitors in Kuma for `/livez`, `/readyz`, and optional `/startupz`.
   - Apply final interval/timeout/retry settings directly in the Kuma UI.

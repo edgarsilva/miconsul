@@ -22,7 +22,13 @@ Prerequisites:
 Install project tooling:
 
 ```bash
-make install
+make install/deps
+```
+
+Optional local CLI tools (`templ`, `go-localize`):
+
+```bash
+make install/tools
 ```
 
 Run in development mode (Tailwind + Templ watch + hot reload):
