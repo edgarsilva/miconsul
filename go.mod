@@ -4,9 +4,9 @@ go 1.26
 
 require (
 	github.com/a-h/templ v0.3.1001
+	github.com/alicebob/miniredis/v2 v2.35.0
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/edgarsilva/simpleenv v1.2.0
-	github.com/go-co-op/gocron/v2 v2.16.5
 	github.com/gofiber/contrib/v3/otel v1.1.0
 	github.com/gofiber/fiber/v3 v3.1.0
 	github.com/gofiber/storage/sqlite3/v2 v2.2.3
@@ -59,7 +59,6 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/jonboulle/clockwork v0.5.0 // indirect
 	github.com/klauspost/compress v1.18.4 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -78,6 +77,7 @@ require (
 	github.com/uptrace/opentelemetry-go-extra/otelsql v0.3.2 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.69.0 // indirect
+	github.com/yuin/gopher-lua v1.1.1 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib v1.40.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.38.0 // indirect

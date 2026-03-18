@@ -132,7 +132,7 @@
 - [x] Run full tests (`go test ./...`)
 
 ### Exit Criteria
-- [ ] Acceptance criteria are met
+- [x] Acceptance criteria are met
 - [x] CI/local test suite is green
 
 ### Commit
@@ -145,5 +145,5 @@
 - [x] New appointment enqueue creates durable booked-alert task
 - [x] Reminder sweep runs via Asynq scheduler and enqueues reminder tasks
 - [x] Job processing updates alert status + sent timestamps correctly
-- [ ] Jobs runtime survives app restarts with Valkey backend
+- [x] Jobs runtime survives app restarts with Valkey backend
 - [x] `go test ./...` passes

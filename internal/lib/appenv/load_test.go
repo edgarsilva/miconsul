@@ -171,6 +171,27 @@ func TestNewReturnsErrorWhenRequiredEnvMissing(t *testing.T) {
 
 func setRequiredEnv(t *testing.T) {
 	t.Helper()
+	clearEnv(t,
+		"APP_SHUTDOWN_TIMEOUT",
+		"RATE_LIMITER_ENABLED",
+		"CACHE_DB_PATH",
+		"LOGTO_RESOURCE",
+		"LOGTO_URL",
+		"LOGTO_APP_ID",
+		"LOGTO_APP_SECRET",
+		"OTEL_EXPORTER_OTLP_ENDPOINT",
+		"OTEL_EXPORTER_OTLP_INSECURE",
+		"OTEL_SERVICE_NAME",
+		"OTEL_TRACER_SERVER",
+		"OTEL_TRACER_AUTH",
+		"JOBS_ENABLED",
+		"JOBS_UI_ENABLED",
+		"VALKEY_HOST",
+		"VALKEY_PORT",
+		"VALKEY_PASSWORD",
+		"VALKEY_DB",
+	)
+
 	t.Setenv("APP_ENV", "test")
 	t.Setenv("APP_NAME", "miconsul")
 	t.Setenv("APP_PROTOCOL", "http")
@@ -189,4 +210,14 @@ func setRequiredEnv(t *testing.T) {
 	t.Setenv("GOOSE_DBSTRING", "tmp/db.sqlite")
 	t.Setenv("GOOSE_MIGRATION_DIR", "internal/db/migrations")
 	t.Setenv("ASSETS_DIR", "static")
+}
+
+func clearEnv(t *testing.T, keys ...string) {
+	t.Helper()
+
+	for _, key := range keys {
+		if err := os.Unsetenv(key); err != nil {
+			t.Fatalf("unset %s: %v", key, err)
+		}
+	}
 }
