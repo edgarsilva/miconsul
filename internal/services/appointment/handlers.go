@@ -223,7 +223,7 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusOK)
 	}
 
-	err = s.SendBookedAlert(appointment)
+	err = s.DispatchBookedAlert(appointment)
 	if err != nil {
 		redirectPath := "/appointments?toast=Appointment created, but failed to queue alert"
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusOK)

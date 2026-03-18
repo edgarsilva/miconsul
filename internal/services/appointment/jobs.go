@@ -27,6 +27,13 @@ func (s *service) bootstrapJobs() error {
 		return err
 	}
 
+	if err := s.registerBookedAlertHandler(); err != nil {
+		if errors.Is(err, jobs.ErrRuntimeUnavailable) {
+			return nil
+		}
+		return err
+	}
+
 	if err := s.registerReminderHandler(); err != nil {
 		if errors.Is(err, jobs.ErrRuntimeUnavailable) {
 			return nil
@@ -46,6 +53,10 @@ func (s *service) bootstrapJobs() error {
 
 func (s *service) registerReminderSweepHandler() error {
 	return s.RegisterTaskHandler(TaskReminderSweep, asynq.HandlerFunc(s.handleReminderSweepTask))
+}
+
+func (s *service) registerBookedAlertHandler() error {
+	return s.RegisterTaskHandler(TaskBookedAlert, asynq.HandlerFunc(s.handleBookedAlertTask))
 }
 
 func (s *service) registerReminderHandler() error {
@@ -101,5 +112,34 @@ func (s *service) handleReminderTask(ctx context.Context, task *asynq.Task) erro
 	}
 
 	s.sendReminderNow(ctx, appointment)
+	return nil
+}
+
+func (s *service) handleBookedAlertTask(ctx context.Context, task *asynq.Task) error {
+	payload := TaskAppointmentPayload{}
+	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
+		return fmt.Errorf("decode booked alert payload: %w", err)
+	}
+	if payload.AppointmentID == "" {
+		return errors.New("appointment_id is required")
+	}
+
+	appointment, err := gorm.G[model.Appointment](s.DB.GormDB()).
+		Preload("Patient", nil).
+		Preload("Clinic", nil).
+		Where("id = ?", payload.AppointmentID).
+		First(ctx)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("load appointment for booked alert: %w", err)
+	}
+
+	if !appointment.BookedAlertSentAt.IsZero() {
+		return nil
+	}
+
+	s.sendBookedNow(ctx, appointment)
 	return nil
 }
