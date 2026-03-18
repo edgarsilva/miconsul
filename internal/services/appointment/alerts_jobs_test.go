@@ -6,9 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"miconsul/internal/jobs"
 	"miconsul/internal/model"
-
-	"github.com/hibiken/asynq"
 )
 
 func TestSendReminderAlertExecutesWorkerPath(t *testing.T) {
@@ -52,8 +51,7 @@ func TestHandleBookedAlertTaskSkipsWhenAlreadySent(t *testing.T) {
 		t.Fatalf("marshal payload: %v", err)
 	}
 
-	task := asynq.NewTask(TaskBookedAlert, payload)
-	if err := svc.handleBookedAlertTask(context.Background(), task); err != nil {
+	if err := svc.handleBookedAlertTask(context.Background(), jobs.Task{Payload: payload}); err != nil {
 		t.Fatalf("expected idempotent skip, got %v", err)
 	}
 }

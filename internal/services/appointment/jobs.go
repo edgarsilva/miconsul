@@ -11,7 +11,6 @@ import (
 	"miconsul/internal/jobs"
 	"miconsul/internal/model"
 
-	"github.com/hibiken/asynq"
 	"gorm.io/gorm"
 )
 
@@ -52,18 +51,18 @@ func (s *service) bootstrapJobs() error {
 }
 
 func (s *service) registerReminderSweepHandler() error {
-	return s.RegisterTaskHandler(TaskReminderSweep, asynq.HandlerFunc(s.handleReminderSweepTask))
+	return s.RegisterTaskHandler(TaskReminderSweep, s.handleReminderSweepTask)
 }
 
 func (s *service) registerBookedAlertHandler() error {
-	return s.RegisterTaskHandler(TaskBookedAlert, asynq.HandlerFunc(s.handleBookedAlertTask))
+	return s.RegisterTaskHandler(TaskBookedAlert, s.handleBookedAlertTask)
 }
 
 func (s *service) registerReminderHandler() error {
-	return s.RegisterTaskHandler(TaskReminder, asynq.HandlerFunc(s.handleReminderTask))
+	return s.RegisterTaskHandler(TaskReminder, s.handleReminderTask)
 }
 
-func (s *service) handleReminderSweepTask(ctx context.Context, _ *asynq.Task) error {
+func (s *service) handleReminderSweepTask(ctx context.Context, _ jobs.Task) error {
 	st := time.Now()
 	year, month, day := st.Date()
 	et := time.Date(year, month, day, st.Hour(), st.Minute(), 0, 0, st.Location()).Add(2 * time.Hour)
@@ -86,9 +85,9 @@ func (s *service) handleReminderSweepTask(ctx context.Context, _ *asynq.Task) er
 	return nil
 }
 
-func (s *service) handleReminderTask(ctx context.Context, task *asynq.Task) error {
+func (s *service) handleReminderTask(ctx context.Context, task jobs.Task) error {
 	payload := TaskAppointmentPayload{}
-	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
+	if err := json.Unmarshal(task.Payload, &payload); err != nil {
 		return fmt.Errorf("decode reminder payload: %w", err)
 	}
 	if payload.AppointmentID == "" {
@@ -115,9 +114,9 @@ func (s *service) handleReminderTask(ctx context.Context, task *asynq.Task) erro
 	return nil
 }
 
-func (s *service) handleBookedAlertTask(ctx context.Context, task *asynq.Task) error {
+func (s *service) handleBookedAlertTask(ctx context.Context, task jobs.Task) error {
 	payload := TaskAppointmentPayload{}
-	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
+	if err := json.Unmarshal(task.Payload, &payload); err != nil {
 		return fmt.Errorf("decode booked alert payload: %w", err)
 	}
 	if payload.AppointmentID == "" {

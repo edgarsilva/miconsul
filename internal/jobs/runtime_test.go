@@ -41,7 +41,7 @@ func TestNew(t *testing.T) {
 func TestRegisterTaskHandlerGuards(t *testing.T) {
 	t.Run("returns unavailable when runtime disabled", func(t *testing.T) {
 		runtime := &Runtime{}
-		err := runtime.RegisterTaskHandler("appointment:booked_alert", asynq.HandlerFunc(func(context.Context, *asynq.Task) error { return nil }))
+		err := runtime.RegisterTaskHandler("appointment:booked_alert", func(context.Context, Task) error { return nil })
 		if !errors.Is(err, ErrRuntimeUnavailable) {
 			t.Fatalf("register task handler error = %v, want %v", err, ErrRuntimeUnavailable)
 		}
@@ -49,7 +49,7 @@ func TestRegisterTaskHandlerGuards(t *testing.T) {
 
 	t.Run("returns task type required when missing", func(t *testing.T) {
 		runtime := &Runtime{enabled: true, mux: asynq.NewServeMux()}
-		err := runtime.RegisterTaskHandler("", asynq.HandlerFunc(func(context.Context, *asynq.Task) error { return nil }))
+		err := runtime.RegisterTaskHandler("", func(context.Context, Task) error { return nil })
 		if !errors.Is(err, ErrTaskTypeRequired) {
 			t.Fatalf("register task handler error = %v, want %v", err, ErrTaskTypeRequired)
 		}
@@ -65,7 +65,7 @@ func TestRegisterTaskHandlerGuards(t *testing.T) {
 
 	t.Run("skips duplicate task handler registrations", func(t *testing.T) {
 		runtime := &Runtime{enabled: true, mux: asynq.NewServeMux(), registeredHandlers: map[string]struct{}{}}
-		handler := asynq.HandlerFunc(func(context.Context, *asynq.Task) error { return nil })
+		handler := HandlerFunc(func(context.Context, Task) error { return nil })
 		if err := runtime.RegisterTaskHandler("appointment:booked_alert", handler); err != nil {
 			t.Fatalf("first register task handler error: %v", err)
 		}
