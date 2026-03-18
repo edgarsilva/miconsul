@@ -60,6 +60,8 @@ This file provides repo-specific guidance for coding assistants working on this 
 
 - Start every feature/fix/refactor on a new branch created from a freshly synced `main`.
 - Avoid continuing development directly on `main`; keep `main` aligned with `origin/main` between workstreams.
+- Never commit directly on `main`.
+- If work starts while on `main`, create a feature branch before making changes or creating commits.
 
 ## Pull Request Workflow
 
