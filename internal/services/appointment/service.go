@@ -1,3 +1,4 @@
+// Package appointment provides the appointments business logic.
 package appointment
 
 import (
