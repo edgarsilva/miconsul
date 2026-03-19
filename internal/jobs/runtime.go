@@ -76,7 +76,7 @@ func New(env *appenv.Env) (*Runtime, error) {
 	return runtime, nil
 }
 
-func (r *Runtime) RegisterTaskHandler(taskType string, handler asynq.Handler) error {
+func (r *Runtime) RegisterTaskHandler(taskType string, handler HandlerFunc) error {
 	if r == nil || !r.enabled || r.mux == nil {
 		return ErrRuntimeUnavailable
 	}
@@ -100,12 +100,12 @@ func (r *Runtime) RegisterTaskHandler(taskType string, handler asynq.Handler) er
 		return nil
 	}
 
-	r.mux.Handle(taskType, handler)
+	r.mux.Handle(taskType, asynqHandlerAdapter{fn: handler})
 	r.registeredHandlers[taskType] = struct{}{}
 	return nil
 }
 
-func (r *Runtime) RegisterScheduledTask(spec, taskType string, payload any, opts ...asynq.Option) (string, error) {
+func (r *Runtime) RegisterScheduledTask(spec, taskType string, payload any, opts ...Option) (string, error) {
 	if r == nil || !r.enabled || r.scheduler == nil {
 		return "", ErrRuntimeUnavailable
 	}

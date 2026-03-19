@@ -21,18 +21,19 @@ help: ## Show this help with available tasks
 	/^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0,5) }' $(MAKEFILE_LIST)
 
 ##@ Setup
-install: install/go-localize ## Installs deps 🥐 Bun, 🪿 goose, 🛕 templ and  go-localize
-	@echo "📦 Installing dependencies"
-	@echo "🥐 Installing bun (for tailwindcss)"
-	curl -fsSL https://bun.sh/install | bash
-	@echo "🌬️ Installing TailwindCSS plugins"
-	bun add -D tailwindcss@latest
-	bun add -D daisyui@latest
-	bun add -D @tailwindcss/typography
-	@echo "🪿 installing goose"
-	go install github.com/pressly/goose/v3/cmd/goose@latest
+install: install/deps ## Alias for install/deps
+
+install/deps: check/bun ## Install project dependencies (no toolchain install)
+	@echo "📦 Installing Go and Bun project dependencies"
+	go mod download
+	bun install
+
+install/tools: install/go-localize ## Install optional local CLI tools
 	@echo "🛕 installing Templ"
 	go install github.com/a-h/templ/cmd/templ@latest
+
+check/bun: ## Ensure Bun is installed in the shell
+	@command -v bun >/dev/null 2>&1 || (echo "❌ bun is required but not found in PATH. Install with your toolchain manager (e.g. mise/asdf/homebrew) and retry."; exit 1)
 
 install/go-localize: ## Install go-localize CLI
 	@echo " installing go-localize"
@@ -256,7 +257,7 @@ load/test: ## Run authenticated oha load test (30s, 30 concurrency)
 	./scripts/load_test.sh
 
 
-.PHONY: help install install/go-localize fmt vet lint \
+.PHONY: help install install/deps install/tools check/bun install/go-localize fmt vet lint \
 	tailwind tailwind/watch templ templ/watch locales/build \
 	locales/normalize \
 	ai/templ-sync \
