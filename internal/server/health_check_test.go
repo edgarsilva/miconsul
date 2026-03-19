@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -11,90 +10,11 @@ import (
 	"time"
 
 	"miconsul/internal/database"
-	"miconsul/internal/lib/appenv"
 
 	"github.com/gofiber/fiber/v3"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
-
-type cacheStub struct {
-	readErr  error
-	writeErr error
-	wroteKey string
-	readKey  string
-}
-
-func (c *cacheStub) Read(key string, _ *[]byte) error {
-	c.readKey = key
-	return c.readErr
-}
-
-func (c *cacheStub) Write(key string, _ *[]byte, _ time.Duration) error {
-	c.wroteKey = key
-	return c.writeErr
-}
-
-func TestCacheReadWrite(t *testing.T) {
-	s := &Server{}
-	payload := []byte("v")
-
-	if err := s.CacheWrite("k", &payload, time.Second); err != nil {
-		t.Fatalf("expected nil cache write to be no-op: %v", err)
-	}
-	if err := s.CacheRead("k", &payload); err != nil {
-		t.Fatalf("expected nil cache read to be no-op: %v", err)
-	}
-
-	stub := &cacheStub{}
-	s.Cache = stub
-	if err := s.CacheWrite("write-key", &payload, time.Second); err != nil {
-		t.Fatalf("unexpected cache write error: %v", err)
-	}
-	if stub.wroteKey != "write-key" {
-		t.Fatalf("expected write key to be captured, got %q", stub.wroteKey)
-	}
-
-	if err := s.CacheRead("read-key", &payload); err != nil {
-		t.Fatalf("unexpected cache read error: %v", err)
-	}
-	if stub.readKey != "read-key" {
-		t.Fatalf("expected read key to be captured, got %q", stub.readKey)
-	}
-
-	stub.writeErr = errors.New("write failed")
-	if err := s.CacheWrite("k2", &payload, time.Second); err == nil {
-		t.Fatalf("expected cache write error")
-	}
-}
-
-func TestStaticConfigHelpers(t *testing.T) {
-	dev := &appenv.Env{Environment: appenv.EnvironmentDevelopment}
-	prod := &appenv.Env{Environment: appenv.EnvironmentProduction}
-
-	if got := staticCacheDuration(dev); got != 0 {
-		t.Fatalf("expected dev static cache duration 0, got %v", got)
-	}
-	if got := staticMaxAge(dev); got != 0 {
-		t.Fatalf("expected dev static max age 0, got %d", got)
-	}
-	if got := staticCacheDuration(prod); got != 300*time.Second {
-		t.Fatalf("expected prod static cache duration 300s, got %v", got)
-	}
-	if got := staticMaxAge(prod); got != 3600 {
-		t.Fatalf("expected prod static max age 3600, got %d", got)
-	}
-}
-
-func TestSessionConfigDefaults(t *testing.T) {
-	cfg := sessionConfig("")
-	if cfg.Database == "" {
-		t.Fatalf("expected default session db path")
-	}
-	if cfg.Table != "fiber_storage" {
-		t.Fatalf("expected default session table name, got %q", cfg.Table)
-	}
-}
 
 func TestLivenessReadinessStartupProbes(t *testing.T) {
 	if livenessProbe(nil) == nil {

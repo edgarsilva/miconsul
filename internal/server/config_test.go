@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"sync"
 	"testing"
+	"time"
 
 	"miconsul/internal/lib/appenv"
 
@@ -79,5 +80,23 @@ func TestSendErrorPageAndFiberErrorHandler(t *testing.T) {
 	}
 	if resp500.StatusCode != fiber.StatusInternalServerError {
 		t.Fatalf("expected 500 status, got %d", resp500.StatusCode)
+	}
+}
+
+func TestStaticConfigHelpers(t *testing.T) {
+	dev := &appenv.Env{Environment: appenv.EnvironmentDevelopment}
+	prod := &appenv.Env{Environment: appenv.EnvironmentProduction}
+
+	if got := staticCacheDuration(dev); got != 0 {
+		t.Fatalf("expected dev static cache duration 0, got %v", got)
+	}
+	if got := staticMaxAge(dev); got != 0 {
+		t.Fatalf("expected dev static max age 0, got %d", got)
+	}
+	if got := staticCacheDuration(prod); got != 300*time.Second {
+		t.Fatalf("expected prod static cache duration 300s, got %v", got)
+	}
+	if got := staticMaxAge(prod); got != 3600 {
+		t.Fatalf("expected prod static max age 3600, got %d", got)
 	}
 }
