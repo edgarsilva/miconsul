@@ -2,11 +2,9 @@
 
 ## Icebox
 
-- [devx/build] Clarify setup targets and toolchain ownership
-  - Rename `make install` to `make install/deps` and keep `install` as alias.
-  - Keep toolchain installation outside Make defaults; assume Bun is preinstalled.
-  - Add clear missing-tool checks/messages for required CLIs.
-  - Keep optional CLI installers under dedicated setup targets.
+- [devx/docs] Document toolchain manager guidance
+  - Note preferred local setup path (`mise`) while keeping alternatives valid (`asdf`, `homebrew`, etc.).
+  - Clarify which tasks install project dependencies versus optional CLI tools.
 
 - [external/runtime] Uptime Kuma monitor setup (when environment is ready)
   - Configure monitors in Kuma for `/livez`, `/readyz`, and optional `/startupz`.
@@ -19,6 +17,12 @@
   - Degradation alert: `/readyz` latency above threshold.
 
 ## Done
+
+- Devx setup target and toolchain ownership cleanup
+  - Renamed setup flow to `make install/deps` and kept `make install` as alias.
+  - Removed Bun toolchain installation from default Make setup path.
+  - Added `check/bun` fail-fast message for missing Bun binary.
+  - Split optional CLI installation under `make install/tools`.
 
 - Observability runbook troubleshooting flow
   - Added response playbook for: `/readyz` failing while `/livez` is passing.
