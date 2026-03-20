@@ -13,7 +13,7 @@ import (
 
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"miconsul/internal/observability/logging"
 	"miconsul/internal/routes"
 	"miconsul/internal/server"

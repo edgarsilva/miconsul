@@ -1,6 +1,6 @@
 package clinic
 
-import "miconsul/internal/model"
+import "miconsul/internal/models"
 
 type clinicUpsertInput struct {
 	Name  string `form:"name"`

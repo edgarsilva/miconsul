@@ -11,7 +11,7 @@ import (
 
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/mailer"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"miconsul/internal/server"
 
 	"github.com/asaskevich/govalidator"

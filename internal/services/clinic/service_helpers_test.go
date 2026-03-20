@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"miconsul/internal/server"
 
 	"github.com/gofiber/fiber/v3"

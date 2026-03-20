@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 )
 
 func TestNormalizeClinicWriteInput(t *testing.T) {

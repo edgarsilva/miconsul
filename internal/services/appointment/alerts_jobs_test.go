@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"miconsul/internal/jobs"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 )
 
 func TestSendReminderAlertExecutesWorkerPath(t *testing.T) {

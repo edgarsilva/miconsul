@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 
 	"miconsul/internal/lib/appenv"
 

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 )
 
 func TestAuthHandlers(t *testing.T) {

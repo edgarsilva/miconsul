@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"miconsul/internal/lib/libtime"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"miconsul/internal/server"
 
 	"gorm.io/gorm"

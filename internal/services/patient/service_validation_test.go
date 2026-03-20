@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 )
 
 func TestServiceValidationGuards(t *testing.T) {

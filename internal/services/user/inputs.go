@@ -1,6 +1,6 @@
 package user
 
-import "miconsul/internal/model"
+import "miconsul/internal/models"
 
 type userProfileUpdateInput struct {
 	Name  string `form:"name"`

@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"miconsul/internal/lib/libtime"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"miconsul/internal/server"
 	view "miconsul/internal/views"
 	"time"

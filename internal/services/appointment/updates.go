@@ -3,7 +3,7 @@ package appointment
 import (
 	"time"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 )
 
 type appointmentPatchUpdates struct {

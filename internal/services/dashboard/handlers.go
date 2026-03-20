@@ -2,7 +2,7 @@ package dashboard
 
 import (
 	"miconsul/internal/lib/libtime"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	view "miconsul/internal/views"
 	"time"
 

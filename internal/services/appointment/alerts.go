@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"miconsul/internal/mailer"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 
 	"gorm.io/gorm"
 )

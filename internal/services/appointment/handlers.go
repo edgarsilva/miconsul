@@ -9,7 +9,7 @@ import (
 	"miconsul/internal/lib/amount"
 	"miconsul/internal/lib/libtime"
 	"miconsul/internal/lib/xid"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	view "miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"

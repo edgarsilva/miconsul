@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"os"
 
 	"gopkg.in/gomail.v2"

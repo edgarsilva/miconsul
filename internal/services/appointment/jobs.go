@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"miconsul/internal/jobs"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 
 	"gorm.io/gorm"
 )

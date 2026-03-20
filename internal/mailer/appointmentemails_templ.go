@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 )
 
 func AppointmentBookedEmail(env *appenv.Env, appointment model.Appointment) templ.Component {

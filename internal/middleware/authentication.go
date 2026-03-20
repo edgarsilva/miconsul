@@ -3,7 +3,7 @@
 package middleware
 
 import (
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"miconsul/internal/services/auth"
 
 	"github.com/gofiber/fiber/v3"

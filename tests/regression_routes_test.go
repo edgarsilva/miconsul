@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 
 	"gorm.io/gorm"
 )

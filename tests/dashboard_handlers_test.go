@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 )
 
 func TestDashboardHandlers(t *testing.T) {

@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
 )

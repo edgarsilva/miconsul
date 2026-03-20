@@ -4,7 +4,7 @@ import (
 	"errors"
 	"miconsul/internal/lib/avatar"
 	"miconsul/internal/lib/xid"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	view "miconsul/internal/views"
 	"os"
 	"strconv"

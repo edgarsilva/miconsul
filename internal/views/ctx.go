@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"miconsul/internal/lib/localize"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
 )

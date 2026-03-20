@@ -3,7 +3,7 @@ package patient
 import (
 	"context"
 	"errors"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"miconsul/internal/server"
 	"strings"
 

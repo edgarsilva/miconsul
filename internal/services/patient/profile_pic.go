@@ -3,7 +3,7 @@ package patient
 import (
 	"errors"
 	"fmt"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"net/http"
 	"os"
 	"path"

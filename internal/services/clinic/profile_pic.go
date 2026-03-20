@@ -3,7 +3,7 @@ package clinic
 import (
 	"errors"
 	"fmt"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"path"
 	"strings"
 

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"miconsul/internal/lib/avatar"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
