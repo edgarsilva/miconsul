@@ -13,7 +13,7 @@ import (
 func TestSendReminderAlertExecutesWorkerPath(t *testing.T) {
 	svc, user, clinic, patient := newAppointmentServiceForTests(t)
 
-	apnt := model.Appointment{
+	apnt := models.Appointment{
 		UserID:    user.ID,
 		ClinicID:  clinic.ID,
 		PatientID: patient.ID,
@@ -33,7 +33,7 @@ func TestSendReminderAlertExecutesWorkerPath(t *testing.T) {
 func TestHandleBookedAlertTaskSkipsWhenAlreadySent(t *testing.T) {
 	svc, user, clinic, patient := newAppointmentServiceForTests(t)
 
-	apnt := model.Appointment{
+	apnt := models.Appointment{
 		UserID:            user.ID,
 		ClinicID:          clinic.ID,
 		PatientID:         patient.ID,

@@ -30,20 +30,20 @@ func NewService(s *server.Server) (service, error) {
 	}, nil
 }
 
-func (s service) TakePatientByID(ctx context.Context, userID, patientID string) (model.Patient, error) {
+func (s service) TakePatientByID(ctx context.Context, userID, patientID string) (models.Patient, error) {
 	patientID = strings.TrimSpace(patientID)
 	if patientID == "" {
-		return model.Patient{}, ErrIDRequired
+		return models.Patient{}, ErrIDRequired
 	}
 
-	return gorm.G[model.Patient](s.DB.GormDB()).
+	return gorm.G[models.Patient](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", patientID, userID).
 		Take(ctx)
 }
 
-func (s service) PatientForShowPage(ctx context.Context, userID, patientID string) (model.Patient, error) {
+func (s service) PatientForShowPage(ctx context.Context, userID, patientID string) (models.Patient, error) {
 	patientID = strings.TrimSpace(patientID)
-	patient := model.Patient{}
+	patient := models.Patient{}
 	if patientID == "" || patientID == "new" {
 		return patient, nil
 	}
@@ -51,8 +51,8 @@ func (s service) PatientForShowPage(ctx context.Context, userID, patientID strin
 	return s.TakePatientByID(ctx, userID, patientID)
 }
 
-func (s service) FindRecentPatientsByUser(ctx context.Context, cu model.User, limit int) ([]model.Patient, error) {
-	patients := []model.Patient{}
+func (s service) FindRecentPatientsByUser(ctx context.Context, cu models.User, limit int) ([]models.Patient, error) {
+	patients := []models.Patient{}
 	err := s.DB.WithContext(ctx).
 		Model(&cu).
 		Order("created_at desc").
@@ -61,41 +61,41 @@ func (s service) FindRecentPatientsByUser(ctx context.Context, cu model.User, li
 		Find(&patients)
 
 	if err != nil {
-		return []model.Patient{}, err
+		return []models.Patient{}, err
 	}
 
 	return patients, nil
 }
 
-func (s service) SearchPatientsByUser(ctx context.Context, cu model.User, query string, limit int) ([]model.Patient, error) {
+func (s service) SearchPatientsByUser(ctx context.Context, cu models.User, query string, limit int) ([]models.Patient, error) {
 	query = strings.TrimSpace(query)
-	patients := []model.Patient{}
+	patients := []models.Patient{}
 
 	dbquery := s.DB.WithContext(ctx).Model(&cu)
 	if query != "" {
-		dbquery.Scopes(model.GlobalFTS(query))
+		dbquery.Scopes(models.GlobalFTS(query))
 	} else {
 		dbquery.Order("created_at desc")
 	}
 
 	err := dbquery.Limit(limit).Association("Patients").Find(&patients)
 	if err != nil {
-		return []model.Patient{}, err
+		return []models.Patient{}, err
 	}
 
 	return patients, nil
 }
 
-func (s service) CreatePatient(ctx context.Context, patient *model.Patient) error {
+func (s service) CreatePatient(ctx context.Context, patient *models.Patient) error {
 	err := normalizePatientWriteInput(patient)
 	if err != nil {
 		return err
 	}
 
-	return gorm.G[model.Patient](s.DB.GormDB()).Create(ctx, patient)
+	return gorm.G[models.Patient](s.DB.GormDB()).Create(ctx, patient)
 }
 
-func (s service) UpdatePatientByID(ctx context.Context, userID, patientID string, patient model.Patient) error {
+func (s service) UpdatePatientByID(ctx context.Context, userID, patientID string, patient models.Patient) error {
 	patientID = strings.TrimSpace(patientID)
 	if patientID == "" {
 		return ErrIDRequired
@@ -105,7 +105,7 @@ func (s service) UpdatePatientByID(ctx context.Context, userID, patientID string
 		return err
 	}
 
-	rowsAffected, err := gorm.G[model.Patient](s.DB.GormDB()).
+	rowsAffected, err := gorm.G[models.Patient](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", patientID, userID).
 		Updates(ctx, patient)
 	if err != nil {
@@ -132,7 +132,7 @@ func (s service) DeletePatientByID(ctx context.Context, userID, patientID string
 		return ErrIDRequired
 	}
 
-	rowsAffected, err := gorm.G[model.Patient](s.DB.GormDB()).
+	rowsAffected, err := gorm.G[models.Patient](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", patientID, userID).
 		Delete(ctx)
 	if err != nil {
@@ -151,7 +151,7 @@ func (s service) ClearPatientProfilePic(ctx context.Context, userID, patientID s
 		return ErrIDRequired
 	}
 
-	rowsAffected, err := gorm.G[model.Patient](s.DB.GormDB()).
+	rowsAffected, err := gorm.G[models.Patient](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", patientID, userID).
 		Update(ctx, "profile_pic", "")
 	if err != nil {
@@ -180,7 +180,7 @@ func (s service) patientExistsByID(ctx context.Context, userID, patientID string
 
 	var count int64
 	err := s.DB.WithContext(ctx).
-		Model(&model.Patient{}).
+		Model(&models.Patient{}).
 		Where("id = ? AND user_id = ?", patientID, userID).
 		Count(&count).Error
 	if err != nil {
@@ -190,7 +190,7 @@ func (s service) patientExistsByID(ctx context.Context, userID, patientID string
 	return count > 0, nil
 }
 
-func (s service) CreatePatientsInBatches(ctx context.Context, patients []model.Patient, batchSize int) (int64, error) {
+func (s service) CreatePatientsInBatches(ctx context.Context, patients []models.Patient, batchSize int) (int64, error) {
 	result := s.DB.WithContext(ctx).CreateInBatches(&patients, batchSize)
 	if result.Error != nil {
 		return 0, result.Error
@@ -199,7 +199,7 @@ func (s service) CreatePatientsInBatches(ctx context.Context, patients []model.P
 	return result.RowsAffected, nil
 }
 
-func normalizePatientWriteInput(patient *model.Patient) error {
+func normalizePatientWriteInput(patient *models.Patient) error {
 	if patient == nil {
 		return errors.New("patient is required")
 	}

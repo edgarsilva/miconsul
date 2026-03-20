@@ -20,7 +20,7 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("create and fetch appointment", func(t *testing.T) {
-		apnt := model.Appointment{
+		apnt := models.Appointment{
 			UserID:    user.ID,
 			ClinicID:  clinic.ID,
 			PatientID: patient.ID,
@@ -30,7 +30,7 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 		if err := svc.CreateAppointment(ctx, &apnt); err != nil {
 			t.Fatalf("create appointment: %v", err)
 		}
-		if apnt.Status != model.ApntStatusPending {
+		if apnt.Status != models.ApntStatusPending {
 			t.Fatalf("expected default pending status, got %q", apnt.Status)
 		}
 
@@ -53,13 +53,13 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 	})
 
 	t.Run("token update wrappers execute", func(t *testing.T) {
-		apnt := model.Appointment{
+		apnt := models.Appointment{
 			UserID:    user.ID,
 			ClinicID:  clinic.ID,
 			PatientID: patient.ID,
 			BookedAt:  time.Now().Add(2 * time.Hour),
 			Token:     "tok_flow",
-			Status:    model.ApntStatusPending,
+			Status:    models.ApntStatusPending,
 		}
 		if err := svc.CreateAppointment(ctx, &apnt); err != nil {
 			t.Fatalf("create appointment: %v", err)
@@ -79,7 +79,7 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 		if err != nil {
 			t.Fatalf("take by id and token: %v", err)
 		}
-		if got.Status != model.ApntStatusPending {
+		if got.Status != models.ApntStatusPending {
 			t.Fatalf("expected pending status after date change, got %q", got.Status)
 		}
 	})
@@ -124,12 +124,12 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 	})
 
 	t.Run("patient with last done appointment preloads done appointment", func(t *testing.T) {
-		doneApnt := model.Appointment{
+		doneApnt := models.Appointment{
 			UserID:    user.ID,
 			ClinicID:  clinic.ID,
 			PatientID: patient.ID,
 			BookedAt:  time.Now().Add(-time.Hour),
-			Status:    model.ApntStatusDone,
+			Status:    models.ApntStatusDone,
 			Token:     "tok_done",
 		}
 		if err := svc.CreateAppointment(ctx, &doneApnt); err != nil {
@@ -140,19 +140,19 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 		if err != nil {
 			t.Fatalf("take patient with done appointment: %v", err)
 		}
-		if len(got.Appointments) == 0 || got.Appointments[0].Status != model.ApntStatusDone {
+		if len(got.Appointments) == 0 || got.Appointments[0].Status != models.ApntStatusDone {
 			t.Fatalf("expected preloaded done appointment")
 		}
 	})
 
 	t.Run("update and delete by id branches", func(t *testing.T) {
-		apnt := model.Appointment{
+		apnt := models.Appointment{
 			UserID:    user.ID,
 			ClinicID:  clinic.ID,
 			PatientID: patient.ID,
 			BookedAt:  time.Now().Add(3 * time.Hour),
 			Token:     "tok_upd_del",
-			Status:    model.ApntStatusPending,
+			Status:    models.ApntStatusPending,
 		}
 		if err := svc.CreateAppointment(ctx, &apnt); err != nil {
 			t.Fatalf("create appointment for update/delete: %v", err)
@@ -187,7 +187,7 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 	})
 }
 
-func newAppointmentServiceForTests(t *testing.T) (*service, model.User, model.Clinic, model.Patient) {
+func newAppointmentServiceForTests(t *testing.T) (*service, models.User, models.Clinic, models.Patient) {
 	t.Helper()
 
 	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())
@@ -196,7 +196,7 @@ func newAppointmentServiceForTests(t *testing.T) (*service, model.User, model.Cl
 		t.Fatalf("open sqlite: %v", err)
 	}
 
-	if err := gdb.AutoMigrate(&model.User{}, &model.Clinic{}, &model.Patient{}, &model.Appointment{}); err != nil {
+	if err := gdb.AutoMigrate(&models.User{}, &models.Clinic{}, &models.Patient{}, &models.Appointment{}); err != nil {
 		t.Fatalf("automigrate models: %v", err)
 	}
 
@@ -209,18 +209,18 @@ func newAppointmentServiceForTests(t *testing.T) (*service, model.User, model.Cl
 		t.Fatalf("new appointment service: %v", err)
 	}
 
-	u := model.User{Email: "appt@example.com", Password: "hash", Role: model.UserRoleUser}
-	if err := gorm.G[model.User](gdb).Create(context.Background(), &u); err != nil {
+	u := models.User{Email: "appt@example.com", Password: "hash", Role: models.UserRoleUser}
+	if err := gorm.G[models.User](gdb).Create(context.Background(), &u); err != nil {
 		t.Fatalf("create user: %v", err)
 	}
 
-	cl := model.Clinic{UserID: u.ID, Name: "Clinic", Email: "c@example.com", Phone: "123"}
-	if err := gorm.G[model.Clinic](gdb).Create(context.Background(), &cl); err != nil {
+	cl := models.Clinic{UserID: u.ID, Name: "Clinic", Email: "c@example.com", Phone: "123"}
+	if err := gorm.G[models.Clinic](gdb).Create(context.Background(), &cl); err != nil {
 		t.Fatalf("create clinic: %v", err)
 	}
 
-	pt := model.Patient{UserID: u.ID, Name: "Patient", Age: 30, Phone: "555", Email: "p@example.com"}
-	if err := gorm.G[model.Patient](gdb).Create(context.Background(), &pt); err != nil {
+	pt := models.Patient{UserID: u.ID, Name: "Patient", Age: 30, Phone: "555", Email: "p@example.com"}
+	if err := gorm.G[models.Patient](gdb).Create(context.Background(), &pt); err != nil {
 		t.Fatalf("create patient: %v", err)
 	}
 

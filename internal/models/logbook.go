@@ -1,5 +1,5 @@
 // Logbook saves the purpose of storing error/info/warn logs.
-package model
+package models
 
 import (
 	"miconsul/internal/lib/xid"

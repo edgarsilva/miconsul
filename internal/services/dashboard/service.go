@@ -27,7 +27,7 @@ func NewService(s *server.Server) (service, error) {
 	}, nil
 }
 
-func (s service) CalcDashboardStats(ctx context.Context, cu model.User) view.DashboardStats {
+func (s service) CalcDashboardStats(ctx context.Context, cu models.User) view.DashboardStats {
 	ctx, span := s.Trace(ctx, "dashboard/services.CalcDashboardStats")
 	defer span.End()
 
@@ -36,8 +36,8 @@ func (s service) CalcDashboardStats(ctx context.Context, cu model.User) view.Das
 		return stats
 	}
 
-	patStats := s.CalcMonthlyStats(ctx, cu, &model.Patient{UserID: cu.ID})
-	apptStats := s.CalcMonthlyStats(ctx, cu, &model.Appointment{UserID: cu.ID})
+	patStats := s.CalcMonthlyStats(ctx, cu, &models.Patient{UserID: cu.ID})
+	apptStats := s.CalcMonthlyStats(ctx, cu, &models.Appointment{UserID: cu.ID})
 	stats := view.DashboardStats{
 		Patients:     patStats,
 		Appointments: apptStats,
@@ -77,7 +77,7 @@ func (s service) ReadStatsCache(cachekey string) (stats view.DashboardStats, ok 
 	return stats, true
 }
 
-func (s service) CalcMonthlyStats(ctx context.Context, cu model.User, imodel interface{}) view.DashboardStat {
+func (s service) CalcMonthlyStats(ctx context.Context, cu models.User, imodel interface{}) view.DashboardStat {
 	localCtx, span := s.Trace(ctx, "dashboard/services:CalcMonthlyStats")
 	defer span.End()
 

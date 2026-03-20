@@ -111,7 +111,7 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 		}
 	} else {
 		patient.ProfilePic = path
-		profilePicUpdate := model.Patient{ProfilePic: path}
+		profilePicUpdate := models.Patient{ProfilePic: path}
 		err = s.UpdatePatientByID(c.Context(), cu.ID, patient.ID, profilePicUpdate)
 		if err != nil {
 			log.Error(err)
@@ -215,7 +215,7 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
 	}
 
-	patient := model.Patient{
+	patient := models.Patient{
 		UserID: cu.ID,
 	}
 	err := s.ClearPatientProfilePic(c.Context(), cu.ID, patientID)
@@ -336,10 +336,10 @@ func (s *service) HandleMockManyPatients(c fiber.Ctx) error {
 		n = maxMockPatients
 	}
 
-	patients := []model.Patient{}
+	patients := []models.Patient{}
 	for i := 0; i < n; i++ {
 		ExtID := xid.New("prav")
-		patients = append(patients, model.Patient{
+		patients = append(patients, models.Patient{
 			ExtID:      ExtID,
 			ProfilePic: avatar.PravatarURL(ExtID),
 			Name:       faker.Name().Name(),

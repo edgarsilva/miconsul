@@ -8,8 +8,8 @@ type userProfileUpdateInput struct {
 	Phone string `form:"phone"`
 }
 
-func (in userProfileUpdateInput) toUserProfileUpdates() model.User {
-	return model.User{
+func (in userProfileUpdateInput) toUserProfileUpdates() models.User {
+	return models.User{
 		Name:  in.Name,
 		Email: in.Email,
 		Phone: in.Phone,

@@ -22,7 +22,7 @@ func TestNormalizeUserWriteInput(t *testing.T) {
 	})
 
 	t.Run("trims and normalizes fields", func(t *testing.T) {
-		u := &model.User{Name: "  User Name  ", Email: "  MIXED@Example.COM  ", Phone: "  +123  "}
+		u := &models.User{Name: "  User Name  ", Email: "  MIXED@Example.COM  ", Phone: "  +123  "}
 		if err := normalizeUserWriteInput(u); err != nil {
 			t.Fatalf("expected normalized input to pass: %v", err)
 		}
@@ -32,7 +32,7 @@ func TestNormalizeUserWriteInput(t *testing.T) {
 	})
 
 	t.Run("rejects over max lengths", func(t *testing.T) {
-		cases := []model.User{
+		cases := []models.User{
 			{Name: strings.Repeat("n", 121)},
 			{Email: strings.Repeat("e", 255)},
 			{Phone: strings.Repeat("p", 41)},
@@ -122,14 +122,14 @@ func TestServiceValidationGuards(t *testing.T) {
 	})
 
 	t.Run("UpdateUserProfileByID requires id", func(t *testing.T) {
-		_, err := svc.UpdateUserProfileByID(ctx, "", model.User{})
+		_, err := svc.UpdateUserProfileByID(ctx, "", models.User{})
 		if err != ErrIDRequired {
 			t.Fatalf("expected ErrIDRequired, got %v", err)
 		}
 	})
 
 	t.Run("UpdateUserProfileByID validates normalized input", func(t *testing.T) {
-		tooLongName := model.User{Name: strings.Repeat("n", 121)}
+		tooLongName := models.User{Name: strings.Repeat("n", 121)}
 		_, err := svc.UpdateUserProfileByID(ctx, "user_1", tooLongName)
 		if err == nil {
 			t.Fatalf("expected validation error for long name")

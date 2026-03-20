@@ -22,7 +22,7 @@ type Ctx struct {
 	Theme       string
 	Timeframe   string
 	Toast       Toast
-	CurrentUser model.User
+	CurrentUser models.User
 }
 
 type ContextOption func(*Ctx) error
@@ -60,17 +60,17 @@ func themeFromLocals(c fiber.Ctx) string {
 	return theme
 }
 
-func currentUserFromLocals(c fiber.Ctx) model.User {
+func currentUserFromLocals(c fiber.Ctx) models.User {
 	iuser := c.Locals("current_user")
-	cu, ok := iuser.(model.User)
+	cu, ok := iuser.(models.User)
 	if !ok {
-		return model.User{}
+		return models.User{}
 	}
 
 	return cu
 }
 
-func CU(c fiber.Ctx) model.User {
+func CU(c fiber.Ctx) models.User {
 	return currentUserFromLocals(c)
 }
 
@@ -97,7 +97,7 @@ func NewCtx(c fiber.Ctx, ctxOpts ...ContextOption) (*Ctx, error) {
 	return &ctx, nil
 }
 
-func WithCurrentUser(cu model.User) ContextOption {
+func WithCurrentUser(cu models.User) ContextOption {
 	return func(props *Ctx) error {
 		props.CurrentUser = cu
 		return nil

@@ -24,13 +24,13 @@ const (
 )
 
 type AuthSnapshot struct {
-	Token          string         // t
-	UserID         string         // uid
-	UserEmail      string         // em
-	UserRole       model.UserRole // rl
-	UserName       string         // nm
-	UserProfilePic string         // pp
-	CachedAtUnix   int64          // cat
+	Token          string          // t
+	UserID         string          // uid
+	UserEmail      string          // em
+	UserRole       models.UserRole // rl
+	UserName       string          // nm
+	UserProfilePic string          // pp
+	CachedAtUnix   int64           // cat
 }
 
 type LocalStrategy struct {
@@ -51,10 +51,10 @@ func NewLocalStrategy(resource LocalStrategyResource) *LocalStrategy {
 	}
 }
 
-func (ls LocalStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
+func (ls LocalStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
 	token := getToken(c)
 	if token == "" {
-		return model.User{}, errors.New("failed to retrieve JWT token, it is blank")
+		return models.User{}, errors.New("failed to retrieve JWT token, it is blank")
 	}
 
 	userFromSession, ok := ls.currentUserFromSession(c, token)
@@ -76,14 +76,14 @@ func (ls LocalStrategy) Metadata() AuthenticatorMeta {
 	return AuthenticatorMeta{}
 }
 
-func (ls LocalStrategy) FindUserById(ctx context.Context, uid string) (model.User, error) {
-	return gorm.G[model.User](ls.resource.GormDB()).Where("id = ?", uid).Take(ctx)
+func (ls LocalStrategy) FindUserById(ctx context.Context, uid string) (models.User, error) {
+	return gorm.G[models.User](ls.resource.GormDB()).Where("id = ?", uid).Take(ctx)
 }
 
-func (ls LocalStrategy) authenticateWithJWT(c fiber.Ctx, token string) (model.User, error) {
+func (ls LocalStrategy) authenticateWithJWT(c fiber.Ctx, token string) (models.User, error) {
 	claims, err := decodeJWTToken(ls.resource.AppEnv(), token)
 	if err != nil {
-		return model.User{}, errors.New("failed to validate JWT token")
+		return models.User{}, errors.New("failed to validate JWT token")
 	}
 
 	uid, ok := claims["uid"].(string)
@@ -125,22 +125,22 @@ func (ls LocalStrategy) refreshAuthCookie(c fiber.Ctx, jwt string, validFor time
 	c.Cookie(ls.resource.NewCookie("Auth", jwt, validFor))
 }
 
-func (ls LocalStrategy) currentUserFromSession(c fiber.Ctx, token string) (model.User, bool) {
+func (ls LocalStrategy) currentUserFromSession(c fiber.Ctx, token string) (models.User, bool) {
 	snapshot, ok := ls.readAuthSnapshot(c)
 	if !ok {
-		return model.User{}, false
+		return models.User{}, false
 	}
 
 	tokenHash := tokenDigest(token)
 	isInvalidToken := !snapshot.isValidForToken(tokenHash, time.Now())
 	if isInvalidToken {
-		return model.User{}, false
+		return models.User{}, false
 	}
 
 	return snapshot.toUser(), true
 }
 
-func (ls LocalStrategy) saveCurrentUserToSession(c fiber.Ctx, token string, user model.User) {
+func (ls LocalStrategy) saveCurrentUserToSession(c fiber.Ctx, token string, user models.User) {
 	if token == "" || user.ID == "" {
 		return
 	}
@@ -206,7 +206,7 @@ func DecodeAuthSnapshot(raw string) (AuthSnapshot, bool) {
 		Token:          v.Get("t"),
 		UserID:         v.Get("uid"),
 		UserEmail:      v.Get("em"),
-		UserRole:       model.UserRole(v.Get("rl")),
+		UserRole:       models.UserRole(v.Get("rl")),
 		UserName:       v.Get("nm"),
 		UserProfilePic: v.Get("pp"),
 		CachedAtUnix:   cachedAtUnix,
@@ -232,8 +232,8 @@ func (sa AuthSnapshot) isValidForToken(token string, now time.Time) bool {
 	return now.Sub(time.Unix(sa.CachedAtUnix, 0)) <= authSessionHydrationTTL
 }
 
-func (sa AuthSnapshot) toUser() model.User {
-	return model.User{
+func (sa AuthSnapshot) toUser() models.User {
+	return models.User{
 		ID:         sa.UserID,
 		Email:      sa.UserEmail,
 		Role:       sa.UserRole,

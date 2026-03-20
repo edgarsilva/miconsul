@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-func PatientsPage(c *Ctx, patients []model.Patient) templ.Component {
+func PatientsPage(c *Ctx, patients []models.Patient) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -123,7 +123,7 @@ func PatientsPage(c *Ctx, patients []model.Patient) templ.Component {
 	})
 }
 
-func PatientFormPage(patient model.Patient, c *Ctx) templ.Component {
+func PatientFormPage(patient models.Patient, c *Ctx) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -257,7 +257,7 @@ func PatientFormPage(patient model.Patient, c *Ctx) templ.Component {
 	})
 }
 
-func PatientsList(c *Ctx, patients []model.Patient) templ.Component {
+func PatientsList(c *Ctx, patients []models.Patient) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -335,7 +335,7 @@ func PatientsList(c *Ctx, patients []model.Patient) templ.Component {
 	})
 }
 
-func PatientLi(patient model.Patient, c *Ctx) templ.Component {
+func PatientLi(patient models.Patient, c *Ctx) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -454,7 +454,7 @@ func PatientLi(patient model.Patient, c *Ctx) templ.Component {
 	})
 }
 
-func PatientDeleteForm(patient model.Patient, c *Ctx) templ.Component {
+func PatientDeleteForm(patient models.Patient, c *Ctx) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -564,7 +564,7 @@ func PatientsEmptyList(c *Ctx) templ.Component {
 	})
 }
 
-func PatientProfile(patient model.Patient, c *Ctx) templ.Component {
+func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1647,7 +1647,7 @@ func PatientProfile(patient model.Patient, c *Ctx) templ.Component {
 	})
 }
 
-func PatientForm(c *Ctx, patient model.Patient) templ.Component {
+func PatientForm(c *Ctx, patient models.Patient) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

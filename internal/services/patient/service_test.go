@@ -15,7 +15,7 @@ func TestNormalizePatientWriteInput(t *testing.T) {
 	})
 
 	t.Run("trims and normalizes fields", func(t *testing.T) {
-		patient := &model.Patient{
+		patient := &models.Patient{
 			Name:  "  Patient Name  ",
 			Email: "  MIXED@Example.COM  ",
 			Phone: "  +12345  ",
@@ -38,11 +38,11 @@ func TestNormalizePatientWriteInput(t *testing.T) {
 	t.Run("rejects over max lengths", func(t *testing.T) {
 		cases := []struct {
 			name    string
-			patient model.Patient
+			patient models.Patient
 		}{
-			{name: "name too long", patient: model.Patient{Name: strings.Repeat("n", 121)}},
-			{name: "email too long", patient: model.Patient{Email: strings.Repeat("e", 255)}},
-			{name: "phone too long", patient: model.Patient{Phone: strings.Repeat("p", 41)}},
+			{name: "name too long", patient: models.Patient{Name: strings.Repeat("n", 121)}},
+			{name: "email too long", patient: models.Patient{Email: strings.Repeat("e", 255)}},
+			{name: "phone too long", patient: models.Patient{Phone: strings.Repeat("p", 41)}},
 		}
 
 		for _, tc := range cases {

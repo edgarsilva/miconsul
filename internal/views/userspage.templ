@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-templ UsersIndexPage(c *Ctx, users []model.User) {
+templ UsersIndexPage(c *Ctx, users []models.User) {
 	@LayoutWithBackBtn(c, "/") {
 		<section id="users_section" class="grow flex flex-col px-0 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<div
@@ -64,7 +64,7 @@ templ UsersIndexPage(c *Ctx, users []model.User) {
 	}
 }
 
-templ UsersList(c *Ctx, users []model.User) {
+templ UsersList(c *Ctx, users []models.User) {
 	<ul id="users_list" role="list" class="app-card divide-y divide-base-content/10 overflow-hidden px-4 py-2">
 		for _, user := range users {
 			@UserLi(c, user)
@@ -72,7 +72,7 @@ templ UsersList(c *Ctx, users []model.User) {
 	</ul>
 }
 
-templ UserLi(c *Ctx, user model.User) {
+templ UserLi(c *Ctx, user models.User) {
 	<li class="relative flex justify-between items-center gap-x-6 px-2 py-2 hover:bg-base-200/75">
 		<div class="flex items-center min-w-0 gap-x-4">
 			@CmpAvatar(user)
@@ -114,7 +114,7 @@ templ UsersEmptyList(c *Ctx) {
 	</div>
 }
 
-templ UserEditPage(c *Ctx, user model.User) {
+templ UserEditPage(c *Ctx, user models.User) {
 	@LayoutWithBackBtn(c, "/") {
 		<section id="user_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<hgroup
@@ -139,7 +139,7 @@ templ UserEditPage(c *Ctx, user model.User) {
 	}
 }
 
-templ UserProfile(c *Ctx, user model.User) {
+templ UserProfile(c *Ctx, user models.User) {
 	<div id="user_profile" class="space-y-10 divide-y divide-base-content/10">
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
@@ -244,7 +244,7 @@ templ UserProfile(c *Ctx, user model.User) {
 	</div>
 }
 
-templ UserForm(c *Ctx, user model.User) {
+templ UserForm(c *Ctx, user models.User) {
 	<form
 		class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2"
 		method="POST"
@@ -254,7 +254,7 @@ templ UserForm(c *Ctx, user model.User) {
 			action="/users"
 		}
 		else
-		if c.CurrentUser.Role == model.UserRoleAdmin {
+		if c.CurrentUser.Role == models.UserRoleAdmin {
 			hx-patch={ "/users/" + user.ID }
 			action={ templ.URL("/users/" + user.ID + "/patch") }
 		} else {

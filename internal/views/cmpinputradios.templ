@@ -2,15 +2,15 @@ package views
 
 import "miconsul/internal/models"
 
-templ CmpInputRadioApntStatus(status model.AppointmentStatus) {
+templ CmpInputRadioApntStatus(status models.AppointmentStatus) {
 	<div class="flex gap-4 items-center p-2 flex-wrap">
 		<label class="badge border-success text-success bg-transparent gap-2 has-[:checked]:badge-success py-4 px-2">
 			<input
 				type="radio"
 				name="status"
-				value={ string(model.ApntStatusConfirmed) }
+				value={ string(models.ApntStatusConfirmed) }
 				class="radio radio-sm"
-				if status == model.ApntStatusConfirmed {
+				if status == models.ApntStatusConfirmed {
 					checked
 				}
 			/>
@@ -20,9 +20,9 @@ templ CmpInputRadioApntStatus(status model.AppointmentStatus) {
 			<input
 				type="radio"
 				name="status"
-				value={ string(model.ApntStatusDone) }
+				value={ string(models.ApntStatusDone) }
 				class="radio radio-sm"
-				if status == model.ApntStatusDone {
+				if status == models.ApntStatusDone {
 					checked
 				}
 			/>
@@ -32,9 +32,9 @@ templ CmpInputRadioApntStatus(status model.AppointmentStatus) {
 			<input
 				type="radio"
 				name="status"
-				value={ string(model.ApntStatusRescheduled) }
+				value={ string(models.ApntStatusRescheduled) }
 				class="radio radio-sm"
-				if status == model.ApntStatusRescheduled {
+				if status == models.ApntStatusRescheduled {
 					checked
 				}
 			/>
@@ -44,9 +44,9 @@ templ CmpInputRadioApntStatus(status model.AppointmentStatus) {
 			<input
 				type="radio"
 				name="status"
-				value={ string(model.ApntStatusCanceled) }
+				value={ string(models.ApntStatusCanceled) }
 				class="radio radio-sm"
-				if status == model.ApntStatusCanceled {
+				if status == models.ApntStatusCanceled {
 					checked
 				}
 			/>

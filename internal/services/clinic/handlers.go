@@ -38,7 +38,7 @@ func (s *service) HandleClinicsIndexPage(c fiber.Ctx) error {
 // HandleClinicsNewPage renders the new clinic HTML page
 // GET: /clinics/new
 func (s *service) HandleClinicsNewPage(c fiber.Ctx) error {
-	clinic := model.Clinic{}
+	clinic := models.Clinic{}
 	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.ClinicPage(vc, clinic))
 }
@@ -193,10 +193,10 @@ func (s *service) HandleMockManyClinics(c fiber.Ctx) error {
 		n = 100000
 	}
 
-	var clinics []model.Clinic
+	var clinics []models.Clinic
 	for i := 0; i <= n; i++ {
 		ExtID := xid.New("prav")
-		clinics = append(clinics, model.Clinic{
+		clinics = append(clinics, models.Clinic{
 			ExtID:      ExtID,
 			ProfilePic: avatar.DicebearShapeAvatarURL(ExtID),
 			Name:       faker.Company().Name(),
@@ -223,7 +223,7 @@ func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string, htmxStat
 	return c.SendStatus(htmxStatus)
 }
 
-func (s *service) respondWithClinicPage(c fiber.Ctx, clinic model.Clinic) error {
+func (s *service) respondWithClinicPage(c fiber.Ctx, clinic models.Clinic) error {
 	if s.NotHTMX(c) {
 		return s.Redirect(c, "/clinics/"+clinic.ID)
 	}
@@ -233,7 +233,7 @@ func (s *service) respondWithClinicPage(c fiber.Ctx, clinic model.Clinic) error 
 	return view.Render(c, view.ClinicPage(vc, clinic))
 }
 
-func (s *service) attachClinicProfilePicBestEffort(c fiber.Ctx, userID string, clinic *model.Clinic) {
+func (s *service) attachClinicProfilePicBestEffort(c fiber.Ctx, userID string, clinic *models.Clinic) {
 	path, picErr := SaveProfilePicToDisk(c, *clinic)
 	if errors.Is(picErr, ErrProfilePicNotProvided) {
 		return
@@ -244,7 +244,7 @@ func (s *service) attachClinicProfilePicBestEffort(c fiber.Ctx, userID string, c
 	}
 
 	clinic.ProfilePic = path
-	profilePicUpdate := model.Clinic{ProfilePic: path}
+	profilePicUpdate := models.Clinic{ProfilePic: path}
 	err := s.UpdateClinicByID(c.Context(), userID, clinic.ID, profilePicUpdate)
 	if err != nil {
 		log.Error(err)

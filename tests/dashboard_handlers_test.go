@@ -9,7 +9,7 @@ import (
 
 func TestDashboardHandlers(t *testing.T) {
 	h := newTestHarness(t)
-	u := h.createUser(model.UserRoleUser)
+	u := h.createUser(models.UserRoleUser)
 	token := h.authToken(u)
 
 	t.Run("dashboard requires authentication", func(t *testing.T) {

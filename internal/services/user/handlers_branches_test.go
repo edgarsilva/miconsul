@@ -64,8 +64,8 @@ func TestUserHandlerBranches(t *testing.T) {
 func TestHandleEditPageSuccess(t *testing.T) {
 	svc, currentUser := newUserServiceForTests(t)
 
-	admin := model.User{Email: "admin@example.com", Password: "hash", Role: model.UserRoleAdmin}
-	if err := svc.CreateUsersInBatches(t.Context(), []model.User{admin}, 1); err != nil {
+	admin := models.User{Email: "admin@example.com", Password: "hash", Role: models.UserRoleAdmin}
+	if err := svc.CreateUsersInBatches(t.Context(), []models.User{admin}, 1); err != nil {
 		t.Fatalf("seed admin: %v", err)
 	}
 

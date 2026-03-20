@@ -262,19 +262,19 @@ func TestMaybeAuthenticate(t *testing.T) {
 	})
 }
 
-func newMiddlewareAuthRuntime(t *testing.T) (testAuthRuntime, model.User, string) {
+func newMiddlewareAuthRuntime(t *testing.T) (testAuthRuntime, models.User, string) {
 	t.Helper()
 	dsn := fmt.Sprintf("file:middleware_auth_%d?mode=memory&cache=shared", time.Now().UnixNano())
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("open db: %v", err)
 	}
-	if err := db.AutoMigrate(&model.User{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}); err != nil {
 		t.Fatalf("migrate user: %v", err)
 	}
 
 	rt := testAuthRuntime{env: &appenv.Env{JWTSecret: "01234567890123456789012345678901"}, db: db}
-	user := model.User{ID: "usr_regular", Email: "regular@example.com", Role: model.UserRoleUser}
+	user := models.User{ID: "usr_regular", Email: "regular@example.com", Role: models.UserRoleUser}
 	if err := db.Create(&user).Error; err != nil {
 		t.Fatalf("create user: %v", err)
 	}
@@ -287,10 +287,10 @@ func newMiddlewareAuthRuntime(t *testing.T) (testAuthRuntime, model.User, string
 	return rt, user, token
 }
 
-func newMiddlewareAdminRuntime(t *testing.T) (testAuthRuntime, model.User, string, model.User, string) {
+func newMiddlewareAdminRuntime(t *testing.T) (testAuthRuntime, models.User, string, models.User, string) {
 	t.Helper()
 	rt, regular, regularToken := newMiddlewareAuthRuntime(t)
-	admin := model.User{ID: "usr_admin", Email: "admin@example.com", Role: model.UserRoleAdmin}
+	admin := models.User{ID: "usr_admin", Email: "admin@example.com", Role: models.UserRoleAdmin}
 	if err := rt.db.Create(&admin).Error; err != nil {
 		t.Fatalf("create admin user: %v", err)
 	}

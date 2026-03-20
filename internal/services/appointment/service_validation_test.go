@@ -17,7 +17,7 @@ func TestServiceInputValidation(t *testing.T) {
 			t.Fatalf("expected nil appointment error")
 		}
 
-		apnt := &model.Appointment{Status: model.AppointmentStatus("nope")}
+		apnt := &models.Appointment{Status: models.AppointmentStatus("nope")}
 		if err := svc.CreateAppointment(ctx, apnt); err == nil {
 			t.Fatalf("expected invalid status error")
 		}
@@ -54,13 +54,13 @@ func TestServiceInputValidation(t *testing.T) {
 	})
 
 	t.Run("status validation catches invalid mutations", func(t *testing.T) {
-		if err := svc.CompleteAppointmentByID(ctx, "usr_1", "apnt_1", appointmentCompleteUpdates{Status: model.AppointmentStatus("invalid")}); err == nil {
+		if err := svc.CompleteAppointmentByID(ctx, "usr_1", "apnt_1", appointmentCompleteUpdates{Status: models.AppointmentStatus("invalid")}); err == nil {
 			t.Fatalf("expected complete invalid status error")
 		}
-		if err := svc.CancelAppointmentByID(ctx, "usr_1", "apnt_1", appointmentCancelUpdates{Status: model.AppointmentStatus("invalid")}); err == nil {
+		if err := svc.CancelAppointmentByID(ctx, "usr_1", "apnt_1", appointmentCancelUpdates{Status: models.AppointmentStatus("invalid")}); err == nil {
 			t.Fatalf("expected cancel invalid status error")
 		}
-		if err := svc.UpdateAppointmentByIDAndToken(ctx, "apnt_1", "tok", []string{"Status"}, appointmentTokenUpdates{Status: model.AppointmentStatus("invalid")}); err == nil {
+		if err := svc.UpdateAppointmentByIDAndToken(ctx, "apnt_1", "tok", []string{"Status"}, appointmentTokenUpdates{Status: models.AppointmentStatus("invalid")}); err == nil {
 			t.Fatalf("expected token update invalid status error")
 		}
 	})

@@ -173,7 +173,7 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, "/signin", "unable to confirm email, try signin instead")
 	}
 
-	user, err := gorm.G[model.User](s.DB.GormDB()).
+	user, err := gorm.G[models.User](s.DB.GormDB()).
 		Select("id, email, confirm_email_token").
 		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
 		Take(c.Context())
@@ -181,10 +181,10 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, "/signin", "we couldn't verify your account, pls try again")
 	}
 
-	_, err = gorm.G[model.User](s.DB.GormDB()).
+	_, err = gorm.G[models.User](s.DB.GormDB()).
 		Select("ConfirmEmailToken", "ConfirmEmailExpiresAt").
 		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
-		Updates(c.Context(), model.User{})
+		Updates(c.Context(), models.User{})
 	if err != nil {
 		return s.respondWithRedirect(c, "/signin", "Email confirmed, you should be able to signin now")
 	}
@@ -262,7 +262,7 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
 	}
 
-	user, err := gorm.G[model.User](s.DB.GormDB()).Select("id", "name").Where("email = ?", email).Take(c.Context())
+	user, err := gorm.G[models.User](s.DB.GormDB()).Select("id", "name").Where("email = ?", email).Take(c.Context())
 	if err != nil {
 		errView := errors.New("user not found with that email")
 		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
@@ -275,7 +275,7 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 
 	user.ResetToken = token
 	user.ResetTokenExpiresAt = time.Now().Add(time.Hour * 1)
-	rowsAffected, err := gorm.G[model.User](s.DB.GormDB()).
+	rowsAffected, err := gorm.G[models.User](s.DB.GormDB()).
 		Select("ResetToken", "ResetTokenExpiresAt").
 		Where("id = ?", user.ID).
 		Updates(c.Context(), user)
@@ -360,7 +360,7 @@ func (s *service) HandleValidate(c fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusOK)
 }
 
-// HandleShowUser returns a JSON model.User if the session is valid
+// HandleShowUser returns a JSON models.User if the session is valid
 // GET: /api/auth/protected
 func (s *service) HandleShowUser(c fiber.Ctx) error {
 	_, span := s.Trace(c.Context(), "auth/handlers:HandleShowUser")
@@ -368,7 +368,7 @@ func (s *service) HandleShowUser(c fiber.Ctx) error {
 
 	user := s.CurrentUser(c)
 
-	res := struct{ User model.User }{
+	res := struct{ User models.User }{
 		User: user,
 	}
 

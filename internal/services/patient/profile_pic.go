@@ -15,7 +15,7 @@ import (
 
 const patientsDir = "/patients"
 
-func SaveProfilePicToDisk(c fiber.Ctx, patient model.Patient, assetsDir string) (string, error) {
+func SaveProfilePicToDisk(c fiber.Ctx, patient models.Patient, assetsDir string) (string, error) {
 	profilePic, err := c.FormFile("profilePic")
 	if err != nil {
 		return "", profilePicFormFileErr(err)

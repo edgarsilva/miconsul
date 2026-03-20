@@ -15,7 +15,7 @@ type DashboardStats struct {
 	Appointments DashboardStat
 }
 
-templ DashboardPage(vc *Ctx, stats DashboardStats, appointments []model.Appointment, favClinic model.Clinic) {
+templ DashboardPage(vc *Ctx, stats DashboardStats, appointments []models.Appointment, favClinic models.Clinic) {
 	@Layout(vc) {
 		<div id="content" class="container md:mx-auto md:px-4">
 			@MonthTrends(stats, vc)
@@ -23,7 +23,7 @@ templ DashboardPage(vc *Ctx, stats DashboardStats, appointments []model.Appointm
 				<section
 					class="col-span-3 lg:col-span-2 order-1 lg:order-1"
 				>
-					@AppointmentsSection(vc, appointments, true, model.Patient{}, model.Clinic{})
+					@AppointmentsSection(vc, appointments, true, models.Patient{}, models.Clinic{})
 				</section>
 				<section
 					class="col-span-3 lg:col-span-1 order-2 lg:order-2 flex flex-col gap-8"
@@ -120,7 +120,7 @@ templ MonthTrends(stats DashboardStats, vc *Ctx) {
 	</div>
 }
 
-templ Clinic(c *Ctx, clinic model.Clinic) {
+templ Clinic(c *Ctx, clinic models.Clinic) {
 	if clinic.ID != "" {
 		<div class="app-card">
 			<div class="relative flex flex-wrap">

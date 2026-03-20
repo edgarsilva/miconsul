@@ -19,7 +19,7 @@ import (
 func TestPatientHandlersFlows(t *testing.T) {
 	svc, user := newPatientServiceForTests(t)
 
-	seed := model.Patient{UserID: user.ID, Name: "Alpha", Age: 30, Phone: "111", Email: "alpha@example.com"}
+	seed := models.Patient{UserID: user.ID, Name: "Alpha", Age: 30, Phone: "111", Email: "alpha@example.com"}
 	if err := svc.CreatePatient(t.Context(), &seed); err != nil {
 		t.Fatalf("seed patient: %v", err)
 	}
@@ -128,7 +128,7 @@ func TestPatientProfilePicImageSourceHandler(t *testing.T) {
 	assetsDir := t.TempDir()
 	svc.Env.AssetsDir = assetsDir
 
-	patient := model.Patient{UserID: user.ID, Name: "Pic User", Age: 28, Phone: "123", Email: "pic@example.com"}
+	patient := models.Patient{UserID: user.ID, Name: "Pic User", Age: 28, Phone: "123", Email: "pic@example.com"}
 	if err := svc.CreatePatient(t.Context(), &patient); err != nil {
 		t.Fatalf("create patient: %v", err)
 	}
@@ -142,7 +142,7 @@ func TestPatientProfilePicImageSourceHandler(t *testing.T) {
 		t.Fatalf("write profile pic file: %v", err)
 	}
 
-	if err := svc.DB.WithContext(t.Context()).Model(&model.Patient{}).Where("id = ?", patient.ID).Update("profile_pic", "/patients/"+patient.ID+"/profilepic/"+filename).Error; err != nil {
+	if err := svc.DB.WithContext(t.Context()).Model(&models.Patient{}).Where("id = ?", patient.ID).Update("profile_pic", "/patients/"+patient.ID+"/profilepic/"+filename).Error; err != nil {
 		t.Fatalf("attach patient profile pic: %v", err)
 	}
 
@@ -158,7 +158,7 @@ func TestPatientProfilePicImageSourceHandler(t *testing.T) {
 	}
 
 	var count int64
-	if err := svc.DB.WithContext(t.Context()).Model(&model.Patient{}).Where("id = ?", patient.ID).Count(&count).Error; err != nil {
+	if err := svc.DB.WithContext(t.Context()).Model(&models.Patient{}).Where("id = ?", patient.ID).Count(&count).Error; err != nil {
 		t.Fatalf("count patient rows: %v", err)
 	}
 	if count != 1 {

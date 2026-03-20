@@ -68,7 +68,7 @@ func TestClinicHandlerBranches(t *testing.T) {
 func TestClinicHandlersHappyPaths(t *testing.T) {
 	svc, user := newClinicServiceForTests(t)
 
-	clinic := model.Clinic{UserID: user.ID, Name: "Alpha", Email: "alpha@example.com", Phone: "123"}
+	clinic := models.Clinic{UserID: user.ID, Name: "Alpha", Email: "alpha@example.com", Phone: "123"}
 	if err := svc.CreateClinic(t.Context(), &clinic); err != nil {
 		t.Fatalf("seed clinic: %v", err)
 	}

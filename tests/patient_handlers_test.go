@@ -13,7 +13,7 @@ import (
 
 func TestPatientHandlers(t *testing.T) {
 	h := newTestHarness(t)
-	u := h.createUser(model.UserRoleUser)
+	u := h.createUser(models.UserRoleUser)
 	token := h.authToken(u)
 
 	t.Run("update patient htmx returns success redirect header", func(t *testing.T) {
@@ -38,7 +38,7 @@ func TestPatientHandlers(t *testing.T) {
 			t.Fatalf("expected HX-Location to be set for htmx patient update")
 		}
 
-		updated, err := gorm.G[model.Patient](h.db.GormDB()).Where("id = ?", patient.ID).Take(t.Context())
+		updated, err := gorm.G[models.Patient](h.db.GormDB()).Where("id = ?", patient.ID).Take(t.Context())
 		if err != nil {
 			t.Fatalf("load updated patient: %v", err)
 		}
@@ -131,7 +131,7 @@ func TestPatientHandlers(t *testing.T) {
 	})
 
 	t.Run("cross-user update and delete are scoped", func(t *testing.T) {
-		owner := h.createUser(model.UserRoleUser)
+		owner := h.createUser(models.UserRoleUser)
 		ownerPatient := h.createPatient(owner.ID, "Owner Patient")
 
 		resp, _ := h.doRequest(requestOptions{
@@ -159,7 +159,7 @@ func TestPatientHandlers(t *testing.T) {
 			t.Fatalf("expected 404 for cross-user patient delete, got %d", resp.StatusCode)
 		}
 
-		unchanged, err := gorm.G[model.Patient](h.db.GormDB()).Where("id = ?", ownerPatient.ID).Take(t.Context())
+		unchanged, err := gorm.G[models.Patient](h.db.GormDB()).Where("id = ?", ownerPatient.ID).Take(t.Context())
 		if err != nil {
 			t.Fatalf("load owner patient after cross-user attempts: %v", err)
 		}

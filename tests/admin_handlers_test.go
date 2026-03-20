@@ -9,7 +9,7 @@ import (
 
 func TestAdminHandlers(t *testing.T) {
 	h := newTestHarness(t)
-	admin := h.createUser(model.UserRoleAdmin)
+	admin := h.createUser(models.UserRoleAdmin)
 
 	t.Run("admin jobs ui is disabled by default", func(t *testing.T) {
 		resp, _ := h.doRequest(requestOptions{method: http.MethodGet, path: "/admin/jobs", authToken: h.authToken(admin)})

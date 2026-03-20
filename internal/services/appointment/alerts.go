@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func (s *service) DispatchBookedAlert(appointment model.Appointment) error {
+func (s *service) DispatchBookedAlert(appointment models.Appointment) error {
 	if s.Env.JobsEnabled {
 		payload := TaskAppointmentPayload{AppointmentID: appointment.ID}
 		_, err := s.EnqueueTask(context.Background(), TaskBookedAlert, payload)
@@ -26,7 +26,7 @@ func (s *service) DispatchBookedAlert(appointment model.Appointment) error {
 	})
 }
 
-func (s *service) SendReminder(appointment model.Appointment) error {
+func (s *service) SendReminder(appointment models.Appointment) error {
 	err := s.SendToWorker(func() {
 		ctx, cancel := context.WithTimeout(context.Background(), defaultWorkerContextTimeout)
 		defer cancel()
@@ -37,17 +37,17 @@ func (s *service) SendReminder(appointment model.Appointment) error {
 	return err
 }
 
-func (s *service) SendReminderAlert(appointment model.Appointment) error {
+func (s *service) SendReminderAlert(appointment models.Appointment) error {
 	return s.SendReminder(appointment)
 }
 
-func (s *service) sendReminderNow(ctx context.Context, appointment model.Appointment) {
+func (s *service) sendReminderNow(ctx context.Context, appointment models.Appointment) {
 	err := mailer.SendAppointmentReminderEmail(s.Env, appointment)
 	if err != nil {
-		alert := model.Alert{
-			Medium: model.AlertMediumEmail,
+		alert := models.Alert{
+			Medium: models.AlertMediumEmail,
 			Name:   "appointment_reminder",
-			Status: model.AlertFailed,
+			Status: models.AlertFailed,
 			To:     appointment.Patient.Email,
 		}
 		appendErr := s.DB.WithContext(ctx).Model(&appointment).Association("Alerts").Append(&alert)
@@ -57,17 +57,17 @@ func (s *service) sendReminderNow(ctx context.Context, appointment model.Appoint
 		return
 	}
 
-	_, updateErr := gorm.G[model.Appointment](s.DB.GormDB()).
+	_, updateErr := gorm.G[models.Appointment](s.DB.GormDB()).
 		Where("id = ?", appointment.ID).
 		Update(ctx, "ReminderAlertSentAt", time.Now())
 	if updateErr != nil {
 		fmt.Println("failed to update ReminderAlertSentAt:", updateErr.Error())
 	}
 
-	alert := model.Alert{
-		Medium: model.AlertMediumEmail,
+	alert := models.Alert{
+		Medium: models.AlertMediumEmail,
 		Name:   "appointment_reminder",
-		Status: model.AlertSent,
+		Status: models.AlertSent,
 		To:     appointment.Patient.Email,
 	}
 	appendErr := s.DB.WithContext(ctx).Model(&appointment).Association("Alerts").Append(&alert)
@@ -76,11 +76,11 @@ func (s *service) sendReminderNow(ctx context.Context, appointment model.Appoint
 	}
 }
 
-func (s *service) sendBookedNow(ctx context.Context, appointment model.Appointment) {
-	alert := model.Alert{
-		Medium: model.AlertMediumEmail,
+func (s *service) sendBookedNow(ctx context.Context, appointment models.Appointment) {
+	alert := models.Alert{
+		Medium: models.AlertMediumEmail,
 		Name:   "appointment_booked",
-		Status: model.AlertFailed,
+		Status: models.AlertFailed,
 		To:     appointment.Patient.Email,
 	}
 	err := mailer.SendAppointmentBookedEmail(s.Env, appointment)
@@ -91,14 +91,14 @@ func (s *service) sendBookedNow(ctx context.Context, appointment model.Appointme
 		}
 		return
 	}
-	_, updateErr := gorm.G[model.Appointment](s.DB.GormDB()).
+	_, updateErr := gorm.G[models.Appointment](s.DB.GormDB()).
 		Where("id = ?", appointment.ID).
 		Update(ctx, "BookedAlertSentAt", time.Now())
 	if updateErr != nil {
 		fmt.Println("failed to update BookedAlertSentAt:", updateErr.Error())
 	}
 
-	alert.Status = model.AlertSent
+	alert.Status = models.AlertSent
 	appendErr := s.DB.WithContext(ctx).Model(&appointment).Association("Alerts").Append(&alert)
 	if appendErr != nil {
 		fmt.Println("failed to append sent booked alert:", appendErr.Error())

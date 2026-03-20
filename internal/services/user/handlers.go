@@ -91,7 +91,7 @@ func (s *service) HandleAPIUsers(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	res := struct{ Users []model.User }{
+	res := struct{ Users []models.User }{
 		Users: users,
 	}
 	return c.Status(fiber.StatusOK).JSON(res)
@@ -112,9 +112,9 @@ func (s *service) HandleAPIMakeUsers(c fiber.Ctx) error {
 		n = maxMockUsers
 	}
 
-	users := []model.User{}
+	users := []models.User{}
 	for i := 0; i < n; i++ {
-		users = append(users, model.User{
+		users = append(users, models.User{
 			Name:  strings.TrimSpace(faker.Name().Name()),
 			Email: strings.ToLower(strings.TrimSpace(faker.Internet().Email())),
 		})

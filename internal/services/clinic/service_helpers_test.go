@@ -19,7 +19,7 @@ func TestServiceIDGuards(t *testing.T) {
 	if _, err := svc.TakeClinicByID(ctx, "usr_1", ""); err != ErrIDRequired {
 		t.Fatalf("expected ErrIDRequired from TakeClinicByID, got %v", err)
 	}
-	if err := svc.UpdateClinicByID(ctx, "usr_1", "", model.Clinic{}); err != ErrIDRequired {
+	if err := svc.UpdateClinicByID(ctx, "usr_1", "", models.Clinic{}); err != ErrIDRequired {
 		t.Fatalf("expected ErrIDRequired from UpdateClinicByID, got %v", err)
 	}
 	if err := svc.DeleteClinicByID(ctx, "usr_1", ""); err != ErrIDRequired {
@@ -51,7 +51,7 @@ func TestRespondHelpers(t *testing.T) {
 	t.Run("respondWithClinicPage non-htmx", func(t *testing.T) {
 		app := fiber.New()
 		app.Get("/clinics", func(c fiber.Ctx) error {
-			return svc.respondWithClinicPage(c, model.Clinic{ID: "cln_1"})
+			return svc.respondWithClinicPage(c, models.Clinic{ID: "cln_1"})
 		})
 
 		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/clinics", nil))

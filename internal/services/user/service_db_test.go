@@ -37,7 +37,7 @@ func TestUserServiceDBFlows(t *testing.T) {
 	})
 
 	t.Run("update user profile branches", func(t *testing.T) {
-		updates := model.User{Name: "  New Name  ", Email: " NEW@EXAMPLE.COM ", Phone: " 999 "}
+		updates := models.User{Name: "  New Name  ", Email: " NEW@EXAMPLE.COM ", Phone: " 999 "}
 		updated, err := svc.UpdateUserProfileByID(ctx, seededUser.ID, updates)
 		if err != nil {
 			t.Fatalf("update user profile: %v", err)
@@ -53,9 +53,9 @@ func TestUserServiceDBFlows(t *testing.T) {
 	})
 
 	t.Run("create users in batches", func(t *testing.T) {
-		batch := []model.User{
-			{Email: "batch1@example.com", Password: "hash", Role: model.UserRoleUser},
-			{Email: "batch2@example.com", Password: "hash", Role: model.UserRoleUser},
+		batch := []models.User{
+			{Email: "batch1@example.com", Password: "hash", Role: models.UserRoleUser},
+			{Email: "batch2@example.com", Password: "hash", Role: models.UserRoleUser},
 		}
 		if err := svc.CreateUsersInBatches(ctx, batch, 2); err != nil {
 			t.Fatalf("create users in batches: %v", err)
@@ -71,7 +71,7 @@ func TestUserServiceDBFlows(t *testing.T) {
 	})
 }
 
-func newUserServiceForTests(t *testing.T) (service, model.User) {
+func newUserServiceForTests(t *testing.T) (service, models.User) {
 	t.Helper()
 
 	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())
@@ -80,7 +80,7 @@ func newUserServiceForTests(t *testing.T) (service, model.User) {
 		t.Fatalf("open sqlite: %v", err)
 	}
 
-	if err := gdb.AutoMigrate(&model.User{}); err != nil {
+	if err := gdb.AutoMigrate(&models.User{}); err != nil {
 		t.Fatalf("automigrate user: %v", err)
 	}
 
@@ -93,8 +93,8 @@ func newUserServiceForTests(t *testing.T) (service, model.User) {
 		t.Fatalf("new user service: %v", err)
 	}
 
-	u := model.User{Email: "user@example.com", Password: "hash", Name: "Seed User", Role: model.UserRoleUser}
-	if err := gorm.G[model.User](gdb).Create(context.Background(), &u); err != nil {
+	u := models.User{Email: "user@example.com", Password: "hash", Name: "Seed User", Role: models.UserRoleUser}
+	if err := gorm.G[models.User](gdb).Create(context.Background(), &u); err != nil {
 		t.Fatalf("create seed user: %v", err)
 	}
 

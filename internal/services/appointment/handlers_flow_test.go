@@ -16,7 +16,7 @@ import (
 func TestAppointmentHandlersFlows(t *testing.T) {
 	svc, user, clinic, patient := newAppointmentServiceForTests(t)
 
-	apnt := model.Appointment{
+	apnt := models.Appointment{
 		UserID:    user.ID,
 		ClinicID:  clinic.ID,
 		PatientID: patient.ID,
@@ -154,7 +154,7 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 	})
 
 	t.Run("patient token routes", func(t *testing.T) {
-		tokenApnt := model.Appointment{
+		tokenApnt := models.Appointment{
 			UserID:    user.ID,
 			ClinicID:  clinic.ID,
 			PatientID: patient.ID,
@@ -277,7 +277,7 @@ func TestAppointmentHandlerGuardBranches(t *testing.T) {
 
 func TestHandleStartPagePatientMissingBranch(t *testing.T) {
 	svc, user, clinic, _ := newAppointmentServiceForTests(t)
-	apnt := model.Appointment{
+	apnt := models.Appointment{
 		UserID:    user.ID,
 		ClinicID:  clinic.ID,
 		PatientID: "missing-patient-id",

@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-templ AppointmentStartPage(appointment model.Appointment, vc *Ctx) {
+templ AppointmentStartPage(appointment models.Appointment, vc *Ctx) {
 	@Layout(vc) {
 		<div class="px-4 lg:px-8">
 			@CmpBtnBack(l(vc.Locale, "btn.back"), "/appointments")
@@ -16,7 +16,7 @@ templ AppointmentStartPage(appointment model.Appointment, vc *Ctx) {
 	}
 }
 
-templ PatientCard(patient model.Patient, vc *Ctx) {
+templ PatientCard(patient models.Patient, vc *Ctx) {
 	<div>
 		<hgroup
 			class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
@@ -84,7 +84,7 @@ templ PatientCard(patient model.Patient, vc *Ctx) {
 	</div>
 }
 
-templ AppointmentStart(appointment model.Appointment, vc *Ctx) {
+templ AppointmentStart(appointment models.Appointment, vc *Ctx) {
 	<span class="absolute top-2 right-2 loading loading-ring text-primary loading-md htmx-indicator"></span>
 	<div class="space-y-10 ">
 		@PatientCard(appointment.Patient, vc)

@@ -38,64 +38,64 @@ func New(s *server.Server) (*service, error) {
 	return svc, nil
 }
 
-func (s *service) TakePatientByID(ctx context.Context, userID, patientID string) (model.Patient, error) {
+func (s *service) TakePatientByID(ctx context.Context, userID, patientID string) (models.Patient, error) {
 	if strings.TrimSpace(patientID) == "" {
-		return model.Patient{}, ErrIDRequired
+		return models.Patient{}, ErrIDRequired
 	}
 
-	patient, err := gorm.G[model.Patient](s.DB.GormDB()).
+	patient, err := gorm.G[models.Patient](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", patientID, userID).
 		Take(ctx)
 	if err != nil {
-		return model.Patient{}, err
+		return models.Patient{}, err
 	}
 
 	return patient, nil
 }
 
-func (s *service) TakeClinicByID(ctx context.Context, userID, clinicID string) (model.Clinic, error) {
+func (s *service) TakeClinicByID(ctx context.Context, userID, clinicID string) (models.Clinic, error) {
 	if strings.TrimSpace(clinicID) == "" {
-		return model.Clinic{}, ErrIDRequired
+		return models.Clinic{}, ErrIDRequired
 	}
 
-	clinic, err := gorm.G[model.Clinic](s.DB.GormDB()).
+	clinic, err := gorm.G[models.Clinic](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", clinicID, userID).
 		Take(ctx)
 	if err != nil {
-		return model.Clinic{}, err
+		return models.Clinic{}, err
 	}
 
 	return clinic, nil
 }
 
-func (s *service) CreateAppointment(ctx context.Context, appointment *model.Appointment) error {
+func (s *service) CreateAppointment(ctx context.Context, appointment *models.Appointment) error {
 	if appointment == nil {
 		return errors.New("appointment is required")
 	}
 
 	if appointment.Status == "" {
-		appointment.Status = model.ApntStatusPending
+		appointment.Status = models.ApntStatusPending
 	}
 
 	if !appointment.Status.IsValid() {
 		return errors.New("invalid appointment status")
 	}
 
-	return gorm.G[model.Appointment](s.DB.GormDB()).Create(ctx, appointment)
+	return gorm.G[models.Appointment](s.DB.GormDB()).Create(ctx, appointment)
 }
 
-func (s *service) TakeAppointmentByID(ctx context.Context, userID, appointmentID string) (model.Appointment, error) {
+func (s *service) TakeAppointmentByID(ctx context.Context, userID, appointmentID string) (models.Appointment, error) {
 	if strings.TrimSpace(appointmentID) == "" {
-		return model.Appointment{}, ErrIDRequired
+		return models.Appointment{}, ErrIDRequired
 	}
 
-	appointment, err := gorm.G[model.Appointment](s.DB.GormDB()).
+	appointment, err := gorm.G[models.Appointment](s.DB.GormDB()).
 		Preload("Clinic", nil).
 		Preload("Patient", nil).
 		Where("id = ? AND user_id = ?", appointmentID, userID).
 		Take(ctx)
 	if err != nil {
-		return model.Appointment{}, err
+		return models.Appointment{}, err
 	}
 
 	return appointment, nil
@@ -156,7 +156,7 @@ func (s *service) updateAppointmentColumnsByID(ctx context.Context, userID, appo
 	}
 
 	result := s.DB.WithContext(ctx).
-		Model(&model.Appointment{}).
+		Model(&models.Appointment{}).
 		Where("id = ? AND user_id = ?", appointmentID, userID).
 		Select(columns).
 		Omit("UserID", "Clinic", "Patient", "User", "FeedEvents", "Alerts").
@@ -176,7 +176,7 @@ func (s *service) DeleteAppointmentByID(ctx context.Context, userID, appointment
 		return ErrIDRequired
 	}
 
-	rowsAffected, err := gorm.G[model.Appointment](s.DB.GormDB()).
+	rowsAffected, err := gorm.G[models.Appointment](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", appointmentID, userID).
 		Delete(ctx)
 	if err != nil {
@@ -189,33 +189,33 @@ func (s *service) DeleteAppointmentByID(ctx context.Context, userID, appointment
 	return nil
 }
 
-func (s *service) TakeAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) (model.Appointment, error) {
-	appointment, err := gorm.G[model.Appointment](s.DB.GormDB()).
+func (s *service) TakeAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) (models.Appointment, error) {
+	appointment, err := gorm.G[models.Appointment](s.DB.GormDB()).
 		Preload("Clinic", nil).
 		Preload("User", nil).
 		Where("id = ? AND token = ?", appointmentID, token).
 		Take(ctx)
 	if err != nil {
-		return model.Appointment{}, err
+		return models.Appointment{}, err
 	}
 
 	return appointment, nil
 }
 
-func (s *service) TakePatientByIDWithLastDoneAppointment(ctx context.Context, userID, patientID string) (model.Patient, error) {
+func (s *service) TakePatientByIDWithLastDoneAppointment(ctx context.Context, userID, patientID string) (models.Patient, error) {
 	if strings.TrimSpace(patientID) == "" {
-		return model.Patient{}, ErrIDRequired
+		return models.Patient{}, ErrIDRequired
 	}
 
-	patient := model.Patient{}
-	err := s.DB.Model(&model.Patient{}).
+	patient := models.Patient{}
+	err := s.DB.Model(&models.Patient{}).
 		Where("id = ? AND user_id = ?", patientID, userID).
 		Preload("Appointments", func(tx *gorm.DB) *gorm.DB {
-			return tx.Limit(1).Where("status = ?", model.ApntStatusDone).Order("booked_at desc")
+			return tx.Limit(1).Where("status = ?", models.ApntStatusDone).Order("booked_at desc")
 		}).
 		Take(&patient).Error
 	if err != nil {
-		return model.Patient{}, err
+		return models.Patient{}, err
 	}
 
 	return patient, nil
@@ -235,7 +235,7 @@ func (s *service) UpdateAppointmentByIDAndToken(ctx context.Context, appointment
 	}
 
 	result := s.DB.WithContext(ctx).
-		Model(&model.Appointment{}).
+		Model(&models.Appointment{}).
 		Where("id = ? AND token = ?", appointmentID, token).
 		Select(selectColumns).
 		Omit("UserID", "Clinic", "Patient", "User", "FeedEvents", "Alerts").
@@ -253,7 +253,7 @@ func (s *service) UpdateAppointmentByIDAndToken(ctx context.Context, appointment
 func (s *service) ConfirmAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) error {
 	updates := appointmentTokenUpdates{
 		ConfirmedAt: time.Now(),
-		Status:      model.ApntStatusConfirmed,
+		Status:      models.ApntStatusConfirmed,
 	}
 	return s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"ConfirmedAt", "Status"}, updates)
 }
@@ -261,7 +261,7 @@ func (s *service) ConfirmAppointmentByIDAndToken(ctx context.Context, appointmen
 func (s *service) CancelAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) error {
 	updates := appointmentTokenUpdates{
 		CanceledAt: time.Now(),
-		Status:     model.ApntStatusCanceled,
+		Status:     models.ApntStatusCanceled,
 	}
 	return s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"CanceledAt", "Status"}, updates)
 }
@@ -269,14 +269,14 @@ func (s *service) CancelAppointmentByIDAndToken(ctx context.Context, appointment
 func (s *service) RequestAppointmentDateChangeByIDAndToken(ctx context.Context, appointmentID, token string) error {
 	updates := appointmentTokenUpdates{
 		PendingAt: time.Now(),
-		Status:    model.ApntStatusPending,
+		Status:    models.ApntStatusPending,
 	}
 	return s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"PendingAt", "Status"}, updates)
 }
 
-func (s *service) FindAppointmentsBy(ctx context.Context, userID, patientID, clinicID, timeframe string) ([]model.Appointment, error) {
-	appointments := []model.Appointment{}
-	dbquery := s.DB.Model(&model.Appointment{}).Where("user_id = ?", userID)
+func (s *service) FindAppointmentsBy(ctx context.Context, userID, patientID, clinicID, timeframe string) ([]models.Appointment, error) {
+	appointments := []models.Appointment{}
+	dbquery := s.DB.Model(&models.Appointment{}).Where("user_id = ?", userID)
 
 	if patientID != "" {
 		dbquery = dbquery.Where("patient_id = ?", patientID)
@@ -288,11 +288,11 @@ func (s *service) FindAppointmentsBy(ctx context.Context, userID, patientID, cli
 
 	switch timeframe {
 	case "day":
-		dbquery = dbquery.Scopes(model.AppointmentBookedToday)
+		dbquery = dbquery.Scopes(models.AppointmentBookedToday)
 	case "week":
-		dbquery = dbquery.Scopes(model.AppointmentBookedThisWeek)
+		dbquery = dbquery.Scopes(models.AppointmentBookedThisWeek)
 	case "month":
-		dbquery = dbquery.Scopes(model.AppointmentBookedThisMonth)
+		dbquery = dbquery.Scopes(models.AppointmentBookedThisMonth)
 	default:
 		dbquery = dbquery.Where("booked_at > ?", libtime.BoD(time.Now()))
 	}
@@ -309,27 +309,27 @@ func (s *service) FindAppointmentsBy(ctx context.Context, userID, patientID, cli
 	return appointments, nil
 }
 
-func (s *service) FindClinicsBySearchTerm(ctx context.Context, userID, searchTerm string) ([]model.Clinic, error) {
-	clinics := []model.Clinic{}
+func (s *service) FindClinicsBySearchTerm(ctx context.Context, userID, searchTerm string) ([]models.Clinic, error) {
+	clinics := []models.Clinic{}
 	searchTerm = strings.TrimSpace(searchTerm)
 	err := s.DB.WithContext(ctx).
-		Model(&model.Clinic{}).
+		Model(&models.Clinic{}).
 		Where("user_id = ?", userID).
-		Scopes(model.GlobalFTS(searchTerm)).
+		Scopes(models.GlobalFTS(searchTerm)).
 		Limit(10).
 		Find(&clinics).
 		Error
 	if err != nil {
-		return []model.Clinic{}, err
+		return []models.Clinic{}, err
 	}
 
 	return clinics, nil
 }
 
-func (s *service) FindRecentClinicsByUserID(ctx context.Context, userID string, limit int) ([]model.Clinic, error) {
-	clinics := []model.Clinic{}
+func (s *service) FindRecentClinicsByUserID(ctx context.Context, userID string, limit int) ([]models.Clinic, error) {
+	clinics := []models.Clinic{}
 	err := s.DB.WithContext(ctx).
-		Model(&model.Clinic{}).
+		Model(&models.Clinic{}).
 		Where("user_id = ?", userID).
 		Order("created_at desc").
 		Limit(limit).
@@ -342,10 +342,10 @@ func (s *service) FindRecentClinicsByUserID(ctx context.Context, userID string, 
 	return clinics, nil
 }
 
-func (s *service) FindRecentPatientsByUserID(ctx context.Context, userID string, limit int) ([]model.Patient, error) {
-	patients := []model.Patient{}
+func (s *service) FindRecentPatientsByUserID(ctx context.Context, userID string, limit int) ([]models.Patient, error) {
+	patients := []models.Patient{}
 	err := s.DB.WithContext(ctx).
-		Model(&model.Patient{}).
+		Model(&models.Patient{}).
 		Where("user_id = ?", userID).
 		Order("created_at desc").
 		Limit(limit).

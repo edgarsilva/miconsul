@@ -153,7 +153,7 @@ func (s *service) HandleComplete(c fiber.Ctx) error {
 	}
 
 	appointment := appointmentCompleteUpdates{
-		Status:       model.ApntStatusDone,
+		Status:       models.ApntStatusDone,
 		Observations: input.Observations,
 		Conclusions:  input.Conclusions,
 		Summary:      input.Summary,
@@ -186,7 +186,7 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 
 	priceValue := c.FormValue("price", "")
 
-	bookedAt = libtime.NewInTimezone(bookedAt, model.DefaultTimezone)
+	bookedAt = libtime.NewInTimezone(bookedAt, models.DefaultTimezone)
 	bookedAt = bookedAt.UTC()
 	input := appointmentUpsertInput{}
 	err = c.Bind().Body(&input)
@@ -195,7 +195,7 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
 	}
 
-	appointment := model.Appointment{
+	appointment := models.Appointment{
 		Token:        xid.New("tkn_"),
 		UserID:       cu.ID,
 		BookedAt:     bookedAt,
@@ -204,7 +204,7 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 		BookedDay:    bookedAt.Day(),
 		BookedHour:   bookedAt.Hour(),
 		BookedMinute: bookedAt.Minute(),
-		Timezone:     model.DefaultTimezone,
+		Timezone:     models.DefaultTimezone,
 		Price:        amount.StrToAmount(priceValue),
 		ClinicID:     input.ClinicID,
 		PatientID:    input.PatientID,
@@ -254,7 +254,7 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 		bookedAt = time.Now()
 	}
 
-	bookedAt = libtime.NewInTimezone(bookedAt, model.DefaultTimezone)
+	bookedAt = libtime.NewInTimezone(bookedAt, models.DefaultTimezone)
 	bookedAt = bookedAt.UTC()
 	input := appointmentUpsertInput{}
 	err = c.Bind().Body(&input)
@@ -306,7 +306,7 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 	}
 
 	appointment := appointmentCancelUpdates{
-		Status:     model.ApntStatusCanceled,
+		Status:     models.ApntStatusCanceled,
 		CanceledAt: time.Now(),
 	}
 	err := s.CancelAppointmentByID(c.Context(), cu.ID, appointmentID, appointment)
@@ -452,7 +452,7 @@ func (s *service) HandlePriceFrg(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusNotFound)
 	}
 
-	clinic, err := gorm.G[model.Clinic](s.DB.GormDB()).
+	clinic, err := gorm.G[models.Clinic](s.DB.GormDB()).
 		Select("id", "price").
 		Where("id = ? AND user_id = ?", clinicID, cu.ID).
 		Take(c.Context())
@@ -466,7 +466,7 @@ func (s *service) HandlePriceFrg(c fiber.Ctx) error {
 	toast := c.Query("toast", "")
 	vc, _ := view.NewCtx(c, view.WithToast(toast, "", ""))
 
-	return view.Render(c, view.ApptPrice(vc, model.Appointment{}, clinic, false))
+	return view.Render(c, view.ApptPrice(vc, models.Appointment{}, clinic, false))
 }
 
 // HandleSearchClinics searches clinics and returns an HTML fragment to be
@@ -487,8 +487,8 @@ func (s *service) HandleSearchClinics(c fiber.Ctx) error {
 	return view.Render(c, view.ApptSearchClinicsFrg(vc, clinics))
 }
 
-func (s *service) AppointmentForShowPage(ctx context.Context, userID, appointmentID string) (model.Appointment, error) {
-	appointment := model.Appointment{ID: appointmentID}
+func (s *service) AppointmentForShowPage(ctx context.Context, userID, appointmentID string) (models.Appointment, error) {
+	appointment := models.Appointment{ID: appointmentID}
 	if appointmentID == "" || appointmentID == "new" {
 		return appointment, nil
 	}
@@ -496,33 +496,33 @@ func (s *service) AppointmentForShowPage(ctx context.Context, userID, appointmen
 	return s.TakeAppointmentByID(ctx, userID, appointmentID)
 }
 
-func (s *service) PatientForStartPage(ctx context.Context, userID, patientID string) (model.Patient, error) {
+func (s *service) PatientForStartPage(ctx context.Context, userID, patientID string) (models.Patient, error) {
 	return s.TakePatientByIDWithLastDoneAppointment(ctx, userID, patientID)
 }
 
-func (s *service) selectedPatientFromQuery(c fiber.Ctx, userID, patientID string) (model.Patient, error) {
+func (s *service) selectedPatientFromQuery(c fiber.Ctx, userID, patientID string) (models.Patient, error) {
 	patientID = strings.TrimSpace(patientID)
 	if patientID == "" {
-		return model.Patient{}, nil
+		return models.Patient{}, nil
 	}
 
 	patient, err := s.TakePatientByID(c.Context(), userID, patientID)
 	if err != nil {
-		return model.Patient{}, err
+		return models.Patient{}, err
 	}
 
 	return patient, nil
 }
 
-func (s *service) selectedClinicFromQuery(c fiber.Ctx, userID, clinicID string) (model.Clinic, error) {
+func (s *service) selectedClinicFromQuery(c fiber.Ctx, userID, clinicID string) (models.Clinic, error) {
 	clinicID = strings.TrimSpace(clinicID)
 	if clinicID == "" {
-		return model.Clinic{}, nil
+		return models.Clinic{}, nil
 	}
 
 	clinic, err := s.TakeClinicByID(c.Context(), userID, clinicID)
 	if err != nil {
-		return model.Clinic{}, err
+		return models.Clinic{}, err
 	}
 
 	return clinic, nil

@@ -61,10 +61,10 @@ func Run(ctx context.Context, db *gorm.DB, opts Options) (Result, error) {
 	return result, nil
 }
 
-func seedBaseline(ctx context.Context, db *gorm.DB, opts Options) (model.User, Result, error) {
+func seedBaseline(ctx context.Context, db *gorm.DB, opts Options) (models.User, Result, error) {
 	ownerUser, createdOwner, err := resolveOwnerUser(ctx, db, opts)
 	if err != nil {
-		return model.User{}, Result{}, err
+		return models.User{}, Result{}, err
 	}
 
 	result := Result{}
@@ -78,7 +78,7 @@ func seedBaseline(ctx context.Context, db *gorm.DB, opts Options) (model.User, R
 
 	clinic, createdClinic, err := ensureBaselineClinic(ctx, db, ownerUser)
 	if err != nil {
-		return model.User{}, Result{}, err
+		return models.User{}, Result{}, err
 	}
 	if createdClinic {
 		result.ClinicsCreated++
@@ -86,89 +86,89 @@ func seedBaseline(ctx context.Context, db *gorm.DB, opts Options) (model.User, R
 
 	patients, createdPatients, err := ensureBaselinePatients(ctx, db, ownerUser)
 	if err != nil {
-		return model.User{}, Result{}, err
+		return models.User{}, Result{}, err
 	}
 	result.PatientsCreated += createdPatients
 
 	createdAppointments, err := ensureBaselineAppointments(ctx, db, ownerUser, clinic, patients)
 	if err != nil {
-		return model.User{}, Result{}, err
+		return models.User{}, Result{}, err
 	}
 	result.AppointmentsCreated += createdAppointments
 
 	return ownerUser, result, nil
 }
 
-func resolveOwnerUser(ctx context.Context, db *gorm.DB, opts Options) (model.User, bool, error) {
+func resolveOwnerUser(ctx context.Context, db *gorm.DB, opts Options) (models.User, bool, error) {
 	ownerEmail := strings.TrimSpace(opts.OwnerEmail)
 	if ownerEmail == "" {
 		return ensureAdminUser(ctx, db)
 	}
 
-	user := model.User{}
+	user := models.User{}
 	err := db.WithContext(ctx).Where("email = ?", ownerEmail).Take(&user).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		if !opts.EnsureOwner {
-			return model.User{}, false, fmt.Errorf("owner user not found: %s", ownerEmail)
+			return models.User{}, false, fmt.Errorf("owner user not found: %s", ownerEmail)
 		}
 
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(seedOwnerPassword), 12)
 		if err != nil {
-			return model.User{}, false, fmt.Errorf("hash seed owner password: %w", err)
+			return models.User{}, false, fmt.Errorf("hash seed owner password: %w", err)
 		}
 
-		user = model.User{
+		user = models.User{
 			Name:              "Seed Owner",
 			Email:             ownerEmail,
 			Password:          string(hashedPassword),
 			ProfilePic:        avatar.DicebearAvatarURL(ownerEmail),
-			Role:              model.UserRoleUser,
+			Role:              models.UserRoleUser,
 			ConfirmEmailToken: "",
 		}
 
 		if err := db.WithContext(ctx).Create(&user).Error; err != nil {
-			return model.User{}, false, fmt.Errorf("create seed owner user: %w", err)
+			return models.User{}, false, fmt.Errorf("create seed owner user: %w", err)
 		}
 
 		return user, true, nil
 	}
 	if err != nil {
-		return model.User{}, false, fmt.Errorf("find seed owner user: %w", err)
+		return models.User{}, false, fmt.Errorf("find seed owner user: %w", err)
 	}
 
 	return user, false, nil
 }
 
-func ensureAdminUser(ctx context.Context, db *gorm.DB) (model.User, bool, error) {
+func ensureAdminUser(ctx context.Context, db *gorm.DB) (models.User, bool, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(seedAdminPassword), 12)
 	if err != nil {
-		return model.User{}, false, fmt.Errorf("hash seed admin password: %w", err)
+		return models.User{}, false, fmt.Errorf("hash seed admin password: %w", err)
 	}
 
-	user := model.User{}
+	user := models.User{}
 	err = db.WithContext(ctx).Where("email = ?", seedAdminEmail).Take(&user).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		user = model.User{
+		user = models.User{
 			Name:              seedAdminName,
 			Email:             seedAdminEmail,
 			Password:          string(hashedPassword),
 			ProfilePic:        avatar.DicebearAvatarURL(seedAdminEmail),
-			Role:              model.UserRoleAdmin,
+			Role:              models.UserRoleAdmin,
 			ConfirmEmailToken: "",
 		}
 		if err := db.WithContext(ctx).Create(&user).Error; err != nil {
-			return model.User{}, false, fmt.Errorf("create seed admin user: %w", err)
+			return models.User{}, false, fmt.Errorf("create seed admin user: %w", err)
 		}
 
 		return user, true, nil
 	}
 	if err != nil {
-		return model.User{}, false, fmt.Errorf("find seed admin user: %w", err)
+		return models.User{}, false, fmt.Errorf("find seed admin user: %w", err)
 	}
 
 	updates := map[string]any{
 		"name":                     seedAdminName,
-		"role":                     model.UserRoleAdmin,
+		"role":                     models.UserRoleAdmin,
 		"password":                 string(hashedPassword),
 		"profile_pic":              avatar.DicebearAvatarURL(seedAdminEmail),
 		"confirm_email_token":      "",
@@ -176,37 +176,37 @@ func ensureAdminUser(ctx context.Context, db *gorm.DB) (model.User, bool, error)
 	}
 
 	if err := db.WithContext(ctx).Model(&user).Updates(updates).Error; err != nil {
-		return model.User{}, false, fmt.Errorf("update seed admin user: %w", err)
+		return models.User{}, false, fmt.Errorf("update seed admin user: %w", err)
 	}
 
 	if err := db.WithContext(ctx).Where("id = ?", user.ID).Take(&user).Error; err != nil {
-		return model.User{}, false, fmt.Errorf("reload seed admin user: %w", err)
+		return models.User{}, false, fmt.Errorf("reload seed admin user: %w", err)
 	}
 
 	return user, false, nil
 }
 
-func ensureBaselineClinic(ctx context.Context, db *gorm.DB, owner model.User) (model.Clinic, bool, error) {
-	clinic := model.Clinic{}
+func ensureBaselineClinic(ctx context.Context, db *gorm.DB, owner models.User) (models.Clinic, bool, error) {
+	clinic := models.Clinic{}
 	err := db.WithContext(ctx).Where("ext_id = ?", baselineClinicExtID).Take(&clinic).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		clinic = model.Clinic{
+		clinic = models.Clinic{
 			ExtID:      baselineClinicExtID,
 			UserID:     owner.ID,
 			Name:       "Seed Family Clinic",
 			Email:      "clinic-main@seed.local",
 			Phone:      "+52-55-1111-2222",
 			ProfilePic: avatar.DicebearShapeAvatarURL(baselineClinicExtID),
-			Address:    model.Address{City: "Monterrey", State: "NL", Country: "MX"},
+			Address:    models.Address{City: "Monterrey", State: "NL", Country: "MX"},
 		}
 		if err := db.WithContext(ctx).Create(&clinic).Error; err != nil {
-			return model.Clinic{}, false, fmt.Errorf("create baseline clinic: %w", err)
+			return models.Clinic{}, false, fmt.Errorf("create baseline clinic: %w", err)
 		}
 
 		return clinic, true, nil
 	}
 	if err != nil {
-		return model.Clinic{}, false, fmt.Errorf("find baseline clinic: %w", err)
+		return models.Clinic{}, false, fmt.Errorf("find baseline clinic: %w", err)
 	}
 
 	updates := map[string]any{
@@ -220,18 +220,18 @@ func ensureBaselineClinic(ctx context.Context, db *gorm.DB, owner model.User) (m
 		"country":     "MX",
 	}
 	if err := db.WithContext(ctx).Model(&clinic).Updates(updates).Error; err != nil {
-		return model.Clinic{}, false, fmt.Errorf("update baseline clinic: %w", err)
+		return models.Clinic{}, false, fmt.Errorf("update baseline clinic: %w", err)
 	}
 
 	if err := db.WithContext(ctx).Where("id = ?", clinic.ID).Take(&clinic).Error; err != nil {
-		return model.Clinic{}, false, fmt.Errorf("reload baseline clinic: %w", err)
+		return models.Clinic{}, false, fmt.Errorf("reload baseline clinic: %w", err)
 	}
 
 	return clinic, false, nil
 }
 
-func ensureBaselinePatients(ctx context.Context, db *gorm.DB, owner model.User) ([]model.Patient, int, error) {
-	basePatients := []model.Patient{
+func ensureBaselinePatients(ctx context.Context, db *gorm.DB, owner models.User) ([]models.Patient, int, error) {
+	basePatients := []models.Patient{
 		{
 			ExtID:      baselinePatientExtIDs[0],
 			UserID:     owner.ID,
@@ -261,11 +261,11 @@ func ensureBaselinePatients(ctx context.Context, db *gorm.DB, owner model.User) 
 		},
 	}
 
-	patients := make([]model.Patient, 0, len(basePatients))
+	patients := make([]models.Patient, 0, len(basePatients))
 	created := 0
 
 	for _, desired := range basePatients {
-		patient := model.Patient{}
+		patient := models.Patient{}
 		err := db.WithContext(ctx).Where("ext_id = ?", desired.ExtID).Take(&patient).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			if err := db.WithContext(ctx).Create(&desired).Error; err != nil {
@@ -300,7 +300,7 @@ func ensureBaselinePatients(ctx context.Context, db *gorm.DB, owner model.User) 
 	return patients, created, nil
 }
 
-func ensureBaselineAppointments(ctx context.Context, db *gorm.DB, owner model.User, clinic model.Clinic, patients []model.Patient) (int, error) {
+func ensureBaselineAppointments(ctx context.Context, db *gorm.DB, owner models.User, clinic models.Clinic, patients []models.Patient) (int, error) {
 	if len(patients) == 0 {
 		return 0, nil
 	}
@@ -313,17 +313,17 @@ func ensureBaselineAppointments(ctx context.Context, db *gorm.DB, owner model.Us
 
 	created := 0
 	for i, extID := range baselineAppointmentExtIDs {
-		apnt := model.Appointment{}
+		apnt := models.Appointment{}
 		err := db.WithContext(ctx).Where("ext_id = ?", extID).Take(&apnt).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			candidate := model.Appointment{
+			candidate := models.Appointment{
 				ExtID:     extID,
 				UserID:    owner.ID,
 				ClinicID:  clinic.ID,
 				PatientID: patients[i%len(patients)].ID,
 				BookedAt:  bookedAt[i%len(bookedAt)],
-				Timezone:  model.DefaultTimezone,
-				Status:    model.ApntStatusConfirmed,
+				Timezone:  models.DefaultTimezone,
+				Status:    models.ApntStatusConfirmed,
 				Summary:   fmt.Sprintf("Baseline follow-up #%d", i+1),
 				Token:     fmt.Sprintf("seed-baseline-token-%d", i+1),
 			}
@@ -342,8 +342,8 @@ func ensureBaselineAppointments(ctx context.Context, db *gorm.DB, owner model.Us
 			"clinic_id":  clinic.ID,
 			"patient_id": patients[i%len(patients)].ID,
 			"booked_at":  bookedAt[i%len(bookedAt)],
-			"timezone":   model.DefaultTimezone,
-			"status":     model.ApntStatusConfirmed,
+			"timezone":   models.DefaultTimezone,
+			"status":     models.ApntStatusConfirmed,
 			"summary":    fmt.Sprintf("Baseline follow-up #%d", i+1),
 		}
 		if err := db.WithContext(ctx).Model(&apnt).Updates(updates).Error; err != nil {
@@ -354,7 +354,7 @@ func ensureBaselineAppointments(ctx context.Context, db *gorm.DB, owner model.Us
 	return created, nil
 }
 
-func seedBulk(ctx context.Context, db *gorm.DB, owner model.User, opts Options) (Result, error) {
+func seedBulk(ctx context.Context, db *gorm.DB, owner models.User, opts Options) (Result, error) {
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	runID := time.Now().Unix()
 
@@ -397,14 +397,14 @@ func createBulkUsers(ctx context.Context, db *gorm.DB, rng *rand.Rand, runID int
 		return 0, fmt.Errorf("hash bulk user password: %w", err)
 	}
 
-	users := make([]model.User, 0, count)
+	users := make([]models.User, 0, count)
 	for i := 0; i < count; i++ {
-		users = append(users, model.User{
+		users = append(users, models.User{
 			Name:              fmt.Sprintf("Seed User %d", i+1),
 			Email:             fmt.Sprintf("seed.user.%d.%d@seed.local", runID, i+1),
 			Password:          string(hashedPassword),
 			ProfilePic:        avatar.DicebearFunEmojiAvatarURL(fmt.Sprintf("seed-user-%d-%d", runID, i+1)),
-			Role:              model.UserRoleUser,
+			Role:              models.UserRoleUser,
 			Timezone:          "America/Mexico_City",
 			Phone:             fmt.Sprintf("+52-55-%04d-%04d", rng.Intn(10000), rng.Intn(10000)),
 			ConfirmEmailToken: "",
@@ -418,22 +418,22 @@ func createBulkUsers(ctx context.Context, db *gorm.DB, rng *rand.Rand, runID int
 	return len(users), nil
 }
 
-func createBulkClinics(ctx context.Context, db *gorm.DB, owner model.User, rng *rand.Rand, runID int64, count int) ([]model.Clinic, int, error) {
+func createBulkClinics(ctx context.Context, db *gorm.DB, owner models.User, rng *rand.Rand, runID int64, count int) ([]models.Clinic, int, error) {
 	if count <= 0 {
 		return nil, 0, nil
 	}
 
-	clinics := make([]model.Clinic, 0, count)
+	clinics := make([]models.Clinic, 0, count)
 	for i := 0; i < count; i++ {
 		extID := fmt.Sprintf("seed-bulk-clinic-%d-%d", runID, i+1)
-		clinics = append(clinics, model.Clinic{
+		clinics = append(clinics, models.Clinic{
 			ExtID:      extID,
 			UserID:     owner.ID,
 			Name:       fmt.Sprintf("Seed Clinic %d", i+1),
 			Email:      fmt.Sprintf("clinic.%d.%d@seed.local", runID, i+1),
 			Phone:      fmt.Sprintf("+52-81-%04d-%04d", rng.Intn(10000), rng.Intn(10000)),
 			ProfilePic: avatar.DicebearShapeAvatarURL(extID),
-			Address:    model.Address{City: "Monterrey", State: "NL", Country: "MX"},
+			Address:    models.Address{City: "Monterrey", State: "NL", Country: "MX"},
 		})
 	}
 
@@ -444,14 +444,14 @@ func createBulkClinics(ctx context.Context, db *gorm.DB, owner model.User, rng *
 	return clinics, len(clinics), nil
 }
 
-func createBulkPatients(ctx context.Context, db *gorm.DB, owner model.User, rng *rand.Rand, runID int64, count int) ([]model.Patient, int, error) {
+func createBulkPatients(ctx context.Context, db *gorm.DB, owner models.User, rng *rand.Rand, runID int64, count int) ([]models.Patient, int, error) {
 	if count <= 0 {
 		return nil, 0, nil
 	}
 
-	patients := make([]model.Patient, 0, count)
+	patients := make([]models.Patient, 0, count)
 	for i := 0; i < count; i++ {
-		patients = append(patients, model.Patient{
+		patients = append(patients, models.Patient{
 			ExtID:      fmt.Sprintf("seed-bulk-patient-%d-%d", runID, i+1),
 			UserID:     owner.ID,
 			Name:       fmt.Sprintf("Seed Patient %d", i+1),
@@ -469,27 +469,27 @@ func createBulkPatients(ctx context.Context, db *gorm.DB, owner model.User, rng 
 	return patients, len(patients), nil
 }
 
-func createBulkAppointments(ctx context.Context, db *gorm.DB, owner model.User, rng *rand.Rand, runID int64, clinics []model.Clinic, patients []model.Patient, count int) (int, error) {
+func createBulkAppointments(ctx context.Context, db *gorm.DB, owner models.User, rng *rand.Rand, runID int64, clinics []models.Clinic, patients []models.Patient, count int) (int, error) {
 	if count <= 0 || len(clinics) == 0 || len(patients) == 0 {
 		return 0, nil
 	}
 
-	appointments := make([]model.Appointment, 0, count)
+	appointments := make([]models.Appointment, 0, count)
 	baseTime := time.Now().UTC().Add(24 * time.Hour)
 
 	for i := 0; i < count; i++ {
 		clinic := clinics[rng.Intn(len(clinics))]
 		patient := patients[rng.Intn(len(patients))]
 
-		appointments = append(appointments, model.Appointment{
+		appointments = append(appointments, models.Appointment{
 			ExtID:     fmt.Sprintf("seed-bulk-appointment-%d-%d", runID, i+1),
 			UserID:    owner.ID,
 			ClinicID:  clinic.ID,
 			PatientID: patient.ID,
 			BookedAt:  baseTime.Add(time.Duration(i) * 45 * time.Minute),
-			Timezone:  model.DefaultTimezone,
+			Timezone:  models.DefaultTimezone,
 			Duration:  45,
-			Status:    model.ApntStatusPending,
+			Status:    models.ApntStatusPending,
 			Summary:   fmt.Sprintf("Seed appointment #%d", i+1),
 			Token:     fmt.Sprintf("seed-bulk-token-%d-%d", runID, i+1),
 		})

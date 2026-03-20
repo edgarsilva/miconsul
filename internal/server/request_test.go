@@ -20,7 +20,7 @@ func TestCurrentUser(t *testing.T) {
 	})
 
 	runWithCtx(t, http.MethodGet, "/", nil, func(c fiber.Ctx) {
-		expected := model.User{ID: "usr_1", Email: "u@example.com"}
+		expected := models.User{ID: "usr_1", Email: "u@example.com"}
 		c.Locals("current_user", expected)
 		if got := s.CurrentUser(c); got.ID != expected.ID || got.Email != expected.Email {
 			t.Fatalf("expected %#v, got %#v", expected, got)

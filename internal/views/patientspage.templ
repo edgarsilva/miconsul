@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-templ PatientsPage(c *Ctx, patients []model.Patient) {
+templ PatientsPage(c *Ctx, patients []models.Patient) {
 	@LayoutWithBackBtn(c, "/") {
 		<section id="patients_section" class="grow flex flex-col px-0 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<div
@@ -48,7 +48,7 @@ templ PatientsPage(c *Ctx, patients []model.Patient) {
 	}
 }
 
-templ PatientFormPage(patient model.Patient, c *Ctx) {
+templ PatientFormPage(patient models.Patient, c *Ctx) {
 	@Layout(c) {
 		<div class="px-4 lg:px-8">
 			@CmpBtnBack(c.l("btn.back"), "/patients")
@@ -76,7 +76,7 @@ templ PatientFormPage(patient model.Patient, c *Ctx) {
 	}
 }
 
-templ PatientsList(c *Ctx, patients []model.Patient) {
+templ PatientsList(c *Ctx, patients []models.Patient) {
 	<ul id="patients_list" role="list" class="app-card divide-y divide-base-content/10 overflow-hidden px-4 py-2">
 		for _, patient := range patients {
 			@PatientLi(patient, c)
@@ -126,7 +126,7 @@ templ PatientsList(c *Ctx, patients []model.Patient) {
 	</ul>
 }
 
-templ PatientLi(patient model.Patient, c *Ctx) {
+templ PatientLi(patient models.Patient, c *Ctx) {
 	<li class="relative flex justify-between items-center gap-x-6 px-2 py-2 hover:bg-base-200/75">
 		<div class="flex items-center min-w-0 gap-x-4">
 			@CmpAvatar(patient)
@@ -170,7 +170,7 @@ templ PatientLi(patient model.Patient, c *Ctx) {
 	</li>
 }
 
-templ PatientDeleteForm(patient model.Patient, c *Ctx) {
+templ PatientDeleteForm(patient models.Patient, c *Ctx) {
 	<form
 		method="POST"
 		action={ templ.URL("/patients/"+patient.ID) + "/delete" }
@@ -205,7 +205,7 @@ templ PatientsEmptyList(c *Ctx) {
 	</div>
 }
 
-templ PatientProfile(patient model.Patient, c *Ctx) {
+templ PatientProfile(patient models.Patient, c *Ctx) {
 	<div id="patient_profile" class="space-y-10 divide-y divide-base-content/10">
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
@@ -536,7 +536,7 @@ templ PatientProfile(patient model.Patient, c *Ctx) {
 	</div>
 }
 
-templ PatientForm(c *Ctx, patient model.Patient) {
+templ PatientForm(c *Ctx, patient models.Patient) {
 	<form
 		class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2"
 		method="POST"

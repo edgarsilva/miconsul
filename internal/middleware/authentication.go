@@ -48,7 +48,7 @@ func MustBeAdmin(authRuntime auth.Runtime) func(c fiber.Ctx) error {
 			}
 		}
 
-		if cu.Role != model.UserRoleAdmin {
+		if cu.Role != models.UserRoleAdmin {
 			switch c.Accepts("text/html", "text/plain", "application/json") {
 			case "text/plain", "application/json":
 				return c.SendStatus(fiber.StatusForbidden)

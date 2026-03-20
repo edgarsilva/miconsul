@@ -25,7 +25,7 @@ type Runtime interface {
 }
 
 type Authenticator interface {
-	Authenticate(c fiber.Ctx) (model.User, error)
+	Authenticate(c fiber.Ctx) (models.User, error)
 	Metadata() AuthenticatorMeta
 }
 
@@ -41,11 +41,11 @@ type AuthenticatorMeta struct {
 
 // Authenticate resolves request identity (session snapshot/JWT strategy fallback)
 // and returns the current user for this request.
-func Authenticate(c fiber.Ctx, rt Runtime) (model.User, error) {
+func Authenticate(c fiber.Ctx, rt Runtime) (models.User, error) {
 	authenticator := selectAuthenticator(rt)
 	user, err := authenticator.Authenticate(c)
 	if err != nil {
-		return model.User{}, err
+		return models.User{}, err
 	}
 
 	return user, nil
@@ -60,10 +60,10 @@ func selectAuthenticator(rt Runtime) Authenticator {
 	}
 }
 
-func TakeUserByExtID(ctx context.Context, rt Runtime, extID string) (model.User, error) {
-	user, err := gorm.G[model.User](rt.GormDB()).Where("ext_id = ?", extID).Take(ctx)
+func TakeUserByExtID(ctx context.Context, rt Runtime, extID string) (models.User, error) {
+	user, err := gorm.G[models.User](rt.GormDB()).Where("ext_id = ?", extID).Take(ctx)
 	if err != nil {
-		return model.User{}, errors.New("failed to authenticate user")
+		return models.User{}, errors.New("failed to authenticate user")
 	}
 
 	return user, nil
