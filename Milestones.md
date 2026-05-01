@@ -7,6 +7,10 @@
 - [ ] Uptime Kuma monitors + notifications + SLO-style alerts
 - [ ] Upload images to S3-compatible object storage (RustFS)
 
+## Nice-to-Have (Low Priority)
+
+- [ ] Optional Valkey-backed HTTP sessions
+
 ## V0 (7day proof of concept)
 
 [2024/Apr/21]

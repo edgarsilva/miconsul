@@ -27,6 +27,10 @@
 - [external/runtime] Beta tester release prep
   - Define exit criteria and communication checklist for first beta group.
 
+- [infra/sessions] Optional Valkey-backed HTTP sessions (lowest priority)
+  - Replace SQLite session storage with Valkey storage behind Fiber session middleware.
+  - Keep fallback behavior and rollout checklist for local/dev environments.
+
 ## Done
 
 - Testing docs drift cleanup for auth migration status
