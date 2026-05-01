@@ -3,7 +3,7 @@ package appointment
 import (
 	"time"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 )
 
 type appointmentPatchUpdates struct {
@@ -20,7 +20,7 @@ type appointmentPatchUpdates struct {
 }
 
 type appointmentCompleteUpdates struct {
-	Status       model.AppointmentStatus
+	Status       models.AppointmentStatus
 	Observations string
 	Conclusions  string
 	Summary      string
@@ -28,12 +28,12 @@ type appointmentCompleteUpdates struct {
 }
 
 type appointmentCancelUpdates struct {
-	Status     model.AppointmentStatus
+	Status     models.AppointmentStatus
 	CanceledAt time.Time
 }
 
 type appointmentTokenUpdates struct {
-	Status      model.AppointmentStatus
+	Status      models.AppointmentStatus
 	ConfirmedAt time.Time
 	CanceledAt  time.Time
 	PendingAt   time.Time

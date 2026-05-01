@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -131,7 +131,7 @@ func TestSaveProfilePicToDisk(t *testing.T) {
 	t.Run("returns ErrProfilePicNotProvided when form file missing", func(t *testing.T) {
 		app := fiber.New()
 		app.Post("/", func(c fiber.Ctx) error {
-			_, err := SaveProfilePicToDisk(c, model.Patient{ID: "pat_1"}, t.TempDir())
+			_, err := SaveProfilePicToDisk(c, models.Patient{ID: "pat_1"}, t.TempDir())
 			if !errors.Is(err, ErrProfilePicNotProvided) {
 				t.Fatalf("expected ErrProfilePicNotProvided, got %v", err)
 			}
@@ -147,7 +147,7 @@ func TestSaveProfilePicToDisk(t *testing.T) {
 	t.Run("fails when patient id is blank", func(t *testing.T) {
 		app := fiber.New()
 		app.Post("/", func(c fiber.Ctx) error {
-			_, err := SaveProfilePicToDisk(c, model.Patient{}, t.TempDir())
+			_, err := SaveProfilePicToDisk(c, models.Patient{}, t.TempDir())
 			if err == nil {
 				t.Fatalf("expected missing patient id error")
 			}

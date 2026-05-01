@@ -2,7 +2,14 @@
 
 ## Ongoing
 
-- [ ] README and Go Env Setup/Updates
+- [x] README and Go Env Setup/Updates (2026/Mar/27)
+- [x] Auth docs drift cleanup (`docs/testing.md` migration status) (2026/Mar/27)
+- [ ] Uptime Kuma monitors + notifications + SLO-style alerts
+- [ ] Upload images to S3-compatible object storage (RustFS)
+
+## Nice-to-Have (Low Priority)
+
+- [ ] Optional Valkey-backed HTTP sessions
 
 ## V0 (7day proof of concept)
 
@@ -90,7 +97,7 @@
 
 - [x] Upload patients profile pic to disk under authentication
 - [x] Accept profile pic from Logto, from google identity.
-- [ ] Upload images to object storage? <- still unsure about this one...
+- [ ] Upload images to S3-compatible object storage (RustFS)
 
 - [ ] Email/Messages updates
 

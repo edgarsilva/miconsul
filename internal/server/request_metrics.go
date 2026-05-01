@@ -13,7 +13,7 @@ import (
 	metricapi "go.opentelemetry.io/otel/metric"
 )
 
-// requestMetricsMiddleware records HTTP request metrics using both pull and push paths.
+// RequestMetricsMiddleware records HTTP request metrics using both pull and push paths.
 func RequestMetricsMiddleware(metrics obsmetrics.HTTPMetrics) func(c fiber.Ctx) error {
 	otelHTTPDuration := metrics.HTTPDuration
 	otelHTTPRequests := metrics.HTTPRequests

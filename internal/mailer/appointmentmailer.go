@@ -6,13 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"os"
 
 	"gopkg.in/gomail.v2"
 )
 
-func SendAppointmentBookedEmail(env *appenv.Env, appointment model.Appointment) error {
+func SendAppointmentBookedEmail(env *appenv.Env, appointment models.Appointment) error {
 	if appointment.Patient.ID == "" || appointment.Clinic.ID == "" {
 		fmt.Println(errors.New("appointment Clinic or Patient association is missing, they must be Preloaded"))
 	}
@@ -40,7 +40,7 @@ func SendAppointmentBookedEmail(env *appenv.Env, appointment model.Appointment) 
 	return nil
 }
 
-func SendAppointmentReminderEmail(env *appenv.Env, appointment model.Appointment) error {
+func SendAppointmentReminderEmail(env *appenv.Env, appointment models.Appointment) error {
 	if appointment.Patient.ID == "" || appointment.Clinic.ID == "" {
 		return errors.New("appointment Clinic or Patient association is missing, they must be Preloaded")
 	}

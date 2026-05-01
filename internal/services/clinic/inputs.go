@@ -1,6 +1,6 @@
 package clinic
 
-import "miconsul/internal/model"
+import "miconsul/internal/models"
 
 type clinicUpsertInput struct {
 	Name  string `form:"name"`
@@ -21,15 +21,15 @@ type clinicUpsertInput struct {
 	Facebook  string `form:"facebook"`
 }
 
-func (in clinicUpsertInput) toClinic(id, userID string, price int) model.Clinic {
-	return model.Clinic{
+func (in clinicUpsertInput) toClinic(id, userID string, price int) models.Clinic {
+	return models.Clinic{
 		ID:     id,
 		UserID: userID,
 		Price:  price,
 		Name:   in.Name,
 		Email:  in.Email,
 		Phone:  in.Phone,
-		Address: model.Address{
+		Address: models.Address{
 			Line1:   in.AddressLine1,
 			Line2:   in.AddressLine2,
 			City:    in.AddressCity,
@@ -37,7 +37,7 @@ func (in clinicUpsertInput) toClinic(id, userID string, price int) model.Clinic 
 			Country: in.AddressCountry,
 			Zip:     in.AddressZipCode,
 		},
-		SocialMedia: model.SocialMedia{
+		SocialMedia: models.SocialMedia{
 			Whatsapp:  in.Whatsapp,
 			Telegram:  in.Telegram,
 			Messenger: in.Messenger,

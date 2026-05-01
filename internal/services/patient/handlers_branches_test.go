@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -110,7 +110,7 @@ func TestHandleMockManyPatientsCreatesRows(t *testing.T) {
 	}
 
 	var count int64
-	if err := svc.DB.WithContext(context.Background()).Model(&model.Patient{}).Where("user_id = ?", user.ID).Count(&count).Error; err != nil {
+	if err := svc.DB.WithContext(context.Background()).Model(&models.Patient{}).Where("user_id = ?", user.ID).Count(&count).Error; err != nil {
 		t.Fatalf("count patients: %v", err)
 	}
 	if count == 0 {

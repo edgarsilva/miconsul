@@ -102,6 +102,6 @@ func resolveModelsDir() (string, error) {
 		return "", errors.New("failed to resolve admin service source path")
 	}
 
-	modelsDir := filepath.Clean(filepath.Join(filepath.Dir(currentFile), "../../model"))
+	modelsDir := filepath.Clean(filepath.Join(filepath.Dir(currentFile), "../../models"))
 	return modelsDir, nil
 }

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -104,7 +104,7 @@ func TestRunWithBaselineAndLargeBulk(t *testing.T) {
 
 func TestCreateBulkAppointmentsGuards(t *testing.T) {
 	db := newSeederDB(t)
-	owner := model.User{Email: "owner-guard@example.com", Password: "hash", Role: model.UserRoleUser}
+	owner := models.User{Email: "owner-guard@example.com", Password: "hash", Role: models.UserRoleUser}
 	if err := db.WithContext(t.Context()).Create(&owner).Error; err != nil {
 		t.Fatalf("create owner user: %v", err)
 	}
@@ -117,7 +117,7 @@ func TestCreateBulkAppointmentsGuards(t *testing.T) {
 		t.Fatalf("expected no appointments when clinics/patients missing, got %d", created)
 	}
 
-	created, err = createBulkAppointments(t.Context(), db, owner, nil, 1, []model.Clinic{{ID: "cln"}}, []model.Patient{{ID: "pat"}}, 0)
+	created, err = createBulkAppointments(t.Context(), db, owner, nil, 1, []models.Clinic{{ID: "cln"}}, []models.Patient{{ID: "pat"}}, 0)
 	if err != nil {
 		t.Fatalf("expected count guard return without error: %v", err)
 	}
@@ -135,7 +135,7 @@ func newSeederDB(t *testing.T) *gorm.DB {
 		t.Fatalf("open sqlite db: %v", err)
 	}
 
-	if err := db.AutoMigrate(&model.User{}, &model.Clinic{}, &model.Patient{}, &model.Appointment{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.Clinic{}, &models.Patient{}, &models.Appointment{}); err != nil {
 		t.Fatalf("automigrate seeder models: %v", err)
 	}
 
@@ -145,7 +145,7 @@ func newSeederDB(t *testing.T) *gorm.DB {
 func assertBaselineClinicExists(t *testing.T, db *gorm.DB) {
 	t.Helper()
 
-	clinic := model.Clinic{}
+	clinic := models.Clinic{}
 	if err := db.WithContext(t.Context()).Where("ext_id = ?", baselineClinicExtID).Take(&clinic).Error; err != nil {
 		t.Fatalf("expected baseline clinic %q to exist: %v", baselineClinicExtID, err)
 	}
@@ -155,7 +155,7 @@ func assertBaselinePatientsExist(t *testing.T, db *gorm.DB) {
 	t.Helper()
 
 	for _, extID := range baselinePatientExtIDs {
-		patient := model.Patient{}
+		patient := models.Patient{}
 		if err := db.WithContext(t.Context()).Where("ext_id = ?", extID).Take(&patient).Error; err != nil {
 			t.Fatalf("expected baseline patient %q to exist: %v", extID, err)
 		}
@@ -166,7 +166,7 @@ func assertBaselineAppointmentsExist(t *testing.T, db *gorm.DB) {
 	t.Helper()
 
 	for _, extID := range baselineAppointmentExtIDs {
-		appointment := model.Appointment{}
+		appointment := models.Appointment{}
 		if err := db.WithContext(t.Context()).Where("ext_id = ?", extID).Take(&appointment).Error; err != nil {
 			t.Fatalf("expected baseline appointment %q to exist: %v", extID, err)
 		}

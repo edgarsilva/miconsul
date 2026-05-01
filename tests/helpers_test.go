@@ -13,7 +13,7 @@ import (
 
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"miconsul/internal/observability/logging"
 	"miconsul/internal/routes"
 	"miconsul/internal/server"
@@ -92,12 +92,12 @@ func newTestHarness(t *testing.T) *testHarness {
 	}
 
 	if err := db.AutoMigrate(
-		&model.User{},
-		&model.Clinic{},
-		&model.Patient{},
-		&model.Appointment{},
-		&model.Alert{},
-		&model.FeedEvent{},
+		&models.User{},
+		&models.Clinic{},
+		&models.Patient{},
+		&models.Appointment{},
+		&models.Alert{},
+		&models.FeedEvent{},
 	); err != nil {
 		t.Fatalf("auto migrate test schema: %v", err)
 	}
@@ -133,22 +133,22 @@ func newTestHarness(t *testing.T) *testHarness {
 	return &testHarness{t: t, server: s, db: db, env: env}
 }
 
-func (h *testHarness) createUser(role model.UserRole) model.User {
+func (h *testHarness) createUser(role models.UserRole) models.User {
 	h.t.Helper()
 
-	u := model.User{
+	u := models.User{
 		Name:  "Test User",
 		Email: "test-" + time.Now().Format("150405.000000") + "@example.com",
 		Role:  role,
 	}
-	if err := gorm.G[model.User](h.db.GormDB()).Create(h.t.Context(), &u); err != nil {
+	if err := gorm.G[models.User](h.db.GormDB()).Create(h.t.Context(), &u); err != nil {
 		h.t.Fatalf("create user fixture: %v", err)
 	}
 
 	return u
 }
 
-func (h *testHarness) createAuthUser(email, password string, role model.UserRole) model.User {
+func (h *testHarness) createAuthUser(email, password string, role models.UserRole) models.User {
 	h.t.Helper()
 
 	if strings.TrimSpace(email) == "" {
@@ -160,64 +160,64 @@ func (h *testHarness) createAuthUser(email, password string, role model.UserRole
 		h.t.Fatalf("hash auth user password: %v", err)
 	}
 
-	u := model.User{
+	u := models.User{
 		Name:              "Auth User",
 		Email:             email,
 		Password:          string(hash),
 		Role:              role,
 		ConfirmEmailToken: "",
 	}
-	if err := gorm.G[model.User](h.db.GormDB()).Create(h.t.Context(), &u); err != nil {
+	if err := gorm.G[models.User](h.db.GormDB()).Create(h.t.Context(), &u); err != nil {
 		h.t.Fatalf("create auth user fixture: %v", err)
 	}
 
 	return u
 }
 
-func (h *testHarness) createPatient(userID string, name string) model.Patient {
+func (h *testHarness) createPatient(userID string, name string) models.Patient {
 	h.t.Helper()
 
-	p := model.Patient{Name: name, Phone: "555-0100", Age: 30, UserID: userID}
-	if err := gorm.G[model.Patient](h.db.GormDB()).Create(h.t.Context(), &p); err != nil {
+	p := models.Patient{Name: name, Phone: "555-0100", Age: 30, UserID: userID}
+	if err := gorm.G[models.Patient](h.db.GormDB()).Create(h.t.Context(), &p); err != nil {
 		h.t.Fatalf("create patient fixture: %v", err)
 	}
 
 	return p
 }
 
-func (h *testHarness) createClinic(userID string, name string) model.Clinic {
+func (h *testHarness) createClinic(userID string, name string) models.Clinic {
 	h.t.Helper()
 
-	c := model.Clinic{Name: name, UserID: userID}
-	if err := gorm.G[model.Clinic](h.db.GormDB()).Create(h.t.Context(), &c); err != nil {
+	c := models.Clinic{Name: name, UserID: userID}
+	if err := gorm.G[models.Clinic](h.db.GormDB()).Create(h.t.Context(), &c); err != nil {
 		h.t.Fatalf("create clinic fixture: %v", err)
 	}
 
 	return c
 }
 
-func (h *testHarness) createAppointment(userID, patientID, clinicID string) model.Appointment {
+func (h *testHarness) createAppointment(userID, patientID, clinicID string) models.Appointment {
 	h.t.Helper()
 
-	a := model.Appointment{
+	a := models.Appointment{
 		UserID:      userID,
 		PatientID:   patientID,
 		ClinicID:    clinicID,
-		Status:      model.ApntStatusPending,
+		Status:      models.ApntStatusPending,
 		BookedAt:    time.Now().UTC().Add(2 * time.Hour),
 		BookedYear:  time.Now().UTC().Year(),
 		BookedMonth: int(time.Now().UTC().Month()),
 		BookedDay:   time.Now().UTC().Day(),
 		BookedHour:  time.Now().UTC().Hour(),
 	}
-	if err := gorm.G[model.Appointment](h.db.GormDB()).Create(h.t.Context(), &a); err != nil {
+	if err := gorm.G[models.Appointment](h.db.GormDB()).Create(h.t.Context(), &a); err != nil {
 		h.t.Fatalf("create appointment fixture: %v", err)
 	}
 
 	return a
 }
 
-func (h *testHarness) authToken(user model.User) string {
+func (h *testHarness) authToken(user models.User) string {
 	h.t.Helper()
 
 	token, err := auth.JWTCreateToken(h.env, user.Email, user.ID)

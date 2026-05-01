@@ -1,3 +1,4 @@
+// Package jobs provides the runtime for jobs that wraps asynq library.
 package jobs
 
 import (

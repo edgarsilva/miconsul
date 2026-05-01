@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -43,7 +43,7 @@ func TestNewCtxAndOptions(t *testing.T) {
 	runViewCtx(t, "/ctx?toast=Saved&sub=Done&level=success", func(c fiber.Ctx) {
 		c.Locals("locale", "en-US")
 		c.Locals("theme", "dark")
-		expectedCU := model.User{ID: "usr_1", Email: "u@example.com"}
+		expectedCU := models.User{ID: "usr_1", Email: "u@example.com"}
 		c.Locals("current_user", expectedCU)
 
 		vc, err := NewCtx(c)
@@ -62,7 +62,7 @@ func TestNewCtxAndOptions(t *testing.T) {
 	})
 
 	runViewCtx(t, "/ctx", func(c fiber.Ctx) {
-		vc, err := NewCtx(c, WithTheme("dark"), WithLocale("en-US"), WithToast("ok", "sub", "info"), WithCurrentUser(model.User{ID: "usr_2"}))
+		vc, err := NewCtx(c, WithTheme("dark"), WithLocale("en-US"), WithToast("ok", "sub", "info"), WithCurrentUser(models.User{ID: "usr_2"}))
 		if err != nil {
 			t.Fatalf("new ctx with options failed: %v", err)
 		}

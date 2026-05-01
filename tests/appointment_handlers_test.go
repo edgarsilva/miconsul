@@ -6,14 +6,14 @@ import (
 	"testing"
 	"time"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 
 	"gorm.io/gorm"
 )
 
 func TestAppointmentHandlers(t *testing.T) {
 	h := newTestHarness(t)
-	u := h.createUser(model.UserRoleUser)
+	u := h.createUser(models.UserRoleUser)
 	token := h.authToken(u)
 
 	t.Run("update returns not found for unknown appointment", func(t *testing.T) {
@@ -110,11 +110,11 @@ func TestAppointmentHandlers(t *testing.T) {
 			t.Fatalf("expected 200 for appointment cancel, got %d", resp.StatusCode)
 		}
 
-		updated, err := gorm.G[model.Appointment](h.db.GormDB()).Where("id = ?", appt.ID).Take(t.Context())
+		updated, err := gorm.G[models.Appointment](h.db.GormDB()).Where("id = ?", appt.ID).Take(t.Context())
 		if err != nil {
 			t.Fatalf("load canceled appointment: %v", err)
 		}
-		if updated.Status != model.ApntStatusCanceled {
+		if updated.Status != models.ApntStatusCanceled {
 			t.Fatalf("expected canceled status, got %q", updated.Status)
 		}
 		if updated.CanceledAt.IsZero() {
@@ -143,11 +143,11 @@ func TestAppointmentHandlers(t *testing.T) {
 			t.Fatalf("expected 200 for appointment complete, got %d", resp.StatusCode)
 		}
 
-		updated, err := gorm.G[model.Appointment](h.db.GormDB()).Where("id = ?", appt.ID).Take(t.Context())
+		updated, err := gorm.G[models.Appointment](h.db.GormDB()).Where("id = ?", appt.ID).Take(t.Context())
 		if err != nil {
 			t.Fatalf("load completed appointment: %v", err)
 		}
-		if updated.Status != model.ApntStatusDone {
+		if updated.Status != models.ApntStatusDone {
 			t.Fatalf("expected done status, got %q", updated.Status)
 		}
 		if updated.Summary != "Procedure completed" || updated.Notes != "No complications" {
@@ -204,7 +204,7 @@ func TestAppointmentHandlers(t *testing.T) {
 	})
 
 	t.Run("cross-user update and delete are scoped", func(t *testing.T) {
-		owner := h.createUser(model.UserRoleUser)
+		owner := h.createUser(models.UserRoleUser)
 		ownerPatient := h.createPatient(owner.ID, "Owner Patient")
 		ownerClinic := h.createClinic(owner.ID, "Owner Clinic")
 		ownerAppt := h.createAppointment(owner.ID, ownerPatient.ID, ownerClinic.ID)
@@ -235,7 +235,7 @@ func TestAppointmentHandlers(t *testing.T) {
 			t.Fatalf("expected redirect for cross-user appointment delete, got %d", resp.StatusCode)
 		}
 
-		unchanged, err := gorm.G[model.Appointment](h.db.GormDB()).Where("id = ?", ownerAppt.ID).Take(t.Context())
+		unchanged, err := gorm.G[models.Appointment](h.db.GormDB()).Where("id = ?", ownerAppt.ID).Take(t.Context())
 		if err != nil {
 			t.Fatalf("load owner appointment after cross-user attempts: %v", err)
 		}

@@ -7,14 +7,14 @@ import (
 	"testing"
 	"time"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 
 	"gorm.io/gorm"
 )
 
 func TestPatchAndDeleteRoutesForPatientAndAppointment(t *testing.T) {
 	h := newTestHarness(t)
-	u := h.createUser(model.UserRoleUser)
+	u := h.createUser(models.UserRoleUser)
 	token := h.authToken(u)
 
 	t.Run("patient patch and delete", func(t *testing.T) {
@@ -35,7 +35,7 @@ func TestPatchAndDeleteRoutesForPatientAndAppointment(t *testing.T) {
 			t.Fatalf("expected 200 for patient patch, got %d", patchResp.StatusCode)
 		}
 
-		updated, err := gorm.G[model.Patient](h.db.GormDB()).Where("id = ?", patient.ID).Take(t.Context())
+		updated, err := gorm.G[models.Patient](h.db.GormDB()).Where("id = ?", patient.ID).Take(t.Context())
 		if err != nil {
 			t.Fatalf("load patched patient: %v", err)
 		}
@@ -53,7 +53,7 @@ func TestPatchAndDeleteRoutesForPatientAndAppointment(t *testing.T) {
 			t.Fatalf("expected 200 for patient delete, got %d", delResp.StatusCode)
 		}
 
-		_, err = gorm.G[model.Patient](h.db.GormDB()).Where("id = ?", patient.ID).Take(t.Context())
+		_, err = gorm.G[models.Patient](h.db.GormDB()).Where("id = ?", patient.ID).Take(t.Context())
 		if err == nil {
 			t.Fatalf("expected deleted patient to be missing")
 		}
@@ -80,7 +80,7 @@ func TestPatchAndDeleteRoutesForPatientAndAppointment(t *testing.T) {
 			t.Fatalf("expected 200 for appointment patch, got %d", patchResp.StatusCode)
 		}
 
-		updated, err := gorm.G[model.Appointment](h.db.GormDB()).Where("id = ?", appt.ID).Take(t.Context())
+		updated, err := gorm.G[models.Appointment](h.db.GormDB()).Where("id = ?", appt.ID).Take(t.Context())
 		if err != nil {
 			t.Fatalf("load patched appointment: %v", err)
 		}
@@ -98,7 +98,7 @@ func TestPatchAndDeleteRoutesForPatientAndAppointment(t *testing.T) {
 			t.Fatalf("expected 200 for appointment delete, got %d", delResp.StatusCode)
 		}
 
-		_, err = gorm.G[model.Appointment](h.db.GormDB()).Where("id = ?", appt.ID).Take(t.Context())
+		_, err = gorm.G[models.Appointment](h.db.GormDB()).Where("id = ?", appt.ID).Take(t.Context())
 		if err == nil {
 			t.Fatalf("expected deleted appointment to be missing")
 		}
@@ -107,7 +107,7 @@ func TestPatchAndDeleteRoutesForPatientAndAppointment(t *testing.T) {
 
 func TestAppointmentsSearchClinicsRouteBehavior(t *testing.T) {
 	h := newTestHarness(t)
-	u := h.createUser(model.UserRoleUser)
+	u := h.createUser(models.UserRoleUser)
 	token := h.authToken(u)
 
 	h.createClinic(u.ID, "Bright Dental")

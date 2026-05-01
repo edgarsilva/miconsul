@@ -13,7 +13,7 @@ import (
 
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"miconsul/internal/server"
 
 	"github.com/gofiber/fiber/v3"
@@ -28,7 +28,7 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 
 		app := fiber.New()
 		app.Get("/signin", func(c fiber.Ctx) error {
-			c.Locals("current_user", model.User{ID: "user_1"})
+			c.Locals("current_user", models.User{ID: "user_1"})
 			return svc.HandleSigninPage(c)
 		})
 
@@ -370,7 +370,7 @@ func TestAuthHandlersLogoutAndSessionEndpoints(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		app := fiber.New()
 		app.Get("/api/auth/protected", func(c fiber.Ctx) error {
-			c.Locals("current_user", model.User{ID: "user_123", Email: "u@example.com"})
+			c.Locals("current_user", models.User{ID: "user_123", Email: "u@example.com"})
 			return svc.HandleShowUser(c)
 		})
 
@@ -427,7 +427,7 @@ func TestAuthHandlersSignupPaths(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		app := fiber.New()
 		app.Get("/signup", func(c fiber.Ctx) error {
-			c.Locals("current_user", model.User{ID: "user_1"})
+			c.Locals("current_user", models.User{ID: "user_1"})
 			return svc.HandleSignupPage(c)
 		})
 
@@ -999,7 +999,7 @@ func newAuthServiceForTests(t *testing.T) *service {
 		t.Fatalf("open sqlite: %v", err)
 	}
 
-	if err := gdb.AutoMigrate(&model.User{}); err != nil {
+	if err := gdb.AutoMigrate(&models.User{}); err != nil {
 		t.Fatalf("migrate user model: %v", err)
 	}
 
@@ -1037,7 +1037,7 @@ func newAuthServiceForTestsNoLegacyColumns(t *testing.T) *service {
 		t.Fatalf("open sqlite: %v", err)
 	}
 
-	if err := gdb.AutoMigrate(&model.User{}); err != nil {
+	if err := gdb.AutoMigrate(&models.User{}); err != nil {
 		t.Fatalf("migrate user model: %v", err)
 	}
 
@@ -1070,7 +1070,7 @@ func newAuthServiceForTestsWithUserUpdateError(t *testing.T) *service {
 	return svc
 }
 
-func seedAuthUser(t *testing.T, svc *service, email, password, confirmToken string) model.User {
+func seedAuthUser(t *testing.T, svc *service, email, password, confirmToken string) models.User {
 	t.Helper()
 
 	return seedAuthUserWithOptions(t, svc, authUserSeedOptions{
@@ -1089,7 +1089,7 @@ type authUserSeedOptions struct {
 	ResetTokenExpiresAt   time.Time
 }
 
-func seedAuthUserWithOptions(t *testing.T, svc *service, opts authUserSeedOptions) model.User {
+func seedAuthUserWithOptions(t *testing.T, svc *service, opts authUserSeedOptions) models.User {
 	t.Helper()
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(opts.Password), 12)
@@ -1102,16 +1102,16 @@ func seedAuthUserWithOptions(t *testing.T, svc *service, opts authUserSeedOption
 		confirmExp = time.Now().Add(time.Hour)
 	}
 
-	u := model.User{
+	u := models.User{
 		Email:                 opts.Email,
 		Password:              string(hash),
 		ConfirmEmailToken:     opts.ConfirmToken,
 		ConfirmEmailExpiresAt: confirmExp,
 		ResetToken:            opts.ResetToken,
 		ResetTokenExpiresAt:   opts.ResetTokenExpiresAt,
-		Role:                  model.UserRoleUser,
+		Role:                  models.UserRoleUser,
 	}
-	if err := gorm.G[model.User](svc.DB.GormDB()).Create(context.Background(), &u); err != nil {
+	if err := gorm.G[models.User](svc.DB.GormDB()).Create(context.Background(), &u); err != nil {
 		t.Fatalf("seed user: %v", err)
 	}
 

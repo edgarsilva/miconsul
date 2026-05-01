@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"miconsul/internal/jobs"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 
 	"gorm.io/gorm"
 )
@@ -67,7 +67,7 @@ func (s *service) handleReminderSweepTask(ctx context.Context, _ jobs.Task) erro
 	year, month, day := st.Date()
 	et := time.Date(year, month, day, st.Hour(), st.Minute(), 0, 0, st.Location()).Add(2 * time.Hour)
 
-	appointments, err := gorm.G[model.Appointment](s.DB.GormDB()).
+	appointments, err := gorm.G[models.Appointment](s.DB.GormDB()).
 		Where("booked_at > ?", st).
 		Where("booked_at <= ?", et).
 		Where("reminder_alert_sent_at IS NULL").
@@ -94,7 +94,7 @@ func (s *service) handleReminderTask(ctx context.Context, task jobs.Task) error 
 		return errors.New("appointment_id is required")
 	}
 
-	appointment, err := gorm.G[model.Appointment](s.DB.GormDB()).
+	appointment, err := gorm.G[models.Appointment](s.DB.GormDB()).
 		Preload("Patient", nil).
 		Preload("Clinic", nil).
 		Where("id = ?", payload.AppointmentID).
@@ -123,7 +123,7 @@ func (s *service) handleBookedAlertTask(ctx context.Context, task jobs.Task) err
 		return errors.New("appointment_id is required")
 	}
 
-	appointment, err := gorm.G[model.Appointment](s.DB.GormDB()).
+	appointment, err := gorm.G[models.Appointment](s.DB.GormDB()).
 		Preload("Patient", nil).
 		Preload("Clinic", nil).
 		Where("id = ?", payload.AppointmentID).

@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -15,7 +15,7 @@ import (
 func TestSaveProfilePicToDisk(t *testing.T) {
 	t.Run("missing file returns ErrProfilePicNotProvided", func(t *testing.T) {
 		runClinicCtx(t, "", nil, func(c fiber.Ctx) {
-			_, err := SaveProfilePicToDisk(c, model.Clinic{ID: "cln_1"})
+			_, err := SaveProfilePicToDisk(c, models.Clinic{ID: "cln_1"})
 			if err != ErrProfilePicNotProvided {
 				t.Fatalf("expected ErrProfilePicNotProvided, got %v", err)
 			}
@@ -24,7 +24,7 @@ func TestSaveProfilePicToDisk(t *testing.T) {
 
 	t.Run("missing clinic id returns error", func(t *testing.T) {
 		runClinicCtx(t, "photo.png", []byte("img"), func(c fiber.Ctx) {
-			_, err := SaveProfilePicToDisk(c, model.Clinic{})
+			_, err := SaveProfilePicToDisk(c, models.Clinic{})
 			if err == nil {
 				t.Fatalf("expected missing clinic id to fail")
 			}
@@ -33,7 +33,7 @@ func TestSaveProfilePicToDisk(t *testing.T) {
 
 	t.Run("rejects invalid sanitized filename", func(t *testing.T) {
 		runClinicCtx(t, "..", []byte("img"), func(c fiber.Ctx) {
-			_, err := SaveProfilePicToDisk(c, model.Clinic{ID: "cln_1"})
+			_, err := SaveProfilePicToDisk(c, models.Clinic{ID: "cln_1"})
 			if err == nil {
 				t.Fatalf("expected invalid filename error")
 			}

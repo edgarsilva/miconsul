@@ -8,7 +8,7 @@ import (
 
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"miconsul/internal/server"
 
 	"gorm.io/driver/sqlite"
@@ -19,7 +19,7 @@ func TestClinicServiceDBFlows(t *testing.T) {
 	svc, user := newClinicServiceForTests(t)
 	ctx := context.Background()
 
-	base := model.Clinic{UserID: user.ID, Name: "Alpha Clinic", Email: "alpha@example.com", Phone: "111"}
+	base := models.Clinic{UserID: user.ID, Name: "Alpha Clinic", Email: "alpha@example.com", Phone: "111"}
 	if err := svc.CreateClinic(ctx, &base); err != nil {
 		t.Fatalf("create base clinic: %v", err)
 	}
@@ -48,7 +48,7 @@ func TestClinicServiceDBFlows(t *testing.T) {
 	})
 
 	t.Run("update clinic and existence branches", func(t *testing.T) {
-		upd := model.Clinic{Name: "  Beta Clinic  ", Email: "  BETA@EXAMPLE.COM  ", Phone: " 999 "}
+		upd := models.Clinic{Name: "  Beta Clinic  ", Email: "  BETA@EXAMPLE.COM  ", Phone: " 999 "}
 		if err := svc.UpdateClinicByID(ctx, user.ID, base.ID, upd); err != nil {
 			t.Fatalf("update clinic by id: %v", err)
 		}
@@ -65,7 +65,7 @@ func TestClinicServiceDBFlows(t *testing.T) {
 			t.Fatalf("expected not found on missing update, got %v", err)
 		}
 
-		if err := svc.UpdateClinicByID(ctx, user.ID, base.ID, model.Clinic{Email: strings.Repeat("e", 255)}); err == nil {
+		if err := svc.UpdateClinicByID(ctx, user.ID, base.ID, models.Clinic{Email: strings.Repeat("e", 255)}); err == nil {
 			t.Fatalf("expected normalization error on too long email")
 		}
 
@@ -96,7 +96,7 @@ func TestClinicServiceDBFlows(t *testing.T) {
 	})
 }
 
-func newClinicServiceForTests(t *testing.T) (service, model.User) {
+func newClinicServiceForTests(t *testing.T) (service, models.User) {
 	t.Helper()
 
 	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())
@@ -105,7 +105,7 @@ func newClinicServiceForTests(t *testing.T) (service, model.User) {
 		t.Fatalf("open sqlite: %v", err)
 	}
 
-	if err := gdb.AutoMigrate(&model.User{}, &model.Clinic{}); err != nil {
+	if err := gdb.AutoMigrate(&models.User{}, &models.Clinic{}); err != nil {
 		t.Fatalf("automigrate user/clinic: %v", err)
 	}
 
@@ -118,8 +118,8 @@ func newClinicServiceForTests(t *testing.T) (service, model.User) {
 		t.Fatalf("new clinic service: %v", err)
 	}
 
-	u := model.User{Email: "clinic@example.com", Password: "hash", Role: model.UserRoleUser}
-	if err := gorm.G[model.User](gdb).Create(context.Background(), &u); err != nil {
+	u := models.User{Email: "clinic@example.com", Password: "hash", Role: models.UserRoleUser}
+	if err := gorm.G[models.User](gdb).Create(context.Background(), &u); err != nil {
 		t.Fatalf("create user: %v", err)
 	}
 

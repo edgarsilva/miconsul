@@ -8,7 +8,7 @@ import (
 
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"miconsul/internal/server"
 
 	"gorm.io/driver/sqlite"
@@ -41,7 +41,7 @@ func TestPatientServiceDBFlows(t *testing.T) {
 		}
 	})
 
-	base := model.Patient{UserID: user.ID, Name: "Alpha", Age: 28, Phone: "111", Email: "alpha@example.com"}
+	base := models.Patient{UserID: user.ID, Name: "Alpha", Age: 28, Phone: "111", Email: "alpha@example.com"}
 	if err := svc.CreatePatient(ctx, &base); err != nil {
 		t.Fatalf("create base patient: %v", err)
 	}
@@ -70,7 +70,7 @@ func TestPatientServiceDBFlows(t *testing.T) {
 	})
 
 	t.Run("update patient and clear profile pic", func(t *testing.T) {
-		upd := model.Patient{Name: "Alpha Updated", Email: "updated@example.com", Phone: "999"}
+		upd := models.Patient{Name: "Alpha Updated", Email: "updated@example.com", Phone: "999"}
 		if err := svc.UpdatePatientByID(ctx, user.ID, base.ID, upd); err != nil {
 			t.Fatalf("update patient: %v", err)
 		}
@@ -79,11 +79,11 @@ func TestPatientServiceDBFlows(t *testing.T) {
 			t.Fatalf("expected record not found on missing update, got %v", err)
 		}
 
-		if err := svc.UpdatePatientByID(ctx, user.ID, base.ID, model.Patient{Name: "N", Phone: "1", Email: strings.Repeat("e", 255)}); err == nil {
+		if err := svc.UpdatePatientByID(ctx, user.ID, base.ID, models.Patient{Name: "N", Phone: "1", Email: strings.Repeat("e", 255)}); err == nil {
 			t.Fatalf("expected normalization error on long email")
 		}
 
-		if err := svc.UpdatePatientByID(ctx, user.ID, base.ID, model.Patient{ProfilePic: "avatar.png", Name: "Alpha Updated", Email: "updated@example.com", Phone: "999"}); err != nil {
+		if err := svc.UpdatePatientByID(ctx, user.ID, base.ID, models.Patient{ProfilePic: "avatar.png", Name: "Alpha Updated", Email: "updated@example.com", Phone: "999"}); err != nil {
 			t.Fatalf("update profile pic: %v", err)
 		}
 		if err := svc.ClearPatientProfilePic(ctx, user.ID, base.ID); err != nil {
@@ -95,7 +95,7 @@ func TestPatientServiceDBFlows(t *testing.T) {
 	})
 
 	t.Run("batch create and delete flows", func(t *testing.T) {
-		rows, err := svc.CreatePatientsInBatches(ctx, []model.Patient{
+		rows, err := svc.CreatePatientsInBatches(ctx, []models.Patient{
 			{UserID: user.ID, Name: "B1", Age: 20, Phone: "222", Email: "b1@example.com"},
 			{UserID: user.ID, Name: "B2", Age: 22, Phone: "333", Email: "b2@example.com"},
 		}, 2)
@@ -115,7 +115,7 @@ func TestPatientServiceDBFlows(t *testing.T) {
 	})
 
 	t.Run("patient exists helper branches", func(t *testing.T) {
-		p := model.Patient{UserID: user.ID, Name: "Exists", Age: 20, Phone: "444", Email: "exists@example.com"}
+		p := models.Patient{UserID: user.ID, Name: "Exists", Age: 20, Phone: "444", Email: "exists@example.com"}
 		if err := svc.CreatePatient(ctx, &p); err != nil {
 			t.Fatalf("create patient for exists helper: %v", err)
 		}
@@ -142,7 +142,7 @@ func TestPatientServiceDBFlows(t *testing.T) {
 	})
 }
 
-func newPatientServiceForTests(t *testing.T) (service, model.User) {
+func newPatientServiceForTests(t *testing.T) (service, models.User) {
 	t.Helper()
 
 	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())
@@ -151,7 +151,7 @@ func newPatientServiceForTests(t *testing.T) (service, model.User) {
 		t.Fatalf("open sqlite: %v", err)
 	}
 
-	if err := gdb.AutoMigrate(&model.User{}, &model.Patient{}); err != nil {
+	if err := gdb.AutoMigrate(&models.User{}, &models.Patient{}); err != nil {
 		t.Fatalf("automigrate user/patient: %v", err)
 	}
 
@@ -164,8 +164,8 @@ func newPatientServiceForTests(t *testing.T) (service, model.User) {
 		t.Fatalf("new patient service: %v", err)
 	}
 
-	u := model.User{Email: "patient@example.com", Password: "hash", Role: model.UserRoleUser}
-	if err := gorm.G[model.User](gdb).Create(context.Background(), &u); err != nil {
+	u := models.User{Email: "patient@example.com", Password: "hash", Role: models.UserRoleUser}
+	if err := gorm.G[models.User](gdb).Create(context.Background(), &u); err != nil {
 		t.Fatalf("create user: %v", err)
 	}
 

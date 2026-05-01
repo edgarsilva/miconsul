@@ -5,15 +5,15 @@ import (
 	"net/url"
 	"testing"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 
 	"gorm.io/gorm"
 )
 
 func TestUserHandlers(t *testing.T) {
 	h := newTestHarness(t)
-	admin := h.createUser(model.UserRoleAdmin)
-	regular := h.createUser(model.UserRoleUser)
+	admin := h.createUser(models.UserRoleAdmin)
+	regular := h.createUser(models.UserRoleUser)
 
 	t.Run("profile update persists and redirects", func(t *testing.T) {
 		resp, _ := h.doRequest(requestOptions{
@@ -31,7 +31,7 @@ func TestUserHandlers(t *testing.T) {
 			t.Fatalf("expected redirect status, got %d", resp.StatusCode)
 		}
 
-		updated, err := gorm.G[model.User](h.db.GormDB()).Where("id = ?", regular.ID).Take(t.Context())
+		updated, err := gorm.G[models.User](h.db.GormDB()).Where("id = ?", regular.ID).Take(t.Context())
 		if err != nil {
 			t.Fatalf("load updated user: %v", err)
 		}

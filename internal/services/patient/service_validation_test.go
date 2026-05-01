@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 )
 
 func TestServiceValidationGuards(t *testing.T) {
@@ -16,7 +16,7 @@ func TestServiceValidationGuards(t *testing.T) {
 		if _, err := svc.TakePatientByID(ctx, "usr_1", "   "); !errors.Is(err, ErrIDRequired) {
 			t.Fatalf("expected ErrIDRequired for TakePatientByID, got %v", err)
 		}
-		if err := svc.UpdatePatientByID(ctx, "usr_1", "", model.Patient{}); !errors.Is(err, ErrIDRequired) {
+		if err := svc.UpdatePatientByID(ctx, "usr_1", "", models.Patient{}); !errors.Is(err, ErrIDRequired) {
 			t.Fatalf("expected ErrIDRequired for UpdatePatientByID, got %v", err)
 		}
 		if err := svc.DeletePatientByID(ctx, "usr_1", ""); !errors.Is(err, ErrIDRequired) {

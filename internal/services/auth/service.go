@@ -11,7 +11,7 @@ import (
 
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/mailer"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"miconsul/internal/server"
 
 	"github.com/asaskevich/govalidator"
@@ -92,7 +92,7 @@ func (s *service) signupIsEmailValid(ctx context.Context, email string) error {
 		return errors.New("email address is invalid")
 	}
 
-	user, err := gorm.G[model.User](s.DB.GormDB()).Where("email = ?", email).Take(ctx)
+	user, err := gorm.G[models.User](s.DB.GormDB()).Where("email = ?", email).Take(ctx)
 	if err == nil && user.ID != "" {
 		return errors.New("email already exists, try login instead")
 	}
@@ -118,7 +118,7 @@ func (s *service) signupIsPasswordValid(pwd string) error {
 }
 
 func (s *service) userPendingConfirmation(ctx context.Context, email string) error {
-	user, err := gorm.G[model.User](s.DB.GormDB()).
+	user, err := gorm.G[models.User](s.DB.GormDB()).
 		Select("ID, Email, ConfirmEmailToken").
 		Where("email = ? AND confirm_email_token IS NOT null AND confirm_email_token != ''", email).
 		Take(ctx)
@@ -130,84 +130,84 @@ func (s *service) userPendingConfirmation(ctx context.Context, email string) err
 }
 
 // userCreate creates a new row in the users table
-func (s *service) userCreate(ctx context.Context, email, password, token string) (model.User, error) {
-	user := model.User{
+func (s *service) userCreate(ctx context.Context, email, password, token string) (models.User, error) {
+	user := models.User{
 		Email:                 email,
 		Password:              password,
 		ConfirmEmailToken:     token,
 		ConfirmEmailExpiresAt: time.Now().Add(time.Hour * 1),
-		Role:                  model.UserRoleUser,
+		Role:                  models.UserRoleUser,
 	}
 
-	err := gorm.G[model.User](s.DB.GormDB()).Create(ctx, &user)
+	err := gorm.G[models.User](s.DB.GormDB()).Create(ctx, &user)
 	if err != nil {
 		err := errors.New("faild to save email or password, try again")
-		return model.User{}, err
+		return models.User{}, err
 	}
 
 	return user, nil
 }
 
 // userFetch returns a User by email
-func (s *service) userFetch(ctx context.Context, email string) (model.User, error) {
+func (s *service) userFetch(ctx context.Context, email string) (models.User, error) {
 	ctx, span := s.Trace(ctx, "auth/services:userFetch")
 	defer span.End()
 
-	user, err := gorm.G[model.User](s.DB.GormDB()).Where("email = ?", email).Take(ctx)
+	user, err := gorm.G[models.User](s.DB.GormDB()).Where("email = ?", email).Take(ctx)
 	if err != nil {
-		return model.User{}, errors.New("user not found")
+		return models.User{}, errors.New("user not found")
 	}
 
 	return user, nil
 }
 
-func (s *service) authenticateCredentials(ctx context.Context, email, password string) (model.User, error) {
+func (s *service) authenticateCredentials(ctx context.Context, email, password string) (models.User, error) {
 	user, err := s.userFetch(ctx, email)
 	if err != nil {
-		return model.User{}, errAuthInvalidCredentials
+		return models.User{}, errAuthInvalidCredentials
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return model.User{}, errAuthInvalidCredentials
+		return models.User{}, errAuthInvalidCredentials
 	}
 
 	if user.ConfirmEmailToken != "" {
-		return model.User{}, errAuthPendingConfirmation
+		return models.User{}, errAuthPendingConfirmation
 	}
 
 	return user, nil
 }
 
 // userUpdatePassword updates a user password
-func (s *service) userUpdatePassword(ctx context.Context, email, password, token string) (model.User, error) {
+func (s *service) userUpdatePassword(ctx context.Context, email, password, token string) (models.User, error) {
 	pwd, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
-		return model.User{}, errors.New("failed to update password")
+		return models.User{}, errors.New("failed to update password")
 	}
 
-	user := model.User{
+	user := models.User{
 		Email:    email,
 		Password: string(pwd),
 	}
 
-	rowsAffected, err := gorm.G[model.User](s.DB.GormDB()).
+	rowsAffected, err := gorm.G[models.User](s.DB.GormDB()).
 		Select("Password", "ResetToken", "ResetTokenExpiresAt").
 		Where("email = ? AND reset_token = ? AND reset_token_expires_at > ?", email, token, time.Now()).
 		Limit(1).
 		Updates(ctx, user)
 	if err != nil || rowsAffected != 1 {
-		return model.User{}, errors.New("failed to update password")
+		return models.User{}, errors.New("failed to update password")
 	}
 
 	return user, nil
 }
 
 func (s *service) userUpdateConfirmToken(ctx context.Context, email, token string) error {
-	user := model.User{
+	user := models.User{
 		ConfirmEmailToken:     token,
 		ConfirmEmailExpiresAt: time.Now().Add(time.Hour * 24),
 	}
-	rowsAffected, err := gorm.G[model.User](s.DB.GormDB()).
+	rowsAffected, err := gorm.G[models.User](s.DB.GormDB()).
 		Select("ConfirmEmailToken", "ConfirmEmailExpiresAt").
 		Where("email = ?", email).
 		Limit(1).
@@ -220,7 +220,7 @@ func (s *service) userUpdateConfirmToken(ctx context.Context, email, token strin
 }
 
 func (s *service) resetPasswordVerifyToken(ctx context.Context, token string) (email string, err error) {
-	user, err := gorm.G[model.User](s.DB.GormDB()).
+	user, err := gorm.G[models.User](s.DB.GormDB()).
 		Select("id, email").
 		Where("reset_token != '' AND reset_token IS NOT null AND reset_token = ? AND reset_token_expires_at > ?", token, time.Now()).
 		Take(ctx)
@@ -235,7 +235,7 @@ func (s *service) saveLogtoUser(ctx context.Context, logtoUser LogtoUser) error 
 	ctx, span := s.Trace(ctx, "auth/logto:saveLogtoUser")
 	defer span.End()
 
-	user, err := gorm.G[model.User](s.DB.GormDB()).Where("email = ?", logtoUser.Email).Take(ctx)
+	user, err := gorm.G[models.User](s.DB.GormDB()).Where("email = ?", logtoUser.Email).Take(ctx)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return fmt.Errorf("failed to load user from logto claims, GORM error: %w", err)
 	}
@@ -263,7 +263,7 @@ func (s *service) saveLogtoUser(ctx context.Context, logtoUser LogtoUser) error 
 	}
 	user.Phone = logtoUser.PhoneNumber
 	if !userExists || user.Role == "" {
-		user.Role = model.UserRoleUser
+		user.Role = models.UserRoleUser
 	}
 
 	if result := s.DB.WithContext(ctx).Save(&user); result.Error != nil {

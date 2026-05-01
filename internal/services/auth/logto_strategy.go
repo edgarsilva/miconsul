@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
@@ -29,10 +29,10 @@ func NewLogtoStrategy(runtime Runtime) *LogtoStrategy {
 	}
 }
 
-func (lgs *LogtoStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
+func (lgs *LogtoStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
 	sess, err := lgs.runtime.Session(c)
 	if err != nil {
-		return model.User{}, err
+		return models.User{}, err
 	}
 
 	logtoClient, saveSess := NewLogtoClient(sess, LogtoConfig(lgs.runtime.AppEnv()))
@@ -47,7 +47,7 @@ func (lgs *LogtoStrategy) Authenticate(c fiber.Ctx) (model.User, error) {
 
 	claims, err := logtoClient.GetIdTokenClaims()
 	if err != nil {
-		return model.User{}, err
+		return models.User{}, err
 	}
 
 	user, err := TakeUserByExtID(ctx, lgs.runtime, claims.Sub)

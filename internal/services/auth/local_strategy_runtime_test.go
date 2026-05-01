@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/session"
@@ -264,7 +264,7 @@ func TestDecodeAuthSnapshot(t *testing.T) {
 			Token:          "jwt-token",
 			UserID:         "user_123",
 			UserEmail:      "u@example.com",
-			UserRole:       model.UserRoleAdmin,
+			UserRole:       models.UserRoleAdmin,
 			UserName:       "Ada",
 			UserProfilePic: "/avatar.png",
 			CachedAtUnix:   time.Now().Unix(),

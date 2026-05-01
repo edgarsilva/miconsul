@@ -9,7 +9,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"strconv"
 )
 
@@ -23,7 +23,7 @@ type DashboardStats struct {
 	Appointments DashboardStat
 }
 
-func DashboardPage(vc *Ctx, stats DashboardStats, appointments []model.Appointment, favClinic model.Clinic) templ.Component {
+func DashboardPage(vc *Ctx, stats DashboardStats, appointments []models.Appointment, favClinic models.Clinic) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -68,7 +68,7 @@ func DashboardPage(vc *Ctx, stats DashboardStats, appointments []model.Appointme
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = AppointmentsSection(vc, appointments, true, model.Patient{}, model.Clinic{}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = AppointmentsSection(vc, appointments, true, models.Patient{}, models.Clinic{}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -348,7 +348,7 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 	})
 }
 
-func Clinic(c *Ctx, clinic model.Clinic) templ.Component {
+func Clinic(c *Ctx, clinic models.Clinic) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"miconsul/internal/server"
 
 	"github.com/gofiber/fiber/v3"
@@ -56,7 +56,7 @@ func TestIssueAuthCookie(t *testing.T) {
 
 		app := fiber.New()
 		app.Get("/", func(c fiber.Ctx) error {
-			if err := svc.issueAuthCookie(c, model.User{ID: "user_1", Email: "u@example.com"}, true); err != nil {
+			if err := svc.issueAuthCookie(c, models.User{ID: "user_1", Email: "u@example.com"}, true); err != nil {
 				return err
 			}
 			return c.SendStatus(fiber.StatusNoContent)
@@ -79,7 +79,7 @@ func TestIssueAuthCookie(t *testing.T) {
 
 		app := fiber.New()
 		app.Get("/", func(c fiber.Ctx) error {
-			err := svc.issueAuthCookie(c, model.User{ID: "user_1", Email: "u@example.com"}, false)
+			err := svc.issueAuthCookie(c, models.User{ID: "user_1", Email: "u@example.com"}, false)
 			if !errors.Is(err, errAuthSessionCreate) {
 				t.Fatalf("expected errAuthSessionCreate, got %v", err)
 			}

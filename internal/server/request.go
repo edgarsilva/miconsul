@@ -1,18 +1,18 @@
 package server
 
 import (
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
 )
 
 // CurrentUser returns request-scoped user from fiber locals only.
 // Auth/session resolution is handled by auth.Authenticate + middleware binding.
-func (s *Server) CurrentUser(c fiber.Ctx) model.User {
+func (s *Server) CurrentUser(c fiber.Ctx) models.User {
 	userIface := c.Locals("current_user")
-	cu, ok := userIface.(model.User)
+	cu, ok := userIface.(models.User)
 	if !ok {
-		return model.User{}
+		return models.User{}
 	}
 
 	return cu

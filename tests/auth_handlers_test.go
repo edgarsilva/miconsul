@@ -6,14 +6,14 @@ import (
 	"strings"
 	"testing"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 )
 
 func TestAuthHandlers(t *testing.T) {
 	h := newTestHarness(t)
-	u := h.createUser(model.UserRoleUser)
+	u := h.createUser(models.UserRoleUser)
 	token := h.authToken(u)
-	authUser := h.createAuthUser("", "Password1!", model.UserRoleUser)
+	authUser := h.createAuthUser("", "Password1!", models.UserRoleUser)
 
 	t.Run("signin page renders when unauthenticated", func(t *testing.T) {
 		resp, body := h.doRequest(requestOptions{method: http.MethodGet, path: "/signin"})

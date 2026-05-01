@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 	"errors"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"miconsul/internal/server"
 	"strings"
 
@@ -26,63 +26,63 @@ func NewService(s *server.Server) (service, error) {
 	}, nil
 }
 
-func (s service) FindRecentUsers(ctx context.Context, limit int) ([]model.User, error) {
-	users, err := gorm.G[model.User](s.DB.GormDB()).Order("id DESC").Limit(limit).Find(ctx)
+func (s service) FindRecentUsers(ctx context.Context, limit int) ([]models.User, error) {
+	users, err := gorm.G[models.User](s.DB.GormDB()).Order("id DESC").Limit(limit).Find(ctx)
 	if err != nil {
-		return []model.User{}, err
+		return []models.User{}, err
 	}
 
 	return users, nil
 }
 
-func (s service) TakeUserByID(ctx context.Context, userID string) (model.User, error) {
+func (s service) TakeUserByID(ctx context.Context, userID string) (models.User, error) {
 	userID = strings.TrimSpace(userID)
 	if userID == "" {
-		return model.User{}, ErrIDRequired
+		return models.User{}, ErrIDRequired
 	}
 
-	user, err := gorm.G[model.User](s.DB.GormDB()).Where("id = ?", userID).Take(ctx)
+	user, err := gorm.G[models.User](s.DB.GormDB()).Where("id = ?", userID).Take(ctx)
 	if err != nil {
-		return model.User{}, err
+		return models.User{}, err
 	}
 
 	return user, nil
 }
 
-func (s service) UpdateUserProfileByID(ctx context.Context, userID string, updates model.User) (model.User, error) {
+func (s service) UpdateUserProfileByID(ctx context.Context, userID string, updates models.User) (models.User, error) {
 	userID = strings.TrimSpace(userID)
 	if userID == "" {
-		return model.User{}, ErrIDRequired
+		return models.User{}, ErrIDRequired
 	}
 
 	err := normalizeUserWriteInput(&updates)
 	if err != nil {
-		return model.User{}, err
+		return models.User{}, err
 	}
 
-	rowsAffected, err := gorm.G[model.User](s.DB.GormDB()).
+	rowsAffected, err := gorm.G[models.User](s.DB.GormDB()).
 		Where("id = ?", userID).
 		Updates(ctx, updates)
 	if err != nil {
-		return model.User{}, err
+		return models.User{}, err
 	}
 	if rowsAffected != 1 {
-		return model.User{}, gorm.ErrRecordNotFound
+		return models.User{}, gorm.ErrRecordNotFound
 	}
 
 	user, err := s.TakeUserByID(ctx, userID)
 	if err != nil {
-		return model.User{}, err
+		return models.User{}, err
 	}
 
 	return user, nil
 }
 
-func (s service) CreateUsersInBatches(ctx context.Context, users []model.User, batchSize int) error {
-	return gorm.G[model.User](s.DB.GormDB()).CreateInBatches(ctx, &users, batchSize)
+func (s service) CreateUsersInBatches(ctx context.Context, users []models.User, batchSize int) error {
+	return gorm.G[models.User](s.DB.GormDB()).CreateInBatches(ctx, &users, batchSize)
 }
 
-func normalizeUserWriteInput(user *model.User) error {
+func normalizeUserWriteInput(user *models.User) error {
 	if user == nil {
 		return errors.New("user is required")
 	}

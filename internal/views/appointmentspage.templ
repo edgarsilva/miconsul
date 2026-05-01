@@ -2,12 +2,12 @@ package views
 
 import (
 	"miconsul/internal/lib/libtime"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"strconv"
 	"time"
 )
 
-templ AppointmentsPage(vc *Ctx, appointments []model.Appointment, selectedPatient model.Patient, selectedClinic model.Clinic) {
+templ AppointmentsPage(vc *Ctx, appointments []models.Appointment, selectedPatient models.Patient, selectedClinic models.Clinic) {
 	@LayoutWithBackBtn(vc, "/") {
 		<section class="grow flex flex-col px-0 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<div
@@ -34,7 +34,7 @@ templ AppointmentsPage(vc *Ctx, appointments []model.Appointment, selectedPatien
 	}
 }
 
-templ AppointmentPage(vc *Ctx, appointment model.Appointment, patients []model.Patient, clinics []model.Clinic) {
+templ AppointmentPage(vc *Ctx, appointment models.Appointment, patients []models.Patient, clinics []models.Clinic) {
 	@LayoutWithBackBtn(vc, "/appointments") {
 		<section id="appointment_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 md:py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			if appointment.ID == "" || appointment.ID == "new" {
@@ -47,7 +47,7 @@ templ AppointmentPage(vc *Ctx, appointment model.Appointment, patients []model.P
 	}
 }
 
-templ AppointmentsSection(c *Ctx, appointments []model.Appointment, showTitle bool, selectedPatient model.Patient, selectedClinic model.Clinic) {
+templ AppointmentsSection(c *Ctx, appointments []models.Appointment, showTitle bool, selectedPatient models.Patient, selectedClinic models.Clinic) {
 	<section id="appointments_section" class="app-card col-span-2 flex flex-col pt-4">
 		<div
 			class="relative items-center flex justify-between border-b border-base-content/10 pb-2"
@@ -157,7 +157,7 @@ templ AppointmentsSection(c *Ctx, appointments []model.Appointment, showTitle bo
 	</section>
 }
 
-templ AppointmentsList(vc *Ctx, appointments []model.Appointment) {
+templ AppointmentsList(vc *Ctx, appointments []models.Appointment) {
 	<ul id="appointments_list" class="divide-y divide-base-content-10 text-sm leading-6" hx-boost="true">
 		for _, appointment := range appointments {
 			@AppointmentLi(vc, appointment)
@@ -165,7 +165,7 @@ templ AppointmentsList(vc *Ctx, appointments []model.Appointment) {
 	</ul>
 }
 
-templ AppointmentLi(vc *Ctx, appointment model.Appointment) {
+templ AppointmentLi(vc *Ctx, appointment models.Appointment) {
 	<li class="relative flex space-x-4 py-4 xl:static">
 		<figure aria-label="patient picture" class="h-14 w-14 flex-none rounded-full">
 			@CmpAvatar(appointment.Patient, "w-14 h-14")
@@ -240,7 +240,7 @@ templ AppointmentLi(vc *Ctx, appointment model.Appointment) {
 	</li>
 }
 
-templ AppointmentActions(appointment model.Appointment, vc *Ctx) {
+templ AppointmentActions(appointment models.Appointment, vc *Ctx) {
 	<div class="hidden gap-2 items-center lg:flex">
 		<a href={ templ.URL("/appointments/" + appointment.ID + "/start") } class="btn btn-outline btn-primary">
 			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -267,7 +267,7 @@ templ AppointmentsEmptyList(vc *Ctx) {
 	</div>
 }
 
-templ AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.Patient, clinics []model.Clinic) {
+templ AppointmentCont(vc *Ctx, appointment models.Appointment, patients []models.Patient, clinics []models.Clinic) {
 	<div id="appointment_profile" class="space-y-10 divide-y divide-base-content/10">
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
@@ -301,7 +301,7 @@ templ AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.P
 										type="datetime-local"
 										name="bookedAt"
 										if appointment.BookedAt.IsZero() {
-										value={ libtime.InTimezone(time.Now(), model.DefaultTimezone).Format("2006-01-02T15:04") }
+										value={ libtime.InTimezone(time.Now(), models.DefaultTimezone).Format("2006-01-02T15:04") }
 										} else {
 											value={ appointment.BookedAtInLocalTime().Format("2006-01-02T15:04") }
 										}
@@ -329,7 +329,7 @@ templ AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.P
 									/>
 								</div>
 							</div>
-							@ApptPrice(vc, appointment, model.Clinic{}, false)
+							@ApptPrice(vc, appointment, models.Clinic{}, false)
 							<div class="col-span-full mt-2">
 								<label class="relative flex gap-x-3">
 									<input
@@ -359,7 +359,7 @@ templ AppointmentCont(vc *Ctx, appointment model.Appointment, patients []model.P
 	</div>
 }
 
-templ ApptPrice(vc *Ctx, appointment model.Appointment, clinic model.Clinic, swapOOB bool) {
+templ ApptPrice(vc *Ctx, appointment models.Appointment, clinic models.Clinic, swapOOB bool) {
 	<div
 		id="appt_price"
 		class="sm:col-span-3"
@@ -388,7 +388,7 @@ templ ApptPrice(vc *Ctx, appointment model.Appointment, clinic model.Clinic, swa
 	</div>
 }
 
-templ ClinicSearch(vc *Ctx, clinics []model.Clinic) {
+templ ClinicSearch(vc *Ctx, clinics []models.Clinic) {
 	<section class="p-4 md:p-6 bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
 		<span class="absolute top-2 right-2 loading loading-ring text-primary loading-md htmx-indicator"></span>
 		<label class="relative input input-bordered rounded-full flex items-center gap-2 mb-4">
@@ -420,7 +420,7 @@ templ ClinicSearch(vc *Ctx, clinics []model.Clinic) {
 	</section>
 }
 
-templ ApptSearchClinicsResults(vc *Ctx, clinics []model.Clinic) {
+templ ApptSearchClinicsResults(vc *Ctx, clinics []models.Clinic) {
 	<ul
 		id="clinic_search_results"
 		role="list"
@@ -461,14 +461,14 @@ templ ApptSearchClinicsResults(vc *Ctx, clinics []model.Clinic) {
 	</ul>
 }
 
-templ ApptSearchClinicsFrg(vc *Ctx, clinics []model.Clinic) {
+templ ApptSearchClinicsFrg(vc *Ctx, clinics []models.Clinic) {
 	@ApptSearchClinicsResults(vc, clinics)
 	if len(clinics) > 0 {
-		@ApptPrice(vc, model.Appointment{}, clinics[0], true)
+		@ApptPrice(vc, models.Appointment{}, clinics[0], true)
 	}
 }
 
-templ PatientSearch(vc *Ctx, patients []model.Patient) {
+templ PatientSearch(vc *Ctx, patients []models.Patient) {
 	<section class="p-4 md:p-6 bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
 		<span class="absolute top-2 right-2 loading loading-ring text-primary loading-md htmx-indicator"></span>
 		<label class="relative input input-bordered rounded-full flex items-center gap-2 mb-4">
@@ -499,7 +499,7 @@ templ PatientSearch(vc *Ctx, patients []model.Patient) {
 	</section>
 }
 
-templ PatientSearchResults(patients []model.Patient, vc *Ctx) {
+templ PatientSearchResults(patients []models.Patient, vc *Ctx) {
 	<ul
 		id="patient_search_results"
 		role="list"
@@ -536,7 +536,7 @@ templ PatientSearchResults(patients []model.Patient, vc *Ctx) {
 	</ul>
 }
 
-templ AppointmentForm(appointment model.Appointment, vc *Ctx) {
+templ AppointmentForm(appointment models.Appointment, vc *Ctx) {
 	<form
 		id="new_appointment"
 		method="POST"

@@ -9,11 +9,11 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"time"
 )
 
-func UsersIndexPage(c *Ctx, users []model.User) templ.Component {
+func UsersIndexPage(c *Ctx, users []models.User) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -135,7 +135,7 @@ func UsersIndexPage(c *Ctx, users []model.User) templ.Component {
 	})
 }
 
-func UsersList(c *Ctx, users []model.User) templ.Component {
+func UsersList(c *Ctx, users []models.User) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -174,7 +174,7 @@ func UsersList(c *Ctx, users []model.User) templ.Component {
 	})
 }
 
-func UserLi(c *Ctx, user model.User) templ.Component {
+func UserLi(c *Ctx, user models.User) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -321,7 +321,7 @@ func UsersEmptyList(c *Ctx) templ.Component {
 	})
 }
 
-func UserEditPage(c *Ctx, user model.User) templ.Component {
+func UserEditPage(c *Ctx, user models.User) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -447,7 +447,7 @@ func UserEditPage(c *Ctx, user model.User) templ.Component {
 	})
 }
 
-func UserProfile(c *Ctx, user model.User) templ.Component {
+func UserProfile(c *Ctx, user models.User) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -841,7 +841,7 @@ func UserProfile(c *Ctx, user model.User) templ.Component {
 	})
 }
 
-func UserForm(c *Ctx, user model.User) templ.Component {
+func UserForm(c *Ctx, user models.User) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -876,7 +876,7 @@ func UserForm(c *Ctx, user model.User) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if c.CurrentUser.Role == model.UserRoleAdmin {
+		if c.CurrentUser.Role == models.UserRoleAdmin {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, " hx-patch=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

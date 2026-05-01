@@ -1,12 +1,13 @@
 # Backlog
 
-## Icebox
+## Next Up
 
-- [devx/docs] Document toolchain manager guidance
-  - Note preferred local setup path (`mise`) while keeping alternatives valid (`asdf`, `homebrew`, etc.).
-  - Clarify which tasks install project dependencies versus optional CLI tools.
+- [quality/auth] Auth coverage hardening after migration checklist closure
+  - Keep `docs/testing.md` migration status aligned with real auth suite state.
+  - Expand auth regression matrix for provider callback errors and session-first hydration edge-cases.
+  - Add a compact auth route contract table (status/redirect/header behavior) to reduce future docs drift.
 
-- [external/runtime] Uptime Kuma monitor setup (when environment is ready)
+- [external/runtime] Uptime Kuma monitor setup (environment ready)
   - Configure monitors in Kuma for `/livez`, `/readyz`, and optional `/startupz`.
   - Apply final interval/timeout/retry settings directly in the Kuma UI.
 - [external/runtime] Uptime Kuma notifications and routing
@@ -16,7 +17,29 @@
   - Service health alert: `/readyz` failure streak threshold (for example 3 consecutive failures).
   - Degradation alert: `/readyz` latency above threshold.
 
+- [feature/storage] Object storage uploads for images (RustFS S3-compatible)
+  - Define storage abstraction and configuration wiring for local disk vs S3-compatible backends.
+  - Upload and retrieval path for patient/profile images via RustFS.
+  - Migration/fallback strategy for existing disk-backed image files.
+
+## Icebox
+
+- [external/runtime] Beta tester release prep
+  - Define exit criteria and communication checklist for first beta group.
+
+- [infra/sessions] Optional Valkey-backed HTTP sessions (lowest priority)
+  - Replace SQLite session storage with Valkey storage behind Fiber session middleware.
+  - Keep fallback behavior and rollout checklist for local/dev environments.
+
 ## Done
+
+- Testing docs drift cleanup for auth migration status
+  - Updated migration checklist in `docs/testing.md` to mark `auth` as done.
+  - Captured remaining auth work as hardening tasks instead of migration status debt.
+
+- Devx/docs toolchain manager guidance in README
+  - Documented preferred local setup path (`mise`) while keeping alternatives valid (`asdf`, `homebrew`).
+  - Clarified `make install/deps` (project deps) versus `make install/tools` (optional local CLIs).
 
 - Devx setup target and toolchain ownership cleanup
   - Renamed setup flow to `make install/deps` and kept `make install` as alias.

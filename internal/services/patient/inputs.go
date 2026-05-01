@@ -1,6 +1,6 @@
 package patient
 
-import "miconsul/internal/model"
+import "miconsul/internal/models"
 
 type patientUpsertInput struct {
 	Name              string `form:"name"`
@@ -32,8 +32,8 @@ type patientUpsertInput struct {
 	ViaMessenger        bool `form:"viaMessenger"`
 }
 
-func (in patientUpsertInput) toPatient(id, userID string) model.Patient {
-	return model.Patient{
+func (in patientUpsertInput) toPatient(id, userID string) models.Patient {
+	return models.Patient{
 		ID:                id,
 		UserID:            userID,
 		Name:              in.Name,
@@ -45,7 +45,7 @@ func (in patientUpsertInput) toPatient(id, userID string) model.Patient {
 		MedicalBackground: in.MedicalBackground,
 		Notes:             in.Notes,
 
-		Address: model.Address{
+		Address: models.Address{
 			Line1:   in.AddressLine1,
 			Line2:   in.AddressLine2,
 			City:    in.AddressCity,
@@ -53,14 +53,14 @@ func (in patientUpsertInput) toPatient(id, userID string) model.Patient {
 			Country: in.AddressCountry,
 			Zip:     in.AddressZipCode,
 		},
-		SocialMedia: model.SocialMedia{
+		SocialMedia: models.SocialMedia{
 			Whatsapp:  in.Whatsapp,
 			Telegram:  in.Telegram,
 			Messenger: in.Messenger,
 			Instagram: in.Instagram,
 			Facebook:  in.Facebook,
 		},
-		NotificationFlags: model.NotificationFlags{
+		NotificationFlags: models.NotificationFlags{
 			EnableNotifications: in.EnableNotifications,
 			ViaEmail:            in.ViaEmail,
 			ViaWhatsapp:         in.ViaWhatsapp,

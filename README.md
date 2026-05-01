@@ -15,9 +15,46 @@ Miconsul is a patient appointment planner and notification center.
 
 Prerequisites:
 
-- Go (with CGO support for SQLite)
+- Go 1.26+ (with CGO support for SQLite)
 - `make`
+- Bun
 - Docker (optional, for local observability stack)
+
+### Toolchain Manager Guidance
+
+Preferred local toolchain path is `mise`.
+
+Alternatives remain valid:
+
+- `asdf`
+- `homebrew`
+
+Use your manager to install runtime/toolchain binaries (`go`, `bun`).
+
+Then use project tasks for repository setup:
+
+- `make install/deps`: installs project dependencies (`go mod download`, `bun install`)
+- `make install/tools`: installs optional local CLIs (`templ`, `go-localize`)
+
+### Environment Setup
+
+Create your local environment file:
+
+```bash
+cp .env.example .env
+```
+
+Minimum app variables to verify/update in `.env`:
+
+- `APP_ENV`, `APP_PORT`, `APP_NAME`, `APP_PROTOCOL`, `APP_DOMAIN`, `APP_VERSION`
+- `COOKIE_SECRET`, `JWT_SECRET`
+- `DB_PATH`, `SESSION_DB_PATH`
+
+Optional but commonly used:
+
+- `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_INSECURE`
+- `JOBS_ENABLED`, `JOBS_UI_ENABLED`, `VALKEY_HOST`, `VALKEY_PORT`, `VALKEY_DB`
+- `LOGTO_URL`, `LOGTO_APP_ID`, `LOGTO_APP_SECRET`, `LOGTO_RESOURCE`
 
 Install project tooling:
 
@@ -139,8 +176,8 @@ Project entry points:
 - Seed command: `cmd/seed/main.go`
 - Router wiring: `internal/routes/router.go`
 - HTTP server/middleware: `internal/server`
-- Services/handlers: `internal/service`
-- Views: `internal/view/*.templ`
+- Services/handlers: `internal/services`
+- Views: `internal/views/*.templ`
 
 Architecture guidelines and diagrams:
 

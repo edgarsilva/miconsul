@@ -2,7 +2,7 @@ package dashboard
 
 import (
 	"miconsul/internal/lib/libtime"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	view "miconsul/internal/views"
 	"time"
 
@@ -16,17 +16,17 @@ import (
 func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
-	appointments := []model.Appointment{}
-	query := s.DB.WithContext(c.Context()).Model(model.Appointment{}).Where("user_id = ?", cu.ID)
+	appointments := []models.Appointment{}
+	query := s.DB.WithContext(c.Context()).Model(models.Appointment{}).Where("user_id = ?", cu.ID)
 
 	timeframe := c.Query("timeframe", "")
 	switch timeframe {
 	case "day":
-		query.Scopes(model.AppointmentBookedToday)
+		query.Scopes(models.AppointmentBookedToday)
 	case "week":
-		query.Scopes(model.AppointmentBookedThisWeek)
+		query.Scopes(models.AppointmentBookedThisWeek)
 	case "month":
-		query.Scopes(model.AppointmentBookedThisMonth)
+		query.Scopes(models.AppointmentBookedThisMonth)
 	default:
 		query.Where("booked_at > ?", libtime.BoD(time.Now()))
 	}
@@ -37,14 +37,14 @@ func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 		Limit(10).
 		Find(&appointments)
 
-	clinic := model.Clinic{}
-	clinic, _ = gorm.G[model.Clinic](s.DB.GormDB()).
+	clinic := models.Clinic{}
+	clinic, _ = gorm.G[models.Clinic](s.DB.GormDB()).
 		Where("user_id = ? AND favorite = ?", cu.ID, true).
 		Order("created_at").
 		Take(c.Context())
 
 	if clinic.ID == "" {
-		clinic, _ = gorm.G[model.Clinic](s.DB.GormDB()).
+		clinic, _ = gorm.G[models.Clinic](s.DB.GormDB()).
 			Where("user_id = ?", cu.ID).
 			Order("created_at").
 			Take(c.Context())

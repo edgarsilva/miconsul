@@ -3,7 +3,7 @@ package clinic
 import (
 	"errors"
 	"fmt"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"path"
 	"strings"
 
@@ -12,7 +12,7 @@ import (
 
 var ErrProfilePicNotProvided = errors.New("profile picture not provided")
 
-func SaveProfilePicToDisk(c fiber.Ctx, clinic model.Clinic) (string, error) {
+func SaveProfilePicToDisk(c fiber.Ctx, clinic models.Clinic) (string, error) {
 	profilePic, err := c.FormFile("profilePic")
 	if err != nil {
 		return "", ErrProfilePicNotProvided

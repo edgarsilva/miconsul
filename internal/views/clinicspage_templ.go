@@ -9,11 +9,11 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"strconv"
 )
 
-func ClinicsPage(vc *Ctx, clinics []model.Clinic) templ.Component {
+func ClinicsPage(vc *Ctx, clinics []models.Clinic) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -122,7 +122,7 @@ func ClinicsPage(vc *Ctx, clinics []model.Clinic) templ.Component {
 	})
 }
 
-func ClinicPage(vc *Ctx, clinic model.Clinic) templ.Component {
+func ClinicPage(vc *Ctx, clinic models.Clinic) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -226,7 +226,7 @@ func ClinicPage(vc *Ctx, clinic model.Clinic) templ.Component {
 	})
 }
 
-func ClinicsList(vc *Ctx, clinics []model.Clinic) templ.Component {
+func ClinicsList(vc *Ctx, clinics []models.Clinic) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -265,7 +265,7 @@ func ClinicsList(vc *Ctx, clinics []model.Clinic) templ.Component {
 	})
 }
 
-func ClinicLi(clinic model.Clinic, vc *Ctx) templ.Component {
+func ClinicLi(clinic models.Clinic, vc *Ctx) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -423,7 +423,7 @@ func ClinicLi(clinic model.Clinic, vc *Ctx) templ.Component {
 	})
 }
 
-func ClinicDeleteForm(vc *Ctx, clinic model.Clinic) templ.Component {
+func ClinicDeleteForm(vc *Ctx, clinic models.Clinic) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -533,7 +533,7 @@ func ClinicsEmptyList(vc *Ctx) templ.Component {
 	})
 }
 
-func ClinicProfile(clinic model.Clinic, vc *Ctx) templ.Component {
+func ClinicProfile(clinic models.Clinic, vc *Ctx) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1350,7 +1350,7 @@ func ClinicProfile(clinic model.Clinic, vc *Ctx) templ.Component {
 	})
 }
 
-func ClinicForm(clinic model.Clinic, vc *Ctx) templ.Component {
+func ClinicForm(clinic models.Clinic, vc *Ctx) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

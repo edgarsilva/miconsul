@@ -9,11 +9,11 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"strconv"
 )
 
-func AppointmentStartPage(appointment model.Appointment, vc *Ctx) templ.Component {
+func AppointmentStartPage(appointment models.Appointment, vc *Ctx) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -76,7 +76,7 @@ func AppointmentStartPage(appointment model.Appointment, vc *Ctx) templ.Componen
 	})
 }
 
-func PatientCard(patient model.Patient, vc *Ctx) templ.Component {
+func PatientCard(patient models.Patient, vc *Ctx) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -255,7 +255,7 @@ func PatientCard(patient model.Patient, vc *Ctx) templ.Component {
 	})
 }
 
-func AppointmentStart(appointment model.Appointment, vc *Ctx) templ.Component {
+func AppointmentStart(appointment models.Appointment, vc *Ctx) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

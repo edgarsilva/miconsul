@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
 	"gorm.io/gorm"
@@ -118,15 +118,15 @@ func TestSaveLogtoUserPaths(t *testing.T) {
 		if got.ProfilePic != "https://cdn.example.com/avatar.png" {
 			t.Fatalf("expected profile picture fallback, got %q", got.ProfilePic)
 		}
-		if got.Role != model.UserRoleUser {
+		if got.Role != models.UserRoleUser {
 			t.Fatalf("expected default role user, got %q", got.Role)
 		}
 	})
 
 	t.Run("updates existing user ext id and fills missing password", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
-		u := model.User{Email: "logto-update@example.com", Password: "", Role: model.UserRoleUser}
-		if err := gorm.G[model.User](svc.DB.GormDB()).Create(context.Background(), &u); err != nil {
+		u := models.User{Email: "logto-update@example.com", Password: "", Role: models.UserRoleUser}
+		if err := gorm.G[models.User](svc.DB.GormDB()).Create(context.Background(), &u); err != nil {
 			t.Fatalf("seed user with blank password: %v", err)
 		}
 

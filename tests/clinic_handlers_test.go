@@ -6,14 +6,14 @@ import (
 	"strings"
 	"testing"
 
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 
 	"gorm.io/gorm"
 )
 
 func TestClinicHandlers(t *testing.T) {
 	h := newTestHarness(t)
-	u := h.createUser(model.UserRoleUser)
+	u := h.createUser(models.UserRoleUser)
 	token := h.authToken(u)
 
 	t.Run("update missing id returns bad request", func(t *testing.T) {
@@ -81,7 +81,7 @@ func TestClinicHandlers(t *testing.T) {
 			t.Fatalf("expected updated clinic name in response body")
 		}
 
-		updated, err := gorm.G[model.Clinic](h.db.GormDB()).Where("id = ?", clinic.ID).Take(t.Context())
+		updated, err := gorm.G[models.Clinic](h.db.GormDB()).Where("id = ?", clinic.ID).Take(t.Context())
 		if err != nil {
 			t.Fatalf("load updated clinic: %v", err)
 		}
@@ -168,7 +168,7 @@ func TestClinicHandlers(t *testing.T) {
 			t.Fatalf("expected HX-Location /clinics, got %q", got)
 		}
 
-		_, err := gorm.G[model.Clinic](h.db.GormDB()).Where("id = ?", clinic.ID).Take(t.Context())
+		_, err := gorm.G[models.Clinic](h.db.GormDB()).Where("id = ?", clinic.ID).Take(t.Context())
 		if err == nil {
 			t.Fatalf("expected deleted clinic to be missing")
 		}
@@ -207,7 +207,7 @@ func TestClinicHandlers(t *testing.T) {
 	})
 
 	t.Run("cross-user update and delete are scoped", func(t *testing.T) {
-		owner := h.createUser(model.UserRoleUser)
+		owner := h.createUser(models.UserRoleUser)
 		ownerClinic := h.createClinic(owner.ID, "Owner Clinic")
 
 		resp, _ := h.doRequest(requestOptions{
@@ -233,7 +233,7 @@ func TestClinicHandlers(t *testing.T) {
 			t.Fatalf("expected 404 for cross-user clinic delete, got %d", resp.StatusCode)
 		}
 
-		unchanged, err := gorm.G[model.Clinic](h.db.GormDB()).Where("id = ?", ownerClinic.ID).Take(t.Context())
+		unchanged, err := gorm.G[models.Clinic](h.db.GormDB()).Where("id = ?", ownerClinic.ID).Take(t.Context())
 		if err != nil {
 			t.Fatalf("load owner clinic after cross-user attempts: %v", err)
 		}

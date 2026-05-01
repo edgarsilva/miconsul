@@ -1,12 +1,12 @@
 package auth
 
 import (
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
 )
 
-func (s *service) issueAuthCookie(c fiber.Ctx, user model.User, rememberMe bool) error {
+func (s *service) issueAuthCookie(c fiber.Ctx, user models.User, rememberMe bool) error {
 	validFor := authTokenTTL(rememberMe)
 
 	jwt, err := JWTCreateTokenWithTTL(s.AppEnv(), user.Email, user.ID, validFor, rememberMe)

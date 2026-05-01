@@ -3,7 +3,7 @@ package clinic
 import (
 	"context"
 	"errors"
-	"miconsul/internal/model"
+	"miconsul/internal/models"
 	"miconsul/internal/server"
 	"strings"
 
@@ -26,49 +26,49 @@ func NewService(s *server.Server) (service, error) {
 	}, nil
 }
 
-func (s service) TakeClinicByID(ctx context.Context, userID, clinicID string) (model.Clinic, error) {
+func (s service) TakeClinicByID(ctx context.Context, userID, clinicID string) (models.Clinic, error) {
 	clinicID = strings.TrimSpace(clinicID)
 	if clinicID == "" {
-		return model.Clinic{}, ErrIDRequired
+		return models.Clinic{}, ErrIDRequired
 	}
 
-	clinic, err := gorm.G[model.Clinic](s.DB.GormDB()).
+	clinic, err := gorm.G[models.Clinic](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", clinicID, userID).
 		Take(ctx)
 	if err != nil {
-		return model.Clinic{}, err
+		return models.Clinic{}, err
 	}
 
 	return clinic, nil
 }
 
-func (s service) FindClinicsBySearchTerm(ctx context.Context, cu model.User, searchTerm string) ([]model.Clinic, error) {
-	clinics := []model.Clinic{}
+func (s service) FindClinicsBySearchTerm(ctx context.Context, cu models.User, searchTerm string) ([]models.Clinic, error) {
+	clinics := []models.Clinic{}
 	searchTerm = strings.TrimSpace(searchTerm)
 
 	err := s.DB.WithContext(ctx).
 		Model(&cu).
-		Scopes(model.GlobalFTS(searchTerm)).
+		Scopes(models.GlobalFTS(searchTerm)).
 		Limit(QUERY_LIMIT).
 		Association("Clinics").
 		Find(&clinics)
 	if err != nil {
-		return []model.Clinic{}, err
+		return []models.Clinic{}, err
 	}
 
 	return clinics, nil
 }
 
-func (s service) CreateClinic(ctx context.Context, clinic *model.Clinic) error {
+func (s service) CreateClinic(ctx context.Context, clinic *models.Clinic) error {
 	err := normalizeClinicWriteInput(clinic)
 	if err != nil {
 		return err
 	}
 
-	return gorm.G[model.Clinic](s.DB.GormDB()).Create(ctx, clinic)
+	return gorm.G[models.Clinic](s.DB.GormDB()).Create(ctx, clinic)
 }
 
-func (s service) UpdateClinicByID(ctx context.Context, userID, clinicID string, clinic model.Clinic) error {
+func (s service) UpdateClinicByID(ctx context.Context, userID, clinicID string, clinic models.Clinic) error {
 	clinicID = strings.TrimSpace(clinicID)
 	if clinicID == "" {
 		return ErrIDRequired
@@ -79,7 +79,7 @@ func (s service) UpdateClinicByID(ctx context.Context, userID, clinicID string, 
 		return err
 	}
 
-	rowsAffected, err := gorm.G[model.Clinic](s.DB.GormDB()).
+	rowsAffected, err := gorm.G[models.Clinic](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", clinicID, userID).
 		Updates(ctx, clinic)
 	if err != nil {
@@ -106,7 +106,7 @@ func (s service) DeleteClinicByID(ctx context.Context, userID, clinicID string) 
 		return ErrIDRequired
 	}
 
-	rowsAffected, err := gorm.G[model.Clinic](s.DB.GormDB()).
+	rowsAffected, err := gorm.G[models.Clinic](s.DB.GormDB()).
 		Where("id = ? AND user_id = ?", clinicID, userID).
 		Delete(ctx)
 	if err != nil {
@@ -127,7 +127,7 @@ func (s service) clinicExistsByID(ctx context.Context, userID, clinicID string) 
 
 	var count int64
 	err := s.DB.WithContext(ctx).
-		Model(&model.Clinic{}).
+		Model(&models.Clinic{}).
 		Where("id = ? AND user_id = ?", clinicID, userID).
 		Count(&count).Error
 	if err != nil {
@@ -137,7 +137,7 @@ func (s service) clinicExistsByID(ctx context.Context, userID, clinicID string) 
 	return count > 0, nil
 }
 
-func normalizeClinicWriteInput(clinic *model.Clinic) error {
+func normalizeClinicWriteInput(clinic *models.Clinic) error {
 	if clinic == nil {
 		return errors.New("clinic is required")
 	}
