@@ -6,11 +6,15 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
+	"time"
+
 	"miconsul/internal/lib/libtime"
 	"miconsul/internal/models"
 	"miconsul/internal/server"
 	view "miconsul/internal/views"
-	"time"
+
+	"github.com/gofiber/fiber/v3"
+	"gorm.io/gorm"
 )
 
 type service struct {
@@ -25,6 +29,23 @@ func NewService(s *server.Server) (service, error) {
 	return service{
 		Server: s,
 	}, nil
+}
+
+func (s service) FavoriteClinic(c fiber.Ctx, uid string) (models.Clinic, error) {
+	clinics, err := gorm.G[models.Clinic](s.DB.GormDB()).
+		Where("user_id = ?", uid).
+		Order("favorite DESC, created_at").
+		Limit(1).
+		Find(c.Context())
+	if err != nil {
+		return models.Clinic{}, err
+	}
+
+	if len(clinics) == 0 {
+		return models.Clinic{}, nil
+	}
+
+	return clinics[0], nil
 }
 
 func (s service) CalcDashboardStats(ctx context.Context, cu models.User) view.DashboardStats {

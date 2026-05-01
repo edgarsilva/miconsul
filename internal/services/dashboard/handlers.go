@@ -1,13 +1,14 @@
+// Package dashboard provides the dashboard handlers for the web app UI
 package dashboard
 
 import (
+	"time"
+
 	"miconsul/internal/lib/libtime"
 	"miconsul/internal/models"
 	view "miconsul/internal/views"
-	"time"
 
 	"github.com/gofiber/fiber/v3"
-	"gorm.io/gorm"
 )
 
 // HandleDashboardPage renders the home dashboard
@@ -31,25 +32,7 @@ func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 		query.Where("booked_at > ?", libtime.BoD(time.Now()))
 	}
 
-	query.
-		Preload("Clinic").
-		Preload("Patient").
-		Limit(10).
-		Find(&appointments)
-
-	clinic := models.Clinic{}
-	clinic, _ = gorm.G[models.Clinic](s.DB.GormDB()).
-		Where("user_id = ? AND favorite = ?", cu.ID, true).
-		Order("created_at").
-		Take(c.Context())
-
-	if clinic.ID == "" {
-		clinic, _ = gorm.G[models.Clinic](s.DB.GormDB()).
-			Where("user_id = ?", cu.ID).
-			Order("created_at").
-			Take(c.Context())
-	}
-
+	clinic, _ := s.FavoriteClinic(c, cu.ID)
 	vc, _ := view.NewCtx(c)
 	stats := s.CalcDashboardStats(c.Context(), cu)
 
