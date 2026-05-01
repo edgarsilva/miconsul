@@ -113,8 +113,13 @@ test suites.
 ### Migration Status
 
 - Done: `appointment`, `patient`, `clinic`, `user`, `theme`, `dashboard`,
-  `admin`
-- Pending: `auth`
+  `admin`, `auth`
+- Pending: none
+
+Auth already has both route-level coverage in `tests/auth_handlers_test.go` and
+service-level coverage in `internal/services/auth/*_test.go`. Remaining auth
+work is now coverage hardening and contract expansion, tracked in
+`docs/backlog.md`.
 
 ### Definition of Done
 

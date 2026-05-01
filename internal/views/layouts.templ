@@ -10,12 +10,13 @@ templ HTMLPage(c *Ctx) {
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
 			<meta name="color-scheme" content="light dark"/>
 			<meta name="htmx-config" content='{"includeIndicatorStyles":false}'/>
+			@Favicons(c)
 			<title>Miconsul</title>
 			<link href={ "/public/global.css?v_=" + xid.Pure() } rel="stylesheet"/>
 			<script defer src="https://unpkg.com/htmx.org@2.0.1"></script>
 			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.0/dist/cdn.min.js"></script>
 		</head>
-		<body class="flex-grow">
+		<body class="grow">
 			{ children... }
 			@GlobalToastRegion(c)
 		</body>
@@ -76,4 +77,21 @@ templ LayoutCentered(c *Ctx) {
 			{ children... }
 		</div>
 	}
+}
+
+templ Favicons(c *Ctx) {
+	<!-- Standard favicon -->
+	<link rel="icon" href="/favicon.ico" sizes="any"/>
+	<!-- PNG favicons -->
+	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png"/>
+	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
+	<!-- Apple -->
+	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
+	<!-- Android / PWA -->
+	<link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192.png"/>
+	<link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512.png"/>
+	<!-- Web App Manifest -->
+	<link rel="manifest" href="/site.webmanifest"/>
+	<!-- Optional theme color -->
+	<meta name="theme-color" content="#5abdfa"/>
 }
