@@ -10,6 +10,7 @@ import (
 	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/session"
 	"gorm.io/gorm"
 )
 
@@ -164,6 +165,7 @@ func TestSaveLogtoUserPaths(t *testing.T) {
 
 func TestProviderSigninRedirectBranches(t *testing.T) {
 	svc := newAuthServiceForTests(t)
+	svc.SessionStore = session.NewStore()
 	svc.Env.LogtoURL = "https://logto.example.com"
 	svc.Env.LogtoAppID = "appid"
 	svc.Env.LogtoAppSecret = "secret"
@@ -180,6 +182,21 @@ func TestProviderSigninRedirectBranches(t *testing.T) {
 		redirectURL, msg := svc.providerSigninRedirect(c, "")
 		if redirectURL != "" || msg == "" {
 			t.Fatalf("expected signed-out message branch")
+		}
+	})
+
+	runWithCtx(t, http.MethodGet, "/signin", "/signin", nil, func(c fiber.Ctx) {
+		if err := svc.SessionWrite(c, "logto_skip_redirect", "1"); err != nil {
+			t.Fatalf("set skip redirect session key: %v", err)
+		}
+
+		redirectURL, msg := svc.providerSigninRedirect(c, "")
+		if redirectURL != "" || msg == "" {
+			t.Fatalf("expected skip-redirect signed-out message branch")
+		}
+
+		if got := svc.SessionRead(c, "logto_skip_redirect", ""); got != "" {
+			t.Fatalf("expected skip redirect key cleared, got %q", got)
 		}
 	})
 }
