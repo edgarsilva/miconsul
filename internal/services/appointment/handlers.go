@@ -214,12 +214,12 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 	clinic, err := s.TakeClinicByUID(c.Context(), cu.ID, input.ClinicUID)
 	if err != nil {
 		redirectPath := "/appointments/new?toast=Invalid clinic selected&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusUnprocessableEntity)
 	}
 	patient, err := s.TakePatientByUID(c.Context(), cu.ID, input.PatientUID)
 	if err != nil {
 		redirectPath := "/appointments/new?toast=Invalid patient selected&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusUnprocessableEntity)
 	}
 	appointment.ClinicID = clinic.ID
 	appointment.PatientID = patient.ID
@@ -261,6 +261,16 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 		return s.Redirect(c, "/appointments?msg=can't update without an id")
 	}
 
+	_, err := s.TakeAppointmentByUID(c.Context(), cu.ID, appointmentID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
+	}
+	if err != nil {
+		redirectPath := "/appointments/" + appointmentID + "?toast=Failed to load appointment&level=error"
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusUnprocessableEntity)
+	}
+
 	bookedAtStr := c.FormValue("bookedAt", "")
 	bookedAt, err := time.Parse(view.FormTimeFormat, bookedAtStr)
 	if err != nil {
@@ -292,12 +302,12 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	clinic, err := s.TakeClinicByUID(c.Context(), cu.ID, input.ClinicUID)
 	if err != nil {
 		redirectPath := "/appointments/" + appointmentID + "?toast=Invalid clinic selected&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusUnprocessableEntity)
 	}
 	patient, err := s.TakePatientByUID(c.Context(), cu.ID, input.PatientUID)
 	if err != nil {
 		redirectPath := "/appointments/" + appointmentID + "?toast=Invalid patient selected&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusUnprocessableEntity)
 	}
 	appointment.ClinicID = clinic.ID
 	appointment.PatientID = patient.ID
