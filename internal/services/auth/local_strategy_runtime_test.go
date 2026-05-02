@@ -93,6 +93,9 @@ func TestLocalStrategyAuthenticateSuccessAndRefresh(t *testing.T) {
 		if authed.UID != user.UID {
 			t.Fatalf("expected authenticated user uid %q, got %q", user.UID, authed.UID)
 		}
+		if authed.ID != user.ID {
+			t.Fatalf("expected authenticated user id %d, got %d", user.ID, authed.ID)
+		}
 		return c.SendStatus(fiber.StatusNoContent)
 	})
 
@@ -131,6 +134,9 @@ func TestLocalStrategyAuthenticateSessionHydration(t *testing.T) {
 		}
 		if authed.UID != user.UID {
 			t.Fatalf("expected authenticated user uid %q, got %q", user.UID, authed.UID)
+		}
+		if authed.ID != user.ID {
+			t.Fatalf("expected authenticated user id %d, got %d", user.ID, authed.ID)
 		}
 		return c.SendStatus(fiber.StatusNoContent)
 	})
@@ -222,6 +228,9 @@ func TestRuntimeAuthenticateAndTakeUserByExtID(t *testing.T) {
 			if authed.UID != user.UID {
 				t.Fatalf("expected %q, got %q", user.UID, authed.UID)
 			}
+			if authed.ID != user.ID {
+				t.Fatalf("expected %d, got %d", user.ID, authed.ID)
+			}
 			return c.SendStatus(fiber.StatusNoContent)
 		})
 
@@ -262,7 +271,8 @@ func TestDecodeAuthSnapshot(t *testing.T) {
 	t.Run("roundtrip encode decode", func(t *testing.T) {
 		in := AuthSnapshot{
 			Token:          "jwt-token",
-			UserID:         "user_123",
+			UserID:         42,
+			UserUID:        "user_123",
 			UserEmail:      "u@example.com",
 			UserRole:       models.UserRoleAdmin,
 			UserName:       "Ada",
@@ -274,25 +284,30 @@ func TestDecodeAuthSnapshot(t *testing.T) {
 		if !ok {
 			t.Fatalf("expected decode success")
 		}
-		if out.Token != in.Token || out.UserID != in.UserID || out.UserEmail != in.UserEmail {
+		if out.Token != in.Token || out.UserID != in.UserID || out.UserUID != in.UserUID || out.UserEmail != in.UserEmail {
 			t.Fatalf("decoded auth mismatch: got %+v", out)
 		}
 	})
 
 	t.Run("fails for malformed cached timestamp", func(t *testing.T) {
-		_, ok := DecodeAuthSnapshot("t=a&uid=u1&cat=not-a-number")
+		_, ok := DecodeAuthSnapshot("t=a&id=1&uid=u1&cat=not-a-number")
 		if ok {
 			t.Fatalf("expected decode failure")
 		}
 	})
 
 	t.Run("fails when required fields missing", func(t *testing.T) {
-		_, ok := DecodeAuthSnapshot("uid=u1&cat=123")
+		_, ok := DecodeAuthSnapshot("id=1&uid=u1&cat=123")
 		if ok {
 			t.Fatalf("expected decode failure when token is missing")
 		}
 
-		_, ok = DecodeAuthSnapshot("t=a&cat=123")
+		_, ok = DecodeAuthSnapshot("t=a&id=1&cat=123")
+		if ok {
+			t.Fatalf("expected decode failure when user id is missing")
+		}
+
+		_, ok = DecodeAuthSnapshot("t=a&uid=u1&cat=123")
 		if ok {
 			t.Fatalf("expected decode failure when user id is missing")
 		}
@@ -324,14 +339,14 @@ func TestAuthSnapshotTTLBoundary(t *testing.T) {
 	token := tokenDigest("header.payload.signature")
 
 	t.Run("accepts snapshot at ttl boundary", func(t *testing.T) {
-		s := AuthSnapshot{Token: token, UserID: "u1", CachedAtUnix: now.Add(-authSessionHydrationTTL).Unix()}
+		s := AuthSnapshot{Token: token, UserID: 1, UserUID: "u1", CachedAtUnix: now.Add(-authSessionHydrationTTL).Unix()}
 		if !s.isValidForToken(token, now) {
 			t.Fatalf("expected snapshot valid at ttl boundary")
 		}
 	})
 
 	t.Run("rejects snapshot older than ttl", func(t *testing.T) {
-		s := AuthSnapshot{Token: token, UserID: "u1", CachedAtUnix: now.Add(-authSessionHydrationTTL - time.Second).Unix()}
+		s := AuthSnapshot{Token: token, UserID: 1, UserUID: "u1", CachedAtUnix: now.Add(-authSessionHydrationTTL - time.Second).Unix()}
 		if s.isValidForToken(token, now) {
 			t.Fatalf("expected snapshot invalid past ttl")
 		}

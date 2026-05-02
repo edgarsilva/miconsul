@@ -12,6 +12,9 @@ import (
 func MustAuthenticate(authRuntime auth.Runtime) func(c fiber.Ctx) error {
 	return func(c fiber.Ctx) error {
 		cu, err := auth.Authenticate(c, authRuntime)
+		if err == nil && cu.ID == 0 {
+			err = fiber.ErrUnauthorized
+		}
 		if err != nil {
 			switch c.Accepts("text/html", "text/plain", "application/json") {
 			case "text/plain", "application/json":
@@ -35,6 +38,9 @@ func MustAuthenticate(authRuntime auth.Runtime) func(c fiber.Ctx) error {
 func MustBeAdmin(authRuntime auth.Runtime) func(c fiber.Ctx) error {
 	return func(c fiber.Ctx) error {
 		cu, err := auth.Authenticate(c, authRuntime)
+		if err == nil && cu.ID == 0 {
+			err = fiber.ErrUnauthorized
+		}
 		if err != nil {
 			switch c.Accepts("text/html", "text/plain", "application/json") {
 			case "text/html":
