@@ -20,7 +20,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 FROM debian:bookworm-slim AS runtime
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ca-certificates tzdata && \
+    apt-get install -y --no-install-recommends ca-certificates tzdata curl wget unzip && \
     rm -rf /var/lib/apt/lists/*
 
 RUN groupadd --gid 1000 miconsul && useradd --uid 1000 --gid miconsul --home /app --create-home miconsul
