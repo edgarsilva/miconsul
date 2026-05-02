@@ -26,14 +26,14 @@ func NewService(s *server.Server) (service, error) {
 	}, nil
 }
 
-func (s service) TakeClinicByID(ctx context.Context, userID, clinicID string) (models.Clinic, error) {
+func (s service) TakeClinicByID(ctx context.Context, userID uint, clinicID string) (models.Clinic, error) {
 	clinicID = strings.TrimSpace(clinicID)
 	if clinicID == "" {
 		return models.Clinic{}, ErrIDRequired
 	}
 
 	clinic, err := gorm.G[models.Clinic](s.DB.GormDB()).
-		Where("id = ? AND user_id = ?", clinicID, userID).
+		Where("uid = ? AND user_id = ?", clinicID, userID).
 		Take(ctx)
 	if err != nil {
 		return models.Clinic{}, err
@@ -68,7 +68,7 @@ func (s service) CreateClinic(ctx context.Context, clinic *models.Clinic) error 
 	return gorm.G[models.Clinic](s.DB.GormDB()).Create(ctx, clinic)
 }
 
-func (s service) UpdateClinicByID(ctx context.Context, userID, clinicID string, clinic models.Clinic) error {
+func (s service) UpdateClinicByID(ctx context.Context, userID uint, clinicID string, clinic models.Clinic) error {
 	clinicID = strings.TrimSpace(clinicID)
 	if clinicID == "" {
 		return ErrIDRequired
@@ -80,7 +80,7 @@ func (s service) UpdateClinicByID(ctx context.Context, userID, clinicID string, 
 	}
 
 	rowsAffected, err := gorm.G[models.Clinic](s.DB.GormDB()).
-		Where("id = ? AND user_id = ?", clinicID, userID).
+		Where("uid = ? AND user_id = ?", clinicID, userID).
 		Updates(ctx, clinic)
 	if err != nil {
 		return err
@@ -100,14 +100,14 @@ func (s service) UpdateClinicByID(ctx context.Context, userID, clinicID string, 
 	return nil
 }
 
-func (s service) DeleteClinicByID(ctx context.Context, userID, clinicID string) error {
+func (s service) DeleteClinicByID(ctx context.Context, userID uint, clinicID string) error {
 	clinicID = strings.TrimSpace(clinicID)
 	if clinicID == "" {
 		return ErrIDRequired
 	}
 
 	rowsAffected, err := gorm.G[models.Clinic](s.DB.GormDB()).
-		Where("id = ? AND user_id = ?", clinicID, userID).
+		Where("uid = ? AND user_id = ?", clinicID, userID).
 		Delete(ctx)
 	if err != nil {
 		return err
@@ -119,7 +119,7 @@ func (s service) DeleteClinicByID(ctx context.Context, userID, clinicID string) 
 	return nil
 }
 
-func (s service) clinicExistsByID(ctx context.Context, userID, clinicID string) (bool, error) {
+func (s service) clinicExistsByID(ctx context.Context, userID uint, clinicID string) (bool, error) {
 	clinicID = strings.TrimSpace(clinicID)
 	if clinicID == "" {
 		return false, ErrIDRequired
@@ -128,7 +128,7 @@ func (s service) clinicExistsByID(ctx context.Context, userID, clinicID string) 
 	var count int64
 	err := s.DB.WithContext(ctx).
 		Model(&models.Clinic{}).
-		Where("id = ? AND user_id = ?", clinicID, userID).
+		Where("uid = ? AND user_id = ?", clinicID, userID).
 		Count(&count).Error
 	if err != nil {
 		return false, err

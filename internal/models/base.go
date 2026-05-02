@@ -1,7 +1,6 @@
 package models
 
 import (
-	"miconsul/internal/lib/xid"
 	"time"
 
 	"gorm.io/gorm"
@@ -11,7 +10,6 @@ type ModelBase struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	fieldErrors map[string]string `gorm:"-:all"`
-	ID          string            `gorm:"primarykey;default:null;not null" form:"__blank"`
 }
 
 type Address struct {
@@ -41,11 +39,6 @@ type NotificationFlags struct {
 	ViaWhatsapp         bool `form:"viaWhatsapp"`
 	ViaMessenger        bool `form:"viaMessenger"`
 	ViaTelegram         bool `form:"viaTelegram"`
-}
-
-func (mb *ModelBase) BeforeCreate(tx *gorm.DB) error {
-	mb.ID = xid.New("____")
-	return nil
 }
 
 func (mb *ModelBase) IsValid() error {

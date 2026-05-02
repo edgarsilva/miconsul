@@ -77,7 +77,7 @@ func (ls LocalStrategy) Metadata() AuthenticatorMeta {
 }
 
 func (ls LocalStrategy) FindUserById(ctx context.Context, uid string) (models.User, error) {
-	return gorm.G[models.User](ls.resource.GormDB()).Where("id = ?", uid).Take(ctx)
+	return gorm.G[models.User](ls.resource.GormDB()).Where("uid = ?", uid).Take(ctx)
 }
 
 func (ls LocalStrategy) authenticateWithJWT(c fiber.Ctx, token string) (models.User, error) {
@@ -141,13 +141,13 @@ func (ls LocalStrategy) currentUserFromSession(c fiber.Ctx, token string) (model
 }
 
 func (ls LocalStrategy) saveCurrentUserToSession(c fiber.Ctx, token string, user models.User) {
-	if token == "" || user.ID == "" {
+	if token == "" || user.UID == "" {
 		return
 	}
 
 	ls.writeAuthSnapshot(c, AuthSnapshot{
 		Token:          tokenDigest(token),
-		UserID:         user.ID,
+		UserID:         user.UID,
 		UserEmail:      user.Email,
 		UserRole:       user.Role,
 		UserName:       user.Name,
@@ -234,7 +234,7 @@ func (sa AuthSnapshot) isValidForToken(token string, now time.Time) bool {
 
 func (sa AuthSnapshot) toUser() models.User {
 	return models.User{
-		ID:         sa.UserID,
+		UID:        sa.UserID,
 		Email:      sa.UserEmail,
 		Role:       sa.UserRole,
 		Name:       sa.UserName,

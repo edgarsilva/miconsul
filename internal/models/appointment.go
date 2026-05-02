@@ -51,7 +51,8 @@ type Appointment struct {
 	RescheduledAt       time.Time `gorm:"default:null"`
 	DeletedAt           gorm.DeletedAt
 	ModelBase
-	ID           string            `gorm:"primarykey;default:null;not null" form:"_"`
+	ID           uint              `gorm:"primaryKey" form:"_"`
+	UID          string            `gorm:"uniqueIndex;default:null;not null" form:"_"`
 	ExtID        string            `form:"extId"`
 	Token        string            `form:"_"`
 	Summary      string            `form:"summary"`
@@ -60,9 +61,9 @@ type Appointment struct {
 	Notes        string            `form:"notes"`
 	Hashtags     string            `form:"hashtags"`
 	Timezone     string            `form:"timezone"`
-	UserID       string            `gorm:"index;default:null;not null"`
-	ClinicID     string            `gorm:"index;default:null;not null" form:"clinicId"`
-	PatientID    string            `gorm:"index;default:null;not null" form:"patientId"`
+	UserID       uint              `gorm:"index;default:null;not null"`
+	ClinicID     uint              `gorm:"index;default:null;not null" form:"clinicId"`
+	PatientID    uint              `gorm:"index;default:null;not null" form:"patientId"`
 	Status       AppointmentStatus `gorm:"index;default:pending;not null;type:string" form:"status"`
 	FeedEvents   []FeedEvent       `gorm:"polymorphic:FeedEventable;"`
 	Alerts       []Alert           `gorm:"polymorphic:Alertable;"`
@@ -81,7 +82,7 @@ type Appointment struct {
 }
 
 func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
-	a.ID = xid.New("apnt")
+	a.UID = xid.New("apnt")
 	if a.Status == "" {
 		a.Status = ApntStatusPending
 	}
@@ -109,15 +110,15 @@ func (a *Appointment) PriceInputValue() string {
 }
 
 func (a *Appointment) ConfirmPath() string {
-	return "/appointments/" + a.ID + "/patient/confirm/" + a.Token
+	return "/appointments/" + a.UID + "/patient/confirm/" + a.Token
 }
 
 func (a *Appointment) CancelPath() string {
-	return "/appointments/" + a.ID + "/patient/cancel/" + a.Token
+	return "/appointments/" + a.UID + "/patient/cancel/" + a.Token
 }
 
 func (a *Appointment) RescheduledPath() string {
-	return "/appointments/" + a.ID + "/patient/reschedule/" + a.Token
+	return "/appointments/" + a.UID + "/patient/reschedule/" + a.Token
 }
 
 // Scopes

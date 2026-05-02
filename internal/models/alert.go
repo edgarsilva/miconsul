@@ -28,6 +28,8 @@ const (
 )
 
 type Alert struct {
+	ID            uint        `gorm:"primaryKey" form:"-"`
+	UID           string      `gorm:"uniqueIndex;default:null;not null" form:"-"`
 	Medium        AlertMedium `gorm:"index;default:null;not null;type:string" form:"-"`
 	Name          string      `gorm:"index;default:null;not null"`
 	Title         string
@@ -42,6 +44,6 @@ type Alert struct {
 }
 
 func (a *Alert) BeforeCreate(tx *gorm.DB) (err error) {
-	a.ID = xid.New("alrt")
+	a.UID = xid.New("alrt")
 	return nil
 }

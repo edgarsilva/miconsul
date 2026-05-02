@@ -14,12 +14,13 @@ type Patient struct {
 	Address
 	SocialMedia
 	ModelBase
-	ID                string `gorm:"primarykey;default:null;not null" form:"_"`
+	ID                uint   `gorm:"primaryKey" form:"_"`
+	UID               string `gorm:"uniqueIndex;default:null;not null" form:"_"`
 	ExtID             string
 	Email             string         `form:"email"`
 	Phone             string         `form:"phone"`
 	Ocupation         string         `form:"ocupation"`
-	UserID            string         `gorm:"index;default:null;not null"`
+	UserID            uint           `gorm:"index;default:null;not null"`
 	Name              string         `gorm:"default:null;not null" form:"name"`
 	ProfilePic        string         `form:"profilePic"`
 	FamilyHistory     string         `form:"familyHistory"`
@@ -38,7 +39,7 @@ func (p *Patient) BeforeCreate(tx *gorm.DB) error {
 		return err
 	}
 
-	p.ID = xid.New("ptnt")
+	p.UID = xid.New("ptnt")
 	return nil
 }
 
