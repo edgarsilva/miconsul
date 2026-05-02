@@ -2,15 +2,6 @@
 
 ## Next Up
 
-- [quality/auth] Auth coverage hardening after migration checklist closure
-  - Keep `docs/testing.md` migration status aligned with real auth suite state.
-  - Expand auth regression matrix for provider callback errors and session-first hydration edge-cases.
-  - Add a compact auth route contract table (status/redirect/header behavior) to reduce future docs drift.
-  - Gap audit (2026-05-02):
-    - Missing explicit branch tests for provider callback failures (`request`, `callback`, `id_token`, `claims`, `user_sync`).
-    - Missing explicit branch test for `logto_skip_redirect` session key clearing flow.
-    - Missing explicit session hydration TTL boundary test (snapshot stale -> JWT fallback path).
-
 - [external/runtime] Uptime Kuma monitor setup (environment ready)
   - Configure monitors in Kuma for `/livez`, `/readyz`, and optional `/startupz`.
   - Apply final interval/timeout/retry settings directly in the Kuma UI.
@@ -36,6 +27,12 @@
   - Keep fallback behavior and rollout checklist for local/dev environments.
 
 ## Done
+
+- Auth coverage hardening after migration checklist closure
+  - Added explicit callback verification failure coverage for `GET /logto/callback` (`logto_error=callback`).
+  - Added explicit `logto_skip_redirect` session key clearing branch coverage.
+  - Added auth snapshot hydration TTL boundary coverage.
+  - Added compact auth route contract + provider callback error matrix to `docs/testing.md`.
 
 - Testing docs drift cleanup for auth migration status
   - Updated migration checklist in `docs/testing.md` to mark `auth` as done.
