@@ -20,8 +20,8 @@ func TestClinicUpsertInputToClinic(t *testing.T) {
 		Facebook:       "fb",
 	}
 
-	clinic := in.toClinic("cln_1", "usr_1", 250)
-	if clinic.ID != "cln_1" || clinic.UserID != "usr_1" || clinic.Price != 250 {
+	clinic := in.toClinic(1, "cln_1", 2, 250)
+	if clinic.ID != 1 || clinic.UID != "cln_1" || clinic.UserID != 2 || clinic.Price != 250 {
 		t.Fatalf("unexpected identifiers mapping: %#v", clinic)
 	}
 	if clinic.Name != in.Name || clinic.Email != in.Email || clinic.Phone != in.Phone {

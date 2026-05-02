@@ -31,9 +31,9 @@ func NewService(s *server.Server) (service, error) {
 	}, nil
 }
 
-func (s service) FavoriteClinic(c fiber.Ctx, uid string) (models.Clinic, error) {
+func (s service) FavoriteClinic(c fiber.Ctx, userID uint) (models.Clinic, error) {
 	clinics, err := gorm.G[models.Clinic](s.DB.GormDB()).
-		Where("user_id = ?", uid).
+		Where("user_id = ?", userID).
 		Order("favorite DESC, created_at").
 		Limit(1).
 		Find(c.Context())
@@ -52,7 +52,7 @@ func (s service) CalcDashboardStats(ctx context.Context, cu models.User) view.Da
 	ctx, span := s.Trace(ctx, "dashboard/services.CalcDashboardStats")
 	defer span.End()
 
-	cacheKey := cu.ID + ".dashboard.stats"
+	cacheKey := cu.UID + ".dashboard.stats"
 	if stats, ok := s.ReadStatsCache(cacheKey); ok {
 		return stats
 	}
@@ -64,7 +64,7 @@ func (s service) CalcDashboardStats(ctx context.Context, cu models.User) view.Da
 		Appointments: apptStats,
 	}
 
-	s.WriteStatsCache(cacheKey, stats)
+	_ = s.WriteStatsCache(cacheKey, stats)
 
 	return stats
 }

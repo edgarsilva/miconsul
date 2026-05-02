@@ -46,7 +46,7 @@ func TestHandleBookedAlertTaskSkipsWhenAlreadySent(t *testing.T) {
 		t.Fatalf("create appointment: %v", err)
 	}
 
-	payload, err := json.Marshal(TaskAppointmentPayload{AppointmentID: apnt.ID})
+	payload, err := json.Marshal(TaskAppointmentPayload{AppointmentID: apnt.UID})
 	if err != nil {
 		t.Fatalf("marshal payload: %v", err)
 	}

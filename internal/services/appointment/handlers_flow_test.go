@@ -43,7 +43,7 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 			t.Fatalf("index page expected 200, got status=%d err=%v", resp1.StatusCode, err)
 		}
 
-		resp2, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/"+apnt.ID, nil))
+		resp2, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/"+apnt.UID, nil))
 		if err != nil || resp2.StatusCode != fiber.StatusOK {
 			t.Fatalf("show page expected 200, got status=%d err=%v", resp2.StatusCode, err)
 		}
@@ -84,7 +84,7 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 			return svc.HandleSearchClinics(c)
 		})
 
-		resp1, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/"+apnt.ID+"/start", nil))
+		resp1, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/"+apnt.UID+"/start", nil))
 		if err != nil || resp1.StatusCode != fiber.StatusOK {
 			t.Fatalf("start page expected 200, got status=%d err=%v", resp1.StatusCode, err)
 		}
@@ -92,8 +92,8 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 		form := url.Values{
 			"bookedAt":  {time.Now().Format("2006-01-02T15:04")},
 			"price":     {"100.0"},
-			"clinicId":  {clinic.ID},
-			"patientId": {patient.ID},
+			"clinicId":  {clinic.UID},
+			"patientId": {patient.UID},
 			"duration":  {"30"},
 		}
 		req2 := httptest.NewRequest(http.MethodPost, "/appointments", strings.NewReader(form.Encode()))
@@ -106,11 +106,11 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 		updForm := url.Values{
 			"bookedAt":  {time.Now().Add(2 * time.Hour).Format("2006-01-02T15:04")},
 			"price":     {"120.0"},
-			"clinicId":  {clinic.ID},
-			"patientId": {patient.ID},
+			"clinicId":  {clinic.UID},
+			"patientId": {patient.UID},
 			"duration":  {"45"},
 		}
-		req3 := httptest.NewRequest(http.MethodPost, "/appointments/"+apnt.ID+"/patch", strings.NewReader(updForm.Encode()))
+		req3 := httptest.NewRequest(http.MethodPost, "/appointments/"+apnt.UID+"/patch", strings.NewReader(updForm.Encode()))
 		req3.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		resp3, err := app.Test(req3)
 		if err != nil || resp3.StatusCode != fiber.StatusSeeOther {
@@ -123,19 +123,19 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 			"summary":      {"ok"},
 			"notes":        {"notes"},
 		}
-		req4 := httptest.NewRequest(http.MethodPost, "/appointments/"+apnt.ID+"/complete", strings.NewReader(completeForm.Encode()))
+		req4 := httptest.NewRequest(http.MethodPost, "/appointments/"+apnt.UID+"/complete", strings.NewReader(completeForm.Encode()))
 		req4.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		resp4, err := app.Test(req4)
 		if err != nil || resp4.StatusCode != fiber.StatusSeeOther {
 			t.Fatalf("complete expected 303, got status=%d err=%v", resp4.StatusCode, err)
 		}
 
-		resp5, err := app.Test(httptest.NewRequest(http.MethodPost, "/appointments/"+apnt.ID+"/cancel", nil))
+		resp5, err := app.Test(httptest.NewRequest(http.MethodPost, "/appointments/"+apnt.UID+"/cancel", nil))
 		if err != nil || resp5.StatusCode != fiber.StatusSeeOther {
 			t.Fatalf("cancel expected 303, got status=%d err=%v", resp5.StatusCode, err)
 		}
 
-		resp6, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/new/pricefrg/"+clinic.ID, nil))
+		resp6, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/new/pricefrg/"+clinic.UID, nil))
 		if err != nil || resp6.StatusCode != fiber.StatusOK {
 			t.Fatalf("price fragment expected 200, got status=%d err=%v", resp6.StatusCode, err)
 		}
@@ -147,7 +147,7 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 			t.Fatalf("search clinics expected 200, got status=%d err=%v", resp7.StatusCode, err)
 		}
 
-		resp8, err := app.Test(httptest.NewRequest(http.MethodPost, "/appointments/"+apnt.ID+"/delete", nil))
+		resp8, err := app.Test(httptest.NewRequest(http.MethodPost, "/appointments/"+apnt.UID+"/delete", nil))
 		if err != nil || resp8.StatusCode != fiber.StatusSeeOther {
 			t.Fatalf("delete expected 303, got status=%d err=%v", resp8.StatusCode, err)
 		}
@@ -171,22 +171,22 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 		app.Post("/appointments/:id/patient/cancel/:token", svc.HandlePatientCancel)
 		app.Get("/appointments/:id/patient/changedate/:token", svc.HandlePatientChangeDate)
 
-		resp1, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/"+tokenApnt.ID+"/patient/confirm/"+tokenApnt.Token, nil))
+		resp1, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/"+tokenApnt.UID+"/patient/confirm/"+tokenApnt.Token, nil))
 		if err != nil || resp1.StatusCode != fiber.StatusOK {
 			t.Fatalf("patient confirm expected 200, got status=%d err=%v", resp1.StatusCode, err)
 		}
 
-		resp2, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/"+tokenApnt.ID+"/patient/cancel/"+tokenApnt.Token, nil))
+		resp2, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/"+tokenApnt.UID+"/patient/cancel/"+tokenApnt.Token, nil))
 		if err != nil || resp2.StatusCode != fiber.StatusOK {
 			t.Fatalf("patient cancel page expected 200, got status=%d err=%v", resp2.StatusCode, err)
 		}
 
-		resp3, err := app.Test(httptest.NewRequest(http.MethodPost, "/appointments/"+tokenApnt.ID+"/patient/cancel/"+tokenApnt.Token, nil))
+		resp3, err := app.Test(httptest.NewRequest(http.MethodPost, "/appointments/"+tokenApnt.UID+"/patient/cancel/"+tokenApnt.Token, nil))
 		if err != nil || resp3.StatusCode != fiber.StatusOK {
 			t.Fatalf("patient cancel expected 200, got status=%d err=%v", resp3.StatusCode, err)
 		}
 
-		resp4, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/"+tokenApnt.ID+"/patient/changedate/"+tokenApnt.Token, nil))
+		resp4, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/"+tokenApnt.UID+"/patient/changedate/"+tokenApnt.Token, nil))
 		if err != nil || resp4.StatusCode != fiber.StatusOK {
 			t.Fatalf("patient change date expected 200, got status=%d err=%v", resp4.StatusCode, err)
 		}
@@ -280,7 +280,7 @@ func TestHandleStartPagePatientMissingBranch(t *testing.T) {
 	apnt := models.Appointment{
 		UserID:    user.ID,
 		ClinicID:  clinic.ID,
-		PatientID: "missing-patient-id",
+		PatientID: 999999,
 		BookedAt:  time.Now().Add(time.Hour),
 		Token:     "tok_missing_patient",
 	}
@@ -294,7 +294,7 @@ func TestHandleStartPagePatientMissingBranch(t *testing.T) {
 		return svc.HandleStartPage(c)
 	})
 
-	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/"+apnt.ID+"/start", nil))
+	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/"+apnt.UID+"/start", nil))
 	if err != nil || resp.StatusCode != fiber.StatusSeeOther {
 		t.Fatalf("start with missing patient expected 303 redirect, got status=%d err=%v", resp.StatusCode, err)
 	}

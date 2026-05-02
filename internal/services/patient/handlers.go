@@ -94,7 +94,7 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
 	}
 
-	patient := input.toPatient("", cu.ID)
+	patient := input.toPatient(0, "", cu.ID)
 
 	patient.Sanitize()
 
@@ -112,17 +112,17 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 	} else {
 		patient.ProfilePic = path
 		profilePicUpdate := models.Patient{ProfilePic: path}
-		err = s.UpdatePatientByID(c.Context(), cu.ID, patient.ID, profilePicUpdate)
+		err = s.UpdatePatientByID(c.Context(), cu.ID, patient.UID, profilePicUpdate)
 		if err != nil {
 			log.Error(err)
 		}
 	}
 
 	if s.NotHTMX(c) {
-		return s.Redirect(c, "/patients/"+patient.ID)
+		return s.Redirect(c, "/patients/"+patient.UID)
 	}
 
-	c.Set("HX-Push-Url", "/patients/"+patient.ID)
+	c.Set("HX-Push-Url", "/patients/"+patient.UID)
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(
 		c,
@@ -164,7 +164,17 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
 	}
 
-	patient := input.toPatient(patientID, cu.ID)
+	existingPatient, findErr := s.TakePatientByID(c.Context(), cu.ID, patientID)
+	if errors.Is(findErr, gorm.ErrRecordNotFound) {
+		redirectPath := "/patients?toast=Patient does not exist&level=warning"
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
+	}
+	if findErr != nil {
+		redirectPath := "/patients?toast=Failed to load patient&level=error"
+		return s.respondWithRedirect(c, redirectPath, fiber.StatusInternalServerError)
+	}
+
+	patient := input.toPatient(existingPatient.ID, existingPatient.UID, cu.ID)
 
 	patient.Sanitize()
 
@@ -243,7 +253,7 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 	}
 
 	if s.NotHTMX(c) {
-		return s.Redirect(c, "/patients/"+patient.ID)
+		return s.Redirect(c, "/patients/"+patient.UID)
 	}
 
 	theme := s.SessionUITheme(c)

@@ -117,7 +117,7 @@ func TestCreateBulkAppointmentsGuards(t *testing.T) {
 		t.Fatalf("expected no appointments when clinics/patients missing, got %d", created)
 	}
 
-	created, err = createBulkAppointments(t.Context(), db, owner, nil, 1, []models.Clinic{{ID: "cln"}}, []models.Patient{{ID: "pat"}}, 0)
+	created, err = createBulkAppointments(t.Context(), db, owner, nil, 1, []models.Clinic{{ID: 1, UID: "cln"}}, []models.Patient{{ID: 1, UID: "pat"}}, 0)
 	if err != nil {
 		t.Fatalf("expected count guard return without error: %v", err)
 	}

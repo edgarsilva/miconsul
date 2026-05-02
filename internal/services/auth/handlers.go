@@ -174,7 +174,7 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 	}
 
 	user, err := gorm.G[models.User](s.DB.GormDB()).
-		Select("id, email, confirm_email_token").
+		Select("uid, email, confirm_email_token").
 		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
 		Take(c.Context())
 	if err != nil {
@@ -189,7 +189,7 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, "/signin", "Email confirmed, you should be able to signin now")
 	}
 
-	jwt, err := JWTCreateToken(s.AppEnv(), user.Email, user.ID)
+	jwt, err := JWTCreateToken(s.AppEnv(), user.Email, user.UID)
 	if err != nil {
 		return s.respondWithRedirect(c, "/signin", "Email confirmed, you should be able to signin now")
 	}

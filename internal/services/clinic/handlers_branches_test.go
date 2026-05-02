@@ -79,7 +79,7 @@ func TestClinicHandlersHappyPaths(t *testing.T) {
 		return svc.HandleClinicsShowPage(c)
 	})
 
-	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/clinics/"+clinic.ID, nil))
+	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/clinics/"+clinic.UID, nil))
 	if err != nil || resp.StatusCode != fiber.StatusOK {
 		t.Fatalf("show existing clinic expected 200, got status=%d err=%v", resp.StatusCode, err)
 	}

@@ -11,36 +11,36 @@ import (
 
 func TestEntityBeforeCreateHooksSetIDs(t *testing.T) {
 	alert := &Alert{}
-	if err := alert.BeforeCreate(nil); err != nil || !strings.HasPrefix(alert.ID, "alrt") {
-		t.Fatalf("alert before create failed: id=%q err=%v", alert.ID, err)
+	if err := alert.BeforeCreate(nil); err != nil || !strings.HasPrefix(alert.UID, "alrt") {
+		t.Fatalf("alert before create failed: uid=%q err=%v", alert.UID, err)
 	}
 
 	fe := &FeedEvent{}
-	if err := fe.BeforeCreate(nil); err != nil || !strings.HasPrefix(fe.ID, "fevn") {
-		t.Fatalf("feed event before create failed: id=%q err=%v", fe.ID, err)
+	if err := fe.BeforeCreate(nil); err != nil || !strings.HasPrefix(fe.UID, "fevn") {
+		t.Fatalf("feed event before create failed: uid=%q err=%v", fe.UID, err)
 	}
 
 	logbook := &Logbook{}
-	if err := logbook.BeforeCreate(nil); err != nil || !strings.HasPrefix(logbook.ID, "lgbk") {
-		t.Fatalf("logbook before create failed: id=%q err=%v", logbook.ID, err)
+	if err := logbook.BeforeCreate(nil); err != nil || !strings.HasPrefix(logbook.UID, "lgbk") {
+		t.Fatalf("logbook before create failed: uid=%q err=%v", logbook.UID, err)
 	}
 
 	session := &Session{}
-	if err := session.BeforeCreate(nil); err != nil || !strings.HasPrefix(session.ID, "sess") {
-		t.Fatalf("session before create failed: id=%q err=%v", session.ID, err)
+	if err := session.BeforeCreate(nil); err != nil || !strings.HasPrefix(session.UID, "sess") {
+		t.Fatalf("session before create failed: uid=%q err=%v", session.UID, err)
 	}
 
 	user := &User{}
-	if err := user.BeforeCreate(nil); err != nil || !strings.HasPrefix(user.ID, "user") {
-		t.Fatalf("user before create failed: id=%q err=%v", user.ID, err)
+	if err := user.BeforeCreate(nil); err != nil || !strings.HasPrefix(user.UID, "user") {
+		t.Fatalf("user before create failed: uid=%q err=%v", user.UID, err)
 	}
 
 	apnt := &Appointment{}
 	if err := apnt.BeforeCreate(nil); err != nil {
 		t.Fatalf("appointment before create error: %v", err)
 	}
-	if !strings.HasPrefix(apnt.ID, "apnt") {
-		t.Fatalf("unexpected appointment id %q", apnt.ID)
+	if !strings.HasPrefix(apnt.UID, "apnt") {
+		t.Fatalf("unexpected appointment uid %q", apnt.UID)
 	}
 	if apnt.Status != ApntStatusPending {
 		t.Fatalf("expected default pending status, got %q", apnt.Status)
@@ -68,7 +68,7 @@ func TestAppointmentBeforeSaveAndHelpers(t *testing.T) {
 		t.Fatalf("unexpected price input value %q", got)
 	}
 
-	apnt.ID = "apnt_1"
+	apnt.UID = "apnt_1"
 	apnt.Token = "tok_1"
 	if got := apnt.ConfirmPath(); got != "/appointments/apnt_1/patient/confirm/tok_1" {
 		t.Fatalf("unexpected confirm path %q", got)
@@ -128,12 +128,6 @@ func TestScopesAndBaseHelpers(t *testing.T) {
 	}
 
 	mb := &ModelBase{}
-	if err := mb.BeforeCreate(nil); err != nil {
-		t.Fatalf("model base before create failed: %v", err)
-	}
-	if mb.ID == "" {
-		t.Fatalf("expected generated model base id")
-	}
 	if err := mb.IsValid(); err != nil {
 		t.Fatalf("model base IsValid should initialize errors map: %v", err)
 	}
@@ -149,8 +143,8 @@ func TestClinicAndPatientValidationAndHelpers(t *testing.T) {
 	if err := clinic.BeforeCreate(nil); err != nil {
 		t.Fatalf("clinic before create should pass: %v", err)
 	}
-	if !strings.HasPrefix(clinic.ID, "clnc") {
-		t.Fatalf("expected clinic id prefix, got %q", clinic.ID)
+	if !strings.HasPrefix(clinic.UID, "clnc") {
+		t.Fatalf("expected clinic uid prefix, got %q", clinic.UID)
 	}
 	if clinic.AvatarPic() != "clinic.png" {
 		t.Fatalf("unexpected clinic avatar")
@@ -178,11 +172,11 @@ func TestClinicAndPatientValidationAndHelpers(t *testing.T) {
 
 	usr := User{ProfilePic: "u.png"}
 	if usr.IsLoggedIn() {
-		t.Fatalf("expected empty id to be not logged in")
+		t.Fatalf("expected empty uid to be not logged in")
 	}
-	usr.ID = "user_1"
+	usr.UID = "user_1"
 	if !usr.IsLoggedIn() {
-		t.Fatalf("expected id to indicate logged in")
+		t.Fatalf("expected uid to indicate logged in")
 	}
 	if usr.ProfilePicPath() != "u.png" || usr.AvatarPic() != "u.png" {
 		t.Fatalf("unexpected user avatar/profile methods")
@@ -240,7 +234,7 @@ func TestAppointmentAndIdentityHelpers(t *testing.T) {
 		t.Fatalf("expected unknown status to be invalid")
 	}
 
-	a := Appointment{ID: "apnt_1", Token: "tok_1", Timezone: "Invalid/Zone", BookedAt: time.Now().UTC()}
+	a := Appointment{UID: "apnt_1", Token: "tok_1", Timezone: "Invalid/Zone", BookedAt: time.Now().UTC()}
 	if got := a.LocalTimezone(); got != DefaultTimezone {
 		t.Fatalf("expected default timezone fallback, got %q", got)
 	}

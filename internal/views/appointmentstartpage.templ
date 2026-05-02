@@ -95,15 +95,15 @@ templ AppointmentStart(appointment models.Appointment, vc *Ctx) {
 				<h1 class="font-bold text-2xl">{ l(vc.Locale, "str.current_session") }</h1>
 			</hgroup>
 			<section class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
-				<input type="hidden" name="id" value={ appointment.ID } id="mb_appointment_id"/>
+				<input type="hidden" name="id" value={ appointment.UID } id="mb_appointment_id"/>
 				<div class="flex justify-end p-4 pb-0 text-base-content/50">
 					@CmpTime(appointment.BookedAt)
 				</div>
 				<form
 					id="patch_appointment"
 					method="POST"
-					action={ templ.URL("/appointments/" + appointment.ID + "/complete") }
-					hx-post={ "/appointments/" + appointment.ID + "/complete" }
+					action={ templ.URL("/appointments/" + appointment.UID + "/complete") }
+					hx-post={ "/appointments/" + appointment.UID + "/complete" }
 				>
 					<div class="px-4 py-6 sm:p-8">
 						<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -158,8 +158,8 @@ templ AppointmentStart(appointment models.Appointment, vc *Ctx) {
 					<form
 						id="cancel_appointment"
 						method="POST"
-						action={ templ.URL("/appointments/" + appointment.ID + "/cancel") }
-						hx-post={ "/appointments/" + appointment.ID + "/cancel" }
+						action={ templ.URL("/appointments/" + appointment.UID + "/cancel") }
+						hx-post={ "/appointments/" + appointment.UID + "/cancel" }
 						hx-confirm={ l(vc.Locale, "str.are_you_sure") }
 					>
 						<button

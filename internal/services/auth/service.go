@@ -93,7 +93,7 @@ func (s *service) signupIsEmailValid(ctx context.Context, email string) error {
 	}
 
 	user, err := gorm.G[models.User](s.DB.GormDB()).Where("email = ?", email).Take(ctx)
-	if err == nil && user.ID != "" {
+	if err == nil && user.ID != 0 {
 		return errors.New("email already exists, try login instead")
 	}
 
@@ -122,7 +122,7 @@ func (s *service) userPendingConfirmation(ctx context.Context, email string) err
 		Select("ID, Email, ConfirmEmailToken").
 		Where("email = ? AND confirm_email_token IS NOT null AND confirm_email_token != ''", email).
 		Take(ctx)
-	if err == nil && user.ID != "" { // If a row/record exists it means confirmation is pending and we should re-send
+	if err == nil && user.ID != 0 { // If a row/record exists it means confirmation is pending and we should re-send
 		return errors.New("user pending confirmation")
 	}
 
@@ -240,7 +240,7 @@ func (s *service) saveLogtoUser(ctx context.Context, logtoUser LogtoUser) error 
 		return fmt.Errorf("failed to load user from logto claims, GORM error: %w", err)
 	}
 
-	userExists := user.ID != ""
+	userExists := user.ID != 0
 	extIDMatchesUID := user.ExtID == logtoUser.UID
 	if userExists && extIDMatchesUID {
 		return nil

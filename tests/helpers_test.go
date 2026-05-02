@@ -174,7 +174,7 @@ func (h *testHarness) createAuthUser(email, password string, role models.UserRol
 	return u
 }
 
-func (h *testHarness) createPatient(userID string, name string) models.Patient {
+func (h *testHarness) createPatient(userID uint, name string) models.Patient {
 	h.t.Helper()
 
 	p := models.Patient{Name: name, Phone: "555-0100", Age: 30, UserID: userID}
@@ -185,7 +185,7 @@ func (h *testHarness) createPatient(userID string, name string) models.Patient {
 	return p
 }
 
-func (h *testHarness) createClinic(userID string, name string) models.Clinic {
+func (h *testHarness) createClinic(userID uint, name string) models.Clinic {
 	h.t.Helper()
 
 	c := models.Clinic{Name: name, UserID: userID}
@@ -196,7 +196,7 @@ func (h *testHarness) createClinic(userID string, name string) models.Clinic {
 	return c
 }
 
-func (h *testHarness) createAppointment(userID, patientID, clinicID string) models.Appointment {
+func (h *testHarness) createAppointment(userID, patientID, clinicID uint) models.Appointment {
 	h.t.Helper()
 
 	a := models.Appointment{
@@ -220,7 +220,7 @@ func (h *testHarness) createAppointment(userID, patientID, clinicID string) mode
 func (h *testHarness) authToken(user models.User) string {
 	h.t.Helper()
 
-	token, err := auth.JWTCreateToken(h.env, user.Email, user.ID)
+	token, err := auth.JWTCreateToken(h.env, user.Email, user.UID)
 	if err != nil {
 		h.t.Fatalf("create auth token: %v", err)
 	}

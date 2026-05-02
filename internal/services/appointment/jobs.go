@@ -77,8 +77,8 @@ func (s *service) handleReminderSweepTask(ctx context.Context, _ jobs.Task) erro
 	}
 
 	for _, appointment := range appointments {
-		if _, err := s.EnqueueTask(ctx, TaskReminder, TaskAppointmentPayload{AppointmentID: appointment.ID}); err != nil {
-			log.Printf("appointment jobs: enqueue reminder failed for %s: %v", appointment.ID, err)
+		if _, err := s.EnqueueTask(ctx, TaskReminder, TaskAppointmentPayload{AppointmentID: appointment.UID}); err != nil {
+			log.Printf("appointment jobs: enqueue reminder failed for %s: %v", appointment.UID, err)
 		}
 	}
 
@@ -97,7 +97,7 @@ func (s *service) handleReminderTask(ctx context.Context, task jobs.Task) error 
 	appointment, err := gorm.G[models.Appointment](s.DB.GormDB()).
 		Preload("Patient", nil).
 		Preload("Clinic", nil).
-		Where("id = ?", payload.AppointmentID).
+		Where("uid = ?", payload.AppointmentID).
 		First(ctx)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil
@@ -126,7 +126,7 @@ func (s *service) handleBookedAlertTask(ctx context.Context, task jobs.Task) err
 	appointment, err := gorm.G[models.Appointment](s.DB.GormDB()).
 		Preload("Patient", nil).
 		Preload("Clinic", nil).
-		Where("id = ?", payload.AppointmentID).
+		Where("uid = ?", payload.AppointmentID).
 		First(ctx)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil

@@ -21,7 +21,7 @@ func TestPatientHandlers(t *testing.T) {
 
 		resp, _ := h.doRequest(requestOptions{
 			method:    http.MethodPost,
-			path:      "/patients/" + patient.ID + "/patch",
+			path:      "/patients/" + patient.UID + "/patch",
 			authToken: token,
 			htmx:      true,
 			body: url.Values{
@@ -52,7 +52,7 @@ func TestPatientHandlers(t *testing.T) {
 
 		resp, _ := h.doRequest(requestOptions{
 			method:    http.MethodPost,
-			path:      "/patients/" + patient.ID + "/patch",
+			path:      "/patients/" + patient.UID + "/patch",
 			authToken: token,
 			htmx:      true,
 			body: url.Values{
@@ -96,7 +96,7 @@ func TestPatientHandlers(t *testing.T) {
 
 		resp, _ := h.doRequest(requestOptions{
 			method:     http.MethodPost,
-			path:       "/patients/" + patient.ID + "/patch",
+			path:       "/patients/" + patient.UID + "/patch",
 			authToken:  token,
 			htmx:       true,
 			contentTyp: "application/json",
@@ -115,7 +115,7 @@ func TestPatientHandlers(t *testing.T) {
 
 		resp, _ := h.doRequest(requestOptions{
 			method:    http.MethodPost,
-			path:      "/patients/" + patient.ID + "/patch",
+			path:      "/patients/" + patient.UID + "/patch",
 			authToken: token,
 			htmx:      true,
 			body: url.Values{
@@ -136,7 +136,7 @@ func TestPatientHandlers(t *testing.T) {
 
 		resp, _ := h.doRequest(requestOptions{
 			method:    http.MethodPost,
-			path:      "/patients/" + ownerPatient.ID + "/patch",
+			path:      "/patients/" + ownerPatient.UID + "/patch",
 			authToken: token,
 			htmx:      true,
 			body: url.Values{
@@ -151,7 +151,7 @@ func TestPatientHandlers(t *testing.T) {
 
 		resp, _ = h.doRequest(requestOptions{
 			method:    http.MethodDelete,
-			path:      "/patients/" + ownerPatient.ID,
+			path:      "/patients/" + ownerPatient.UID,
 			authToken: token,
 			htmx:      true,
 		})

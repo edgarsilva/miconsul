@@ -77,7 +77,7 @@ func (s *service) HandleClinicsCreate(c fiber.Ctx) error {
 	if err != nil {
 		return s.respondWithRedirect(c, "/clinics/new?toast=Invalid clinic input&level=error", fiber.StatusBadRequest)
 	}
-	clinic := input.toClinic("", cu.ID, price)
+	clinic := input.toClinic(0, "", cu.ID, price)
 
 	err = s.CreateClinic(c.Context(), &clinic)
 	if err != nil {
@@ -115,7 +115,7 @@ func (s *service) HandleClinicsUpdate(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, "/clinics/"+clinicID+"?toast=Invalid clinic input&level=error", fiber.StatusBadRequest)
 	}
 
-	clinic = input.toClinic(clinic.ID, clinic.UserID, amount.StrToAmount(c.FormValue("price", "")))
+	clinic = input.toClinic(clinic.ID, clinic.UID, clinic.UserID, amount.StrToAmount(c.FormValue("price", "")))
 
 	s.attachClinicProfilePicBestEffort(c, cu.ID, &clinic)
 
@@ -225,15 +225,15 @@ func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string, htmxStat
 
 func (s *service) respondWithClinicPage(c fiber.Ctx, clinic models.Clinic) error {
 	if s.NotHTMX(c) {
-		return s.Redirect(c, "/clinics/"+clinic.ID)
+		return s.Redirect(c, "/clinics/"+clinic.UID)
 	}
 
-	c.Set("HX-Push-Url", "/clinics/"+clinic.ID)
+	c.Set("HX-Push-Url", "/clinics/"+clinic.UID)
 	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.ClinicPage(vc, clinic))
 }
 
-func (s *service) attachClinicProfilePicBestEffort(c fiber.Ctx, userID string, clinic *models.Clinic) {
+func (s *service) attachClinicProfilePicBestEffort(c fiber.Ctx, userID uint, clinic *models.Clinic) {
 	path, picErr := SaveProfilePicToDisk(c, *clinic)
 	if errors.Is(picErr, ErrProfilePicNotProvided) {
 		return
@@ -245,7 +245,7 @@ func (s *service) attachClinicProfilePicBestEffort(c fiber.Ctx, userID string, c
 
 	clinic.ProfilePic = path
 	profilePicUpdate := models.Clinic{ProfilePic: path}
-	err := s.UpdateClinicByID(c.Context(), userID, clinic.ID, profilePicUpdate)
+	err := s.UpdateClinicByID(c.Context(), userID, clinic.UID, profilePicUpdate)
 	if err != nil {
 		log.Error(err)
 	}

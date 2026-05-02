@@ -13,7 +13,7 @@ import (
 
 func (s *service) DispatchBookedAlert(appointment models.Appointment) error {
 	if s.Env.JobsEnabled {
-		payload := TaskAppointmentPayload{AppointmentID: appointment.ID}
+		payload := TaskAppointmentPayload{AppointmentID: appointment.UID}
 		_, err := s.EnqueueTask(context.Background(), TaskBookedAlert, payload)
 		return err
 	}
@@ -58,7 +58,7 @@ func (s *service) sendReminderNow(ctx context.Context, appointment models.Appoin
 	}
 
 	_, updateErr := gorm.G[models.Appointment](s.DB.GormDB()).
-		Where("id = ?", appointment.ID).
+		Where("uid = ?", appointment.UID).
 		Update(ctx, "ReminderAlertSentAt", time.Now())
 	if updateErr != nil {
 		fmt.Println("failed to update ReminderAlertSentAt:", updateErr.Error())
@@ -92,7 +92,7 @@ func (s *service) sendBookedNow(ctx context.Context, appointment models.Appointm
 		return
 	}
 	_, updateErr := gorm.G[models.Appointment](s.DB.GormDB()).
-		Where("id = ?", appointment.ID).
+		Where("uid = ?", appointment.UID).
 		Update(ctx, "BookedAlertSentAt", time.Now())
 	if updateErr != nil {
 		fmt.Println("failed to update BookedAlertSentAt:", updateErr.Error())

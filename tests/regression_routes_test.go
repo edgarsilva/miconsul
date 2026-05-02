@@ -22,7 +22,7 @@ func TestPatchAndDeleteRoutesForPatientAndAppointment(t *testing.T) {
 
 		patchResp, _ := h.doRequest(requestOptions{
 			method:    http.MethodPatch,
-			path:      "/patients/" + patient.ID,
+			path:      "/patients/" + patient.UID,
 			authToken: token,
 			htmx:      true,
 			body: url.Values{
@@ -45,7 +45,7 @@ func TestPatchAndDeleteRoutesForPatientAndAppointment(t *testing.T) {
 
 		delResp, _ := h.doRequest(requestOptions{
 			method:    http.MethodDelete,
-			path:      "/patients/" + patient.ID,
+			path:      "/patients/" + patient.UID,
 			authToken: token,
 			htmx:      true,
 		})
@@ -66,12 +66,12 @@ func TestPatchAndDeleteRoutesForPatientAndAppointment(t *testing.T) {
 
 		patchResp, _ := h.doRequest(requestOptions{
 			method:    http.MethodPost,
-			path:      "/appointments/" + appt.ID + "/patch",
+			path:      "/appointments/" + appt.UID + "/patch",
 			authToken: token,
 			htmx:      true,
 			body: url.Values{
-				"clinicId":  {clinic.ID},
-				"patientId": {patient.ID},
+				"clinicId":  {clinic.UID},
+				"patientId": {patient.UID},
 				"duration":  {"45"},
 				"bookedAt":  {time.Now().Add(3 * time.Hour).Format("2006-01-02T15:04")},
 			},
@@ -90,7 +90,7 @@ func TestPatchAndDeleteRoutesForPatientAndAppointment(t *testing.T) {
 
 		delResp, _ := h.doRequest(requestOptions{
 			method:    http.MethodDelete,
-			path:      "/appointments/" + appt.ID,
+			path:      "/appointments/" + appt.UID,
 			authToken: token,
 			htmx:      true,
 		})

@@ -67,7 +67,7 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 	}
 
 	userUpds := input.toUserProfileUpdates()
-	updatedUser, err := s.UpdateUserProfileByID(c.Context(), cu.ID, userUpds)
+	updatedUser, err := s.UpdateUserProfileByID(c.Context(), cu.UID, userUpds)
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.respondWithRedirect(c, "/profile?toast=User does not exist&level=warning", fiber.StatusNotFound)
 	}

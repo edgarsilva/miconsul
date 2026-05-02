@@ -14,8 +14,8 @@ type appointmentPatchUpdates struct {
 	BookedHour   int
 	BookedMinute int
 	Price        int
-	ClinicID     string
-	PatientID    string
+	ClinicID     uint
+	PatientID    uint
 	Duration     int
 }
 

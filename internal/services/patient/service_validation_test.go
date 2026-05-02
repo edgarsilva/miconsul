@@ -13,29 +13,29 @@ func TestServiceValidationGuards(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("id-required methods return ErrIDRequired on blank id", func(t *testing.T) {
-		if _, err := svc.TakePatientByID(ctx, "usr_1", "   "); !errors.Is(err, ErrIDRequired) {
+		if _, err := svc.TakePatientByID(ctx, 1, "   "); !errors.Is(err, ErrIDRequired) {
 			t.Fatalf("expected ErrIDRequired for TakePatientByID, got %v", err)
 		}
-		if err := svc.UpdatePatientByID(ctx, "usr_1", "", models.Patient{}); !errors.Is(err, ErrIDRequired) {
+		if err := svc.UpdatePatientByID(ctx, 1, "", models.Patient{}); !errors.Is(err, ErrIDRequired) {
 			t.Fatalf("expected ErrIDRequired for UpdatePatientByID, got %v", err)
 		}
-		if err := svc.DeletePatientByID(ctx, "usr_1", ""); !errors.Is(err, ErrIDRequired) {
+		if err := svc.DeletePatientByID(ctx, 1, ""); !errors.Is(err, ErrIDRequired) {
 			t.Fatalf("expected ErrIDRequired for DeletePatientByID, got %v", err)
 		}
-		if err := svc.ClearPatientProfilePic(ctx, "usr_1", ""); !errors.Is(err, ErrIDRequired) {
+		if err := svc.ClearPatientProfilePic(ctx, 1, ""); !errors.Is(err, ErrIDRequired) {
 			t.Fatalf("expected ErrIDRequired for ClearPatientProfilePic, got %v", err)
 		}
-		if _, err := svc.patientExistsByID(ctx, "usr_1", ""); !errors.Is(err, ErrIDRequired) {
+		if _, err := svc.patientExistsByID(ctx, 1, ""); !errors.Is(err, ErrIDRequired) {
 			t.Fatalf("expected ErrIDRequired for patientExistsByID, got %v", err)
 		}
 	})
 
 	t.Run("PatientForShowPage short-circuits for create flow", func(t *testing.T) {
-		patient, err := svc.PatientForShowPage(ctx, "usr_1", "new")
+		patient, err := svc.PatientForShowPage(ctx, 1, "new")
 		if err != nil {
 			t.Fatalf("expected nil error for new patient page, got %v", err)
 		}
-		if patient.ID != "" {
+		if patient.ID != 0 {
 			t.Fatalf("expected zero patient for new page, got %+v", patient)
 		}
 	})

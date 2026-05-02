@@ -106,8 +106,8 @@ func TestMustAuthenticate(t *testing.T) {
 	t.Run("authenticated request reaches handler with uid", func(t *testing.T) {
 		app := fiber.New()
 		app.Get("/protected", MustAuthenticate(rt), func(c fiber.Ctx) error {
-			if got := c.Locals("uid"); got != regular.ID {
-				t.Fatalf("expected uid local %q, got %#v", regular.ID, got)
+			if got := c.Locals("uid"); got != regular.UID {
+				t.Fatalf("expected uid local %q, got %#v", regular.UID, got)
 			}
 			return c.SendStatus(http.StatusNoContent)
 		})
@@ -197,8 +197,8 @@ func TestMustBeAdmin(t *testing.T) {
 	t.Run("admin request reaches handler", func(t *testing.T) {
 		app := fiber.New()
 		app.Get("/admin", MustBeAdmin(rt), func(c fiber.Ctx) error {
-			if got := c.Locals("uid"); got != admin.ID {
-				t.Fatalf("expected uid local %q, got %#v", admin.ID, got)
+			if got := c.Locals("uid"); got != admin.UID {
+				t.Fatalf("expected uid local %q, got %#v", admin.UID, got)
 			}
 			return c.SendStatus(http.StatusNoContent)
 		})
@@ -214,7 +214,7 @@ func TestMustBeAdmin(t *testing.T) {
 		}
 	})
 
-	if regular.ID == "" {
+	if regular.UID == "" {
 		t.Fatalf("guard to keep regular user referenced")
 	}
 }
@@ -244,8 +244,8 @@ func TestMaybeAuthenticate(t *testing.T) {
 	t.Run("with valid token sets user locals", func(t *testing.T) {
 		app := fiber.New()
 		app.Get("/maybe", MaybeAuthenticate(rt), func(c fiber.Ctx) error {
-			if got := c.Locals("uid"); got != user.ID {
-				t.Fatalf("expected uid local %q, got %#v", user.ID, got)
+			if got := c.Locals("uid"); got != user.UID {
+				t.Fatalf("expected uid local %q, got %#v", user.UID, got)
 			}
 			return c.SendStatus(http.StatusNoContent)
 		})
@@ -274,12 +274,12 @@ func newMiddlewareAuthRuntime(t *testing.T) (testAuthRuntime, models.User, strin
 	}
 
 	rt := testAuthRuntime{env: &appenv.Env{JWTSecret: "01234567890123456789012345678901"}, db: db}
-	user := models.User{ID: "usr_regular", Email: "regular@example.com", Role: models.UserRoleUser}
+	user := models.User{UID: "usr_regular", Email: "regular@example.com", Role: models.UserRoleUser}
 	if err := db.Create(&user).Error; err != nil {
 		t.Fatalf("create user: %v", err)
 	}
 
-	token, err := auth.JWTCreateToken(rt.env, user.Email, user.ID)
+	token, err := auth.JWTCreateToken(rt.env, user.Email, user.UID)
 	if err != nil {
 		t.Fatalf("create token: %v", err)
 	}
@@ -290,11 +290,11 @@ func newMiddlewareAuthRuntime(t *testing.T) (testAuthRuntime, models.User, strin
 func newMiddlewareAdminRuntime(t *testing.T) (testAuthRuntime, models.User, string, models.User, string) {
 	t.Helper()
 	rt, regular, regularToken := newMiddlewareAuthRuntime(t)
-	admin := models.User{ID: "usr_admin", Email: "admin@example.com", Role: models.UserRoleAdmin}
+	admin := models.User{UID: "usr_admin", Email: "admin@example.com", Role: models.UserRoleAdmin}
 	if err := rt.db.Create(&admin).Error; err != nil {
 		t.Fatalf("create admin user: %v", err)
 	}
-	adminToken, err := auth.JWTCreateToken(rt.env, admin.Email, admin.ID)
+	adminToken, err := auth.JWTCreateToken(rt.env, admin.Email, admin.UID)
 	if err != nil {
 		t.Fatalf("create admin token: %v", err)
 	}

@@ -19,12 +19,12 @@ func TestUserServiceDBFlows(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("take user and find recent users", func(t *testing.T) {
-		got, err := svc.TakeUserByID(ctx, seededUser.ID)
+		got, err := svc.TakeUserByID(ctx, seededUser.UID)
 		if err != nil {
 			t.Fatalf("take user by id: %v", err)
 		}
-		if got.ID != seededUser.ID {
-			t.Fatalf("expected user id %q, got %q", seededUser.ID, got.ID)
+		if got.UID != seededUser.UID {
+			t.Fatalf("expected user uid %q, got %q", seededUser.UID, got.UID)
 		}
 
 		users, err := svc.FindRecentUsers(ctx, 10)
@@ -38,7 +38,7 @@ func TestUserServiceDBFlows(t *testing.T) {
 
 	t.Run("update user profile branches", func(t *testing.T) {
 		updates := models.User{Name: "  New Name  ", Email: " NEW@EXAMPLE.COM ", Phone: " 999 "}
-		updated, err := svc.UpdateUserProfileByID(ctx, seededUser.ID, updates)
+		updated, err := svc.UpdateUserProfileByID(ctx, seededUser.UID, updates)
 		if err != nil {
 			t.Fatalf("update user profile: %v", err)
 		}

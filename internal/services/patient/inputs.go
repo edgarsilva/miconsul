@@ -32,9 +32,10 @@ type patientUpsertInput struct {
 	ViaMessenger        bool `form:"viaMessenger"`
 }
 
-func (in patientUpsertInput) toPatient(id, userID string) models.Patient {
+func (in patientUpsertInput) toPatient(id uint, uid string, userID uint) models.Patient {
 	return models.Patient{
 		ID:                id,
+		UID:               uid,
 		UserID:            userID,
 		Name:              in.Name,
 		Email:             in.Email,

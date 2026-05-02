@@ -21,9 +21,10 @@ type clinicUpsertInput struct {
 	Facebook  string `form:"facebook"`
 }
 
-func (in clinicUpsertInput) toClinic(id, userID string, price int) models.Clinic {
+func (in clinicUpsertInput) toClinic(id uint, uid string, userID uint, price int) models.Clinic {
 	return models.Clinic{
 		ID:     id,
+		UID:    uid,
 		UserID: userID,
 		Price:  price,
 		Name:   in.Name,

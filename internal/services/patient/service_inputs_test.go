@@ -30,8 +30,8 @@ func TestPatientUpsertInputToPatient(t *testing.T) {
 		ViaMessenger:        true,
 	}
 
-	patient := in.toPatient("pat_1", "usr_1")
-	if patient.ID != "pat_1" || patient.UserID != "usr_1" {
+	patient := in.toPatient(1, "pat_1", 2)
+	if patient.ID != 1 || patient.UID != "pat_1" || patient.UserID != 2 {
 		t.Fatalf("unexpected identifiers mapping: %#v", patient)
 	}
 	if patient.Name != in.Name || patient.Email != in.Email || patient.Ocupation != in.Ocupation {

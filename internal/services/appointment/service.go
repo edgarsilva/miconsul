@@ -38,13 +38,13 @@ func New(s *server.Server) (*service, error) {
 	return svc, nil
 }
 
-func (s *service) TakePatientByID(ctx context.Context, userID uint, patientID string) (models.Patient, error) {
-	if strings.TrimSpace(patientID) == "" {
+func (s *service) TakePatientByUID(ctx context.Context, userID uint, patientUID string) (models.Patient, error) {
+	if strings.TrimSpace(patientUID) == "" {
 		return models.Patient{}, ErrIDRequired
 	}
 
 	patient, err := gorm.G[models.Patient](s.DB.GormDB()).
-		Where("uid = ? AND user_id = ?", patientID, userID).
+		Where("uid = ? AND user_id = ?", patientUID, userID).
 		Take(ctx)
 	if err != nil {
 		return models.Patient{}, err
@@ -53,13 +53,13 @@ func (s *service) TakePatientByID(ctx context.Context, userID uint, patientID st
 	return patient, nil
 }
 
-func (s *service) TakeClinicByID(ctx context.Context, userID uint, clinicID string) (models.Clinic, error) {
-	if strings.TrimSpace(clinicID) == "" {
+func (s *service) TakeClinicByUID(ctx context.Context, userID uint, clinicUID string) (models.Clinic, error) {
+	if strings.TrimSpace(clinicUID) == "" {
 		return models.Clinic{}, ErrIDRequired
 	}
 
 	clinic, err := gorm.G[models.Clinic](s.DB.GormDB()).
-		Where("uid = ? AND user_id = ?", clinicID, userID).
+		Where("uid = ? AND user_id = ?", clinicUID, userID).
 		Take(ctx)
 	if err != nil {
 		return models.Clinic{}, err
@@ -84,15 +84,15 @@ func (s *service) CreateAppointment(ctx context.Context, appointment *models.App
 	return gorm.G[models.Appointment](s.DB.GormDB()).Create(ctx, appointment)
 }
 
-func (s *service) TakeAppointmentByID(ctx context.Context, userID uint, appointmentID string) (models.Appointment, error) {
-	if strings.TrimSpace(appointmentID) == "" {
+func (s *service) TakeAppointmentByUID(ctx context.Context, userID uint, appointmentUID string) (models.Appointment, error) {
+	if strings.TrimSpace(appointmentUID) == "" {
 		return models.Appointment{}, ErrIDRequired
 	}
 
 	appointment, err := gorm.G[models.Appointment](s.DB.GormDB()).
 		Preload("Clinic", nil).
 		Preload("Patient", nil).
-		Where("uid = ? AND user_id = ?", appointmentID, userID).
+		Where("uid = ? AND user_id = ?", appointmentUID, userID).
 		Take(ctx)
 	if err != nil {
 		return models.Appointment{}, err
@@ -202,14 +202,14 @@ func (s *service) TakeAppointmentByIDAndToken(ctx context.Context, appointmentID
 	return appointment, nil
 }
 
-func (s *service) TakePatientByIDWithLastDoneAppointment(ctx context.Context, userID uint, patientID string) (models.Patient, error) {
-	if strings.TrimSpace(patientID) == "" {
+func (s *service) TakePatientByUIDWithLastDoneAppointment(ctx context.Context, userID uint, patientUID string) (models.Patient, error) {
+	if strings.TrimSpace(patientUID) == "" {
 		return models.Patient{}, ErrIDRequired
 	}
 
 	patient := models.Patient{}
 	err := s.DB.Model(&models.Patient{}).
-		Where("uid = ? AND user_id = ?", patientID, userID).
+		Where("uid = ? AND user_id = ?", patientUID, userID).
 		Preload("Appointments", func(tx *gorm.DB) *gorm.DB {
 			return tx.Limit(1).Where("status = ?", models.ApntStatusDone).Order("booked_at desc")
 		}).
@@ -276,7 +276,7 @@ func (s *service) RequestAppointmentDateChangeByIDAndToken(ctx context.Context, 
 
 func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, patientID, clinicID, timeframe string) ([]models.Appointment, error) {
 	appointments := []models.Appointment{}
-	dbquery := s.DB.Model(&models.Appointment{}).Where("user_id = ?", userID)
+	dbquery := s.DB.Model(&models.Appointment{}).Where("appointments.user_id = ?", userID)
 
 	if patientID != "" {
 		dbquery = dbquery.Joins("INNER JOIN patients ON patients.id = appointments.patient_id").Where("patients.uid = ?", patientID)
