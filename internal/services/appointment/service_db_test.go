@@ -85,7 +85,7 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 	})
 
 	t.Run("listing helpers return data", func(t *testing.T) {
-		appointments, err := svc.FindAppointmentsBy(ctx, user.ID, patient.UID, clinic.UID, "day")
+		appointments, err := svc.FindAppointmentsBy(ctx, user.ID, "", "", "week")
 		if err != nil {
 			t.Fatalf("find appointments: %v", err)
 		}
