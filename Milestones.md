@@ -99,9 +99,11 @@
 - [x] Accept profile pic from Logto, from google identity.
 - [ ] Upload images to S3-compatible object storage (RustFS)
 
-- [ ] Email/Messages updates
+- [ ] Notifications rollout (email + chat channels)
 
-  - [ ] Show appointment clinic and professional profile in emails and messages
-  - [ ] Update actions in emails/messages to use pro info
+  - [ ] Keep email notification templates/actions aligned with appointment + professional info
+  - [ ] Add Telegram delivery channel
+  - [ ] Add WhatsApp delivery channel
+  - [ ] Add Facebook Messenger delivery channel
 
-- [ ] Release to beta testers
+- [ ] Release to beta testers after notification channels baseline is live
