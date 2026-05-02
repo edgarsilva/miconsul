@@ -6,6 +6,10 @@
 - [x] Auth docs drift cleanup (`docs/testing.md` migration status) (2026/Mar/27)
 - [ ] Uptime Kuma monitors + notifications + SLO-style alerts
 - [ ] Upload images to S3-compatible object storage (RustFS)
+- [ ] Move frontend + templ generated artifacts to image-build pipeline (keep runtime image slim)
+
+  - [ ] Generate Tailwind CSS during Docker build from `styles/global.css` (instead of relying on prebuilt committed `public/global.css`)
+  - [ ] Define templ generation policy for CI/image builds vs committed artifacts and enforce one canonical source of truth
 
 ## Nice-to-Have (Low Priority)
 
