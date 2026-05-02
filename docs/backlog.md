@@ -17,6 +17,13 @@
   - Upload and retrieval path for patient/profile images via RustFS.
   - Migration/fallback strategy for existing disk-backed image files.
 
+- [feature/notifications] Multi-channel notifications baseline
+  - Keep email templates/actions synced with appointment + professional details.
+  - Add Telegram provider integration (credentials, send path, retry/error handling).
+  - Add WhatsApp provider integration.
+  - Add Facebook Messenger provider integration.
+  - Define per-channel opt-in/opt-out + fallback policy (email as default fallback).
+
 ## Icebox
 
 - [external/runtime] Beta tester release prep
