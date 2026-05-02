@@ -319,6 +319,25 @@ func TestTokenDigest(t *testing.T) {
 	})
 }
 
+func TestAuthSnapshotTTLBoundary(t *testing.T) {
+	now := time.Unix(time.Now().Unix(), 0)
+	token := tokenDigest("header.payload.signature")
+
+	t.Run("accepts snapshot at ttl boundary", func(t *testing.T) {
+		s := AuthSnapshot{Token: token, UserID: "u1", CachedAtUnix: now.Add(-authSessionHydrationTTL).Unix()}
+		if !s.isValidForToken(token, now) {
+			t.Fatalf("expected snapshot valid at ttl boundary")
+		}
+	})
+
+	t.Run("rejects snapshot older than ttl", func(t *testing.T) {
+		s := AuthSnapshot{Token: token, UserID: "u1", CachedAtUnix: now.Add(-authSessionHydrationTTL - time.Second).Unix()}
+		if s.isValidForToken(token, now) {
+			t.Fatalf("expected snapshot invalid past ttl")
+		}
+	})
+}
+
 func cookieValueByName(resp *http.Response, name string) string {
 	for _, c := range resp.Cookies() {
 		if c.Name == name {

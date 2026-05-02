@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/session"
 )
 
 func TestLogtoHandlersSessionFailureRedirects(t *testing.T) {
@@ -75,6 +76,27 @@ func TestLogtoHandlersSessionFailureRedirects(t *testing.T) {
 		}
 		if got := resp.Header.Get("Location"); got != "/logto/signout" {
 			t.Fatalf("expected redirect to /logto/signout, got %q", got)
+		}
+	})
+}
+
+func TestLogtoHandlersCallbackErrorBranches(t *testing.T) {
+	t.Run("callback redirects with callback error when signin state is missing", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		svc.SessionStore = session.NewStore()
+
+		app := fiber.New()
+		app.Get("/logto/callback", svc.HandleLogtoCallback)
+
+		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/logto/callback", nil))
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != fiber.StatusSeeOther {
+			t.Fatalf("expected 303, got %d", resp.StatusCode)
+		}
+		if got := resp.Header.Get("Location"); got != "/signin?logto_error=callback" {
+			t.Fatalf("expected callback error redirect, got %q", got)
 		}
 	})
 }

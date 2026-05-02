@@ -128,6 +128,30 @@ work is now coverage hardening and contract expansion, tracked in
 - Handler suite naming/style is consistent (`tests/<service>_handlers_test.go`).
 - CI gate is green (`go test ./...` and `go test -race ./...`).
 
+## Auth Route Contract
+
+| Route | Unauthenticated behavior | Authenticated behavior | Notes |
+| --- | --- | --- | --- |
+| `GET /signin` | `200` login page (or provider message render) | `303` redirect `/` | When Logto enabled and no provider error/logout flags, auto-redirects to `/logto/signin`. |
+| `POST /signin` | `200` login page with validation/auth error | `303` redirect `/?timeframe=day` after cookie issuance | On cookie issuance failure, redirects to `/` with message query. |
+| `POST /api/auth/signin` | `400` bad payload/blank fields, `401` invalid credentials, `403` pending confirmation | `200` JSON `{ok:true}` + `Auth` cookie | JSON contract checked in handler and integration tests. |
+| `POST /logout` | `302/303` redirect `/signin` (or Logto signout path) | same | HTMX requests return `307` + `HX-Redirect` header. |
+| `POST /api/auth/validate` | `401` behind auth middleware | `200` | Endpoint itself returns `200`; middleware enforces auth. |
+| `GET /api/auth/protected` | `401` behind auth middleware | `200` JSON user payload | User identity must match authenticated request context. |
+
+### Provider Callback Error Matrix (Logto)
+
+| Route | Failure class | Expected result |
+| --- | --- | --- |
+| `GET /logto/signin` | Session load failure | `303` redirect `/signin?logto_error=session` |
+| `GET /logto/signin` | Callback URI/config build failure | `303` redirect `/signin?logto_error=config` |
+| `GET /logto/callback` | Session load failure | `303` redirect `/signin?logto_error=session` |
+| `GET /logto/callback` | Callback verification failure (missing/invalid state/code) | `303` redirect `/signin?logto_error=callback` |
+| `GET /logto/callback` | Request conversion failure | `303` redirect `/signin?logto_error=request` |
+| `GET /logto/callback` | ID token claims failure | `303` redirect `/signin?logto_error=id_token` |
+| `GET /logto/callback` | Claims mapping failure | `303` redirect `/signin?logto_error=claims` |
+| `GET /logto/callback` | User sync failure | `303` redirect `/signin?logto_error=user_sync` |
+
 ## Negative Path Matrix (Appointment + Clinic)
 
 These status expectations are covered in handler suites and should remain
