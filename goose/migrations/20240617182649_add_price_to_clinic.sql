@@ -1,10 +1,10 @@
 -- +goose Up
 -- +goose StatementBegin
-ALTER TABLE clinics ADD COLUMN price integer;
+SELECT 'price is part of baseline schema';
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-ALTER TABLE clinics DROP COLUMN price;
+SELECT 'no down';
 -- +goose StatementEnd
 -

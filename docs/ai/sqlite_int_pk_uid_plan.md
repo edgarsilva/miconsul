@@ -15,15 +15,15 @@
 ## Implementation Checklist
 
 ### 1) Model Layer
-- [ ] Update model identity fields to `ID uint` + `UID string`.
-- [ ] Update `BeforeCreate` hooks to assign `UID` instead of `ID`.
-- [ ] Update relation FK fields to integer IDs where appropriate.
-- [ ] Keep model-specific UID prefixes (`user`, `clnc`, `ptnt`, etc.).
+- [x] Update model identity fields to `ID uint` + `UID string`.
+- [x] Update `BeforeCreate` hooks to assign `UID` instead of `ID`.
+- [x] Update relation FK fields to integer IDs where appropriate.
+- [x] Keep model-specific UID prefixes (`user`, `clnc`, `ptnt`, etc.).
 
 ### 2) Query/Service Layer
-- [ ] Switch external lookups from `id` to `uid`.
-- [ ] Keep internal joins and relation traversal on integer `id`.
-- [ ] Ensure enqueue/job payload semantics remain external-UID-safe.
+- [x] Switch external lookups from `id` to `uid`.
+- [x] Keep internal joins and relation traversal on integer `id`.
+- [x] Ensure enqueue/job payload semantics remain external-UID-safe.
 
 ### 3) Migrations/Schema
 - [ ] Rewrite bootstrap schema for integer PK + UID unique constraints.
@@ -32,12 +32,12 @@
 - [ ] Keep FTS setup and triggers compatible with new keys.
 
 ### 4) Tests/Seeders
-- [ ] Update tests expecting string IDs.
+- [x] Update tests expecting string IDs.
 - [ ] Update seeders/fixtures to use UID for external selection.
 - [ ] Re-run migrations and DB bootstrap tests.
 
 ### 5) Validation
-- [ ] Run `go test ./...`.
+- [x] Run `go test ./...`.
 - [ ] Run `make docker/image`.
 - [ ] Report files changed and remaining follow-ups.
 

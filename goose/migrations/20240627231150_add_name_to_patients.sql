@@ -1,22 +1,19 @@
 -- +goose Up
 -- +goose StatementBegin
-ALTER TABLE patients ADD COLUMN name TEXT;
-
--- Never Update from migrations, if you have enough data since it
--- runs in a transaction it will lock everything.
--- Create a bettes Expand/Collapse strategy to make it incrementally.
---
--- UPDATE patients
--- SET name = (
---     SELECT first_name || ' ' || last_name
---     FROM patients p2
--- );
-
 DROP TRIGGER IF EXISTS trgr_insert_patients_on_gfts;
 DROP TRIGGER IF EXISTS trgr_update_patients_on_gfts;
+DROP TRIGGER IF EXISTS trgr_delete_patients_on_gfts;
 
-ALTER TABLE patients DROP COLUMN first_name;
-ALTER TABLE patients DROP COLUMN last_name;
+DELETE FROM global_fts WHERE gid IN (SELECT id FROM patients);
+
+INSERT INTO global_fts (gid, "primary", "secondary", "tertiary")
+SELECT
+    id,
+    name,
+    email || ' ' || phone,
+    ocupation || '\n' || family_history || '\n' || medical_background || '\n' || notes
+FROM
+    patients;
 
 CREATE TRIGGER IF NOT EXISTS trgr_insert_patients_on_gfts
   AFTER INSERT on patients
@@ -39,6 +36,13 @@ BEGIN
       "secondary" = new.email || ' ' || new.phone,
       "tertiary" = new.ocupation || '\n' || new.family_history || '\n' || new.medical_background || '\n' || new.notes
   WHERE gid = NEW.id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS trgr_delete_patients_on_gfts
+  AFTER DELETE on patients
+BEGIN
+  DELETE FROM global_fts
+  WHERE gid = OLD.id;
 END;
 
 -- +goose StatementEnd

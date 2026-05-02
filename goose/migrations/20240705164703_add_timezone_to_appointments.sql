@@ -1,9 +1,9 @@
 -- +goose Up
 -- +goose StatementBegin
-ALTER TABLE appointments ADD COLUMN timezone text;
+SELECT 'timezone is part of baseline schema';
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-ALTER TABLE appointments DROP COLUMN timezone;
+SELECT 'no down';
 -- +goose StatementEnd

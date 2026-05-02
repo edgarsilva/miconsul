@@ -1,16 +1,10 @@
 -- +goose Up
 -- +goose StatementBegin
-ALTER TABLE appointments ADD COLUMN price integer;
-UPDATE appointments
-SET price = (
-    SELECT cost
-    FROM appointments a2
-);
-ALTER TABLE appointments DROP COLUMN cost;
+SELECT 'price is part of baseline schema';
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-SELECT 'theres no down for this operation';
+SELECT 'no down';
 -- +goose StatementEnd
 --
