@@ -21,8 +21,8 @@ func SaveProfilePicToDisk(c fiber.Ctx, patient models.Patient, assetsDir string)
 		return "", profilePicFormFileErr(err)
 	}
 
-	if patient.ID == "" {
-		return "", errors.New("failed to save profile pic without patient.ID")
+	if patient.UID == "" {
+		return "", errors.New("failed to save profile pic without patient.UID")
 	}
 
 	originalFilename := strings.TrimSpace(profilePic.Filename)
@@ -33,7 +33,7 @@ func SaveProfilePicToDisk(c fiber.Ctx, patient models.Patient, assetsDir string)
 		return "", ErrInvalidFilename
 	}
 
-	filename := patient.ID + "_ppic_" + safeFilename
+	filename := patient.UID + "_ppic_" + safeFilename
 	path, err := ProfilePicPath(filename, assetsDir)
 	if err != nil {
 		return "", fmt.Errorf("failed to save profile pic without an ASSETS_DIR: %w", err)
@@ -44,7 +44,7 @@ func SaveProfilePicToDisk(c fiber.Ctx, patient models.Patient, assetsDir string)
 		return "", fmt.Errorf("failed to save profilePic to disk: %w", err)
 	}
 
-	imgsrc := "/patients/" + patient.ID + "/profilepic/" + filename
+	imgsrc := "/patients/" + patient.UID + "/profilepic/" + filename
 	return imgsrc, nil
 }
 

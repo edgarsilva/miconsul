@@ -238,9 +238,9 @@ func UserLi(c *Ctx, user models.User) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var11 templ.SafeURL
-		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL("/admin/users/" + user.ID))
+		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL("/admin/users/" + user.UID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/userspage.templ`, Line: 96, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/userspage.templ`, Line: 96, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -358,7 +358,7 @@ func UserEditPage(c *Ctx, user models.User) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if user.ID == "" || user.ID == "new" {
+			if user.UID == "" || user.UID == "new" {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<h1 class=\"font-bold text-2xl\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -400,9 +400,9 @@ func UserEditPage(c *Ctx, user models.User) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var19 templ.SafeURL
-			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL("/appointments?userId=" + user.ID))
+			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL("/appointments?userId=" + user.UID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/userspage.templ`, Line: 130, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/userspage.templ`, Line: 130, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -515,9 +515,9 @@ func UserProfile(c *Ctx, user models.User) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var25 string
-			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(user.ID)
+			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(user.UID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/userspage.templ`, Line: 150, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/userspage.templ`, Line: 150, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 			if templ_7745c5c3_Err != nil {
@@ -554,7 +554,7 @@ func UserProfile(c *Ctx, user models.User) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var27 templ.SafeURL
-				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL("/users/" + user.ID + "/removepic"))
+				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL("/users/" + user.UID + "/removepic"))
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/userspage.templ`, Line: 160, Col: 63}
 				}
@@ -567,7 +567,7 @@ func UserProfile(c *Ctx, user models.User) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var28 string
-				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs("/users/" + user.ID + "/removepic")
+				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs("/users/" + user.UID + "/removepic")
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/userspage.templ`, Line: 161, Col: 56}
 				}
@@ -866,7 +866,7 @@ func UserForm(c *Ctx, user models.User) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if user.ID != "new" {
+		if user.UID != "new" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, " hx-post=\"/users\" action=\"/users\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -882,9 +882,9 @@ func UserForm(c *Ctx, user models.User) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var46 string
-			templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs("/users/" + user.ID)
+			templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs("/users/" + user.UID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/userspage.templ`, Line: 258, Col: 33}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/userspage.templ`, Line: 258, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 			if templ_7745c5c3_Err != nil {
@@ -895,9 +895,9 @@ func UserForm(c *Ctx, user models.User) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var47 templ.SafeURL
-			templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL("/users/" + user.ID + "/patch"))
+			templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL("/users/" + user.UID + "/patch"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/userspage.templ`, Line: 259, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/userspage.templ`, Line: 259, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 			if templ_7745c5c3_Err != nil {

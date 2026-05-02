@@ -60,7 +60,7 @@ templ AppointmentCancelPage(vc *Ctx, appointment models.Appointment) {
 					</p>
 					<div class="mt-10 flex items-center justify-center gap-x-6">
 						if appointment.CanceledAt.IsZero() {
-							<form action={ templ.URL("/appointments/" + appointment.ID + "/patient/cancel/" + appointment.Token) } method="POST" hx-boost="true">
+							<form action={ templ.URL("/appointments/" + appointment.UID + "/patient/cancel/" + appointment.Token) } method="POST" hx-boost="true">
 								<button type="submit" class="btn btn-secondary">{ l(vc.Locale, "str.yes_cancel_my_appointment") }</button>
 							</form>
 						} else {

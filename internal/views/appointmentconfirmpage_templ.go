@@ -231,9 +231,9 @@ func AppointmentCancelPage(vc *Ctx, appointment models.Appointment) templ.Compon
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var11 templ.SafeURL
-				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL("/appointments/" + appointment.ID + "/patient/cancel/" + appointment.Token))
+				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL("/appointments/" + appointment.UID + "/patient/cancel/" + appointment.Token))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentconfirmpage.templ`, Line: 63, Col: 107}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentconfirmpage.templ`, Line: 63, Col: 108}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {

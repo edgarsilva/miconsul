@@ -9,7 +9,7 @@ import (
 func (s *service) issueAuthCookie(c fiber.Ctx, user models.User, rememberMe bool) error {
 	validFor := authTokenTTL(rememberMe)
 
-	jwt, err := JWTCreateTokenWithTTL(s.AppEnv(), user.Email, user.ID, validFor, rememberMe)
+	jwt, err := JWTCreateTokenWithTTL(s.AppEnv(), user.Email, user.UID, validFor, rememberMe)
 	if err != nil {
 		return errAuthSessionCreate
 	}

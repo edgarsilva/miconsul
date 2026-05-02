@@ -302,9 +302,9 @@ func AppointmentStart(appointment models.Appointment, vc *Ctx) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var15 string
-		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(appointment.ID)
+		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(appointment.UID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentstartpage.templ`, Line: 98, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentstartpage.templ`, Line: 98, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -323,9 +323,9 @@ func AppointmentStart(appointment models.Appointment, vc *Ctx) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var16 templ.SafeURL
-		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL("/appointments/" + appointment.ID + "/complete"))
+		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL("/appointments/" + appointment.UID + "/complete"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentstartpage.templ`, Line: 105, Col: 72}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentstartpage.templ`, Line: 105, Col: 73}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -336,9 +336,9 @@ func AppointmentStart(appointment models.Appointment, vc *Ctx) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var17 string
-		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs("/appointments/" + appointment.ID + "/complete")
+		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs("/appointments/" + appointment.UID + "/complete")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentstartpage.templ`, Line: 106, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentstartpage.templ`, Line: 106, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -505,9 +505,9 @@ func AppointmentStart(appointment models.Appointment, vc *Ctx) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var30 templ.SafeURL
-		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL("/appointments/" + appointment.ID + "/cancel"))
+		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL("/appointments/" + appointment.UID + "/cancel"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentstartpage.templ`, Line: 161, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentstartpage.templ`, Line: 161, Col: 72}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 		if templ_7745c5c3_Err != nil {
@@ -518,9 +518,9 @@ func AppointmentStart(appointment models.Appointment, vc *Ctx) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var31 string
-		templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs("/appointments/" + appointment.ID + "/cancel")
+		templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs("/appointments/" + appointment.UID + "/cancel")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentstartpage.templ`, Line: 162, Col: 61}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentstartpage.templ`, Line: 162, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 		if templ_7745c5c3_Err != nil {

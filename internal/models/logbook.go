@@ -17,6 +17,8 @@ const (
 )
 
 type Logbook struct {
+	ID              uint   `gorm:"primaryKey"`
+	UID             string `gorm:"uniqueIndex;default:null;not null"`
 	Log             string `gorm:"default:null;not null"`
 	Msg             string
 	Data            string
@@ -27,6 +29,6 @@ type Logbook struct {
 }
 
 func (l *Logbook) BeforeCreate(tx *gorm.DB) (err error) {
-	l.ID = xid.New("lgbk")
+	l.UID = xid.New("lgbk")
 	return nil
 }

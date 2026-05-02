@@ -63,7 +63,7 @@ func TestPatientHandlersFlows(t *testing.T) {
 		t.Fatalf("index page expected 200, got status=%d err=%v", resp1.StatusCode, err)
 	}
 
-	resp2, err := app.Test(httptest.NewRequest(http.MethodGet, "/patients/"+seed.ID, nil))
+	resp2, err := app.Test(httptest.NewRequest(http.MethodGet, "/patients/"+seed.UID, nil))
 	if err != nil || resp2.StatusCode != fiber.StatusOK {
 		t.Fatalf("patient form page expected 200, got status=%d err=%v", resp2.StatusCode, err)
 	}
@@ -87,7 +87,7 @@ func TestPatientHandlersFlows(t *testing.T) {
 		"phone": {"444"},
 		"age":   {"31"},
 	}
-	req4 := httptest.NewRequest(http.MethodPost, "/patients/"+seed.ID+"/patch", strings.NewReader(updateForm.Encode()))
+	req4 := httptest.NewRequest(http.MethodPost, "/patients/"+seed.UID+"/patch", strings.NewReader(updateForm.Encode()))
 	req4.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req4.Header.Set("HX-Request", "true")
 	resp4, err := app.Test(req4)
@@ -95,14 +95,14 @@ func TestPatientHandlersFlows(t *testing.T) {
 		t.Fatalf("update patient expected 200 for htmx, got status=%d err=%v", resp4.StatusCode, err)
 	}
 
-	req5 := httptest.NewRequest(http.MethodPost, "/patients/"+seed.ID+"/removepic", nil)
+	req5 := httptest.NewRequest(http.MethodPost, "/patients/"+seed.UID+"/removepic", nil)
 	req5.Header.Set("HX-Request", "true")
 	resp5, err := app.Test(req5)
 	if err != nil || resp5.StatusCode != fiber.StatusOK {
 		t.Fatalf("remove pic expected 200 for htmx, got status=%d err=%v", resp5.StatusCode, err)
 	}
 
-	req6 := httptest.NewRequest(http.MethodPost, "/patients/"+seed.ID+"/delete", nil)
+	req6 := httptest.NewRequest(http.MethodPost, "/patients/"+seed.UID+"/delete", nil)
 	req6.Header.Set("HX-Request", "true")
 	resp6, err := app.Test(req6)
 	if err != nil || resp6.StatusCode != fiber.StatusOK {
@@ -133,7 +133,7 @@ func TestPatientProfilePicImageSourceHandler(t *testing.T) {
 		t.Fatalf("create patient: %v", err)
 	}
 
-	filename := patient.ID + "_ppic_avatar.png"
+	filename := patient.UID + "_ppic_avatar.png"
 	storagePath, err := ProfilePicPath(filename, assetsDir)
 	if err != nil {
 		t.Fatalf("profile pic path: %v", err)
@@ -142,7 +142,7 @@ func TestPatientProfilePicImageSourceHandler(t *testing.T) {
 		t.Fatalf("write profile pic file: %v", err)
 	}
 
-	if err := svc.DB.WithContext(t.Context()).Model(&models.Patient{}).Where("id = ?", patient.ID).Update("profile_pic", "/patients/"+patient.ID+"/profilepic/"+filename).Error; err != nil {
+	if err := svc.DB.WithContext(t.Context()).Model(&models.Patient{}).Where("id = ?", patient.ID).Update("profile_pic", "/patients/"+patient.UID+"/profilepic/"+filename).Error; err != nil {
 		t.Fatalf("attach patient profile pic: %v", err)
 	}
 
@@ -152,7 +152,7 @@ func TestPatientProfilePicImageSourceHandler(t *testing.T) {
 		return svc.HandlePatientProfilePicImgSrc(c)
 	})
 
-	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/patients/"+patient.ID+"/profilepic/"+filename, nil))
+	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/patients/"+patient.UID+"/profilepic/"+filename, nil))
 	if err != nil || resp.StatusCode != fiber.StatusOK {
 		t.Fatalf("profile pic src expected 200, got status=%d err=%v", resp.StatusCode, err)
 	}

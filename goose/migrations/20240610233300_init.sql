@@ -1,122 +1,195 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE IF NOT EXISTS `todos` (`created_at` datetime,`content` text NOT NULL DEFAULT null,`user_id` text NOT NULL DEFAULT null,`updated_at` datetime,`id` text NOT NULL DEFAULT null,`completed` numeric,PRIMARY KEY (`id`),CONSTRAINT `fk_users_todos` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`));
-CREATE INDEX `idx_todos_user_id` ON `todos`(`user_id`);
-CREATE INDEX `idx_todos_created_at` ON `todos`(`created_at` desc);
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY,
+  uid TEXT NOT NULL UNIQUE,
+  ext_id TEXT,
+  profile_pic TEXT,
+  name TEXT,
+  email TEXT NOT NULL UNIQUE,
+  password TEXT,
+  theme TEXT,
+  reset_token TEXT,
+  confirm_email_token TEXT,
+  confirm_email_expires_at DATETIME,
+  reset_token_expires_at DATETIME,
+  phone TEXT,
+  timezone TEXT,
+  role TEXT NOT NULL,
+  created_at DATETIME,
+  updated_at DATETIME
+);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_users_ext_id ON users(ext_id);
 
-CREATE TABLE IF NOT EXISTS "articles"  (`created_at` datetime,`updated_at` datetime,`user_id` text NOT NULL DEFAULT null,`title` text,`content` text,`id` text NOT NULL DEFAULT null,PRIMARY KEY (`id`),CONSTRAINT `fk_users_articles` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`),CONSTRAINT `fk_articles_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`));
-CREATE INDEX `idx_articles_created_at` ON `articles`(`created_at` desc);
-CREATE INDEX `idx_articles_user_id` ON `articles`(`user_id`);
+CREATE TABLE IF NOT EXISTS clinics (
+  id INTEGER PRIMARY KEY,
+  uid TEXT NOT NULL UNIQUE,
+  ext_id TEXT,
+  user_id INTEGER NOT NULL,
+  cover_pic TEXT,
+  profile_pic TEXT,
+  name TEXT NOT NULL,
+  email TEXT,
+  phone TEXT NOT NULL,
+  line1 TEXT,
+  line2 TEXT,
+  city TEXT,
+  state TEXT,
+  country TEXT,
+  zip TEXT,
+  whatsapp TEXT,
+  telegram TEXT,
+  messenger TEXT,
+  instagram TEXT,
+  facebook TEXT,
+  favorite NUMERIC,
+  price INTEGER,
+  deleted_at DATETIME,
+  created_at DATETIME,
+  updated_at DATETIME,
+  FOREIGN KEY(user_id) REFERENCES users(id)
+);
+CREATE INDEX IF NOT EXISTS idx_clinics_user_id ON clinics(user_id);
 
-CREATE TABLE IF NOT EXISTS "comments"  (`user_id` text NOT NULL DEFAULT null,`article_id` text NOT NULL DEFAULT null,`content` text,`created_at` datetime,`updated_at` datetime,`id` text NOT NULL DEFAULT null,PRIMARY KEY (`id`),CONSTRAINT `fk_users_comments` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`),CONSTRAINT `fk_articles_comments` FOREIGN KEY (`article_id`) REFERENCES `articles`(`id`),CONSTRAINT `fk_comments_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`));
-CREATE INDEX `idx_comments_user_id` ON `comments`(`user_id`);
-CREATE INDEX `idx_comments_article_id` ON `comments`(`article_id`);
+CREATE TABLE IF NOT EXISTS patients (
+  id INTEGER PRIMARY KEY,
+  uid TEXT NOT NULL UNIQUE,
+  ext_id TEXT,
+  user_id INTEGER NOT NULL,
+  email TEXT,
+  phone TEXT NOT NULL,
+  ocupation TEXT,
+  name TEXT NOT NULL,
+  profile_pic TEXT,
+  family_history TEXT,
+  medical_background TEXT,
+  notes TEXT,
+  line1 TEXT,
+  line2 TEXT,
+  city TEXT,
+  state TEXT,
+  country TEXT,
+  zip TEXT,
+  whatsapp TEXT,
+  telegram TEXT,
+  messenger TEXT,
+  instagram TEXT,
+  facebook TEXT,
+  age INTEGER,
+  enable_notifications NUMERIC,
+  via_email NUMERIC,
+  via_whatsapp NUMERIC,
+  via_messenger NUMERIC,
+  via_telegram NUMERIC,
+  deleted_at DATETIME,
+  created_at DATETIME,
+  updated_at DATETIME,
+  FOREIGN KEY(user_id) REFERENCES users(id)
+);
+CREATE INDEX IF NOT EXISTS idx_patients_user_id ON patients(user_id);
 
-CREATE TABLE IF NOT EXISTS "clinics"  (
-  `ext_id` text,
-  `name` text NOT NULL DEFAULT null,
-  `line1` text,
-  `line2` text,
-  `city` text,
-  `state` text,
-  `country` text,
-  `zip` text,
-  `email` text,
-  `phone` text NOT NULL DEFAULT null,
-  `instagram_url` text,
-  `facebook_url` text,
-  `user_id` text NOT NULL DEFAULT null,
-  `created_at` datetime,
-  `updated_at` datetime,
-  `id` text NOT NULL DEFAULT null,
-  `whatsapp` text,
-  `telegram` text,
-  `instagram` text,
-  `facebook` text,
-  `messenger` text,
-  `profile_pic` text,
-  `cover_pic` text,
-  `deleted_at` datetime,
-  `favorite` numeric,
-  PRIMARY KEY (`id`),
-  CONSTRAINT `fk_clinics_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`),
-  CONSTRAINT `fk_users_clinics` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`));
-CREATE INDEX `idx_clinics_user_id` ON `clinics`(`user_id`);
-CREATE INDEX `idx_clinics_deleted_at` ON `clinics`(`deleted_at`);
+CREATE TABLE IF NOT EXISTS appointments (
+  id INTEGER PRIMARY KEY,
+  uid TEXT NOT NULL UNIQUE,
+  ext_id TEXT,
+  token TEXT,
+  summary TEXT,
+  observations TEXT,
+  conclusions TEXT,
+  notes TEXT,
+  hashtags TEXT,
+  timezone TEXT,
+  user_id INTEGER NOT NULL,
+  clinic_id INTEGER NOT NULL,
+  patient_id INTEGER NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  duration INTEGER,
+  price INTEGER,
+  booked_year INTEGER,
+  booked_month INTEGER,
+  booked_day INTEGER,
+  booked_hour INTEGER,
+  booked_minute INTEGER,
+  no_show NUMERIC,
+  enable_notifications NUMERIC,
+  via_email NUMERIC,
+  via_whatsapp NUMERIC,
+  via_messenger NUMERIC,
+  via_telegram NUMERIC,
+  booked_at DATETIME NOT NULL,
+  old_booked_at DATETIME,
+  booked_alert_sent_at DATETIME,
+  reminder_alert_sent_at DATETIME,
+  viewed_at DATETIME,
+  confirmed_at DATETIME,
+  done_at DATETIME,
+  canceled_at DATETIME,
+  pending_at DATETIME,
+  rescheduled_at DATETIME,
+  deleted_at DATETIME,
+  created_at DATETIME,
+  updated_at DATETIME,
+  FOREIGN KEY(user_id) REFERENCES users(id),
+  FOREIGN KEY(clinic_id) REFERENCES clinics(id),
+  FOREIGN KEY(patient_id) REFERENCES patients(id)
+);
+CREATE INDEX IF NOT EXISTS idx_appointments_user_id ON appointments(user_id);
+CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
+CREATE INDEX IF NOT EXISTS idx_appointments_clinic_id ON appointments(clinic_id);
+CREATE INDEX IF NOT EXISTS idx_appointments_patient_id ON appointments(patient_id);
+CREATE INDEX IF NOT EXISTS idx_appointments_booked_at ON appointments(booked_at);
+CREATE INDEX IF NOT EXISTS idx_appointments_old_booked_at ON appointments(old_booked_at);
 
-CREATE TABLE IF NOT EXISTS "patients"  (
-  `ext_id` text,
-  `email` text,
-  `phone` text NOT NULL DEFAULT null,
-  `facebook_url` text,
-  `profile_url` text,
-  `user_id` text NOT NULL DEFAULT null,
-  `created_at` datetime,`updated_at` datetime,
-  `id` text NOT NULL DEFAULT null,
-  `line1` text,`line2` text,
-  `city` text,`state` text,
-  `country` text,`zip` text,
-  `first_name` text NOT NULL DEFAULT null,
-  `last_name` text NOT NULL DEFAULT null,
-  `age` integer,
-  `profile_pic` text,
-  `facebook` text,
-  `whatsapp` text,
-  `telegram` text,
-  `messenger` text,
-  `instagram` text,
-  `username` text,
-  `pass` text,
-  `ocupation` text,
-  `enable_notifications` numeric,
-  `family_history` text,
-  `medical_background` text,
-  `notes` text,
-  `via_email` numeric,
-  `via_whatsapp` numeric,
-  `via_messenger` numeric,
-  `via_telegram` numeric,
-  `deleted_at` datetime,
-  PRIMARY KEY (`id`),
-  CONSTRAINT `fk_patients_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`),
-  CONSTRAINT `fk_users_patients` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`));
-CREATE INDEX `idx_patients_user_id` ON `patients`(`user_id`);
-CREATE INDEX `idx_patients_deleted_at` ON `patients`(`deleted_at`);
+CREATE TABLE IF NOT EXISTS alerts (
+  id INTEGER PRIMARY KEY,
+  uid TEXT NOT NULL UNIQUE,
+  medium TEXT NOT NULL,
+  name TEXT NOT NULL,
+  title TEXT,
+  sub TEXT,
+  message TEXT,
+  "from" TEXT,
+  "to" TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  alertable_id TEXT,
+  alertable_type TEXT,
+  created_at DATETIME,
+  updated_at DATETIME
+);
+CREATE INDEX IF NOT EXISTS poly_fevnt_idx ON alerts(alertable_id, alertable_type);
+CREATE INDEX IF NOT EXISTS idx_alerts_status ON alerts(status);
+CREATE INDEX IF NOT EXISTS idx_alerts_name ON alerts(name);
+CREATE INDEX IF NOT EXISTS idx_alerts_medium ON alerts(medium);
 
-CREATE TABLE IF NOT EXISTS "appointments"  (`booked_at` datetime NOT NULL DEFAULT null,`confirmed_at` datetime DEFAULT null,`canceled_at` datetime DEFAULT null,`rescheduled_at` datetime DEFAULT null,`accepted_at` datetime DEFAULT null,`no_show_at` datetime DEFAULT null,`deleted_at` datetime,`created_at` datetime,`updated_at` datetime,`id` text NOT NULL DEFAULT null,`summary` text,`observations` text,`conclusions` text,`notes` text,`ext_id` text,`hashtags` text,`user_id` text NOT NULL DEFAULT null,`clinic_id` text NOT NULL DEFAULT null,`patient_id` text NOT NULL DEFAULT null,`duration` integer,`booked_month` integer,`booked_minute` integer,`booked_hour` integer,`booked_day` integer,`booked_year` integer,`confirmed` numeric,`canceled` numeric,`rescheduled` numeric,`accepted` numeric,`no_show` numeric,`cost` integer,`viewed_at` datetime DEFAULT null,`sent_at` datetime DEFAULT null,`started_at` datetime DEFAULT null,`done_at` datetime DEFAULT null,`begin_at` datetime DEFAULT null,`status` text NOT NULL DEFAULT "draft", `notification_status` text NOT NULL DEFAULT "pending", `enable_notifications` numeric, `via_email` numeric, `via_whatsapp` numeric, `via_messenger` numeric, `via_telegram` numeric, `booked_alert_sent_at` datetime DEFAULT null, `reminder_alert_sent_at` datetime DEFAULT null, `pending_at` datetime DEFAULT null, `old_booked_at` datetime DEFAULT null, `token` text,PRIMARY KEY (`id`),CONSTRAINT `fk_appointments_clinic` FOREIGN KEY (`clinic_id`) REFERENCES `clinics`(`id`),CONSTRAINT `fk_appointments_patient` FOREIGN KEY (`patient_id`) REFERENCES `patients`(`id`),CONSTRAINT `fk_users_appointments` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`),CONSTRAINT `fk_patients_appoinments` FOREIGN KEY (`patient_id`) REFERENCES `patients`(`id`),CONSTRAINT `fk_patients_appointments` FOREIGN KEY (`patient_id`) REFERENCES `patients`(`id`));
-CREATE INDEX `idx_appointments_user_id` ON `appointments`(`user_id`);
-CREATE INDEX `idx_appointments_status` ON `appointments`(`status`);
-CREATE INDEX `idx_appointments_clinic_id` ON `appointments`(`clinic_id`);
-CREATE INDEX `idx_appointments_patient_id` ON `appointments`(`patient_id`);
-CREATE INDEX `idx_appointments_deleted_at` ON `appointments`(`deleted_at`);
-CREATE INDEX `idx_appointments_notification_status` ON `appointments`(`notification_status`);
-
-CREATE VIRTUAL TABLE global_fts USING fts5(gid, primary, secondary, tertiary)
-/* global_fts(gid,"primary",secondary,tertiary) */;
-CREATE TABLE IF NOT EXISTS 'global_fts_data'(id INTEGER PRIMARY KEY, block BLOB);
-CREATE TABLE IF NOT EXISTS 'global_fts_idx'(segid, term, pgno, PRIMARY KEY(segid, term)) WITHOUT ROWID;
-CREATE TABLE IF NOT EXISTS 'global_fts_content'(id INTEGER PRIMARY KEY, c0, c1, c2, c3);
-CREATE TABLE IF NOT EXISTS 'global_fts_docsize'(id INTEGER PRIMARY KEY, sz BLOB);
-CREATE TABLE IF NOT EXISTS 'global_fts_config'(k PRIMARY KEY, v) WITHOUT ROWID;
-
-CREATE TABLE `alerts` (`medium` text NOT NULL DEFAULT null,`name` text NOT NULL DEFAULT null,`title` text,`sub` text,`message` text,`sent_at` datetime DEFAULT null,`delivered_at` datetime DEFAULT null,`viewed_at` datetime DEFAULT null,`from` text,`to` text,`status` text NOT NULL DEFAULT "pending",`alertable_id` text,`alertable_type` text,`created_at` datetime,`updated_at` datetime,`id` text NOT NULL DEFAULT null,PRIMARY KEY (`id`));
-CREATE INDEX `poly_fevnt_idx` ON `alerts`(`alertable_id`,`alertable_type`);
-CREATE INDEX `idx_alerts_status` ON `alerts`(`status`);
-CREATE INDEX `idx_alerts_name` ON `alerts`(`name`);
-CREATE INDEX `idx_alerts_medium` ON `alerts`(`medium`);
-
-CREATE TABLE IF NOT EXISTS "feed_events"  (`subject` text,`subject_id` text NOT NULL DEFAULT null,`subject_type` text NOT NULL DEFAULT null,`subject_url` text,`action` text,`target` text NOT NULL DEFAULT null,`target_id` text NOT NULL DEFAULT null,`target_type` text,`target_url` text,`ocurred_at` datetime DEFAULT null,`extra1` text,`extra2` text,`extra3` text,`feed_eventable_id` text,`feed_eventable_type` text,`created_at` datetime,`updated_at` datetime,`id` text NOT NULL DEFAULT null,`name` text NOT NULL DEFAULT null,PRIMARY KEY (`id`));
-CREATE INDEX `fe_target_idx` ON `feed_events`(`target`,`target_id`);
-CREATE INDEX `idx_feed_events_ocurred_at` ON `feed_events`(`ocurred_at`);
-CREATE INDEX `fe_poly_idx` ON `feed_events`(`feed_eventable_id`,`feed_eventable_type`);
-CREATE INDEX `idx_feed_events_name` ON `feed_events`(`name`);
-CREATE INDEX `fe_subject_idx` ON `feed_events`(`subject_id`,`subject_type`);
-CREATE INDEX `idx_feed_events_action` ON `feed_events`(`action`);
-CREATE INDEX `idx_appointments_old_booked_at` ON `appointments`(`old_booked_at`);
-
-CREATE TABLE IF NOT EXISTS "users"  (`confirm_email_expires_at` datetime,`reset_token_expires_at` datetime,`name` text,`email` text NOT NULL DEFAULT null,`role` text NOT NULL DEFAULT null,`password` text,`theme` text,`reset_token` text,`confirm_email_token` text,`created_at` datetime,`updated_at` datetime,`id` text NOT NULL DEFAULT null,`ext_id` text,`profile_pic` text,PRIMARY KEY (`id`));
-CREATE UNIQUE INDEX `idx_users_email` ON `users`(`email`);
-CREATE INDEX `idx_users_role` ON `users`(`role`);
+CREATE TABLE IF NOT EXISTS feed_events (
+  id INTEGER PRIMARY KEY,
+  uid TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  subject TEXT,
+  subject_id TEXT NOT NULL,
+  subject_type TEXT NOT NULL,
+  subject_url TEXT,
+  action TEXT,
+  target TEXT NOT NULL,
+  target_id TEXT NOT NULL,
+  target_type TEXT,
+  target_url TEXT,
+  ocurred_at DATETIME,
+  extra1 TEXT,
+  extra2 TEXT,
+  extra3 TEXT,
+  feed_eventable_id TEXT,
+  feed_eventable_type TEXT,
+  created_at DATETIME,
+  updated_at DATETIME
+);
+CREATE INDEX IF NOT EXISTS fe_target_idx ON feed_events(target, target_id);
+CREATE INDEX IF NOT EXISTS idx_feed_events_ocurred_at ON feed_events(ocurred_at);
+CREATE INDEX IF NOT EXISTS fe_poly_idx ON feed_events(feed_eventable_id, feed_eventable_type);
+CREATE INDEX IF NOT EXISTS idx_feed_events_name ON feed_events(name);
+CREATE INDEX IF NOT EXISTS fe_subject_idx ON feed_events(subject_id, subject_type);
+CREATE INDEX IF NOT EXISTS idx_feed_events_action ON feed_events(action);
 -- +goose StatementEnd
 
 -- +goose Down

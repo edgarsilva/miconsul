@@ -17,14 +17,16 @@ const (
 type Session struct {
 	ExpiresAt time.Time
 	ModelBase
+	ID       uint   `gorm:"primaryKey"`
+	UID      string `gorm:"uniqueIndex;default:null;not null"`
 	Token    string
 	Email    string      `gorm:"index;default:null;not null"`
-	UserID   string      `gorm:"index;default:null;not null"`
+	UserID   uint        `gorm:"index;default:null;not null"`
 	AuthType SessionType `gorm:"default:null;not null;type:string"`
 	User     User
 }
 
 func (u *Session) BeforeCreate(tx *gorm.DB) (err error) {
-	u.ID = xid.New("sess")
+	u.UID = xid.New("sess")
 	return nil
 }

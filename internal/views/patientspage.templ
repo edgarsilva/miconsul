@@ -58,13 +58,13 @@ templ PatientFormPage(patient models.Patient, c *Ctx) {
 				class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
 				hx-boost="true"
 			>
-				if patient.ID == "" || patient.ID == "new" {
+				if patient.UID == "" || patient.UID == "new" {
 					<h1 class="font-bold text-2xl">{ c.l("str.new_patient") }</h1>
 				} else {
 					<h1 class="font-bold text-2xl">{ c.l("str.edit_patient") }</h1>
 				}
 				<a
-					href={ templ.URL("/appointments?patientId=" + patient.ID) }
+					href={ templ.URL("/appointments?patientId=" + patient.UID) }
 					class="btn btn-primary btn-sm"
 				>
 					@IconCalendar("")
@@ -147,7 +147,7 @@ templ PatientLi(patient models.Patient, c *Ctx) {
 				<div class="flex gap-2 z-10 mb-2">
 					<a
 						class="btn btn-outline btn-primary"
-						href={ templ.URL("/appointments?patientId=" + patient.ID) }
+						href={ templ.URL("/appointments?patientId=" + patient.UID) }
 					>
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
 							<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"></path>
@@ -156,7 +156,7 @@ templ PatientLi(patient models.Patient, c *Ctx) {
 					</a>
 					<a
 						class="btn btn-outline btn-secondary"
-						href={ templ.URL("/patients/" + patient.ID) }
+						href={ templ.URL("/patients/" + patient.UID) }
 						hx-boost="true"
 					>
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -173,8 +173,8 @@ templ PatientLi(patient models.Patient, c *Ctx) {
 templ PatientDeleteForm(patient models.Patient, c *Ctx) {
 	<form
 		method="POST"
-		action={ templ.URL("/patients/"+patient.ID) + "/delete" }
-		hx-delete={ "/patients/" + patient.ID }
+		action={ templ.URL("/patients/"+patient.UID) + "/delete" }
+		hx-delete={ "/patients/" + patient.UID }
 		hx-confirm={ c.l("str.are_you_sure") }
 		hx-target="#patients_list"
 	>
@@ -213,7 +213,7 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 				<p class="mt-1 text-sm leading-6 text-base-content/60">{ c.l("str.personal_info_desc") }</p>
 			</div>
 			@PatientForm(c, patient) {
-				<input type="hidden" name="id" value={ patient.ID } id="pi_patient_id"/>
+				<input type="hidden" name="id" value={ patient.UID } id="pi_patient_id"/>
 				<div class="px-4 py-6 sm:p-8">
 					<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
 						<div class="col-span-full">
@@ -223,8 +223,8 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 									<figure class="flex flex-col gap-1 items-center" id="avatar_pic">
 										@CmpAvatar(patient)
 										<a
-											href={ templ.URL("/patients/" + patient.ID + "/removepic") }
-											hx-patch={ "/patients/" + patient.ID + "/removepic" }
+										href={ templ.URL("/patients/" + patient.UID + "/removepic") }
+										hx-patch={ "/patients/" + patient.UID + "/removepic" }
 											hx-select="#avatar_pic"
 											hx-swap="outerHTML"
 											hx-target="closest figure"
@@ -339,7 +339,7 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 				<p class="mt-1 text-sm leading-6 text-base-content/60">{ c.l("str.address_desc") }</p>
 			</div>
 			@PatientForm(c, patient) {
-				<input type="hidden" name="id" value={ patient.ID } id="address_patient_id"/>
+				<input type="hidden" name="id" value={ patient.UID } id="address_patient_id"/>
 				<div class="px-4 py-6 sm:p-8">
 					<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
 						<div class="col-span-full">
@@ -390,7 +390,7 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 				<p class="mt-1 text-sm leading-6 text-base-content/60">{ c.l("str.medical_profile_desc") }</p>
 			</div>
 			@PatientForm(c, patient) {
-				<input type="hidden" name="id" value={ patient.ID } id="mb_patient_id"/>
+				<input type="hidden" name="id" value={ patient.UID } id="mb_patient_id"/>
 				<div class="px-4 py-6 sm:p-8">
 					<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
 						<div class="col-span-full">
@@ -438,7 +438,7 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 				<p class="mt-1 text-sm leading-6">{ c.l("str.notifications_desc") }</p>
 			</div>
 			@PatientForm(c, patient) {
-				<input type="hidden" name="id" value={ patient.ID } id="no_patient_id"/>
+				<input type="hidden" name="id" value={ patient.UID } id="no_patient_id"/>
 				<div class="px-4 py-6 sm:p-8">
 					<div class="max-w-2xl space-y-10">
 						<fieldset>
@@ -541,9 +541,9 @@ templ PatientForm(c *Ctx, patient models.Patient) {
 		class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2"
 		method="POST"
 		enctype="multipart/form-data"
-		if patient.ID != "" && patient.ID != "new" {
-			hx-patch={ "/patients/" + patient.ID }
-			action={ templ.URL("/patients/" + patient.ID + "/patch") }
+		if patient.UID != "" && patient.UID != "new" {
+			hx-patch={ "/patients/" + patient.UID }
+			action={ templ.URL("/patients/" + patient.UID + "/patch") }
 		} else {
 			hx-post="/patients"
 			action="/patients"

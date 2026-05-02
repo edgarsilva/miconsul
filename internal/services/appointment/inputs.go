@@ -1,9 +1,9 @@
 package appointment
 
 type appointmentUpsertInput struct {
-	ClinicID  string `form:"clinicId"`
-	PatientID string `form:"patientId"`
-	Duration  int    `form:"duration"`
+	ClinicUID  string `form:"clinicId"`
+	PatientUID string `form:"patientId"`
+	Duration   int    `form:"duration"`
 }
 
 type appointmentCompleteInput struct {

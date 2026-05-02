@@ -25,12 +25,12 @@ func TestClinicServiceDBFlows(t *testing.T) {
 	}
 
 	t.Run("take and search clinics", func(t *testing.T) {
-		got, err := svc.TakeClinicByID(ctx, user.ID, base.ID)
+		got, err := svc.TakeClinicByID(ctx, user.ID, base.UID)
 		if err != nil {
 			t.Fatalf("take clinic by id: %v", err)
 		}
-		if got.ID != base.ID {
-			t.Fatalf("expected clinic id %q, got %q", base.ID, got.ID)
+		if got.UID != base.UID {
+			t.Fatalf("expected clinic uid %q, got %q", base.UID, got.UID)
 		}
 
 		recent, err := svc.FindClinicsBySearchTerm(ctx, user, "")
@@ -49,11 +49,11 @@ func TestClinicServiceDBFlows(t *testing.T) {
 
 	t.Run("update clinic and existence branches", func(t *testing.T) {
 		upd := models.Clinic{Name: "  Beta Clinic  ", Email: "  BETA@EXAMPLE.COM  ", Phone: " 999 "}
-		if err := svc.UpdateClinicByID(ctx, user.ID, base.ID, upd); err != nil {
+		if err := svc.UpdateClinicByID(ctx, user.ID, base.UID, upd); err != nil {
 			t.Fatalf("update clinic by id: %v", err)
 		}
 
-		got, err := svc.TakeClinicByID(ctx, user.ID, base.ID)
+		got, err := svc.TakeClinicByID(ctx, user.ID, base.UID)
 		if err != nil {
 			t.Fatalf("reload clinic after update: %v", err)
 		}
@@ -65,11 +65,11 @@ func TestClinicServiceDBFlows(t *testing.T) {
 			t.Fatalf("expected not found on missing update, got %v", err)
 		}
 
-		if err := svc.UpdateClinicByID(ctx, user.ID, base.ID, models.Clinic{Email: strings.Repeat("e", 255)}); err == nil {
+		if err := svc.UpdateClinicByID(ctx, user.ID, base.UID, models.Clinic{Email: strings.Repeat("e", 255)}); err == nil {
 			t.Fatalf("expected normalization error on too long email")
 		}
 
-		exists, err := svc.clinicExistsByID(ctx, user.ID, base.ID)
+		exists, err := svc.clinicExistsByID(ctx, user.ID, base.UID)
 		if err != nil {
 			t.Fatalf("clinic exists check: %v", err)
 		}
@@ -87,10 +87,10 @@ func TestClinicServiceDBFlows(t *testing.T) {
 	})
 
 	t.Run("delete clinic by id", func(t *testing.T) {
-		if err := svc.DeleteClinicByID(ctx, user.ID, base.ID); err != nil {
+		if err := svc.DeleteClinicByID(ctx, user.ID, base.UID); err != nil {
 			t.Fatalf("delete clinic by id: %v", err)
 		}
-		if err := svc.DeleteClinicByID(ctx, user.ID, base.ID); err != gorm.ErrRecordNotFound {
+		if err := svc.DeleteClinicByID(ctx, user.ID, base.UID); err != gorm.ErrRecordNotFound {
 			t.Fatalf("expected not found on repeated delete, got %v", err)
 		}
 	})

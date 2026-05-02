@@ -131,7 +131,7 @@ func TestSaveProfilePicToDisk(t *testing.T) {
 	t.Run("returns ErrProfilePicNotProvided when form file missing", func(t *testing.T) {
 		app := fiber.New()
 		app.Post("/", func(c fiber.Ctx) error {
-			_, err := SaveProfilePicToDisk(c, models.Patient{ID: "pat_1"}, t.TempDir())
+			_, err := SaveProfilePicToDisk(c, models.Patient{UID: "pat_1"}, t.TempDir())
 			if !errors.Is(err, ErrProfilePicNotProvided) {
 				t.Fatalf("expected ErrProfilePicNotProvided, got %v", err)
 			}

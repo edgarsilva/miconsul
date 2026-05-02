@@ -28,16 +28,16 @@ func TestPatientServiceDBFlows(t *testing.T) {
 		if err != nil {
 			t.Fatalf("expected empty show page patient without error, got %v", err)
 		}
-		if showPatient.ID != "" {
-			t.Fatalf("expected zero patient id for empty show page id, got %q", showPatient.ID)
+		if showPatient.UID != "" {
+			t.Fatalf("expected zero patient uid for empty show page id, got %q", showPatient.UID)
 		}
 
 		showPatient, err = svc.PatientForShowPage(ctx, user.ID, "new")
 		if err != nil {
 			t.Fatalf("expected new show page patient without error, got %v", err)
 		}
-		if showPatient.ID != "" {
-			t.Fatalf("expected zero patient id for new show page id, got %q", showPatient.ID)
+		if showPatient.UID != "" {
+			t.Fatalf("expected zero patient uid for new show page id, got %q", showPatient.UID)
 		}
 	})
 
@@ -71,7 +71,7 @@ func TestPatientServiceDBFlows(t *testing.T) {
 
 	t.Run("update patient and clear profile pic", func(t *testing.T) {
 		upd := models.Patient{Name: "Alpha Updated", Email: "updated@example.com", Phone: "999"}
-		if err := svc.UpdatePatientByID(ctx, user.ID, base.ID, upd); err != nil {
+		if err := svc.UpdatePatientByID(ctx, user.ID, base.UID, upd); err != nil {
 			t.Fatalf("update patient: %v", err)
 		}
 
@@ -79,14 +79,14 @@ func TestPatientServiceDBFlows(t *testing.T) {
 			t.Fatalf("expected record not found on missing update, got %v", err)
 		}
 
-		if err := svc.UpdatePatientByID(ctx, user.ID, base.ID, models.Patient{Name: "N", Phone: "1", Email: strings.Repeat("e", 255)}); err == nil {
+		if err := svc.UpdatePatientByID(ctx, user.ID, base.UID, models.Patient{Name: "N", Phone: "1", Email: strings.Repeat("e", 255)}); err == nil {
 			t.Fatalf("expected normalization error on long email")
 		}
 
-		if err := svc.UpdatePatientByID(ctx, user.ID, base.ID, models.Patient{ProfilePic: "avatar.png", Name: "Alpha Updated", Email: "updated@example.com", Phone: "999"}); err != nil {
+		if err := svc.UpdatePatientByID(ctx, user.ID, base.UID, models.Patient{ProfilePic: "avatar.png", Name: "Alpha Updated", Email: "updated@example.com", Phone: "999"}); err != nil {
 			t.Fatalf("update profile pic: %v", err)
 		}
-		if err := svc.ClearPatientProfilePic(ctx, user.ID, base.ID); err != nil {
+		if err := svc.ClearPatientProfilePic(ctx, user.ID, base.UID); err != nil {
 			t.Fatalf("clear profile pic: %v", err)
 		}
 		if err := svc.ClearPatientProfilePic(ctx, user.ID, "missing"); err != gorm.ErrRecordNotFound {
@@ -106,10 +106,10 @@ func TestPatientServiceDBFlows(t *testing.T) {
 			t.Fatalf("expected 2 rows affected, got %d", rows)
 		}
 
-		if err := svc.DeletePatientByID(ctx, user.ID, base.ID); err != nil {
+		if err := svc.DeletePatientByID(ctx, user.ID, base.UID); err != nil {
 			t.Fatalf("delete patient: %v", err)
 		}
-		if err := svc.DeletePatientByID(ctx, user.ID, base.ID); err != gorm.ErrRecordNotFound {
+		if err := svc.DeletePatientByID(ctx, user.ID, base.UID); err != gorm.ErrRecordNotFound {
 			t.Fatalf("expected not found on repeated delete, got %v", err)
 		}
 	})
@@ -120,7 +120,7 @@ func TestPatientServiceDBFlows(t *testing.T) {
 			t.Fatalf("create patient for exists helper: %v", err)
 		}
 
-		exists, err := svc.patientExistsByID(ctx, user.ID, p.ID)
+		exists, err := svc.patientExistsByID(ctx, user.ID, p.UID)
 		if err != nil {
 			t.Fatalf("patient exists check: %v", err)
 		}

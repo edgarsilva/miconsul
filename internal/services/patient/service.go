@@ -30,18 +30,18 @@ func NewService(s *server.Server) (service, error) {
 	}, nil
 }
 
-func (s service) TakePatientByID(ctx context.Context, userID, patientID string) (models.Patient, error) {
+func (s service) TakePatientByID(ctx context.Context, userID uint, patientID string) (models.Patient, error) {
 	patientID = strings.TrimSpace(patientID)
 	if patientID == "" {
 		return models.Patient{}, ErrIDRequired
 	}
 
 	return gorm.G[models.Patient](s.DB.GormDB()).
-		Where("id = ? AND user_id = ?", patientID, userID).
+		Where("uid = ? AND user_id = ?", patientID, userID).
 		Take(ctx)
 }
 
-func (s service) PatientForShowPage(ctx context.Context, userID, patientID string) (models.Patient, error) {
+func (s service) PatientForShowPage(ctx context.Context, userID uint, patientID string) (models.Patient, error) {
 	patientID = strings.TrimSpace(patientID)
 	patient := models.Patient{}
 	if patientID == "" || patientID == "new" {
@@ -95,7 +95,7 @@ func (s service) CreatePatient(ctx context.Context, patient *models.Patient) err
 	return gorm.G[models.Patient](s.DB.GormDB()).Create(ctx, patient)
 }
 
-func (s service) UpdatePatientByID(ctx context.Context, userID, patientID string, patient models.Patient) error {
+func (s service) UpdatePatientByID(ctx context.Context, userID uint, patientID string, patient models.Patient) error {
 	patientID = strings.TrimSpace(patientID)
 	if patientID == "" {
 		return ErrIDRequired
@@ -106,7 +106,7 @@ func (s service) UpdatePatientByID(ctx context.Context, userID, patientID string
 	}
 
 	rowsAffected, err := gorm.G[models.Patient](s.DB.GormDB()).
-		Where("id = ? AND user_id = ?", patientID, userID).
+		Where("uid = ? AND user_id = ?", patientID, userID).
 		Updates(ctx, patient)
 	if err != nil {
 		return err
@@ -126,14 +126,14 @@ func (s service) UpdatePatientByID(ctx context.Context, userID, patientID string
 	return nil
 }
 
-func (s service) DeletePatientByID(ctx context.Context, userID, patientID string) error {
+func (s service) DeletePatientByID(ctx context.Context, userID uint, patientID string) error {
 	patientID = strings.TrimSpace(patientID)
 	if patientID == "" {
 		return ErrIDRequired
 	}
 
 	rowsAffected, err := gorm.G[models.Patient](s.DB.GormDB()).
-		Where("id = ? AND user_id = ?", patientID, userID).
+		Where("uid = ? AND user_id = ?", patientID, userID).
 		Delete(ctx)
 	if err != nil {
 		return err
@@ -145,14 +145,14 @@ func (s service) DeletePatientByID(ctx context.Context, userID, patientID string
 	return nil
 }
 
-func (s service) ClearPatientProfilePic(ctx context.Context, userID, patientID string) error {
+func (s service) ClearPatientProfilePic(ctx context.Context, userID uint, patientID string) error {
 	patientID = strings.TrimSpace(patientID)
 	if patientID == "" {
 		return ErrIDRequired
 	}
 
 	rowsAffected, err := gorm.G[models.Patient](s.DB.GormDB()).
-		Where("id = ? AND user_id = ?", patientID, userID).
+		Where("uid = ? AND user_id = ?", patientID, userID).
 		Update(ctx, "profile_pic", "")
 	if err != nil {
 		return err
@@ -172,7 +172,7 @@ func (s service) ClearPatientProfilePic(ctx context.Context, userID, patientID s
 	return nil
 }
 
-func (s service) patientExistsByID(ctx context.Context, userID, patientID string) (bool, error) {
+func (s service) patientExistsByID(ctx context.Context, userID uint, patientID string) (bool, error) {
 	patientID = strings.TrimSpace(patientID)
 	if patientID == "" {
 		return false, ErrIDRequired
@@ -181,7 +181,7 @@ func (s service) patientExistsByID(ctx context.Context, userID, patientID string
 	var count int64
 	err := s.DB.WithContext(ctx).
 		Model(&models.Patient{}).
-		Where("id = ? AND user_id = ?", patientID, userID).
+		Where("uid = ? AND user_id = ?", patientID, userID).
 		Count(&count).Error
 	if err != nil {
 		return false, err

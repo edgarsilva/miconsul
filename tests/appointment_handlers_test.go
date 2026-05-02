@@ -43,7 +43,7 @@ func TestAppointmentHandlers(t *testing.T) {
 
 		resp, _ := h.doRequest(requestOptions{
 			method: http.MethodPost,
-			path:   "/appointments/" + appt.ID + "/patch",
+			path:   "/appointments/" + appt.UID + "/patch",
 			accept: "application/json",
 			body: url.Values{
 				"duration": {"30"},
@@ -63,7 +63,7 @@ func TestAppointmentHandlers(t *testing.T) {
 
 		resp, _ := h.doRequest(requestOptions{
 			method:     http.MethodPost,
-			path:       "/appointments/" + appt.ID + "/patch",
+			path:       "/appointments/" + appt.UID + "/patch",
 			authToken:  token,
 			htmx:       true,
 			contentTyp: "application/json",
@@ -102,7 +102,7 @@ func TestAppointmentHandlers(t *testing.T) {
 
 		resp, _ := h.doRequest(requestOptions{
 			method:    http.MethodPost,
-			path:      "/appointments/" + appt.ID + "/cancel",
+			path:      "/appointments/" + appt.UID + "/cancel",
 			authToken: token,
 			htmx:      true,
 		})
@@ -129,7 +129,7 @@ func TestAppointmentHandlers(t *testing.T) {
 
 		resp, _ := h.doRequest(requestOptions{
 			method:    http.MethodPost,
-			path:      "/appointments/" + appt.ID + "/complete",
+			path:      "/appointments/" + appt.UID + "/complete",
 			authToken: token,
 			htmx:      true,
 			body: url.Values{
@@ -211,12 +211,12 @@ func TestAppointmentHandlers(t *testing.T) {
 
 		resp, _ := h.doRequest(requestOptions{
 			method:    http.MethodPost,
-			path:      "/appointments/" + ownerAppt.ID + "/patch",
+			path:      "/appointments/" + ownerAppt.UID + "/patch",
 			authToken: token,
 			htmx:      true,
 			body: url.Values{
-				"clinicId":  {ownerClinic.ID},
-				"patientId": {ownerPatient.ID},
+				"clinicId":  {ownerClinic.UID},
+				"patientId": {ownerPatient.UID},
 				"duration":  {"30"},
 				"bookedAt":  {time.Now().Add(3 * time.Hour).Format("2006-01-02T15:04")},
 			},
@@ -227,7 +227,7 @@ func TestAppointmentHandlers(t *testing.T) {
 
 		resp, _ = h.doRequest(requestOptions{
 			method:    http.MethodDelete,
-			path:      "/appointments/" + ownerAppt.ID,
+			path:      "/appointments/" + ownerAppt.UID,
 			authToken: token,
 			htmx:      true,
 		})
@@ -240,7 +240,7 @@ func TestAppointmentHandlers(t *testing.T) {
 			t.Fatalf("load owner appointment after cross-user attempts: %v", err)
 		}
 		if unchanged.UserID != owner.ID {
-			t.Fatalf("expected appointment ownership unchanged, got %q", unchanged.UserID)
+			t.Fatalf("expected appointment ownership unchanged, got %d", unchanged.UserID)
 		}
 	})
 }

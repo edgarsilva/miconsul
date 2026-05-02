@@ -121,7 +121,7 @@ templ MonthTrends(stats DashboardStats, vc *Ctx) {
 }
 
 templ Clinic(c *Ctx, clinic models.Clinic) {
-	if clinic.ID != "" {
+	if clinic.UID != "" {
 		<div class="app-card">
 			<div class="relative flex flex-wrap">
 				<div class="flex items-center w-full gap-2 justify-between mb-6">

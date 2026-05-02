@@ -28,7 +28,7 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 
 		app := fiber.New()
 		app.Get("/signin", func(c fiber.Ctx) error {
-			c.Locals("current_user", models.User{ID: "user_1"})
+			c.Locals("current_user", models.User{UID: "user_1"})
 			return svc.HandleSigninPage(c)
 		})
 
@@ -370,7 +370,7 @@ func TestAuthHandlersLogoutAndSessionEndpoints(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		app := fiber.New()
 		app.Get("/api/auth/protected", func(c fiber.Ctx) error {
-			c.Locals("current_user", models.User{ID: "user_123", Email: "u@example.com"})
+			c.Locals("current_user", models.User{UID: "user_123", Email: "u@example.com"})
 			return svc.HandleShowUser(c)
 		})
 
@@ -427,7 +427,7 @@ func TestAuthHandlersSignupPaths(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		app := fiber.New()
 		app.Get("/signup", func(c fiber.Ctx) error {
-			c.Locals("current_user", models.User{ID: "user_1"})
+			c.Locals("current_user", models.User{UID: "user_1"})
 			return svc.HandleSignupPage(c)
 		})
 

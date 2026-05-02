@@ -25,7 +25,8 @@ const (
 
 type AuthSnapshot struct {
 	Token          string          // t
-	UserID         string          // uid
+	UserID         uint            // id
+	UserUID        string          // uid
 	UserEmail      string          // em
 	UserRole       models.UserRole // rl
 	UserName       string          // nm
@@ -77,7 +78,7 @@ func (ls LocalStrategy) Metadata() AuthenticatorMeta {
 }
 
 func (ls LocalStrategy) FindUserById(ctx context.Context, uid string) (models.User, error) {
-	return gorm.G[models.User](ls.resource.GormDB()).Where("id = ?", uid).Take(ctx)
+	return gorm.G[models.User](ls.resource.GormDB()).Where("uid = ?", uid).Take(ctx)
 }
 
 func (ls LocalStrategy) authenticateWithJWT(c fiber.Ctx, token string) (models.User, error) {
@@ -141,13 +142,14 @@ func (ls LocalStrategy) currentUserFromSession(c fiber.Ctx, token string) (model
 }
 
 func (ls LocalStrategy) saveCurrentUserToSession(c fiber.Ctx, token string, user models.User) {
-	if token == "" || user.ID == "" {
+	if token == "" || user.ID == 0 || user.UID == "" {
 		return
 	}
 
 	ls.writeAuthSnapshot(c, AuthSnapshot{
 		Token:          tokenDigest(token),
 		UserID:         user.ID,
+		UserUID:        user.UID,
 		UserEmail:      user.Email,
 		UserRole:       user.Role,
 		UserName:       user.Name,
@@ -177,7 +179,8 @@ func (ls LocalStrategy) writeAuthSnapshot(c fiber.Ctx, snapshot AuthSnapshot) {
 func EncodeAuthSnapshot(sa AuthSnapshot) string {
 	v := url.Values{}
 	v.Set("t", sa.Token)
-	v.Set("uid", sa.UserID)
+	v.Set("id", strconv.FormatUint(uint64(sa.UserID), 10))
+	v.Set("uid", sa.UserUID)
 	v.Set("em", sa.UserEmail)
 	v.Set("rl", string(sa.UserRole))
 	v.Set("nm", sa.UserName)
@@ -204,14 +207,22 @@ func DecodeAuthSnapshot(raw string) (AuthSnapshot, bool) {
 
 	sa := AuthSnapshot{
 		Token:          v.Get("t"),
-		UserID:         v.Get("uid"),
+		UserID:         0,
+		UserUID:        v.Get("uid"),
 		UserEmail:      v.Get("em"),
 		UserRole:       models.UserRole(v.Get("rl")),
 		UserName:       v.Get("nm"),
 		UserProfilePic: v.Get("pp"),
 		CachedAtUnix:   cachedAtUnix,
 	}
-	if sa.Token == "" || sa.UserID == "" {
+
+	userID, err := strconv.ParseUint(v.Get("id"), 10, 64)
+	if err != nil {
+		return AuthSnapshot{}, false
+	}
+	sa.UserID = uint(userID)
+
+	if sa.Token == "" || sa.UserUID == "" || sa.UserID == 0 {
 		return AuthSnapshot{}, false
 	}
 
@@ -219,7 +230,7 @@ func DecodeAuthSnapshot(raw string) (AuthSnapshot, bool) {
 }
 
 func (sa AuthSnapshot) isValidForToken(token string, now time.Time) bool {
-	if token == "" || sa.Token == "" || sa.UserID == "" {
+	if token == "" || sa.Token == "" || sa.UserUID == "" || sa.UserID == 0 {
 		return false
 	}
 	if sa.Token != token {
@@ -235,6 +246,7 @@ func (sa AuthSnapshot) isValidForToken(token string, now time.Time) bool {
 func (sa AuthSnapshot) toUser() models.User {
 	return models.User{
 		ID:         sa.UserID,
+		UID:        sa.UserUID,
 		Email:      sa.UserEmail,
 		Role:       sa.UserRole,
 		Name:       sa.UserName,

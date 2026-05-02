@@ -23,6 +23,8 @@ const (
 )
 
 type FeedEvent struct {
+	ID                uint   `gorm:"primaryKey"`
+	UID               string `gorm:"uniqueIndex;default:null;not null"`
 	extID             string `gorm:"index;default:null;not null"`
 	Name              string `gorm:"index;default:null;not null"`
 	Subject           string
@@ -47,6 +49,6 @@ type FeedEvent struct {
 }
 
 func (fe *FeedEvent) BeforeCreate(tx *gorm.DB) (err error) {
-	fe.ID = xid.New("fevn")
+	fe.UID = xid.New("fevn")
 	return nil
 }

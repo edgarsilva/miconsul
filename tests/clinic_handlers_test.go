@@ -44,7 +44,7 @@ func TestClinicHandlers(t *testing.T) {
 
 		resp, _ := h.doRequest(requestOptions{
 			method: http.MethodPost,
-			path:   "/clinics/" + clinic.ID + "/patch",
+			path:   "/clinics/" + clinic.UID + "/patch",
 			accept: "application/json",
 			body: url.Values{
 				"name": {"Blocked"},
@@ -61,7 +61,7 @@ func TestClinicHandlers(t *testing.T) {
 
 		resp, body := h.doRequest(requestOptions{
 			method:    http.MethodPost,
-			path:      "/clinics/" + clinic.ID + "/patch",
+			path:      "/clinics/" + clinic.UID + "/patch",
 			authToken: token,
 			htmx:      true,
 			body: url.Values{
@@ -95,7 +95,7 @@ func TestClinicHandlers(t *testing.T) {
 
 		resp, _ := h.doRequest(requestOptions{
 			method:    http.MethodPost,
-			path:      "/clinics/" + clinic.ID + "/patch",
+			path:      "/clinics/" + clinic.UID + "/patch",
 			authToken: token,
 			htmx:      true,
 			body: url.Values{
@@ -118,7 +118,7 @@ func TestClinicHandlers(t *testing.T) {
 
 		resp, _ := h.doRequest(requestOptions{
 			method:    http.MethodPost,
-			path:      "/clinics/" + clinic.ID + "/patch",
+			path:      "/clinics/" + clinic.UID + "/patch",
 			authToken: token,
 			htmx:      true,
 			body: url.Values{
@@ -156,7 +156,7 @@ func TestClinicHandlers(t *testing.T) {
 
 		resp, _ := h.doRequest(requestOptions{
 			method:    http.MethodDelete,
-			path:      "/clinics/" + clinic.ID,
+			path:      "/clinics/" + clinic.UID,
 			authToken: token,
 			htmx:      true,
 		})
@@ -212,7 +212,7 @@ func TestClinicHandlers(t *testing.T) {
 
 		resp, _ := h.doRequest(requestOptions{
 			method:    http.MethodPost,
-			path:      "/clinics/" + ownerClinic.ID + "/patch",
+			path:      "/clinics/" + ownerClinic.UID + "/patch",
 			authToken: token,
 			htmx:      true,
 			body: url.Values{
@@ -225,7 +225,7 @@ func TestClinicHandlers(t *testing.T) {
 
 		resp, _ = h.doRequest(requestOptions{
 			method:    http.MethodDelete,
-			path:      "/clinics/" + ownerClinic.ID,
+			path:      "/clinics/" + ownerClinic.UID,
 			authToken: token,
 			htmx:      true,
 		})

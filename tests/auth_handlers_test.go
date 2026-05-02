@@ -99,7 +99,7 @@ func TestAuthHandlers(t *testing.T) {
 		if resp.StatusCode != http.StatusOK {
 			t.Fatalf("expected 200 for authenticated protected endpoint, got %d", resp.StatusCode)
 		}
-		if !strings.Contains(body, u.ID) {
+		if !strings.Contains(body, u.UID) {
 			t.Fatalf("expected protected response to include current user id")
 		}
 	})

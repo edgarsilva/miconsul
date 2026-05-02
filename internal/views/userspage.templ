@@ -93,7 +93,7 @@ templ UserLi(c *Ctx, user models.User) {
 				<div class="flex gap-2 z-10 mb-2">
 					<a
 						class="btn btn-outline btn-secondary"
-						href={ templ.URL("/admin/users/" + user.ID) }
+						href={ templ.URL("/admin/users/" + user.UID) }
 						hx-boost="true"
 					>
 						@IconEdit("size-6")
@@ -121,13 +121,13 @@ templ UserEditPage(c *Ctx, user models.User) {
 				class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
 				hx-boost="true"
 			>
-				if user.ID == "" || user.ID == "new" {
+				if user.UID == "" || user.UID == "new" {
 					<h1 class="font-bold text-2xl">{ l(c.Locale, "str.new_user") }</h1>
 				} else {
 					<h1 class="font-bold text-2xl">{ l(c.Locale, "str.my_profile") }</h1>
 				}
 				<a
-					href={ templ.URL("/appointments?userId=" + user.ID) }
+					href={ templ.URL("/appointments?userId=" + user.UID) }
 					class="btn btn-primary btn-sm"
 				>
 					@IconCalendar("")
@@ -147,7 +147,7 @@ templ UserProfile(c *Ctx, user models.User) {
 				<p class="mt-1 text-sm leading-6 text-base-content/60">{ c.l("str.personal_info_desc") }</p>
 			</div>
 			@UserForm(c, user) {
-				<input type="hidden" name="id" value={ user.ID } id="pi_user_id"/>
+				<input type="hidden" name="id" value={ user.UID } id="pi_user_id"/>
 				<div class="px-4 py-6 sm:p-8">
 					<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
 						<div class="col-span-full">
@@ -157,8 +157,8 @@ templ UserProfile(c *Ctx, user models.User) {
 									<figure class="flex flex-col gap-1 items-center" id="avatar_pic">
 										@CmpAvatar(user)
 										<a
-											href={ templ.URL("/users/" + user.ID + "/removepic") }
-											hx-patch={ "/users/" + user.ID + "/removepic" }
+										href={ templ.URL("/users/" + user.UID + "/removepic") }
+										hx-patch={ "/users/" + user.UID + "/removepic" }
 											hx-select="#avatar_pic"
 											hx-swap="outerHTML"
 											hx-target="closest figure"
@@ -249,14 +249,14 @@ templ UserForm(c *Ctx, user models.User) {
 		class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2"
 		method="POST"
 		enctype="multipart/form-data"
-		if user.ID != "new" {
+		if user.UID != "new" {
 			hx-post="/users"
 			action="/users"
 		}
 		else
 		if c.CurrentUser.Role == models.UserRoleAdmin {
-			hx-patch={ "/users/" + user.ID }
-			action={ templ.URL("/users/" + user.ID + "/patch") }
+			hx-patch={ "/users/" + user.UID }
+			action={ templ.URL("/users/" + user.UID + "/patch") }
 		} else {
 			hx-patch={ "/profile" }
 			action={ templ.URL("/profile") }

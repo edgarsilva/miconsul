@@ -369,7 +369,7 @@ func Clinic(c *Ctx, clinic models.Clinic) templ.Component {
 			templ_7745c5c3_Var21 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		if clinic.ID != "" {
+		if clinic.UID != "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "<div class=\"app-card\"><div class=\"relative flex flex-wrap\"><div class=\"flex items-center w-full gap-2 justify-between mb-6\"><h3 class=\"font-semibold text-xl leading-6 indicator mr-32\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

@@ -43,7 +43,7 @@ func TestNewCtxAndOptions(t *testing.T) {
 	runViewCtx(t, "/ctx?toast=Saved&sub=Done&level=success", func(c fiber.Ctx) {
 		c.Locals("locale", "en-US")
 		c.Locals("theme", "dark")
-		expectedCU := models.User{ID: "usr_1", Email: "u@example.com"}
+		expectedCU := models.User{UID: "usr_1", Email: "u@example.com"}
 		c.Locals("current_user", expectedCU)
 
 		vc, err := NewCtx(c)
@@ -53,7 +53,7 @@ func TestNewCtxAndOptions(t *testing.T) {
 		if vc.Locale != "en-US" || vc.Theme != "dark" {
 			t.Fatalf("unexpected locale/theme: %+v", vc)
 		}
-		if vc.CurrentUser.ID != expectedCU.ID {
+		if vc.CurrentUser.UID != expectedCU.UID {
 			t.Fatalf("unexpected current user: %+v", vc.CurrentUser)
 		}
 		if vc.Toast.Msg != "Saved" || vc.Toast.Level != "success" {
@@ -62,14 +62,14 @@ func TestNewCtxAndOptions(t *testing.T) {
 	})
 
 	runViewCtx(t, "/ctx", func(c fiber.Ctx) {
-		vc, err := NewCtx(c, WithTheme("dark"), WithLocale("en-US"), WithToast("ok", "sub", "info"), WithCurrentUser(models.User{ID: "usr_2"}))
+		vc, err := NewCtx(c, WithTheme("dark"), WithLocale("en-US"), WithToast("ok", "sub", "info"), WithCurrentUser(models.User{UID: "usr_2"}))
 		if err != nil {
 			t.Fatalf("new ctx with options failed: %v", err)
 		}
 		if vc.Theme != "dark" || vc.Locale != "en-US" {
 			t.Fatalf("unexpected option values: %+v", vc)
 		}
-		if vc.Toast.Msg != "ok" || vc.CurrentUser.ID != "usr_2" {
+		if vc.Toast.Msg != "ok" || vc.CurrentUser.UID != "usr_2" {
 			t.Fatalf("unexpected option mapping: %+v", vc)
 		}
 	})

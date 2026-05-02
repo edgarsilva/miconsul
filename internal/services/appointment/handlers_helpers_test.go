@@ -17,20 +17,20 @@ func TestAppointmentForShowPage(t *testing.T) {
 	svc := &service{}
 	ctx := context.Background()
 
-	appointment, err := svc.AppointmentForShowPage(ctx, "usr_1", "")
+	appointment, err := svc.AppointmentForShowPage(ctx, 1, "")
 	if err != nil {
 		t.Fatalf("expected empty-id shortcut without error, got %v", err)
 	}
-	if appointment.ID != "" {
-		t.Fatalf("expected zero-value appointment id, got %q", appointment.ID)
+	if appointment.UID != "" {
+		t.Fatalf("expected zero-value appointment uid, got %q", appointment.UID)
 	}
 
-	appointment, err = svc.AppointmentForShowPage(ctx, "usr_1", "new")
+	appointment, err = svc.AppointmentForShowPage(ctx, 1, "new")
 	if err != nil {
 		t.Fatalf("expected new-id shortcut without error, got %v", err)
 	}
-	if appointment.ID != "new" {
-		t.Fatalf("expected passthrough appointment id, got %q", appointment.ID)
+	if appointment.UID != "new" {
+		t.Fatalf("expected passthrough appointment uid, got %q", appointment.UID)
 	}
 }
 
@@ -38,20 +38,20 @@ func TestPatientAndClinicSelectionHelpers(t *testing.T) {
 	svc := &service{}
 	app := fiber.New()
 	app.Get("/", func(c fiber.Ctx) error {
-		patient, err := svc.selectedPatientFromQuery(c, "usr_1", "   ")
+		patient, err := svc.selectedPatientFromQuery(c, 1, "   ")
 		if err != nil {
 			t.Fatalf("expected blank patient query to skip lookup, got %v", err)
 		}
-		if patient.ID != "" {
-			t.Fatalf("expected zero patient when query is blank, got %q", patient.ID)
+		if patient.ID != 0 {
+			t.Fatalf("expected zero patient when query is blank, got %d", patient.ID)
 		}
 
-		clinic, err := svc.selectedClinicFromQuery(c, "usr_1", "")
+		clinic, err := svc.selectedClinicFromQuery(c, 1, "")
 		if err != nil {
 			t.Fatalf("expected blank clinic query to skip lookup, got %v", err)
 		}
-		if clinic.ID != "" {
-			t.Fatalf("expected zero clinic when query is blank, got %q", clinic.ID)
+		if clinic.ID != 0 {
+			t.Fatalf("expected zero clinic when query is blank, got %d", clinic.ID)
 		}
 
 		return c.SendStatus(fiber.StatusNoContent)
@@ -72,20 +72,20 @@ func TestSelectionHelpersBranchesAndNotFoundPage(t *testing.T) {
 	t.Run("selected helpers return entities when ids exist", func(t *testing.T) {
 		app := fiber.New()
 		app.Get("/", func(c fiber.Ctx) error {
-			gotPatient, err := svc.selectedPatientFromQuery(c, user.ID, patient.ID)
+			gotPatient, err := svc.selectedPatientFromQuery(c, user.ID, patient.UID)
 			if err != nil {
 				t.Fatalf("expected selected patient success, got %v", err)
 			}
 			if gotPatient.ID != patient.ID {
-				t.Fatalf("expected patient id %q, got %q", patient.ID, gotPatient.ID)
+				t.Fatalf("expected patient id %d, got %d", patient.ID, gotPatient.ID)
 			}
 
-			gotClinic, err := svc.selectedClinicFromQuery(c, user.ID, clinic.ID)
+			gotClinic, err := svc.selectedClinicFromQuery(c, user.ID, clinic.UID)
 			if err != nil {
 				t.Fatalf("expected selected clinic success, got %v", err)
 			}
 			if gotClinic.ID != clinic.ID {
-				t.Fatalf("expected clinic id %q, got %q", clinic.ID, gotClinic.ID)
+				t.Fatalf("expected clinic id %d, got %d", clinic.ID, gotClinic.ID)
 			}
 
 			return c.SendStatus(fiber.StatusNoContent)

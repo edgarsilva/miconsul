@@ -13,7 +13,7 @@ import (
 )
 
 func SendAppointmentBookedEmail(env *appenv.Env, appointment models.Appointment) error {
-	if appointment.Patient.ID == "" || appointment.Clinic.ID == "" {
+	if appointment.Patient.ID == 0 || appointment.Clinic.ID == 0 {
 		fmt.Println(errors.New("appointment Clinic or Patient association is missing, they must be Preloaded"))
 	}
 
@@ -41,7 +41,7 @@ func SendAppointmentBookedEmail(env *appenv.Env, appointment models.Appointment)
 }
 
 func SendAppointmentReminderEmail(env *appenv.Env, appointment models.Appointment) error {
-	if appointment.Patient.ID == "" || appointment.Clinic.ID == "" {
+	if appointment.Patient.ID == 0 || appointment.Clinic.ID == 0 {
 		return errors.New("appointment Clinic or Patient association is missing, they must be Preloaded")
 	}
 

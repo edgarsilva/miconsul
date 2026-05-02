@@ -18,8 +18,8 @@ func SaveProfilePicToDisk(c fiber.Ctx, clinic models.Clinic) (string, error) {
 		return "", ErrProfilePicNotProvided
 	}
 
-	if clinic.ID == "" {
-		return "", errors.New("can't save profile pic without clinic.ID")
+	if clinic.UID == "" {
+		return "", errors.New("can't save profile pic without clinic.UID")
 	}
 
 	filename := strings.TrimSpace(profilePic.Filename)
@@ -29,7 +29,7 @@ func SaveProfilePicToDisk(c fiber.Ctx, clinic models.Clinic) (string, error) {
 		return "", errors.New("invalid profile picture filename")
 	}
 
-	profilePath := "/public/assets/profile_pics/" + clinic.ID + "_" + filename
+	profilePath := "/public/assets/profile_pics/" + clinic.UID + "_" + filename
 	err = c.SaveFile(profilePic, "."+profilePath)
 	if err != nil {
 		return "", fmt.Errorf("failed to save profilePic to disk: %w", err)

@@ -9,9 +9,10 @@ import (
 )
 
 type Clinic struct {
-	ID         string `gorm:"primarykey;default:null;not null" form:"_"`
+	ID         uint   `gorm:"primaryKey" form:"_"`
+	UID        string `gorm:"uniqueIndex;default:null;not null" form:"_"`
 	ExtID      string `gorm:"index;default:null;" form:"_"`
-	UserID     string `gorm:"index;default:null;not null"`
+	UserID     uint   `gorm:"index;default:null;not null"`
 	CoverPic   string
 	ProfilePic string         `form:"profilePic"`
 	Name       string         `gorm:"default:null;not null" form:"name"`
@@ -36,7 +37,7 @@ func (c *Clinic) BeforeCreate(tx *gorm.DB) error {
 		return errors.New("invalid data found in clinic record")
 	}
 
-	c.ID = xid.New("clnc")
+	c.UID = xid.New("clnc")
 	return nil
 }
 

@@ -37,7 +37,7 @@ templ AppointmentsPage(vc *Ctx, appointments []models.Appointment, selectedPatie
 templ AppointmentPage(vc *Ctx, appointment models.Appointment, patients []models.Patient, clinics []models.Clinic) {
 	@LayoutWithBackBtn(vc, "/appointments") {
 		<section id="appointment_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 md:py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
-			if appointment.ID == "" || appointment.ID == "new" {
+			if appointment.UID == "" || appointment.UID == "new" {
 				<h1 class="px-4 sm:px-0 font-bold text-2xl pb-0 w-full">{ l(vc.Locale, "str.new_appointment") }</h1>
 			} else {
 				<h1 class="px-4 sm:px-0 font-bold text-2xl pb-0 w-full">{ l(vc.Locale, "str.edit_appointment") }</h1>
@@ -172,7 +172,7 @@ templ AppointmentLi(vc *Ctx, appointment models.Appointment) {
 		</figure>
 		<div class="flex-auto">
 			<hgroup class="flex items-center gap-2">
-				<a href={ templ.URL("/appointments" + QueryParams(vc, "patientId="+appointment.PatientID)) } class="link link-hover">
+				<a href={ templ.URL("/appointments" + QueryParams(vc, "patientId="+appointment.Patient.UID)) } class="link link-hover">
 					<h3 class="font-semibold text-base-content xl:pr-0">
 						{ appointment.Patient.Name }
 					</h3>
@@ -242,13 +242,13 @@ templ AppointmentLi(vc *Ctx, appointment models.Appointment) {
 
 templ AppointmentActions(appointment models.Appointment, vc *Ctx) {
 	<div class="hidden gap-2 items-center lg:flex">
-		<a href={ templ.URL("/appointments/" + appointment.ID + "/start") } class="btn btn-outline btn-primary">
+		<a href={ templ.URL("/appointments/" + appointment.UID + "/start") } class="btn btn-outline btn-primary">
 			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
 				<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"></path>
 			</svg>
 			{ l(vc.Locale, "btn.open") }
 		</a>
-		<a href={ templ.URL("/appointments/" + appointment.ID) } class="btn btn-outline btn-secondary">
+		<a href={ templ.URL("/appointments/" + appointment.UID) } class="btn btn-outline btn-secondary">
 			<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
 				<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"></path>
 			</svg>
@@ -290,7 +290,7 @@ templ AppointmentCont(vc *Ctx, appointment models.Appointment, patients []models
 			</div>
 			<section class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
 				@AppointmentForm(appointment, vc) {
-					<input type="hidden" name="id" value={ appointment.ID } id="apnt_datetime_id"/>
+					<input type="hidden" name="id" value={ appointment.UID } id="apnt_datetime_id"/>
 					<div class="px-4 py-6 sm:p-8">
 						<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
 							<div class="sm:col-span-4">
@@ -443,11 +443,11 @@ templ ApptSearchClinicsResults(vc *Ctx, clinics []models.Clinic) {
 						type="radio"
 						class="radio"
 						form="new_appointment"
-						value={ clinic.ID }
+						value={ clinic.UID }
 						if i == 0 {
 							checked
 						}
-						hx-get={ "/appointments/new/pricefrg/" + clinic.ID }
+						hx-get={ "/appointments/new/pricefrg/" + clinic.UID }
 						hx-trigger="click"
 					/>
 				</label>
@@ -520,7 +520,7 @@ templ PatientSearchResults(patients []models.Patient, vc *Ctx) {
 						type="radio"
 						class="radio"
 						form="new_appointment"
-						value={ patient.ID }
+						value={ patient.UID }
 						if i == 0 {
 							checked
 						}
@@ -541,9 +541,9 @@ templ AppointmentForm(appointment models.Appointment, vc *Ctx) {
 		id="new_appointment"
 		method="POST"
 		enctype="multipart/form-data"
-		if appointment.ID != "" && appointment.ID != "new" {
-			hx-patch={ "/appointments/" + appointment.ID }
-			action={ templ.URL("/appointments/" + appointment.ID + "/patch") }
+		if appointment.UID != "" && appointment.UID != "new" {
+			hx-patch={ "/appointments/" + appointment.UID }
+			action={ templ.URL("/appointments/" + appointment.UID + "/patch") }
 		} else {
 			hx-post="/appointments"
 			action="/appointments"

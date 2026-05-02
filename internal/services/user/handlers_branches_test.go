@@ -74,7 +74,7 @@ func TestHandleEditPageSuccess(t *testing.T) {
 		return svc.HandleEditPage(c)
 	})
 
-	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/admin/users/"+currentUser.ID, nil))
+	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/admin/users/"+currentUser.UID, nil))
 	if err != nil || resp.StatusCode != fiber.StatusOK {
 		t.Fatalf("edit page existing user expected 200, got status=%d err=%v", resp.StatusCode, err)
 	}

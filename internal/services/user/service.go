@@ -41,7 +41,7 @@ func (s service) TakeUserByID(ctx context.Context, userID string) (models.User, 
 		return models.User{}, ErrIDRequired
 	}
 
-	user, err := gorm.G[models.User](s.DB.GormDB()).Where("id = ?", userID).Take(ctx)
+	user, err := gorm.G[models.User](s.DB.GormDB()).Where("uid = ?", userID).Take(ctx)
 	if err != nil {
 		return models.User{}, err
 	}
@@ -61,7 +61,7 @@ func (s service) UpdateUserProfileByID(ctx context.Context, userID string, updat
 	}
 
 	rowsAffected, err := gorm.G[models.User](s.DB.GormDB()).
-		Where("id = ?", userID).
+		Where("uid = ?", userID).
 		Updates(ctx, updates)
 	if err != nil {
 		return models.User{}, err

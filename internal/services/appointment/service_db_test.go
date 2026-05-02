@@ -34,20 +34,20 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 			t.Fatalf("expected default pending status, got %q", apnt.Status)
 		}
 
-		got, err := svc.TakeAppointmentByID(ctx, user.ID, apnt.ID)
+		got, err := svc.TakeAppointmentByUID(ctx, user.ID, apnt.UID)
 		if err != nil {
 			t.Fatalf("take appointment: %v", err)
 		}
-		if got.ID != apnt.ID || got.Clinic.ID == "" || got.Patient.ID == "" {
+		if got.ID != apnt.ID || got.Clinic.ID == 0 || got.Patient.ID == 0 {
 			t.Fatalf("expected preloaded appointment entities")
 		}
 	})
 
 	t.Run("lookups by ids work", func(t *testing.T) {
-		if _, err := svc.TakePatientByID(ctx, user.ID, patient.ID); err != nil {
+		if _, err := svc.TakePatientByUID(ctx, user.ID, patient.UID); err != nil {
 			t.Fatalf("take patient by id: %v", err)
 		}
-		if _, err := svc.TakeClinicByID(ctx, user.ID, clinic.ID); err != nil {
+		if _, err := svc.TakeClinicByUID(ctx, user.ID, clinic.UID); err != nil {
 			t.Fatalf("take clinic by id: %v", err)
 		}
 	})
@@ -65,17 +65,17 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 			t.Fatalf("create appointment: %v", err)
 		}
 
-		if err := svc.ConfirmAppointmentByIDAndToken(ctx, apnt.ID, apnt.Token); err != nil {
+		if err := svc.ConfirmAppointmentByIDAndToken(ctx, apnt.UID, apnt.Token); err != nil {
 			t.Fatalf("confirm by token: %v", err)
 		}
-		if err := svc.CancelAppointmentByIDAndToken(ctx, apnt.ID, apnt.Token); err != nil {
+		if err := svc.CancelAppointmentByIDAndToken(ctx, apnt.UID, apnt.Token); err != nil {
 			t.Fatalf("cancel by token: %v", err)
 		}
-		if err := svc.RequestAppointmentDateChangeByIDAndToken(ctx, apnt.ID, apnt.Token); err != nil {
+		if err := svc.RequestAppointmentDateChangeByIDAndToken(ctx, apnt.UID, apnt.Token); err != nil {
 			t.Fatalf("request date change by token: %v", err)
 		}
 
-		got, err := svc.TakeAppointmentByIDAndToken(ctx, apnt.ID, apnt.Token)
+		got, err := svc.TakeAppointmentByIDAndToken(ctx, apnt.UID, apnt.Token)
 		if err != nil {
 			t.Fatalf("take by id and token: %v", err)
 		}
@@ -85,7 +85,7 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 	})
 
 	t.Run("listing helpers return data", func(t *testing.T) {
-		appointments, err := svc.FindAppointmentsBy(ctx, user.ID, patient.ID, clinic.ID, "day")
+		appointments, err := svc.FindAppointmentsBy(ctx, user.ID, patient.UID, clinic.UID, "day")
 		if err != nil {
 			t.Fatalf("find appointments: %v", err)
 		}
@@ -136,7 +136,7 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 			t.Fatalf("create done appointment: %v", err)
 		}
 
-		got, err := svc.TakePatientByIDWithLastDoneAppointment(ctx, user.ID, patient.ID)
+		got, err := svc.TakePatientByUIDWithLastDoneAppointment(ctx, user.ID, patient.UID)
 		if err != nil {
 			t.Fatalf("take patient with done appointment: %v", err)
 		}
@@ -170,7 +170,7 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 			PatientID:    patient.ID,
 			Duration:     60,
 		}
-		if err := svc.UpdateAppointmentByID(ctx, user.ID, apnt.ID, patch); err != nil {
+		if err := svc.UpdateAppointmentByID(ctx, user.ID, apnt.UID, patch); err != nil {
 			t.Fatalf("update appointment by id: %v", err)
 		}
 
@@ -178,10 +178,10 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 			t.Fatalf("expected record not found for missing update, got %v", err)
 		}
 
-		if err := svc.DeleteAppointmentByID(ctx, user.ID, apnt.ID); err != nil {
+		if err := svc.DeleteAppointmentByID(ctx, user.ID, apnt.UID); err != nil {
 			t.Fatalf("delete appointment by id: %v", err)
 		}
-		if err := svc.DeleteAppointmentByID(ctx, user.ID, apnt.ID); err != gorm.ErrRecordNotFound {
+		if err := svc.DeleteAppointmentByID(ctx, user.ID, apnt.UID); err != gorm.ErrRecordNotFound {
 			t.Fatalf("expected record not found for repeated delete, got %v", err)
 		}
 	})

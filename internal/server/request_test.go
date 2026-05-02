@@ -14,15 +14,15 @@ func TestCurrentUser(t *testing.T) {
 	s := &Server{}
 
 	runWithCtx(t, http.MethodGet, "/", nil, func(c fiber.Ctx) {
-		if got := s.CurrentUser(c); got.ID != "" || got.Email != "" {
+		if got := s.CurrentUser(c); got.ID != 0 || got.Email != "" {
 			t.Fatalf("expected zero user when local is missing, got %#v", got)
 		}
 	})
 
 	runWithCtx(t, http.MethodGet, "/", nil, func(c fiber.Ctx) {
-		expected := models.User{ID: "usr_1", Email: "u@example.com"}
+		expected := models.User{UID: "usr_1", Email: "u@example.com"}
 		c.Locals("current_user", expected)
-		if got := s.CurrentUser(c); got.ID != expected.ID || got.Email != expected.Email {
+		if got := s.CurrentUser(c); got.UID != expected.UID || got.Email != expected.Email {
 			t.Fatalf("expected %#v, got %#v", expected, got)
 		}
 	})

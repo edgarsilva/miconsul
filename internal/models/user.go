@@ -22,7 +22,8 @@ const (
 type User struct {
 	ConfirmEmailExpiresAt time.Time
 	ResetTokenExpiresAt   time.Time
-	ID                    string `gorm:"primarykey;default:null;not null" form:"__blank__"`
+	ID                    uint   `gorm:"primaryKey" form:"__blank__"`
+	UID                   string `gorm:"uniqueIndex;default:null;not null" form:"__blank__"`
 	ExtID                 string
 	ProfilePic            string
 	Name                  string
@@ -42,12 +43,12 @@ type User struct {
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
-	u.ID = xid.New("user")
+	u.UID = xid.New("user")
 	return nil
 }
 
 func (u User) IsLoggedIn() bool {
-	return u.ID != ""
+	return u.UID != ""
 }
 
 func (u User) Initials() string {
