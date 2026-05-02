@@ -240,6 +240,9 @@ docker/valkey-logs: ## Follow Valkey logs
 docker/build: ## Rebuild the app image
 	docker compose up --no-deps --build app
 
+docker/image: ## Build app image only (miconsul:local)
+	docker build -t miconsul:local .
+
 ##@ Observability
 obs/load: ## Run continuous synthetic traffic (~40 RPM total)
 	$(MAKE) obs/load/medium
@@ -267,6 +270,6 @@ load/test: ## Run authenticated oha load test (30s, 30 concurrency)
 	test/coverage/gate-global-65 test/coverage/gate-service-floor-65 \
 	db/create db/delete db/setup db/reset db/dump_schema db/seed \
 	migrations/apply migrate migrations/create migrations/status migrations/rollback migrations/redo \
-	docker/up docker/dev docker/detached docker/down docker/logs docker/app-logs docker/lgtm-logs docker/build \
+	docker/up docker/dev docker/detached docker/down docker/logs docker/app-logs docker/lgtm-logs docker/build docker/image \
 	docker/valkey-logs \
 	obs/load obs/load/light obs/load/medium obs/load/heavy load/test
