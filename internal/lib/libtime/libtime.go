@@ -46,14 +46,13 @@ func BoD(t time.Time) time.Time {
 }
 
 func BoW(t time.Time) time.Time {
-	var (
-		wd    = int(t.Weekday()) - 1
-		day   = t.Add(-time.Hour * time.Duration(24*wd)).Day()
-		month = t.Month()
-		year  = t.Year()
-	)
-	fmt.Println("wd:", wd, ", day:", day, ", month:", month, ", year:", year)
-	return time.Date(year, month, day, 0, 0, 0, 0, t.Location())
+	start := BoD(t)
+	weekday := int(start.Weekday())
+	if weekday == 0 {
+		weekday = 7
+	}
+
+	return start.AddDate(0, 0, -(weekday - 1))
 }
 
 func BoM(t time.Time) time.Time {

@@ -24,6 +24,11 @@
   - Add Facebook Messenger provider integration.
   - Define per-channel opt-in/opt-out + fallback policy (email as default fallback).
 
+- [infra/build] Asset generation in Docker/CI pipeline
+  - Build Tailwind output (`public/global.css`) during image build from `styles/global.css`.
+  - Decide and document templ artifact strategy (`*.templ` source vs committed generated `*_templ.go`) and enforce via CI.
+  - Keep runtime image free of Bun/templ toolchain binaries.
+
 ## Icebox
 
 - [external/runtime] Beta tester release prep
