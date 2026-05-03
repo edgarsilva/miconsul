@@ -16,6 +16,8 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -80,7 +82,7 @@ func (s *service) signup(ctx context.Context, email string, password string) err
 		return errors.New("failed to save email or password, try again")
 	}
 
-	go mailer.ConfirmEmail(email, token)
+	s.sendConfirmEmailAsync(ctx, email, token, "signup_confirm")
 
 	return nil
 }
@@ -119,7 +121,7 @@ func (s *service) signupIsPasswordValid(pwd string) error {
 
 func (s *service) userPendingConfirmation(ctx context.Context, email string) error {
 	user, err := gorm.G[models.User](s.DB.GormDB()).
-		Select("ID, Email, ConfirmEmailToken").
+		Select("id, email, confirm_email_token").
 		Where("email = ? AND confirm_email_token IS NOT null AND confirm_email_token != ''", email).
 		Take(ctx)
 	if err == nil && user.ID != 0 { // If a row/record exists it means confirmation is pending and we should re-send
@@ -191,7 +193,7 @@ func (s *service) userUpdatePassword(ctx context.Context, email, password, token
 	}
 
 	rowsAffected, err := gorm.G[models.User](s.DB.GormDB()).
-		Select("Password", "ResetToken", "ResetTokenExpiresAt").
+		Select("password", "reset_token", "reset_token_expires_at").
 		Where("email = ? AND reset_token = ? AND reset_token_expires_at > ?", email, token, time.Now()).
 		Limit(1).
 		Updates(ctx, user)
@@ -208,7 +210,7 @@ func (s *service) userUpdateConfirmToken(ctx context.Context, email, token strin
 		ConfirmEmailExpiresAt: time.Now().Add(time.Hour * 24),
 	}
 	rowsAffected, err := gorm.G[models.User](s.DB.GormDB()).
-		Select("ConfirmEmailToken", "ConfirmEmailExpiresAt").
+		Select("confirm_email_token", "confirm_email_expires_at").
 		Where("email = ?", email).
 		Limit(1).
 		Updates(ctx, user)
@@ -271,4 +273,82 @@ func (s *service) saveLogtoUser(ctx context.Context, logtoUser LogtoUser) error 
 	}
 
 	return nil
+}
+
+func (s *service) resendPendingConfirmation(ctx context.Context, email string) error {
+	token := newConfirmEmailToken()
+	if err := s.userUpdateConfirmToken(ctx, email, token); err != nil {
+		return err
+	}
+
+	s.sendConfirmEmailAsync(ctx, email, token, "signup_resend_confirm")
+	return nil
+}
+
+func (s *service) sendConfirmEmailAsync(ctx context.Context, email, token, operation string) {
+	go func() {
+		asyncCtx, span := s.Trace(ctx, "auth/services:"+operation)
+		defer span.End()
+
+		defer func() {
+			if r := recover(); r != nil {
+				err := fmt.Errorf("panic: %v", r)
+				span.RecordError(err)
+				span.SetStatus(codes.Error, err.Error())
+				s.emitAsyncEmailError(asyncCtx, operation, email, "panic", err)
+			}
+		}()
+
+		if sendErr := mailer.ConfirmEmail(s.Env, email, token); sendErr != nil {
+			span.RecordError(sendErr)
+			span.SetStatus(codes.Error, sendErr.Error())
+			s.emitAsyncEmailError(asyncCtx, operation, email, "failed", sendErr)
+		}
+	}()
+}
+
+func (s *service) sendResetPasswordEmailAsync(ctx context.Context, email, token string) {
+	go func() {
+		asyncCtx, span := s.Trace(ctx, "auth/services:reset_password_email")
+		defer span.End()
+
+		defer func() {
+			if r := recover(); r != nil {
+				err := fmt.Errorf("panic: %v", r)
+				span.RecordError(err)
+				span.SetStatus(codes.Error, err.Error())
+				s.emitAsyncEmailError(asyncCtx, "reset_password", email, "panic", err)
+			}
+		}()
+
+		if sendErr := mailer.ResetPassword(s.Env, email, token); sendErr != nil {
+			span.RecordError(sendErr)
+			span.SetStatus(codes.Error, sendErr.Error())
+			s.emitAsyncEmailError(asyncCtx, "reset_password", email, "failed", sendErr)
+		}
+	}()
+}
+
+func (s *service) emitAsyncEmailError(ctx context.Context, operation, email, status string, err error) {
+	if err == nil || !s.RequestLog.Enabled() {
+		return
+	}
+
+	rec := otellog.Record{}
+	rec.SetTimestamp(time.Now())
+	rec.SetObservedTimestamp(time.Now())
+	rec.SetEventName("auth_email_send")
+	rec.SetBody(otellog.StringValue("auth_email_send"))
+	rec.SetSeverity(otellog.SeverityError)
+	rec.SetSeverityText("ERROR")
+	rec.SetErr(err)
+	rec.AddAttributes(
+		otellog.String("event", "auth_email_send"),
+		otellog.String("operation", operation),
+		otellog.String("status", status),
+		otellog.String("email", email),
+		otellog.String("error", err.Error()),
+	)
+
+	s.RequestLog.Emit(ctx, rec)
 }

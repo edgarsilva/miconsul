@@ -1,8 +1,8 @@
 package mailer
 
 import (
+	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/localize"
-	"os"
 	"strings"
 )
 
@@ -19,12 +19,20 @@ func l(lang, key string) string {
 	return locales.GetWithLocale(lang, key)
 }
 
-func dialerUsername() string {
-	return os.Getenv("EMAIL_SENDER")
+func dialerUsername(env *appenv.Env) string {
+	if env == nil {
+		return ""
+	}
+
+	return env.EmailSender
 }
 
-func dialerPassword() string {
-	pwd := os.Getenv("EMAIL_SECRET")
+func dialerPassword(env *appenv.Env) string {
+	if env == nil {
+		return ""
+	}
+
+	pwd := env.EmailSecret
 	pwd = strings.Trim(pwd, "\"")
 
 	return pwd

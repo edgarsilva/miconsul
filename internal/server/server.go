@@ -160,7 +160,8 @@ func setupCoreMiddleware(s *Server) {
 			path := c.Path()
 			return strings.HasPrefix(path, "/public/") ||
 				strings.HasPrefix(path, "/.well-known/") ||
-				path == "/favicon.ico"
+				path == "/favicon.ico" ||
+				path == "/readyz"
 		}),
 	))
 	app.Use(logger.New())

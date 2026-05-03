@@ -18,7 +18,7 @@ func RequestLoggerMiddleware(logger obslogging.Logger) func(c fiber.Ctx) error {
 		}
 
 		path := c.Path()
-		if strings.HasPrefix(path, "/public/") || path == "/favicon.ico" || path == "/metrics" {
+		if strings.HasPrefix(path, "/public/") || path == "/favicon.ico" || path == "/readyz" {
 			return c.Next()
 		}
 

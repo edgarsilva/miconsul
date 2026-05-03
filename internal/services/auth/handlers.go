@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"miconsul/internal/lib/xid"
-	"miconsul/internal/mailer"
 	"miconsul/internal/models"
 	view "miconsul/internal/views"
 
@@ -152,9 +151,9 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 
 	err = s.userPendingConfirmation(c.Context(), email)
 	if err != nil {
-		token := newConfirmEmailToken()
-		s.userUpdateConfirmToken(c.Context(), email, token)
-		go mailer.ConfirmEmail(email, token)
+		if resendErr := s.resendPendingConfirmation(c.Context(), email); resendErr != nil {
+			return view.Render(c, view.SignupPage(vc, email, errors.New("failed to resend confirmation email, please try again")))
+		}
 		return s.respondWithRedirect(c, "/signin", "check your inbox, we'll re-send a confirmation link")
 	}
 
@@ -182,7 +181,7 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 	}
 
 	_, err = gorm.G[models.User](s.DB.GormDB()).
-		Select("ConfirmEmailToken", "ConfirmEmailExpiresAt").
+		Select("confirm_email_token", "confirm_email_expires_at").
 		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
 		Updates(c.Context(), models.User{})
 	if err != nil {
@@ -276,7 +275,7 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 	user.ResetToken = token
 	user.ResetTokenExpiresAt = time.Now().Add(time.Hour * 1)
 	rowsAffected, err := gorm.G[models.User](s.DB.GormDB()).
-		Select("ResetToken", "ResetTokenExpiresAt").
+		Select("reset_token", "reset_token_expires_at").
 		Where("id = ?", user.ID).
 		Updates(c.Context(), user)
 	if err != nil || rowsAffected != 1 {
@@ -284,7 +283,7 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
 	}
 
-	go mailer.ResetPassword(email, token)
+	s.sendResetPasswordEmailAsync(c.Context(), email, token)
 
 	return view.Render(c, view.ResetPasswordPage(vc, email, "", "check your email for a reset password link", nil))
 }
