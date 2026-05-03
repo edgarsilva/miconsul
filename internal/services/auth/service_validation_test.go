@@ -38,6 +38,10 @@ func TestSignupPasswordValidation(t *testing.T) {
 		{name: "missing digit", pwd: "Password!", wantErr: true},
 		{name: "missing special", pwd: "Password1", wantErr: true},
 		{name: "valid", pwd: "Password1!", wantErr: false},
+		{name: "valid with dot", pwd: "Password1.", wantErr: false},
+		{name: "valid with hyphen", pwd: "Password1-", wantErr: false},
+		{name: "valid with underscore", pwd: "Password1_", wantErr: false},
+		{name: "valid with space", pwd: "Password1 ", wantErr: false},
 	}
 
 	for _, tc := range cases {

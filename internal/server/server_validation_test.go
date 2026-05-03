@@ -77,11 +77,6 @@ func TestValidateRuntimeConfig(t *testing.T) {
 			want: "COOKIE_SECRET is required",
 		},
 		{
-			name: "short cookie secret",
-			s:    &Server{Env: &appenv.Env{Environment: appenv.EnvironmentDevelopment, CookieSecret: "short"}},
-			want: "COOKIE_SECRET must be at least 32 characters",
-		},
-		{
 			name: "valid runtime config",
 			s:    &Server{Env: &appenv.Env{Environment: appenv.EnvironmentDevelopment, CookieSecret: validCookieSecret}},
 			want: "",

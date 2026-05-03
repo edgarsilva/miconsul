@@ -29,6 +29,13 @@
   - Decide and document templ artifact strategy (`*.templ` source vs committed generated `*_templ.go`) and enforce via CI.
   - Keep runtime image free of Bun/templ toolchain binaries.
 
+- [infra/deploy] Production bootstrap and config guardrails
+  - Add explicit startup validation for `COOKIE_SECRET` to require exactly 16, 24, or 32 bytes (Fiber encryptcookie requirement).
+  - After migrations, if no admin exists, create one from `ADMIN_USER` + `ADMIN_PASSWORD`; if at least one admin exists, do nothing.
+  - Fix local-strategy signup confirm-email delivery (env key alignment, SMTP config consistency, and non-silent send failures).
+  - Provision Logto tenant in Coolify and document callback/resource/env wiring checklist.
+  - Document required Coolify env vars and healthcheck expectations (`/readyz`, `curl`/`wget` availability).
+
 ## Icebox
 
 - [external/runtime] Beta tester release prep

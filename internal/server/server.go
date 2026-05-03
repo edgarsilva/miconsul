@@ -126,10 +126,6 @@ func validateRuntimeConfig(s *Server) error {
 		return errors.New("COOKIE_SECRET is required")
 	}
 
-	if len(cookieSecret) < 32 {
-		return errors.New("COOKIE_SECRET must be at least 32 characters")
-	}
-
 	return nil
 }
 
