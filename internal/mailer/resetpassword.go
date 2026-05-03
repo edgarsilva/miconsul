@@ -15,14 +15,15 @@ func ResetPassword(env *appenv.Env, email, token string) error {
 	}
 
 	m := gomail.NewMessage()
+	lang := emailLocale()
 	m.SetHeader("From", env.EmailFromAddress)
 	m.SetHeader("To", email)
 	// m.SetAddressHeader("Cc", "dan@example.com", "Dan")
-	m.SetHeader("Subject", "Scaffold: Reset Your Password!")
+	m.SetHeader("Subject", "Miconsul: "+l(lang, "email.reset_password_subject"))
 
 	url := env.AppProtocol + "://" + env.AppDomain + "/resetpassword/change/" + token
 	emailHTML := bytes.Buffer{}
-	if err := ResetPasswordTpl(email, url).Render(context.Background(), &emailHTML); err != nil {
+	if err := ResetPasswordTpl(lang, email, url).Render(context.Background(), &emailHTML); err != nil {
 		return errors.New("couldn't create HTML from templ comp to send email")
 	}
 	m.SetBody("text/html", emailHTML.String())

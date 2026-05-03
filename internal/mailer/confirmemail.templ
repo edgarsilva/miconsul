@@ -1,16 +1,16 @@
 package mailer
 
-templ ConfirmEmailTpl(username, confirmURL string) {
+templ ConfirmEmailTpl(locale, username, confirmURL string) {
 	@EmailWrapper() {
 		<p>
-			Hello
+			{ l(locale, "email.greeting") }
 			<b>{ username }</b>
 			<br/>
 			<br/>
-			<span>Confirm your email by cliking on link below:</span>
+			<span>{ l(locale, "email.confirm_email_body") }</span>
 			<br/>
 			<br/>
-			<a href={ templ.URL(confirmURL) }><b>Click to confirm your email</b></a>!
+			<a href={ templ.URL(confirmURL) }><b>{ l(locale, "email.confirm_email_cta") }</b></a>!
 		</p>
 	}
 }

@@ -5,7 +5,7 @@
 - [external/runtime] Uptime Kuma monitor setup (environment ready)
   - Configure monitors in Kuma for `/livez`, `/readyz`, and optional `/startupz`.
   - Apply final interval/timeout/retry settings directly in the Kuma UI.
-- [external/runtime] Uptime Kuma notifications and routing
+- [external/runtime] Uptime Kuma notifications and routing (low priority)
   - Configure Slack/Discord/Email channels and label-based alert routing.
 - [external/runtime] SLO-style alerts in Kuma/Grafana
   - Availability alert: `/livez` success rate over 5m.
