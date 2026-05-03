@@ -190,6 +190,33 @@ func TestNewLoadsEnvironment(t *testing.T) {
 	}
 }
 
+func TestNewAcceptsCookieSecretAllowedLengths(t *testing.T) {
+	tests := []struct {
+		name   string
+		secret string
+	}{
+		{name: "16 bytes", secret: "1234567890abcdef"},
+		{name: "24 bytes", secret: "1234567890abcdefghijklmn"},
+		{name: "32 bytes", secret: "12345678901234567890123456789012"},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			setRequiredEnv(t)
+			t.Setenv("COOKIE_SECRET", tc.secret)
+
+			env, err := New()
+			if err != nil {
+				t.Fatalf("unexpected New error: %v", err)
+			}
+			if env == nil {
+				t.Fatalf("expected non-nil env")
+			}
+		})
+	}
+}
+
 func TestNewReturnsErrorOnLoadFailure(t *testing.T) {
 	setRequiredEnv(t)
 	t.Setenv("COOKIE_SECRET", "too-short")

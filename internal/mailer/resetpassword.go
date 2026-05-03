@@ -4,19 +4,23 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"os"
+	"miconsul/internal/lib/appenv"
 
 	"gopkg.in/gomail.v2"
 )
 
-func ResetPassword(email, token string) error {
+func ResetPassword(env *appenv.Env, email, token string) error {
+	if env == nil {
+		return errors.New("mailer reset password requires non-nil env")
+	}
+
 	m := gomail.NewMessage()
-	m.SetHeader("From", os.Getenv("EMAIL_FROM_ADDR"))
-	m.SetHeader("To", "edgarsilva.dev@gmail.com")
+	m.SetHeader("From", env.EmailFromAddress)
+	m.SetHeader("To", email)
 	// m.SetAddressHeader("Cc", "dan@example.com", "Dan")
 	m.SetHeader("Subject", "Scaffold: Reset Your Password!")
 
-	url := "http://localhost:8080/resetpassword/change/" + token
+	url := env.AppProtocol + "://" + env.AppDomain + "/resetpassword/change/" + token
 	emailHTML := bytes.Buffer{}
 	if err := ResetPasswordTpl(email, url).Render(context.Background(), &emailHTML); err != nil {
 		return errors.New("couldn't create HTML from templ comp to send email")
@@ -30,7 +34,7 @@ func ResetPassword(email, token string) error {
 	// log.Info("sent CWD ->", cwd)
 	// m.Attach(cwd + "/public/images/ripple-pic.jpg")
 
-	d := gomail.NewDialer("smtp.gmail.com", 587, dialerUsername(), dialerPassword())
+	d := gomail.NewDialer(env.EmailSMTPURL, 587, dialerUsername(env), dialerPassword(env))
 
 	// Send Email
 	if err := d.DialAndSend(m); err != nil {

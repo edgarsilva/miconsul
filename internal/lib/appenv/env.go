@@ -20,7 +20,7 @@ type Env struct {
 	AppShutdownTimeout time.Duration `env:"APP_SHUTDOWN_TIMEOUT;optional;min=1s"`
 	RateLimiterEnabled bool          `env:"RATE_LIMITER_ENABLED;optional"`
 
-	CookieSecret string `env:"COOKIE_SECRET;regex=^.{32,}$"`
+	CookieSecret string `env:"COOKIE_SECRET;regex=^(.{16}|.{24}|.{32})$"`
 	JWTSecret    string `env:"JWT_SECRET"`
 
 	DBPath        string `env:"DB_PATH"`
@@ -31,6 +31,8 @@ type Env struct {
 	EmailSecret      string `env:"EMAIL_SECRET"`
 	EmailFromAddress string `env:"EMAIL_FROM_ADDRESS"`
 	EmailSMTPURL     string `env:"EMAIL_SMTP_URL"`
+	AdminUser        string `env:"ADMIN_USER;optional;trimspace"`
+	AdminPassword    string `env:"ADMIN_PASSWORD;optional"`
 
 	GooseDriver       string `env:"GOOSE_DRIVER"`
 	GooseDBString     string `env:"GOOSE_DBSTRING"`

@@ -153,7 +153,7 @@ func fiberAppErrorHandler(ctx fiber.Ctx, err error) error {
 
 	span := trace.SpanFromContext(ctx.Context())
 
-	if err != nil {
+	if err != nil && code >= fiber.StatusInternalServerError {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 	}

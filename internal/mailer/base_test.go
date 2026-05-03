@@ -1,6 +1,7 @@
 package mailer
 
 import (
+	"miconsul/internal/lib/appenv"
 	"os"
 	"strings"
 	"testing"
@@ -9,11 +10,12 @@ import (
 func TestDialerCredentialsAndLocalization(t *testing.T) {
 	t.Setenv("EMAIL_SENDER", "sender@example.com")
 	t.Setenv("EMAIL_SECRET", "\"secret123\"")
+	env := &appenv.Env{EmailSender: "sender@example.com", EmailSecret: "\"secret123\""}
 
-	if got := dialerUsername(); got != "sender@example.com" {
+	if got := dialerUsername(env); got != "sender@example.com" {
 		t.Fatalf("expected sender@example.com, got %q", got)
 	}
-	if got := dialerPassword(); got != "secret123" {
+	if got := dialerPassword(env); got != "secret123" {
 		t.Fatalf("expected unquoted secret, got %q", got)
 	}
 
