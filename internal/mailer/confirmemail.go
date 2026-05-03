@@ -15,14 +15,15 @@ func ConfirmEmail(env *appenv.Env, email, token string) error {
 	}
 
 	m := gomail.NewMessage()
+	lang := emailLocale()
 	m.SetHeader("From", env.EmailFromAddress)
 	m.SetHeader("To", email)
 	// m.SetAddressHeader("Cc", "dan@example.com", "Dan")
-	m.SetHeader("Subject", "Scaffold: Confirm your email to login to Miconsul!")
+	m.SetHeader("Subject", "Miconsul: "+l(lang, "email.confirm_email_subject"))
 
 	url := "https://" + env.AppDomain + "/signup/confirm/" + token
 	emailHTML := bytes.Buffer{}
-	if err := ConfirmEmailTpl(email, url).Render(context.Background(), &emailHTML); err != nil {
+	if err := ConfirmEmailTpl(lang, email, url).Render(context.Background(), &emailHTML); err != nil {
 		return errors.New("couldn't create HTML from templ comp to send email")
 	}
 	m.SetBody("text/html", emailHTML.String())

@@ -24,7 +24,7 @@ func SendAppointmentBookedEmail(env *appenv.Env, appointment models.Appointment)
 	m.SetHeader("From", env.EmailFromAddress)
 	m.SetHeader("To", appointment.Patient.Email)
 	m.SetAddressHeader("Bcc", "edgarsilva.dev@gmail.com", "edgarsilva")
-	m.SetHeader("Subject", "Miconsul:"+l("es-MX", "email.confirm_appointment_title"))
+	m.SetHeader("Subject", "Miconsul: "+l("es-MX", "email.confirm_appointment_title"))
 
 	emailHTML := bytes.Buffer{}
 	if err := AppointmentBookedEmail(env, appointment).Render(context.Background(), &emailHTML); err != nil {
@@ -55,7 +55,7 @@ func SendAppointmentReminderEmail(env *appenv.Env, appointment models.Appointmen
 	m.SetHeader("From", env.EmailFromAddress)
 	m.SetHeader("To", appointment.Patient.Email)
 	m.SetAddressHeader("Bcc", "edgarsilva.dev@gmail.com", "edgarsilva")
-	m.SetHeader("Subject", "Miconsul:"+l("es-MX", "email.confirm_appointment_title"))
+	m.SetHeader("Subject", "Miconsul: "+l("es-MX", "email.confirm_appointment_title"))
 
 	emailHTML := bytes.Buffer{}
 	if err := AppointmentReminderEmail(env, appointment).Render(context.Background(), &emailHTML); err != nil {
