@@ -8,6 +8,13 @@
 - [ ] Upload images to S3-compatible object storage (RustFS)
 - [ ] Move frontend + templ generated artifacts to image-build pipeline (keep runtime image slim)
 
+- [ ] Production bootstrap + deploy guardrails
+
+  - [ ] Add strict `COOKIE_SECRET` length validation (16/24/32 bytes)
+  - [ ] Ensure post-migration admin bootstrap: create admin from `ADMIN_USER` + `ADMIN_PASSWORD` only when no admin exists
+  - [ ] Fix local-strategy signup confirm-email delivery in production (env wiring + SMTP path + error visibility)
+  - [ ] Provision Logto tenant in Coolify and wire required runtime env vars
+
   - [ ] Generate Tailwind CSS during Docker build from `styles/global.css` (instead of relying on prebuilt committed `public/global.css`)
   - [ ] Define templ generation policy for CI/image builds vs committed artifacts and enforce one canonical source of truth
 

@@ -224,6 +224,11 @@ func setupDB(env *appenv.Env, dbLogger logging.Logger) (*database.Database, erro
 		return nil, err
 	}
 
+	if err := database.EnsureAdminUser(context.Background(), env, db.GormDB()); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+
 	return db, nil
 }
 
