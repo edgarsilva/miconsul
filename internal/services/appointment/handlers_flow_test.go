@@ -33,6 +33,10 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 			c.Locals("current_user", user)
 			return svc.HandleIndexPage(c)
 		})
+		app.Get("/appointments/search", func(c fiber.Ctx) error {
+			c.Locals("current_user", user)
+			return svc.HandleIndexSearch(c)
+		})
 		app.Get("/appointments/:id", func(c fiber.Ctx) error {
 			c.Locals("current_user", user)
 			return svc.HandleShowPage(c)
@@ -46,6 +50,11 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 		resp2, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/"+apnt.UID, nil))
 		if err != nil || resp2.StatusCode != fiber.StatusOK {
 			t.Fatalf("show page expected 200, got status=%d err=%v", resp2.StatusCode, err)
+		}
+
+		resp3, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/search?searchTerm=", nil))
+		if err != nil || resp3.StatusCode != fiber.StatusOK {
+			t.Fatalf("search page expected 200, got status=%d err=%v", resp3.StatusCode, err)
 		}
 	})
 
