@@ -75,10 +75,7 @@ func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
 	originalCallbackURL := ""
 	if req.URL != nil {
 		originalCallbackURL = req.URL.String()
-		req.URL.Scheme = expectedCallback.Scheme
-		req.URL.Host = expectedCallback.Host
-		req.URL.Path = expectedCallback.Path
-		req.Host = expectedCallback.Host
+		req.Header.Set("X-Forwarded-Proto", expectedCallback.Scheme)
 	}
 
 	err = logtoClient.HandleSignInCallback(req)
