@@ -31,7 +31,7 @@ func CmpNavbar(c *Ctx) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<header id=\"header\" class=\"relative mb-8 lg:mb-12 bg-base-100 border-y border-base-content/10\" hx-boost=\"true\"><nav id=\"navbar\" class=\"navbar rounded-lg p-4\"><div class=\"navbar-start\"><a href=\"/?timeframe=day\" class=\"relative px-2 rounded-lg self-stretch flex items-center text-xl font-semibold hover:ring hover:ring-secondary/35 hover:bg-secondary/10 active:ring\"><div class=\"avatar overflow-hidden mr-2\"><div class=\"h-10\"><img class=\"\" src=\"/public/images/labcoat64.png\" alt=\"miconsul logo\"></div></div>miconsul</a></div><div class=\"navbar-end flex items-center\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<header id=\"header\" class=\"relative mb-8 lg:mb-12 bg-base-100 border-y border-base-content/10\" hx-boost=\"true\"><nav id=\"navbar\" class=\"navbar rounded-lg p-4\"><div class=\"navbar-start\"><a href=\"/?timeframe=day\" class=\"relative px-2 rounded-lg self-stretch flex items-center text-xl font-semibold hover:ring hover:ring-secondary/35 hover:bg-secondary/10 active:ring\"><div class=\"avatar overflow-hidden mr-2\"><div class=\"h-10\"><img class=\"\" src=\"/public/images/labcoat64.png\" alt=\"Miconsul logo\"></div></div>Miconsul</a></div><div class=\"navbar-end flex items-center\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
