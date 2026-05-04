@@ -122,7 +122,7 @@ func TestServiceValidationGuards(t *testing.T) {
 	})
 
 	t.Run("UpdateUserProfileByID requires id", func(t *testing.T) {
-		_, err := svc.UpdateUserProfileByID(ctx, "", models.User{})
+		_, err := svc.UpdateUserProfileByUID(ctx, "", models.User{})
 		if err != ErrIDRequired {
 			t.Fatalf("expected ErrIDRequired, got %v", err)
 		}
@@ -130,7 +130,7 @@ func TestServiceValidationGuards(t *testing.T) {
 
 	t.Run("UpdateUserProfileByID validates normalized input", func(t *testing.T) {
 		tooLongName := models.User{Name: strings.Repeat("n", 121)}
-		_, err := svc.UpdateUserProfileByID(ctx, "user_1", tooLongName)
+		_, err := svc.UpdateUserProfileByUID(ctx, "user_1", tooLongName)
 		if err == nil {
 			t.Fatalf("expected validation error for long name")
 		}

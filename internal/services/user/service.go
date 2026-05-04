@@ -49,9 +49,9 @@ func (s service) TakeUserByID(ctx context.Context, userID string) (models.User, 
 	return user, nil
 }
 
-func (s service) UpdateUserProfileByID(ctx context.Context, userID string, updates models.User) (models.User, error) {
-	userID = strings.TrimSpace(userID)
-	if userID == "" {
+func (s service) UpdateUserProfileByUID(ctx context.Context, userUID string, updates models.User) (models.User, error) {
+	userUID = strings.TrimSpace(userUID)
+	if userUID == "" {
 		return models.User{}, ErrIDRequired
 	}
 
@@ -61,7 +61,7 @@ func (s service) UpdateUserProfileByID(ctx context.Context, userID string, updat
 	}
 
 	rowsAffected, err := gorm.G[models.User](s.DB.GormDB()).
-		Where("uid = ?", userID).
+		Where("uid = ?", userUID).
 		Updates(ctx, updates)
 	if err != nil {
 		return models.User{}, err
@@ -70,7 +70,7 @@ func (s service) UpdateUserProfileByID(ctx context.Context, userID string, updat
 		return models.User{}, gorm.ErrRecordNotFound
 	}
 
-	user, err := s.TakeUserByID(ctx, userID)
+	user, err := s.TakeUserByID(ctx, userUID)
 	if err != nil {
 		return models.User{}, err
 	}

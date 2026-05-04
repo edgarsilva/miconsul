@@ -67,7 +67,7 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 	}
 
 	userUpds := input.toUserProfileUpdates()
-	updatedUser, err := s.UpdateUserProfileByID(c.Context(), cu.UID, userUpds)
+	updatedUser, err := s.UpdateUserProfileByUID(c.Context(), cu.UID, userUpds)
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.respondWithRedirect(c, "/profile?toast=User does not exist&level=warning", fiber.StatusNotFound)
 	}
@@ -77,6 +77,48 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 
 	if s.NotHTMX(c) {
 		return s.Redirect(c, "/profile?toast=Profile updated&level=success")
+	}
+
+	vc, _ := view.NewCtx(c)
+	return view.Render(c, view.UserEditPage(vc, updatedUser))
+}
+
+// HandleRemoveProfilePic removes the current user's profile picture.
+// PATCH: /profile/removepic
+func (s *service) HandleRemoveProfilePic(c fiber.Ctx) error {
+	cu := s.CurrentUser(c)
+
+	updatedUser, err := s.UpdateUserProfileByUID(c.Context(), cu.UID, models.User{ProfilePic: ""})
+	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
+		return s.respondWithRedirect(c, "/profile?toast=User does not exist&level=warning", fiber.StatusNotFound)
+	}
+	if err != nil {
+		return s.respondWithRedirect(c, "/profile?toast=Failed to remove profile picture&level=error", fiber.StatusUnprocessableEntity)
+	}
+
+	if s.NotHTMX(c) {
+		return s.Redirect(c, "/profile?toast=Profile picture removed&level=success")
+	}
+
+	vc, _ := view.NewCtx(c)
+	return view.Render(c, view.UserEditPage(vc, updatedUser))
+}
+
+// HandleAdminRemoveProfilePic removes a user's profile picture as admin.
+// PATCH: /admin/users/:id/removepic
+func (s *service) HandleAdminRemoveProfilePic(c fiber.Ctx) error {
+	userID := c.Params("id", "")
+
+	updatedUser, err := s.UpdateUserProfileByUID(c.Context(), userID, models.User{ProfilePic: ""})
+	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
+		return s.respondWithRedirect(c, "/admin/users?toast=User does not exist&level=warning", fiber.StatusNotFound)
+	}
+	if err != nil {
+		return s.respondWithRedirect(c, "/admin/users?toast=Failed to remove profile picture&level=error", fiber.StatusUnprocessableEntity)
+	}
+
+	if s.NotHTMX(c) {
+		return s.Redirect(c, "/admin/users/"+updatedUser.UID+"?toast=Profile picture removed&level=success")
 	}
 
 	vc, _ := view.NewCtx(c)
