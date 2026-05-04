@@ -84,6 +84,8 @@ func TestLogtoHandlersCallbackErrorBranches(t *testing.T) {
 	t.Run("callback redirects with callback error when signin state is missing", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		svc.SessionStore = session.NewStore()
+		svc.Env.AppProtocol = "https"
+		svc.Env.AppDomain = "example.com"
 
 		app := fiber.New()
 		app.Get("/logto/callback", svc.HandleLogtoCallback)
