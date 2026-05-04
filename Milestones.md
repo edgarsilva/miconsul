@@ -108,6 +108,7 @@
 
 - [x] Upload patients profile pic to disk under authentication
 - [x] Accept profile pic from Logto, from google identity.
+- [x] Appointment index search (HTMX + filters parity with clinics/patients)
 - [ ] Upload images to S3-compatible object storage (RustFS)
 
 - [ ] Notifications rollout (email + chat channels)

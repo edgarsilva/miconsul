@@ -46,12 +46,12 @@ func (mb *ModelBase) IsValid() error {
 	return nil
 }
 
-func (c *ModelBase) FieldErrors() map[string]string {
-	if c.fieldErrors == nil {
-		c.fieldErrors = make(map[string]string)
+func (mb *ModelBase) FieldErrors() map[string]string {
+	if mb.fieldErrors == nil {
+		mb.fieldErrors = make(map[string]string)
 	}
 
-	return c.fieldErrors
+	return mb.fieldErrors
 }
 
 // FieldError returns the error associated to a field, defined by key
@@ -64,12 +64,12 @@ func (mb *ModelBase) FieldError(key string) string {
 }
 
 // SetFieldError sets an error for a field, defined by key
-func (c *ModelBase) SetFieldError(key, errStr string) {
-	if c.fieldErrors == nil {
-		c.fieldErrors = make(map[string]string)
+func (mb *ModelBase) SetFieldError(key, errStr string) {
+	if mb.fieldErrors == nil {
+		mb.fieldErrors = make(map[string]string)
 	}
 
-	c.fieldErrors[key] = errStr
+	mb.fieldErrors[key] = errStr
 }
 
 type Country struct {

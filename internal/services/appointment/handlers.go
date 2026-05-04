@@ -39,13 +39,45 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 		return s.Redirect(c, "/appointments?toast=Failed to load selected clinic&level=error")
 	}
 	timeframe := c.Query("timeframe", "day")
-	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, patientID, clinicID, timeframe)
+	searchTerm := strings.TrimSpace(c.Query("searchTerm", ""))
+	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, patientID, clinicID, timeframe, searchTerm)
 	if err != nil {
 		return s.Redirect(c, "/appointments?toast=Failed to load appointments&level=error")
 	}
 
 	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.AppointmentsPage(vc, appointments, patient, clinic))
+}
+
+// HandleIndexSearch runs the appointments index search.
+// GET: /appointments/search
+func (s *service) HandleIndexSearch(c fiber.Ctx) error {
+	searchTerm := strings.TrimSpace(c.Query("searchTerm", ""))
+	if len(searchTerm) > 0 && len(searchTerm) < 3 {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	cu := s.CurrentUser(c)
+	patientID := c.Query("patientId", "")
+	patient, err := s.selectedPatientFromQuery(c, cu.ID, patientID)
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	clinicID := c.Query("clinicId", "")
+	clinic, err := s.selectedClinicFromQuery(c, cu.ID, clinicID)
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	timeframe := c.Query("timeframe", "day")
+	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, patientID, clinicID, timeframe, searchTerm)
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	vc, _ := view.NewCtx(c)
+	return view.Render(c, view.AppointmentsSection(vc, appointments, false, patient, clinic))
 }
 
 // HandleShowPage renders the appointment create/edit page.

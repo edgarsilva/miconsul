@@ -296,7 +296,7 @@ func UsersEmptyList(c *Ctx) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = IconAddUser("mx-auto w-8 h-8 text-base-content/60").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = IconUserAdd("mx-auto w-8 h-8 text-base-content/60").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

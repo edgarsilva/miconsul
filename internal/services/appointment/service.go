@@ -274,16 +274,42 @@ func (s *service) RequestAppointmentDateChangeByIDAndToken(ctx context.Context, 
 	return s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"PendingAt", "Status"}, updates)
 }
 
-func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, patientID, clinicID, timeframe string) ([]models.Appointment, error) {
+func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, patientID, clinicID, timeframe, searchTerm string) ([]models.Appointment, error) {
 	appointments := []models.Appointment{}
 	dbquery := s.DB.Model(&models.Appointment{}).Where("appointments.user_id = ?", userID)
 
 	if patientID != "" {
-		dbquery = dbquery.Joins("INNER JOIN patients ON patients.id = appointments.patient_id").Where("patients.uid = ?", patientID)
+		dbquery = dbquery.Joins("INNER JOIN patients ON patients.id = appointments.patient_id")
+	}
+	if patientID != "" {
+		dbquery = dbquery.Where("patients.uid = ?", patientID)
 	}
 
 	if clinicID != "" {
-		dbquery = dbquery.Joins("INNER JOIN clinics ON clinics.id = appointments.clinic_id").Where("clinics.uid = ?", clinicID)
+		dbquery = dbquery.Joins("INNER JOIN clinics ON clinics.id = appointments.clinic_id")
+	}
+	if clinicID != "" {
+		dbquery = dbquery.Where("clinics.uid = ?", clinicID)
+	}
+
+	searchTerm = strings.TrimSpace(searchTerm)
+	applySearch := searchTerm != ""
+	if applySearch {
+		patientIDs, err := s.findPatientIDsBySearchTerm(ctx, userID, searchTerm)
+		if err != nil {
+			return nil, err
+		}
+
+		clinicIDs, err := s.findClinicIDsBySearchTerm(ctx, userID, searchTerm)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(patientIDs) == 0 && len(clinicIDs) == 0 {
+			return []models.Appointment{}, nil
+		}
+
+		dbquery = dbquery.Where("appointments.patient_id IN ? OR appointments.clinic_id IN ?", patientIDs, clinicIDs)
 	}
 
 	switch timeframe {
@@ -307,6 +333,46 @@ func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, patientID
 	}
 
 	return appointments, nil
+}
+
+func (s *service) findPatientIDsBySearchTerm(ctx context.Context, userID uint, searchTerm string) ([]uint, error) {
+	if searchTerm == "" {
+		return []uint{}, nil
+	}
+
+	var ids []uint
+	err := s.DB.WithContext(ctx).
+		Model(&models.Patient{}).
+		Where("user_id = ?", userID).
+		Scopes(models.GlobalFTS(searchTerm)).
+		Limit(50).
+		Pluck("patients.id", &ids).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	return ids, nil
+}
+
+func (s *service) findClinicIDsBySearchTerm(ctx context.Context, userID uint, searchTerm string) ([]uint, error) {
+	if searchTerm == "" {
+		return []uint{}, nil
+	}
+
+	var ids []uint
+	err := s.DB.WithContext(ctx).
+		Model(&models.Clinic{}).
+		Where("user_id = ?", userID).
+		Scopes(models.GlobalFTS(searchTerm)).
+		Limit(50).
+		Pluck("clinics.id", &ids).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	return ids, nil
 }
 
 func (s *service) FindClinicsBySearchTerm(ctx context.Context, userID uint, searchTerm string) ([]models.Clinic, error) {

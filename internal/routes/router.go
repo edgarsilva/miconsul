@@ -175,6 +175,7 @@ func AppointmentRoutes(s *server.Server, authSvc auth.Runtime) error {
 
 	g := a.Group("/appointments", mw.MustAuthenticate(authSvc))
 	g.Get("/", a.HandleIndexPage)
+	g.Get("/search", a.HandleIndexSearch)
 	g.Get("/new", a.HandleShowPage)
 	g.Get("/new/pricefrg/:id", a.HandlePriceFrg)
 	g.Get("/:id", a.HandleShowPage)
