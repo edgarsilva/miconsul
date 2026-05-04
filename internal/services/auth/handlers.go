@@ -11,6 +11,8 @@ import (
 	view "miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"gorm.io/gorm"
 )
 
@@ -136,30 +138,45 @@ func (s *service) HandleSignupPage(c fiber.Ctx) error {
 //
 // POST: /signup
 func (s *service) HandleSignup(c fiber.Ctx) error {
+	ctx, span := s.Trace(c.Context(), "auth/handlers:HandleSignup")
+	defer span.End()
+	span.SetAttributes(attribute.String("auth.provider", "local"))
+
 	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(c, view.WithTheme(theme))
 	email, password, err := credentialsFromRequest(c)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "invalid signup credentials input")
 		return view.Render(c, view.SignupPage(vc, email, err))
 	}
+	span.SetAttributes(attribute.String("auth.signup.email", strings.ToLower(strings.TrimSpace(email))))
 
 	confirm := c.FormValue("confirm", "")
 	if confirm == "" || password != confirm {
 		err := errors.New("passwords don't match")
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "signup password confirmation mismatch")
 		return view.Render(c, view.SignupPage(vc, email, err))
 	}
 
-	err = s.userPendingConfirmation(c.Context(), email)
+	err = s.userPendingConfirmation(ctx, email)
 	if err != nil {
-		if resendErr := s.resendPendingConfirmation(c.Context(), email); resendErr != nil {
+		if resendErr := s.resendPendingConfirmation(ctx, email); resendErr != nil {
+			span.RecordError(resendErr)
+			span.SetStatus(codes.Error, "resend confirmation failed")
 			return view.Render(c, view.SignupPage(vc, email, errors.New("failed to resend confirmation email, please try again")))
 		}
+		span.SetStatus(codes.Ok, "pending confirmation resent")
 		return s.respondWithRedirect(c, "/signin", "check your inbox, we'll re-send a confirmation link")
 	}
 
-	if err := s.signup(c.Context(), email, password); err != nil {
+	if err := s.signup(ctx, email, password); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "signup failed")
 		return view.Render(c, view.SignupPage(vc, email, err))
 	}
+	span.SetStatus(codes.Ok, "signup confirmation email sent")
 
 	return s.respondWithRedirect(c, "/signin", "check your inbox to confirm your email")
 }
@@ -167,33 +184,46 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 // HandleSignupConfirmEmail validates an email confirmation token.
 // GET: /signup/confirm/:token
 func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
+	ctx, span := s.Trace(c.Context(), "auth/handlers:HandleSignupConfirmEmail")
+	defer span.End()
+	span.SetAttributes(attribute.String("auth.provider", "local"))
+
 	token := c.Params("token", "")
 	if token == "" {
+		span.SetStatus(codes.Error, "missing confirmation token")
 		return s.respondWithRedirect(c, "/signin", "unable to confirm email, try signin instead")
 	}
 
 	user, err := gorm.G[models.User](s.DB.GormDB()).
 		Select("uid, email, confirm_email_token").
 		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
-		Take(c.Context())
+		Take(ctx)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "invalid or expired confirmation token")
 		return s.respondWithRedirect(c, "/signin", "we couldn't verify your account, pls try again")
 	}
+	span.SetAttributes(attribute.String("auth.signup.confirm_email", strings.ToLower(strings.TrimSpace(user.Email))))
 
 	_, err = gorm.G[models.User](s.DB.GormDB()).
 		Select("confirm_email_token", "confirm_email_expires_at").
 		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
-		Updates(c.Context(), models.User{})
+		Updates(ctx, models.User{})
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "confirmation token clear failed")
 		return s.respondWithRedirect(c, "/signin", "Email confirmed, you should be able to signin now")
 	}
 
 	jwt, err := JWTCreateToken(s.AppEnv(), user.Email, user.UID)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "jwt creation after confirmation failed")
 		return s.respondWithRedirect(c, "/signin", "Email confirmed, you should be able to signin now")
 	}
 
 	c.Cookie(s.NewCookie("Auth", jwt, time.Hour*24))
+	span.SetStatus(codes.Ok, "email confirmed")
 	return s.respondWithRedirect(c, "/signin", "Email confirmed, you should be able to signin now")
 }
 
@@ -302,7 +332,7 @@ func (s *service) HandleResetPasswordChange(c fiber.Ctx) error {
 	}
 
 	nonce := xid.New("rpnnce")
-	s.SessionWrite(c, "nonce", nonce)
+	_ = s.SessionWrite(c, "nonce", nonce)
 
 	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.ResetPasswordChangePage(email, token, nonce, nil, vc))

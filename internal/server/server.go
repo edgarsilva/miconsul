@@ -102,7 +102,7 @@ func validateCriticalDeps(s *Server) error {
 	}
 
 	if s.DB == nil {
-		return errors.New("Database is required")
+		return errors.New("database is required")
 	}
 
 	if s.Tracer == nil {
