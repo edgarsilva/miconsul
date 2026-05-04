@@ -351,7 +351,7 @@ func (s *service) HandleMockManyPatients(c fiber.Ctx) error {
 		ExtID := xid.New("prav")
 		patients = append(patients, models.Patient{
 			ExtID:      ExtID,
-			ProfilePic: avatar.PravatarURL(ExtID),
+			ProfilePic: avatar.DicebearFunEmojiAvatarURL(ExtID),
 			Name:       faker.Name().Name(),
 			Email:      faker.Internet().Email(),
 			Phone:      faker.PhoneNumber().CellPhone(),
