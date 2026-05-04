@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"net/url"
+
 	view "miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"
@@ -58,9 +60,34 @@ func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
 		return s.Redirect(c, "/signin?logto_error=request")
 	}
 
+	callbackURI, err := logtoRedirectURI(s.Env, "/logto/callback")
+	if err != nil {
+		log.Error("failed to compose logto callback uri during callback verification:", err)
+		return s.Redirect(c, "/signin?logto_error=config")
+	}
+
+	expectedCallback, err := url.Parse(callbackURI)
+	if err != nil {
+		log.Error("failed to parse expected logto callback uri:", err)
+		return s.Redirect(c, "/signin?logto_error=config")
+	}
+
+	originalCallbackURL := ""
+	if req.URL != nil {
+		originalCallbackURL = req.URL.String()
+		req.URL.Scheme = expectedCallback.Scheme
+		req.URL.Host = expectedCallback.Host
+		req.URL.Path = expectedCallback.Path
+		req.Host = expectedCallback.Host
+	}
+
 	err = logtoClient.HandleSignInCallback(req)
 	if err != nil {
-		log.Error("failed to verify signin in logto callback handler:", err)
+		if req.URL != nil {
+			log.Errorf("failed to verify signin in logto callback handler: %v (expected_callback=%s original_callback=%s normalized_callback=%s x_forwarded_proto=%s x_forwarded_host=%s)", err, callbackURI, originalCallbackURL, req.URL.String(), req.Header.Get("X-Forwarded-Proto"), req.Header.Get("X-Forwarded-Host"))
+		} else {
+			log.Errorf("failed to verify signin in logto callback handler: %v (expected_callback=%s original_callback=%s x_forwarded_proto=%s x_forwarded_host=%s)", err, callbackURI, originalCallbackURL, req.Header.Get("X-Forwarded-Proto"), req.Header.Get("X-Forwarded-Host"))
+		}
 		return s.Redirect(c, "/signin?logto_error=callback")
 	}
 
