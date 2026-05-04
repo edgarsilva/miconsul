@@ -1,13 +1,15 @@
 package mailer
 
 import (
+	"strings"
+
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/localize"
-	"strings"
 )
 
-const fontFamily = "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\""
-const defaultEmailLocale = "es-MX"
+const (
+	defaultEmailLocale = "es-MX"
+)
 
 var locales = localize.New("es-MX", "en-US")
 

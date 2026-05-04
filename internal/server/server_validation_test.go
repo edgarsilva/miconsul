@@ -19,7 +19,7 @@ func TestValidateCriticalDeps(t *testing.T) {
 	}{
 		{name: "nil server", s: nil, want: "server is required"},
 		{name: "missing env", s: &Server{}, want: "environment config is required"},
-		{name: "missing db", s: &Server{Env: &appenv.Env{}}, want: "Database is required"},
+		{name: "missing db", s: &Server{Env: &appenv.Env{}}, want: "database is required"},
 		{name: "missing tracer", s: &Server{Env: &appenv.Env{}, DB: &database.Database{}}, want: "tracer is required; pass server.WithTracer(...) to server.New(...)"},
 		{
 			name: "valid deps",

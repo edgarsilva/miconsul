@@ -77,7 +77,7 @@ func (ls LocalStrategy) Metadata() AuthenticatorMeta {
 	return AuthenticatorMeta{}
 }
 
-func (ls LocalStrategy) FindUserById(ctx context.Context, uid string) (models.User, error) {
+func (ls LocalStrategy) FindUserByID(ctx context.Context, uid string) (models.User, error) {
 	return gorm.G[models.User](ls.resource.GormDB()).Where("uid = ?", uid).Take(ctx)
 }
 
@@ -92,7 +92,7 @@ func (ls LocalStrategy) authenticateWithJWT(c fiber.Ctx, token string) (models.U
 		uid = ""
 	}
 
-	user, err := ls.FindUserById(c.Context(), uid)
+	user, err := ls.FindUserByID(c.Context(), uid)
 	if err != nil {
 		return user, errors.New("failed to find user with UID in JWT token")
 	}
