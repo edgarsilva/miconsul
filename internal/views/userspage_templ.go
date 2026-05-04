@@ -867,7 +867,7 @@ func UserForm(c *Ctx, user models.User) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if user.UID != "new" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, " hx-post=\"/users\" action=\"/users\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, " hx-post=\"/profile\" action=\"/profile\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

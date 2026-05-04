@@ -250,8 +250,8 @@ templ UserForm(c *Ctx, user models.User) {
 		method="POST"
 		enctype="multipart/form-data"
 		if user.UID != "new" {
-			hx-post="/users"
-			action="/users"
+			hx-post="/profile"
+			action="/profile"
 		}
 		else
 		if c.CurrentUser.Role == models.UserRoleAdmin {
