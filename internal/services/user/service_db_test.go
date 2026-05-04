@@ -38,7 +38,7 @@ func TestUserServiceDBFlows(t *testing.T) {
 
 	t.Run("update user profile branches", func(t *testing.T) {
 		updates := models.User{Name: "  New Name  ", Email: " NEW@EXAMPLE.COM ", Phone: " 999 "}
-		updated, err := svc.UpdateUserProfileByID(ctx, seededUser.UID, updates)
+		updated, err := svc.UpdateUserProfileByUID(ctx, seededUser.UID, updates)
 		if err != nil {
 			t.Fatalf("update user profile: %v", err)
 		}
@@ -46,7 +46,7 @@ func TestUserServiceDBFlows(t *testing.T) {
 			t.Fatalf("expected normalized updates, got %#v", updated)
 		}
 
-		_, err = svc.UpdateUserProfileByID(ctx, "missing", updates)
+		_, err = svc.UpdateUserProfileByUID(ctx, "missing", updates)
 		if err != gorm.ErrRecordNotFound {
 			t.Fatalf("expected not found on missing update, got %v", err)
 		}

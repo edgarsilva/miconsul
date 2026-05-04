@@ -157,8 +157,13 @@ templ UserProfile(c *Ctx, user models.User) {
 									<figure class="flex flex-col gap-1 items-center" id="avatar_pic">
 										@CmpAvatar(user)
 										<a
-										href={ templ.URL("/users/" + user.UID + "/removepic") }
-										hx-patch={ "/users/" + user.UID + "/removepic" }
+										if c.CurrentUser.Role == models.UserRoleAdmin {
+											href={ templ.URL("/admin/users/" + user.UID + "/removepic") }
+											hx-patch={ "/admin/users/" + user.UID + "/removepic" }
+										} else {
+											href={ templ.URL("/profile/removepic") }
+											hx-patch="/profile/removepic"
+										}
 											hx-select="#avatar_pic"
 											hx-swap="outerHTML"
 											hx-target="closest figure"
@@ -250,8 +255,8 @@ templ UserForm(c *Ctx, user models.User) {
 		method="POST"
 		enctype="multipart/form-data"
 		if user.UID != "new" {
-			hx-post="/users"
-			action="/users"
+			hx-post="/profile"
+			action="/profile"
 		}
 		else
 		if c.CurrentUser.Role == models.UserRoleAdmin {

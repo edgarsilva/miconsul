@@ -31,24 +31,53 @@ func TestNewService(t *testing.T) {
 }
 
 func TestHandleToggleTheme(t *testing.T) {
-	app := fiber.New()
-	svc := service{Server: &server.Server{}}
-	app.Post("/theme/toggle/:theme", svc.HandleToggleTheme)
+	t.Run("sets dark when checkbox checked", func(t *testing.T) {
+		app := fiber.New()
+		svc := service{Server: &server.Server{}}
+		app.Post("/theme/toggle", svc.HandleToggleTheme)
 
-	req := httptest.NewRequest(http.MethodPost, "/theme/toggle/dark", nil)
-	resp, err := app.Test(req)
-	if err != nil {
-		t.Fatalf("request failed: %v", err)
-	}
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("expected 200, got %d", resp.StatusCode)
-	}
+		req := httptest.NewRequest(http.MethodPost, "/theme/toggle", strings.NewReader("theme=dark"))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	setCookie := resp.Header.Get("Set-Cookie")
-	if setCookie == "" {
-		t.Fatalf("expected Set-Cookie header")
-	}
-	if !strings.Contains(setCookie, "theme=dark") {
-		t.Fatalf("expected theme cookie set to dark, got %q", setCookie)
-	}
+		resp, err := app.Test(req)
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("expected 200, got %d", resp.StatusCode)
+		}
+
+		setCookie := resp.Header.Get("Set-Cookie")
+		if setCookie == "" {
+			t.Fatalf("expected Set-Cookie header")
+		}
+		if !strings.Contains(setCookie, "theme=dark") {
+			t.Fatalf("expected theme cookie set to dark, got %q", setCookie)
+		}
+	})
+
+	t.Run("defaults to light when checkbox unchecked", func(t *testing.T) {
+		app := fiber.New()
+		svc := service{Server: &server.Server{}}
+		app.Post("/theme/toggle", svc.HandleToggleTheme)
+
+		req := httptest.NewRequest(http.MethodPost, "/theme/toggle", strings.NewReader(""))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+		resp, err := app.Test(req)
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("expected 200, got %d", resp.StatusCode)
+		}
+
+		setCookie := resp.Header.Get("Set-Cookie")
+		if setCookie == "" {
+			t.Fatalf("expected Set-Cookie header")
+		}
+		if !strings.Contains(setCookie, "theme=light") {
+			t.Fatalf("expected theme cookie set to light, got %q", setCookie)
+		}
+	})
 }
