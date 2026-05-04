@@ -122,6 +122,7 @@ func (a *Appointment) RescheduledPath() string {
 }
 
 // Scopes
+
 func AppointmentWithPendingAlerts(db *gorm.DB) *gorm.DB {
 	st := time.Now()
 	year, month, day := st.Date()

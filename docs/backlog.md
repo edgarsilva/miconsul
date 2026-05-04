@@ -2,6 +2,11 @@
 
 ## Next Up
 
+- [feature/appointments] Appointment index search follow-ups
+  - [ ] Evaluate adding appointment text fields (`summary`, `notes`, `conclusions`) to search scope.
+  - [ ] Add optional FTS/meilisearch path only if native query performance degrades.
+  - [ ] Add production telemetry for search latency + result counts.
+
 - [external/runtime] Uptime Kuma monitor setup (environment ready)
   - Configure monitors in Kuma for `/livez`, `/readyz`, and optional `/startupz`.
   - Apply final interval/timeout/retry settings directly in the Kuma UI.
@@ -48,6 +53,11 @@
   - Keep fallback behavior and rollout checklist for local/dev environments.
 
 ## Done
+
+- Appointment index search parity with clinics/patients
+  - Added `GET /appointments/search` HTMX index search endpoint.
+  - Added appointments page search input that preserves active `timeframe`, `patientId`, and `clinicId` filters.
+  - Extended appointment query filtering by patient/clinic identity fields while keeping existing filter behavior.
 
 - Auth coverage hardening after migration checklist closure
   - Added explicit callback verification failure coverage for `GET /logto/callback` (`logto_error=callback`).
