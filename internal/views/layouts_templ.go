@@ -272,7 +272,7 @@ func LayoutAuth(c *Ctx) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div id=\"root\" class=\"flex flex-col justify-center py-12 sm:px-6 lg:px-8\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div id=\"root\" class=\"min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-base-200\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
