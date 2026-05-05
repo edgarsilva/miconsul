@@ -12,7 +12,7 @@ templ PatientsPage(c *Ctx, patients []models.Patient) {
 			<div
 				class="relative"
 			>
-				<hgroup class="md:flex md:justify-between md:items-center pb-4 px-2 md:px-0 w-full" hx-boost="true">
+				<hgroup class="md:flex md:justify-between md:items-center pb-4 px-2 md:px-0 w-full" hx-boost:inherited="true">
 					<div class="md:flex md:gap-2 items-baseline w-full md:justify-between md:pr-4">
 						<h1 class="flex w-full md:w-auto font-bold text-2xl mb-4 md:mb-0">
 							{ c.l("str.patients") }
@@ -52,7 +52,7 @@ templ PatientFormPage(patient models.Patient, c *Ctx) {
 		<section id="patient_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<hgroup
 				class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
-				hx-boost="true"
+				hx-boost:inherited="true"
 			>
 				if patient.UID == "" || patient.UID == "new" {
 					<h1 class="font-bold text-2xl">{ c.l("str.new_patient") }</h1>
@@ -73,7 +73,7 @@ templ PatientFormPage(patient models.Patient, c *Ctx) {
 }
 
 templ PatientsList(c *Ctx, patients []models.Patient) {
-	<ul id="patients_list" role="list" class="app-card divide-y divide-base-content/10 overflow-hidden px-4 py-2">
+	<ul id="patients_list" role="list" class="app-card divide-y divide-base-content/10 overflow-hidden">
 		for _, patient := range patients {
 			@PatientLi(patient, c)
 		}
@@ -219,8 +219,8 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 									<figure class="flex flex-col gap-1 items-center" id="avatar_pic">
 										@CmpAvatar(patient)
 										<a
-										href={ templ.URL("/patients/" + patient.UID + "/removepic") }
-										hx-patch={ "/patients/" + patient.UID + "/removepic" }
+											href={ templ.URL("/patients/" + patient.UID + "/removepic") }
+											hx-patch={ "/patients/" + patient.UID + "/removepic" }
 											hx-select="#avatar_pic"
 											hx-swap="outerHTML"
 											hx-target="closest figure"

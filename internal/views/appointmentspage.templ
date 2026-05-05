@@ -13,7 +13,7 @@ templ AppointmentsPage(vc *Ctx, appointments []models.Appointment, selectedPatie
 			<div
 				class="relative"
 			>
-				<hgroup class="md:flex md:justify-between md:items-center pb-4 px-2 md:px-0 w-full" hx-boost="true">
+				<hgroup class="md:flex md:justify-between md:items-center pb-4 px-2 md:px-0 w-full" hx-boost:inherited="true">
 					<div class="md:flex md:gap-2 items-baseline w-full md:justify-between md:pr-4">
 						<h1 class="flex w-full md:w-auto font-bold text-2xl mb-4 md:mb-0">
 							{ vc.l("str.appointments") }
@@ -58,9 +58,9 @@ templ AppointmentsSection(c *Ctx, appointments []models.Appointment, showTitle b
 	<section id="appointments_section" class="app-card col-span-2 flex flex-col pt-4">
 		<div
 			class="relative items-center flex justify-between border-b border-base-content/10 pb-2"
-			hx-swap="outerHTML"
-			hx-target="closest section"
-			hx-select="#appointments_section"
+			hx-swap:inherited="outerHTML"
+			hx-target:inherited="closest section"
+			hx-select:inherited="#appointments_section"
 		>
 			<h3 class="font-semibold text-xl flex items-center gap-4">
 				if showTitle {
@@ -165,7 +165,7 @@ templ AppointmentsSection(c *Ctx, appointments []models.Appointment, showTitle b
 }
 
 templ AppointmentsList(vc *Ctx, appointments []models.Appointment) {
-	<ul id="appointments_list" class="divide-y divide-base-content-10 text-sm leading-6" hx-boost="true">
+	<ul id="appointments_list" class="divide-y divide-base-content/10 overflow-hidden text-sm leading-6" hx-boost="true">
 		for _, appointment := range appointments {
 			@AppointmentLi(vc, appointment)
 		}
@@ -432,8 +432,8 @@ templ ApptSearchClinicsResults(vc *Ctx, clinics []models.Clinic) {
 		id="clinic_search_results"
 		role="list"
 		class="divide-y divide-base-content/10"
-		hx-target="#appt_price"
-		hx-swap="outerHTML"
+		hx-target:inherited="#appt_price"
+		hx-swap:inherited="outerHTML"
 	>
 		for i, clinic := range clinics {
 			<li>

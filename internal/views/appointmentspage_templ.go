@@ -48,7 +48,7 @@ func AppointmentsPage(vc *Ctx, appointments []models.Appointment, selectedPatien
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section class=\"grow flex flex-col px-0 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto\"><div class=\"relative\"><hgroup class=\"md:flex md:justify-between md:items-center pb-4 px-2 md:px-0 w-full\" hx-boost=\"true\"><div class=\"md:flex md:gap-2 items-baseline w-full md:justify-between md:pr-4\"><h1 class=\"flex w-full md:w-auto font-bold text-2xl mb-4 md:mb-0\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section class=\"grow flex flex-col px-0 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto\"><div class=\"relative\"><hgroup class=\"md:flex md:justify-between md:items-center pb-4 px-2 md:px-0 w-full\" hx-boost:inherited=\"true\"><div class=\"md:flex md:gap-2 items-baseline w-full md:justify-between md:pr-4\"><h1 class=\"flex w-full md:w-auto font-bold text-2xl mb-4 md:mb-0\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -238,7 +238,7 @@ func AppointmentsSection(c *Ctx, appointments []models.Appointment, showTitle bo
 			templ_7745c5c3_Var10 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<section id=\"appointments_section\" class=\"app-card col-span-2 flex flex-col pt-4\"><div class=\"relative items-center flex justify-between border-b border-base-content/10 pb-2\" hx-swap=\"outerHTML\" hx-target=\"closest section\" hx-select=\"#appointments_section\"><h3 class=\"font-semibold text-xl flex items-center gap-4\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<section id=\"appointments_section\" class=\"app-card col-span-2 flex flex-col pt-4\"><div class=\"relative items-center flex justify-between border-b border-base-content/10 pb-2\" hx-swap:inherited=\"outerHTML\" hx-target:inherited=\"closest section\" hx-select:inherited=\"#appointments_section\"><h3 class=\"font-semibold text-xl flex items-center gap-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -858,7 +858,7 @@ func AppointmentsList(vc *Ctx, appointments []models.Appointment) templ.Componen
 			templ_7745c5c3_Var56 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "<ul id=\"appointments_list\" class=\"divide-y divide-base-content-10 text-sm leading-6\" hx-boost=\"true\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "<ul id=\"appointments_list\" class=\"divide-y divide-base-content/10 overflow-hidden text-sm leading-6\" hx-boost=\"true\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1630,7 +1630,7 @@ func ApptSearchClinicsResults(vc *Ctx, clinics []models.Clinic) templ.Component 
 			templ_7745c5c3_Var94 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 122, "<ul id=\"clinic_search_results\" role=\"list\" class=\"divide-y divide-base-content/10\" hx-target=\"#appt_price\" hx-swap=\"outerHTML\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 122, "<ul id=\"clinic_search_results\" role=\"list\" class=\"divide-y divide-base-content/10\" hx-target:inherited=\"#appt_price\" hx-swap:inherited=\"outerHTML\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
