@@ -2,6 +2,13 @@
 
 ## Next Up
 
+- [feature/search] Global Ctrl+K search modal
+  - [ ] Add keyboard shortcut (`Ctrl+K`) to open a global search modal.
+  - [ ] Search across appointments, clinics, and patients from a single input.
+  - [ ] Support keyboard navigation + enter-to-open selected result.
+  - [ ] Keep existing index search endpoints; add a dedicated global search endpoint contract.
+  - [ ] Define result grouping and ranking order (appointments first vs mixed relevance).
+
 - [feature/appointments] Appointment index search follow-ups
   - [ ] Evaluate adding appointment text fields (`summary`, `notes`, `conclusions`) to search scope.
   - [ ] Add optional FTS/meilisearch path only if native query performance degrades.
