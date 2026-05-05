@@ -39,8 +39,8 @@ func TestUserHandlerBranches(t *testing.T) {
 	badJSON.Header.Set("Content-Type", "application/json")
 	badJSON.Header.Set("HX-Request", "true")
 	resp2, err := app.Test(badJSON)
-	if err != nil || resp2.StatusCode != fiber.StatusBadRequest {
-		t.Fatalf("profile invalid body expected 400, got status=%d err=%v", resp2.StatusCode, err)
+	if err != nil || resp2.StatusCode != fiber.StatusNoContent {
+		t.Fatalf("profile invalid body expected 204 for htmx redirect, got status=%d err=%v", resp2.StatusCode, err)
 	}
 	if got := resp2.Header.Get("HX-Location"); got == "" {
 		t.Fatalf("expected HX-Location header for htmx profile error")

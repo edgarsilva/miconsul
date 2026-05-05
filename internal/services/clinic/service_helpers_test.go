@@ -36,7 +36,7 @@ func TestRespondHelpers(t *testing.T) {
 	t.Run("respondWithRedirect non-htmx", func(t *testing.T) {
 		app := fiber.New()
 		app.Get("/clinics", func(c fiber.Ctx) error {
-			return svc.respondWithRedirect(c, "/clinics?toast=ok", fiber.StatusBadRequest)
+			return svc.respondWithRedirect(c, "/clinics?toast=ok")
 		})
 
 		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/clinics", nil))

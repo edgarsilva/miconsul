@@ -252,8 +252,8 @@ func TestAppointmentHandlerGuardBranches(t *testing.T) {
 	createReq.Header.Set("Content-Type", "application/json")
 	createReq.Header.Set("HX-Request", "true")
 	respCreate, err := app.Test(createReq)
-	if err != nil || respCreate.StatusCode != fiber.StatusBadRequest {
-		t.Fatalf("create invalid body expected 400 for htmx, got status=%d err=%v", respCreate.StatusCode, err)
+	if err != nil || respCreate.StatusCode != fiber.StatusNoContent {
+		t.Fatalf("create invalid body expected 204 for htmx redirect, got status=%d err=%v", respCreate.StatusCode, err)
 	}
 
 	resp2, err := app.Test(httptest.NewRequest(http.MethodPost, "/appointments/%20/complete", nil))

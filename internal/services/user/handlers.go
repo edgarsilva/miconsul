@@ -63,16 +63,16 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 	input := userProfileUpdateInput{}
 	err := c.Bind().Body(&input)
 	if err != nil {
-		return s.respondWithRedirect(c, "/profile?toast=Invalid profile input&level=error", fiber.StatusBadRequest)
+		return s.respondWithRedirect(c, "/profile?toast=Invalid profile input&level=error")
 	}
 
 	userUpds := input.toUserProfileUpdates()
 	updatedUser, err := s.UpdateUserProfileByUID(c.Context(), cu.UID, userUpds)
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.respondWithRedirect(c, "/profile?toast=User does not exist&level=warning", fiber.StatusNotFound)
+		return s.respondWithRedirect(c, "/profile?toast=User does not exist&level=warning")
 	}
 	if err != nil {
-		return s.respondWithRedirect(c, "/profile?toast=Failed to update profile&level=error", fiber.StatusUnprocessableEntity)
+		return s.respondWithRedirect(c, "/profile?toast=Failed to update profile&level=error")
 	}
 
 	if s.NotHTMX(c) {
@@ -90,10 +90,10 @@ func (s *service) HandleRemoveProfilePic(c fiber.Ctx) error {
 
 	updatedUser, err := s.UpdateUserProfileByUID(c.Context(), cu.UID, models.User{ProfilePic: ""})
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.respondWithRedirect(c, "/profile?toast=User does not exist&level=warning", fiber.StatusNotFound)
+		return s.respondWithRedirect(c, "/profile?toast=User does not exist&level=warning")
 	}
 	if err != nil {
-		return s.respondWithRedirect(c, "/profile?toast=Failed to remove profile picture&level=error", fiber.StatusUnprocessableEntity)
+		return s.respondWithRedirect(c, "/profile?toast=Failed to remove profile picture&level=error")
 	}
 
 	if s.NotHTMX(c) {
@@ -111,10 +111,10 @@ func (s *service) HandleAdminRemoveProfilePic(c fiber.Ctx) error {
 
 	updatedUser, err := s.UpdateUserProfileByUID(c.Context(), userID, models.User{ProfilePic: ""})
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.respondWithRedirect(c, "/admin/users?toast=User does not exist&level=warning", fiber.StatusNotFound)
+		return s.respondWithRedirect(c, "/admin/users?toast=User does not exist&level=warning")
 	}
 	if err != nil {
-		return s.respondWithRedirect(c, "/admin/users?toast=Failed to remove profile picture&level=error", fiber.StatusUnprocessableEntity)
+		return s.respondWithRedirect(c, "/admin/users?toast=Failed to remove profile picture&level=error")
 	}
 
 	if s.NotHTMX(c) {
@@ -174,11 +174,11 @@ func (s *service) HandleAPIMakeUsers(c fiber.Ctx) error {
 	})
 }
 
-func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string, htmxStatus int) error {
+func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string) error {
 	if s.NotHTMX(c) {
 		return s.Redirect(c, redirectPath)
 	}
 
 	c.Set("HX-Location", redirectPath)
-	return c.SendStatus(htmxStatus)
+	return c.SendStatus(fiber.StatusNoContent)
 }

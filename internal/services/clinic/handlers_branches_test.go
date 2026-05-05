@@ -50,8 +50,8 @@ func TestClinicHandlerBranches(t *testing.T) {
 	badJSON.Header.Set("Content-Type", "application/json")
 	badJSON.Header.Set("HX-Request", "true")
 	resp3, err := app.Test(badJSON)
-	if err != nil || resp3.StatusCode != fiber.StatusBadRequest {
-		t.Fatalf("create invalid body expected 400 for htmx, got status=%d err=%v", resp3.StatusCode, err)
+	if err != nil || resp3.StatusCode != fiber.StatusNoContent {
+		t.Fatalf("create invalid body expected 204 for htmx redirect, got status=%d err=%v", resp3.StatusCode, err)
 	}
 
 	resp4, err := app.Test(httptest.NewRequest(http.MethodPost, "/clinics/%20/patch", nil))
