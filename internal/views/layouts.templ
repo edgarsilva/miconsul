@@ -9,6 +9,7 @@ templ HTMLPage(c *Ctx) {
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
 			<meta name="color-scheme" content="light dark"/>
+			<meta name="htmx-config" content='{"includeIndicatorCSS":false}'/>
 			@Favicons(c)
 			<title>Miconsul</title>
 			<link href={ "/public/global.css?v_=" + xid.Pure() } rel="stylesheet"/>
