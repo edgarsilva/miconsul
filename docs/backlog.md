@@ -14,6 +14,11 @@
   - [ ] Add optional FTS/meilisearch path only if native query performance degrades.
   - [ ] Add production telemetry for search latency + result counts.
 
+- [feature/htmx4] Replace OOB price update with partials pattern
+  - [ ] Refactor appointment clinic-search response to use HTMX 4 partial swap flow instead of `hx-swap-oob`.
+  - [ ] Keep clinic list and price updates independent targets with explicit swap contracts.
+  - [ ] Add regression check for clinic search + price update on repeated searches and back navigation.
+
 - [external/runtime] Uptime Kuma monitor setup (environment ready)
   - Configure monitors in Kuma for `/livez`, `/readyz`, and optional `/startupz`.
   - Apply final interval/timeout/retry settings directly in the Kuma UI.
