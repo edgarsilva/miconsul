@@ -76,8 +76,8 @@ func TestPatchAndDeleteRoutesForPatientAndAppointment(t *testing.T) {
 				"bookedAt":  {time.Now().Add(3 * time.Hour).Format("2006-01-02T15:04")},
 			},
 		})
-		if patchResp.StatusCode != http.StatusOK {
-			t.Fatalf("expected 200 for appointment patch, got %d", patchResp.StatusCode)
+		if patchResp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for appointment patch redirect, got %d", patchResp.StatusCode)
 		}
 
 		updated, err := gorm.G[models.Appointment](h.db.GormDB()).Where("id = ?", appt.ID).Take(t.Context())
@@ -94,8 +94,8 @@ func TestPatchAndDeleteRoutesForPatientAndAppointment(t *testing.T) {
 			authToken: token,
 			htmx:      true,
 		})
-		if delResp.StatusCode != http.StatusOK {
-			t.Fatalf("expected 200 for appointment delete, got %d", delResp.StatusCode)
+		if delResp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for appointment delete redirect, got %d", delResp.StatusCode)
 		}
 
 		_, err = gorm.G[models.Appointment](h.db.GormDB()).Where("id = ?", appt.ID).Take(t.Context())
