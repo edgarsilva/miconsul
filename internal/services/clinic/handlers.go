@@ -75,13 +75,13 @@ func (s *service) HandleClinicsCreate(c fiber.Ctx) error {
 	input := clinicUpsertInput{}
 	err := c.Bind().Body(&input)
 	if err != nil {
-		return s.respondWithRedirect(c, "/clinics/new?toast=Invalid clinic input&level=error", fiber.StatusBadRequest)
+		return s.respondWithRedirect(c, "/clinics/new?toast=Invalid clinic input&level=error")
 	}
 	clinic := input.toClinic(0, "", cu.ID, price)
 
 	err = s.CreateClinic(c.Context(), &clinic)
 	if err != nil {
-		return s.respondWithRedirect(c, "/clinics/new?toast=Failed to create clinic&level=error", fiber.StatusUnprocessableEntity)
+		return s.respondWithRedirect(c, "/clinics/new?toast=Failed to create clinic&level=error")
 	}
 
 	s.attachClinicProfilePicBestEffort(c, cu.ID, &clinic)
@@ -95,24 +95,24 @@ func (s *service) HandleClinicsUpdate(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 	clinicID := cmp.Or(c.Params("id", ""), c.FormValue("id", ""))
 	if clinicID == "" {
-		return s.respondWithRedirect(c, "/clinics?toast=Can't update without an id&level=error", fiber.StatusBadRequest)
+		return s.respondWithRedirect(c, "/clinics?toast=Can't update without an id&level=error")
 	}
 
 	clinic, err := s.TakeClinicByID(c.Context(), cu.ID, clinicID)
 	if errors.Is(err, ErrIDRequired) {
-		return s.respondWithRedirect(c, "/clinics?toast=Can't update without an id&level=error", fiber.StatusBadRequest)
+		return s.respondWithRedirect(c, "/clinics?toast=Can't update without an id&level=error")
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return fiber.ErrNotFound
 	}
 	if err != nil {
-		return s.respondWithRedirect(c, "/clinics?toast=Failed to load clinic&level=error", fiber.StatusInternalServerError)
+		return s.respondWithRedirect(c, "/clinics?toast=Failed to load clinic&level=error")
 	}
 
 	input := clinicUpsertInput{}
 	err = c.Bind().Body(&input)
 	if err != nil {
-		return s.respondWithRedirect(c, "/clinics/"+clinicID+"?toast=Invalid clinic input&level=error", fiber.StatusBadRequest)
+		return s.respondWithRedirect(c, "/clinics/"+clinicID+"?toast=Invalid clinic input&level=error")
 	}
 
 	clinic = input.toClinic(clinic.ID, clinic.UID, clinic.UserID, amount.StrToAmount(c.FormValue("price", "")))
@@ -121,10 +121,10 @@ func (s *service) HandleClinicsUpdate(c fiber.Ctx) error {
 
 	err = s.UpdateClinicByID(c.Context(), cu.ID, clinicID, clinic)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.respondWithRedirect(c, "/clinics?toast=Clinic does not exist&level=warning", fiber.StatusNotFound)
+		return s.respondWithRedirect(c, "/clinics?toast=Clinic does not exist&level=warning")
 	}
 	if err != nil {
-		return s.respondWithRedirect(c, "/clinics?toast=Failed to update clinic&level=error", fiber.StatusUnprocessableEntity)
+		return s.respondWithRedirect(c, "/clinics?toast=Failed to update clinic&level=error")
 	}
 
 	return s.respondWithClinicPage(c, clinic)
@@ -137,23 +137,23 @@ func (s *service) HandleClinicsDelete(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 	clinicID := strings.TrimSpace(c.Params("id", ""))
 	if clinicID == "" {
-		return s.respondWithRedirect(c, "/clinics?toast=Can't delete without an id&level=error", fiber.StatusBadRequest)
+		return s.respondWithRedirect(c, "/clinics?toast=Can't delete without an id&level=error")
 	}
 
 	_, err := s.TakeClinicByID(c.Context(), cu.ID, clinicID)
 	if errors.Is(err, ErrIDRequired) {
-		return s.respondWithRedirect(c, "/clinics?toast=Can't delete without an id&level=error", fiber.StatusBadRequest)
+		return s.respondWithRedirect(c, "/clinics?toast=Can't delete without an id&level=error")
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return fiber.ErrNotFound
 	}
 	if err != nil {
-		return s.respondWithRedirect(c, "/clinics?toast=Failed to load clinic&level=error", fiber.StatusInternalServerError)
+		return s.respondWithRedirect(c, "/clinics?toast=Failed to load clinic&level=error")
 	}
 
 	err = s.DeleteClinicByID(c.Context(), cu.ID, clinicID)
 	if err != nil {
-		return s.respondWithRedirect(c, "/clinics?toast=Failed to delete clinic&level=error", fiber.StatusUnprocessableEntity)
+		return s.respondWithRedirect(c, "/clinics?toast=Failed to delete clinic&level=error")
 	}
 
 	if s.NotHTMX(c) {
@@ -214,13 +214,13 @@ func (s *service) HandleMockManyClinics(c fiber.Ctx) error {
 	return c.SendString("Rowsaffected:" + strconv.Itoa(int(result.RowsAffected)))
 }
 
-func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string, htmxStatus int) error {
+func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string) error {
 	if s.NotHTMX(c) {
 		return s.Redirect(c, redirectPath)
 	}
 
 	c.Set("HX-Location", redirectPath)
-	return c.SendStatus(htmxStatus)
+	return c.SendStatus(fiber.StatusNoContent)
 }
 
 func (s *service) respondWithClinicPage(c fiber.Ctx, clinic models.Clinic) error {

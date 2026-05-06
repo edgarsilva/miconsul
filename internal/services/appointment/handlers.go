@@ -125,31 +125,31 @@ func (s *service) HandleStartPage(c fiber.Ctx) error {
 	appointmentID := c.Params("id", "")
 	if appointmentID == "" {
 		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 
 	appointment, err := s.TakeAppointmentByUID(c.Context(), cu.ID, appointmentID)
 	if errors.Is(err, ErrIDRequired) {
 		redirectPath := "/appointments?toast=Invalid appointment id&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) || appointment.ID == 0 {
 		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 	if err != nil {
 		redirectPath := "/appointments?toast=Failed to load appointment&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusInternalServerError)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 
 	patient, err := s.PatientForStartPage(c.Context(), cu.ID, appointment.PatientID)
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
 		redirectPath := "/appointments?toast=The appointment patient does not exist&level=warning"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 	if err != nil {
 		redirectPath := "/appointments?toast=Failed to load appointment patient&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusInternalServerError)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 
 	appointment.Patient = patient
@@ -174,14 +174,14 @@ func (s *service) HandleComplete(c fiber.Ctx) error {
 
 	if appointmentID == "" {
 		redirectPath := "/appointments?toast=Can't find that appointment&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 
 	input := appointmentCompleteInput{}
 	err := c.Bind().Body(&input)
 	if err != nil {
 		redirectPath := "/appointments/" + appointmentID + "?toast=Invalid appointment input&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 
 	appointment := appointmentCompleteUpdates{
@@ -195,14 +195,14 @@ func (s *service) HandleComplete(c fiber.Ctx) error {
 	err = s.CompleteAppointmentByID(c.Context(), cu.ID, appointmentID, appointment)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 	if err != nil {
 		redirectPath := "/appointments?toast=Failed to update appointment&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusUnprocessableEntity)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 
-	return s.respondWithRedirect(c, "/appointments", fiber.StatusOK)
+	return s.respondWithRedirect(c, "/appointments")
 }
 
 // HandleCreate inserts a new appointment record for the CurrentUser
@@ -224,7 +224,7 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 	err = c.Bind().Body(&input)
 	if err != nil {
 		redirectPath := "/appointments/new?toast=Invalid appointment input&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 
 	appointment := models.Appointment{
@@ -246,12 +246,12 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 	clinic, err := s.TakeClinicByUID(c.Context(), cu.ID, input.ClinicUID)
 	if err != nil {
 		redirectPath := "/appointments/new?toast=Invalid clinic selected&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusUnprocessableEntity)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 	patient, err := s.TakePatientByUID(c.Context(), cu.ID, input.PatientUID)
 	if err != nil {
 		redirectPath := "/appointments/new?toast=Invalid patient selected&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusUnprocessableEntity)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 	appointment.ClinicID = clinic.ID
 	appointment.PatientID = patient.ID
@@ -259,23 +259,23 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 	err = s.CreateAppointment(c.Context(), &appointment)
 	if err != nil {
 		redirectPath := "/appointments?toast=failed to create appointment&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusUnprocessableEntity)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 
 	appointment, err = s.TakeAppointmentByUID(c.Context(), cu.ID, appointment.UID)
 	if err != nil {
 		redirectPath := "/appointments?toast=Appointment created, but failed to load related records"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusOK)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 
 	err = s.DispatchBookedAlert(appointment)
 	if err != nil {
 		redirectPath := "/appointments?toast=Appointment created, but failed to queue alert"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusOK)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 
 	redirectPath := "/appointments?toast=New appointment created"
-	return s.respondWithRedirect(c, redirectPath, fiber.StatusOK)
+	return s.respondWithRedirect(c, redirectPath)
 }
 
 // HandleUpdate updates an appointment record for the current user.
@@ -296,11 +296,11 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	_, err := s.TakeAppointmentByUID(c.Context(), cu.ID, appointmentID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 	if err != nil {
 		redirectPath := "/appointments/" + appointmentID + "?toast=Failed to load appointment&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusUnprocessableEntity)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 
 	bookedAtStr := c.FormValue("bookedAt", "")
@@ -315,7 +315,7 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	err = c.Bind().Body(&input)
 	if err != nil {
 		redirectPath := "/appointments/" + appointmentID + "?toast=Invalid appointment input&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusBadRequest)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 
 	appointment := appointmentPatchUpdates{
@@ -334,12 +334,12 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	clinic, err := s.TakeClinicByUID(c.Context(), cu.ID, input.ClinicUID)
 	if err != nil {
 		redirectPath := "/appointments/" + appointmentID + "?toast=Invalid clinic selected&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusUnprocessableEntity)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 	patient, err := s.TakePatientByUID(c.Context(), cu.ID, input.PatientUID)
 	if err != nil {
 		redirectPath := "/appointments/" + appointmentID + "?toast=Invalid patient selected&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusUnprocessableEntity)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 	appointment.ClinicID = clinic.ID
 	appointment.PatientID = patient.ID
@@ -347,15 +347,15 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	err = s.UpdateAppointmentByID(c.Context(), cu.ID, appointmentID, appointment)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 
 	if err != nil {
 		redirectPath := "/appointments/" + appointmentID + "?toast=failed to update appointment&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusUnprocessableEntity)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 
-	return s.respondWithRedirect(c, "/appointments?toast=Appointment saved", fiber.StatusOK)
+	return s.respondWithRedirect(c, "/appointments?toast=Appointment saved")
 }
 
 // HandleCancel cancels an appointment
@@ -370,7 +370,7 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 
 	if appointmentID == "" {
 		redirectPath := "/appointments?toast=Can't find that appointment&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 
 	appointment := appointmentCancelUpdates{
@@ -380,14 +380,14 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 	err := s.CancelAppointmentByID(c.Context(), cu.ID, appointmentID, appointment)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusNotFound)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 	if err != nil {
 		redirectPath := "/appointments?toast=Failed to update appointment&level=error"
-		return s.respondWithRedirect(c, redirectPath, fiber.StatusUnprocessableEntity)
+		return s.respondWithRedirect(c, redirectPath)
 	}
 
-	return s.respondWithRedirect(c, "/appointments", fiber.StatusOK)
+	return s.respondWithRedirect(c, "/appointments")
 }
 
 // HandleDelete deletes an appointment record from the DB.
@@ -409,7 +409,7 @@ func (s *service) HandleDelete(c fiber.Ctx) error {
 		return s.Redirect(c, "/appointments?msg=failed to delete that appointment")
 	}
 
-	return s.respondWithRedirect(c, "/appointments", fiber.StatusOK)
+	return s.respondWithRedirect(c, "/appointments")
 }
 
 // HandlePatientConfirm lets a patient mark an appointment as confirmed
@@ -614,11 +614,11 @@ func (s *service) renderAppointmentNotFoundPage(c fiber.Ctx, toast, level string
 	return view.Render(c, view.AppointmentNotFoundPage(vc))
 }
 
-func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string, htmxStatus int) error {
+func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string) error {
 	if s.NotHTMX(c) {
 		return s.Redirect(c, redirectPath)
 	}
 
 	c.Set("HX-Location", redirectPath)
-	return c.SendStatus(htmxStatus)
+	return c.SendStatus(fiber.StatusNoContent)
 }

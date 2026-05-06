@@ -74,7 +74,7 @@ func TestRespondWithRedirect(t *testing.T) {
 	t.Run("non-htmx returns redirect", func(t *testing.T) {
 		app := fiber.New()
 		app.Get("/profile", func(c fiber.Ctx) error {
-			return svc.respondWithRedirect(c, "/profile?toast=ok", fiber.StatusBadRequest)
+			return svc.respondWithRedirect(c, "/profile?toast=ok")
 		})
 
 		req := httptest.NewRequest(http.MethodGet, "/profile", nil)
@@ -93,7 +93,7 @@ func TestRespondWithRedirect(t *testing.T) {
 	t.Run("htmx sets HX-Location and status", func(t *testing.T) {
 		app := fiber.New()
 		app.Get("/profile", func(c fiber.Ctx) error {
-			return svc.respondWithRedirect(c, "/profile?toast=ok", fiber.StatusBadRequest)
+			return svc.respondWithRedirect(c, "/profile?toast=ok")
 		})
 
 		req := httptest.NewRequest(http.MethodGet, "/profile", nil)
@@ -102,8 +102,8 @@ func TestRespondWithRedirect(t *testing.T) {
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
-		if resp.StatusCode != fiber.StatusBadRequest {
-			t.Fatalf("expected %d, got %d", fiber.StatusBadRequest, resp.StatusCode)
+		if resp.StatusCode != fiber.StatusNoContent {
+			t.Fatalf("expected %d, got %d", fiber.StatusNoContent, resp.StatusCode)
 		}
 		if got := resp.Header.Get("HX-Location"); got != "/profile?toast=ok" {
 			t.Fatalf("expected HX-Location header, got %q", got)

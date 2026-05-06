@@ -7,6 +7,7 @@
 - [ ] Uptime Kuma monitors + notifications + SLO-style alerts
 - [ ] Upload images to S3-compatible object storage (RustFS)
 - [ ] Move frontend + templ generated artifacts to image-build pipeline (keep runtime image slim)
+- [ ] Global search modal (Ctrl+K) for appointments, clinics, and patients
 
 - [ ] Production bootstrap + deploy guardrails
 

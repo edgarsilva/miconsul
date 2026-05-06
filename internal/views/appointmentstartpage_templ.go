@@ -97,7 +97,7 @@ func PatientCard(patient models.Patient, vc *Ctx) templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div><hgroup class=\"flex justify-between items-center pb-4 pl-4 sm:pl-0\" hx-boost=\"true\"><h1 class=\"font-bold text-2xl\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div><hgroup class=\"flex justify-between items-center pb-4 pl-4 sm:pl-0\" hx-boost:inherited=\"true\"><h1 class=\"font-bold text-2xl\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

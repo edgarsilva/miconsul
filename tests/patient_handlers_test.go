@@ -83,8 +83,8 @@ func TestPatientHandlers(t *testing.T) {
 			},
 		})
 
-		if resp.StatusCode != http.StatusNotFound {
-			t.Fatalf("expected 404 for unknown patient update, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for unknown patient update redirect, got %d", resp.StatusCode)
 		}
 		if got := resp.Header.Get("HX-Location"); got == "" {
 			t.Fatalf("expected HX-Location redirect for htmx patient not found")
@@ -105,8 +105,8 @@ func TestPatientHandlers(t *testing.T) {
 			},
 		})
 
-		if resp.StatusCode != http.StatusBadRequest {
-			t.Fatalf("expected 400 for malformed patient input, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for malformed patient input redirect, got %d", resp.StatusCode)
 		}
 	})
 
@@ -125,8 +125,8 @@ func TestPatientHandlers(t *testing.T) {
 			},
 		})
 
-		if resp.StatusCode != http.StatusUnprocessableEntity {
-			t.Fatalf("expected 422 for invalid patient boundaries, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for invalid patient boundaries redirect, got %d", resp.StatusCode)
 		}
 	})
 
@@ -145,8 +145,8 @@ func TestPatientHandlers(t *testing.T) {
 				"age":   {"40"},
 			},
 		})
-		if resp.StatusCode != http.StatusNotFound {
-			t.Fatalf("expected 404 for cross-user patient update, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for cross-user patient update redirect, got %d", resp.StatusCode)
 		}
 
 		resp, _ = h.doRequest(requestOptions{
@@ -155,8 +155,8 @@ func TestPatientHandlers(t *testing.T) {
 			authToken: token,
 			htmx:      true,
 		})
-		if resp.StatusCode != http.StatusNotFound {
-			t.Fatalf("expected 404 for cross-user patient delete, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for cross-user patient delete redirect, got %d", resp.StatusCode)
 		}
 
 		unchanged, err := gorm.G[models.Patient](h.db.GormDB()).Where("id = ?", ownerPatient.ID).Take(t.Context())

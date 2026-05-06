@@ -2,10 +2,22 @@
 
 ## Next Up
 
+- [feature/search] Global Ctrl+K search modal
+  - [ ] Add keyboard shortcut (`Ctrl+K`) to open a global search modal.
+  - [ ] Search across appointments, clinics, and patients from a single input.
+  - [ ] Support keyboard navigation + enter-to-open selected result.
+  - [ ] Keep existing index search endpoints; add a dedicated global search endpoint contract.
+  - [ ] Define result grouping and ranking order (appointments first vs mixed relevance).
+
 - [feature/appointments] Appointment index search follow-ups
   - [ ] Evaluate adding appointment text fields (`summary`, `notes`, `conclusions`) to search scope.
   - [ ] Add optional FTS/meilisearch path only if native query performance degrades.
   - [ ] Add production telemetry for search latency + result counts.
+
+- [feature/htmx4] Replace OOB price update with partials pattern
+  - [ ] Refactor appointment clinic-search response to use HTMX 4 partial swap flow instead of `hx-swap-oob`.
+  - [ ] Keep clinic list and price updates independent targets with explicit swap contracts.
+  - [ ] Add regression check for clinic search + price update on repeated searches and back navigation.
 
 - [external/runtime] Uptime Kuma monitor setup (environment ready)
   - Configure monitors in Kuma for `/livez`, `/readyz`, and optional `/startupz`.

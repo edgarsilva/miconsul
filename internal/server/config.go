@@ -23,7 +23,7 @@ const csp = "default-src 'self';base-uri 'self';font-src 'self' https: data:;" +
 	"frame-ancestors 'self';" +
 	"img-src 'self' data: *.dicebear.com *.pravatar.cc images.unsplash.com *.googleusercontent.com *.gravatar.com;" +
 	"object-src 'none';" +
-	"script-src 'self' 'unsafe-eval' unpkg.com *.jsdelivr.net;" +
+	"script-src 'self' 'unsafe-eval' unpkg.com *.jsdelivr.net static.cloudflareinsights.com;" +
 	"script-src-attr 'none';" +
 	"style-src 'self' https:;" +
 	"upgrade-insecure-requests"

@@ -7,7 +7,7 @@ templ CmpFooter(vc *Ctx) {
 			<p>Copyright © 2024 - All right reserved</p>
 		</aside>
 		<nav class="flex justify-center w-full md:w-auto md:ml-auto order-1 md:order-2">
-			<ul class="menu menu-horizontal" hx-boost="true">
+			<ul class="menu menu-horizontal" hx-boost:inherited="true">
 				<li><a href="/appointments" class="btn btn-ghost text-sm">{ vc.l("str.appointments") }</a></li>
 				<li><a href="/clinics" class="btn btn-ghost text-sm">{ vc.l("str.clinics") }</a></li>
 				<li><a href="/patients" class="btn btn-ghost text-sm">{ vc.l("str.patients") }</a></li>

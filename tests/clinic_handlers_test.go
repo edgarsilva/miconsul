@@ -126,8 +126,8 @@ func TestClinicHandlers(t *testing.T) {
 			},
 		})
 
-		if resp.StatusCode != http.StatusUnprocessableEntity {
-			t.Fatalf("expected 422 for invalid clinic boundaries, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for invalid clinic boundaries redirect, got %d", resp.StatusCode)
 		}
 	})
 

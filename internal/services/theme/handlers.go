@@ -1,8 +1,9 @@
 package theme
 
 import (
-	view "miconsul/internal/views"
 	"time"
+
+	view "miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -10,9 +11,9 @@ import (
 // HandleToggleTheme toggles and renders the active UI theme button.
 // POST: /theme/toggle
 func (s *service) HandleToggleTheme(c fiber.Ctx) error {
-	theme := c.FormValue("theme", "")
-	if theme != "dark" {
-		theme = "light"
+	theme := "light"
+	if c.FormValue("theme", "") != "" {
+		theme = "dark"
 	}
 
 	c.Cookie(s.NewCookie("theme", theme, 24*7*time.Hour))

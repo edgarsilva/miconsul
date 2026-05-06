@@ -28,8 +28,8 @@ func TestAppointmentHandlers(t *testing.T) {
 			},
 		})
 
-		if resp.StatusCode != http.StatusNotFound {
-			t.Fatalf("expected 404 for unknown appointment update, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for unknown appointment update redirect, got %d", resp.StatusCode)
 		}
 		if got := resp.Header.Get("HX-Location"); got == "" {
 			t.Fatalf("expected HX-Location redirect for htmx not found response")
@@ -72,8 +72,8 @@ func TestAppointmentHandlers(t *testing.T) {
 			},
 		})
 
-		if resp.StatusCode != http.StatusBadRequest {
-			t.Fatalf("expected 400 for malformed appointment input, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for malformed appointment input redirect, got %d", resp.StatusCode)
 		}
 	})
 
@@ -90,8 +90,8 @@ func TestAppointmentHandlers(t *testing.T) {
 			},
 		})
 
-		if resp.StatusCode != http.StatusUnprocessableEntity {
-			t.Fatalf("expected 422 for invalid appointment create payload, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for invalid appointment create redirect, got %d", resp.StatusCode)
 		}
 	})
 
@@ -106,8 +106,8 @@ func TestAppointmentHandlers(t *testing.T) {
 			authToken: token,
 			htmx:      true,
 		})
-		if resp.StatusCode != http.StatusOK {
-			t.Fatalf("expected 200 for appointment cancel, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for appointment cancel redirect, got %d", resp.StatusCode)
 		}
 
 		updated, err := gorm.G[models.Appointment](h.db.GormDB()).Where("id = ?", appt.ID).Take(t.Context())
@@ -139,8 +139,8 @@ func TestAppointmentHandlers(t *testing.T) {
 				"notes":        {"No complications"},
 			},
 		})
-		if resp.StatusCode != http.StatusOK {
-			t.Fatalf("expected 200 for appointment complete, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for appointment complete redirect, got %d", resp.StatusCode)
 		}
 
 		updated, err := gorm.G[models.Appointment](h.db.GormDB()).Where("id = ?", appt.ID).Take(t.Context())
@@ -163,8 +163,8 @@ func TestAppointmentHandlers(t *testing.T) {
 			htmx:      true,
 		})
 
-		if resp.StatusCode != http.StatusNotFound {
-			t.Fatalf("expected 404 for unknown appointment cancel, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for unknown appointment cancel redirect, got %d", resp.StatusCode)
 		}
 		if got := resp.Header.Get("HX-Location"); got == "" {
 			t.Fatalf("expected HX-Location redirect for htmx cancel not found response")
@@ -182,8 +182,8 @@ func TestAppointmentHandlers(t *testing.T) {
 			},
 		})
 
-		if resp.StatusCode != http.StatusNotFound {
-			t.Fatalf("expected 404 for unknown appointment complete, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for unknown appointment complete redirect, got %d", resp.StatusCode)
 		}
 		if got := resp.Header.Get("HX-Location"); got == "" {
 			t.Fatalf("expected HX-Location redirect for htmx complete not found response")
@@ -221,8 +221,8 @@ func TestAppointmentHandlers(t *testing.T) {
 				"bookedAt":  {time.Now().Add(3 * time.Hour).Format("2006-01-02T15:04")},
 			},
 		})
-		if resp.StatusCode != http.StatusNotFound {
-			t.Fatalf("expected 404 for cross-user appointment update, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for cross-user appointment update redirect, got %d", resp.StatusCode)
 		}
 
 		resp, _ = h.doRequest(requestOptions{

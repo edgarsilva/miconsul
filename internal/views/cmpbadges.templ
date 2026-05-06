@@ -25,7 +25,7 @@ templ CmpBadgeStatus(status models.AppointmentStatus, vc *Ctx) {
 				{ l(vc.Locale, "str.canceled") }
 			</div>
 		default:
-			<div class="badge badge-ghost ring-1 ring-base-content/15">
+			<div class="badge badge-neutral">
 				{ l(vc.Locale, "str.pending") }
 			</div>
 	}
