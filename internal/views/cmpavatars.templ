@@ -1,8 +1,6 @@
 package views
 
-import (
-	"strings"
-)
+import "strings"
 
 type Avatarable interface {
 	AvatarPic() string
@@ -17,7 +15,7 @@ templ CmpAvatar(avatar Avatarable, classname ...string) {
 			</div>
 		</div>
 	} else {
-		<div class="avatar placeholder">
+		<div class="avatar avatar-placeholder">
 			<div class="bg-neutral text-neutral-content rounded-full w-12">
 				<span class="text-xl">{ avatar.Initials() }</span>
 			</div>
