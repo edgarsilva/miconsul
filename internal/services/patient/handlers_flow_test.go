@@ -91,8 +91,8 @@ func TestPatientHandlersFlows(t *testing.T) {
 	req4.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req4.Header.Set("HX-Request", "true")
 	resp4, err := app.Test(req4)
-	if err != nil || resp4.StatusCode != fiber.StatusOK {
-		t.Fatalf("update patient expected 200 for htmx, got status=%d err=%v", resp4.StatusCode, err)
+	if err != nil || resp4.StatusCode != fiber.StatusNoContent {
+		t.Fatalf("update patient expected 204 for htmx, got status=%d err=%v", resp4.StatusCode, err)
 	}
 
 	req5 := httptest.NewRequest(http.MethodPost, "/patients/"+seed.UID+"/removepic", nil)

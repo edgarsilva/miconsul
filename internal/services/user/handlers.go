@@ -73,6 +73,15 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 	}
 
 	userUpds := input.toUserProfileUpdates()
+	path, picErr := SaveProfilePicToDisk(c, cu, s.Env.AssetsDir)
+	if picErr != nil {
+		if !errors.Is(picErr, ErrProfilePicNotProvided) {
+			return s.respondWithRedirect(c, "/profile?toast=Failed to upload profile picture&level=error")
+		}
+	} else {
+		userUpds.ProfilePic = path
+	}
+
 	updatedUser, err := s.UpdateUserProfileByUID(c.Context(), cu.UID, userUpds)
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.respondWithRedirect(c, "/profile?toast=User does not exist&level=warning")
