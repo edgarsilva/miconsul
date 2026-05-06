@@ -157,7 +157,7 @@ templ UserProfile(c *Ctx, user models.User) {
 									<figure class="flex flex-col gap-1 items-center" id="avatar_pic">
 										@CmpAvatar(user)
 										<a
-										if c.CurrentUser.Role == models.UserRoleAdmin {
+										if c.CurrentUser.Role == models.UserRoleAdmin && user.UID != c.CurrentUser.UID {
 											href={ templ.URL("/admin/users/" + user.UID + "/removepic") }
 											hx-patch={ "/admin/users/" + user.UID + "/removepic" }
 										} else {

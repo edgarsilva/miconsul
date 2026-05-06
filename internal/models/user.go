@@ -1,9 +1,10 @@
 package models
 
 import (
-	"miconsul/internal/lib/xid"
 	"strings"
 	"time"
+
+	"miconsul/internal/lib/xid"
 
 	"gorm.io/gorm"
 )
@@ -18,7 +19,7 @@ const (
 	UserRoleTest  UserRole = "test"
 )
 
-// --model:User
+// User represents a DB users row in the application.
 type User struct {
 	ConfirmEmailExpiresAt time.Time
 	ResetTokenExpiresAt   time.Time

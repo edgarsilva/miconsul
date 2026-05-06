@@ -42,8 +42,8 @@ func TestUserHandlerBranches(t *testing.T) {
 	if err != nil || resp2.StatusCode != fiber.StatusNoContent {
 		t.Fatalf("profile invalid body expected 204 for htmx redirect, got status=%d err=%v", resp2.StatusCode, err)
 	}
-	if got := resp2.Header.Get("HX-Location"); got == "" {
-		t.Fatalf("expected HX-Location header for htmx profile error")
+	if got := resp2.Header.Get("HX-Redirect"); got == "" {
+		t.Fatalf("expected HX-Redirect header for htmx profile error")
 	}
 
 	resp3, err := app.Test(httptest.NewRequest(http.MethodGet, "/api/users", nil))

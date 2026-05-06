@@ -553,7 +553,7 @@ func UserProfile(c *Ctx, user models.User) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				if c.CurrentUser.Role == models.UserRoleAdmin {
+				if c.CurrentUser.Role == models.UserRoleAdmin && user.UID != c.CurrentUser.UID {
 					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, " href=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err

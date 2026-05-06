@@ -1,11 +1,13 @@
+// Package user provides handlers and services for managing users.
 package user
 
 import (
 	"errors"
-	"miconsul/internal/models"
-	view "miconsul/internal/views"
 	"strconv"
 	"strings"
+
+	"miconsul/internal/models"
+	view "miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"
 	"gorm.io/gorm"
@@ -34,7 +36,7 @@ func (s *service) HandleEditPage(c fiber.Ctx) error {
 	if userID == "" {
 		return s.Redirect(c, "/")
 	}
-	user, err := s.TakeUserByID(c.Context(), userID)
+	user, err := s.TakeUserByUID(c.Context(), userID)
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.Redirect(c, "/admin/users?toast=User does not exist&level=warning")
 	}
@@ -50,9 +52,13 @@ func (s *service) HandleEditPage(c fiber.Ctx) error {
 // GET: /profile
 func (s *service) HandleProfilePage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
+	user, err := s.TakeUserByUID(c.Context(), cu.UID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return s.Redirect(c, "/profile?toast=User does not exist&level=warning")
+	}
 
 	vc, _ := view.NewCtx(c)
-	return view.Render(c, view.UserEditPage(vc, cu))
+	return view.Render(c, view.UserEditPage(vc, user))
 }
 
 // HandleUpdateProfile updates the current user's profile data.
@@ -88,7 +94,7 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 func (s *service) HandleRemoveProfilePic(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
-	updatedUser, err := s.UpdateUserProfileByUID(c.Context(), cu.UID, models.User{ProfilePic: ""})
+	_, err := gorm.G[models.User](s.GormDB()).Where("uid = ?", cu.UID).Update(c.Context(), "profile_pic", "")
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.respondWithRedirect(c, "/profile?toast=User does not exist&level=warning")
 	}
@@ -100,8 +106,7 @@ func (s *service) HandleRemoveProfilePic(c fiber.Ctx) error {
 		return s.Redirect(c, "/profile?toast=Profile picture removed&level=success")
 	}
 
-	vc, _ := view.NewCtx(c)
-	return view.Render(c, view.UserEditPage(vc, updatedUser))
+	return s.respondWithRedirect(c, "/profile?toast=Profile picture removed&level=success")
 }
 
 // HandleAdminRemoveProfilePic removes a user's profile picture as admin.
@@ -179,6 +184,6 @@ func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string) error {
 		return s.Redirect(c, redirectPath)
 	}
 
-	c.Set("HX-Location", redirectPath)
+	c.Set("HX-Redirect", redirectPath)
 	return c.SendStatus(fiber.StatusNoContent)
 }

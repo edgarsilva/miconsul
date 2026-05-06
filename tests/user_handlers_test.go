@@ -40,6 +40,34 @@ func TestUserHandlers(t *testing.T) {
 		}
 	})
 
+	t.Run("profile removepic htmx redirects back to profile", func(t *testing.T) {
+		if _, err := gorm.G[models.User](h.db.GormDB()).Where("id = ?", regular.ID).Updates(t.Context(), models.User{ProfilePic: "/public/images/profile.png"}); err != nil {
+			t.Fatalf("seed profile pic: %v", err)
+		}
+
+		resp, _ := h.doRequest(requestOptions{
+			method:    http.MethodPatch,
+			path:      "/profile/removepic",
+			authToken: h.authToken(regular),
+			htmx:      true,
+		})
+
+		if resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for htmx removepic, got %d", resp.StatusCode)
+		}
+		if got := resp.Header.Get("HX-Redirect"); got != "/profile?toast=Profile picture removed&level=success" {
+			t.Fatalf("expected HX-Redirect profile redirect, got %q", got)
+		}
+
+		updated, err := gorm.G[models.User](h.db.GormDB()).Where("id = ?", regular.ID).Take(t.Context())
+		if err != nil {
+			t.Fatalf("load updated user: %v", err)
+		}
+		if updated.ProfilePic != "" {
+			t.Fatalf("expected profile pic removed, got %q", updated.ProfilePic)
+		}
+	})
+
 	t.Run("api users auth gating", func(t *testing.T) {
 		resp, _ := h.doRequest(requestOptions{method: http.MethodGet, path: "/api/users", accept: "application/json"})
 		if resp.StatusCode != http.StatusUnauthorized {
