@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -69,7 +70,7 @@ func (u User) Initials() string {
 }
 
 func (u User) ProfilePicPath() string {
-	return u.ProfilePic
+	return fmt.Sprintf("%s?v=%d", u.ProfilePic, time.Now().UnixNano())
 }
 
 func (u User) AvatarPic() string {

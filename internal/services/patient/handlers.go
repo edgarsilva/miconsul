@@ -2,13 +2,14 @@ package patient
 
 import (
 	"errors"
+	"os"
+	"strconv"
+	"strings"
+
 	"miconsul/internal/lib/avatar"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/models"
 	view "miconsul/internal/views"
-	"os"
-	"strconv"
-	"strings"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
