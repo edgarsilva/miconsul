@@ -147,47 +147,10 @@ templ UserProfile(c *Ctx, user models.User) {
 				<p class="mt-1 text-sm leading-6 text-base-content/60">{ c.l("str.personal_info_desc") }</p>
 			</div>
 			@UserForm(c, user) {
-				<input type="hidden" name="id" value={ user.UID } id="pi_user_id"/>
+				<input type="hidden" name="id" value={ user.UID } id="user_id"/>
 				<div class="px-4 py-6 sm:p-8">
 					<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-						<div class="col-span-full">
-							<label for="profile_pic" class="block text-sm font-medium leading-6">{ c.l("str.profile_pic") }</label>
-							<div class="mt-2 flex items-center gap-x-3">
-								if user.ProfilePic != "" {
-									<figure class="flex flex-col gap-1 items-center" id="avatar_pic">
-										@CmpAvatar(user)
-										<a
-										if c.CurrentUser.Role == models.UserRoleAdmin && user.UID != c.CurrentUser.UID {
-											href={ templ.URL("/admin/users/" + user.UID + "/removepic") }
-											hx-patch={ "/admin/users/" + user.UID + "/removepic" }
-										} else {
-											href={ templ.URL("/profile/removepic") }
-											hx-patch="/profile/removepic"
-										}
-											hx-select="#avatar_pic"
-											hx-swap="outerHTML"
-											hx-target="closest figure"
-											class="link text-xs link-secondary"
-										>{ c.l("btn.remove") }</a>
-									</figure>
-								} else {
-									<figure class="flex flex-col gap-2" id="avatar_pic">
-										<div class="avatar placeholder">
-											<div class="bg-neutral text-neutral-content rounded-full w-12">
-												<span class="text-xl">{ user.Initials() }</span>
-											</div>
-										</div>
-									</figure>
-								}
-								<input
-									id="profile_pic"
-									name="profilePic"
-									type="file"
-									class="file-input file-input-bordered w-full file-input-primary"
-									accept="image/*"
-								/>
-							</div>
-						</div>
+						@ProfilePic(c, user)
 						<div class="sm:col-span-3">
 							<label for="name" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.name") }</label>
 							<div class="mt-2">
@@ -249,24 +212,64 @@ templ UserProfile(c *Ctx, user models.User) {
 	</div>
 }
 
+templ ProfilePic(c *Ctx, user models.User) {
+	<div id="profile_pic" class="col-span-full">
+		<label for="profile_pic_input" class="block text-sm font-medium leading-6">{ c.l("str.profile_pic") }</label>
+		<div class="mt-2 flex items-center gap-x-3">
+			@ProfileAvatarPic(c, user)
+			<input
+				id="profile_pic_input"
+				name="profilePic"
+				type="file"
+				class="file-input file-input-bordered w-full file-input-primary"
+				accept="image/*"
+				hx-post="/profile/avatar/preview"
+				hx-encoding="multipart/form-data"
+				hx-trigger="input changed delay:350ms"
+				hx-target="#avatar_pic"
+				hx-swap="outerHTML"
+				hx-preserve
+			/>
+		</div>
+	</div>
+}
+
+templ ProfileAvatarPic(c *Ctx, user models.User) {
+	<figure id="avatar_pic" class="flex flex-col gap-2 items-center">
+		if user.ProfilePic != "" {
+			@CmpAvatar(user)
+			<a
+				if c.CurrentUser.Role == models.UserRoleAdmin && user.UID != c.CurrentUser.UID {
+					href={ templ.URL("/admin/users/" + user.UID + "/removepic") }
+					hx-patch={ "/admin/users/" + user.UID + "/removepic" }
+				} else {
+					href={ templ.URL("/profile/avatar/remove") }
+					hx-delete="/profile/avatar"
+				}
+				hx-select="#avatar_pic"
+				hx-swap="outerHTML"
+				hx-target="closest figure"
+				class="link text-xs link-secondary"
+			>{ c.l("btn.remove") }</a>
+		} else {
+			<div class="avatar avatar-placeholder">
+				<div class="bg-neutral text-neutral-content w-12 rounded-full">
+					<span class="text-xl">{ user.Initials() }</span>
+				</div>
+			</div>
+		}
+	</figure>
+}
+
 templ UserForm(c *Ctx, user models.User) {
 	<form
 		class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2"
 		method="POST"
 		enctype="multipart/form-data"
-		if user.UID != "new" {
-			hx-post="/profile"
-			action="/profile"
-		}
-		else
-		if c.CurrentUser.Role == models.UserRoleAdmin {
-			hx-patch={ "/users/" + user.UID }
-			action={ templ.URL("/users/" + user.UID + "/patch") }
-		} else {
-			hx-patch={ "/profile" }
-			action={ templ.URL("/profile") }
-		}
+		action={ templ.URL("/profile") }
+		hx-patch={ "/profile" }
 		hx-target="closest #user_profile_cont"
+		hx-encoding="multipart/form-data"
 		hx-select="#user_profile_cont"
 		hx-swap="outerHTML"
 	>

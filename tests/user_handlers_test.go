@@ -53,8 +53,8 @@ func TestUserHandlers(t *testing.T) {
 		}
 
 		resp, _ := h.doRequest(requestOptions{
-			method:    http.MethodPatch,
-			path:      "/profile/removepic",
+			method:    http.MethodDelete,
+			path:      "/profile/avatar",
 			authToken: h.authToken(regular),
 			htmx:      true,
 		})
@@ -112,7 +112,7 @@ func TestUserHandlers(t *testing.T) {
 			t.Fatalf("close writer: %v", err)
 		}
 
-		req := httptest.NewRequest(http.MethodPost, "/profile/pic/preview", &body)
+		req := httptest.NewRequest(http.MethodPost, "/profile/avatar/preview", &body)
 		req.Header.Set("Content-Type", writer.FormDataContentType())
 		req.Header.Set("Accept", "text/html")
 		req.Header.Set("HX-Request", "true")
@@ -132,12 +132,12 @@ func TestUserHandlers(t *testing.T) {
 		if err != nil {
 			t.Fatalf("read preview body: %v", err)
 		}
-		expectedPath := "/users/" + regular.UID + "/profilepic/" + regular.UID + "_profile_pic_preview.jpg"
+		expectedPath := "/profile/avatar/preview"
 		if !strings.Contains(string(respBody), expectedPath) {
 			t.Fatalf("expected preview img src in response body, got %q", string(respBody))
 		}
 
-		previewFilePath, err := usersvc.ProfilePicPath(regular.UID+"_profile_pic_preview.jpg", h.env.AssetsDir)
+		previewFilePath, err := usersvc.ProfilePicPath(regular.UID+"_preview", h.env.AssetsDir)
 		if err != nil {
 			t.Fatalf("resolve preview file path: %v", err)
 		}

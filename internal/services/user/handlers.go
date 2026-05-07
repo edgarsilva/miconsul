@@ -3,6 +3,7 @@ package user
 
 import (
 	"errors"
+	"os"
 	"strconv"
 	"strings"
 
@@ -96,6 +97,56 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 
 	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.UserEditPage(vc, updatedUser))
+}
+
+// HandleProfilePicPreview stores and renders a temporary profile picture preview.
+// POST: /profile/avatar/preview
+func (s *service) HandleProfilePicPreview(c fiber.Ctx) error {
+	cu := s.CurrentUser(c)
+
+	user, err := s.TakeUserByUID(c.Context(), cu.UID)
+	if err != nil {
+		return s.respondWithRedirect(c, "/profile?toast=User does not exist&level=error")
+	}
+
+	previewPath, err := SaveProfilePicPreviewToTmp(c, user, s.Env.AssetsDir)
+	if err != nil {
+		return s.respondWithRedirect(c, "/profile?toast=Failed to display profile picture&level=error")
+	}
+
+	user.ProfilePic = previewPath
+	vc, _ := view.NewCtx(c)
+	return view.Render(c, view.ProfileAvatarPic(vc, user))
+}
+
+// HandleUserProfilePicImgSrc serves a user's profile picture file.
+// GET: /users/:id/profilepic/:filename
+func (s *service) HandleUserProfilePicImgSrc(c fiber.Ctx) error {
+	cu := s.CurrentUser(c)
+	isPreview := strings.HasSuffix(c.Path(), "preview")
+	sufix := "avatar"
+	if isPreview {
+		sufix = "preview"
+	}
+
+	filename := cu.UID + "_" + sufix
+	picPath, err := ProfilePicPath(filename, s.Env.AssetsDir)
+	if err != nil {
+		return c.SendStatus(fiber.StatusNotFound)
+	}
+
+	fileInfo, err := os.Stat(picPath)
+	if errors.Is(err, os.ErrNotExist) {
+		return c.SendStatus(fiber.StatusNotFound)
+	}
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+	if fileInfo.IsDir() {
+		return c.SendStatus(fiber.StatusNotFound)
+	}
+
+	return s.SendFile(c, picPath)
 }
 
 // HandleRemoveProfilePic removes the current user's profile picture.

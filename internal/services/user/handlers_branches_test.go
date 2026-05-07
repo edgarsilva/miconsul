@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -77,5 +78,34 @@ func TestHandleEditPageSuccess(t *testing.T) {
 	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/admin/users/"+currentUser.UID, nil))
 	if err != nil || resp.StatusCode != fiber.StatusOK {
 		t.Fatalf("edit page existing user expected 200, got status=%d err=%v", resp.StatusCode, err)
+	}
+}
+
+func TestHandleUserProfilePicImgSrc(t *testing.T) {
+	svc, currentUser := newUserServiceForTests(t)
+
+	filename := currentUser.UID + "_preview"
+	picPath, err := ProfilePicPath(filename, svc.Env.AssetsDir)
+	if err != nil {
+		t.Fatalf("profile pic path: %v", err)
+	}
+	if err := os.WriteFile(picPath, []byte("img-bytes"), 0o644); err != nil {
+		t.Fatalf("write preview file: %v", err)
+	}
+
+	app := fiber.New()
+	app.Get("/profile/avatar/preview", func(c fiber.Ctx) error {
+		c.Locals("current_user", currentUser)
+		return svc.HandleUserProfilePicImgSrc(c)
+	})
+
+	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/profile/avatar/preview", nil))
+	if err != nil || resp.StatusCode != fiber.StatusOK {
+		t.Fatalf("self preview pic expected 200, got status=%d err=%v", resp.StatusCode, err)
+	}
+
+	resp2, err := app.Test(httptest.NewRequest(http.MethodGet, "/profile/avatar", nil))
+	if err != nil || resp2.StatusCode != fiber.StatusNotFound {
+		t.Fatalf("missing avatar pic expected 404, got status=%d err=%v", resp2.StatusCode, err)
 	}
 }

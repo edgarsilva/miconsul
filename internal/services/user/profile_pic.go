@@ -3,12 +3,12 @@ package user
 import (
 	"errors"
 	"fmt"
-	"miconsul/internal/models"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
+
+	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -27,15 +27,8 @@ func SaveProfilePicToDisk(c fiber.Ctx, user models.User, assetsDir string) (stri
 		return "", errors.New("failed to save profile pic without user.UID")
 	}
 
-	originalFilename := strings.TrimSpace(profilePic.Filename)
-	originalFilename = strings.ReplaceAll(originalFilename, "\\", "/")
-	originalFilename = path.Base(originalFilename)
-	safeFilename := cleanFilenameSegment(originalFilename)
-	if safeFilename == "" || safeFilename == "." || safeFilename == ".." {
-		return "", ErrInvalidFilename
-	}
+	filename := user.UID + "_avatar"
 
-	filename := user.UID + "_ppic_" + safeFilename
 	filePath, err := ProfilePicPath(filename, assetsDir)
 	if err != nil {
 		return "", fmt.Errorf("failed to save profile pic without an ASSETS_DIR: %w", err)
@@ -46,8 +39,33 @@ func SaveProfilePicToDisk(c fiber.Ctx, user models.User, assetsDir string) (stri
 		return "", fmt.Errorf("failed to save profilePic to disk: %w", err)
 	}
 
-	imgsrc := "/users/" + user.UID + "/profilepic/" + filename
-	return imgsrc, nil
+	return "/profile/avatar", nil
+}
+
+func SaveProfilePicPreviewToTmp(c fiber.Ctx, user models.User, assetsDir string) (string, error) {
+	profilePic, err := c.FormFile("profilePic")
+	if err != nil {
+		return "", profilePicFormFileErr(err)
+	}
+
+	if user.UID == "" {
+		return "", errors.New("failed to save profile pic preview without user.UID")
+	}
+
+	filename := user.UID + "_preview"
+
+	// Save tmp preview pic to /tmp directory
+	filePath, err := ProfilePicPath(filename, assetsDir)
+	if err != nil {
+		return "", fmt.Errorf("failed to save profile pic without an ASSETS_DIR: %w", err)
+	}
+
+	err = c.SaveFile(profilePic, filePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to save profile pic preview to tmp: %w", err)
+	}
+
+	return "/profile/avatar/preview", nil
 }
 
 func ProfilePicPath(filename, assetsDir string) (string, error) {
@@ -60,7 +78,12 @@ func ProfilePicPath(filename, assetsDir string) (string, error) {
 		return "", errors.New("failed to find assets directory")
 	}
 
-	dirPath := filepath.Join(assetsDir, usersDir)
+	absAssetsDir, err := filepath.Abs(assetsDir)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve assets directory: %w", err)
+	}
+
+	dirPath := filepath.Join(absAssetsDir, usersDir)
 	if err := os.MkdirAll(dirPath, 0o755); err != nil {
 		return "", errors.New("failed to create assets/users dir")
 	}
@@ -77,6 +100,20 @@ func IsSafeProfilePicFilenameForUser(userID, filename string) bool {
 	}
 
 	return strings.HasPrefix(filename, userID+"_ppic_")
+}
+
+func IsProfilePicPreviewFilenameForUser(userID, filename string) bool {
+	userID = strings.TrimSpace(userID)
+	if userID == "" || !isSafeFilename(filename) {
+		return false
+	}
+
+	prefix := userID + "_profile_pic_preview"
+	if filename == prefix {
+		return true
+	}
+
+	return strings.HasPrefix(filename, prefix+".")
 }
 
 func profilePicFormFileErr(err error) error {
@@ -104,6 +141,12 @@ func isMissingProfilePicErr(err error) bool {
 func isSafeFilename(filename string) bool {
 	filename = strings.TrimSpace(filename)
 	if filename == "" || filename == "." || filename == ".." {
+		return false
+	}
+	if strings.Contains(filename, "..") {
+		return false
+	}
+	if strings.Contains(filename, "../") {
 		return false
 	}
 	if strings.ContainsAny(filename, "/\\") {

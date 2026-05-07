@@ -85,7 +85,7 @@ func newUserServiceForTests(t *testing.T) (service, models.User) {
 	}
 
 	srv := &server.Server{
-		Env: &appenv.Env{AppName: "miconsul", JWTSecret: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"},
+		Env: &appenv.Env{AppName: "miconsul", JWTSecret: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", AssetsDir: t.TempDir()},
 		DB:  &database.Database{DB: gdb},
 	}
 	svc, err := NewService(srv)
