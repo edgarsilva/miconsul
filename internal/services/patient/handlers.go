@@ -2,13 +2,14 @@ package patient
 
 import (
 	"errors"
+	"os"
+	"strconv"
+	"strings"
+
 	"miconsul/internal/lib/avatar"
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/models"
 	view "miconsul/internal/views"
-	"os"
-	"strconv"
-	"strings"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
@@ -196,8 +197,7 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 		return s.Redirect(c, "/patients/"+patientID)
 	}
 
-	c.Set("HX-Location", "/patients/"+patientID+"?toast=Patient changes saved&level=success")
-	return c.SendStatus(fiber.StatusOK)
+	return s.respondWithRedirect(c, "/patients/"+patientID+"?toast=Patient changes saved&level=success")
 }
 
 // HandleRemovePic removes the ProfilePic from the patient
@@ -407,6 +407,6 @@ func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string) error {
 		return s.Redirect(c, redirectPath)
 	}
 
-	c.Set("HX-Location", redirectPath)
+	c.Set("HX-Redirect", redirectPath)
 	return c.SendStatus(fiber.StatusNoContent)
 }

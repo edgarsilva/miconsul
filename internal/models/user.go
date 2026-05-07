@@ -1,9 +1,11 @@
 package models
 
 import (
-	"miconsul/internal/lib/xid"
+	"fmt"
 	"strings"
 	"time"
+
+	"miconsul/internal/lib/xid"
 
 	"gorm.io/gorm"
 )
@@ -18,7 +20,7 @@ const (
 	UserRoleTest  UserRole = "test"
 )
 
-// --model:User
+// User represents a DB users row in the application.
 type User struct {
 	ConfirmEmailExpiresAt time.Time
 	ResetTokenExpiresAt   time.Time
@@ -68,7 +70,7 @@ func (u User) Initials() string {
 }
 
 func (u User) ProfilePicPath() string {
-	return u.ProfilePic
+	return fmt.Sprintf("%s?v=%d", u.ProfilePic, time.Now().UnixNano())
 }
 
 func (u User) AvatarPic() string {

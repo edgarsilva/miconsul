@@ -90,7 +90,7 @@ func TestRespondWithRedirect(t *testing.T) {
 		}
 	})
 
-	t.Run("htmx sets HX-Location and status", func(t *testing.T) {
+	t.Run("htmx sets HX-Redirect and status", func(t *testing.T) {
 		app := fiber.New()
 		app.Get("/profile", func(c fiber.Ctx) error {
 			return svc.respondWithRedirect(c, "/profile?toast=ok")
@@ -105,8 +105,8 @@ func TestRespondWithRedirect(t *testing.T) {
 		if resp.StatusCode != fiber.StatusNoContent {
 			t.Fatalf("expected %d, got %d", fiber.StatusNoContent, resp.StatusCode)
 		}
-		if got := resp.Header.Get("HX-Location"); got != "/profile?toast=ok" {
-			t.Fatalf("expected HX-Location header, got %q", got)
+		if got := resp.Header.Get("HX-Redirect"); got != "/profile?toast=ok" {
+			t.Fatalf("expected HX-Redirect header, got %q", got)
 		}
 	})
 }

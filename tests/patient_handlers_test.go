@@ -31,11 +31,11 @@ func TestPatientHandlers(t *testing.T) {
 			},
 		})
 
-		if resp.StatusCode != http.StatusOK {
-			t.Fatalf("expected 200 for patient update, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for patient update, got %d", resp.StatusCode)
 		}
-		if got := resp.Header.Get("HX-Location"); got == "" {
-			t.Fatalf("expected HX-Location to be set for htmx patient update")
+		if got := resp.Header.Get("HX-Redirect"); got == "" {
+			t.Fatalf("expected HX-Redirect to be set for htmx patient update")
 		}
 
 		updated, err := gorm.G[models.Patient](h.db.GormDB()).Where("id = ?", patient.ID).Take(t.Context())
@@ -62,11 +62,11 @@ func TestPatientHandlers(t *testing.T) {
 			},
 		})
 
-		if resp.StatusCode != http.StatusOK {
-			t.Fatalf("expected 200 for unchanged patient update, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for unchanged patient update, got %d", resp.StatusCode)
 		}
-		if got := resp.Header.Get("HX-Location"); got == "" {
-			t.Fatalf("expected HX-Location for unchanged patient update")
+		if got := resp.Header.Get("HX-Redirect"); got == "" {
+			t.Fatalf("expected HX-Redirect for unchanged patient update")
 		}
 	})
 
@@ -86,8 +86,8 @@ func TestPatientHandlers(t *testing.T) {
 		if resp.StatusCode != http.StatusNoContent {
 			t.Fatalf("expected 204 for unknown patient update redirect, got %d", resp.StatusCode)
 		}
-		if got := resp.Header.Get("HX-Location"); got == "" {
-			t.Fatalf("expected HX-Location redirect for htmx patient not found")
+		if got := resp.Header.Get("HX-Redirect"); got == "" {
+			t.Fatalf("expected HX-Redirect redirect for htmx patient not found")
 		}
 	})
 

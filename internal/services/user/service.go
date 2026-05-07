@@ -3,9 +3,10 @@ package user
 import (
 	"context"
 	"errors"
+	"strings"
+
 	"miconsul/internal/models"
 	"miconsul/internal/server"
-	"strings"
 
 	"gorm.io/gorm"
 )
@@ -35,18 +36,22 @@ func (s service) FindRecentUsers(ctx context.Context, limit int) ([]models.User,
 	return users, nil
 }
 
-func (s service) TakeUserByID(ctx context.Context, userID string) (models.User, error) {
-	userID = strings.TrimSpace(userID)
-	if userID == "" {
+func (s service) TakeUserByUID(ctx context.Context, UID string) (models.User, error) {
+	UID = strings.TrimSpace(UID)
+	if UID == "" {
 		return models.User{}, ErrIDRequired
 	}
 
-	user, err := gorm.G[models.User](s.DB.GormDB()).Where("uid = ?", userID).Take(ctx)
+	user, err := gorm.G[models.User](s.DB.GormDB()).Where("uid = ?", UID).Take(ctx)
 	if err != nil {
 		return models.User{}, err
 	}
 
 	return user, nil
+}
+
+func (s service) TakeUserByID(ctx context.Context, userID string) (models.User, error) {
+	return s.TakeUserByUID(ctx, userID)
 }
 
 func (s service) UpdateUserProfileByUID(ctx context.Context, userUID string, updates models.User) (models.User, error) {
@@ -70,7 +75,7 @@ func (s service) UpdateUserProfileByUID(ctx context.Context, userUID string, upd
 		return models.User{}, gorm.ErrRecordNotFound
 	}
 
-	user, err := s.TakeUserByID(ctx, userUID)
+	user, err := s.TakeUserByUID(ctx, userUID)
 	if err != nil {
 		return models.User{}, err
 	}

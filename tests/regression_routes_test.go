@@ -31,8 +31,8 @@ func TestPatchAndDeleteRoutesForPatientAndAppointment(t *testing.T) {
 				"age":   {"35"},
 			},
 		})
-		if patchResp.StatusCode != http.StatusOK {
-			t.Fatalf("expected 200 for patient patch, got %d", patchResp.StatusCode)
+		if patchResp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for patient patch redirect, got %d", patchResp.StatusCode)
 		}
 
 		updated, err := gorm.G[models.Patient](h.db.GormDB()).Where("id = ?", patient.ID).Take(t.Context())

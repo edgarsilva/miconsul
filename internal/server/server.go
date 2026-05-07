@@ -145,7 +145,7 @@ func setupFiberApp(s *Server) {
 
 	setupCoreMiddleware(s)
 	setupSecurityMiddleware(s)
-	setupObservability(s)
+	setupObservabilityExporter(s)
 	setupStaticFiles(s)
 	setupHealthcheckRoutes(s)
 }
@@ -161,7 +161,9 @@ func setupCoreMiddleware(s *Server) {
 			return strings.HasPrefix(path, "/public/") ||
 				strings.HasPrefix(path, "/.well-known/") ||
 				path == "/favicon.ico" ||
-				path == "/readyz"
+				path == "/readyz" ||
+				path == "/metrics" ||
+				path == "/livez"
 		}),
 	))
 	app.Use(logger.New())
@@ -184,7 +186,7 @@ func setupSecurityMiddleware(s *Server) {
 	}
 }
 
-func setupObservability(s *Server) {
+func setupObservabilityExporter(s *Server) {
 	app := s.App
 	app.Get("/metrics", adaptor.HTTPHandler(promhttp.Handler()))
 }

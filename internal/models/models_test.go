@@ -178,7 +178,7 @@ func TestClinicAndPatientValidationAndHelpers(t *testing.T) {
 	if !usr.IsLoggedIn() {
 		t.Fatalf("expected uid to indicate logged in")
 	}
-	if usr.ProfilePicPath() != "u.png" || usr.AvatarPic() != "u.png" {
+	if !strings.HasPrefix(usr.ProfilePicPath(), "u.png?v=") || !strings.HasPrefix(usr.AvatarPic(), "u.png?v=") {
 		t.Fatalf("unexpected user avatar/profile methods")
 	}
 }

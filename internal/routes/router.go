@@ -221,7 +221,12 @@ func UserRoutes(s *server.Server, authSvc auth.Runtime) error {
 	// Pages
 	u.Get("/profile", mw.MustAuthenticate(authSvc), u.HandleProfilePage)
 	u.Post("/profile", mw.MustAuthenticate(authSvc), u.HandleUpdateProfile)
-	u.Patch("/profile/removepic", mw.MustAuthenticate(authSvc), u.HandleRemoveProfilePic)
+	u.Patch("/profile", mw.MustAuthenticate(authSvc), u.HandleUpdateProfile)
+	u.Post("/profile/avatar/preview", mw.MustAuthenticate(authSvc), u.HandleProfilePicPreview)
+	u.Delete("/profile/avatar", mw.MustAuthenticate(authSvc), u.HandleRemoveProfilePic)
+	u.Get("/profile/avatar/remove", mw.MustAuthenticate(authSvc), u.HandleRemoveProfilePic)
+	u.Get("/profile/avatar", mw.MustAuthenticate(authSvc), u.HandleUserProfilePicImgSrc)
+	u.Get("/profile/avatar/preview", mw.MustAuthenticate(authSvc), u.HandleUserProfilePicImgSrc)
 
 	// Admin only
 	u.Get("/admin/users", mw.MustBeAdmin(authSvc), u.HandleIndexPage)

@@ -3,6 +3,8 @@ package appenv
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/edgarsilva/simpleenv"
@@ -77,7 +79,26 @@ func New() (*Env, error) {
 		return nil, fmt.Errorf("failed to load ENV variables: %w", err)
 	}
 
+	env.AssetsDir, err = normalizeAbsPath(env.AssetsDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to normalize ASSETS_DIR: %w", err)
+	}
+
 	return env, nil
+}
+
+func normalizeAbsPath(p string) (string, error) {
+	p = strings.TrimSpace(p)
+	if p == "" {
+		return "", fmt.Errorf("path is required")
+	}
+
+	absPath, err := filepath.Abs(p)
+	if err != nil {
+		return "", err
+	}
+
+	return absPath, nil
 }
 
 func (e *Env) IsDevelopment() bool {
