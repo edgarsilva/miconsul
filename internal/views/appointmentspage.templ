@@ -4,8 +4,36 @@ import (
 	"miconsul/internal/lib/libtime"
 	"miconsul/internal/models"
 	"strconv"
+	"strings"
 	"time"
 )
+
+func toggleStatusFilter(currentStatus, status string) string {
+	statuses := []string{}
+	if currentStatus != "" {
+		statuses = strings.Split(currentStatus, ",")
+	}
+
+	found := false
+	for _, s := range statuses {
+		if strings.TrimSpace(s) == status {
+			found = true
+			continue
+		}
+	}
+
+	if found {
+		result := []string{}
+		for _, s := range statuses {
+			if strings.TrimSpace(s) != status {
+				result = append(result, strings.TrimSpace(s))
+			}
+		}
+		return strings.Join(result, ",")
+	}
+
+	return currentStatus + "," + status
+}
 
 templ AppointmentsPage(vc *Ctx, appointments []models.Appointment, selectedPatient models.Patient, selectedClinic models.Clinic) {
 	@LayoutWithBackBtn(vc, "/") {
@@ -62,29 +90,61 @@ templ AppointmentsSection(c *Ctx, appointments []models.Appointment, showTitle b
 			hx-target:inherited="closest section"
 			hx-select:inherited="#appointments_section"
 		>
-			<h3 class="font-semibold text-xl flex items-center gap-4">
-				if showTitle {
-					{ c.l("str.appointments") }
-				}
-				if c.Query("patientId", "") != "" {
+			<div class="flex items-center gap-4">
+				<h3 class="font-semibold text-xl flex items-center gap-4">
+					if showTitle {
+						{ c.l("str.appointments") }
+					}
+					if c.Query("patientId", "") != "" {
+						<a
+							href={ templ.URL(c.Path() + QueryParams(c, "patientId=")) }
+							class="badge badge-secondary badge-outline gap-2 hover:bg-secondary hover:text-secondary-content"
+						>
+							{ selectedPatient.Email }
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="inline-block w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+						</a>
+					}
+					if c.Query("clinicId", "") != "" {
+						<a
+							href={ templ.URL(c.Path() + QueryParams(c, "clinicId=")) }
+							class="badge badge-secondary badge-outline gap-2 hover:bg-secondary hover:text-secondary-content"
+						>
+							{ selectedClinic.Name }
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="inline-block w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+						</a>
+					}
+				</h3>
+				<div class="hidden md:flex items-center gap-1">
 					<a
-						href={ templ.URL(c.Path() + QueryParams(c, "patientId=")) }
-						class="badge badge-secondary badge-outline gap-2 hover:bg-secondary hover:text-secondary-content"
-					>
-						{ selectedPatient.Email }
-						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="inline-block w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-					</a>
-				}
-				if c.Query("clinicId", "") != "" {
+						class={ "btn btn-xs btn-soft opacity-45 hover:opacity-100", templ.KV("btn-success opacity-90 ring-1 ring-success/50", strings.Contains(c.Query("status", ""), "confirmed")) }
+						href={ templ.URL(c.Path() + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "confirmed"))) }
+						hx-get={ c.Path() + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "confirmed")) }
+						hx-push-url={ c.Path() + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "confirmed")) }
+					>{ c.l("str.confirmed") }</a>
 					<a
-						href={ templ.URL(c.Path() + QueryParams(c, "clinicId=")) }
-						class="badge badge-secondary badge-outline gap-2 hover:bg-secondary hover:text-secondary-content"
-					>
-						{ selectedClinic.Name }
-						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="inline-block w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-					</a>
-				}
-			</h3>
+						class={ "btn btn-xs btn-soft opacity-45 hover:opacity-100", templ.KV("btn-neutral opacity-90 ring-1 ring-neutral/50", strings.Contains(c.Query("status", ""), "pending")) }
+						href={ templ.URL(c.Path() + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "pending"))) }
+						hx-get={ c.Path() + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "pending")) }
+						hx-push-url={ c.Path() + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "pending")) }
+					>{ c.l("str.pending") }</a>
+					<a
+						class={ "btn btn-xs btn-soft opacity-45 hover:opacity-100", templ.KV("btn-info opacity-90 ring-1 ring-info/50", strings.Contains(c.Query("status", ""), "rescheduled")) }
+						href={ templ.URL(c.Path() + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "rescheduled"))) }
+						hx-get={ c.Path() + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "rescheduled")) }
+						hx-push-url={ c.Path() + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "rescheduled")) }
+					>{ c.l("str.rescheduled") }</a>
+					if c.Query("status", "") != "" {
+						<a
+							class="btn btn-xs btn-square btn-ghost opacity-75 hover:opacity-90"
+							href={ templ.URL(c.Path() + QueryParams(c, "status=")) }
+							hx-get={ c.Path() + QueryParams(c, "status=") }
+							hx-push-url={ c.Path() + QueryParams(c, "status=") }
+						>
+							@IconClose("size-4")
+						</a>
+					}
+				</div>
+			</div>
 			<details class="dropdown dropdown-end md:hidden">
 				<summary
 					class="rounded-md px-3 py-2 text-sm font-medium bg-secondary/35 text-secondary-content"
@@ -221,9 +281,9 @@ templ AppointmentLi(vc *Ctx, appointment models.Appointment) {
 						}
 					</dt>
 					<dd class="flex flex-col">
-						@CmpTimeInTimezone(appointment.BookedAt, appointment.LocalTimezone(), "font-semibold", "text-info")
+						@CmpContextualTime(appointment.BookedAt, appointment.LocalTimezone(), "font-semibold")
 						if !appointment.RescheduledAt.IsZero() {
-							@CmpTimeInTimezone(appointment.RescheduledAt, appointment.LocalTimezone(), "font-semibold text-warning")
+							@CmpContextualTime(appointment.RescheduledAt, appointment.LocalTimezone(), "font-semibold")
 						}
 					</dd>
 				</div>

@@ -2,7 +2,6 @@ package views
 
 import (
 	"miconsul/internal/models"
-	"time"
 )
 
 templ UsersIndexPage(c *Ctx, users []models.User) {
@@ -82,10 +81,10 @@ templ UserLi(c *Ctx, user models.User) {
 						{ user.Name }
 					</span>
 				</p>
-				<p class="text-xs leading-5 text-base-content/50">
-					{ l(c.Locale, "str.last_appointment") }
-					@CmpTime(time.Now())
-				</p>
+			<p class="text-xs leading-5 text-base-content/50">
+				{ l(c.Locale, "str.updated") }
+				@CmpRelativeTime(user.UpdatedAt)
+			</p>
 			</div>
 		</div>
 		<div class="flex shrink-0 items-center gap-x-4">

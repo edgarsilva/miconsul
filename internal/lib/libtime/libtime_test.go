@@ -1,6 +1,7 @@
 package libtime
 
 import (
+	"strings"
 	"testing"
 	"time"
 )
@@ -84,5 +85,59 @@ func TestTimeHelpers(t *testing.T) {
 
 	t.Run("SubRef executes without panicking", func(t *testing.T) {
 		SubRef()
+	})
+
+	t.Run("RelativeTime returns empty for zero time", func(t *testing.T) {
+		if got := RelativeTime(time.Time{}); got != "" {
+			t.Fatalf("RelativeTime(zero) = %q, want empty string", got)
+		}
+	})
+
+	t.Run("RelativeTime returns now for current time", func(t *testing.T) {
+		if got := RelativeTime(time.Now()); got != "now" {
+			t.Fatalf("RelativeTime(now) = %q, want 'now'", got)
+		}
+	})
+
+	t.Run("RelativeTime returns abbreviated past times", func(t *testing.T) {
+		now := time.Now()
+		tests := []struct {
+			name     string
+			input    time.Time
+			expected string
+		}{
+			{"1 second ago", now.Add(-1 * time.Second), "1s"},
+			{"30 seconds ago", now.Add(-30 * time.Second), "30s"},
+			{"1 minute ago", now.Add(-1 * time.Minute), "1m"},
+			{"5 minutes ago", now.Add(-5 * time.Minute), "5m"},
+			{"1 hour ago", now.Add(-1 * time.Hour), "1h"},
+			{"3 hours ago", now.Add(-3 * time.Hour), "3h"},
+			{"1 day ago", now.Add(-24 * time.Hour), "1d"},
+			{"2 days ago", now.Add(-2 * 24 * time.Hour), "2d"},
+			{"1 week ago", now.Add(-7 * 24 * time.Hour), "1w"},
+			{"2 weeks ago", now.Add(-2 * 7 * 24 * time.Hour), "2w"},
+			{"1 month ago", now.Add(-30 * 24 * time.Hour), "1mo"},
+			{"3 months ago", now.Add(-3 * 30 * 24 * time.Hour), "3mo"},
+			{"1 year ago", now.Add(-365 * 24 * time.Hour), "1y"},
+			{"2 years ago", now.Add(-2 * 365 * 24 * time.Hour), "2y"},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				got := RelativeTime(tt.input)
+				if got != tt.expected {
+					t.Fatalf("RelativeTime() = %q, want %q", got, tt.expected)
+				}
+			})
+		}
+	})
+
+	t.Run("RelativeTime returns abbreviated future times", func(t *testing.T) {
+		now := time.Now()
+		// Future times should start with "in"
+		got := RelativeTime(now.Add(5 * time.Minute))
+		if !strings.HasPrefix(got, "in ") {
+			t.Fatalf("RelativeTime(future) = %q, expected to start with 'in '", got)
+		}
 	})
 }
