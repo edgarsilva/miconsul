@@ -30,7 +30,6 @@ func ConfirmEmail(env *appenv.Env, email, token string) error {
 
 	dialer := gomail.NewDialer(env.EmailSMTPURL, 587, dialerUsername(env), dialerPassword(env))
 
-	// Send Email
 	if err := dialer.DialAndSend(m); err != nil {
 		return err
 	}

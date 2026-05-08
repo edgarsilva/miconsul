@@ -2,7 +2,6 @@
 package server
 
 import (
-	"context"
 	"errors"
 	"strconv"
 	"strings"
@@ -26,7 +25,7 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/helmet"
 	"github.com/gofiber/fiber/v3/middleware/limiter"
 	"github.com/gofiber/fiber/v3/middleware/logger"
-	"github.com/gofiber/fiber/v3/middleware/recover"
+	recoverer "github.com/gofiber/fiber/v3/middleware/recover"
 	"github.com/gofiber/fiber/v3/middleware/requestid"
 	"github.com/gofiber/fiber/v3/middleware/session"
 	"github.com/gofiber/fiber/v3/middleware/static"
@@ -34,7 +33,6 @@ import (
 
 	"github.com/panjf2000/ants/v2"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 )
@@ -153,7 +151,7 @@ func setupFiberApp(s *Server) {
 func setupCoreMiddleware(s *Server) {
 	app := s.App
 
-	app.Use(recover.New()) // Recover MW catches panics that might stop app execution
+	app.Use(recoverer.New()) // Recover MW catches panics that might stop app execution
 	app.Use(RequestMetricsMiddleware(s.Metrics))
 	app.Use(otelfiber.Middleware(
 		otelfiber.WithNext(func(c fiber.Ctx) bool {
@@ -209,30 +207,6 @@ func setupHealthcheckRoutes(s *Server) {
 	app.Get(healthcheck.StartupEndpoint, healthcheck.New(healthcheck.Config{
 		Probe: startupProbe(s),
 	}))
-}
-
-func emitStartupBootstrapLog(s *Server) {
-	if !s.RequestLog.Enabled() {
-		return
-	}
-
-	rec := otellog.Record{}
-	rec.SetTimestamp(time.Now())
-	rec.SetObservedTimestamp(time.Now())
-	rec.SetEventName("server_startup")
-	rec.SetBody(otellog.StringValue("server_startup"))
-	rec.SetSeverity(otellog.SeverityInfo)
-	rec.SetSeverityText("INFO")
-	rec.AddAttributes(
-		otellog.String("event", "server_startup"),
-		otellog.String("started_at", s.StartedAt.UTC().Format(time.RFC3339)),
-		otellog.String("ready_at", s.ReadyAt.UTC().Format(time.RFC3339)),
-		otellog.Int64("bootstrap_duration_ms", s.BootstrapDuration.Milliseconds()),
-		otellog.String("version", s.Env.AppVersion),
-		otellog.String("environment", string(s.Env.Environment)),
-	)
-
-	s.RequestLog.Emit(context.Background(), rec)
 }
 
 // WithEnv configures the server environment.
@@ -337,19 +311,6 @@ func WithCache(cache Cache) ServerOption {
 	}
 }
 
-// SendToWorker passes fn as a job for a worker in the workpool, to be executed as a go routine
-// when the a worker is available
-func (s *Server) SendToWorker(fn func()) error {
-	if s.wp == nil {
-		log.Warn("failed to add fn to run as job in worker pool, server.wp might be nil, running synchronously")
-		fn()
-		return nil
-	}
-
-	err := s.wp.Submit(fn)
-	return err
-}
-
 // GormDB returns the active gorm DB handle when available.
 func (s *Server) GormDB() *gorm.DB {
 	if s.DB == nil {
@@ -362,16 +323,6 @@ func (s *Server) GormDB() *gorm.DB {
 // AppEnv returns the active application environment configuration.
 func (s *Server) AppEnv() *appenv.Env {
 	return s.Env
-}
-
-// Trace starts a span with the configured tracer and returns updated context.
-func (s *Server) Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	ctx, span := s.Tracer.Start(ctx, spanName, opts...)
-	return ctx, span
 }
 
 // Listen starts the fiberapp server (fiberApp.Listen()) on the specified port.

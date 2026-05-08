@@ -61,7 +61,8 @@ func (s *service) Trace(ctx context.Context, spanName string, opts ...trace.Span
 	return s.tracer.Start(ctx, spanName, opts...)
 }
 
-// Signup creates a new user record if req.body Email & Password are valid
+// Signup creates a new user record if req.body Email & Password are valid.
+// The confirmation email is sent synchronously so SMTP failures surface to the user.
 func (s *service) signup(ctx context.Context, email string, password string) error {
 	if err := s.signupIsEmailValid(ctx, email); err != nil {
 		return err
@@ -82,9 +83,7 @@ func (s *service) signup(ctx context.Context, email string, password string) err
 		return errors.New("failed to save email or password, try again")
 	}
 
-	s.sendConfirmEmailAsync(ctx, email, token, "signup_confirm")
-
-	return nil
+	return s.sendConfirmEmail(ctx, email, token)
 }
 
 // IsEmailValidForSignup returns nil if valid, otherwise returns an error
@@ -99,6 +98,17 @@ func (s *service) signupIsEmailValid(ctx context.Context, email string) error {
 		return errors.New("email already exists, try login instead")
 	}
 
+	return nil
+}
+
+func (s *service) sendConfirmEmail(ctx context.Context, email, token string) error {
+	if s.Env.EmailSMTPURL == "" {
+		return nil
+	}
+
+	if err := mailer.ConfirmEmail(s.Env, email, token); err != nil {
+		return fmt.Errorf("failed to send confirmation email, please try again: %w", err)
+	}
 	return nil
 }
 
@@ -281,52 +291,29 @@ func (s *service) resendPendingConfirmation(ctx context.Context, email string) e
 		return err
 	}
 
-	s.sendConfirmEmailAsync(ctx, email, token, "signup_resend_confirm")
-	return nil
-}
-
-func (s *service) sendConfirmEmailAsync(ctx context.Context, email, token, operation string) {
-	go func() {
-		asyncCtx, span := s.Trace(ctx, "auth/services:"+operation)
+	return s.SendToWorker(ctx, func() {
+		asyncCtx, span := s.Trace(ctx, "auth/services:signup_resend_confirm")
 		defer span.End()
-
-		defer func() {
-			if r := recover(); r != nil {
-				err := fmt.Errorf("panic: %v", r)
-				span.RecordError(err)
-				span.SetStatus(codes.Error, err.Error())
-				s.emitAsyncEmailError(asyncCtx, operation, email, "panic", err)
-			}
-		}()
 
 		if sendErr := mailer.ConfirmEmail(s.Env, email, token); sendErr != nil {
 			span.RecordError(sendErr)
 			span.SetStatus(codes.Error, sendErr.Error())
-			s.emitAsyncEmailError(asyncCtx, operation, email, "failed", sendErr)
+			s.emitAsyncEmailError(asyncCtx, "signup_resend_confirm", email, "failed", sendErr)
 		}
-	}()
+	})
 }
 
 func (s *service) sendResetPasswordEmailAsync(ctx context.Context, email, token string) {
-	go func() {
+	_ = s.SendToWorker(ctx, func() {
 		asyncCtx, span := s.Trace(ctx, "auth/services:reset_password_email")
 		defer span.End()
-
-		defer func() {
-			if r := recover(); r != nil {
-				err := fmt.Errorf("panic: %v", r)
-				span.RecordError(err)
-				span.SetStatus(codes.Error, err.Error())
-				s.emitAsyncEmailError(asyncCtx, "reset_password", email, "panic", err)
-			}
-		}()
 
 		if sendErr := mailer.ResetPassword(s.Env, email, token); sendErr != nil {
 			span.RecordError(sendErr)
 			span.SetStatus(codes.Error, sendErr.Error())
 			s.emitAsyncEmailError(asyncCtx, "reset_password", email, "failed", sendErr)
 		}
-	}()
+	})
 }
 
 func (s *service) emitAsyncEmailError(ctx context.Context, operation, email, status string, err error) {
