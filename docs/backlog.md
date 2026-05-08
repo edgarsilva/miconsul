@@ -2,37 +2,24 @@
 
 ## Next Up
 
-- [feature/search] Global Ctrl+K search modal
-  - [ ] Add keyboard shortcut (`Ctrl+K`) to open a global search modal.
-  - [ ] Search across appointments, clinics, and patients from a single input.
-  - [ ] Support keyboard navigation + enter-to-open selected result.
-  - [ ] Keep existing index search endpoints; add a dedicated global search endpoint contract.
-  - [ ] Define result grouping and ranking order (appointments first vs mixed relevance).
+- [feature/auth] Harden local signup confirm-email delivery
+  - [ ] Make SMTP send failures non-silent: return error to signup handler instead of always redirecting.
+  - [ ] Audit env key alignment (`EMAIL_SENDER` vs `EMAIL_FROM_ADDRESS` vs dialer username).
+  - [ ] Replace raw `go func()` with `SendToWorker` + recover.
 
-- [feature/appointments] Appointment index search follow-ups
-  - [ ] Evaluate adding appointment text fields (`summary`, `notes`, `conclusions`) to search scope.
-  - [ ] Add optional FTS/meilisearch path only if native query performance degrades.
-  - [ ] Add production telemetry for search latency + result counts.
+- [infra/runtime] Add panic recovery to SendToWorker
+  - [ ] Wrapper with `recover()` + structured error logging / OTel span emission.
+  - [ ] Update all call sites (`appointment/alerts.go`) to benefit without manual recover.
 
-- [feature/htmx4] Replace OOB price update with partials pattern
-  - [ ] Refactor appointment clinic-search response to use HTMX 4 partial swap flow instead of `hx-swap-oob`.
-  - [ ] Keep clinic list and price updates independent targets with explicit swap contracts.
-  - [ ] Add regression check for clinic search + price update on repeated searches and back navigation.
+- [feature/dashboard] Populate FeedEvent on appointment changes and wire Dashboard Feed widget
+  - [ ] Create FeedEvent records on appointment create/update/cancel/complete.
+  - [ ] Update Dashboard Feed widget to read from FeedEvent table instead of static/dummy data.
+  - [ ] Add FeedEvent query scoped to current user + recent time window.
 
-- [external/runtime] Uptime Kuma monitor setup (environment ready)
-  - Configure monitors in Kuma for `/livez`, `/readyz`, and optional `/startupz`.
-  - Apply final interval/timeout/retry settings directly in the Kuma UI.
-- [external/runtime] Uptime Kuma notifications and routing (low priority)
-  - Configure Slack/Discord/Email channels and label-based alert routing.
-- [external/runtime] SLO-style alerts in Kuma/Grafana
-  - Availability alert: `/livez` success rate over 5m.
-  - Service health alert: `/readyz` failure streak threshold (for example 3 consecutive failures).
-  - Degradation alert: `/readyz` latency above threshold.
-
-- [feature/storage] Object storage uploads for images (RustFS S3-compatible)
-  - Define storage abstraction and configuration wiring for local disk vs S3-compatible backends.
-  - Upload and retrieval path for patient/profile images via RustFS.
-  - Migration/fallback strategy for existing disk-backed image files.
+- [feature/ui] Add relative time formatting to appointments and users lists
+  - [ ] Add `RelativeTime` / `TimeAgo` helper to `internal/lib/libtime` (e.g. "5h", "2d ago", "3mo ago").
+  - [ ] Render relative time next to absolute dates in appointment list (`appointmentspage.templ`).
+  - [ ] Render relative time for user `CreatedAt` / `UpdatedAt` in admin users list (`userspage.templ`).
 
 - [feature/notifications] Multi-channel notifications baseline
   - Keep email templates/actions synced with appointment + professional details.
@@ -41,19 +28,31 @@
   - Add Facebook Messenger provider integration.
   - Define per-channel opt-in/opt-out + fallback policy (email as default fallback).
 
-- [infra/build] Asset generation in Docker/CI pipeline
-  - Build Tailwind output (`public/global.css`) during image build from `styles/global.css`.
-  - Decide and document templ artifact strategy (`*.templ` source vs committed generated `*_templ.go`) and enforce via CI.
-  - Keep runtime image free of Bun/templ toolchain binaries.
+- [feature/search] Global Ctrl+K search modal
+  - [ ] Add keyboard shortcut (`Ctrl+K`) to open a global search modal.
+  - [ ] Search across appointments, clinics, and patients from a single input.
+  - [ ] Support keyboard navigation + enter-to-open selected result.
+  - [ ] Keep existing index search endpoints; add a dedicated global search endpoint contract.
+  - [ ] Define result grouping and ranking order (appointments first vs mixed relevance).
 
-- [infra/deploy] Production bootstrap and config guardrails
-  - Add explicit startup validation for `COOKIE_SECRET` to require exactly 16, 24, or 32 bytes (Fiber encryptcookie requirement).
-  - After migrations, if no admin exists, create one from `ADMIN_USER` + `ADMIN_PASSWORD`; if at least one admin exists, do nothing.
-  - Fix local-strategy signup confirm-email delivery (env key alignment, SMTP config consistency, and non-silent send failures).
-  - Harden async side-effects by adding a safe `SendToWorker` wrapper with panic recovery + structured error logging.
-  - Refactor mailers to consume `appenv.Env` from server/service instead of direct `os.Getenv` reads.
-  - Provision Logto tenant in Coolify and document callback/resource/env wiring checklist.
-  - Document required Coolify env vars and healthcheck expectations (`/readyz`, `curl`/`wget` availability).
+- [feature/htmx4] Replace OOB price update with partials pattern
+  - [ ] Refactor appointment clinic-search response to use HTMX 4 partial swap flow instead of `hx-swap-oob`.
+  - [ ] Keep clinic list and price updates independent targets with explicit swap contracts.
+  - [ ] Add regression check for clinic search + price update on repeated searches and back navigation.
+
+- [feature/storage] Object storage uploads for images (RustFS S3-compatible)
+  - Define storage abstraction and configuration wiring for local disk vs S3-compatible backends.
+  - Upload and retrieval path for patient/profile images via RustFS.
+  - Migration/fallback strategy for existing disk-backed image files.
+
+- [infra/build] Generate Tailwind CSS at Docker build time
+  - [ ] Add Bun/Node build stage in `Dockerfile` to compile `styles/global.css` → `public/global.css`.
+  - [ ] Stop committing generated `public/global.css`; treat it as a build artifact.
+  - [ ] Keep runtime image free of Bun/Node binaries.
+
+- [infra/build] Define templ generation policy for CI/image builds
+  - [ ] Decide and document templ artifact strategy (`*.templ` source vs committed generated `*_templ.go`).
+  - [ ] Enforce one canonical source of truth via CI if generating at build time.
 
 ## Icebox
 
@@ -113,3 +112,20 @@
 - Templ toolchain alignment
   - Aligned `github.com/a-h/templ` module dependency with the generator version.
   - Verified with `go test ./...`.
+
+- Appointment index search follow-ups
+  - FTS5 `global_fts` table active for appointments/clinics/patients.
+  - Native query performance sufficient; no meilisearch path needed yet.
+
+- Uptime Kuma monitors
+  - Endpoints `/livez`, `/readyz`, `/startupz` exposed and documented.
+  - Monitors configured externally in Kuma.
+
+- Logto tenant provisioning + Coolify deployment docs
+  - Logto tenant provisioned; OAuth/Google identity sign-in working.
+  - `docs/deployment.md` covers Coolify env vars, healthcheck expectations, and Logto wiring checklist.
+
+- Production bootstrap guardrails (partial)
+  - `COOKIE_SECRET` validated for 16/24/32 bytes at startup.
+  - Post-migration admin auto-creation from `ADMIN_USER` + `ADMIN_PASSWORD`.
+  - Mailers consume `appenv.Env` directly; no `os.Getenv` reads in mailer code.
