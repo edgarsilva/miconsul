@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -9,9 +10,10 @@ import (
 
 func TestSendToWorker(t *testing.T) {
 	s := &Server{}
+	ctx := context.Background()
 
 	ran := false
-	if err := s.SendToWorker(func() { ran = true }); err != nil {
+	if err := s.SendToWorker(ctx, func() { ran = true }); err != nil {
 		t.Fatalf("expected nil workpool fallback to succeed: %v", err)
 	}
 	if !ran {
@@ -26,7 +28,7 @@ func TestSendToWorker(t *testing.T) {
 
 	s.wp = wp
 	done := make(chan struct{})
-	if err := s.SendToWorker(func() { close(done) }); err != nil {
+	if err := s.SendToWorker(ctx, func() { close(done) }); err != nil {
 		t.Fatalf("expected workpool submit success: %v", err)
 	}
 
@@ -37,7 +39,7 @@ func TestSendToWorker(t *testing.T) {
 	}
 
 	wp.Release()
-	if err := s.SendToWorker(func() {}); err == nil {
+	if err := s.SendToWorker(ctx, func() {}); err == nil {
 		t.Fatalf("expected worker submit error after pool release")
 	}
 }

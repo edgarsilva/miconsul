@@ -18,7 +18,7 @@ func (s *service) DispatchBookedAlert(appointment models.Appointment) error {
 		return err
 	}
 
-	return s.SendToWorker(func() {
+	return s.SendToWorker(context.Background(), func() {
 		ctx, cancel := context.WithTimeout(context.Background(), defaultWorkerContextTimeout)
 		defer cancel()
 
@@ -27,14 +27,12 @@ func (s *service) DispatchBookedAlert(appointment models.Appointment) error {
 }
 
 func (s *service) SendReminder(appointment models.Appointment) error {
-	err := s.SendToWorker(func() {
+	return s.SendToWorker(context.Background(), func() {
 		ctx, cancel := context.WithTimeout(context.Background(), defaultWorkerContextTimeout)
 		defer cancel()
 
 		s.sendReminderNow(ctx, appointment)
 	})
-
-	return err
 }
 
 func (s *service) SendReminderAlert(appointment models.Appointment) error {

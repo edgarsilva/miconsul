@@ -37,7 +37,6 @@ func ResetPassword(env *appenv.Env, email, token string) error {
 
 	d := gomail.NewDialer(env.EmailSMTPURL, 587, dialerUsername(env), dialerPassword(env))
 
-	// Send Email
 	if err := d.DialAndSend(m); err != nil {
 		return err
 	}

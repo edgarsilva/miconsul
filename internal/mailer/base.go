@@ -35,10 +35,7 @@ func dialerPassword(env *appenv.Env) string {
 		return ""
 	}
 
-	pwd := env.EmailSecret
-	pwd = strings.Trim(pwd, "\"")
-
-	return pwd
+	return strings.Trim(env.EmailSecret, `"`)
 }
 
 func waURL(phone, msg string) string {
