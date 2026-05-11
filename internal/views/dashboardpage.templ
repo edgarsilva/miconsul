@@ -336,6 +336,23 @@ func feedEventColorClass(action string) string {
 	}
 }
 
+templ feedEventIcon(action string) {
+	switch action {
+		case "created":
+			@IconPlusCircled("size-4")
+		case "updated":
+			@IconPencil("size-4")
+		case "confirmed", "completed":
+			@IconCheck("size-4")
+		case "canceled":
+			@IconClose("size-4")
+		case "deleted":
+			@IconTrash("size-4")
+		default:
+			@IconCalendar("size-4")
+	}
+}
+
 templ Feed(vc *Ctx, events []models.FeedEvent) {
 	<div class="app-card">
 		<h3 class="font-semibold text-xl mb-6">My feed</h3>
@@ -355,7 +372,7 @@ templ Feed(vc *Ctx, events []models.FeedEvent) {
 							</div>
 						}
 						<div class={ "relative flex h-6 w-6 flex-none items-center justify-center rounded-full bg-base-100 " + feedEventColorClass(event.Action) }>
-							@IconCalendar("size-4")
+							@feedEventIcon(event.Action)
 						</div>
 						<div class="flex-auto py-0.5">
 							<p class="text-xs leading-5 text-base-content/60">
