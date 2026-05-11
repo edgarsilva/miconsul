@@ -40,7 +40,8 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	}
 	timeframe := c.Query("timeframe", "day")
 	searchTerm := strings.TrimSpace(c.Query("searchTerm", ""))
-	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, patientID, clinicID, timeframe, searchTerm)
+	statusFilter := strings.TrimSpace(c.Query("status", ""))
+	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, patientID, clinicID, timeframe, searchTerm, statusFilter)
 	if err != nil {
 		return s.Redirect(c, "/appointments?toast=Failed to load appointments&level=error")
 	}
@@ -71,7 +72,8 @@ func (s *service) HandleIndexSearch(c fiber.Ctx) error {
 	}
 
 	timeframe := c.Query("timeframe", "day")
-	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, patientID, clinicID, timeframe, searchTerm)
+	statusFilter := strings.TrimSpace(c.Query("status", ""))
+	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, patientID, clinicID, timeframe, searchTerm, statusFilter)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}

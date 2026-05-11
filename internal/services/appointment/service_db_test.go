@@ -85,7 +85,7 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 	})
 
 	t.Run("listing helpers return data", func(t *testing.T) {
-		appointments, err := svc.FindAppointmentsBy(ctx, user.ID, "", "", "week", "")
+		appointments, err := svc.FindAppointmentsBy(ctx, user.ID, "", "", "week", "", "")
 		if err != nil {
 			t.Fatalf("find appointments: %v", err)
 		}
@@ -117,7 +117,7 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 			t.Fatalf("expected clinics from empty search fallback")
 		}
 
-		_, err = svc.FindAppointmentsBy(ctx, user.ID, "", "", "week", "patient")
+		_, err = svc.FindAppointmentsBy(ctx, user.ID, "", "", "week", "patient", "")
 		if err == nil {
 			t.Fatalf("expected FTS-backed appointment search error without global_fts table")
 		}

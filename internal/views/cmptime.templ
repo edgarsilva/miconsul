@@ -13,3 +13,32 @@ templ CmpTime(t time.Time, class ...string) {
 templ CmpTimeInTimezone(t time.Time, tz string, class ...string) {
 	@CmpTime(libtime.InTimezone(t, tz), class...)
 }
+
+templ CmpRelativeTime(t time.Time, class ...string) {
+	<span class={ strings.Join(class, " ") } title={ t.Format(ViewTimeFormat) }>{ libtime.RelativeTime(t) }</span>
+}
+
+func contextualTimeClass(t time.Time, tz string, class []string) string {
+	localT := libtime.InTimezone(t, tz)
+	localNow := libtime.InTimezone(time.Now().UTC(), tz)
+
+	isToday := localT.Year() == localNow.Year() && localT.YearDay() == localNow.YearDay()
+	isFuture := localT.After(localNow)
+
+	timeClass := ""
+	switch {
+	case isToday:
+		timeClass = "text-accent font-bold"
+	case isFuture:
+		timeClass = "text-info"
+	default:
+		timeClass = "text-base-content/30"
+	}
+
+	allClasses := append([]string{timeClass}, class...)
+	return strings.Join(allClasses, " ")
+}
+
+templ CmpContextualTime(t time.Time, tz string, class ...string) {
+	<span class={ contextualTimeClass(t, tz, class) } title={ libtime.InTimezone(t, tz).Format(ViewTimeFormat) }>{ libtime.ContextualTime(t, tz) }</span>
+}

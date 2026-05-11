@@ -274,7 +274,7 @@ func (s *service) RequestAppointmentDateChangeByIDAndToken(ctx context.Context, 
 	return s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"PendingAt", "Status"}, updates)
 }
 
-func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, patientID, clinicID, timeframe, searchTerm string) ([]models.Appointment, error) {
+func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, patientID, clinicID, timeframe, searchTerm, statusFilter string) ([]models.Appointment, error) {
 	appointments := []models.Appointment{}
 	dbquery := s.DB.Model(&models.Appointment{}).Where("appointments.user_id = ?", userID)
 
@@ -321,6 +321,15 @@ func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, patientID
 		dbquery = dbquery.Scopes(models.AppointmentBookedThisMonth)
 	default:
 		dbquery = dbquery.Where("booked_at > ?", libtime.BoD(time.Now()))
+	}
+
+	statusFilter = strings.TrimSpace(statusFilter)
+	if statusFilter != "" {
+		statuses := strings.Split(statusFilter, ",")
+		for i := range statuses {
+			statuses[i] = strings.TrimSpace(statuses[i])
+		}
+		dbquery = dbquery.Where("status IN ?", statuses)
 	}
 
 	err := dbquery.Preload("Clinic").

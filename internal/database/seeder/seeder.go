@@ -305,10 +305,11 @@ func ensureBaselineAppointments(ctx context.Context, db *gorm.DB, owner models.U
 		return 0, nil
 	}
 
+	now := time.Now().UTC()
 	bookedAt := []time.Time{
-		time.Date(2026, 1, 10, 10, 0, 0, 0, time.UTC),
-		time.Date(2026, 1, 11, 11, 30, 0, 0, time.UTC),
-		time.Date(2026, 1, 12, 16, 15, 0, 0, time.UTC),
+		now.Add(48 * time.Hour),     // 2 days from now
+		now.Add(72 * time.Hour),     // 3 days from now
+		now.Add(7 * 24 * time.Hour), // 1 week from now
 	}
 
 	created := 0
