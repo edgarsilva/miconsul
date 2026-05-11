@@ -5,10 +5,10 @@
 - [x] README and Go Env Setup/Updates (2026/Mar/27)
 - [x] Auth docs drift cleanup (`docs/testing.md` migration status) (2026/Mar/27)
 - [x] Uptime Kuma monitors (endpoints ready, external Kuma configured)
-- [ ] Fix local-strategy signup confirm-email delivery in production (env wiring + SMTP path + error visibility)
-- [ ] Add panic recovery + structured error logging to `SendToWorker`
+- [x] Fix local-strategy signup confirm-email delivery in production (env wiring + SMTP path + error visibility)
+- [x] Add panic recovery + structured error logging to `SendToWorker`
+- [x] Add relative time formatting (time ago) to appointments and users lists
 - [ ] Populate FeedEvent on appointment changes and wire Dashboard Feed widget
-- [ ] Add relative time formatting (time ago) to appointments and users lists
 - [ ] Multi-channel notifications baseline (Telegram, WhatsApp, Messenger)
 - [ ] Global search modal (Ctrl+K) for appointments, clinics, and patients
 - [ ] Upload images to S3-compatible object storage (RustFS)
