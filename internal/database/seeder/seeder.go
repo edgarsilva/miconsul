@@ -362,17 +362,10 @@ func ensureBaselineAppointments(ctx context.Context, db *gorm.DB, owner models.U
 }
 
 func seedFeedEvents(ctx context.Context, db *gorm.DB, owner models.User) (int, error) {
-	// Check if any feed events already exist for this user to maintain idempotency
-	var existingCount int64
+	// Delete existing feed events for this user's appointments so re-seeding regenerates fresh data
 	if err := db.WithContext(ctx).
-		Model(&models.FeedEvent{}).
-		Joins("JOIN appointments ON appointments.uid = feed_events.feed_eventable_id AND feed_events.feed_eventable_type = ?", "appointments").
-		Where("appointments.user_id = ?", owner.ID).
-		Count(&existingCount).Error; err != nil {
-		return 0, fmt.Errorf("count existing feed events: %w", err)
-	}
-	if existingCount > 0 {
-		return 0, nil
+		Exec("DELETE FROM feed_events WHERE feed_eventable_type = ? AND feed_eventable_id IN (SELECT uid FROM appointments WHERE user_id = ?)", "appointments", owner.ID).Error; err != nil {
+		return 0, fmt.Errorf("delete old feed events: %w", err)
 	}
 
 	var appointments []models.Appointment

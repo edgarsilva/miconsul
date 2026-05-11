@@ -25,8 +25,13 @@ func TestRunSeedsBaselineAndIsIdempotent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("second baseline run failed: %v", err)
 	}
-	if second.TotalCreated() != 0 {
-		t.Fatalf("expected idempotent baseline second run, got %#v", second)
+	// Feed events are regenerated on each run (deleted and recreated), so only check non-feed idempotency
+	if second.UsersCreated != 0 || second.ClinicsCreated != 0 || second.PatientsCreated != 0 || second.AppointmentsCreated != 0 {
+		t.Fatalf("expected idempotent baseline second run for non-feed entities, got %#v", second)
+	}
+	// Feed events should be regenerated (6 for 3 appointments)
+	if second.FeedEventsCreated != 6 {
+		t.Fatalf("expected 6 feed events regenerated on second run, got %d", second.FeedEventsCreated)
 	}
 }
 
@@ -93,8 +98,13 @@ func TestRunWithBaselineAndLargeBulk(t *testing.T) {
 		t.Fatalf("baseline + large bulk run failed: %v", err)
 	}
 
-	if result.UsersCreated != 201 || result.ClinicsCreated != 201 || result.PatientsCreated != 203 || result.AppointmentsCreated != 203 || result.FeedEventsCreated != 6 {
+	if result.UsersCreated != 201 || result.ClinicsCreated != 201 || result.PatientsCreated != 203 || result.AppointmentsCreated != 203 {
 		t.Fatalf("unexpected baseline + large bulk result: %#v", result)
+	}
+	// Feed events are only created for the first 20 appointments (Limit 20 in seedFeedEvents)
+	// With 20 appointments and 1-3 events each (1 + i%3), total = 45
+	if result.FeedEventsCreated != 45 {
+		t.Fatalf("expected 45 feed events for 20 appointments, got %d", result.FeedEventsCreated)
 	}
 
 	assertBaselineClinicExists(t, db)
