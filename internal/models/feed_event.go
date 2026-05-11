@@ -16,16 +16,51 @@ const (
 	EventActionDeleted   EventAction = "deleted"
 	EventActionChanged   EventAction = "changed"
 	EventActionCanceled  EventAction = "canceled"
+	EventActionCompleted EventAction = "completed"
+	EventActionConfirmed EventAction = "confirmed"
 	EventActionSent      EventAction = "sent"
 	EventActionDelivered EventAction = "delivered"
 	EventActionFailed    EventAction = "failed"
 	EventActionSuccess   EventAction = "success"
 )
 
+// FeedEventSource defines the contract for models that can generate feed events.
+type FeedEventSource interface {
+	FeedEventRef() (id string, typ string)
+	FeedEventSubject() (name, id, typ, url string)
+	FeedEventTarget() (name, id, typ, url string)
+}
+
+// NewFeedEvent builds a FeedEvent from a source model and action.
+func NewFeedEvent(action EventAction, actorName, actorID, actorURL string, source FeedEventSource) FeedEvent {
+	refID, refType := source.FeedEventRef()
+	subName, subID, subType, subURL := source.FeedEventSubject()
+	tgtName, tgtID, tgtType, tgtURL := source.FeedEventTarget()
+
+	return FeedEvent{
+		Name:              string(action),
+		Action:            string(action),
+		Subject:           subName,
+		SubjectID:         subID,
+		SubjectType:       subType,
+		SubjectURL:        subURL,
+		Target:            tgtName,
+		TargetID:          tgtID,
+		TargetType:        tgtType,
+		TargetURL:         tgtURL,
+		Actor:             actorName,
+		ActorID:           actorID,
+		ActorURL:          actorURL,
+		FeedEventableID:   refID,
+		FeedEventableType: refType,
+		OcurredAt:         time.Now(),
+	}
+}
+
 type FeedEvent struct {
 	ID                uint   `gorm:"primaryKey"`
 	UID               string `gorm:"uniqueIndex;default:null;not null"`
-	extID             string `gorm:"index;default:null;not null"`
+	ExtID             string `gorm:"index;default:'';not null"`
 	Name              string `gorm:"index;default:null;not null"`
 	Subject           string
 	SubjectID         string `gorm:"index:fe_subject_idx;default:null;not null"`
@@ -36,10 +71,10 @@ type FeedEvent struct {
 	TargetID          string `gorm:"index:fe_target_idx;default:null;not null"`
 	TargetType        string
 	TargetURL         string
+	Actor             string
+	ActorID           string
+	ActorURL          string
 	OcurredAt         time.Time `gorm:"index;default:null"`
-	onAttr            string
-	from              string
-	to                string
 	Extra1            string
 	Extra2            string
 	Extra3            string

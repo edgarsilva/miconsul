@@ -37,6 +37,7 @@ type Result struct {
 	ClinicsCreated      int
 	PatientsCreated     int
 	AppointmentsCreated int
+	FeedEventsCreated   int
 }
 
 func (r *Result) add(other Result) {
@@ -44,8 +45,9 @@ func (r *Result) add(other Result) {
 	r.ClinicsCreated += other.ClinicsCreated
 	r.PatientsCreated += other.PatientsCreated
 	r.AppointmentsCreated += other.AppointmentsCreated
+	r.FeedEventsCreated += other.FeedEventsCreated
 }
 
 func (r Result) TotalCreated() int {
-	return r.UsersCreated + r.ClinicsCreated + r.PatientsCreated + r.AppointmentsCreated
+	return r.UsersCreated + r.ClinicsCreated + r.PatientsCreated + r.AppointmentsCreated + r.FeedEventsCreated
 }

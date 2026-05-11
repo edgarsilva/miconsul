@@ -9,8 +9,10 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"miconsul/internal/lib/libtime"
 	"miconsul/internal/models"
 	"strconv"
+	"time"
 )
 
 type DashboardStat struct {
@@ -23,7 +25,7 @@ type DashboardStats struct {
 	Appointments DashboardStat
 }
 
-func DashboardPage(vc *Ctx, stats DashboardStats, appointments []models.Appointment, favClinic models.Clinic) templ.Component {
+func DashboardPage(vc *Ctx, stats DashboardStats, appointments []models.Appointment, favClinic models.Clinic, feedEvents []models.FeedEvent) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -80,7 +82,7 @@ func DashboardPage(vc *Ctx, stats DashboardStats, appointments []models.Appointm
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = Feed().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = Feed(vc, feedEvents).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -126,7 +128,7 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.stats"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 41, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 43, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -139,7 +141,7 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.patients"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 51, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 53, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -152,7 +154,7 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(stats.Patients.Total))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 55, Col: 93}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 57, Col: 93}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -165,7 +167,7 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.increased_by"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 60, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 62, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -178,7 +180,7 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(stats.Patients.Diff))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 61, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 63, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -191,7 +193,7 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "btn.view_all"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 64, Col: 84}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 66, Col: 84}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -204,7 +206,7 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.patients"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 64, Col: 138}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 66, Col: 138}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -217,7 +219,7 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.appointments"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 77, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 79, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -230,7 +232,7 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(stats.Appointments.Total))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 83, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 85, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -243,7 +245,7 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.increased_by"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 88, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 90, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -256,7 +258,7 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(stats.Appointments.Diff))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 89, Col: 45}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 91, Col: 45}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -269,7 +271,7 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "btn.view_all"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 92, Col: 84}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 94, Col: 84}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -282,7 +284,7 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.all_appointmens"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 92, Col: 145}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 94, Col: 145}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -295,7 +297,7 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.revenue_month"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 103, Col: 104}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 105, Col: 104}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -308,7 +310,7 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.decreased_by"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 111, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 113, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -321,7 +323,7 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "btn.view_all"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 115, Col: 84}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 117, Col: 84}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -334,7 +336,7 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.all_revenue"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 115, Col: 141}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 117, Col: 141}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -377,7 +379,7 @@ func Clinic(c *Ctx, clinic models.Clinic) templ.Component {
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(clinic.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 129, Col: 19}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 131, Col: 19}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 			if templ_7745c5c3_Err != nil {
@@ -390,7 +392,7 @@ func Clinic(c *Ctx, clinic models.Clinic) templ.Component {
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(clinic.ProfilePic)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 134, Col: 35}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 136, Col: 35}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
@@ -416,7 +418,7 @@ func Clinic(c *Ctx, clinic models.Clinic) templ.Component {
 				var templ_7745c5c3_Var24 string
 				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(clinic.Address.Line1)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 145, Col: 29}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 147, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 				if templ_7745c5c3_Err != nil {
@@ -443,7 +445,7 @@ func Clinic(c *Ctx, clinic models.Clinic) templ.Component {
 				var templ_7745c5c3_Var25 string
 				templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(clinic.Phone)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 156, Col: 21}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 158, Col: 21}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 				if templ_7745c5c3_Err != nil {
@@ -470,7 +472,7 @@ func Clinic(c *Ctx, clinic models.Clinic) templ.Component {
 				var templ_7745c5c3_Var26 string
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(clinic.Email)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 167, Col: 21}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 169, Col: 21}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {
@@ -488,7 +490,7 @@ func Clinic(c *Ctx, clinic models.Clinic) templ.Component {
 			var templ_7745c5c3_Var27 string
 			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.view_appt"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 173, Col: 102}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 175, Col: 102}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 			if templ_7745c5c3_Err != nil {
@@ -564,7 +566,46 @@ func LatestTransactions() templ.Component {
 	})
 }
 
-func Feed() templ.Component {
+func feedEventColorClass(action string) string {
+	switch action {
+	case "created":
+		return "text-info"
+	case "confirmed", "completed":
+		return "text-success"
+	case "canceled", "deleted":
+		return "text-error"
+	case "updated":
+		return "text-warning"
+	default:
+		return "text-base-content/60"
+	}
+}
+
+func feedEventSubjectLabel(vc *Ctx, event models.FeedEvent) string {
+	if event.SubjectType == "appointments" {
+		return l(vc.Locale, "str.appointment")
+	}
+
+	return event.Subject
+}
+
+func feedEventShortDateTime(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+
+	return t.Format("02 Jan, 3:04pm")
+}
+
+func feedEventTitle(vc *Ctx, event models.FeedEvent) string {
+	if event.SubjectType == "appointments" && event.Action == "created" {
+		return l(vc.Locale, "str.feed_new_appointment")
+	}
+
+	return feedEventSubjectLabel(vc, event) + " " + l(vc.Locale, FeedActionLocaleKey(event.Action))
+}
+
+func feedEventIcon(action string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -585,7 +626,306 @@ func Feed() templ.Component {
 			templ_7745c5c3_Var29 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "<div class=\"app-card\"><h3 class=\"font-semibold text-xl mb-6\">My feed</h3><ul role=\"list\" class=\"space-y-6\"><li class=\"relative flex gap-x-4\"><div class=\"absolute left-0 top-0 flex w-6 justify-center -bottom-6\"><div class=\"w-px bg-base-content/10\"></div></div><div class=\"relative flex h-6 w-6 flex-none items-center justify-center bg-base-100\"><div class=\"h-1.5 w-1.5 rounded-full bg-base-100 ring-1 ring-gray-300\"></div></div><p class=\"flex-auto py-0.5 text-xs leading-5 text-base-content/60\"><span class=\"font-medium text-base-content\">Chelsea Hagon</span> created the invoice.</p><time datetime=\"2023-01-23T10:32\" class=\"flex-none py-0.5 text-xs leading-5 text-base-content/60\">7d ago</time></li><li class=\"relative flex gap-x-4\"><div class=\"absolute left-0 top-0 flex w-6 justify-center -bottom-6\"><div class=\"w-px bg-base-content/10\"></div></div><div class=\"relative flex h-6 w-6 flex-none items-center justify-center bg-base-100\"><div class=\"h-1.5 w-1.5 rounded-full bg-base-100 ring-1 ring-gray-300\"></div></div><p class=\"flex-auto py-0.5 text-xs leading-5 text-base-content/60\"><span class=\"font-medium text-base-content\">Chelsea Hagon</span> edited the invoice.</p><time datetime=\"2023-01-23T11:03\" class=\"flex-none py-0.5 text-xs leading-5 text-base-content/60\">6d ago</time></li><li class=\"relative flex gap-x-4\"><div class=\"absolute left-0 top-0 flex w-6 justify-center -bottom-6\"><div class=\"w-px bg-base-content/10\"></div></div><div class=\"relative flex h-6 w-6 flex-none items-center justify-center bg-base-100\"><div class=\"h-1.5 w-1.5 rounded-full bg-base-100 ring-1 ring-gray-300\"></div></div><p class=\"flex-auto py-0.5 text-xs leading-5 text-base-content/60\"><span class=\"font-medium text-base-content\">Chelsea Hagon</span> sent the invoice.</p><time datetime=\"2023-01-23T11:24\" class=\"flex-none py-0.5 text-xs leading-5 text-base-content/60\">6d ago</time></li><li class=\"relative flex gap-x-4\"><div class=\"absolute left-0 top-0 flex w-6 justify-center -bottom-6\"><div class=\"w-px bg-base-content/10\"></div></div><img src=\"https://images.unsplash.com/photo-1550525811-e5869dd03032?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80\" alt=\"\" class=\"relative mt-3 h-6 w-6 flex-none rounded-full bg-gray-50\"><div class=\"flex-auto rounded-md p-2 border-y border-base-content/10\"><div class=\"flex justify-between gap-x-4\"><div class=\"py-0.5 text-xs leading-5 text-base-content/60\"><span class=\"font-medium text-base-content\">Chelsea Hagon</span> commented</div><time datetime=\"2023-01-23T15:56\" class=\"flex-none py-0.5 text-xs leading-5 text-base-content/60\">3d ago</time></div><p class=\"text-sm leading-6 text-base-content/60\">Called client, they reassured me the invoice would be paid by the 25th.</p></div></li><li class=\"relative flex gap-x-4\"><div class=\"absolute left-0 top-0 flex w-6 justify-center -bottom-6\"><div class=\"w-px bg-base-content/10\"></div></div><div class=\"relative flex h-6 w-6 flex-none items-center justify-center bg-base-100\"><div class=\"h-1.5 w-1.5 rounded-full bg-base-100 ring-1 ring-gray-300\"></div></div><p class=\"flex-auto py-0.5 text-xs leading-5 text-base-content/60\"><span class=\"font-medium text-base-content\">Alex Curren</span> viewed the invoice.</p><time datetime=\"2023-01-24T09:12\" class=\"flex-none py-0.5 text-xs leading-5 text-base-content/60\">2d ago</time></li><li class=\"relative flex gap-x-4\"><div class=\"absolute left-0 top-0 flex w-6 justify-center h-6\"><div class=\"w-px bg-base-content/10\"></div></div><div class=\"relative flex h-6 w-6 flex-none items-center justify-center bg-base-100\"><svg class=\"h-6 w-6 text-primary\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><path fill-rule=\"evenodd\" d=\"M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z\" clip-rule=\"evenodd\"></path></svg></div><p class=\"flex-auto py-0.5 text-xs leading-5 text-base-content/60\"><span class=\"font-medium text-base-content\">Alex Curren</span> paid the invoice.</p><time datetime=\"2023-01-24T09:20\" class=\"flex-none py-0.5 text-xs leading-5 text-base-content\">1d ago</time></li></ul></div>")
+		switch action {
+		case "created":
+			templ_7745c5c3_Err = IconPlusCircleFilled("size-5").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		case "updated":
+			templ_7745c5c3_Err = IconPencilFilled("size-5").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		case "confirmed", "completed":
+			templ_7745c5c3_Err = IconCheck("size-5").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		case "canceled":
+			templ_7745c5c3_Err = IconCloseCircleFilled("size-5").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		case "deleted":
+			templ_7745c5c3_Err = IconTrash("size-5").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		default:
+			templ_7745c5c3_Err = IconCalendar("size-5").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		return nil
+	})
+}
+
+func Feed(vc *Ctx, events []models.FeedEvent) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var30 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var30 == nil {
+			templ_7745c5c3_Var30 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "<div class=\"app-card\"><h3 class=\"font-semibold text-xl mb-6\">My feed</h3>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if len(events) == 0 {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<p class=\"text-sm text-base-content/60 py-4\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var31 string
+			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.no_recent_activity"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 384, Col: 88}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "</p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		} else {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "<ul role=\"list\" class=\"space-y-6\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			for i, event := range events {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "<li class=\"relative flex gap-x-4\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				if i < len(events)-1 {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "<div class=\"absolute left-0 top-0 flex w-8 justify-center -bottom-6\"><div class=\"w-px bg-base-content/10\"></div></div>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				} else {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "<div class=\"absolute left-0 top-0 flex w-8 justify-center h-8\"><div class=\"w-px bg-base-content/10\"></div></div>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				}
+				var templ_7745c5c3_Var32 = []any{"relative flex h-8 w-8 flex-none items-center justify-center rounded-full bg-base-100 " + feedEventColorClass(event.Action)}
+				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var32...)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "<div class=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var33 string
+				templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var32).String())
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 1, Col: 0}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = feedEventIcon(event.Action).Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "</div><div class=\"flex-auto py-0.5\"><p class=\"text-xs leading-5 text-base-content/60\"><a href=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var34 templ.SafeURL
+				templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(event.SubjectURL))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 403, Col: 49}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "\" class=\"font-medium text-base-content hover:underline\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var35 string
+				templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(feedEventTitle(vc, event))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 403, Col: 133}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "</a> <span>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var36 string
+				templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs("@" + feedEventShortDateTime(event.OcurredAt))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 404, Col: 61}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "</span></p><p class=\"text-[11px] text-base-content/50 mt-0.5\"><span>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var37 string
+				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.patient"))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 407, Col: 43}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "</span> <a href=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var38 templ.SafeURL
+				templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(event.TargetURL))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 408, Col: 48}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "\" class=\"font-medium text-base-content hover:underline\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var39 string
+				templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(event.Target)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 408, Col: 119}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "</a> <span>,</span> ")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				if event.ActorURL != "" {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "<a href=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var40 templ.SafeURL
+					templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(event.ActorURL))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 411, Col: 48}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "\" class=\"hover:underline\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var41 string
+					templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(event.Actor)
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 411, Col: 88}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "</a>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				} else if event.Actor != "" {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "<span>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var42 string
+					templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(event.Actor)
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 413, Col: 28}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "</span>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				} else {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "<span>Miconsul</span>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "</p></div><time datetime=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var43 string
+				templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(event.OcurredAt.Format(time.RFC3339))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 419, Col: 59}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "\" class=\"flex-none py-0.5 text-xs leading-5 text-base-content/60\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var44 string
+				templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(libtime.RelativeTime(event.OcurredAt))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 419, Col: 165}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "</time></li>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "</ul>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

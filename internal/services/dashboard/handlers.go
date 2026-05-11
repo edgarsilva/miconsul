@@ -18,7 +18,11 @@ func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
 	appointments := []models.Appointment{}
-	query := s.DB.WithContext(c.Context()).Model(models.Appointment{}).Where("user_id = ?", cu.ID)
+	query := s.DB.WithContext(c.Context()).
+		Model(models.Appointment{}).
+		Preload("Patient").
+		Preload("Clinic").
+		Where("user_id = ?", cu.ID)
 
 	timeframe := c.Query("timeframe", "")
 	switch timeframe {
@@ -32,9 +36,13 @@ func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 		query.Where("booked_at > ?", libtime.BoD(time.Now()))
 	}
 
+	_ = query.Limit(10).Find(&appointments).Error
+
 	clinic, _ := s.FavoriteClinic(c, cu.ID)
 	vc, _ := view.NewCtx(c)
 	stats := s.CalcDashboardStats(c.Context(), cu)
 
-	return view.Render(c, view.DashboardPage(vc, stats, appointments, clinic))
+	feedEvents, _ := s.FindFeedEventsByUserID(c.Context(), cu.ID, 10)
+
+	return view.Render(c, view.DashboardPage(vc, stats, appointments, clinic, feedEvents))
 }

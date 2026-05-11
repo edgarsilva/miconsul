@@ -96,6 +96,12 @@ func seedBaseline(ctx context.Context, db *gorm.DB, opts Options) (models.User, 
 	}
 	result.AppointmentsCreated += createdAppointments
 
+	feedEventsCreated, err := seedFeedEvents(ctx, db, ownerUser)
+	if err != nil {
+		return models.User{}, Result{}, err
+	}
+	result.FeedEventsCreated += feedEventsCreated
+
 	return ownerUser, result, nil
 }
 
@@ -355,6 +361,66 @@ func ensureBaselineAppointments(ctx context.Context, db *gorm.DB, owner models.U
 	return created, nil
 }
 
+func seedFeedEvents(ctx context.Context, db *gorm.DB, owner models.User) (int, error) {
+	// Delete existing feed events for this user's appointments so re-seeding regenerates fresh data
+	if err := db.WithContext(ctx).
+		Exec("DELETE FROM feed_events WHERE feed_eventable_type = ? AND feed_eventable_id IN (SELECT uid FROM appointments WHERE user_id = ?)", "appointments", owner.ID).Error; err != nil {
+		return 0, fmt.Errorf("delete old feed events: %w", err)
+	}
+
+	var appointments []models.Appointment
+	if err := db.WithContext(ctx).
+		Where("user_id = ?", owner.ID).
+		Preload("Patient").
+		Order("created_at desc").
+		Limit(20).
+		Find(&appointments).Error; err != nil {
+		return 0, fmt.Errorf("fetch appointments for feed events: %w", err)
+	}
+
+	if len(appointments) == 0 {
+		return 0, nil
+	}
+
+	actions := []models.EventAction{
+		models.EventActionCreated,
+		models.EventActionUpdated,
+		models.EventActionConfirmed,
+		models.EventActionCompleted,
+		models.EventActionCanceled,
+	}
+
+	now := time.Now()
+	created := 0
+	for i, apnt := range appointments {
+		// Create 1-3 feed events per appointment with recent timestamps
+		eventCount := 1 + (i % 3)
+		for j := 0; j < eventCount && j < len(actions); j++ {
+			action := actions[j]
+			// Vary timestamps within last 2.5 days so they show in dashboard feed
+			offset := time.Duration(i*30+j*15) * time.Minute
+			apntCopy := apnt
+			apntCopy.Patient = apnt.Patient // ensure patient is set for FeedEventSource
+			actorName := owner.Name
+			if actorName == "" {
+				actorName = "Seed Admin"
+			}
+			actorURL := ""
+			if owner.UID != "" {
+				actorURL = "/users/" + owner.UID
+			}
+			event := models.NewFeedEvent(action, actorName, owner.UID, actorURL, apntCopy)
+			event.OcurredAt = now.Add(-offset)
+			if err := db.WithContext(ctx).Create(&event).Error; err != nil {
+				return 0, fmt.Errorf("create feed event for appointment %s: %w", apnt.UID, err)
+			}
+			created++
+		}
+	}
+
+	return created, nil
+}
+
 func seedBulk(ctx context.Context, db *gorm.DB, owner models.User, opts Options) (Result, error) {
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	runID := time.Now().Unix()
@@ -384,6 +450,12 @@ func seedBulk(ctx context.Context, db *gorm.DB, owner models.User, opts Options)
 		return Result{}, err
 	}
 	result.AppointmentsCreated += createdAppointments
+
+	feedEventsCreated, err := seedFeedEvents(ctx, db, owner)
+	if err != nil {
+		return Result{}, err
+	}
+	result.FeedEventsCreated += feedEventsCreated
 
 	return result, nil
 }
