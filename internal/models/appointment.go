@@ -169,3 +169,18 @@ func (a *Appointment) BookedAtInLocalTime() time.Time {
 	localTime := libtime.InTimezone(a.BookedAt, a.LocalTimezone())
 	return localTime
 }
+
+// FeedEventRef returns the polymorphic identity for this appointment.
+func (a Appointment) FeedEventRef() (id string, typ string) {
+	return a.UID, "appointments"
+}
+
+// FeedEventSubject returns the patient as the subject of the event.
+func (a Appointment) FeedEventSubject() (name, id, typ, url string) {
+	return a.Patient.Name, a.Patient.UID, "patients", "/patients/" + a.Patient.UID
+}
+
+// FeedEventTarget returns the appointment itself as the target of the event.
+func (a Appointment) FeedEventTarget() (name, id, typ, url string) {
+	return "Appointment", a.UID, "appointments", "/appointments/" + a.UID
+}
