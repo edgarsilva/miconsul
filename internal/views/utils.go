@@ -1,6 +1,9 @@
 package views
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // QueryParams returns the queryParams (AKA searchParams) in the
 // req ctx and appends(or updates) params passed in the form "name=value"
@@ -23,4 +26,9 @@ func QueryParams(vc *Ctx, params ...string) string {
 	}
 
 	return strings.Join(paramStrTokens, "&")
+}
+
+// FeedActionLocaleKey returns the localization key for a feed event action.
+func FeedActionLocaleKey(action string) string {
+	return fmt.Sprintf("str.feed_%s", action)
 }

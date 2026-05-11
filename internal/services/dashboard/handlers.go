@@ -36,5 +36,7 @@ func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 	vc, _ := view.NewCtx(c)
 	stats := s.CalcDashboardStats(c.Context(), cu)
 
-	return view.Render(c, view.DashboardPage(vc, stats, appointments, clinic))
+	feedEvents, _ := s.FindFeedEventsByUserID(c.Context(), cu.ID, 10)
+
+	return view.Render(c, view.DashboardPage(vc, stats, appointments, clinic, feedEvents))
 }

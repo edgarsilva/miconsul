@@ -1,8 +1,10 @@
 package views
 
 import (
+	"miconsul/internal/lib/libtime"
 	"miconsul/internal/models"
 	"strconv"
+	"time"
 )
 
 type DashboardStat struct {
@@ -15,7 +17,7 @@ type DashboardStats struct {
 	Appointments DashboardStat
 }
 
-templ DashboardPage(vc *Ctx, stats DashboardStats, appointments []models.Appointment, favClinic models.Clinic) {
+templ DashboardPage(vc *Ctx, stats DashboardStats, appointments []models.Appointment, favClinic models.Clinic, feedEvents []models.FeedEvent) {
 	@Layout(vc) {
 		<div id="content" class="container md:mx-auto md:px-4">
 			@MonthTrends(stats, vc)
@@ -29,7 +31,7 @@ templ DashboardPage(vc *Ctx, stats DashboardStats, appointments []models.Appoint
 					class="col-span-3 lg:col-span-1 order-2 lg:order-2 flex flex-col gap-8"
 				>
 					@Clinic(vc, favClinic)
-					@Feed()
+					@Feed(vc, feedEvents)
 				</section>
 			</div>
 		</div>
@@ -319,75 +321,36 @@ templ LatestTransactions() {
 	</ul>
 }
 
-templ Feed() {
+templ Feed(vc *Ctx, events []models.FeedEvent) {
 	<div class="app-card">
 		<h3 class="font-semibold text-xl mb-6">My feed</h3>
-		<ul role="list" class="space-y-6">
-			<li class="relative flex gap-x-4">
-				<div class="absolute left-0 top-0 flex w-6 justify-center -bottom-6">
-					<div class="w-px bg-base-content/10"></div>
-				</div>
-				<div class="relative flex h-6 w-6 flex-none items-center justify-center bg-base-100">
-					<div class="h-1.5 w-1.5 rounded-full bg-base-100 ring-1 ring-gray-300"></div>
-				</div>
-				<p class="flex-auto py-0.5 text-xs leading-5 text-base-content/60"><span class="font-medium text-base-content">Chelsea Hagon</span> created the invoice.</p>
-				<time datetime="2023-01-23T10:32" class="flex-none py-0.5 text-xs leading-5 text-base-content/60">7d ago</time>
-			</li>
-			<li class="relative flex gap-x-4">
-				<div class="absolute left-0 top-0 flex w-6 justify-center -bottom-6">
-					<div class="w-px bg-base-content/10"></div>
-				</div>
-				<div class="relative flex h-6 w-6 flex-none items-center justify-center bg-base-100">
-					<div class="h-1.5 w-1.5 rounded-full bg-base-100 ring-1 ring-gray-300"></div>
-				</div>
-				<p class="flex-auto py-0.5 text-xs leading-5 text-base-content/60"><span class="font-medium text-base-content">Chelsea Hagon</span> edited the invoice.</p>
-				<time datetime="2023-01-23T11:03" class="flex-none py-0.5 text-xs leading-5 text-base-content/60">6d ago</time>
-			</li>
-			<li class="relative flex gap-x-4">
-				<div class="absolute left-0 top-0 flex w-6 justify-center -bottom-6">
-					<div class="w-px bg-base-content/10"></div>
-				</div>
-				<div class="relative flex h-6 w-6 flex-none items-center justify-center bg-base-100">
-					<div class="h-1.5 w-1.5 rounded-full bg-base-100 ring-1 ring-gray-300"></div>
-				</div>
-				<p class="flex-auto py-0.5 text-xs leading-5 text-base-content/60"><span class="font-medium text-base-content">Chelsea Hagon</span> sent the invoice.</p>
-				<time datetime="2023-01-23T11:24" class="flex-none py-0.5 text-xs leading-5 text-base-content/60">6d ago</time>
-			</li>
-			<li class="relative flex gap-x-4">
-				<div class="absolute left-0 top-0 flex w-6 justify-center -bottom-6">
-					<div class="w-px bg-base-content/10"></div>
-				</div>
-				<img src="https://images.unsplash.com/photo-1550525811-e5869dd03032?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="relative mt-3 h-6 w-6 flex-none rounded-full bg-gray-50"/>
-				<div class="flex-auto rounded-md p-2 border-y border-base-content/10">
-					<div class="flex justify-between gap-x-4">
-						<div class="py-0.5 text-xs leading-5 text-base-content/60"><span class="font-medium text-base-content ">Chelsea Hagon</span> commented</div>
-						<time datetime="2023-01-23T15:56" class="flex-none py-0.5 text-xs leading-5 text-base-content/60">3d ago</time>
-					</div>
-					<p class="text-sm leading-6 text-base-content/60">Called client, they reassured me the invoice would be paid by the 25th.</p>
-				</div>
-			</li>
-			<li class="relative flex gap-x-4">
-				<div class="absolute left-0 top-0 flex w-6 justify-center -bottom-6">
-					<div class="w-px bg-base-content/10"></div>
-				</div>
-				<div class="relative flex h-6 w-6 flex-none items-center justify-center bg-base-100">
-					<div class="h-1.5 w-1.5 rounded-full bg-base-100 ring-1 ring-gray-300"></div>
-				</div>
-				<p class="flex-auto py-0.5 text-xs leading-5 text-base-content/60"><span class="font-medium text-base-content">Alex Curren</span> viewed the invoice.</p>
-				<time datetime="2023-01-24T09:12" class="flex-none py-0.5 text-xs leading-5 text-base-content/60">2d ago</time>
-			</li>
-			<li class="relative flex gap-x-4">
-				<div class="absolute left-0 top-0 flex w-6 justify-center h-6">
-					<div class="w-px bg-base-content/10"></div>
-				</div>
-				<div class="relative flex h-6 w-6 flex-none items-center justify-center bg-base-100">
-					<svg class="h-6 w-6 text-primary" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-						<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd"></path>
-					</svg>
-				</div>
-				<p class="flex-auto py-0.5 text-xs leading-5 text-base-content/60 "><span class="font-medium text-base-content">Alex Curren</span> paid the invoice.</p>
-				<time datetime="2023-01-24T09:20" class="flex-none py-0.5 text-xs leading-5 text-base-content">1d ago</time>
-			</li>
-		</ul>
+		if len(events) == 0 {
+			<p class="text-sm text-base-content/60 py-4">{ l(vc.Locale, "str.no_recent_activity") }</p>
+		} else {
+			<ul role="list" class="space-y-6">
+				for i, event := range events {
+					<li class="relative flex gap-x-4">
+						if i < len(events)-1 {
+							<div class="absolute left-0 top-0 flex w-6 justify-center -bottom-6">
+								<div class="w-px bg-base-content/10"></div>
+							</div>
+						} else {
+							<div class="absolute left-0 top-0 flex w-6 justify-center h-6">
+								<div class="w-px bg-base-content/10"></div>
+							</div>
+						}
+						<div class="relative flex h-6 w-6 flex-none items-center justify-center bg-base-100">
+							<div class="h-1.5 w-1.5 rounded-full bg-base-100 ring-1 ring-gray-300"></div>
+						</div>
+						<p class="flex-auto py-0.5 text-xs leading-5 text-base-content/60">
+							<a href={ templ.SafeURL(event.SubjectURL) } class="font-medium text-base-content hover:underline">{ event.Subject }</a>
+							<span>{ l(vc.Locale, FeedActionLocaleKey(event.Action)) }</span>
+							<a href={ templ.SafeURL(event.TargetURL) } class="font-medium text-base-content hover:underline">{ event.Target }</a>
+						</p>
+						<time datetime={ event.OcurredAt.Format(time.RFC3339) } class="flex-none py-0.5 text-xs leading-5 text-base-content/60">{ libtime.RelativeTime(event.OcurredAt) }</time>
+					</li>
+				}
+			</ul>
+		}
 	</div>
 }
