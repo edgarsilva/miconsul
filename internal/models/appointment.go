@@ -175,12 +175,12 @@ func (a Appointment) FeedEventRef() (id string, typ string) {
 	return a.UID, "appointments"
 }
 
-// FeedEventSubject returns the patient as the subject of the event.
+// FeedEventSubject returns the appointment as the subject of the event.
 func (a Appointment) FeedEventSubject() (name, id, typ, url string) {
-	return a.Patient.Name, a.Patient.UID, "patients", "/patients/" + a.Patient.UID
+	return "Appointment", a.UID, "appointments", "/appointments/" + a.UID
 }
 
-// FeedEventTarget returns the appointment itself as the target of the event.
+// FeedEventTarget returns the patient as the target of the event.
 func (a Appointment) FeedEventTarget() (name, id, typ, url string) {
-	return "Appointment", a.UID, "appointments", "/appointments/" + a.UID
+	return a.Patient.Name, a.Patient.UID, "patients", "/patients/" + a.Patient.UID
 }

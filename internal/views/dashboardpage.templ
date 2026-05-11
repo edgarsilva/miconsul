@@ -321,6 +321,21 @@ templ LatestTransactions() {
 	</ul>
 }
 
+func feedEventColorClass(action string) string {
+	switch action {
+	case "created":
+		return "text-info"
+	case "confirmed", "completed":
+		return "text-success"
+	case "canceled", "deleted":
+		return "text-error"
+	case "updated":
+		return "text-warning"
+	default:
+		return "text-base-content/60"
+	}
+}
+
 templ Feed(vc *Ctx, events []models.FeedEvent) {
 	<div class="app-card">
 		<h3 class="font-semibold text-xl mb-6">My feed</h3>
@@ -339,14 +354,25 @@ templ Feed(vc *Ctx, events []models.FeedEvent) {
 								<div class="w-px bg-base-content/10"></div>
 							</div>
 						}
-						<div class="relative flex h-6 w-6 flex-none items-center justify-center bg-base-100">
-							<div class="h-1.5 w-1.5 rounded-full bg-base-100 ring-1 ring-gray-300"></div>
+						<div class={ "relative flex h-6 w-6 flex-none items-center justify-center rounded-full bg-base-100 " + feedEventColorClass(event.Action) }>
+							@IconCalendar("size-4")
 						</div>
-						<p class="flex-auto py-0.5 text-xs leading-5 text-base-content/60">
-							<a href={ templ.SafeURL(event.SubjectURL) } class="font-medium text-base-content hover:underline">{ event.Subject }</a>
-							<span>{ l(vc.Locale, FeedActionLocaleKey(event.Action)) }</span>
-							<a href={ templ.SafeURL(event.TargetURL) } class="font-medium text-base-content hover:underline">{ event.Target }</a>
-						</p>
+						<div class="flex-auto py-0.5">
+							<p class="text-xs leading-5 text-base-content/60">
+								<a href={ templ.SafeURL(event.SubjectURL) } class="font-medium text-base-content hover:underline">{ event.Subject }</a>
+								<span>{ l(vc.Locale, FeedActionLocaleKey(event.Action)) }</span>
+								<span>for</span>
+								<a href={ templ.SafeURL(event.TargetURL) } class="font-medium text-base-content hover:underline">{ event.Target }</a>
+								if event.Actor != "" {
+									<span>by</span>
+									if event.ActorURL != "" {
+										<a href={ templ.SafeURL(event.ActorURL) } class="font-medium text-base-content hover:underline">{ event.Actor }</a>
+									} else {
+										<span class="font-medium text-base-content">{ event.Actor }</span>
+									}
+								}
+							</p>
+						</div>
 						<time datetime={ event.OcurredAt.Format(time.RFC3339) } class="flex-none py-0.5 text-xs leading-5 text-base-content/60">{ libtime.RelativeTime(event.OcurredAt) }</time>
 					</li>
 				}

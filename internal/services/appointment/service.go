@@ -290,7 +290,11 @@ func (s *service) ConfirmAppointmentByIDAndToken(ctx context.Context, appointmen
 		return err
 	}
 
-	event := models.NewFeedEvent(models.EventActionConfirmed, appointment)
+	actorName := appointment.Patient.Name
+	if actorName == "" {
+		actorName = "Miconsul"
+	}
+	event := models.NewFeedEvent(models.EventActionConfirmed, actorName, appointment.Patient.UID, "/patients/"+appointment.Patient.UID, appointment)
 	return s.DB.WithContext(ctx).Create(&event).Error
 }
 
@@ -308,7 +312,11 @@ func (s *service) CancelAppointmentByIDAndToken(ctx context.Context, appointment
 		return err
 	}
 
-	event := models.NewFeedEvent(models.EventActionCanceled, appointment)
+	actorName := appointment.Patient.Name
+	if actorName == "" {
+		actorName = "Miconsul"
+	}
+	event := models.NewFeedEvent(models.EventActionCanceled, actorName, appointment.Patient.UID, "/patients/"+appointment.Patient.UID, appointment)
 	return s.DB.WithContext(ctx).Create(&event).Error
 }
 
@@ -330,7 +338,19 @@ func (s *service) recordFeedEvent(ctx context.Context, userID uint, appointmentU
 		return err
 	}
 
-	event := models.NewFeedEvent(action, appointment)
+	var actorName, actorID string
+	if userID > 0 {
+		user, err := gorm.G[models.User](s.DB.GormDB()).Where("id = ?", userID).Take(ctx)
+		if err == nil {
+			actorName = user.Name
+			actorID = user.UID
+		}
+	}
+	if actorName == "" {
+		actorName = "Miconsul"
+	}
+
+	event := models.NewFeedEvent(action, actorName, actorID, "/users/"+actorID, appointment)
 	return s.DB.WithContext(ctx).Create(&event).Error
 }
 

@@ -32,7 +32,7 @@ type FeedEventSource interface {
 }
 
 // NewFeedEvent builds a FeedEvent from a source model and action.
-func NewFeedEvent(action EventAction, source FeedEventSource) FeedEvent {
+func NewFeedEvent(action EventAction, actorName, actorID, actorURL string, source FeedEventSource) FeedEvent {
 	refID, refType := source.FeedEventRef()
 	subName, subID, subType, subURL := source.FeedEventSubject()
 	tgtName, tgtID, tgtType, tgtURL := source.FeedEventTarget()
@@ -48,6 +48,9 @@ func NewFeedEvent(action EventAction, source FeedEventSource) FeedEvent {
 		TargetID:          tgtID,
 		TargetType:        tgtType,
 		TargetURL:         tgtURL,
+		Actor:             actorName,
+		ActorID:           actorID,
+		ActorURL:          actorURL,
 		FeedEventableID:   refID,
 		FeedEventableType: refType,
 		OcurredAt:         time.Now(),
@@ -57,7 +60,7 @@ func NewFeedEvent(action EventAction, source FeedEventSource) FeedEvent {
 type FeedEvent struct {
 	ID                uint   `gorm:"primaryKey"`
 	UID               string `gorm:"uniqueIndex;default:null;not null"`
-	ExtID             string `gorm:"index;default:null;not null"`
+	ExtID             string `gorm:"index"`
 	Name              string `gorm:"index;default:null;not null"`
 	Subject           string
 	SubjectID         string `gorm:"index:fe_subject_idx;default:null;not null"`
@@ -68,6 +71,9 @@ type FeedEvent struct {
 	TargetID          string `gorm:"index:fe_target_idx;default:null;not null"`
 	TargetType        string
 	TargetURL         string
+	Actor             string
+	ActorID           string
+	ActorURL          string
 	OcurredAt         time.Time `gorm:"index;default:null"`
 	Extra1            string
 	Extra2            string

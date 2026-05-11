@@ -408,7 +408,15 @@ func seedFeedEvents(ctx context.Context, db *gorm.DB, owner models.User) (int, e
 			offset := time.Duration(i*30+j*15) * time.Minute
 			apntCopy := apnt
 			apntCopy.Patient = apnt.Patient // ensure patient is set for FeedEventSource
-			event := models.NewFeedEvent(action, apntCopy)
+			actorName := owner.Name
+			if actorName == "" {
+				actorName = "Seed Admin"
+			}
+			actorURL := ""
+			if owner.UID != "" {
+				actorURL = "/users/" + owner.UID
+			}
+			event := models.NewFeedEvent(action, actorName, owner.UID, actorURL, apntCopy)
 			event.OcurredAt = now.Add(-offset)
 			if err := db.WithContext(ctx).Create(&event).Error; err != nil {
 				return 0, fmt.Errorf("create feed event for appointment %s: %w", apnt.UID, err)
