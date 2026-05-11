@@ -2,11 +2,6 @@
 
 ## Next Up
 
-- [feature/dashboard] Populate FeedEvent on appointment changes and wire Dashboard Feed widget
-  - [ ] Create FeedEvent records on appointment create/update/cancel/complete.
-  - [ ] Update Dashboard Feed widget to read from FeedEvent table instead of static/dummy data.
-  - [ ] Add FeedEvent query scoped to current user + recent time window.
-
 - [feature/notifications] Multi-channel notifications baseline
   - Keep email templates/actions synced with appointment + professional details.
   - Add Telegram provider integration (credentials, send path, retry/error handling).
@@ -56,6 +51,13 @@
   - Keep fallback behavior and rollout checklist for local/dev environments.
 
 ## Done
+
+- [feature/dashboard] Populate FeedEvent on appointment changes and wire Dashboard Feed widget
+  - Create FeedEvent records on appointment create/update/cancel/complete/delete + patient confirm/cancel.
+  - Update Dashboard Feed widget to read from FeedEvent table (remove static/dummy timeline).
+  - Scope FeedEvent query to current user with recent window and limit.
+  - Add localized feed copy (en-US/es-MX), actor attribution, and action-specific filled icons.
+  - Add seed data generation for FeedEvents and refresh behavior on re-seed.
 
 - Appointment index search parity with clinics/patients
   - Added `GET /appointments/search` HTMX index search endpoint.

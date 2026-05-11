@@ -8,7 +8,7 @@
 - [x] Fix local-strategy signup confirm-email delivery in production (env wiring + SMTP path + error visibility)
 - [x] Add panic recovery + structured error logging to `SendToWorker`
 - [x] Add relative time formatting (time ago) to appointments and users lists
-- [ ] Populate FeedEvent on appointment changes and wire Dashboard Feed widget
+- [x] Populate FeedEvent on appointment changes and wire Dashboard Feed widget
 - [ ] Multi-channel notifications baseline (Telegram, WhatsApp, Messenger)
 - [ ] Global search modal (Ctrl+K) for appointments, clinics, and patients
 - [ ] Upload images to S3-compatible object storage (RustFS)
