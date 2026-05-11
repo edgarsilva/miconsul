@@ -81,7 +81,15 @@ func (s *service) CreateAppointment(ctx context.Context, appointment *models.App
 		return errors.New("invalid appointment status")
 	}
 
-	return gorm.G[models.Appointment](s.DB.GormDB()).Create(ctx, appointment)
+	if err := gorm.G[models.Appointment](s.DB.GormDB()).Create(ctx, appointment); err != nil {
+		return err
+	}
+
+	if appointment.UID != "" {
+		_ = s.recordFeedEvent(ctx, appointment.UserID, appointment.UID, models.EventActionCreated)
+	}
+
+	return nil
 }
 
 func (s *service) TakeAppointmentByUID(ctx context.Context, userID uint, appointmentUID string) (models.Appointment, error) {
@@ -119,7 +127,12 @@ func (s *service) UpdateAppointmentByID(ctx context.Context, userID uint, appoin
 		"Duration",
 	}
 
-	return s.updateAppointmentColumnsByID(ctx, userID, appointmentID, columns, &updates)
+	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, columns, &updates); err != nil {
+		return err
+	}
+
+	_ = s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionUpdated)
+	return nil
 }
 
 func (s *service) CompleteAppointmentByID(ctx context.Context, userID uint, appointmentID string, updates appointmentCompleteUpdates) error {
@@ -133,7 +146,12 @@ func (s *service) CompleteAppointmentByID(ctx context.Context, userID uint, appo
 
 	columns := []string{"Status", "Observations", "Conclusions", "Summary", "Notes"}
 
-	return s.updateAppointmentColumnsByID(ctx, userID, appointmentID, columns, &updates)
+	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, columns, &updates); err != nil {
+		return err
+	}
+
+	_ = s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionCompleted)
+	return nil
 }
 
 func (s *service) CancelAppointmentByID(ctx context.Context, userID uint, appointmentID string, updates appointmentCancelUpdates) error {
@@ -147,7 +165,12 @@ func (s *service) CancelAppointmentByID(ctx context.Context, userID uint, appoin
 
 	columns := []string{"Status", "CanceledAt"}
 
-	return s.updateAppointmentColumnsByID(ctx, userID, appointmentID, columns, &updates)
+	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, columns, &updates); err != nil {
+		return err
+	}
+
+	_ = s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionCanceled)
+	return nil
 }
 
 func (s *service) updateAppointmentColumnsByID(ctx context.Context, userID uint, appointmentID string, columns []string, updates any) error {
@@ -176,6 +199,8 @@ func (s *service) DeleteAppointmentByID(ctx context.Context, userID uint, appoin
 		return ErrIDRequired
 	}
 
+	_ = s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionDeleted)
+
 	rowsAffected, err := gorm.G[models.Appointment](s.DB.GormDB()).
 		Where("uid = ? AND user_id = ?", appointmentID, userID).
 		Delete(ctx)
@@ -193,6 +218,7 @@ func (s *service) TakeAppointmentByIDAndToken(ctx context.Context, appointmentID
 	appointment, err := gorm.G[models.Appointment](s.DB.GormDB()).
 		Preload("Clinic", nil).
 		Preload("User", nil).
+		Preload("Patient", nil).
 		Where("uid = ? AND token = ?", appointmentID, token).
 		Take(ctx)
 	if err != nil {
@@ -255,7 +281,17 @@ func (s *service) ConfirmAppointmentByIDAndToken(ctx context.Context, appointmen
 		ConfirmedAt: time.Now(),
 		Status:      models.ApntStatusConfirmed,
 	}
-	return s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"ConfirmedAt", "Status"}, updates)
+	if err := s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"ConfirmedAt", "Status"}, updates); err != nil {
+		return err
+	}
+
+	appointment, err := s.TakeAppointmentByIDAndToken(ctx, appointmentID, token)
+	if err != nil {
+		return err
+	}
+
+	event := models.NewFeedEvent(models.EventActionConfirmed, appointment)
+	return s.DB.WithContext(ctx).Create(&event).Error
 }
 
 func (s *service) CancelAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) error {
@@ -263,7 +299,17 @@ func (s *service) CancelAppointmentByIDAndToken(ctx context.Context, appointment
 		CanceledAt: time.Now(),
 		Status:     models.ApntStatusCanceled,
 	}
-	return s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"CanceledAt", "Status"}, updates)
+	if err := s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"CanceledAt", "Status"}, updates); err != nil {
+		return err
+	}
+
+	appointment, err := s.TakeAppointmentByIDAndToken(ctx, appointmentID, token)
+	if err != nil {
+		return err
+	}
+
+	event := models.NewFeedEvent(models.EventActionCanceled, appointment)
+	return s.DB.WithContext(ctx).Create(&event).Error
 }
 
 func (s *service) RequestAppointmentDateChangeByIDAndToken(ctx context.Context, appointmentID, token string) error {
@@ -272,6 +318,20 @@ func (s *service) RequestAppointmentDateChangeByIDAndToken(ctx context.Context, 
 		Status:    models.ApntStatusPending,
 	}
 	return s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"PendingAt", "Status"}, updates)
+}
+
+func (s *service) recordFeedEvent(ctx context.Context, userID uint, appointmentUID string, action models.EventAction) error {
+	if appointmentUID == "" {
+		return nil
+	}
+
+	appointment, err := s.TakeAppointmentByUID(ctx, userID, appointmentUID)
+	if err != nil {
+		return err
+	}
+
+	event := models.NewFeedEvent(action, appointment)
+	return s.DB.WithContext(ctx).Create(&event).Error
 }
 
 func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, patientID, clinicID, timeframe, searchTerm, statusFilter string) ([]models.Appointment, error) {

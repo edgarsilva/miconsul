@@ -201,7 +201,7 @@ func newAppointmentServiceForTests(t *testing.T) (*service, models.User, models.
 		t.Fatalf("open sqlite: %v", err)
 	}
 
-	if err := gdb.AutoMigrate(&models.User{}, &models.Clinic{}, &models.Patient{}, &models.Appointment{}); err != nil {
+	if err := gdb.AutoMigrate(&models.User{}, &models.Clinic{}, &models.Patient{}, &models.Appointment{}, &models.FeedEvent{}); err != nil {
 		t.Fatalf("automigrate models: %v", err)
 	}
 
