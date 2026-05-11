@@ -2,24 +2,10 @@
 
 ## Next Up
 
-- [feature/auth] Harden local signup confirm-email delivery
-  - [ ] Make SMTP send failures non-silent: return error to signup handler instead of always redirecting.
-  - [ ] Audit env key alignment (`EMAIL_SENDER` vs `EMAIL_FROM_ADDRESS` vs dialer username).
-  - [ ] Replace raw `go func()` with `SendToWorker` + recover.
-
-- [infra/runtime] Add panic recovery to SendToWorker
-  - [ ] Wrapper with `recover()` + structured error logging / OTel span emission.
-  - [ ] Update all call sites (`appointment/alerts.go`) to benefit without manual recover.
-
 - [feature/dashboard] Populate FeedEvent on appointment changes and wire Dashboard Feed widget
   - [ ] Create FeedEvent records on appointment create/update/cancel/complete.
   - [ ] Update Dashboard Feed widget to read from FeedEvent table instead of static/dummy data.
   - [ ] Add FeedEvent query scoped to current user + recent time window.
-
-- [feature/ui] Add relative time formatting to appointments and users lists
-  - [ ] Add `RelativeTime` / `TimeAgo` helper to `internal/lib/libtime` (e.g. "5h", "2d ago", "3mo ago").
-  - [ ] Render relative time next to absolute dates in appointment list (`appointmentspage.templ`).
-  - [ ] Render relative time for user `CreatedAt` / `UpdatedAt` in admin users list (`userspage.templ`).
 
 - [feature/notifications] Multi-channel notifications baseline
   - Keep email templates/actions synced with appointment + professional details.
@@ -129,3 +115,22 @@
   - `COOKIE_SECRET` validated for 16/24/32 bytes at startup.
   - Post-migration admin auto-creation from `ADMIN_USER` + `ADMIN_PASSWORD`.
   - Mailers consume `appenv.Env` directly; no `os.Getenv` reads in mailer code.
+
+- [feature/auth] Harden local signup confirm-email delivery
+  - Signup confirm email sent synchronously; SMTP failures surface to user.
+  - Env key alignment audited (`EMAIL_SENDER`, `EMAIL_FROM_ADDRESS`).
+  - Raw goroutines replaced with `SendToWorker` for resend/reset flows.
+
+- [infra/runtime] Add panic recovery to SendToWorker
+  - `SendToWorker` wraps jobs with `recover()` + OTel span error recording.
+  - `appointment/alerts.go` call sites updated to pass context.
+  - Instrumentation methods extracted to `internal/server/instrumentation.go`.
+
+- [feature/ui] Add relative time formatting to appointments and users lists
+  - Added `github.com/dustin/go-humanize` dependency.
+  - Created `RelativeTime()` helper with abbreviated format ("5m", "2h", "3d", "1y", "in 5h").
+  - Added `ContextualTime()` for appointments: "Today @ 3:00pm", "Wednesday @ 11:30am", "Next Week", absolute dates for past.
+  - Added `CmpContextualTime` templ component with timezone-aware tooltip.
+  - Updated appointments index: contextual time display + color coding (today=accent, future=info, past=dimmed).
+  - Updated users index: `UpdatedAt` shows relative time.
+  - Added status filter buttons (confirmed/pending/rescheduled) with toggle behavior.
