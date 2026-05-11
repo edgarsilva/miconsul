@@ -36,7 +36,7 @@ func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 		query.Where("booked_at > ?", libtime.BoD(time.Now()))
 	}
 
-	_ = query.Limit(20).Find(&appointments).Error
+	_ = query.Limit(10).Find(&appointments).Error
 
 	clinic, _ := s.FavoriteClinic(c, cu.ID)
 	vc, _ := view.NewCtx(c)

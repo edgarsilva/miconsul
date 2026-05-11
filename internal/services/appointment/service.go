@@ -415,6 +415,7 @@ func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, patientID
 	err := dbquery.Preload("Clinic").
 		Preload("Patient").
 		Order("booked_at desc").
+		Limit(20).
 		Find(&appointments).
 		Error
 	if err != nil {
