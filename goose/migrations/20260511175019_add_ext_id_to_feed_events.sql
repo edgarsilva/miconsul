@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-ALTER TABLE feed_events ADD COLUMN ext_id TEXT;
+ALTER TABLE feed_events ADD COLUMN ext_id TEXT NOT NULL DEFAULT '';
 CREATE INDEX IF NOT EXISTS idx_feed_events_ext_id ON feed_events(ext_id);
 -- +goose StatementEnd
 

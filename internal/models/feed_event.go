@@ -60,7 +60,7 @@ func NewFeedEvent(action EventAction, actorName, actorID, actorURL string, sourc
 type FeedEvent struct {
 	ID                uint   `gorm:"primaryKey"`
 	UID               string `gorm:"uniqueIndex;default:null;not null"`
-	ExtID             string `gorm:"index"`
+	ExtID             string `gorm:"index;default:'';not null"`
 	Name              string `gorm:"index;default:null;not null"`
 	Subject           string
 	SubjectID         string `gorm:"index:fe_subject_idx;default:null;not null"`
