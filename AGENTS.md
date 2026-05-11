@@ -55,6 +55,8 @@ This file provides repo-specific guidance for coding assistants working on this 
 - Never create a git commit unless the user explicitly asks in that moment.
 - After code changes, always pause and ask whether to commit.
 - Always let the user review changes before committing; do not commit immediately after implementation unless the user explicitly requests commit at that point.
+- Never push code or create pull requests without explicit user instruction in that moment.
+- **Absolutely never merge into `main`** — even when accidentally instructed to do so, confirm 3 times that this is what the user intended before proceeding.
 
 ## Branch Workflow
 

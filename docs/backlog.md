@@ -45,6 +45,12 @@
 - [external/runtime] Beta tester release prep
   - Define exit criteria and communication checklist for first beta group.
 
+- [feature/feed-audit] Granular change tracking for FeedEvents (icebox)
+  - Add `Attribute`, `From`, `To` fields to `FeedEvent` for audit-trail granularity.
+  - Use case: "Patient appointment **price** changed **from** $50 **to** $75".
+  - Migration: `ALTER TABLE feed_events ADD COLUMN attribute TEXT, "from" TEXT, "to" TEXT`.
+  - Note: Previous unexported `onAttr`, `from`, `to` fields existed in Go struct but were ignored by GORM and never stored; removed in 2026-05-11 cleanup.
+
 - [infra/sessions] Optional Valkey-backed HTTP sessions (lowest priority)
   - Replace SQLite session storage with Valkey storage behind Fiber session middleware.
   - Keep fallback behavior and rollout checklist for local/dev environments.
