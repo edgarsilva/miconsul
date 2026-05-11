@@ -17,7 +17,7 @@ func TestRunSeedsBaselineAndIsIdempotent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("first baseline run failed: %v", err)
 	}
-	if first.UsersCreated != 1 || first.ClinicsCreated != 1 || first.PatientsCreated != 3 || first.AppointmentsCreated != 3 {
+	if first.UsersCreated != 1 || first.ClinicsCreated != 1 || first.PatientsCreated != 3 || first.AppointmentsCreated != 3 || first.FeedEventsCreated != 6 {
 		t.Fatalf("unexpected baseline result on first run: %#v", first)
 	}
 
@@ -73,7 +73,7 @@ func TestRunWithRandomizedBulk(t *testing.T) {
 	if result.UsersCreated != 3 { // 1 admin owner + 2 bulk users
 		t.Fatalf("expected 3 users created, got %d", result.UsersCreated)
 	}
-	if result.ClinicsCreated != 2 || result.PatientsCreated != 2 || result.AppointmentsCreated != 3 {
+	if result.ClinicsCreated != 2 || result.PatientsCreated != 2 || result.AppointmentsCreated != 3 || result.FeedEventsCreated != 6 {
 		t.Fatalf("unexpected bulk result: %#v", result)
 	}
 }
@@ -93,7 +93,7 @@ func TestRunWithBaselineAndLargeBulk(t *testing.T) {
 		t.Fatalf("baseline + large bulk run failed: %v", err)
 	}
 
-	if result.UsersCreated != 201 || result.ClinicsCreated != 201 || result.PatientsCreated != 203 || result.AppointmentsCreated != 203 {
+	if result.UsersCreated != 201 || result.ClinicsCreated != 201 || result.PatientsCreated != 203 || result.AppointmentsCreated != 203 || result.FeedEventsCreated != 6 {
 		t.Fatalf("unexpected baseline + large bulk result: %#v", result)
 	}
 
@@ -135,7 +135,7 @@ func newSeederDB(t *testing.T) *gorm.DB {
 		t.Fatalf("open sqlite db: %v", err)
 	}
 
-	if err := db.AutoMigrate(&models.User{}, &models.Clinic{}, &models.Patient{}, &models.Appointment{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.Clinic{}, &models.Patient{}, &models.Appointment{}, &models.FeedEvent{}); err != nil {
 		t.Fatalf("automigrate seeder models: %v", err)
 	}
 
