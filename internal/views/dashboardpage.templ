@@ -336,6 +336,30 @@ func feedEventColorClass(action string) string {
 	}
 }
 
+func feedEventSubjectLabel(vc *Ctx, event models.FeedEvent) string {
+	if event.SubjectType == "appointments" {
+		return l(vc.Locale, "str.appointment")
+	}
+
+	return event.Subject
+}
+
+func feedEventShortDateTime(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+
+	return t.Format("02 Jan, 3:04pm")
+}
+
+func feedEventTitle(vc *Ctx, event models.FeedEvent) string {
+	if event.SubjectType == "appointments" && event.Action == "created" {
+		return l(vc.Locale, "str.feed_new_appointment")
+	}
+
+	return feedEventSubjectLabel(vc, event) + " " + l(vc.Locale, FeedActionLocaleKey(event.Action))
+}
+
 templ feedEventIcon(action string) {
 	switch action {
 		case "created":
@@ -376,17 +400,19 @@ templ Feed(vc *Ctx, events []models.FeedEvent) {
 						</div>
 						<div class="flex-auto py-0.5">
 							<p class="text-xs leading-5 text-base-content/60">
-								<a href={ templ.SafeURL(event.SubjectURL) } class="font-medium text-base-content hover:underline">{ event.Subject }</a>
-								<span>{ l(vc.Locale, FeedActionLocaleKey(event.Action)) }</span>
-								<span>for</span>
+								<a href={ templ.SafeURL(event.SubjectURL) } class="font-medium text-base-content hover:underline">{ feedEventTitle(vc, event) }</a>
+								<span>{ "@" + feedEventShortDateTime(event.OcurredAt) }</span>
+							</p>
+							<p class="text-[11px] text-base-content/50 mt-0.5">
+								<span>{ l(vc.Locale, "str.patient") }</span>
 								<a href={ templ.SafeURL(event.TargetURL) } class="font-medium text-base-content hover:underline">{ event.Target }</a>
-								if event.Actor != "" {
-									<span>by</span>
-									if event.ActorURL != "" {
-										<a href={ templ.SafeURL(event.ActorURL) } class="font-medium text-base-content hover:underline">{ event.Actor }</a>
-									} else {
-										<span class="font-medium text-base-content">{ event.Actor }</span>
-									}
+								<span>,</span>
+								if event.ActorURL != "" {
+									<a href={ templ.SafeURL(event.ActorURL) } class="hover:underline">{ event.Actor }</a>
+								} else if event.Actor != "" {
+									<span>{ event.Actor }</span>
+								} else {
+									<span>Miconsul</span>
 								}
 							</p>
 						</div>
