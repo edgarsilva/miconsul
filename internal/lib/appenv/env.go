@@ -29,12 +29,16 @@ type Env struct {
 	SessionDBPath string `env:"SESSION_DB_PATH"`
 	CacheDBPath   string `env:"CACHE_DB_PATH;optional"`
 
-	EmailSender      string `env:"EMAIL_SENDER"`
-	EmailSecret      string `env:"EMAIL_SECRET"`
-	EmailFromAddress string `env:"EMAIL_FROM_ADDRESS"`
-	EmailSMTPURL     string `env:"EMAIL_SMTP_URL"`
-	AdminUser        string `env:"ADMIN_USER;optional;trimspace"`
-	AdminPassword    string `env:"ADMIN_PASSWORD;optional"`
+	EmailSender        string `env:"EMAIL_SENDER"`
+	EmailSecret        string `env:"EMAIL_SECRET"`
+	EmailFromAddress   string `env:"EMAIL_FROM_ADDRESS"`
+	EmailSMTPURL       string `env:"EMAIL_SMTP_URL"`
+	WhatsAppProvider   string `env:"WHATSAPP_PROVIDER;optional;trimspace"`
+	TwilioAccountSID   string `env:"TWILIO_ACCOUNT_SID;optional;trimspace"`
+	TwilioAuthToken    string `env:"TWILIO_AUTH_TOKEN;optional;trimspace"`
+	TwilioWhatsAppFrom string `env:"TWILIO_WHATSAPP_FROM;optional;trimspace"`
+	AdminUser          string `env:"ADMIN_USER;optional;trimspace"`
+	AdminPassword      string `env:"ADMIN_PASSWORD;optional"`
 
 	GooseDriver       string `env:"GOOSE_DRIVER"`
 	GooseDBString     string `env:"GOOSE_DBSTRING"`
