@@ -70,13 +70,42 @@ func (s *service) handleReminderSweepTask(ctx context.Context, _ jobs.Task) erro
 	appointments, err := gorm.G[models.Appointment](s.DB.GormDB()).
 		Where("booked_at > ?", st).
 		Where("booked_at <= ?", et).
-		Where("NOT EXISTS (SELECT 1 FROM notifications WHERE notifications.alertable_id = appointments.uid AND notifications.alertable_type = ? AND notifications.name = ? AND notifications.medium = ? AND notifications.status IN ?)", "appointments", "appointment_reminder", models.NotificationMediumEmail, []models.NotificationStatus{models.NotificationSent, models.NotificationSuccess}).
 		Find(ctx)
 	if err != nil {
 		return fmt.Errorf("load appointments for reminder sweep: %w", err)
 	}
 
+	if len(appointments) == 0 {
+		return nil
+	}
+
+	candidateIDs := make([]string, 0, len(appointments))
 	for _, appointment := range appointments {
+		candidateIDs = append(candidateIDs, appointment.UID)
+	}
+
+	var notifiedIDs []string
+	err = s.DB.WithContext(ctx).
+		Model(&models.Notification{}).
+		Where("alertable_type = ?", "appointments").
+		Where("name = ?", "appointment_reminder").
+		Where("medium = ?", models.NotificationMediumEmail).
+		Where("status IN ?", []models.NotificationStatus{models.NotificationSent, models.NotificationSuccess}).
+		Where("alertable_id IN ?", candidateIDs).
+		Pluck("alertable_id", &notifiedIDs).Error
+	if err != nil {
+		return fmt.Errorf("load existing reminder notifications: %w", err)
+	}
+
+	notifiedSet := make(map[string]struct{}, len(notifiedIDs))
+	for _, id := range notifiedIDs {
+		notifiedSet[id] = struct{}{}
+	}
+
+	for _, appointment := range appointments {
+		if _, ok := notifiedSet[appointment.UID]; ok {
+			continue
+		}
 		if _, err := s.EnqueueTask(ctx, TaskReminder, TaskAppointmentPayload{AppointmentID: appointment.UID}); err != nil {
 			log.Printf("appointment jobs: enqueue reminder failed for %s: %v", appointment.UID, err)
 		}
