@@ -182,7 +182,7 @@ func (s *service) updateAppointmentColumnsByID(ctx context.Context, userID uint,
 		Model(&models.Appointment{}).
 		Where("uid = ? AND user_id = ?", appointmentID, userID).
 		Select(columns).
-		Omit("UserID", "Clinic", "Patient", "User", "FeedEvents", "Alerts").
+		Omit("UserID", "Clinic", "Patient", "User", "FeedEvents", "Notifications").
 		Updates(updates)
 	if result.Error != nil {
 		return result.Error
@@ -264,7 +264,7 @@ func (s *service) UpdateAppointmentByIDAndToken(ctx context.Context, appointment
 		Model(&models.Appointment{}).
 		Where("uid = ? AND token = ?", appointmentID, token).
 		Select(selectColumns).
-		Omit("UserID", "Clinic", "Patient", "User", "FeedEvents", "Alerts").
+		Omit("UserID", "Clinic", "Patient", "User", "FeedEvents", "Notifications").
 		Updates(&updates)
 	if result.Error != nil {
 		return result.Error

@@ -70,13 +70,42 @@ func (s *service) handleReminderSweepTask(ctx context.Context, _ jobs.Task) erro
 	appointments, err := gorm.G[models.Appointment](s.DB.GormDB()).
 		Where("booked_at > ?", st).
 		Where("booked_at <= ?", et).
-		Where("reminder_alert_sent_at IS NULL").
 		Find(ctx)
 	if err != nil {
 		return fmt.Errorf("load appointments for reminder sweep: %w", err)
 	}
 
+	if len(appointments) == 0 {
+		return nil
+	}
+
+	candidateIDs := make([]string, 0, len(appointments))
 	for _, appointment := range appointments {
+		candidateIDs = append(candidateIDs, appointment.UID)
+	}
+
+	var notifiedIDs []string
+	err = s.DB.WithContext(ctx).
+		Model(&models.Notification{}).
+		Where("alertable_type = ?", "appointments").
+		Where("name = ?", "appointment_reminder").
+		Where("medium = ?", models.NotificationMediumEmail).
+		Where("status IN ?", []models.NotificationStatus{models.NotificationSent, models.NotificationSuccess}).
+		Where("alertable_id IN ?", candidateIDs).
+		Pluck("alertable_id", &notifiedIDs).Error
+	if err != nil {
+		return fmt.Errorf("load existing reminder notifications: %w", err)
+	}
+
+	notifiedSet := make(map[string]struct{}, len(notifiedIDs))
+	for _, id := range notifiedIDs {
+		notifiedSet[id] = struct{}{}
+	}
+
+	for _, appointment := range appointments {
+		if _, ok := notifiedSet[appointment.UID]; ok {
+			continue
+		}
 		if _, err := s.EnqueueTask(ctx, TaskReminder, TaskAppointmentPayload{AppointmentID: appointment.UID}); err != nil {
 			log.Printf("appointment jobs: enqueue reminder failed for %s: %v", appointment.UID, err)
 		}
@@ -106,7 +135,11 @@ func (s *service) handleReminderTask(ctx context.Context, task jobs.Task) error 
 		return fmt.Errorf("load appointment for reminder: %w", err)
 	}
 
-	if !appointment.ReminderAlertSentAt.IsZero() {
+	sent, err := s.notificationSent(ctx, appointment.UID, "appointment_reminder", models.NotificationMediumEmail)
+	if err != nil {
+		return fmt.Errorf("check reminder notification status: %w", err)
+	}
+	if sent {
 		return nil
 	}
 
@@ -135,10 +168,31 @@ func (s *service) handleBookedAlertTask(ctx context.Context, task jobs.Task) err
 		return fmt.Errorf("load appointment for booked alert: %w", err)
 	}
 
-	if !appointment.BookedAlertSentAt.IsZero() {
+	sent, err := s.notificationSent(ctx, appointment.UID, "appointment_booked", models.NotificationMediumEmail)
+	if err != nil {
+		return fmt.Errorf("check booked notification status: %w", err)
+	}
+	if sent {
 		return nil
 	}
 
 	s.sendBookedNow(ctx, appointment)
 	return nil
+}
+
+func (s *service) notificationSent(ctx context.Context, appointmentUID, name string, medium models.NotificationMedium) (bool, error) {
+	var count int64
+	err := s.DB.WithContext(ctx).
+		Model(&models.Notification{}).
+		Where("alertable_id = ?", appointmentUID).
+		Where("alertable_type = ?", "appointments").
+		Where("name = ?", name).
+		Where("medium = ?", medium).
+		Where("status IN ?", []models.NotificationStatus{models.NotificationSent, models.NotificationSuccess}).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
 }

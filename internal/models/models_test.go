@@ -10,9 +10,9 @@ import (
 )
 
 func TestEntityBeforeCreateHooksSetIDs(t *testing.T) {
-	alert := &Alert{}
-	if err := alert.BeforeCreate(nil); err != nil || !strings.HasPrefix(alert.UID, "alrt") {
-		t.Fatalf("alert before create failed: uid=%q err=%v", alert.UID, err)
+	notification := &Notification{}
+	if err := notification.BeforeCreate(nil); err != nil || !strings.HasPrefix(notification.UID, "ntfy") {
+		t.Fatalf("notification before create failed: uid=%q err=%v", notification.UID, err)
 	}
 
 	fe := &FeedEvent{}
@@ -96,10 +96,10 @@ func TestScopesAndBaseHelpers(t *testing.T) {
 		t.Fatalf("open sqlite dry-run: %v", err)
 	}
 
-	stmt := db.Model(&Appointment{}).Scopes(AppointmentWithPendingAlerts).Find(&[]Appointment{}).Statement
+	stmt := db.Model(&Appointment{}).Scopes(AppointmentWithPendingNotifications).Find(&[]Appointment{}).Statement
 	sql := strings.ToLower(stmt.SQL.String())
-	if !strings.Contains(sql, "reminder_alert_sent_at is null") {
-		t.Fatalf("expected pending alerts scope filter, got %q", stmt.SQL.String())
+	if !strings.Contains(sql, "not exists") || !strings.Contains(sql, "notifications") {
+		t.Fatalf("expected pending notifications scope filter, got %q", stmt.SQL.String())
 	}
 
 	today := db.Model(&Appointment{}).Scopes(AppointmentBookedToday).Find(&[]Appointment{}).Statement.SQL.String()

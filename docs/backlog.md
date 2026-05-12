@@ -2,17 +2,24 @@
 
 ## Next Up
 
-- [feature/dashboard] Populate FeedEvent on appointment changes and wire Dashboard Feed widget
-  - [ ] Create FeedEvent records on appointment create/update/cancel/complete.
-  - [ ] Update Dashboard Feed widget to read from FeedEvent table instead of static/dummy data.
-  - [ ] Add FeedEvent query scoped to current user + recent time window.
-
 - [feature/notifications] Multi-channel notifications baseline
   - Keep email templates/actions synced with appointment + professional details.
   - Add Telegram provider integration (credentials, send path, retry/error handling).
   - Add WhatsApp provider integration.
   - Add Facebook Messenger provider integration.
   - Define per-channel opt-in/opt-out + fallback policy (email as default fallback).
+
+- [feature/status-history] Appointment status events audit trail
+  - [ ] Add `appointment_status_events` table for status transition history.
+  - [ ] Track transitions like `pending -> confirmed`, `confirmed -> canceled`, `pending -> rescheduled`.
+  - [ ] Store actor metadata: `actor_id`, `actor_type` (`staff`, `patient`, `system`).
+  - [ ] Store event metadata: `occurred_at`, optional `reason`, optional `source` (`ui`, `token`, `job`).
+  - [ ] Remove legacy `old_booked_at` usage and rely on explicit transition events.
+
+- [feature/feed] Feed events alignment with status history
+  - [ ] Drive appointment feed entries from status transition events when available.
+  - [ ] Keep feed scoped to current user and recent window.
+  - [ ] Re-evaluate need for FeedEvent `Attribute/From/To` after status events are in place.
 
 - [feature/search] Global Ctrl+K search modal
   - [ ] Add keyboard shortcut (`Ctrl+K`) to open a global search modal.
@@ -56,6 +63,13 @@
   - Keep fallback behavior and rollout checklist for local/dev environments.
 
 ## Done
+
+- [feature/dashboard] Populate FeedEvent on appointment changes and wire Dashboard Feed widget
+  - Create FeedEvent records on appointment create/update/cancel/complete/delete + patient confirm/cancel.
+  - Update Dashboard Feed widget to read from FeedEvent table (remove static/dummy timeline).
+  - Scope FeedEvent query to current user with recent window and limit.
+  - Add localized feed copy (en-US/es-MX), actor attribution, and action-specific filled icons.
+  - Add seed data generation for FeedEvents and refresh behavior on re-seed.
 
 - Appointment index search parity with clinics/patients
   - Added `GET /appointments/search` HTMX index search endpoint.

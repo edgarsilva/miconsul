@@ -36,6 +36,12 @@ func NewFeedEvent(action EventAction, actorName, actorID, actorURL string, sourc
 	refID, refType := source.FeedEventRef()
 	subName, subID, subType, subURL := source.FeedEventSubject()
 	tgtName, tgtID, tgtType, tgtURL := source.FeedEventTarget()
+	if subName == "" {
+		subName = "Event"
+	}
+	if tgtName == "" {
+		tgtName = "Record"
+	}
 
 	return FeedEvent{
 		Name:              string(action),
