@@ -51,33 +51,33 @@ type Appointment struct {
 	RescheduledAt       time.Time `gorm:"default:null"`
 	DeletedAt           gorm.DeletedAt
 	ModelBase
-	ID           uint              `gorm:"primaryKey" form:"_"`
-	UID          string            `gorm:"uniqueIndex;default:null;not null" form:"_"`
-	ExtID        string            `form:"extId"`
-	Token        string            `form:"_"`
-	Summary      string            `form:"summary"`
-	Observations string            `form:"observations"`
-	Conclusions  string            `form:"conclusions"`
-	Notes        string            `form:"notes"`
-	Hashtags     string            `form:"hashtags"`
-	Timezone     string            `form:"timezone"`
-	UserID       uint              `gorm:"index;default:null;not null"`
-	ClinicID     uint              `gorm:"index;default:null;not null" form:"clinicId"`
-	PatientID    uint              `gorm:"index;default:null;not null" form:"patientId"`
-	Status       AppointmentStatus `gorm:"index;default:pending;not null;type:string" form:"status"`
-	FeedEvents   []FeedEvent       `gorm:"polymorphic:FeedEventable;"`
-	Alerts       []Alert           `gorm:"polymorphic:Alertable;"`
-	Clinic       Clinic
-	User         User
-	Patient      Patient
-	Duration     int `form:"duration"`
-	Price        int `form:"_"`
-	BookedYear   int
-	BookedMonth  int
-	BookedDay    int
-	BookedHour   int
-	BookedMinute int
-	NoShow       bool `form:"noShow"`
+	ID            uint              `gorm:"primaryKey" form:"_"`
+	UID           string            `gorm:"uniqueIndex;default:null;not null" form:"_"`
+	ExtID         string            `form:"extId"`
+	Token         string            `form:"_"`
+	Summary       string            `form:"summary"`
+	Observations  string            `form:"observations"`
+	Conclusions   string            `form:"conclusions"`
+	Notes         string            `form:"notes"`
+	Hashtags      string            `form:"hashtags"`
+	Timezone      string            `form:"timezone"`
+	UserID        uint              `gorm:"index;default:null;not null"`
+	ClinicID      uint              `gorm:"index;default:null;not null" form:"clinicId"`
+	PatientID     uint              `gorm:"index;default:null;not null" form:"patientId"`
+	Status        AppointmentStatus `gorm:"index;default:pending;not null;type:string" form:"status"`
+	FeedEvents    []FeedEvent       `gorm:"polymorphic:FeedEventable;"`
+	Notifications []Notification    `gorm:"polymorphic:Notificationable;"`
+	Clinic        Clinic
+	User          User
+	Patient       Patient
+	Duration      int `form:"duration"`
+	Price         int `form:"_"`
+	BookedYear    int
+	BookedMonth   int
+	BookedDay     int
+	BookedHour    int
+	BookedMinute  int
+	NoShow        bool `form:"noShow"`
 	NotificationFlags
 }
 
@@ -123,7 +123,7 @@ func (a *Appointment) RescheduledPath() string {
 
 // Scopes
 
-func AppointmentWithPendingAlerts(db *gorm.DB) *gorm.DB {
+func AppointmentWithPendingNotifications(db *gorm.DB) *gorm.DB {
 	st := time.Now()
 	year, month, day := st.Date()
 	et := time.Date(year, month, day, st.Hour(), st.Minute(), 0, 0, st.Location()).Add(2 * time.Hour)

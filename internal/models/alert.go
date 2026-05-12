@@ -6,44 +6,48 @@ import (
 	"gorm.io/gorm"
 )
 
-type AlertMedium string
+type NotificationMedium string
 
 const (
-	AlertMediumEmail     AlertMedium = "email"
-	AlertMediumFacebook  AlertMedium = "facebook"
-	AlertMediumWhatsapp  AlertMedium = "whatsapp"
-	AlertMediumMessenger AlertMedium = "messenger"
-	AlertMediumTelegram  AlertMedium = "telegram"
+	NotificationMediumEmail     NotificationMedium = "email"
+	NotificationMediumFacebook  NotificationMedium = "facebook"
+	NotificationMediumWhatsapp  NotificationMedium = "whatsapp"
+	NotificationMediumMessenger NotificationMedium = "messenger"
+	NotificationMediumTelegram  NotificationMedium = "telegram"
 )
 
-type AlertStatus string
+type NotificationStatus string
 
 const (
-	AlertPending   AlertStatus = "pending"
-	AlertSent      AlertStatus = "sent"
-	AlertDelivered AlertStatus = "delivered"
-	AlertViewed    AlertStatus = "viewed"
-	AlertFailed    AlertStatus = "failed"
-	AlertSuccess   AlertStatus = "success"
+	NotificationPending   NotificationStatus = "pending"
+	NotificationSent      NotificationStatus = "sent"
+	NotificationDelivered NotificationStatus = "delivered"
+	NotificationViewed    NotificationStatus = "viewed"
+	NotificationFailed    NotificationStatus = "failed"
+	NotificationSuccess   NotificationStatus = "success"
 )
 
-type Alert struct {
-	ID            uint        `gorm:"primaryKey" form:"-"`
-	UID           string      `gorm:"uniqueIndex;default:null;not null" form:"-"`
-	Medium        AlertMedium `gorm:"index;default:null;not null;type:string" form:"-"`
-	Name          string      `gorm:"index;default:null;not null"`
-	Title         string
-	Sub           string
-	Message       string
-	From          string
-	To            string
-	Status        AlertStatus `gorm:"index;default:pending;not null;type:string" form:"-"`
-	AlertableID   string      `gorm:"index:poly_fevnt_idx"`
-	AlertableType string      `gorm:"index:poly_fevnt_idx"`
+type Notification struct {
+	ID                   uint               `gorm:"primaryKey" form:"-"`
+	UID                  string             `gorm:"uniqueIndex;default:null;not null" form:"-"`
+	Medium               NotificationMedium `gorm:"index;default:null;not null;type:string" form:"-"`
+	Name                 string             `gorm:"index;default:null;not null"`
+	Title                string
+	Sub                  string
+	Message              string
+	From                 string
+	To                   string
+	Status               NotificationStatus `gorm:"index;default:pending;not null;type:string" form:"-"`
+	NotificationableID   string             `gorm:"column:alertable_id;index:poly_fevnt_idx"`
+	NotificationableType string             `gorm:"column:alertable_type;index:poly_fevnt_idx"`
 	ModelBase
 }
 
-func (a *Alert) BeforeCreate(tx *gorm.DB) (err error) {
-	a.UID = xid.New("alrt")
+func (Notification) TableName() string {
+	return "notifications"
+}
+
+func (n *Notification) BeforeCreate(tx *gorm.DB) (err error) {
+	n.UID = xid.New("ntfy")
 	return nil
 }

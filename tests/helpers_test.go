@@ -96,7 +96,7 @@ func newTestHarness(t *testing.T) *testHarness {
 		&models.Clinic{},
 		&models.Patient{},
 		&models.Appointment{},
-		&models.Alert{},
+		&models.Notification{},
 		&models.FeedEvent{},
 	); err != nil {
 		t.Fatalf("auto migrate test schema: %v", err)

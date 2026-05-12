@@ -42,15 +42,15 @@ func (s *service) SendReminderAlert(appointment models.Appointment) error {
 func (s *service) sendReminderNow(ctx context.Context, appointment models.Appointment) {
 	err := mailer.SendAppointmentReminderEmail(s.Env, appointment)
 	if err != nil {
-		alert := models.Alert{
-			Medium: models.AlertMediumEmail,
+		notification := models.Notification{
+			Medium: models.NotificationMediumEmail,
 			Name:   "appointment_reminder",
-			Status: models.AlertFailed,
+			Status: models.NotificationFailed,
 			To:     appointment.Patient.Email,
 		}
-		appendErr := s.DB.WithContext(ctx).Model(&appointment).Association("Alerts").Append(&alert)
+		appendErr := s.DB.WithContext(ctx).Model(&appointment).Association("Notifications").Append(&notification)
 		if appendErr != nil {
-			fmt.Println("failed to append failed reminder alert:", appendErr.Error())
+			fmt.Println("failed to append failed reminder notification:", appendErr.Error())
 		}
 		return
 	}
@@ -62,30 +62,30 @@ func (s *service) sendReminderNow(ctx context.Context, appointment models.Appoin
 		fmt.Println("failed to update ReminderAlertSentAt:", updateErr.Error())
 	}
 
-	alert := models.Alert{
-		Medium: models.AlertMediumEmail,
+	notification := models.Notification{
+		Medium: models.NotificationMediumEmail,
 		Name:   "appointment_reminder",
-		Status: models.AlertSent,
+		Status: models.NotificationSent,
 		To:     appointment.Patient.Email,
 	}
-	appendErr := s.DB.WithContext(ctx).Model(&appointment).Association("Alerts").Append(&alert)
+	appendErr := s.DB.WithContext(ctx).Model(&appointment).Association("Notifications").Append(&notification)
 	if appendErr != nil {
-		fmt.Println("failed to append sent reminder alert:", appendErr.Error())
+		fmt.Println("failed to append sent reminder notification:", appendErr.Error())
 	}
 }
 
 func (s *service) sendBookedNow(ctx context.Context, appointment models.Appointment) {
-	alert := models.Alert{
-		Medium: models.AlertMediumEmail,
+	notification := models.Notification{
+		Medium: models.NotificationMediumEmail,
 		Name:   "appointment_booked",
-		Status: models.AlertFailed,
+		Status: models.NotificationFailed,
 		To:     appointment.Patient.Email,
 	}
 	err := mailer.SendAppointmentBookedEmail(s.Env, appointment)
 	if err != nil {
-		appendErr := s.DB.WithContext(ctx).Model(&appointment).Association("Alerts").Append(&alert)
+		appendErr := s.DB.WithContext(ctx).Model(&appointment).Association("Notifications").Append(&notification)
 		if appendErr != nil {
-			fmt.Println("failed to append failed booked alert:", appendErr.Error())
+			fmt.Println("failed to append failed booked notification:", appendErr.Error())
 		}
 		return
 	}
@@ -96,9 +96,9 @@ func (s *service) sendBookedNow(ctx context.Context, appointment models.Appointm
 		fmt.Println("failed to update BookedAlertSentAt:", updateErr.Error())
 	}
 
-	alert.Status = models.AlertSent
-	appendErr := s.DB.WithContext(ctx).Model(&appointment).Association("Alerts").Append(&alert)
+	notification.Status = models.NotificationSent
+	appendErr := s.DB.WithContext(ctx).Model(&appointment).Association("Notifications").Append(&notification)
 	if appendErr != nil {
-		fmt.Println("failed to append sent booked alert:", appendErr.Error())
+		fmt.Println("failed to append sent booked notification:", appendErr.Error())
 	}
 }
