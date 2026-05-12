@@ -9,6 +9,18 @@
   - Add Facebook Messenger provider integration.
   - Define per-channel opt-in/opt-out + fallback policy (email as default fallback).
 
+- [feature/status-history] Appointment status events audit trail
+  - [ ] Add `appointment_status_events` table for status transition history.
+  - [ ] Track transitions like `pending -> confirmed`, `confirmed -> canceled`, `pending -> rescheduled`.
+  - [ ] Store actor metadata: `actor_id`, `actor_type` (`staff`, `patient`, `system`).
+  - [ ] Store event metadata: `occurred_at`, optional `reason`, optional `source` (`ui`, `token`, `job`).
+  - [ ] Remove legacy `old_booked_at` usage and rely on explicit transition events.
+
+- [feature/feed] Feed events alignment with status history
+  - [ ] Drive appointment feed entries from status transition events when available.
+  - [ ] Keep feed scoped to current user and recent window.
+  - [ ] Re-evaluate need for FeedEvent `Attribute/From/To` after status events are in place.
+
 - [feature/search] Global Ctrl+K search modal
   - [ ] Add keyboard shortcut (`Ctrl+K`) to open a global search modal.
   - [ ] Search across appointments, clinics, and patients from a single input.

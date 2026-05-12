@@ -10,6 +10,7 @@
 - [x] Add relative time formatting (time ago) to appointments and users lists
 - [x] Populate FeedEvent on appointment changes and wire Dashboard Feed widget
 - [ ] Multi-channel notifications baseline (Telegram, WhatsApp, Messenger)
+- [ ] Appointment status events audit trail (`appointment_status_events`)
 - [ ] Global search modal (Ctrl+K) for appointments, clinics, and patients
 - [ ] Upload images to S3-compatible object storage (RustFS)
 - [ ] Generate Tailwind CSS during Docker build from `styles/global.css` (instead of relying on prebuilt committed `public/global.css`)
