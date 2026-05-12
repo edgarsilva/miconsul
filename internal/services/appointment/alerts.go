@@ -3,12 +3,9 @@ package appointment
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"miconsul/internal/mailer"
 	"miconsul/internal/models"
-
-	"gorm.io/gorm"
 )
 
 func (s *service) DispatchBookedAlert(appointment models.Appointment) error {
@@ -55,13 +52,6 @@ func (s *service) sendReminderNow(ctx context.Context, appointment models.Appoin
 		return
 	}
 
-	_, updateErr := gorm.G[models.Appointment](s.DB.GormDB()).
-		Where("uid = ?", appointment.UID).
-		Update(ctx, "ReminderAlertSentAt", time.Now())
-	if updateErr != nil {
-		fmt.Println("failed to update ReminderAlertSentAt:", updateErr.Error())
-	}
-
 	notification := models.Notification{
 		Medium: models.NotificationMediumEmail,
 		Name:   "appointment_reminder",
@@ -89,13 +79,6 @@ func (s *service) sendBookedNow(ctx context.Context, appointment models.Appointm
 		}
 		return
 	}
-	_, updateErr := gorm.G[models.Appointment](s.DB.GormDB()).
-		Where("uid = ?", appointment.UID).
-		Update(ctx, "BookedAlertSentAt", time.Now())
-	if updateErr != nil {
-		fmt.Println("failed to update BookedAlertSentAt:", updateErr.Error())
-	}
-
 	notification.Status = models.NotificationSent
 	appendErr := s.DB.WithContext(ctx).Model(&appointment).Association("Notifications").Append(&notification)
 	if appendErr != nil {

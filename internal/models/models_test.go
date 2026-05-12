@@ -98,7 +98,7 @@ func TestScopesAndBaseHelpers(t *testing.T) {
 
 	stmt := db.Model(&Appointment{}).Scopes(AppointmentWithPendingNotifications).Find(&[]Appointment{}).Statement
 	sql := strings.ToLower(stmt.SQL.String())
-	if !strings.Contains(sql, "reminder_alert_sent_at is null") {
+	if !strings.Contains(sql, "not exists") || !strings.Contains(sql, "notifications") {
 		t.Fatalf("expected pending notifications scope filter, got %q", stmt.SQL.String())
 	}
 

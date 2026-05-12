@@ -34,16 +34,25 @@ func TestHandleBookedAlertTaskSkipsWhenAlreadySent(t *testing.T) {
 	svc, user, clinic, patient := newAppointmentServiceForTests(t)
 
 	apnt := models.Appointment{
-		UserID:            user.ID,
-		ClinicID:          clinic.ID,
-		PatientID:         patient.ID,
-		BookedAt:          time.Now().Add(time.Hour),
-		Token:             "tok_booked",
-		Patient:           patient,
-		BookedAlertSentAt: time.Now(),
+		UserID:    user.ID,
+		ClinicID:  clinic.ID,
+		PatientID: patient.ID,
+		BookedAt:  time.Now().Add(time.Hour),
+		Token:     "tok_booked",
+		Patient:   patient,
 	}
 	if err := svc.CreateAppointment(t.Context(), &apnt); err != nil {
 		t.Fatalf("create appointment: %v", err)
+	}
+
+	notification := models.Notification{
+		Medium: models.NotificationMediumEmail,
+		Name:   "appointment_booked",
+		Status: models.NotificationSent,
+		To:     patient.Email,
+	}
+	if err := svc.DB.WithContext(t.Context()).Model(&apnt).Association("Notifications").Append(&notification); err != nil {
+		t.Fatalf("append booked notification: %v", err)
 	}
 
 	payload, err := json.Marshal(TaskAppointmentPayload{AppointmentID: apnt.UID})
