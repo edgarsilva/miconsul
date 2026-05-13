@@ -66,7 +66,7 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 		}
 	})
 
-	t.Run("HandleSigninPage renders when logto reports error", func(t *testing.T) {
+	t.Run("HandleSigninPage retries logto when provider reports error", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		svc.Env.LogtoURL = "https://logto.example.com"
 		svc.Env.LogtoAppID = "app-id"
@@ -80,8 +80,11 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
-		if resp.StatusCode != fiber.StatusOK {
-			t.Fatalf("expected 200 login page render, got %d", resp.StatusCode)
+		if resp.StatusCode != fiber.StatusSeeOther {
+			t.Fatalf("expected 303 redirect to retry logto, got %d", resp.StatusCode)
+		}
+		if got := resp.Header.Get("Location"); got != "/logto/signin" {
+			t.Fatalf("expected redirect to /logto/signin, got %q", got)
 		}
 	})
 

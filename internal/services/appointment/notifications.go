@@ -3,6 +3,7 @@ package appointment
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"miconsul/internal/lib/twilio/whatsapp"
@@ -159,7 +160,15 @@ func (s *service) sendWhatsAppNotification(ctx context.Context, span trace.Span,
 	if sender == nil {
 		err := fmt.Errorf("whatsapp sender unavailable: missing twilio config")
 		span.RecordError(err)
-		span.SetAttributes(attribute.String("notification.whatsapp.error", err.Error()))
+		kind, providerStatus := classifyWhatsAppError(err)
+		attrs := []attribute.KeyValue{
+			attribute.String("notification.whatsapp.error", err.Error()),
+			attribute.String("notification.whatsapp.error_kind", kind),
+		}
+		if providerStatus > 0 {
+			attrs = append(attrs, attribute.Int("notification.whatsapp.provider_status_code", providerStatus))
+		}
+		span.SetAttributes(attrs...)
 		s.appendNotification(ctx, appointment, models.Notification{Medium: models.NotificationMediumWhatsapp, Name: eventName, Status: models.NotificationFailed, To: to})
 		return err
 	}
@@ -171,7 +180,15 @@ func (s *service) sendWhatsAppNotification(ctx context.Context, span trace.Span,
 		status = models.NotificationFailed
 		sendErr = err
 		span.RecordError(err)
-		span.SetAttributes(attribute.String("notification.whatsapp.error", err.Error()))
+		kind, providerStatus := classifyWhatsAppError(err)
+		attrs := []attribute.KeyValue{
+			attribute.String("notification.whatsapp.error", err.Error()),
+			attribute.String("notification.whatsapp.error_kind", kind),
+		}
+		if providerStatus > 0 {
+			attrs = append(attrs, attribute.Int("notification.whatsapp.provider_status_code", providerStatus))
+		}
+		span.SetAttributes(attrs...)
 	}
 
 	s.appendNotification(ctx, appointment, models.Notification{
@@ -209,4 +226,44 @@ func (s *service) appendNotification(ctx context.Context, appointment models.App
 	if appendErr != nil {
 		fmt.Println("failed to append notification:", appendErr.Error())
 	}
+}
+
+func classifyWhatsAppError(err error) (string, int) {
+	if err == nil {
+		return "", 0
+	}
+
+	msg := strings.ToLower(strings.TrimSpace(err.Error()))
+	status := extractProviderStatusCode(msg)
+
+	switch {
+	case strings.Contains(msg, "63038") || status == 429:
+		return "rate_limited", status
+	case strings.Contains(msg, "e.164") || strings.Contains(msg, "recipient") || strings.Contains(msg, "invalid"):
+		return "invalid_recipient", status
+	case strings.Contains(msg, "401") || strings.Contains(msg, "403") || strings.Contains(msg, "auth") || strings.Contains(msg, "token") || strings.Contains(msg, "missing twilio config"):
+		return "auth_or_config", status
+	default:
+		return "provider_error", status
+	}
+}
+
+func extractProviderStatusCode(msg string) int {
+	const marker = "status "
+	idx := strings.Index(msg, marker)
+	if idx == -1 {
+		return 0
+	}
+
+	start := idx + len(marker)
+	if start+3 > len(msg) {
+		return 0
+	}
+
+	code, err := strconv.Atoi(msg[start : start+3])
+	if err != nil {
+		return 0
+	}
+
+	return code
 }

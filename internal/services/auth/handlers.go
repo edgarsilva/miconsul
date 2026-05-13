@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -413,8 +414,36 @@ func (s *service) providerSigninRedirect(c fiber.Ctx, msg string) (redirectURL s
 	providerError := c.Query(meta.ErrorQueryKey, "")
 	loggedOut := c.Query(meta.LoggedOutQueryKey, "")
 	skipAutoRedirect := s.SessionRead(c, meta.SkipRedirectSessionKey, "") == "1"
+	maxErrorRedirects := meta.ErrorRedirectMax
+	if maxErrorRedirects <= 0 {
+		maxErrorRedirects = 3
+	}
 	if skipAutoRedirect {
 		_ = s.SessionWrite(c, meta.SkipRedirectSessionKey, "")
+		if meta.ErrorCountSessionKey != "" {
+			_ = s.SessionWrite(c, meta.ErrorCountSessionKey, "0")
+		}
+	}
+
+	errorCount := 0
+	if meta.ErrorCountSessionKey != "" {
+		raw := s.SessionRead(c, meta.ErrorCountSessionKey, "0")
+		parsed, err := strconv.Atoi(strings.TrimSpace(raw))
+		if err == nil && parsed > 0 {
+			errorCount = parsed
+		}
+	}
+
+	if providerError != "" {
+		errorCount++
+		if meta.ErrorCountSessionKey != "" {
+			_ = s.SessionWrite(c, meta.ErrorCountSessionKey, strconv.Itoa(errorCount))
+		}
+		if errorCount < maxErrorRedirects {
+			return meta.SigninPath, msg
+		}
+	} else if meta.ErrorCountSessionKey != "" {
+		_ = s.SessionWrite(c, meta.ErrorCountSessionKey, "0")
 	}
 
 	if providerError == "" && loggedOut == "" && !skipAutoRedirect {

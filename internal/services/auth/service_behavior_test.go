@@ -173,15 +173,39 @@ func TestProviderSigninRedirectBranches(t *testing.T) {
 
 	runWithCtx(t, http.MethodGet, "/signin", "/signin?logto_error=denied", nil, func(c fiber.Ctx) {
 		redirectURL, msg := svc.providerSigninRedirect(c, "")
+		if redirectURL != "/logto/signin" || msg != "" {
+			t.Fatalf("expected retry redirect branch on first logto_error")
+		}
+		if got := svc.SessionRead(c, "logto_redirect_failures", ""); got != "1" {
+			t.Fatalf("expected first logto error count, got %q", got)
+		}
+	})
+
+	runWithCtx(t, http.MethodGet, "/signin", "/signin?logto_error=denied", nil, func(c fiber.Ctx) {
+		if err := svc.SessionWrite(c, "logto_redirect_failures", "2"); err != nil {
+			t.Fatalf("set redirect failure count: %v", err)
+		}
+
+		redirectURL, msg := svc.providerSigninRedirect(c, "")
 		if redirectURL != "" || msg == "" {
-			t.Fatalf("expected message-only branch for logto_error")
+			t.Fatalf("expected message-only branch after max logto errors")
+		}
+		if got := svc.SessionRead(c, "logto_redirect_failures", ""); got != "3" {
+			t.Fatalf("expected max logto error count, got %q", got)
 		}
 	})
 
 	runWithCtx(t, http.MethodGet, "/signin", "/signin?logged_out=1", nil, func(c fiber.Ctx) {
+		if err := svc.SessionWrite(c, "logto_redirect_failures", "2"); err != nil {
+			t.Fatalf("set redirect failure count: %v", err)
+		}
+
 		redirectURL, msg := svc.providerSigninRedirect(c, "")
 		if redirectURL != "" || msg == "" {
 			t.Fatalf("expected signed-out message branch")
+		}
+		if got := svc.SessionRead(c, "logto_redirect_failures", ""); got != "0" {
+			t.Fatalf("expected redirect failure count reset on logged_out, got %q", got)
 		}
 	})
 

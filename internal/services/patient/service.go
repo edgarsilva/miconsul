@@ -3,9 +3,11 @@ package patient
 import (
 	"context"
 	"errors"
+	"regexp"
+	"strings"
+
 	"miconsul/internal/models"
 	"miconsul/internal/server"
-	"strings"
 
 	"gorm.io/gorm"
 )
@@ -19,6 +21,8 @@ var ErrIDRequired = errors.New("id is required")
 var ErrInvalidFilename = errors.New("invalid filename")
 
 var ErrProfilePicNotProvided = errors.New("profile picture not provided")
+
+var e164Pattern = regexp.MustCompile(`^\+[1-9]\d{7,14}$`)
 
 func NewService(s *server.Server) (service, error) {
 	if s == nil {
@@ -206,7 +210,7 @@ func normalizePatientWriteInput(patient *models.Patient) error {
 
 	patient.Name = strings.TrimSpace(patient.Name)
 	patient.Email = strings.ToLower(strings.TrimSpace(patient.Email))
-	patient.Phone = strings.TrimSpace(patient.Phone)
+	patient.Phone = normalizePatientPhone(strings.TrimSpace(patient.Phone))
 
 	if len(patient.Name) > 120 {
 		return errors.New("name exceeds max length")
@@ -219,4 +223,42 @@ func normalizePatientWriteInput(patient *models.Patient) error {
 	}
 
 	return nil
+}
+
+func normalizePatientPhone(value string) string {
+	original := strings.TrimSpace(value)
+	if original == "" {
+		return ""
+	}
+
+	normalized := strings.TrimPrefix(original, "whatsapp:")
+	normalized = strings.ReplaceAll(normalized, " ", "")
+	normalized = strings.ReplaceAll(normalized, "-", "")
+	normalized = strings.ReplaceAll(normalized, "(", "")
+	normalized = strings.ReplaceAll(normalized, ")", "")
+
+	if normalized == "" {
+		return ""
+	}
+
+	if strings.HasPrefix(normalized, "+") {
+		if e164Pattern.MatchString(normalized) {
+			return normalized
+		}
+		return original
+	}
+
+	if len(normalized) == 10 {
+		normalized = "+52" + normalized
+	} else if strings.HasPrefix(normalized, "52") {
+		normalized = "+" + normalized
+	} else {
+		normalized = "+" + normalized
+	}
+
+	if e164Pattern.MatchString(normalized) {
+		return normalized
+	}
+
+	return original
 }
