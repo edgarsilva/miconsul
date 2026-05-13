@@ -57,7 +57,7 @@ func TestSendTemplateSuccess(t *testing.T) {
 	})
 
 	err := sender.SendTemplate(context.Background(), TemplateMessage{
-		To: "+5215512345678",
+		To: "+52 155-123(45678)",
 		Variables: map[string]string{
 			"1": "12/1",
 			"2": "3pm",
@@ -80,6 +80,7 @@ func TestSendTemplateValidation(t *testing.T) {
 		{name: "missing from", sender: NewSender(Config{ContentSID: "HX", AccountSID: "AC123", AuthToken: "token"}), msg: TemplateMessage{To: "+1"}},
 		{name: "missing content sid", sender: NewSender(Config{WhatsAppFrom: "+1", AccountSID: "AC123", AuthToken: "token"}), msg: TemplateMessage{To: "+1"}},
 		{name: "missing to", sender: NewSender(Config{WhatsAppFrom: "+1", ContentSID: "HX", AccountSID: "AC123", AuthToken: "token"}), msg: TemplateMessage{To: ""}},
+		{name: "invalid to", sender: NewSender(Config{WhatsAppFrom: "+1", ContentSID: "HX", AccountSID: "AC123", AuthToken: "token"}), msg: TemplateMessage{To: "abc"}},
 		{name: "missing sid", sender: NewSender(Config{WhatsAppFrom: "+1", ContentSID: "HX", AuthToken: "token"}), msg: TemplateMessage{To: "+1"}},
 		{name: "missing token", sender: NewSender(Config{WhatsAppFrom: "+1", ContentSID: "HX", AccountSID: "AC123"}), msg: TemplateMessage{To: "+1"}},
 	}
@@ -128,5 +129,22 @@ func TestWithWhatsAppPrefix(t *testing.T) {
 	}
 	if got := withWhatsAppPrefix("whatsapp:+123"); got != "whatsapp:+123" {
 		t.Fatalf("unexpected already-prefixed value: %s", got)
+	}
+}
+
+func TestNormalizePhone(t *testing.T) {
+	t.Parallel()
+
+	if got := normalizePhone("+52 155-123(45678)"); got != "+5215512345678" {
+		t.Fatalf("unexpected normalized phone: %s", got)
+	}
+	if got := normalizePhone("whatsapp:+5215512345678"); got != "+5215512345678" {
+		t.Fatalf("unexpected prefixed normalized phone: %s", got)
+	}
+	if got := normalizePhone("3121014574"); got != "+523121014574" {
+		t.Fatalf("expected MX default country code, got: %s", got)
+	}
+	if got := normalizePhone("5213121014574"); got != "+5213121014574" {
+		t.Fatalf("expected explicit 52 country code preserved, got: %s", got)
 	}
 }

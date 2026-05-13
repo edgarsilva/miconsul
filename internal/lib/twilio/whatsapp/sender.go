@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"miconsul/internal/lib/twilio"
@@ -31,6 +32,8 @@ type TemplateMessage struct {
 	To        string
 	Variables map[string]string
 }
+
+var e164Pattern = regexp.MustCompile(`^\+[1-9]\d{7,14}$`)
 
 func NewSender(cfg Config) *Sender {
 	client := twilio.New(twilio.Config{
@@ -61,9 +64,12 @@ func (s *Sender) SendTemplate(ctx context.Context, msg TemplateMessage) error {
 		return fmt.Errorf("twilio whatsapp content sid is required")
 	}
 
-	to := strings.TrimSpace(msg.To)
+	to := normalizePhone(msg.To)
 	if to == "" {
 		return fmt.Errorf("whatsapp recipient is required")
+	}
+	if !e164Pattern.MatchString(to) {
+		return fmt.Errorf("whatsapp recipient must be E.164 (e.g. +5213121014574)")
 	}
 
 	contentVars, err := json.Marshal(msg.Variables)
@@ -92,4 +98,31 @@ func withWhatsAppPrefix(value string) string {
 		return v
 	}
 	return "whatsapp:" + v
+}
+
+func normalizePhone(value string) string {
+	v := strings.TrimSpace(value)
+	v = strings.TrimPrefix(v, "whatsapp:")
+	v = strings.ReplaceAll(v, " ", "")
+	v = strings.ReplaceAll(v, "-", "")
+	v = strings.ReplaceAll(v, "(", "")
+	v = strings.ReplaceAll(v, ")", "")
+	if v == "" {
+		return v
+	}
+
+	if v[0] == '+' {
+		return v
+	}
+
+	onlyDigits := v
+	if len(onlyDigits) == 10 {
+		return "+52" + onlyDigits
+	}
+
+	if strings.HasPrefix(onlyDigits, "52") {
+		return "+" + onlyDigits
+	}
+
+	return "+" + onlyDigits
 }

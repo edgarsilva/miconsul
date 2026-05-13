@@ -55,19 +55,29 @@ func (s *service) sendReminderNow(ctx context.Context, appointment models.Appoin
 	}
 	span.SetAttributes(attribute.Bool("notification.enabled", true))
 
-	s.sendEmailNotification(ctx, span, appointment, "appointment_reminder", func() error {
+	hadErrors := false
+
+	if err := s.sendEmailNotification(ctx, span, appointment, "appointment_reminder", func() error {
 		return mailer.SendAppointmentReminderEmail(s.Env, appointment)
-	})
+	}); err != nil {
+		hadErrors = true
+	}
 
 	bookedAt := appointment.BookedAtInLocalTime()
 	vars := map[string]string{
 		"1": bookedAt.Format("1/2"),
 		"2": bookedAt.Format("3:04 PM"),
 	}
-	s.sendWhatsAppTemplate(ctx, span, appointment, "appointment_reminder", vars)
+	if err := s.sendWhatsAppNotification(ctx, span, appointment, "appointment_reminder", vars); err != nil {
+		hadErrors = true
+	}
 
 	if span.SpanContext().IsValid() {
-		span.SetStatus(codes.Ok, "notifications processed")
+		if hadErrors {
+			span.SetStatus(codes.Error, "notifications processed with errors")
+		} else {
+			span.SetStatus(codes.Ok, "notifications processed")
+		}
 	}
 }
 
@@ -84,33 +94,45 @@ func (s *service) sendBookedNow(ctx context.Context, appointment models.Appointm
 	}
 	span.SetAttributes(attribute.Bool("notification.enabled", true))
 
-	s.sendEmailNotification(ctx, span, appointment, "appointment_booked", func() error {
+	hadErrors := false
+
+	if err := s.sendEmailNotification(ctx, span, appointment, "appointment_booked", func() error {
 		return mailer.SendAppointmentBookedEmail(s.Env, appointment)
-	})
+	}); err != nil {
+		hadErrors = true
+	}
 
 	bookedAt := appointment.BookedAtInLocalTime()
 	vars := map[string]string{
 		"1": bookedAt.Format("1/2"),
 		"2": bookedAt.Format("3:04 PM"),
 	}
-	s.sendWhatsAppTemplate(ctx, span, appointment, "appointment_booked", vars)
+	if err := s.sendWhatsAppNotification(ctx, span, appointment, "appointment_booked", vars); err != nil {
+		hadErrors = true
+	}
 
 	if span.SpanContext().IsValid() {
-		span.SetStatus(codes.Ok, "notifications processed")
+		if hadErrors {
+			span.SetStatus(codes.Error, "notifications processed with errors")
+		} else {
+			span.SetStatus(codes.Ok, "notifications processed")
+		}
 	}
 }
 
-func (s *service) sendEmailNotification(ctx context.Context, span trace.Span, appointment models.Appointment, eventName string, send func() error) {
+func (s *service) sendEmailNotification(ctx context.Context, span trace.Span, appointment models.Appointment, eventName string, send func() error) error {
 	viaEmail := appointment.ViaEmail || appointment.Patient.ViaEmail
 	to := strings.TrimSpace(appointment.Patient.Email)
 	span.SetAttributes(attribute.Bool("notification.email.enabled", viaEmail), attribute.Bool("notification.email.to_present", to != ""))
 	if !viaEmail || to == "" {
-		return
+		return nil
 	}
 
 	status := models.NotificationSent
+	var sendErr error
 	if err := send(); err != nil {
 		status = models.NotificationFailed
+		sendErr = err
 		span.RecordError(err)
 		span.SetAttributes(attribute.String("notification.email.error", err.Error()))
 	}
@@ -121,14 +143,16 @@ func (s *service) sendEmailNotification(ctx context.Context, span trace.Span, ap
 		Status: status,
 		To:     to,
 	})
+
+	return sendErr
 }
 
-func (s *service) sendWhatsAppTemplate(ctx context.Context, span trace.Span, appointment models.Appointment, eventName string, vars map[string]string) {
+func (s *service) sendWhatsAppNotification(ctx context.Context, span trace.Span, appointment models.Appointment, eventName string, vars map[string]string) error {
 	viaWhatsApp := appointment.ViaWhatsapp || appointment.Patient.ViaWhatsapp
 	to := strings.TrimSpace(appointment.Patient.Phone)
 	span.SetAttributes(attribute.Bool("notification.whatsapp.enabled", viaWhatsApp), attribute.Bool("notification.whatsapp.to_present", to != ""))
 	if !viaWhatsApp || to == "" {
-		return
+		return nil
 	}
 
 	sender := s.newWhatsAppSender()
@@ -137,13 +161,15 @@ func (s *service) sendWhatsAppTemplate(ctx context.Context, span trace.Span, app
 		span.RecordError(err)
 		span.SetAttributes(attribute.String("notification.whatsapp.error", err.Error()))
 		s.appendNotification(ctx, appointment, models.Notification{Medium: models.NotificationMediumWhatsapp, Name: eventName, Status: models.NotificationFailed, To: to})
-		return
+		return err
 	}
 
 	status := models.NotificationSent
+	var sendErr error
 	msg := whatsapp.TemplateMessage{To: to, Variables: vars}
 	if err := sender.SendTemplate(ctx, msg); err != nil {
 		status = models.NotificationFailed
+		sendErr = err
 		span.RecordError(err)
 		span.SetAttributes(attribute.String("notification.whatsapp.error", err.Error()))
 	}
@@ -154,6 +180,8 @@ func (s *service) sendWhatsAppTemplate(ctx context.Context, span trace.Span, app
 		Status: status,
 		To:     to,
 	})
+
+	return sendErr
 }
 
 func (s *service) newWhatsAppSender() *whatsapp.Sender {
