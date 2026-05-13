@@ -136,7 +136,7 @@ var localizations = map[string]string{
 	"en-US.str.increased_by":                             "Increased by",
 	"en-US.str.instagram":                                "Instagram",
 	"en-US.str.keep_me_signed_in":                        "Keep me signed in",
-	"en-US.str.landing_hero_desc":                        "Business page for appointment and clinic management. Track progress, follow up with patients, and keep your earnings visible in one place.",
+	"en-US.str.landing_hero_desc":                        "Handle appointments and clinics, follow up with patients, and track your earnings.",
 	"en-US.str.landing_hero_title":                       "Appointment confirmations and notifications",
 	"en-US.str.last_appointment":                         "Last appointment ",
 	"en-US.str.last_name":                                "Last name",
