@@ -155,7 +155,7 @@ feed_on: "el"
 feed_new_appointment: "Nueva cita"
 no_recent_activity: "Sin actividad reciente"
 landing_hero_title: "Confirmaciones y notificaciones de citas"
-landing_hero_desc: "Para tu consultorio."
+landing_hero_desc: "Gestiona tus citas y consultorios, da seguimiento a tus pacientes y administra tus ingresos."
 
 #_login = "Hello my name is {{.name}}"
 #_hello_firstname_lastname = "Hello {{.firstname}} {{.lastname}}"

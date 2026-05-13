@@ -67,7 +67,7 @@ func LandingPage(vc *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</a></div></nav></header><main class=\"grow flex items-center justify-center px-4 py-10 lg:py-16\"><div class=\"card bg-base-100 shadow-xl border border-base-content/10 w-full max-w-2xl mx-auto\"><div class=\"card-body items-center text-center gap-4 py-12\"><div class=\"w-full max-w-md\"><img src=\"/public/miconsul-gestion-de-citas.png\" alt=\"Miconsul\" class=\"w-full h-auto\"></div><p class=\"text-base-content/70 max-w-xl\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</a></div></nav></header><main class=\"grow flex items-center justify-center px-4 py-10 lg:py-16\"><div class=\"card bg-base-100 shadow-xl border border-base-content/10 w-full max-w-2xl mx-auto\"><div class=\"card-body items-center text-center gap-4 py-12\"><div class=\"w-full max-w-sm\"><img src=\"/public/miconsul-gestion-de-citas.png\" alt=\"Miconsul\" class=\"w-full h-auto rounded-lg\"></div><p class=\"text-base-content/70 max-w-lg\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
