@@ -28,9 +28,9 @@ func contextualTimeClass(t time.Time, tz string, class []string) string {
 	timeClass := ""
 	switch {
 	case isToday:
-		timeClass = "text-accent font-bold"
+		timeClass = "badge badge-accent"
 	case isFuture:
-		timeClass = "text-info"
+		timeClass = "badge badge-info"
 	default:
 		timeClass = "text-base-content/30"
 	}
