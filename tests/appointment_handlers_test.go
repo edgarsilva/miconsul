@@ -31,8 +31,8 @@ func TestAppointmentHandlers(t *testing.T) {
 		if resp.StatusCode != http.StatusNoContent {
 			t.Fatalf("expected 204 for unknown appointment update redirect, got %d", resp.StatusCode)
 		}
-		if got := resp.Header.Get("HX-Location"); got == "" {
-			t.Fatalf("expected HX-Location redirect for htmx not found response")
+		if got := resp.Header.Get("HX-Redirect"); got == "" {
+			t.Fatalf("expected HX-Redirect for htmx not found response")
 		}
 	})
 
@@ -166,8 +166,8 @@ func TestAppointmentHandlers(t *testing.T) {
 		if resp.StatusCode != http.StatusNoContent {
 			t.Fatalf("expected 204 for unknown appointment cancel redirect, got %d", resp.StatusCode)
 		}
-		if got := resp.Header.Get("HX-Location"); got == "" {
-			t.Fatalf("expected HX-Location redirect for htmx cancel not found response")
+		if got := resp.Header.Get("HX-Redirect"); got == "" {
+			t.Fatalf("expected HX-Redirect for htmx cancel not found response")
 		}
 	})
 
@@ -185,8 +185,8 @@ func TestAppointmentHandlers(t *testing.T) {
 		if resp.StatusCode != http.StatusNoContent {
 			t.Fatalf("expected 204 for unknown appointment complete redirect, got %d", resp.StatusCode)
 		}
-		if got := resp.Header.Get("HX-Location"); got == "" {
-			t.Fatalf("expected HX-Location redirect for htmx complete not found response")
+		if got := resp.Header.Get("HX-Redirect"); got == "" {
+			t.Fatalf("expected HX-Redirect for htmx complete not found response")
 		}
 	})
 

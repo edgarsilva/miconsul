@@ -164,8 +164,8 @@ func TestClinicHandlers(t *testing.T) {
 		if resp.StatusCode != http.StatusOK {
 			t.Fatalf("expected 200 for clinic delete, got %d", resp.StatusCode)
 		}
-		if got := resp.Header.Get("HX-Location"); got != "/clinics" {
-			t.Fatalf("expected HX-Location /clinics, got %q", got)
+		if got := resp.Header.Get("HX-Redirect"); got != "/clinics" {
+			t.Fatalf("expected HX-Redirect /clinics, got %q", got)
 		}
 
 		_, err := gorm.G[models.Clinic](h.db.GormDB()).Where("id = ?", clinic.ID).Take(t.Context())

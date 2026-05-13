@@ -276,7 +276,7 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, redirectPath)
 	}
 
-	redirectPath := "/appointments?toast=New appointment created"
+	redirectPath := "/appointments/" + appointment.UID + "?toast=New appointment created"
 	return s.respondWithRedirect(c, redirectPath)
 }
 
@@ -621,6 +621,6 @@ func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string) error {
 		return s.Redirect(c, redirectPath)
 	}
 
-	c.Set("HX-Location", redirectPath)
+	c.Set("HX-Redirect", redirectPath)
 	return c.SendStatus(fiber.StatusNoContent)
 }
