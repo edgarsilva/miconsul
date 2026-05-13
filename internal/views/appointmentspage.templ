@@ -11,7 +11,12 @@ import (
 func toggleStatusFilter(currentStatus, status string) string {
 	statuses := []string{}
 	if currentStatus != "" {
-		statuses = strings.Split(currentStatus, ",")
+		for _, token := range strings.Split(currentStatus, ",") {
+			token = strings.TrimSpace(token)
+			if token != "" {
+				statuses = append(statuses, token)
+			}
+		}
 	}
 
 	found := false
@@ -32,7 +37,11 @@ func toggleStatusFilter(currentStatus, status string) string {
 		return strings.Join(result, ",")
 	}
 
-	return currentStatus + "," + status
+	if len(statuses) == 0 {
+		return status
+	}
+
+	return strings.Join(append(statuses, status), ",")
 }
 
 templ AppointmentsPage(vc *Ctx, appointments []models.Appointment, selectedPatient models.Patient, selectedClinic models.Clinic) {
@@ -53,7 +62,7 @@ templ AppointmentsPage(vc *Ctx, appointments []models.Appointment, selectedPatie
 								{ vc.l("btn.new") }
 							</a>
 						</h1>
-						@CmpSearchInput(vc.l("str.search_appointments"), "/appointments/search", "#appointments_section")
+						@CmpSearchInput(vc, vc.l("str.search_appointments"), "/appointments/search", "#appointments_section")
 					</div>
 					<a
 						href="/appointments/new"

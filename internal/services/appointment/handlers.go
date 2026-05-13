@@ -3,6 +3,7 @@ package appointment
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -38,7 +39,7 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	if err != nil {
 		return s.Redirect(c, "/appointments?toast=Failed to load selected clinic&level=error")
 	}
-	timeframe := c.Query("timeframe", "day")
+	timeframe := strings.TrimSpace(c.Query("timeframe", ""))
 	searchTerm := strings.TrimSpace(c.Query("searchTerm", ""))
 	statusFilter := strings.TrimSpace(c.Query("status", ""))
 	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, patientID, clinicID, timeframe, searchTerm, statusFilter)
@@ -53,6 +54,10 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 // HandleIndexSearch runs the appointments index search.
 // GET: /appointments/search
 func (s *service) HandleIndexSearch(c fiber.Ctx) error {
+	if s.NotHTMX(c) {
+		return s.HandleIndexPage(c)
+	}
+
 	searchTerm := strings.TrimSpace(c.Query("searchTerm", ""))
 	if len(searchTerm) > 0 && len(searchTerm) < 3 {
 		return c.SendStatus(fiber.StatusBadRequest)
@@ -71,7 +76,7 @@ func (s *service) HandleIndexSearch(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	timeframe := c.Query("timeframe", "day")
+	timeframe := strings.TrimSpace(c.Query("timeframe", ""))
 	statusFilter := strings.TrimSpace(c.Query("status", ""))
 	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, patientID, clinicID, timeframe, searchTerm, statusFilter)
 	if err != nil {
@@ -276,7 +281,7 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, redirectPath)
 	}
 
-	redirectPath := "/appointments/" + appointment.UID + "?toast=New appointment created"
+	redirectPath := appointmentsIndexRedirectPath(patient.UID, "New appointment created")
 	return s.respondWithRedirect(c, redirectPath)
 }
 
@@ -357,7 +362,7 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, redirectPath)
 	}
 
-	return s.respondWithRedirect(c, "/appointments?toast=Appointment saved")
+	return s.respondWithRedirect(c, appointmentsIndexRedirectPath(patient.UID, "Appointment saved"))
 }
 
 // HandleCancel cancels an appointment
@@ -623,4 +628,9 @@ func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string) error {
 
 	c.Set("HX-Redirect", redirectPath)
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+func appointmentsIndexRedirectPath(patientUID, toast string) string {
+	query := fmt.Sprintf("?patientId=%s&toast=%s", patientUID, toast)
+	return "/appointments" + query
 }
