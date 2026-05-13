@@ -1,18 +1,43 @@
 package views
 
 templ LandingPage(vc *Ctx) {
-	@LayoutAuth(vc) {
-		<div class="px-4">
-			<div class="card bg-base-100 shadow-xl border border-base-content/10 w-full max-w-xl mx-auto">
-				<div class="card-body items-center text-center gap-4 py-10">
-					<div class="w-20 rounded-lg overflow-clip">
-						@CmpLogo()
+	@HTMLPage(vc) {
+		<div id="root" class="min-h-screen flex flex-col bg-base-200">
+			<header class="border-y border-base-content/10 bg-base-100">
+				<nav class="navbar px-4 lg:px-8">
+					<div class="navbar-start">
+						<a href="/" class="relative px-2 rounded-lg self-stretch flex items-center text-xl font-semibold hover:ring hover:ring-secondary hover:bg-secondary/50 active:ring">
+							<div class="avatar overflow-hidden mr-2">
+								<div class="h-10">
+									<img src="/public/images/labcoat64.png" alt="Miconsul logo"/>
+								</div>
+							</div>
+							Miconsul
+						</a>
 					</div>
-					<h1 class="text-3xl font-semibold">Miconsul</h1>
-					<p class="text-base-content/70">Business page for appointment confirmations and notifications.</p>
-					<a href="/signin" class="btn btn-primary min-w-40">Login</a>
+					<div class="navbar-end gap-2">
+						<a href="/signup" class="btn btn-ghost">{ vc.l("btn.signup") }</a>
+						<a href="/signin" class="btn btn-primary">{ vc.l("btn.sign_in") }</a>
+					</div>
+				</nav>
+			</header>
+
+			<main class="grow flex items-center justify-center px-4 py-10 lg:py-16">
+				<div class="card bg-base-100 shadow-xl border border-base-content/10 w-full max-w-2xl mx-auto">
+					<div class="card-body items-center text-center gap-4 py-12">
+						<div class="w-full max-w-md">
+							<img src="/public/miconsul-gestion-de-citas.png" alt="Miconsul" class="w-full h-auto"/>
+						</div>
+						<p class="text-base-content/70 max-w-xl">{ vc.l("str.landing_hero_desc") }</p>
+						<div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+							<a href="/signup" class="btn btn-soft min-w-40">{ vc.l("btn.signup") }</a>
+							<a href="/signin" class="btn btn-primary min-w-40">{ vc.l("btn.sign_in") }</a>
+						</div>
+					</div>
 				</div>
-			</div>
+			</main>
+
+			@CmpFooter(vc)
 		</div>
 	}
 }

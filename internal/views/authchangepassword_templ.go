@@ -148,7 +148,7 @@ func ResetPasswordChangePage(email, token, nonce string, err error, vc *Ctx) tem
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<div><button type=\"submit\" class=\"btn btn-primary btn-block\">Change password</button></div></form></div></div><div><p class=\"mt-10 text-center text-sm\">Not a member? <a href=\"/signup\" class=\"ml-1 link link-info link-hover font-semibold leading-6\">Create an account</a></p></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<div><button type=\"submit\" class=\"btn btn-primary btn-block\">Change password</button></div></form></div></div><div><p class=\"mt-10 text-center text-sm\">Not a member? <a href=\"/signup\" class=\"ml-1 link link-info link-hover font-semibold leading-6\">Sign up</a></p></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
