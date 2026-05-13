@@ -402,20 +402,7 @@ templ AppointmentCont(vc *Ctx, appointment models.Appointment, patients []models
 								</div>
 							</div>
 							@ApptPrice(vc, appointment, models.Clinic{}, false)
-							<div class="col-span-full mt-2">
-								<label class="relative flex gap-x-3">
-									<input
-										name="enableNotifications"
-										value="1"
-										type="checkbox"
-										class="checkbox"
-									/>
-									<div class="text-sm leading-6">
-										<span class="font-medium">{ l(vc.Locale, "str.appointment_send_email") }</span>
-										<p class="text-base-content/60">{ l(vc.Locale, "str.appointment_send_email_desc") }</p>
-									</div>
-								</label>
-							</div>
+							<p class="col-span-full mt-2 text-sm text-base-content/60">Notifications are managed on the patient profile.</p>
 						</div>
 					</div>
 				}
