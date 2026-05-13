@@ -160,7 +160,7 @@ func (s *service) HandleClinicsDelete(c fiber.Ctx) error {
 		return s.Redirect(c, "/clinics")
 	}
 
-	c.Set("HX-Location", "/clinics")
+	c.Set("HX-Redirect", "/clinics")
 	return c.SendStatus(fiber.StatusOK)
 }
 
@@ -219,7 +219,7 @@ func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string) error {
 		return s.Redirect(c, redirectPath)
 	}
 
-	c.Set("HX-Location", redirectPath)
+	c.Set("HX-Redirect", redirectPath)
 	return c.SendStatus(fiber.StatusNoContent)
 }
 

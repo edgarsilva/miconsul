@@ -2,6 +2,8 @@ package views
 
 import (
 	"fmt"
+	"net/url"
+	"sort"
 	"strings"
 )
 
@@ -12,20 +14,49 @@ import (
 //		QueryParams(vc, "timeframe=day", "clinic=myclinic")
 func QueryParams(vc *Ctx, params ...string) string {
 	queryParams := vc.Queries()
-	paramStrTokens := []string{"?"}
+	merged := map[string]string{}
+	for k, v := range queryParams {
+		key := strings.TrimSpace(k)
+		if key == "" {
+			continue
+		}
+		merged[key] = strings.TrimSpace(v)
+	}
 
 	for _, param := range params {
-		kv := strings.Split(param, "=")
+		kv := strings.SplitN(param, "=", 2)
 		if len(kv) < 2 {
 			continue
 		}
 
-		key, val := kv[0], kv[1]
-		queryParams[key] = val
-		paramStrTokens = append(paramStrTokens, key+"="+val)
+		key := strings.TrimSpace(kv[0])
+		if key == "" {
+			continue
+		}
+		val := strings.TrimSpace(kv[1])
+		if val == "" {
+			delete(merged, key)
+			continue
+		}
+		merged[key] = val
 	}
 
-	return strings.Join(paramStrTokens, "&")
+	if len(merged) == 0 {
+		return ""
+	}
+
+	keys := make([]string, 0, len(merged))
+	for k := range merged {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	encoded := url.Values{}
+	for _, key := range keys {
+		encoded.Set(key, merged[key])
+	}
+
+	return "?" + encoded.Encode()
 }
 
 // FeedActionLocaleKey returns the localization key for a feed event action.

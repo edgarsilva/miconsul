@@ -134,7 +134,7 @@ func CmpCardHeader(c *Ctx, title, newLabel, newPath, searchPlaceholder, searchPa
 			return templ_7745c5c3_Err
 		}
 		if searchPath != "" {
-			templ_7745c5c3_Err = CmpSearchInput(searchPlaceholder, searchPath, searchTarget).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpSearchInput(c, searchPlaceholder, searchPath, searchTarget).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -24,7 +24,7 @@ templ PatientsPage(c *Ctx, patients []models.Patient) {
 								{ l(c.Locale, "btn.new_patient") }
 							</a>
 						</h1>
-						@CmpSearchInput(c.l("str.search_patients"), "/patients/search", "#patients_list")
+						@CmpSearchInput(c, c.l("str.search_patients"), "/patients/search", "#patients_list")
 					</div>
 					<a
 						href="/patients/new"

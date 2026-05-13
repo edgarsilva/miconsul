@@ -80,7 +80,7 @@ func ClinicsPage(vc *Ctx, clinics []models.Clinic) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = CmpSearchInput(vc.l("str.search_clinics"), "/clinics/search", "#clinics_list").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpSearchInput(vc, vc.l("str.search_clinics"), "/clinics/search", "#clinics_list").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

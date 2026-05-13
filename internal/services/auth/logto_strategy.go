@@ -69,6 +69,8 @@ func (lgs LogtoStrategy) Metadata() AuthenticatorMeta {
 		ErrorQueryKey:          "logto_error",
 		LoggedOutQueryKey:      "logged_out",
 		SkipRedirectSessionKey: "logto_skip_redirect",
+		ErrorCountSessionKey:   "logto_redirect_failures",
+		ErrorRedirectMax:       3,
 		ErrorMessage:           "Logto sign-in failed. Please try again.",
 		SignedOutMessage:       "You have been signed out.",
 	}

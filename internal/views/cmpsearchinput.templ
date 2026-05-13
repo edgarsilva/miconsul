@@ -1,11 +1,11 @@
 package views
 
-templ CmpSearchInput(placeholder, path, target string) {
+templ CmpSearchInput(c *Ctx, placeholder, path, target string) {
 	<label class="input flex items-center gap-2 rounded-full focus:outline">
 		@IconSearch("size-5")
 		<input
 			name="searchTerm"
-			value=""
+			value={ c.Query("searchTerm", "") }
 			type="search"
 			class="grow"
 			placeholder={ placeholder }

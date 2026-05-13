@@ -98,7 +98,7 @@ func DashbordhRoutes(s *server.Server, authSvc auth.Runtime) error {
 		return err
 	}
 
-	d.Get("/", mw.MustAuthenticate(authSvc), d.HandleDashboardPage)
+	d.Get("/", mw.MaybeAuthenticate(authSvc), d.HandleHomePage)
 
 	g := s.Group("/dashboard", mw.MustAuthenticate(authSvc))
 	g.Get("", d.HandleDashboardPage)
@@ -172,6 +172,8 @@ func AppointmentRoutes(s *server.Server, authSvc auth.Runtime) error {
 	if err != nil {
 		return err
 	}
+
+	a.Post("/api/webhooks/twilio_delivery_status", a.HandleTwilioDeliveryStatusWebhook)
 
 	g := a.Group("/appointments", mw.MustAuthenticate(authSvc))
 	g.Get("/", a.HandleIndexPage)

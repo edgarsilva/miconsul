@@ -62,6 +62,12 @@
   - Replace SQLite session storage with Valkey storage behind Fiber session middleware.
   - Keep fallback behavior and rollout checklist for local/dev environments.
 
+- [feature/notifications] Optional per-appointment notification overrides
+  - Keep appointment-level notification toggles as an optional override contract.
+  - Add fields to `appointmentUpsertInput` for notification channels.
+  - Persist appointment notification flags on create/update.
+  - Define precedence rules explicitly (appointment overrides patient, or fallback behavior).
+
 ## Done
 
 - [feature/dashboard] Populate FeedEvent on appointment changes and wire Dashboard Feed widget

@@ -20,7 +20,7 @@ templ CmpCardHeader(c *Ctx, title, newLabel, newPath, searchPlaceholder, searchP
 				}
 			</h1>
 			if searchPath != "" {
-				@CmpSearchInput(searchPlaceholder, searchPath, searchTarget)
+				@CmpSearchInput(c, searchPlaceholder, searchPath, searchTarget)
 			}
 		</div>
 		if newPath != "" {

@@ -11,8 +11,19 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-// HandleDashboardPage renders the home dashboard
+// HandleHomePage renders the public landing page.
 // GET: /
+func (s *service) HandleHomePage(c fiber.Ctx) error {
+	cu := s.CurrentUser(c)
+	if cu.IsLoggedIn() {
+		return s.Redirect(c, "/dashboard?timeframe=day")
+	}
+
+	vc, _ := view.NewCtx(c)
+	return view.Render(c, view.LandingPage(vc))
+}
+
+// HandleDashboardPage renders the home dashboard
 // GET: /dashboard
 func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)

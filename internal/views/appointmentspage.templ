@@ -11,7 +11,12 @@ import (
 func toggleStatusFilter(currentStatus, status string) string {
 	statuses := []string{}
 	if currentStatus != "" {
-		statuses = strings.Split(currentStatus, ",")
+		for _, token := range strings.Split(currentStatus, ",") {
+			token = strings.TrimSpace(token)
+			if token != "" {
+				statuses = append(statuses, token)
+			}
+		}
 	}
 
 	found := false
@@ -32,7 +37,11 @@ func toggleStatusFilter(currentStatus, status string) string {
 		return strings.Join(result, ",")
 	}
 
-	return currentStatus + "," + status
+	if len(statuses) == 0 {
+		return status
+	}
+
+	return strings.Join(append(statuses, status), ",")
 }
 
 templ AppointmentsPage(vc *Ctx, appointments []models.Appointment, selectedPatient models.Patient, selectedClinic models.Clinic) {
@@ -53,7 +62,7 @@ templ AppointmentsPage(vc *Ctx, appointments []models.Appointment, selectedPatie
 								{ vc.l("btn.new") }
 							</a>
 						</h1>
-						@CmpSearchInput(vc.l("str.search_appointments"), "/appointments/search", "#appointments_section")
+						@CmpSearchInput(vc, vc.l("str.search_appointments"), "/appointments/search", "#appointments_section")
 					</div>
 					<a
 						href="/appointments/new"
@@ -393,20 +402,7 @@ templ AppointmentCont(vc *Ctx, appointment models.Appointment, patients []models
 								</div>
 							</div>
 							@ApptPrice(vc, appointment, models.Clinic{}, false)
-							<div class="col-span-full mt-2">
-								<label class="relative flex gap-x-3">
-									<input
-										name="enableNotifications"
-										value="1"
-										type="checkbox"
-										class="checkbox"
-									/>
-									<div class="text-sm leading-6">
-										<span class="font-medium">{ l(vc.Locale, "str.appointment_send_email") }</span>
-										<p class="text-base-content/60">{ l(vc.Locale, "str.appointment_send_email_desc") }</p>
-									</div>
-								</label>
-							</div>
+							<p class="col-span-full mt-2 text-sm text-base-content/60">Notifications are managed on the patient profile.</p>
 						</div>
 					</div>
 				}

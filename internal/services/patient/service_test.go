@@ -18,7 +18,7 @@ func TestNormalizePatientWriteInput(t *testing.T) {
 		patient := &models.Patient{
 			Name:  "  Patient Name  ",
 			Email: "  MIXED@Example.COM  ",
-			Phone: "  +12345  ",
+			Phone: "  312 101-4574  ",
 		}
 
 		if err := normalizePatientWriteInput(patient); err != nil {
@@ -30,8 +30,28 @@ func TestNormalizePatientWriteInput(t *testing.T) {
 		if patient.Email != "mixed@example.com" {
 			t.Fatalf("expected normalized email, got %q", patient.Email)
 		}
-		if patient.Phone != "+12345" {
-			t.Fatalf("expected trimmed phone, got %q", patient.Phone)
+		if patient.Phone != "+523121014574" {
+			t.Fatalf("expected normalized phone, got %q", patient.Phone)
+		}
+	})
+
+	t.Run("keeps un-normalizable phone as-is", func(t *testing.T) {
+		patient := &models.Patient{Phone: "ext-123"}
+		if err := normalizePatientWriteInput(patient); err != nil {
+			t.Fatalf("expected input to pass: %v", err)
+		}
+		if patient.Phone != "ext-123" {
+			t.Fatalf("expected original phone preserved, got %q", patient.Phone)
+		}
+	})
+
+	t.Run("normalizes whatsapp prefix", func(t *testing.T) {
+		patient := &models.Patient{Phone: "whatsapp:+52 1312 101 4574"}
+		if err := normalizePatientWriteInput(patient); err != nil {
+			t.Fatalf("expected input to pass: %v", err)
+		}
+		if patient.Phone != "+5213121014574" {
+			t.Fatalf("expected normalized whatsapp phone, got %q", patient.Phone)
 		}
 	})
 

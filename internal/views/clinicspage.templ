@@ -23,7 +23,7 @@ templ ClinicsPage(vc *Ctx, clinics []models.Clinic) {
 								{ l(vc.Locale, "btn.new") }
 							</a>
 						</h1>
-						@CmpSearchInput(vc.l("str.search_clinics"), "/clinics/search", "#clinics_list")
+						@CmpSearchInput(vc, vc.l("str.search_clinics"), "/clinics/search", "#clinics_list")
 					</div>
 					<a
 						href="/clinics/new"

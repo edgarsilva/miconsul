@@ -35,6 +35,8 @@ type AuthenticatorMeta struct {
 	ErrorQueryKey          string
 	LoggedOutQueryKey      string
 	SkipRedirectSessionKey string
+	ErrorCountSessionKey   string
+	ErrorRedirectMax       int
 	ErrorMessage           string
 	SignedOutMessage       string
 }
