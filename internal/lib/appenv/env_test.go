@@ -111,6 +111,8 @@ func TestEnvLoadOptionalOverrides(t *testing.T) {
 	t.Setenv("TWILIO_ACCOUNT_SID", "  AC123456789  ")
 	t.Setenv("TWILIO_AUTH_TOKEN", "  twilio-secret  ")
 	t.Setenv("TWILIO_WHATSAPP_FROM", "  whatsapp:+14155238886  ")
+	t.Setenv("TWILIO_WHATSAPP_CONTENT_SID", "  HX123456789  ")
+	t.Setenv("TWILIO_API_BASE_URL", "  https://api.twilio.com  ")
 	t.Setenv("JOBS_ENABLED", "true")
 	t.Setenv("JOBS_UI_ENABLED", "true")
 	t.Setenv("VALKEY_HOST", "  valkey  ")
@@ -160,6 +162,12 @@ func TestEnvLoadOptionalOverrides(t *testing.T) {
 	}
 	if env.TwilioWhatsAppFrom != "whatsapp:+14155238886" {
 		t.Fatalf("expected trimmed twilio whatsapp from, got %q", env.TwilioWhatsAppFrom)
+	}
+	if env.TwilioWhatsAppContentSID != "HX123456789" {
+		t.Fatalf("expected trimmed twilio whatsapp content sid, got %q", env.TwilioWhatsAppContentSID)
+	}
+	if env.TwilioAPIBaseURL != "https://api.twilio.com" {
+		t.Fatalf("expected trimmed twilio api base url, got %q", env.TwilioAPIBaseURL)
 	}
 	if !env.JobsEnabled {
 		t.Fatalf("expected parsed jobs enabled true")
@@ -280,6 +288,8 @@ func setRequiredEnv(t *testing.T) {
 		"TWILIO_ACCOUNT_SID",
 		"TWILIO_AUTH_TOKEN",
 		"TWILIO_WHATSAPP_FROM",
+		"TWILIO_WHATSAPP_CONTENT_SID",
+		"TWILIO_API_BASE_URL",
 		"JOBS_ENABLED",
 		"JOBS_UI_ENABLED",
 		"VALKEY_HOST",

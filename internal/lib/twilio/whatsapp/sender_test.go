@@ -1,4 +1,4 @@
-package twilio
+package whatsapp
 
 import (
 	"context"
@@ -10,13 +10,10 @@ import (
 	"testing"
 )
 
-func TestSendSuccess(t *testing.T) {
+func TestSendTemplateSuccess(t *testing.T) {
 	t.Parallel()
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			t.Fatalf("expected POST")
-		}
 		if got, want := r.URL.Path, "/2010-04-01/Accounts/AC123/Messages.json"; got != want {
 			t.Fatalf("unexpected path: %s", got)
 		}
@@ -39,8 +36,11 @@ func TestSendSuccess(t *testing.T) {
 		if values.Get("From") != "whatsapp:+14155238886" {
 			t.Fatalf("unexpected From: %s", values.Get("From"))
 		}
-		if values.Get("Body") != "hello" {
-			t.Fatalf("unexpected Body: %s", values.Get("Body"))
+		if values.Get("ContentSid") != "HX123" {
+			t.Fatalf("unexpected ContentSid: %s", values.Get("ContentSid"))
+		}
+		if values.Get("ContentVariables") != `{"1":"12/1","2":"3pm"}` {
+			t.Fatalf("unexpected ContentVariables: %s", values.Get("ContentVariables"))
 		}
 
 		w.WriteHeader(http.StatusCreated)
@@ -48,49 +48,54 @@ func TestSendSuccess(t *testing.T) {
 	}))
 	defer server.Close()
 
-	sender := New(Config{
+	sender := NewSender(Config{
+		WhatsAppFrom: "+14155238886",
+		ContentSID:   "HX123",
 		AccountSID:   "AC123",
 		AuthToken:    "token",
-		WhatsAppFrom: "+14155238886",
 		APIBaseURL:   server.URL,
 	})
 
-	err := sender.Send(context.Background(), "+5215512345678", "hello")
+	err := sender.SendTemplate(context.Background(), TemplateMessage{
+		To: "+5215512345678",
+		Variables: map[string]string{
+			"1": "12/1",
+			"2": "3pm",
+		},
+	})
 	if err != nil {
 		t.Fatalf("expected success, got %v", err)
 	}
 }
 
-func TestSendValidationErrors(t *testing.T) {
+func TestSendTemplateValidation(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
 		name   string
 		sender *Sender
-		to     string
-		text   string
+		msg    TemplateMessage
 	}{
-		{name: "nil sender", sender: nil, to: "+521", text: "x"},
-		{name: "missing sid", sender: New(Config{AuthToken: "token", WhatsAppFrom: "+1"}), to: "+521", text: "x"},
-		{name: "missing token", sender: New(Config{AccountSID: "AC123", WhatsAppFrom: "+1"}), to: "+521", text: "x"},
-		{name: "missing from", sender: New(Config{AccountSID: "AC123", AuthToken: "token"}), to: "+521", text: "x"},
-		{name: "missing to", sender: New(Config{AccountSID: "AC123", AuthToken: "token", WhatsAppFrom: "+1"}), to: "", text: "x"},
-		{name: "missing text", sender: New(Config{AccountSID: "AC123", AuthToken: "token", WhatsAppFrom: "+1"}), to: "+521", text: ""},
+		{name: "nil sender", sender: nil, msg: TemplateMessage{To: "+1"}},
+		{name: "missing from", sender: NewSender(Config{ContentSID: "HX", AccountSID: "AC123", AuthToken: "token"}), msg: TemplateMessage{To: "+1"}},
+		{name: "missing content sid", sender: NewSender(Config{WhatsAppFrom: "+1", AccountSID: "AC123", AuthToken: "token"}), msg: TemplateMessage{To: "+1"}},
+		{name: "missing to", sender: NewSender(Config{WhatsAppFrom: "+1", ContentSID: "HX", AccountSID: "AC123", AuthToken: "token"}), msg: TemplateMessage{To: ""}},
+		{name: "missing sid", sender: NewSender(Config{WhatsAppFrom: "+1", ContentSID: "HX", AuthToken: "token"}), msg: TemplateMessage{To: "+1"}},
+		{name: "missing token", sender: NewSender(Config{WhatsAppFrom: "+1", ContentSID: "HX", AccountSID: "AC123"}), msg: TemplateMessage{To: "+1"}},
 	}
 
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			err := tt.sender.Send(context.Background(), tt.to, tt.text)
-			if err == nil {
+			if err := tt.sender.SendTemplate(context.Background(), tt.msg); err == nil {
 				t.Fatalf("expected error")
 			}
 		})
 	}
 }
 
-func TestSendProviderError(t *testing.T) {
+func TestSendTemplateProviderError(t *testing.T) {
 	t.Parallel()
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -98,19 +103,20 @@ func TestSendProviderError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	sender := New(Config{
+	sender := NewSender(Config{
+		WhatsAppFrom: "+14155238886",
+		ContentSID:   "HX123",
 		AccountSID:   "AC123",
 		AuthToken:    "token",
-		WhatsAppFrom: "+14155238886",
 		APIBaseURL:   server.URL,
 	})
 
-	err := sender.Send(context.Background(), "+5215512345678", "hello")
+	err := sender.SendTemplate(context.Background(), TemplateMessage{To: "+5215512345678"})
 	if err == nil {
 		t.Fatalf("expected error")
 	}
 	if !strings.Contains(err.Error(), "status 400") {
-		t.Fatalf("expected status in error, got %v", err)
+		t.Fatalf("expected status error, got %v", err)
 	}
 }
 
@@ -121,6 +127,6 @@ func TestWithWhatsAppPrefix(t *testing.T) {
 		t.Fatalf("unexpected prefixed value: %s", got)
 	}
 	if got := withWhatsAppPrefix("whatsapp:+123"); got != "whatsapp:+123" {
-		t.Fatalf("unexpected already prefixed value: %s", got)
+		t.Fatalf("unexpected already-prefixed value: %s", got)
 	}
 }

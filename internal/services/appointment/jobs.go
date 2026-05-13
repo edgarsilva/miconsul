@@ -89,7 +89,6 @@ func (s *service) handleReminderSweepTask(ctx context.Context, _ jobs.Task) erro
 		Model(&models.Notification{}).
 		Where("alertable_type = ?", "appointments").
 		Where("name = ?", "appointment_reminder").
-		Where("medium = ?", models.NotificationMediumEmail).
 		Where("status IN ?", []models.NotificationStatus{models.NotificationSent, models.NotificationSuccess}).
 		Where("alertable_id IN ?", candidateIDs).
 		Pluck("alertable_id", &notifiedIDs).Error
@@ -135,7 +134,7 @@ func (s *service) handleReminderTask(ctx context.Context, task jobs.Task) error 
 		return fmt.Errorf("load appointment for reminder: %w", err)
 	}
 
-	sent, err := s.notificationSent(ctx, appointment.UID, "appointment_reminder", models.NotificationMediumEmail)
+	sent, err := s.notificationSentAnyMedium(ctx, appointment.UID, "appointment_reminder")
 	if err != nil {
 		return fmt.Errorf("check reminder notification status: %w", err)
 	}
@@ -168,7 +167,7 @@ func (s *service) handleBookedAlertTask(ctx context.Context, task jobs.Task) err
 		return fmt.Errorf("load appointment for booked alert: %w", err)
 	}
 
-	sent, err := s.notificationSent(ctx, appointment.UID, "appointment_booked", models.NotificationMediumEmail)
+	sent, err := s.notificationSentAnyMedium(ctx, appointment.UID, "appointment_booked")
 	if err != nil {
 		return fmt.Errorf("check booked notification status: %w", err)
 	}
@@ -188,6 +187,22 @@ func (s *service) notificationSent(ctx context.Context, appointmentUID, name str
 		Where("alertable_type = ?", "appointments").
 		Where("name = ?", name).
 		Where("medium = ?", medium).
+		Where("status IN ?", []models.NotificationStatus{models.NotificationSent, models.NotificationSuccess}).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+func (s *service) notificationSentAnyMedium(ctx context.Context, appointmentUID, name string) (bool, error) {
+	var count int64
+	err := s.DB.WithContext(ctx).
+		Model(&models.Notification{}).
+		Where("alertable_id = ?", appointmentUID).
+		Where("alertable_type = ?", "appointments").
+		Where("name = ?", name).
 		Where("status IN ?", []models.NotificationStatus{models.NotificationSent, models.NotificationSuccess}).
 		Count(&count).Error
 	if err != nil {
