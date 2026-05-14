@@ -36,6 +36,7 @@ type SocialMedia struct {
 type NotificationFlags struct {
 	EnableNotifications bool `form:"enableNotifications"`
 	ViaEmail            bool `form:"viaEmail"`
+	ViaSMS              bool `form:"viaSMS"`
 	ViaWhatsapp         bool `form:"viaWhatsapp"`
 	ViaMessenger        bool `form:"viaMessenger"`
 	ViaTelegram         bool `form:"viaTelegram"`

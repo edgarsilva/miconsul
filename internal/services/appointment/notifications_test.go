@@ -3,6 +3,9 @@ package appointment
 import (
 	"errors"
 	"testing"
+	"time"
+
+	"miconsul/internal/models"
 )
 
 func TestClassifyWhatsAppError(t *testing.T) {
@@ -52,5 +55,25 @@ func TestClassifyWhatsAppError(t *testing.T) {
 				t.Fatalf("expected status %d, got %d", tt.wantStatus, status)
 			}
 		})
+	}
+}
+
+func TestSMSBodyForEvent(t *testing.T) {
+	t.Parallel()
+
+	apnt := models.Appointment{
+		BookedAt: time.Date(2026, 5, 14, 15, 0, 0, 0, time.UTC),
+		Timezone: models.DefaultTimezone,
+		Clinic:   models.Clinic{Name: "Centro Medico"},
+	}
+
+	booked := smsBodyForEvent(apnt, "appointment_booked")
+	if booked == "" {
+		t.Fatalf("expected booked SMS body")
+	}
+
+	reminder := smsBodyForEvent(apnt, "appointment_reminder")
+	if reminder == "" {
+		t.Fatalf("expected reminder SMS body")
 	}
 }

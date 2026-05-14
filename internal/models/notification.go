@@ -10,6 +10,7 @@ type NotificationMedium string
 
 const (
 	NotificationMediumEmail     NotificationMedium = "email"
+	NotificationMediumSMS       NotificationMedium = "sms"
 	NotificationMediumFacebook  NotificationMedium = "facebook"
 	NotificationMediumWhatsapp  NotificationMedium = "whatsapp"
 	NotificationMediumMessenger NotificationMedium = "messenger"
