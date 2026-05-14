@@ -1834,7 +1834,7 @@ func AppointmentCont(vc *Ctx, appointment models.Appointment, patients []models.
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 137, "</legend><div class=\"mt-6 space-y-6\"><label class=\"flex items-center gap-2 text-sm font-medium leading-6 opacity-60\"><input type=\"checkbox\" class=\"checkbox checkbox-sm\" disabled> <span class=\"inline-flex items-center gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 137, "</legend><div class=\"mt-6 space-y-6\"><label class=\"mb-2 flex items-center gap-2 text-sm font-medium leading-6 opacity-60\"><input type=\"checkbox\" class=\"checkbox checkbox-sm\" disabled> <span class=\"inline-flex items-center gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1842,7 +1842,7 @@ func AppointmentCont(vc *Ctx, appointment models.Appointment, patients []models.
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 138, "<span>Email</span></span></label> <label class=\"flex items-center gap-2 text-sm font-medium leading-6 opacity-60\"><input type=\"checkbox\" class=\"checkbox checkbox-sm\" disabled> <span class=\"inline-flex items-center gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 138, "<span>Email</span></span></label> <label class=\"mb-2 flex items-center gap-2 text-sm font-medium leading-6 opacity-60\"><input type=\"checkbox\" class=\"checkbox checkbox-sm\" disabled> <span class=\"inline-flex items-center gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1850,7 +1850,7 @@ func AppointmentCont(vc *Ctx, appointment models.Appointment, patients []models.
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 139, "<span>SMS</span></span></label> <label class=\"flex items-center gap-2 text-sm font-medium leading-6 opacity-60\"><input type=\"checkbox\" class=\"checkbox checkbox-sm\" disabled> <span class=\"inline-flex items-center gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 139, "<span>SMS</span></span></label> <label class=\"mb-2 flex items-center gap-2 text-sm font-medium leading-6 opacity-60\"><input type=\"checkbox\" class=\"checkbox checkbox-sm\" disabled> <span class=\"inline-flex items-center gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1858,7 +1858,7 @@ func AppointmentCont(vc *Ctx, appointment models.Appointment, patients []models.
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 140, "<span>Whatsapp</span></span></label> <label class=\"flex items-center gap-2 text-sm font-medium leading-6 opacity-60\"><input type=\"checkbox\" class=\"checkbox checkbox-sm\" disabled> <span class=\"inline-flex items-center gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 140, "<span>Whatsapp</span></span></label> <label class=\"mb-2 flex items-center gap-2 text-sm font-medium leading-6 opacity-60\"><input type=\"checkbox\" class=\"checkbox checkbox-sm\" disabled> <span class=\"inline-flex items-center gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

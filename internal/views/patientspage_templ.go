@@ -1571,7 +1571,7 @@ func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 119, "</legend><div class=\"mt-6 space-y-6 font-medium text-sm\"><label class=\"flex items-center gap-2\"><input name=\"viaEmail\" value=\"1\" type=\"checkbox\" class=\"checkbox checkbox-sm\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 119, "</legend><div class=\"mt-6 space-y-6 font-medium text-sm\"><label class=\"mb-2 flex items-center gap-2\"><input name=\"viaEmail\" value=\"1\" type=\"checkbox\" class=\"checkbox checkbox-sm\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1589,7 +1589,7 @@ func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 122, "<span>Email</span></span></label> <label class=\"flex items-center gap-2\"><input name=\"viaWhatsapp\" value=\"1\" type=\"checkbox\" class=\"checkbox checkbox-sm\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 122, "<span>Email</span></span></label> <label class=\"mb-2 flex items-center gap-2\"><input name=\"viaWhatsapp\" value=\"1\" type=\"checkbox\" class=\"checkbox checkbox-sm\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1607,7 +1607,7 @@ func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 125, "<span>Whatsapp</span></span></label> <label class=\"flex items-center gap-2\"><input name=\"viaTelegram\" value=\"1\" type=\"checkbox\" class=\"checkbox checkbox-sm\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 125, "<span>Whatsapp</span></span></label> <label class=\"mb-2 flex items-center gap-2\"><input name=\"viaTelegram\" value=\"1\" type=\"checkbox\" class=\"checkbox checkbox-sm\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1625,7 +1625,7 @@ func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 128, "<span>Telegram</span></span></label> <label class=\"flex items-center gap-2\"><input name=\"viaMessenger\" value=\"1\" type=\"checkbox\" class=\"checkbox checkbox-sm\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 128, "<span>Telegram</span></span></label> <label class=\"mb-2 flex items-center gap-2\"><input name=\"viaMessenger\" value=\"1\" type=\"checkbox\" class=\"checkbox checkbox-sm\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
