@@ -157,30 +157,15 @@ templ AppointmentBookedEmail(env *appenv.Env, appointment models.Appointment) {
 																				class="msohide es-button-border"
 																				style="border-style:solid;border-color:#2CB543;background:#93c47d;border-width:0px;display:inline-block;border-radius:15px;width:100%;mso-hide:all"
 																			>
-																				<a
-																					href={ templ.URL(waURL(appointment.Clinic.Phone, "Me gustaria cambiar la fecha de mi cita.")) }
-																					class="es-button"
-																					target="_blank"
-																					style="mso-style-priority:100 !important;text-decoration:none;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;color:#FFFFFF;font-size:20px;display:inline-block;background:#93c47d;border-radius:15px;font-family:Oswald, sans-serif;font-weight:normal;font-style:normal;line-height:24px;width:auto;text-align:center;padding:10px 0px 10px 0px;mso-padding-alt:0;mso-border-alt:10px solid #93c47d;width:100%;display:inline-block;"
-																				>Reagendar por Whatsapp</a>
-																			</span>
-																		</td>
-																	</tr>
-																	<tr>
-																		<td align="center" style="padding:0;Margin:0;padding-top:20px">
-																			<span
-																				class="msohide es-button-border"
-																				style="border-style:solid;border-color:#666666;background:#cccccc;border-width:0px;display:inline-block;border-radius:15px;width:100%;mso-hide:all"
-																			>
-																				<a
-																									href={ templ.URL(env.AppURL(appointment.RescheduledPath())) }
-																					class="es-button"
-																					target="_blank"
-																					style="mso-style-priority:100 !important;text-decoration:none;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;color:#FFFFFF;font-size:20px;display:inline-block;background:#cccccc;border-radius:15px;font-family:Oswald, sans-serif;font-weight:normal;font-style:normal;line-height:24px;width:auto;text-align:center;padding:10px 0px 10px 0px;mso-padding-alt:0;mso-border-alt:10px solid #cccccc;width:100%;display:inline-block;"
-																				>Cancelar</a>
-																			</span>
-																		</td>
-																	</tr>
+																<a
+																	href={ templ.URL(waURL(appointment.Clinic.Phone, "Me gustaria cambiar la fecha de mi cita.")) }
+																	class="es-button"
+																	target="_blank"
+																	style="mso-style-priority:100 !important;text-decoration:none;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;color:#FFFFFF;font-size:20px;display:inline-block;background:#93c47d;border-radius:15px;font-family:Oswald, sans-serif;font-weight:normal;font-style:normal;line-height:24px;width:auto;text-align:center;padding:10px 0px 10px 0px;mso-padding-alt:0;mso-border-alt:10px solid #93c47d;width:100%;display:inline-block;"
+																	>Contact us on WhatsApp</a>
+																</span>
+															</td>
+														</tr>
 																</table>
 															</td>
 														</tr>
@@ -518,30 +503,15 @@ templ AppointmentReminderEmail(env *appenv.Env, appointment models.Appointment) 
 																				class="msohide es-button-border"
 																				style="border-style:solid;border-color:#2CB543;background:#93c47d;border-width:0px;display:inline-block;border-radius:15px;width:100%;mso-hide:all"
 																			>
-																				<a
-																					href={ templ.URL(waURL(appointment.Clinic.Phone, "Me gustaria cambiar la fecha de mi cita.")) }
-																					class="es-button"
-																					target="_blank"
-																					style="mso-style-priority:100 !important;text-decoration:none;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;color:#FFFFFF;font-size:20px;display:inline-block;background:#93c47d;border-radius:15px;font-family:Oswald, sans-serif;font-weight:normal;font-style:normal;line-height:24px;width:auto;text-align:center;padding:10px 0px 10px 0px;mso-padding-alt:0;mso-border-alt:10px solid #93c47d;width:100%;display:inline-block;"
-																				>Reagendar por Whatsapp</a>
-																			</span>
-																		</td>
-																	</tr>
-																	<tr>
-																		<td align="center" style="padding:0;Margin:0;padding-top:20px">
-																			<span
-																				class="msohide es-button-border"
-																				style="border-style:solid;border-color:#666666;background:#cccccc;border-width:0px;display:inline-block;border-radius:15px;width:100%;mso-hide:all"
-																			>
-																				<a
-																									href={ templ.URL(env.AppURL(appointment.RescheduledPath())) }
-																					class="es-button"
-																					target="_blank"
-																					style="mso-style-priority:100 !important;text-decoration:none;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;color:#FFFFFF;font-size:20px;display:inline-block;background:#cccccc;border-radius:15px;font-family:Oswald, sans-serif;font-weight:normal;font-style:normal;line-height:24px;width:auto;text-align:center;padding:10px 0px 10px 0px;mso-padding-alt:0;mso-border-alt:10px solid #cccccc;width:100%;display:inline-block;"
-																				>Cancelar</a>
-																			</span>
-																		</td>
-																	</tr>
+																<a
+																	href={ templ.URL(waURL(appointment.Clinic.Phone, "Me gustaria cambiar la fecha de mi cita.")) }
+																	class="es-button"
+																	target="_blank"
+																	style="mso-style-priority:100 !important;text-decoration:none;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;color:#FFFFFF;font-size:20px;display:inline-block;background:#93c47d;border-radius:15px;font-family:Oswald, sans-serif;font-weight:normal;font-style:normal;line-height:24px;width:auto;text-align:center;padding:10px 0px 10px 0px;mso-padding-alt:0;mso-border-alt:10px solid #93c47d;width:100%;display:inline-block;"
+																	>Contact us on WhatsApp</a>
+																</span>
+															</td>
+														</tr>
 																</table>
 															</td>
 														</tr>

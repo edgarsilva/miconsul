@@ -9,12 +9,10 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "strings"
-
 // IconEmail HeroIcons 'envelope' - filled mini
 //
 // viewBox 0 0 20 20, class="w-5 h-5" size 20px by 20px
-func IconEmail(class ...string) templ.Component {
+func IconEmail(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -35,7 +33,7 @@ func IconEmail(class ...string) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var2 = []any{"size-5", strings.Join(class, " ")}
+		var templ_7745c5c3_Var2 = []any{iconClasses("size-5", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -64,7 +62,7 @@ func IconEmail(class ...string) templ.Component {
 // IconCalendar HeroIcons 'Calendar' - outline
 //
 // viewBox 0 0 24 24, class="w-6 h-6" size 24px by 24px
-func IconCalendar(class ...string) templ.Component {
+func IconCalendar(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -85,7 +83,7 @@ func IconCalendar(class ...string) templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var5 = []any{"size-5", strings.Join(class, " ")}
+		var templ_7745c5c3_Var5 = []any{iconClasses("size-5", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var5...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -111,7 +109,7 @@ func IconCalendar(class ...string) templ.Component {
 	})
 }
 
-func IconBookOpen(class ...string) templ.Component {
+func IconBookOpen(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -132,7 +130,7 @@ func IconBookOpen(class ...string) templ.Component {
 			templ_7745c5c3_Var7 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var8 = []any{"size-5", strings.Join(class, " ")}
+		var templ_7745c5c3_Var8 = []any{iconClasses("size-5", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var8...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -162,7 +160,7 @@ func IconBookOpen(class ...string) templ.Component {
 //
 //	viewBox 0 0 24 24, class="w-6 h-6" size 24px by 24px
 //	e.g. @IconHeroOutlineSignout("")
-func IconSignout(class ...string) templ.Component {
+func IconSignout(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -183,7 +181,7 @@ func IconSignout(class ...string) templ.Component {
 			templ_7745c5c3_Var10 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var11 = []any{"size-5", strings.Join(class, " ")}
+		var templ_7745c5c3_Var11 = []any{iconClasses("size-5", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var11...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -213,7 +211,7 @@ func IconSignout(class ...string) templ.Component {
 //
 //	viewBox 0 0 24 24, class="w-6 h-6" size 24px by 24px
 //	e.g. @IconHeroOutlineSignin("")
-func IconSignin(class ...string) templ.Component {
+func IconSignin(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -234,7 +232,7 @@ func IconSignin(class ...string) templ.Component {
 			templ_7745c5c3_Var13 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var14 = []any{"size-5", strings.Join(class, " ")}
+		var templ_7745c5c3_Var14 = []any{iconClasses("size-5", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var14...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -260,7 +258,7 @@ func IconSignin(class ...string) templ.Component {
 	})
 }
 
-func IconFacebook(class ...string) templ.Component {
+func IconFacebook(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -281,7 +279,7 @@ func IconFacebook(class ...string) templ.Component {
 			templ_7745c5c3_Var16 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var17 = []any{"size-8", strings.Join(class, " ")}
+		var templ_7745c5c3_Var17 = []any{iconClasses("size-8", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var17...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -307,7 +305,7 @@ func IconFacebook(class ...string) templ.Component {
 	})
 }
 
-func IconWhatsapp(class ...string) templ.Component {
+func IconWhatsapp(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -328,7 +326,7 @@ func IconWhatsapp(class ...string) templ.Component {
 			templ_7745c5c3_Var19 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var20 = []any{"size-6", strings.Join(class, " ")}
+		var templ_7745c5c3_Var20 = []any{iconClasses("size-8", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var20...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -354,7 +352,7 @@ func IconWhatsapp(class ...string) templ.Component {
 	})
 }
 
-func IconTelegram(class ...string) templ.Component {
+func IconTelegram(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -375,7 +373,7 @@ func IconTelegram(class ...string) templ.Component {
 			templ_7745c5c3_Var22 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var23 = []any{"size-8", strings.Join(class, " ")}
+		var templ_7745c5c3_Var23 = []any{iconClasses("size-8", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var23...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -401,7 +399,7 @@ func IconTelegram(class ...string) templ.Component {
 	})
 }
 
-func IconMessenger(class ...string) templ.Component {
+func IconMessenger(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -422,7 +420,7 @@ func IconMessenger(class ...string) templ.Component {
 			templ_7745c5c3_Var25 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var26 = []any{"size-8", strings.Join(class, " ")}
+		var templ_7745c5c3_Var26 = []any{iconClasses("size-8", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var26...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -448,7 +446,7 @@ func IconMessenger(class ...string) templ.Component {
 	})
 }
 
-func IconGmail(class ...string) templ.Component {
+func IconGmail(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -469,7 +467,7 @@ func IconGmail(class ...string) templ.Component {
 			templ_7745c5c3_Var28 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var29 = []any{"size-8", strings.Join(class, " ")}
+		var templ_7745c5c3_Var29 = []any{iconClasses("size-8", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var29...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -553,7 +551,7 @@ func IconSunSm() templ.Component {
 	})
 }
 
-func IconSearch(classname ...string) templ.Component {
+func IconSearch(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -574,8 +572,7 @@ func IconSearch(classname ...string) templ.Component {
 			templ_7745c5c3_Var33 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		cn := strings.Join(classname, " ")
-		var templ_7745c5c3_Var34 = []any{templ.KV("size-6", cn == ""), templ.KV(cn, cn != "")}
+		var templ_7745c5c3_Var34 = []any{iconClasses("size-6", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var34...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -630,7 +627,7 @@ func IconMarker() templ.Component {
 	})
 }
 
-func IconUser(class ...string) templ.Component {
+func IconUser(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -651,7 +648,7 @@ func IconUser(class ...string) templ.Component {
 			templ_7745c5c3_Var37 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var38 = []any{"size-6", strings.Join(class, " ")}
+		var templ_7745c5c3_Var38 = []any{iconClasses("size-6", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var38...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -677,7 +674,7 @@ func IconUser(class ...string) templ.Component {
 	})
 }
 
-func IconStethoscope(class ...string) templ.Component {
+func IconStethoscope(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -698,7 +695,7 @@ func IconStethoscope(class ...string) templ.Component {
 			templ_7745c5c3_Var40 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var41 = []any{"size-6", strings.Join(class, " ")}
+		var templ_7745c5c3_Var41 = []any{iconClasses("size-6", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var41...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -724,7 +721,7 @@ func IconStethoscope(class ...string) templ.Component {
 	})
 }
 
-func IconUserAdd(class ...string) templ.Component {
+func IconUserAdd(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -745,7 +742,7 @@ func IconUserAdd(class ...string) templ.Component {
 			templ_7745c5c3_Var43 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var44 = []any{"size-6", strings.Join(class, " ")}
+		var templ_7745c5c3_Var44 = []any{iconClasses("size-6", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var44...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -800,7 +797,7 @@ func IconMenu() templ.Component {
 	})
 }
 
-func IconBuilding(class ...string) templ.Component {
+func IconBuilding(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -821,7 +818,7 @@ func IconBuilding(class ...string) templ.Component {
 			templ_7745c5c3_Var47 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var48 = []any{"size-5", strings.Join(class, " ")}
+		var templ_7745c5c3_Var48 = []any{iconClasses("size-5", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var48...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -847,7 +844,7 @@ func IconBuilding(class ...string) templ.Component {
 	})
 }
 
-func IconPhone(class ...string) templ.Component {
+func IconPhone(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -868,7 +865,7 @@ func IconPhone(class ...string) templ.Component {
 			templ_7745c5c3_Var50 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var51 = []any{"size-5", strings.Join(class, " ")}
+		var templ_7745c5c3_Var51 = []any{iconClasses("size-5", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var51...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -894,7 +891,7 @@ func IconPhone(class ...string) templ.Component {
 	})
 }
 
-func IconPlusCircled(class ...string) templ.Component {
+func IconPlusCircled(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -915,7 +912,7 @@ func IconPlusCircled(class ...string) templ.Component {
 			templ_7745c5c3_Var53 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var54 = []any{"size-5", strings.Join(class, " ")}
+		var templ_7745c5c3_Var54 = []any{iconClasses("size-5", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var54...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -941,7 +938,7 @@ func IconPlusCircled(class ...string) templ.Component {
 	})
 }
 
-func IconEdit(class ...string) templ.Component {
+func IconEdit(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -962,7 +959,7 @@ func IconEdit(class ...string) templ.Component {
 			templ_7745c5c3_Var56 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var57 = []any{"size-5", strings.Join(class, " ")}
+		var templ_7745c5c3_Var57 = []any{iconClasses("size-5", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var57...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -988,7 +985,7 @@ func IconEdit(class ...string) templ.Component {
 	})
 }
 
-func IconPencil(class ...string) templ.Component {
+func IconPencil(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1009,7 +1006,7 @@ func IconPencil(class ...string) templ.Component {
 			templ_7745c5c3_Var59 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var60 = []any{"size-5", strings.Join(class, " ")}
+		var templ_7745c5c3_Var60 = []any{iconClasses("size-5", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var60...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1035,7 +1032,7 @@ func IconPencil(class ...string) templ.Component {
 	})
 }
 
-func IconClose(class ...string) templ.Component {
+func IconClose(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1056,7 +1053,7 @@ func IconClose(class ...string) templ.Component {
 			templ_7745c5c3_Var62 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var63 = []any{"size-5", strings.Join(class, " ")}
+		var templ_7745c5c3_Var63 = []any{iconClasses("size-5", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var63...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1082,7 +1079,7 @@ func IconClose(class ...string) templ.Component {
 	})
 }
 
-func IconCheck(class ...string) templ.Component {
+func IconCheck(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1103,7 +1100,7 @@ func IconCheck(class ...string) templ.Component {
 			templ_7745c5c3_Var65 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var66 = []any{"size-5", strings.Join(class, " ")}
+		var templ_7745c5c3_Var66 = []any{iconClasses("size-5", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var66...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1129,7 +1126,7 @@ func IconCheck(class ...string) templ.Component {
 	})
 }
 
-func IconTrash(class ...string) templ.Component {
+func IconTrash(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1150,7 +1147,7 @@ func IconTrash(class ...string) templ.Component {
 			templ_7745c5c3_Var68 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var69 = []any{"size-5", strings.Join(class, " ")}
+		var templ_7745c5c3_Var69 = []any{iconClasses("size-5", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var69...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1176,7 +1173,7 @@ func IconTrash(class ...string) templ.Component {
 	})
 }
 
-func IconPlusCircleFilled(class ...string) templ.Component {
+func IconPlusCircleFilled(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1197,7 +1194,7 @@ func IconPlusCircleFilled(class ...string) templ.Component {
 			templ_7745c5c3_Var71 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var72 = []any{"size-5", strings.Join(class, " ")}
+		var templ_7745c5c3_Var72 = []any{iconClasses("size-5", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var72...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1223,7 +1220,7 @@ func IconPlusCircleFilled(class ...string) templ.Component {
 	})
 }
 
-func IconPencilFilled(class ...string) templ.Component {
+func IconPencilFilled(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1244,7 +1241,7 @@ func IconPencilFilled(class ...string) templ.Component {
 			templ_7745c5c3_Var74 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var75 = []any{"size-5", strings.Join(class, " ")}
+		var templ_7745c5c3_Var75 = []any{iconClasses("size-5", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var75...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1270,7 +1267,7 @@ func IconPencilFilled(class ...string) templ.Component {
 	})
 }
 
-func IconCloseCircleFilled(class ...string) templ.Component {
+func IconCloseCircleFilled(classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1291,7 +1288,7 @@ func IconCloseCircleFilled(class ...string) templ.Component {
 			templ_7745c5c3_Var77 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var78 = []any{"size-5", strings.Join(class, " ")}
+		var templ_7745c5c3_Var78 = []any{iconClasses("size-5", classes...)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var78...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
