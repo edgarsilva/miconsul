@@ -4,6 +4,8 @@
 
 - [feature/notifications] Multi-channel notifications baseline
   - Keep email templates/actions synced with appointment + professional details.
+  - Add clinic address to patient-facing appointment confirmation details card.
+  - Add Telegram reschedule CTA alongside WhatsApp when clinic Telegram is configured.
   - Add Telegram provider integration (credentials, send path, retry/error handling).
   - Add WhatsApp provider integration.
   - Add Facebook Messenger provider integration.

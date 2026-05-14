@@ -434,13 +434,21 @@ func (s *service) HandlePatientConfirm(c fiber.Ctx) error {
 		return s.Redirect(c, redirectPath)
 	}
 
+	appointment, err := s.TakeAppointmentByIDAndToken(c.Context(), appointmentID, token)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return s.renderAppointmentNotFoundPage(c, c.Query("toast", ""), "warning")
+	}
+	if err != nil {
+		return s.Redirect(c, "/signin?toast=Failed to load appointment&level=error")
+	}
+
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "")
 	vc, _ := view.NewCtx(c,
 		view.WithTheme(theme), view.WithToast(toast, "", ""),
 	)
 
-	return view.Render(c, view.AppointmentConfirmPage(vc))
+	return view.Render(c, view.AppointmentConfirmPage(vc, appointment))
 }
 
 // HandlePatientCancelPage lets a patient cancel an appointment
