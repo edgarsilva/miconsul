@@ -13,6 +13,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+	"gorm.io/gorm"
 )
 
 func (s *service) DispatchBookedAlert(appointment models.Appointment) error {
@@ -222,9 +223,15 @@ func (s *service) newWhatsAppSender() *whatsapp.Sender {
 }
 
 func (s *service) appendNotification(ctx context.Context, appointment models.Appointment, notification models.Notification) {
-	appendErr := s.DB.WithContext(ctx).Model(&appointment).Association("Notifications").Append(&notification)
-	if appendErr != nil {
-		fmt.Println("failed to append notification:", appendErr.Error())
+	notification.NotificationableID = appointment.AlertableID()
+	notification.NotificationableType = appointment.AlertableType()
+	if notification.NotificationableID == "" {
+		fmt.Println("failed to append notification: appointment primary key missing")
+		return
+	}
+
+	if err := gorm.G[models.Notification](s.DB.GormDB()).Create(ctx, &notification); err != nil {
+		fmt.Println("failed to append notification:", err.Error())
 	}
 }
 

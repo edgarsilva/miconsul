@@ -81,7 +81,14 @@ func (s *service) handleReminderSweepTask(ctx context.Context, _ jobs.Task) erro
 
 	candidateIDs := make([]string, 0, len(appointments))
 	for _, appointment := range appointments {
-		candidateIDs = append(candidateIDs, appointment.UID)
+		candidateID := appointment.AlertableID()
+		if candidateID == "" {
+			continue
+		}
+		candidateIDs = append(candidateIDs, candidateID)
+	}
+	if len(candidateIDs) == 0 {
+		return nil
 	}
 
 	var notifiedIDs []string
@@ -102,7 +109,11 @@ func (s *service) handleReminderSweepTask(ctx context.Context, _ jobs.Task) erro
 	}
 
 	for _, appointment := range appointments {
-		if _, ok := notifiedSet[appointment.UID]; ok {
+		alertableID := appointment.AlertableID()
+		if alertableID == "" {
+			continue
+		}
+		if _, ok := notifiedSet[alertableID]; ok {
 			continue
 		}
 		if _, err := s.EnqueueTask(ctx, TaskReminder, TaskAppointmentPayload{AppointmentID: appointment.UID}); err != nil {
@@ -134,7 +145,7 @@ func (s *service) handleReminderTask(ctx context.Context, task jobs.Task) error 
 		return fmt.Errorf("load appointment for reminder: %w", err)
 	}
 
-	sent, err := s.notificationSentAnyMedium(ctx, appointment.UID, "appointment_reminder")
+	sent, err := s.notificationSentAnyMedium(ctx, appointment, "appointment_reminder")
 	if err != nil {
 		return fmt.Errorf("check reminder notification status: %w", err)
 	}
@@ -167,7 +178,7 @@ func (s *service) handleBookedAlertTask(ctx context.Context, task jobs.Task) err
 		return fmt.Errorf("load appointment for booked alert: %w", err)
 	}
 
-	sent, err := s.notificationSentAnyMedium(ctx, appointment.UID, "appointment_booked")
+	sent, err := s.notificationSentAnyMedium(ctx, appointment, "appointment_booked")
 	if err != nil {
 		return fmt.Errorf("check booked notification status: %w", err)
 	}
@@ -179,12 +190,12 @@ func (s *service) handleBookedAlertTask(ctx context.Context, task jobs.Task) err
 	return nil
 }
 
-func (s *service) notificationSent(ctx context.Context, appointmentUID, name string, medium models.NotificationMedium) (bool, error) {
+func (s *service) notificationSent(ctx context.Context, appointment models.Appointment, name string, medium models.NotificationMedium) (bool, error) {
 	var count int64
 	err := s.DB.WithContext(ctx).
 		Model(&models.Notification{}).
-		Where("alertable_id = ?", appointmentUID).
-		Where("alertable_type = ?", "appointments").
+		Where("alertable_id = ?", appointment.AlertableID()).
+		Where("alertable_type = ?", appointment.AlertableType()).
 		Where("name = ?", name).
 		Where("medium = ?", medium).
 		Where("status IN ?", []models.NotificationStatus{models.NotificationSent, models.NotificationSuccess}).
@@ -196,12 +207,12 @@ func (s *service) notificationSent(ctx context.Context, appointmentUID, name str
 	return count > 0, nil
 }
 
-func (s *service) notificationSentAnyMedium(ctx context.Context, appointmentUID, name string) (bool, error) {
+func (s *service) notificationSentAnyMedium(ctx context.Context, appointment models.Appointment, name string) (bool, error) {
 	var count int64
 	err := s.DB.WithContext(ctx).
 		Model(&models.Notification{}).
-		Where("alertable_id = ?", appointmentUID).
-		Where("alertable_type = ?", "appointments").
+		Where("alertable_id = ?", appointment.AlertableID()).
+		Where("alertable_type = ?", appointment.AlertableType()).
 		Where("name = ?", name).
 		Where("status IN ?", []models.NotificationStatus{models.NotificationSent, models.NotificationSuccess}).
 		Count(&count).Error

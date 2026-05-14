@@ -42,6 +42,10 @@
 }
 
 /* Custom classes*/
+.checkbox {
+	@apply rounded-md;
+}
+
 .app-card {
 	@apply relative bg-base-100 sm:rounded-xl ring-1 ring-base-content/10 p-4 md:p-6
 }
