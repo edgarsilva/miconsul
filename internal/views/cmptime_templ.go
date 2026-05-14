@@ -201,7 +201,7 @@ func contextualTimeClass(t time.Time, tz string, class []string) string {
 	case isToday:
 		timeClass = "badge badge-sm badge-primary"
 	case isFuture:
-		timeClass = "badge badge-accent"
+		timeClass = "badge badge-sm badge-accent"
 	default:
 		timeClass = ""
 	}

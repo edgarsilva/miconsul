@@ -118,6 +118,18 @@ func (a *Appointment) RescheduledPath() string {
 	return "/appointments/" + a.UID + "/patient/reschedule/" + a.Token
 }
 
+func (a Appointment) AlertableID() string {
+	if a.ID == 0 {
+		return ""
+	}
+
+	return strconv.FormatUint(uint64(a.ID), 10)
+}
+
+func (a Appointment) AlertableType() string {
+	return "appointments"
+}
+
 // Scopes
 
 func AppointmentWithPendingNotifications(db *gorm.DB) *gorm.DB {
@@ -128,7 +140,7 @@ func AppointmentWithPendingNotifications(db *gorm.DB) *gorm.DB {
 	return db.
 		Where("booked_at > ?", st).
 		Where("booked_at <= ?", et).
-		Where("NOT EXISTS (SELECT 1 FROM notifications WHERE notifications.alertable_id = appointments.uid AND notifications.alertable_type = ? AND notifications.name = ? AND notifications.medium = ? AND notifications.status IN ?)", "appointments", "appointment_reminder", NotificationMediumEmail, []NotificationStatus{NotificationSent, NotificationSuccess})
+		Where("NOT EXISTS (SELECT 1 FROM notifications WHERE notifications.alertable_id = CAST(appointments.id AS TEXT) AND notifications.alertable_type = ? AND notifications.name = ? AND notifications.medium = ? AND notifications.status IN ?)", "appointments", "appointment_reminder", NotificationMediumEmail, []NotificationStatus{NotificationSent, NotificationSuccess})
 }
 
 func AppointmentBookedToday(db *gorm.DB) *gorm.DB {
