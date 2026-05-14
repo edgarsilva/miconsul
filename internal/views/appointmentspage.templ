@@ -402,7 +402,6 @@ templ AppointmentCont(vc *Ctx, appointment models.Appointment, patients []models
 								</div>
 							</div>
 							@ApptPrice(vc, appointment, models.Clinic{}, false)
-							<p class="col-span-full mt-2 text-sm text-base-content/60">Notifications are managed on the patient profile.</p>
 						</div>
 					</div>
 				}
@@ -412,6 +411,84 @@ templ AppointmentCont(vc *Ctx, appointment models.Appointment, patients []models
 						type="submit"
 						class="btn btn-primary"
 					>{ l(vc.Locale, "btn.save") }</button>
+				</div>
+			</section>
+		</div>
+		<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
+			<div class="px-4 sm:px-0">
+				<h2 class="text-base font-semibold leading-7">{ l(vc.Locale, "str.apnt_step_4") }</h2>
+				<p class="mt-1 text-sm leading-6 text-base-content/50">{ l(vc.Locale, "str.apnt_step_4_desc") }</p>
+			</div>
+			<section class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
+				<div class="px-4 py-6 sm:p-8">
+					<div class="max-w-2xl space-y-10">
+						<fieldset>
+							<legend class="text-sm font-semibold leading-6">{ vc.l("str.notifications_about") }</legend>
+							<div class="mt-6 space-y-6">
+								<label class="relative flex gap-x-3">
+									<input
+										type="checkbox"
+										class="checkbox checkbox-sm"
+										disabled
+									/>
+									<div class="text-sm leading-6">
+										<span class="font-medium">{ vc.l("str.notifications_appointment_lifecycle") }</span>
+										<p class="text-base-content/60">{ vc.l("str.notifications_appointment_lifecycle_desc") }</p>
+									</div>
+								</label>
+							</div>
+						</fieldset>
+						<fieldset>
+							<legend class="text-sm font-semibold leading-6">{ vc.l("str.notifications_via") }</legend>
+							<div class="mt-6 space-y-6">
+								<label class="flex items-center gap-2 text-sm font-medium leading-6 opacity-60">
+									<input
+										type="checkbox"
+										class="checkbox checkbox-sm"
+										disabled
+									/>
+									<span class="inline-flex items-center gap-2">
+										@IconGmail("size-5")
+										<span>Email</span>
+									</span>
+								</label>
+								<label class="flex items-center gap-2 text-sm font-medium leading-6 opacity-60">
+									<input
+										type="checkbox"
+										class="checkbox checkbox-sm"
+										disabled
+									/>
+									<span class="inline-flex items-center gap-2">
+										@IconPhone("size-5")
+										<span>SMS</span>
+									</span>
+								</label>
+								<label class="flex items-center gap-2 text-sm font-medium leading-6 opacity-60">
+									<input
+										type="checkbox"
+										class="checkbox checkbox-sm"
+										disabled
+									/>
+									<span class="inline-flex items-center gap-2">
+										@IconWhatsapp("size-5")
+										<span>Whatsapp</span>
+									</span>
+								</label>
+								<label class="flex items-center gap-2 text-sm font-medium leading-6 opacity-60">
+									<input
+										type="checkbox"
+										class="checkbox checkbox-sm"
+										disabled
+									/>
+									<span class="inline-flex items-center gap-2">
+										@IconTelegram("size-5")
+										<span>Telegram</span>
+									</span>
+								</label>
+							</div>
+						</fieldset>
+						<p class="text-sm text-base-content/60">Notifications are managed on the patient profile.</p>
+					</div>
 				</div>
 			</section>
 		</div>
@@ -513,8 +590,9 @@ templ ApptSearchClinicsResults(vc *Ctx, clinics []models.Clinic) {
 			</li>
 		}
 		if len(clinics) == 0 {
-			<li class="p-4 w-full text-base-content/30">
-				<span class="text-sm font-semibold">{ l(vc.Locale, "str.nothing_found") }</span>
+			<li class="p-4 w-full">
+				<p class="text-sm font-semibold text-base-content/60">{ l(vc.Locale, "str.no_clinics_found") }</p>
+				<a href="/clinics/new" class="link link-primary text-sm">{ l(vc.Locale, "str.add_clinic") }</a>
 			</li>
 		}
 	</ul>
@@ -588,8 +666,9 @@ templ PatientSearchResults(patients []models.Patient, vc *Ctx) {
 			</li>
 		}
 		if len(patients) == 0 {
-			<li class="p-4 w-full text-base-content/30">
-				<span class="text-sm font-semibold">{ l(vc.Locale, "str.nothing_found") }</span>
+			<li class="p-4 w-full">
+				<p class="text-sm font-semibold text-base-content/60">{ l(vc.Locale, "str.no_patients_found") }</p>
+				<a href="/patients/new" class="link link-primary text-sm">{ l(vc.Locale, "str.add_patient") }</a>
 			</li>
 		}
 	</ul>

@@ -208,11 +208,7 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 									</figure>
 								} else {
 									<figure class="flex flex-col gap-2" id="avatar_pic">
-										<div class="avatar placeholder">
-											<div class="bg-neutral text-neutral-content rounded-full w-12">
-												<span class="text-xl">{ patient.Initials() }</span>
-											</div>
-										</div>
+										@CmpAvatar(patient)
 									</figure>
 								}
 								<input
@@ -424,7 +420,7 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 										name="enableNotifications"
 										value="1"
 										type="checkbox"
-										class="checkbox"
+										class="checkbox checkbox-sm"
 										if patient.EnableNotifications {
 											checked
 										}
@@ -438,72 +434,72 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 						</fieldset>
 						<fieldset>
 							<legend class="text-sm font-semibold leading-6">{ c.l("str.notifications_via") }</legend>
-							<div class="mt-6 space-y-6">
-								<label class="flex items-center gap-x-3 text-sm font-medium leading-6">
+							<div class="mt-6 space-y-6 font-medium text-sm">
+								<label class="flex items-center gap-2">
 									<input
 										name="viaEmail"
 										value="1"
 										type="checkbox"
-										class="checkbox"
+										class="checkbox checkbox-sm"
 										if patient.ViaEmail {
 											checked
 										}
 									/>
-									Email
-									<figure aria-lable="whatsapp icon" class="h-6 w-6">
-										@IconGmail()
-									</figure>
+									<span class="inline-flex items-center gap-2">
+										@IconGmail("size-5")
+										<span>Email</span>
+									</span>
 								</label>
-								<label class="flex items-center gap-x-3 text-sm font-medium leading-6">
+								<label class="flex items-center gap-2">
 									<input
 										name="viaWhatsapp"
 										value="1"
 										type="checkbox"
-										class="checkbox"
+										class="checkbox checkbox-sm"
 										if patient.ViaWhatsapp {
 											checked
 										}
 									/>
-									Whatsapp
-									<figure aria-lable="whatsapp icon" class="h-6 w-6">
-										@IconWhatsapp()
-									</figure>
+									<span class="flex items-center gap-2">
+										@IconWhatsapp("size-5")
+										<span>Whatsapp</span>
+									</span>
 								</label>
-								<label class="flex items-center gap-x-3 text-sm font-medium leading-6">
+								<label class="flex items-center gap-2">
 									<input
 										name="viaTelegram"
 										value="1"
 										type="checkbox"
-										class="checkbox"
+										class="checkbox checkbox-sm"
 										if patient.ViaTelegram {
 											checked
 										}
 									/>
-									Telegram
-									<figure aria-lable="whatsapp icon" class="h-6 w-6">
-										@IconTelegram()
-									</figure>
+									<span class="flex items-center gap-2">
+										@IconTelegram("size-5")
+										<span>Telegram</span>
+									</span>
 								</label>
-								<label class="flex items-center gap-x-3 text-sm font-medium leading-6">
+								<label class="flex items-center gap-2">
 									<input
 										name="viaMessenger"
 										value="1"
 										type="checkbox"
-										class="checkbox"
+										class="checkbox checkbox-sm"
 										if patient.ViaMessenger {
 											checked
 										}
 									/>
-									Messenger
-									<figure aria-lable="whatsapp icon" class="h-6 w-6">
-										@IconMessenger()
-									</figure>
+									<span class="inline-flex items-center gap-2">
+										@IconMessenger("size-5")
+										<span>Messenger</span>
+									</span>
 								</label>
 							</div>
 						</fieldset>
 					</div>
 				</div>
-				<div class="flex items-center justify-end gap-x-6 border-t border-base/content/10 px-4 py-4 sm:px-8">
+				<div class="flex items-center justify-end gap-x-6 border-t border-base-content/10 px-4 py-4 sm:px-8">
 					<button type="submit" class="btn btn-primary">{ c.l("btn.save") }</button>
 				</div>
 			}

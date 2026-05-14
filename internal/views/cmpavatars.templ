@@ -16,7 +16,7 @@ templ CmpAvatar(avatar Avatarable, classname ...string) {
 		</div>
 	} else {
 		<div class="avatar avatar-placeholder">
-			<div class="bg-neutral text-neutral-content rounded-full w-12">
+			<div class={ "bg-neutral text-neutral-content rounded-full w-12 flex items-center justify-center " + strings.Join(classname, " ") }>
 				<span class="text-xl">{ avatar.Initials() }</span>
 			</div>
 		</div>
@@ -26,12 +26,12 @@ templ CmpAvatar(avatar Avatarable, classname ...string) {
 templ CmpProfilePic(avatar Avatarable) {
 	if avatar.AvatarPic() != "" {
 		<div class="avatar w-full h-full rounded-xl overflow-clip">
-			<img src={ string(templ.URL(avatar.AvatarPic())) }/>
+			<img class="h-full w-full object-cover object-center" src={ string(templ.URL(avatar.AvatarPic())) }/>
 		</div>
 	} else {
-		<div class="avatar w-full h-full">
-			<div class="bg-neutral text-neutral-content rounded-full w-12">
-				<span class="text-xl">{ avatar.Initials() }</span>
+		<div class="avatar avatar-placeholder w-full h-full">
+			<div class="bg-neutral text-neutral-content h-full w-full rounded-xl flex items-center justify-center">
+				<span class="text-5xl font-semibold tracking-tight">{ avatar.Initials() }</span>
 			</div>
 		</div>
 	}

@@ -123,7 +123,7 @@ func PatientCard(patient models.Patient, vc *Ctx) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</a></hgroup><section class=\"grid grid-cols-6 app-card\"><div class=\"col-span-full flex flex-col gap-10 sm:flex-row\"><figure class=\"aspect-[4/5] w-52 flex-none rounded-2xl object-cover\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</a></hgroup><section class=\"grid grid-cols-6 app-card\"><div class=\"col-span-full flex flex-col gap-10 sm:flex-row\"><figure class=\"aspect-[4/5] w-64 flex-none rounded-2xl overflow-hidden\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
