@@ -36,6 +36,7 @@ type Env struct {
 	WhatsAppProvider         string `env:"WHATSAPP_PROVIDER;optional;trimspace"`
 	TwilioAccountSID         string `env:"TWILIO_ACCOUNT_SID;optional;trimspace"`
 	TwilioAuthToken          string `env:"TWILIO_AUTH_TOKEN;optional;trimspace"`
+	TwilioSMSFrom            string `env:"TWILIO_SMS_FROM;optional;trimspace"`
 	TwilioWhatsAppFrom       string `env:"TWILIO_WHATSAPP_FROM;optional;trimspace"`
 	TwilioWhatsAppContentSID string `env:"TWILIO_WHATSAPP_CONTENT_SID;optional;trimspace"`
 	TwilioAPIBaseURL         string `env:"TWILIO_API_BASE_URL;optional;trimspace;format=URL"`

@@ -452,6 +452,21 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 								</label>
 								<label class="mb-2 flex items-center gap-2">
 									<input
+										name="viaSMS"
+										value="1"
+										type="checkbox"
+										class="checkbox checkbox-sm"
+										if patient.ViaSMS {
+											checked
+										}
+									/>
+									<span class="inline-flex items-center gap-2">
+										@IconPhone("size-5")
+										<span>SMS</span>
+									</span>
+								</label>
+								<label class="mb-2 flex items-center gap-2">
+									<input
 										name="viaWhatsapp"
 										value="1"
 										type="checkbox"

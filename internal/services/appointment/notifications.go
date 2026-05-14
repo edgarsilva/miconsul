@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"miconsul/internal/lib/twilio/sms"
 	"miconsul/internal/lib/twilio/whatsapp"
 	"miconsul/internal/mailer"
 	"miconsul/internal/models"
@@ -64,6 +65,9 @@ func (s *service) sendReminderNow(ctx context.Context, appointment models.Appoin
 	}); err != nil {
 		hadErrors = true
 	}
+	if err := s.sendSMSNotification(ctx, span, appointment, "appointment_reminder"); err != nil {
+		hadErrors = true
+	}
 
 	bookedAt := appointment.BookedAtInLocalTime()
 	vars := map[string]string{
@@ -101,6 +105,9 @@ func (s *service) sendBookedNow(ctx context.Context, appointment models.Appointm
 	if err := s.sendEmailNotification(ctx, span, appointment, "appointment_booked", func() error {
 		return mailer.SendAppointmentBookedEmail(s.Env, appointment)
 	}); err != nil {
+		hadErrors = true
+	}
+	if err := s.sendSMSNotification(ctx, span, appointment, "appointment_booked"); err != nil {
 		hadErrors = true
 	}
 
@@ -200,6 +207,75 @@ func (s *service) sendWhatsAppNotification(ctx context.Context, span trace.Span,
 	})
 
 	return sendErr
+}
+
+func (s *service) sendSMSNotification(ctx context.Context, span trace.Span, appointment models.Appointment, eventName string) error {
+	viaSMS := appointment.ViaSMS || appointment.Patient.ViaSMS
+	to := strings.TrimSpace(appointment.Patient.Phone)
+	span.SetAttributes(attribute.Bool("notification.sms.enabled", viaSMS), attribute.Bool("notification.sms.to_present", to != ""))
+	if !viaSMS || to == "" {
+		return nil
+	}
+
+	sender := s.newSMSSender()
+	if sender == nil {
+		err := fmt.Errorf("sms sender unavailable: missing twilio config")
+		span.RecordError(err)
+		span.SetAttributes(attribute.String("notification.sms.error", err.Error()))
+		s.appendNotification(ctx, appointment, models.Notification{Medium: models.NotificationMediumSMS, Name: eventName, Status: models.NotificationFailed, To: to})
+		return err
+	}
+
+	status := models.NotificationSent
+	var sendErr error
+	body := smsBodyForEvent(appointment, eventName)
+	msg := sms.Message{To: to, Body: body}
+	if err := sender.Send(ctx, msg); err != nil {
+		status = models.NotificationFailed
+		sendErr = err
+		span.RecordError(err)
+		span.SetAttributes(attribute.String("notification.sms.error", err.Error()))
+	}
+
+	s.appendNotification(ctx, appointment, models.Notification{
+		Medium: models.NotificationMediumSMS,
+		Name:   eventName,
+		Status: status,
+		To:     to,
+	})
+
+	return sendErr
+}
+
+func (s *service) newSMSSender() *sms.Sender {
+	if s == nil || s.Env == nil {
+		return nil
+	}
+	if strings.TrimSpace(s.Env.TwilioAccountSID) == "" || strings.TrimSpace(s.Env.TwilioAuthToken) == "" || strings.TrimSpace(s.Env.TwilioSMSFrom) == "" {
+		return nil
+	}
+
+	return sms.NewSender(sms.Config{
+		From:       s.Env.TwilioSMSFrom,
+		AccountSID: s.Env.TwilioAccountSID,
+		AuthToken:  s.Env.TwilioAuthToken,
+		APIBaseURL: s.Env.TwilioAPIBaseURL,
+	})
+}
+
+func smsBodyForEvent(appointment models.Appointment, eventName string) string {
+	bookedAt := appointment.BookedAtInLocalTime().Format("1/2 3:04 PM")
+	clinicName := strings.TrimSpace(appointment.Clinic.Name)
+	if clinicName == "" {
+		clinicName = "your clinic"
+	}
+
+	switch eventName {
+	case "appointment_reminder":
+		return fmt.Sprintf("Reminder: your appointment is on %s at %s.", bookedAt, clinicName)
+	default:
+		return fmt.Sprintf("Appointment booked for %s at %s.", bookedAt, clinicName)
+	}
 }
 
 func (s *service) newWhatsAppSender() *whatsapp.Sender {
