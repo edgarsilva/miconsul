@@ -94,11 +94,11 @@ func (s *service) handleReminderSweepTask(ctx context.Context, _ jobs.Task) erro
 	var notifiedIDs []string
 	err = s.DB.WithContext(ctx).
 		Model(&models.Notification{}).
-		Where("alertable_type = ?", "appointments").
+		Where("notificationable_type = ?", "appointments").
 		Where("name = ?", "appointment_reminder").
 		Where("status IN ?", []models.NotificationStatus{models.NotificationSent, models.NotificationSuccess}).
-		Where("alertable_id IN ?", candidateIDs).
-		Pluck("alertable_id", &notifiedIDs).Error
+		Where("notificationable_id IN ?", candidateIDs).
+		Pluck("notificationable_id", &notifiedIDs).Error
 	if err != nil {
 		return fmt.Errorf("load existing reminder notifications: %w", err)
 	}
@@ -194,8 +194,8 @@ func (s *service) notificationSentAnyMedium(ctx context.Context, appointment mod
 	var count int64
 	err := s.DB.WithContext(ctx).
 		Model(&models.Notification{}).
-		Where("alertable_id = ?", appointment.AlertableID()).
-		Where("alertable_type = ?", appointment.AlertableType()).
+		Where("notificationable_id = ?", appointment.AlertableID()).
+		Where("notificationable_type = ?", appointment.AlertableType()).
 		Where("name = ?", name).
 		Where("status IN ?", []models.NotificationStatus{models.NotificationSent, models.NotificationSuccess}).
 		Count(&count).Error

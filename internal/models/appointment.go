@@ -140,7 +140,7 @@ func AppointmentWithPendingNotifications(db *gorm.DB) *gorm.DB {
 	return db.
 		Where("booked_at > ?", st).
 		Where("booked_at <= ?", et).
-		Where("NOT EXISTS (SELECT 1 FROM notifications WHERE notifications.alertable_id = CAST(appointments.id AS TEXT) AND notifications.alertable_type = ? AND notifications.name = ? AND notifications.medium = ? AND notifications.status IN ?)", "appointments", "appointment_reminder", NotificationMediumEmail, []NotificationStatus{NotificationSent, NotificationSuccess})
+		Where("NOT EXISTS (SELECT 1 FROM notifications WHERE notifications.notificationable_id = CAST(appointments.id AS TEXT) AND notifications.notificationable_type = ? AND notifications.name = ? AND notifications.medium = ? AND notifications.status IN ?)", "appointments", "appointment_reminder", NotificationMediumEmail, []NotificationStatus{NotificationSent, NotificationSuccess})
 }
 
 func AppointmentBookedToday(db *gorm.DB) *gorm.DB {
