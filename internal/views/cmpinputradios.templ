@@ -8,9 +8,9 @@ templ CmpInputRadioApntStatus(status models.AppointmentStatus) {
 			<input
 				type="radio"
 				name="status"
-				value={ string(models.ApntStatusConfirmed) }
+				value={ string(models.AppointmentConfirmed) }
 				class="radio radio-sm"
-				if status == models.ApntStatusConfirmed {
+				if status == models.AppointmentConfirmed {
 					checked
 				}
 			/>
@@ -20,33 +20,21 @@ templ CmpInputRadioApntStatus(status models.AppointmentStatus) {
 			<input
 				type="radio"
 				name="status"
-				value={ string(models.ApntStatusDone) }
+				value={ string(models.AppointmentDone) }
 				class="radio radio-sm"
-				if status == models.ApntStatusDone {
+				if status == models.AppointmentDone {
 					checked
 				}
 			/>
 			Done
 		</label>
-		<label class="badge border-info text-info bg-transparent gap-2 has-[:checked]:badge-info py-4 px-2">
-			<input
-				type="radio"
-				name="status"
-				value={ string(models.ApntStatusRescheduled) }
-				class="radio radio-sm"
-				if status == models.ApntStatusRescheduled {
-					checked
-				}
-			/>
-			Rescheduled
-		</label>
 		<label class="badge border-warning text-warning bg-transparent gap-2 has-[:checked]:badge-warning py-4 px-2">
 			<input
 				type="radio"
 				name="status"
-				value={ string(models.ApntStatusCanceled) }
+				value={ string(models.AppointmentCanceled) }
 				class="radio radio-sm"
-				if status == models.ApntStatusCanceled {
+				if status == models.AppointmentCanceled {
 					checked
 				}
 			/>

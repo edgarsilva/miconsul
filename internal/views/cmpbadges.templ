@@ -16,10 +16,6 @@ templ CmpBadgeStatus(status models.AppointmentStatus, vc *Ctx) {
 			<div class="badge badge-primary badge-sm">
 				{ l(vc.Locale, "str.done") }
 			</div>
-		case "rescheduled":
-			<div class="badge badge-info badge-sm">
-				{ l(vc.Locale, "str.rescheduled") }
-			</div>
 		case "canceled":
 			<div class="badge badge-warning badge-sm">
 				{ l(vc.Locale, "str.canceled") }

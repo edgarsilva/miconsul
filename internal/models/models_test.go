@@ -42,7 +42,7 @@ func TestEntityBeforeCreateHooksSetIDs(t *testing.T) {
 	if !strings.HasPrefix(apnt.UID, "apnt") {
 		t.Fatalf("unexpected appointment uid %q", apnt.UID)
 	}
-	if apnt.Status != ApntStatusPending {
+	if apnt.Status != AppointmentPending {
 		t.Fatalf("expected default pending status, got %q", apnt.Status)
 	}
 }
@@ -58,7 +58,7 @@ func TestAppointmentBeforeSaveAndHelpers(t *testing.T) {
 		t.Fatalf("expected empty status partial update to pass: %v", err)
 	}
 
-	apnt.Status = ApntStatusConfirmed
+	apnt.Status = AppointmentConfirmed
 	if err := apnt.BeforeSave(nil); err != nil {
 		t.Fatalf("expected valid status to pass: %v", err)
 	}
@@ -76,13 +76,6 @@ func TestAppointmentBeforeSaveAndHelpers(t *testing.T) {
 	if got := apnt.CancelPath(); got != "/appointments/apnt_1/patient/cancel/tok_1" {
 		t.Fatalf("unexpected cancel path %q", got)
 	}
-	if got := apnt.RescheduledPath(); got == "" {
-		t.Fatalf("expected non-empty rescheduled path")
-	}
-	if got := apnt.RescheduledPath(); got != "/appointments/apnt_1/patient/reschedule/tok_1" {
-		t.Fatalf("unexpected rescheduled path %q", got)
-	}
-
 	apnt.BookedAt = time.Date(2026, 1, 2, 15, 4, 0, 0, time.UTC)
 	apnt.Timezone = "America/Mexico_City"
 	if local := apnt.BookedAtInLocalTime(); local.IsZero() {
@@ -227,7 +220,7 @@ func TestGlobalFTSScopeSQL(t *testing.T) {
 }
 
 func TestAppointmentAndIdentityHelpers(t *testing.T) {
-	if !ApntStatusPending.IsValid() {
+	if !AppointmentPending.IsValid() {
 		t.Fatalf("expected pending status to be valid")
 	}
 	if AppointmentStatus("bogus").IsValid() {

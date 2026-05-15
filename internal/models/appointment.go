@@ -16,22 +16,22 @@ const DefaultTimezone = string(libtime.AmericaMexicoCity)
 type AppointmentStatus string
 
 const (
-	ApntStatusDraft       AppointmentStatus = "draft"
-	ApntStatusConfirmed   AppointmentStatus = "confirmed"
-	ApntStatusDone        AppointmentStatus = "done"
-	ApntStatusCanceled    AppointmentStatus = "canceled"
-	ApntStatusPending     AppointmentStatus = "pending"
-	ApntStatusRescheduled AppointmentStatus = "rescheduled"
+	AppointmentDraft      AppointmentStatus = "draft"
+	AppointmentConfirmed  AppointmentStatus = "confirmed"
+	AppointmentInProgress AppointmentStatus = "in_progress"
+	AppointmentDone       AppointmentStatus = "done"
+	AppointmentCanceled   AppointmentStatus = "canceled"
+	AppointmentPending    AppointmentStatus = "pending"
 )
 
 func (s AppointmentStatus) IsValid() bool {
 	switch s {
-	case ApntStatusDraft,
-		ApntStatusConfirmed,
-		ApntStatusDone,
-		ApntStatusCanceled,
-		ApntStatusPending,
-		ApntStatusRescheduled:
+	case AppointmentDraft,
+		AppointmentConfirmed,
+		AppointmentInProgress,
+		AppointmentDone,
+		AppointmentCanceled,
+		AppointmentPending:
 		return true
 	default:
 		return false
@@ -81,7 +81,7 @@ type Appointment struct {
 func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	a.UID = xid.New("apnt")
 	if a.Status == "" {
-		a.Status = ApntStatusPending
+		a.Status = AppointmentPending
 	}
 
 	return nil
@@ -112,10 +112,6 @@ func (a *Appointment) ConfirmPath() string {
 
 func (a *Appointment) CancelPath() string {
 	return "/appointments/" + a.UID + "/patient/cancel/" + a.Token
-}
-
-func (a *Appointment) RescheduledPath() string {
-	return "/appointments/" + a.UID + "/patient/reschedule/" + a.Token
 }
 
 func (a Appointment) AlertableID() string {

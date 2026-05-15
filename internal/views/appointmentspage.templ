@@ -136,12 +136,6 @@ templ AppointmentsSection(c *Ctx, appointments []models.Appointment, showTitle b
 						hx-get={ c.Path() + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "pending")) }
 						hx-push-url={ c.Path() + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "pending")) }
 					>{ c.l("str.pending") }</a>
-					<a
-						class={ "btn btn-xs btn-soft opacity-45 hover:opacity-100", templ.KV("btn-info opacity-90 ring-1 ring-info/50", strings.Contains(c.Query("status", ""), "rescheduled")) }
-						href={ templ.URL(c.Path() + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "rescheduled"))) }
-						hx-get={ c.Path() + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "rescheduled")) }
-						hx-push-url={ c.Path() + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "rescheduled")) }
-					>{ c.l("str.rescheduled") }</a>
 					if c.Query("status", "") != "" {
 						<a
 							class="btn btn-xs btn-square btn-ghost opacity-75 hover:opacity-90"
@@ -276,24 +270,9 @@ templ AppointmentLi(vc *Ctx, appointment models.Appointment) {
 						>
 							<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"></path>
 						</svg>
-						if !appointment.RescheduledAt.IsZero() {
-							<svg
-								class="w-5 h-5 mt-1 text-info"
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke-width="1.5"
-								stroke="currentColor"
-							>
-								<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3"></path>
-							</svg>
-						}
 					</dt>
 					<dd class="flex flex-col">
 						@CmpContextualTime(appointment.BookedAt, appointment.LocalTimezone(), "font-semibold")
-						if !appointment.RescheduledAt.IsZero() {
-							@CmpContextualTime(appointment.RescheduledAt, appointment.LocalTimezone(), "font-semibold")
-						}
 					</dd>
 				</div>
 				<div class="mt-2 flex items-center space-x-3 xl:ml-3.5 xl:mt-0 xl:border-l xl:border-base-300 xl:border-opacity-50 xl:pl-3.5">
