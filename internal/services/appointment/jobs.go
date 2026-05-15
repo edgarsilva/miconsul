@@ -190,23 +190,6 @@ func (s *service) handleBookedAlertTask(ctx context.Context, task jobs.Task) err
 	return nil
 }
 
-func (s *service) notificationSent(ctx context.Context, appointment models.Appointment, name string, medium models.NotificationMedium) (bool, error) {
-	var count int64
-	err := s.DB.WithContext(ctx).
-		Model(&models.Notification{}).
-		Where("alertable_id = ?", appointment.AlertableID()).
-		Where("alertable_type = ?", appointment.AlertableType()).
-		Where("name = ?", name).
-		Where("medium = ?", medium).
-		Where("status IN ?", []models.NotificationStatus{models.NotificationSent, models.NotificationSuccess}).
-		Count(&count).Error
-	if err != nil {
-		return false, err
-	}
-
-	return count > 0, nil
-}
-
 func (s *service) notificationSentAnyMedium(ctx context.Context, appointment models.Appointment, name string) (bool, error) {
 	var count int64
 	err := s.DB.WithContext(ctx).
