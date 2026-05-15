@@ -912,7 +912,7 @@ func AppointmentsSection(c *Ctx, appointments []models.Appointment, showTitle bo
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var59 = []any{"btn btn-sm btn-secondary", templ.KV("opacity-45", c.Query("timeframe", "") != "day")}
+		var templ_7745c5c3_Var59 = []any{"btn btn-sm btn-secondary", templ.KV("opacity-45", c.Query("timeframe", "day") != "day")}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var59...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -986,7 +986,7 @@ func AppointmentsSection(c *Ctx, appointments []models.Appointment, showTitle bo
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var65 = []any{"btn btn-sm btn-secondary", templ.KV("opacity-45", c.Query("timeframe", "") != "week")}
+		var templ_7745c5c3_Var65 = []any{"btn btn-sm btn-secondary", templ.KV("opacity-45", c.Query("timeframe", "day") != "week")}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var65...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1060,7 +1060,7 @@ func AppointmentsSection(c *Ctx, appointments []models.Appointment, showTitle bo
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var71 = []any{"btn btn-sm btn-secondary", templ.KV("opacity-45", c.Query("timeframe", "") != "month")}
+		var templ_7745c5c3_Var71 = []any{"btn btn-sm btn-secondary", templ.KV("opacity-45", c.Query("timeframe", "day") != "month")}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var71...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

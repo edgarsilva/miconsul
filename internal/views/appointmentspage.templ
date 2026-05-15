@@ -205,19 +205,19 @@ templ AppointmentsSection(c *Ctx, appointments []models.Appointment, showTitle b
 					aria-label="Tabs"
 				>
 					<a
-						class={ "btn btn-sm btn-secondary", templ.KV("opacity-45", c.Query("timeframe", "") != "day") }
+						class={ "btn btn-sm btn-secondary", templ.KV("opacity-45", c.Query("timeframe", "day") != "day") }
 						href={ templ.URL(c.Path() + QueryParams(c, "timeframe=day")) }
 						hx-get={ c.Path() + QueryParams(c, "timeframe=day") }
 						hx-push-url={ c.Path() + QueryParams(c, "timeframe=day") }
 					>{ l(c.Locale, "nav.my_day") }</a>
 					<a
-						class={ "btn btn-sm btn-secondary", templ.KV("opacity-45", c.Query("timeframe", "") != "week") }
+						class={ "btn btn-sm btn-secondary", templ.KV("opacity-45", c.Query("timeframe", "day") != "week") }
 						href={ templ.URL(c.Path() + QueryParams(c, "timeframe=week")) }
 						hx-get={ c.Path() + QueryParams(c, "timeframe=week") }
 						hx-push-url={ c.Path() + QueryParams(c, "timeframe=week") }
 					>{ c.l("nav.my_week") }</a>
 					<a
-						class={ "btn btn-sm btn-secondary", templ.KV("opacity-45", c.Query("timeframe", "") != "month") }
+						class={ "btn btn-sm btn-secondary", templ.KV("opacity-45", c.Query("timeframe", "day") != "month") }
 						href={ templ.URL(c.Path() + QueryParams(c, "timeframe=month")) }
 						hx-get={ c.Path() + QueryParams(c, "timeframe=month") }
 						hx-push-url={ c.Path() + QueryParams(c, "timeframe=month") }

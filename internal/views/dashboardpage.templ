@@ -1,7 +1,6 @@
 package views
 
 import (
-	"miconsul/internal/lib/libtime"
 	"miconsul/internal/models"
 	"strconv"
 	"time"
@@ -399,24 +398,18 @@ templ Feed(vc *Ctx, events []models.FeedEvent) {
 							@feedEventIcon(event.Action)
 						</div>
 						<div class="flex-auto py-0.5">
-							<p class="text-xs leading-5 text-base-content/60">
-								<a href={ templ.SafeURL(event.SubjectURL) } class="font-medium text-base-content hover:underline">{ feedEventTitle(vc, event) }</a>
-								<span>{ "@" + feedEventShortDateTime(event.OcurredAt) }</span>
+							<p class="text-sm font-medium leading-5 text-base-content">
+								<a href={ templ.SafeURL(event.SubjectURL) } class="hover:underline">{ feedEventTitle(vc, event) }</a>
 							</p>
 							<p class="text-[11px] text-base-content/50 mt-0.5">
 								<span>{ l(vc.Locale, "str.patient") }</span>
 								<a href={ templ.SafeURL(event.TargetURL) } class="font-medium text-base-content hover:underline">{ event.Target }</a>
-								<span>,</span>
-								if event.ActorURL != "" {
-									<a href={ templ.SafeURL(event.ActorURL) } class="hover:underline">{ event.Actor }</a>
-								} else if event.Actor != "" {
-									<span>{ event.Actor }</span>
-								} else {
-									<span>Miconsul</span>
+								if feedEventShortDateTime(event.OcurredAt) != "" {
+									<span>{ " • " }</span>
+									<a href={ templ.SafeURL(event.SubjectURL) } class="badge badge-accent badge-xs hover:opacity-90">{ feedEventShortDateTime(event.OcurredAt) }</a>
 								}
 							</p>
 						</div>
-						<time datetime={ event.OcurredAt.Format(time.RFC3339) } class="flex-none py-0.5 text-xs leading-5 text-base-content/60">{ libtime.RelativeTime(event.OcurredAt) }</time>
 					</li>
 				}
 			</ul>

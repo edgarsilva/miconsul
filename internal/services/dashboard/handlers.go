@@ -2,9 +2,8 @@
 package dashboard
 
 import (
-	"time"
+	"strings"
 
-	"miconsul/internal/lib/libtime"
 	"miconsul/internal/models"
 	view "miconsul/internal/views"
 
@@ -27,6 +26,8 @@ func (s *service) HandleHomePage(c fiber.Ctx) error {
 // GET: /dashboard
 func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
+	timeframe := c.Query("timeframe", "day")
+	statusFilter := strings.TrimSpace(c.Query("status", ""))
 
 	appointments := []models.Appointment{}
 	query := s.DB.WithContext(c.Context()).
@@ -35,7 +36,6 @@ func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 		Preload("Clinic").
 		Where("user_id = ?", cu.ID)
 
-	timeframe := c.Query("timeframe", "")
 	switch timeframe {
 	case "day":
 		query.Scopes(models.AppointmentBookedToday)
@@ -44,7 +44,15 @@ func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 	case "month":
 		query.Scopes(models.AppointmentBookedThisMonth)
 	default:
-		query.Where("booked_at > ?", libtime.BoD(time.Now()))
+		query.Scopes(models.AppointmentBookedToday)
+	}
+
+	if statusFilter != "" {
+		statuses := strings.Split(statusFilter, ",")
+		for i := range statuses {
+			statuses[i] = strings.TrimSpace(statuses[i])
+		}
+		query.Where("status IN ?", statuses)
 	}
 
 	_ = query.Limit(10).Find(&appointments).Error
