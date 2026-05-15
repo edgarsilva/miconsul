@@ -39,26 +39,6 @@ templ PatientCard(patient models.Patient, vc *Ctx) {
 					@CmpProfilePic(patient)
 				</figure>
 				<div class="max-w-xl flex-auto">
-					<a href="/appointments" class="link link-hover">
-						<hgroup class="leading-5 font-semibold flex">
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke-width="1.5"
-								stroke="currentColor"
-								class="w-5 h-5 mr-1"
-							>
-								<path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"></path>
-							</svg>
-							<h3>
-								{ l(vc.Locale, "str.last_appointment") }
-								if len(patient.Appointments) > 0 {
-									@CmpTime(patient.Appointments[0].BookedAt)
-								}
-							</h3>
-						</hgroup>
-					</a>
 					<div class="mt-4 text-base leading-7 text-base-content/60">
 						if len(patient.Appointments) > 0 {
 							<h3 class="text-base-content text-sm font-semibold">Summary</h3>
@@ -78,6 +58,14 @@ templ PatientCard(patient models.Patient, vc *Ctx) {
 						<li class="text-base-content/50 px-2">{ l(vc.Locale, "str.age") + ": " + strconv.Itoa(patient.Age) }</li>
 						<li class="text-base-content/50 px-2">{ l(vc.Locale, "str.ocupation") + ": " + patient.Ocupation }</li>
 					</ul>
+					if len(patient.Appointments) > 0 {
+						<div class="mt-5 flex justify-end" hx-boost:inherited="true">
+							<a href="/appointments" class="link link-hover text-sm font-medium inline-flex items-center gap-1.5">
+								<span>{ l(vc.Locale, "str.last_appointment") }</span>
+								@CmpTime(patient.Appointments[0].BookedAt)
+							</a>
+						</div>
+					}
 				</div>
 			</div>
 		</section>

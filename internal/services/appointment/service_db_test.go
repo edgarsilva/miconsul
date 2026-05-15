@@ -30,7 +30,7 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 		if err := svc.CreateAppointment(ctx, &apnt); err != nil {
 			t.Fatalf("create appointment: %v", err)
 		}
-		if apnt.Status != models.ApntStatusPending {
+		if apnt.Status != models.AppointmentPending {
 			t.Fatalf("expected default pending status, got %q", apnt.Status)
 		}
 
@@ -59,7 +59,7 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 			PatientID: patient.ID,
 			BookedAt:  time.Now().Add(2 * time.Hour),
 			Token:     "tok_flow",
-			Status:    models.ApntStatusPending,
+			Status:    models.AppointmentPending,
 		}
 		if err := svc.CreateAppointment(ctx, &apnt); err != nil {
 			t.Fatalf("create appointment: %v", err)
@@ -79,7 +79,7 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 		if err != nil {
 			t.Fatalf("take by id and token: %v", err)
 		}
-		if got.Status != models.ApntStatusPending {
+		if got.Status != models.AppointmentPending {
 			t.Fatalf("expected pending status after date change, got %q", got.Status)
 		}
 	})
@@ -134,7 +134,7 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 			ClinicID:  clinic.ID,
 			PatientID: patient.ID,
 			BookedAt:  time.Now().Add(-time.Hour),
-			Status:    models.ApntStatusDone,
+			Status:    models.AppointmentDone,
 			Token:     "tok_done",
 		}
 		if err := svc.CreateAppointment(ctx, &doneApnt); err != nil {
@@ -145,7 +145,7 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 		if err != nil {
 			t.Fatalf("take patient with done appointment: %v", err)
 		}
-		if len(got.Appointments) == 0 || got.Appointments[0].Status != models.ApntStatusDone {
+		if len(got.Appointments) == 0 || got.Appointments[0].Status != models.AppointmentDone {
 			t.Fatalf("expected preloaded done appointment")
 		}
 	})
@@ -157,7 +157,7 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 			PatientID: patient.ID,
 			BookedAt:  time.Now().Add(3 * time.Hour),
 			Token:     "tok_upd_del",
-			Status:    models.ApntStatusPending,
+			Status:    models.AppointmentPending,
 		}
 		if err := svc.CreateAppointment(ctx, &apnt); err != nil {
 			t.Fatalf("create appointment for update/delete: %v", err)

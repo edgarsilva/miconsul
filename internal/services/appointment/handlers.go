@@ -117,7 +117,8 @@ func (s *service) HandleShowPage(c fiber.Ctx) error {
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "")
-	vc, _ := view.NewCtx(c,
+	vc, _ := view.NewCtx(
+		c,
 		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, "", ""),
 	)
 
@@ -163,7 +164,8 @@ func (s *service) HandleStartPage(c fiber.Ctx) error {
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "")
-	vc, _ := view.NewCtx(c,
+	vc, _ := view.NewCtx(
+		c,
 		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, "", ""),
 	)
 	return view.Render(c, view.AppointmentStartPage(appointment, vc))
@@ -192,7 +194,7 @@ func (s *service) HandleComplete(c fiber.Ctx) error {
 	}
 
 	appointment := appointmentCompleteUpdates{
-		Status:       models.ApntStatusDone,
+		Status:       models.AppointmentDone,
 		Observations: input.Observations,
 		Conclusions:  input.Conclusions,
 		Summary:      input.Summary,
@@ -381,7 +383,7 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 	}
 
 	appointment := appointmentCancelUpdates{
-		Status:     models.ApntStatusCanceled,
+		Status:     models.AppointmentCanceled,
 		CanceledAt: time.Now(),
 	}
 	err := s.CancelAppointmentByID(c.Context(), cu.ID, appointmentID, appointment)
@@ -444,7 +446,8 @@ func (s *service) HandlePatientConfirm(c fiber.Ctx) error {
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "")
-	vc, _ := view.NewCtx(c,
+	vc, _ := view.NewCtx(
+		c,
 		view.WithTheme(theme), view.WithToast(toast, "", ""),
 	)
 
@@ -470,7 +473,8 @@ func (s *service) HandlePatientCancelPage(c fiber.Ctx) error {
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "")
-	vc, _ := view.NewCtx(c,
+	vc, _ := view.NewCtx(
+		c,
 		view.WithTheme(theme), view.WithToast(toast, "", ""),
 	)
 	return view.Render(c, view.AppointmentCancelPage(vc, appointment))
@@ -500,7 +504,8 @@ func (s *service) HandlePatientCancel(c fiber.Ctx) error {
 
 	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "Success!")
-	vc, _ := view.NewCtx(c,
+	vc, _ := view.NewCtx(
+		c,
 		view.WithTheme(theme), view.WithToast(toast, "", "success"),
 	)
 	return view.Render(c, view.AppointmentCancelPage(vc, appointment))
@@ -585,7 +590,7 @@ func (s *service) PatientForStartPage(ctx context.Context, userID, patientID uin
 		Model(&models.Patient{}).
 		Where("id = ? AND user_id = ?", patientID, userID).
 		Preload("Appointments", func(tx *gorm.DB) *gorm.DB {
-			return tx.Limit(1).Where("status = ?", models.ApntStatusDone).Order("booked_at desc")
+			return tx.Limit(1).Where("status = ?", models.AppointmentDone).Order("booked_at desc")
 		}).
 		Take(&patient).Error
 	if err != nil {

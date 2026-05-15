@@ -74,7 +74,7 @@ func (s *service) CreateAppointment(ctx context.Context, appointment *models.App
 	}
 
 	if appointment.Status == "" {
-		appointment.Status = models.ApntStatusPending
+		appointment.Status = models.AppointmentPending
 	}
 
 	if !appointment.Status.IsValid() {
@@ -237,7 +237,7 @@ func (s *service) TakePatientByUIDWithLastDoneAppointment(ctx context.Context, u
 	err := s.DB.Model(&models.Patient{}).
 		Where("uid = ? AND user_id = ?", patientUID, userID).
 		Preload("Appointments", func(tx *gorm.DB) *gorm.DB {
-			return tx.Limit(1).Where("status = ?", models.ApntStatusDone).Order("booked_at desc")
+			return tx.Limit(1).Where("status = ?", models.AppointmentDone).Order("booked_at desc")
 		}).
 		Take(&patient).Error
 	if err != nil {
@@ -279,7 +279,7 @@ func (s *service) UpdateAppointmentByIDAndToken(ctx context.Context, appointment
 func (s *service) ConfirmAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) error {
 	updates := appointmentTokenUpdates{
 		ConfirmedAt: time.Now(),
-		Status:      models.ApntStatusConfirmed,
+		Status:      models.AppointmentConfirmed,
 	}
 	if err := s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"ConfirmedAt", "Status"}, updates); err != nil {
 		return err
@@ -301,7 +301,7 @@ func (s *service) ConfirmAppointmentByIDAndToken(ctx context.Context, appointmen
 func (s *service) CancelAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) error {
 	updates := appointmentTokenUpdates{
 		CanceledAt: time.Now(),
-		Status:     models.ApntStatusCanceled,
+		Status:     models.AppointmentCanceled,
 	}
 	if err := s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"CanceledAt", "Status"}, updates); err != nil {
 		return err
@@ -323,7 +323,7 @@ func (s *service) CancelAppointmentByIDAndToken(ctx context.Context, appointment
 func (s *service) RequestAppointmentDateChangeByIDAndToken(ctx context.Context, appointmentID, token string) error {
 	updates := appointmentTokenUpdates{
 		PendingAt: time.Now(),
-		Status:    models.ApntStatusPending,
+		Status:    models.AppointmentPending,
 	}
 	return s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"PendingAt", "Status"}, updates)
 }

@@ -1,3 +1,4 @@
+// Package seeder contains the logic to seed the DB with usable data.
 package seeder
 
 import (
@@ -330,7 +331,7 @@ func ensureBaselineAppointments(ctx context.Context, db *gorm.DB, owner models.U
 				PatientID: patients[i%len(patients)].ID,
 				BookedAt:  bookedAt[i%len(bookedAt)],
 				Timezone:  models.DefaultTimezone,
-				Status:    models.ApntStatusConfirmed,
+				Status:    models.AppointmentConfirmed,
 				Summary:   fmt.Sprintf("Baseline follow-up #%d", i+1),
 				Token:     fmt.Sprintf("seed-baseline-token-%d", i+1),
 			}
@@ -350,7 +351,7 @@ func ensureBaselineAppointments(ctx context.Context, db *gorm.DB, owner models.U
 			"patient_id": patients[i%len(patients)].ID,
 			"booked_at":  bookedAt[i%len(bookedAt)],
 			"timezone":   models.DefaultTimezone,
-			"status":     models.ApntStatusConfirmed,
+			"status":     models.AppointmentConfirmed,
 			"summary":    fmt.Sprintf("Baseline follow-up #%d", i+1),
 		}
 		if err := db.WithContext(ctx).Model(&apnt).Updates(updates).Error; err != nil {
@@ -562,7 +563,7 @@ func createBulkAppointments(ctx context.Context, db *gorm.DB, owner models.User,
 			BookedAt:  baseTime.Add(time.Duration(i) * 45 * time.Minute),
 			Timezone:  models.DefaultTimezone,
 			Duration:  45,
-			Status:    models.ApntStatusPending,
+			Status:    models.AppointmentPending,
 			Summary:   fmt.Sprintf("Seed appointment #%d", i+1),
 			Token:     fmt.Sprintf("seed-bulk-token-%d-%d", runID, i+1),
 		})

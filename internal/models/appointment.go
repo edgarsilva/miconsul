@@ -16,18 +16,16 @@ const DefaultTimezone = string(libtime.AmericaMexicoCity)
 type AppointmentStatus string
 
 const (
-	AppointmentDraft      AppointmentStatus = "draft"
+	AppointmentPending    AppointmentStatus = "pending"
 	AppointmentConfirmed  AppointmentStatus = "confirmed"
 	AppointmentInProgress AppointmentStatus = "in_progress"
 	AppointmentDone       AppointmentStatus = "done"
 	AppointmentCanceled   AppointmentStatus = "canceled"
-	AppointmentPending    AppointmentStatus = "pending"
 )
 
 func (s AppointmentStatus) IsValid() bool {
 	switch s {
-	case AppointmentDraft,
-		AppointmentConfirmed,
+	case AppointmentConfirmed,
 		AppointmentInProgress,
 		AppointmentDone,
 		AppointmentCanceled,
