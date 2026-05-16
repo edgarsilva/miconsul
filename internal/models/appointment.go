@@ -16,22 +16,20 @@ const DefaultTimezone = string(libtime.AmericaMexicoCity)
 type AppointmentStatus string
 
 const (
-	ApntStatusDraft       AppointmentStatus = "draft"
-	ApntStatusConfirmed   AppointmentStatus = "confirmed"
-	ApntStatusDone        AppointmentStatus = "done"
-	ApntStatusCanceled    AppointmentStatus = "canceled"
-	ApntStatusPending     AppointmentStatus = "pending"
-	ApntStatusRescheduled AppointmentStatus = "rescheduled"
+	AppointmentPending    AppointmentStatus = "pending"
+	AppointmentConfirmed  AppointmentStatus = "confirmed"
+	AppointmentInProgress AppointmentStatus = "in_progress"
+	AppointmentDone       AppointmentStatus = "done"
+	AppointmentCanceled   AppointmentStatus = "canceled"
 )
 
 func (s AppointmentStatus) IsValid() bool {
 	switch s {
-	case ApntStatusDraft,
-		ApntStatusConfirmed,
-		ApntStatusDone,
-		ApntStatusCanceled,
-		ApntStatusPending,
-		ApntStatusRescheduled:
+	case AppointmentConfirmed,
+		AppointmentInProgress,
+		AppointmentDone,
+		AppointmentCanceled,
+		AppointmentPending:
 		return true
 	default:
 		return false
@@ -81,7 +79,7 @@ type Appointment struct {
 func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	a.UID = xid.New("apnt")
 	if a.Status == "" {
-		a.Status = ApntStatusPending
+		a.Status = AppointmentPending
 	}
 
 	return nil
@@ -114,10 +112,6 @@ func (a *Appointment) CancelPath() string {
 	return "/appointments/" + a.UID + "/patient/cancel/" + a.Token
 }
 
-func (a *Appointment) RescheduledPath() string {
-	return "/appointments/" + a.UID + "/patient/reschedule/" + a.Token
-}
-
 func (a Appointment) AlertableID() string {
 	if a.ID == 0 {
 		return ""
@@ -140,7 +134,7 @@ func AppointmentWithPendingNotifications(db *gorm.DB) *gorm.DB {
 	return db.
 		Where("booked_at > ?", st).
 		Where("booked_at <= ?", et).
-		Where("NOT EXISTS (SELECT 1 FROM notifications WHERE notifications.alertable_id = CAST(appointments.id AS TEXT) AND notifications.alertable_type = ? AND notifications.name = ? AND notifications.medium = ? AND notifications.status IN ?)", "appointments", "appointment_reminder", NotificationMediumEmail, []NotificationStatus{NotificationSent, NotificationSuccess})
+		Where("NOT EXISTS (SELECT 1 FROM notifications WHERE notifications.notificationable_id = CAST(appointments.id AS TEXT) AND notifications.notificationable_type = ? AND notifications.name = ? AND notifications.medium = ? AND notifications.status IN ?)", "appointments", "appointment_reminder", NotificationMediumEmail, []NotificationStatus{NotificationSent, NotificationSuccess})
 }
 
 func AppointmentBookedToday(db *gorm.DB) *gorm.DB {

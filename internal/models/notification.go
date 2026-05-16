@@ -39,8 +39,8 @@ type Notification struct {
 	From                 string
 	To                   string
 	Status               NotificationStatus `gorm:"index;default:pending;not null;type:string" form:"-"`
-	NotificationableID   string             `gorm:"column:alertable_id;index:poly_fevnt_idx"`
-	NotificationableType string             `gorm:"column:alertable_type;index:poly_fevnt_idx"`
+	NotificationableID   string             `gorm:"column:notificationable_id;index:poly_fevnt_idx"`
+	NotificationableType string             `gorm:"column:notificationable_type;index:poly_fevnt_idx"`
 	ModelBase
 }
 

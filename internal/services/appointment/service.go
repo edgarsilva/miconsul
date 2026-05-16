@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"miconsul/internal/lib/libtime"
 	"miconsul/internal/models"
 	"miconsul/internal/server"
 
@@ -74,7 +73,7 @@ func (s *service) CreateAppointment(ctx context.Context, appointment *models.App
 	}
 
 	if appointment.Status == "" {
-		appointment.Status = models.ApntStatusPending
+		appointment.Status = models.AppointmentPending
 	}
 
 	if !appointment.Status.IsValid() {
@@ -151,6 +150,49 @@ func (s *service) CompleteAppointmentByID(ctx context.Context, userID uint, appo
 	}
 
 	_ = s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionCompleted)
+	return nil
+}
+
+func (s *service) SaveAppointmentSessionByID(ctx context.Context, userID uint, appointmentID string, updates appointmentSessionUpdates) error {
+	if strings.TrimSpace(appointmentID) == "" {
+		return ErrIDRequired
+	}
+
+	columns := []string{"Observations", "Conclusions", "Summary", "Notes"}
+
+	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, columns, &updates); err != nil {
+		return err
+	}
+
+	_ = s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionUpdated)
+	return nil
+}
+
+func (s *service) StartAppointmentSessionByID(ctx context.Context, userID uint, appointmentID string) error {
+	if strings.TrimSpace(appointmentID) == "" {
+		return ErrIDRequired
+	}
+
+	updates := appointmentCompleteUpdates{Status: models.AppointmentInProgress}
+	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, []string{"Status"}, &updates); err != nil {
+		return err
+	}
+
+	_ = s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionUpdated)
+	return nil
+}
+
+func (s *service) PauseAppointmentSessionByID(ctx context.Context, userID uint, appointmentID string) error {
+	if strings.TrimSpace(appointmentID) == "" {
+		return ErrIDRequired
+	}
+
+	updates := appointmentPauseUpdates{Status: models.AppointmentPending, PendingAt: time.Now()}
+	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, []string{"Status", "PendingAt"}, &updates); err != nil {
+		return err
+	}
+
+	_ = s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionUpdated)
 	return nil
 }
 
@@ -237,7 +279,7 @@ func (s *service) TakePatientByUIDWithLastDoneAppointment(ctx context.Context, u
 	err := s.DB.Model(&models.Patient{}).
 		Where("uid = ? AND user_id = ?", patientUID, userID).
 		Preload("Appointments", func(tx *gorm.DB) *gorm.DB {
-			return tx.Limit(1).Where("status = ?", models.ApntStatusDone).Order("booked_at desc")
+			return tx.Limit(1).Where("status = ?", models.AppointmentDone).Order("booked_at desc")
 		}).
 		Take(&patient).Error
 	if err != nil {
@@ -279,7 +321,7 @@ func (s *service) UpdateAppointmentByIDAndToken(ctx context.Context, appointment
 func (s *service) ConfirmAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) error {
 	updates := appointmentTokenUpdates{
 		ConfirmedAt: time.Now(),
-		Status:      models.ApntStatusConfirmed,
+		Status:      models.AppointmentConfirmed,
 	}
 	if err := s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"ConfirmedAt", "Status"}, updates); err != nil {
 		return err
@@ -301,7 +343,7 @@ func (s *service) ConfirmAppointmentByIDAndToken(ctx context.Context, appointmen
 func (s *service) CancelAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) error {
 	updates := appointmentTokenUpdates{
 		CanceledAt: time.Now(),
-		Status:     models.ApntStatusCanceled,
+		Status:     models.AppointmentCanceled,
 	}
 	if err := s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"CanceledAt", "Status"}, updates); err != nil {
 		return err
@@ -323,7 +365,7 @@ func (s *service) CancelAppointmentByIDAndToken(ctx context.Context, appointment
 func (s *service) RequestAppointmentDateChangeByIDAndToken(ctx context.Context, appointmentID, token string) error {
 	updates := appointmentTokenUpdates{
 		PendingAt: time.Now(),
-		Status:    models.ApntStatusPending,
+		Status:    models.AppointmentPending,
 	}
 	return s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"PendingAt", "Status"}, updates)
 }
@@ -400,7 +442,7 @@ func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, patientID
 	case "month":
 		dbquery = dbquery.Scopes(models.AppointmentBookedThisMonth)
 	default:
-		dbquery = dbquery.Where("booked_at > ?", libtime.BoD(time.Now()))
+		dbquery = dbquery.Scopes(models.AppointmentBookedToday)
 	}
 
 	statusFilter = strings.TrimSpace(statusFilter)

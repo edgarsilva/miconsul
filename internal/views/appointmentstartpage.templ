@@ -18,10 +18,10 @@ templ AppointmentStartPage(appointment models.Appointment, vc *Ctx) {
 
 templ PatientCard(patient models.Patient, vc *Ctx) {
 	<div>
-			<hgroup
-				class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
-				hx-boost:inherited="true"
-			>
+		<hgroup
+			class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
+			hx-boost:inherited="true"
+		>
 			<h1 class="font-bold text-2xl">{ l(vc.Locale, "str.patient") }</h1>
 			<a
 				href="/patients/new"
@@ -35,30 +35,20 @@ templ PatientCard(patient models.Patient, vc *Ctx) {
 		</hgroup>
 		<section class="grid grid-cols-6 app-card ">
 			<div class="col-span-full flex flex-col gap-10 sm:flex-row">
-				<figure class="aspect-[4/5] w-64 flex-none rounded-2xl overflow-hidden">
+				<figure class="aspect-4/5 w-64 flex-none rounded-2xl overflow-hidden">
 					@CmpProfilePic(patient)
 				</figure>
-				<div class="max-w-xl flex-auto">
-					<a href="/appointments" class="link link-hover">
-						<hgroup class="leading-5 font-semibold flex">
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke-width="1.5"
-								stroke="currentColor"
-								class="w-5 h-5 mr-1"
-							>
-								<path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"></path>
-							</svg>
-							<h3>
-								{ l(vc.Locale, "str.last_appointment") }
-								if len(patient.Appointments) > 0 {
-									@CmpTime(patient.Appointments[0].BookedAt)
-								}
-							</h3>
-						</hgroup>
-					</a>
+				<div class="flex flex-col max-w-xl grow">
+					<div class="pt-2 flex flex-wrap items-center gap-2">
+						<a
+							href={ templ.URL("/patients/" + patient.UID) }
+							target="_blank"
+							rel="noopener noreferrer"
+							class="text-xl font-semibold tracking-tight mr-2 link link-hover"
+						>{ patient.Name }</a>
+						<span class="badge badge-ghost">{ l(vc.Locale, "str.age") + ": " + strconv.Itoa(patient.Age) }</span>
+						<span class="badge badge-ghost">{ l(vc.Locale, "str.ocupation") + ": " + patient.Ocupation }</span>
+					</div>
 					<div class="mt-4 text-base leading-7 text-base-content/60">
 						if len(patient.Appointments) > 0 {
 							<h3 class="text-base-content text-sm font-semibold">Summary</h3>
@@ -73,11 +63,14 @@ templ PatientCard(patient models.Patient, vc *Ctx) {
 							<h3 class="text-base-content/30 text-md font-semibold">{ l(vc.Locale, "str.no_prev_apnt") }</h3>
 						}
 					</div>
-					<ul class="flex divide-x divide-base-content/10 pt-2">
-						<li class="font-semibold tracking-tight pr-2">{ patient.Name }</li>
-						<li class="text-base-content/50 px-2">{ l(vc.Locale, "str.age") + ": " + strconv.Itoa(patient.Age) }</li>
-						<li class="text-base-content/50 px-2">{ l(vc.Locale, "str.ocupation") + ": " + patient.Ocupation }</li>
-					</ul>
+					if len(patient.Appointments) > 0 {
+						<div class="flex justify-end items-end grow" hx-boost:inherited="true">
+							<a href="/appointments" class="link link-hover text-sm font-medium inline-flex items-center gap-1.5">
+								<span>{ l(vc.Locale, "str.last_appointment") }</span>
+								@CmpTime(patient.Appointments[0].BookedAt)
+							</a>
+						</div>
+					}
 				</div>
 			</div>
 		</section>
@@ -93,17 +86,19 @@ templ AppointmentStart(appointment models.Appointment, vc *Ctx) {
 				class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
 			>
 				<h1 class="font-bold text-2xl">{ l(vc.Locale, "str.current_session") }</h1>
+				@AppointmentSessionToggle(appointment, vc)
 			</hgroup>
 			<section class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
 				<input type="hidden" name="id" value={ appointment.UID } id="mb_appointment_id"/>
-				<div class="flex justify-end p-4 pb-0 text-base-content/50">
+				<div class="flex items-start justify-between p-4 pb-0 text-base-content/50">
+					@AppointmentSessionStatusBadge(appointment, vc)
 					@CmpTime(appointment.BookedAt)
 				</div>
 				<form
-					id="patch_appointment"
+					id="save_appointment_session"
 					method="POST"
-					action={ templ.URL("/appointments/" + appointment.UID + "/complete") }
-					hx-post={ "/appointments/" + appointment.UID + "/complete" }
+					action={ templ.URL("/appointments/" + appointment.UID + "/save-session") }
+					hx-post={ "/appointments/" + appointment.UID + "/save-session" }
 				>
 					<div class="px-4 py-6 sm:p-8">
 						<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -148,28 +143,65 @@ templ AppointmentStart(appointment models.Appointment, vc *Ctx) {
 										name="notes"
 										class="textarea textarea-bordered w-full block"
 										placeholder={ l(vc.Locale, "str.notes_ph") }
-									>1234{ appointment.Notes }</textarea>
+									>{ appointment.Notes }</textarea>
 								</div>
 							</div>
 						</div>
 					</div>
 				</form>
 				<div class="flex items-center justify-end gap-x-6 border-t border-base-content/10 px-4 py-4 sm:px-8">
-					<form
-						id="cancel_appointment"
-						method="POST"
-						action={ templ.URL("/appointments/" + appointment.UID + "/cancel") }
-						hx-post={ "/appointments/" + appointment.UID + "/cancel" }
-						hx-confirm={ l(vc.Locale, "str.are_you_sure") }
-					>
-						<button
-							type="submit"
-							class="btn btn-ghost"
-						>{ l(vc.Locale, "btn.cancel") }</button>
-					</form>
-					<button form="patch_appointment" type="submit" class="btn btn-primary">{ l(vc.Locale, "btn.save") }</button>
+					<button form="save_appointment_session" type="submit" class="btn btn-secondary">{ l(vc.Locale, "btn.save") }</button>
+					<button
+						form="save_appointment_session"
+						type="submit"
+						formaction={ "/appointments/" + appointment.UID + "/complete" }
+						class="btn btn-primary"
+					>{ l(vc.Locale, "btn.end_session") }</button>
 				</div>
 			</section>
 		</div>
+	</div>
+}
+
+templ AppointmentSessionStatusBadge(appointment models.Appointment, vc *Ctx) {
+	<div id="session_status_badge">
+		if appointment.Status == models.AppointmentInProgress {
+			@CmpBadgeStatus(models.AppointmentInProgress, vc)
+		}
+	</div>
+}
+
+templ AppointmentSessionToggle(appointment models.Appointment, vc *Ctx) {
+	<div id="session_toggle">
+		if appointment.Status == models.AppointmentInProgress {
+			<a
+				class="btn btn-secondary btn-sm"
+				href={ templ.URL("/appointments/" + appointment.UID + "/pause-session") }
+				hx-post={ "/appointments/" + appointment.UID + "/pause-session" }
+				hx-target="#session_toggle"
+				hx-swap="outerHTML"
+			>
+				{ l(vc.Locale, "btn.pause_session") }
+			</a>
+		} else {
+			<a
+				class="btn btn-primary btn-sm"
+				href={ templ.URL("/appointments/" + appointment.UID + "/start-session") }
+				hx-post={ "/appointments/" + appointment.UID + "/start-session" }
+				hx-target="#session_toggle"
+				hx-swap="outerHTML"
+			>
+				{ l(vc.Locale, "btn.start_session") }
+			</a>
+		}
+	</div>
+}
+
+templ AppointmentSessionToggleFrg(appointment models.Appointment, vc *Ctx) {
+	@AppointmentSessionToggle(appointment, vc)
+	<div id="session_status_badge" hx-swap-oob="outerHTML">
+		if appointment.Status == models.AppointmentInProgress {
+			@CmpBadgeStatus(models.AppointmentInProgress, vc)
+		}
 	</div>
 }

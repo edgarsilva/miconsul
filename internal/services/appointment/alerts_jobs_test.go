@@ -100,11 +100,11 @@ func TestAppendNotificationPersistsPrimaryKeyAlertableID(t *testing.T) {
 	}
 
 	if notification.NotificationableType != "appointments" {
-		t.Fatalf("expected alertable_type appointments, got %q", notification.NotificationableType)
+		t.Fatalf("expected notificationable_type appointments, got %q", notification.NotificationableType)
 	}
 	wantID := strconv.FormatUint(uint64(apnt.ID), 10)
 	if notification.NotificationableID != wantID {
-		t.Fatalf("expected alertable_id %q, got %q", wantID, notification.NotificationableID)
+		t.Fatalf("expected notificationable_id %q, got %q", wantID, notification.NotificationableID)
 	}
 }
 

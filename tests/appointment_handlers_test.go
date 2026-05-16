@@ -114,7 +114,7 @@ func TestAppointmentHandlers(t *testing.T) {
 		if err != nil {
 			t.Fatalf("load canceled appointment: %v", err)
 		}
-		if updated.Status != models.ApntStatusCanceled {
+		if updated.Status != models.AppointmentCanceled {
 			t.Fatalf("expected canceled status, got %q", updated.Status)
 		}
 		if updated.CanceledAt.IsZero() {
@@ -147,7 +147,7 @@ func TestAppointmentHandlers(t *testing.T) {
 		if err != nil {
 			t.Fatalf("load completed appointment: %v", err)
 		}
-		if updated.Status != models.ApntStatusDone {
+		if updated.Status != models.AppointmentDone {
 			t.Fatalf("expected done status, got %q", updated.Status)
 		}
 		if updated.Summary != "Procedure completed" || updated.Notes != "No complications" {

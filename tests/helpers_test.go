@@ -203,7 +203,7 @@ func (h *testHarness) createAppointment(userID, patientID, clinicID uint) models
 		UserID:      userID,
 		PatientID:   patientID,
 		ClinicID:    clinicID,
-		Status:      models.ApntStatusPending,
+		Status:      models.AppointmentPending,
 		BookedAt:    time.Now().UTC().Add(2 * time.Hour),
 		BookedYear:  time.Now().UTC().Year(),
 		BookedMonth: int(time.Now().UTC().Month()),
