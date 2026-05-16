@@ -90,7 +90,8 @@ templ AppointmentStart(appointment models.Appointment, vc *Ctx) {
 			</hgroup>
 			<section class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
 				<input type="hidden" name="id" value={ appointment.UID } id="mb_appointment_id"/>
-				<div class="flex justify-end p-4 pb-0 text-base-content/50">
+				<div class="flex items-start justify-between p-4 pb-0 text-base-content/50">
+					@AppointmentSessionStatusBadge(appointment, vc)
 					@CmpTime(appointment.BookedAt)
 				</div>
 				<form
@@ -162,6 +163,14 @@ templ AppointmentStart(appointment models.Appointment, vc *Ctx) {
 	</div>
 }
 
+templ AppointmentSessionStatusBadge(appointment models.Appointment, vc *Ctx) {
+	<div id="session_status_badge">
+		if appointment.Status == models.AppointmentInProgress {
+			@CmpBadgeStatus(models.AppointmentInProgress, vc)
+		}
+	</div>
+}
+
 templ AppointmentSessionToggle(appointment models.Appointment, vc *Ctx) {
 	<div id="session_toggle">
 		if appointment.Status == models.AppointmentInProgress {
@@ -172,9 +181,6 @@ templ AppointmentSessionToggle(appointment models.Appointment, vc *Ctx) {
 				hx-target="#session_toggle"
 				hx-swap="outerHTML"
 			>
-				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-					<path stroke-linecap="round" stroke-linejoin="round" d="M9 5.25v13.5m6-13.5v13.5"></path>
-				</svg>
 				{ l(vc.Locale, "btn.pause_session") }
 			</a>
 		} else {
@@ -185,18 +191,17 @@ templ AppointmentSessionToggle(appointment models.Appointment, vc *Ctx) {
 				hx-target="#session_toggle"
 				hx-swap="outerHTML"
 			>
-				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-					<path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.285l-11.54 6.347c-1.25.687-2.779-.216-2.779-1.643V5.653Z"></path>
-				</svg>
 				{ l(vc.Locale, "btn.start_session") }
 			</a>
 		}
 	</div>
 }
 
-templ AppointmentSessionToggleFrg(appointment models.Appointment, toastMsg, toastLevel string, vc *Ctx) {
+templ AppointmentSessionToggleFrg(appointment models.Appointment, vc *Ctx) {
 	@AppointmentSessionToggle(appointment, vc)
-	<div id="toast_region" hx-swap-oob="beforeend">
-		@CmpToast(toastMsg, "", toastLevel)
+	<div id="session_status_badge" hx-swap-oob="outerHTML">
+		if appointment.Status == models.AppointmentInProgress {
+			@CmpBadgeStatus(models.AppointmentInProgress, vc)
+		}
 	</div>
 }

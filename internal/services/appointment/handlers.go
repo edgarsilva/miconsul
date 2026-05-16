@@ -192,12 +192,12 @@ func (s *service) HandleStartSession(c fiber.Ctx) error {
 	}
 
 	if s.NotHTMX(c) {
-		return s.respondWithRedirect(c, "/appointments/"+appointmentID+"/open?toast=Session started&level=success")
+		return s.respondWithRedirect(c, "/appointments/"+appointmentID+"/open")
 	}
 
 	vc, _ := view.NewCtx(c)
 	appointment := models.Appointment{UID: appointmentID, Status: models.AppointmentInProgress}
-	return view.Render(c, view.AppointmentSessionToggleFrg(appointment, "Session started", "success", vc))
+	return view.Render(c, view.AppointmentSessionToggleFrg(appointment, vc))
 }
 
 // HandlePauseSession handles pausing an appointment session.
@@ -226,12 +226,12 @@ func (s *service) HandlePauseSession(c fiber.Ctx) error {
 	}
 
 	if s.NotHTMX(c) {
-		return s.respondWithRedirect(c, "/appointments/"+appointmentID+"/open?toast=Session paused&level=success")
+		return s.respondWithRedirect(c, "/appointments/"+appointmentID+"/open")
 	}
 
 	vc, _ := view.NewCtx(c)
 	appointment := models.Appointment{UID: appointmentID, Status: models.AppointmentPending}
-	return view.Render(c, view.AppointmentSessionToggleFrg(appointment, "Session paused", "success", vc))
+	return view.Render(c, view.AppointmentSessionToggleFrg(appointment, vc))
 }
 
 // HandleSaveSession handles saving in-progress session notes.
