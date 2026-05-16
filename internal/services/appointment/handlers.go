@@ -125,9 +125,9 @@ func (s *service) HandleShowPage(c fiber.Ctx) error {
 	return view.Render(c, view.AppointmentPage(vc, appointment, patients, clinics))
 }
 
-// HandleStartPage renders the appointment start page HTML
+// HandleOpenPage renders the appointment start page HTML
 // GET: /appointments/:id/open
-func (s *service) HandleStartPage(c fiber.Ctx) error {
+func (s *service) HandleOpenPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
 	appointmentID := c.Params("id", "")
@@ -162,12 +162,7 @@ func (s *service) HandleStartPage(c fiber.Ctx) error {
 
 	appointment.Patient = patient
 
-	theme := s.SessionUITheme(c)
-	toast := c.Query("toast", "")
-	vc, _ := view.NewCtx(
-		c,
-		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, "", ""),
-	)
+	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.AppointmentStartPage(appointment, vc))
 }
 
@@ -196,13 +191,13 @@ func (s *service) HandleStartSession(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, redirectPath)
 	}
 
-	if !s.NotHTMX(c) {
-		vc, _ := view.NewCtx(c)
-		appointment := models.Appointment{UID: appointmentID, Status: models.AppointmentInProgress}
-		return view.Render(c, view.AppointmentSessionToggleFrg(appointment, "Session started", "success", vc))
+	if s.NotHTMX(c) {
+		return s.respondWithRedirect(c, "/appointments/"+appointmentID+"/open?toast=Session started&level=success")
 	}
 
-	return s.respondWithRedirect(c, "/appointments/"+appointmentID+"/open?toast=Session started&level=success")
+	vc, _ := view.NewCtx(c)
+	appointment := models.Appointment{UID: appointmentID, Status: models.AppointmentInProgress}
+	return view.Render(c, view.AppointmentSessionToggleFrg(appointment, "Session started", "success", vc))
 }
 
 // HandlePauseSession handles pausing an appointment session.
@@ -230,13 +225,13 @@ func (s *service) HandlePauseSession(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, redirectPath)
 	}
 
-	if !s.NotHTMX(c) {
-		vc, _ := view.NewCtx(c)
-		appointment := models.Appointment{UID: appointmentID, Status: models.AppointmentPending}
-		return view.Render(c, view.AppointmentSessionToggleFrg(appointment, "Session paused", "success", vc))
+	if s.NotHTMX(c) {
+		return s.respondWithRedirect(c, "/appointments/"+appointmentID+"/open?toast=Session paused&level=success")
 	}
 
-	return s.respondWithRedirect(c, "/appointments/"+appointmentID+"/open?toast=Session paused&level=success")
+	vc, _ := view.NewCtx(c)
+	appointment := models.Appointment{UID: appointmentID, Status: models.AppointmentPending}
+	return view.Render(c, view.AppointmentSessionToggleFrg(appointment, "Session paused", "success", vc))
 }
 
 // HandleSaveSession handles saving in-progress session notes.

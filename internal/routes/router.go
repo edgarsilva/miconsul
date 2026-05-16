@@ -181,7 +181,7 @@ func AppointmentRoutes(s *server.Server, authSvc auth.Runtime) error {
 	g.Get("/new", a.HandleShowPage)
 	g.Get("/new/pricefrg/:id", a.HandlePriceFrg)
 	g.Get("/:id", a.HandleShowPage)
-	g.Get("/:id/open", a.HandleStartPage)
+	g.Get("/:id/open", a.HandleOpenPage)
 	g.Post("/:id/start-session", a.HandleStartSession)
 	g.Post("/:id/pause-session", a.HandlePauseSession)
 	g.Post("/:id/save-session", a.HandleSaveSession)

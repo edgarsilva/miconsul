@@ -62,7 +62,7 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 		app := fiber.New()
 		app.Get("/appointments/:id/open", func(c fiber.Ctx) error {
 			c.Locals("current_user", user)
-			return svc.HandleStartPage(c)
+			return svc.HandleOpenPage(c)
 		})
 		app.Post("/appointments", func(c fiber.Ctx) error {
 			c.Locals("current_user", user)
@@ -207,7 +207,7 @@ func TestAppointmentHandlerGuardBranches(t *testing.T) {
 	app := fiber.New()
 	app.Get("/appointments/open", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandleStartPage(c)
+		return svc.HandleOpenPage(c)
 	})
 	app.Get("/appointments/new/pricefrg/:id", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
@@ -300,7 +300,7 @@ func TestHandleStartPagePatientMissingBranch(t *testing.T) {
 	app := fiber.New()
 	app.Get("/appointments/:id/open", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandleStartPage(c)
+		return svc.HandleOpenPage(c)
 	})
 
 	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/"+apnt.UID+"/open", nil))
