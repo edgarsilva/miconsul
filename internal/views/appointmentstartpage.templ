@@ -18,14 +18,14 @@ templ AppointmentStartPage(appointment models.Appointment, vc *Ctx) {
 
 templ PatientCard(patient models.Patient, vc *Ctx) {
 	<div>
-			<hgroup
-				class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
-				hx-boost:inherited="true"
-			>
+		<hgroup
+			class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
+			hx-boost:inherited="true"
+		>
 			<h1 class="font-bold text-2xl">{ l(vc.Locale, "str.patient") }</h1>
 			<a
 				href="/patients/new"
-				class="btn btn-primary btn-sm"
+				class="btn btn-accent btn-sm"
 			>
 				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
 					<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"></path>
@@ -35,10 +35,20 @@ templ PatientCard(patient models.Patient, vc *Ctx) {
 		</hgroup>
 		<section class="grid grid-cols-6 app-card ">
 			<div class="col-span-full flex flex-col gap-10 sm:flex-row">
-				<figure class="aspect-[4/5] w-64 flex-none rounded-2xl overflow-hidden">
+				<figure class="aspect-4/5 w-64 flex-none rounded-2xl overflow-hidden">
 					@CmpProfilePic(patient)
 				</figure>
-				<div class="max-w-xl flex-auto">
+				<div class="flex flex-col max-w-xl grow">
+					<div class="pt-2 flex flex-wrap items-center gap-2">
+						<a
+							href={ templ.URL("/patients/" + patient.UID) }
+							target="_blank"
+							rel="noopener noreferrer"
+							class="text-xl font-semibold tracking-tight mr-2 link link-hover"
+						>{ patient.Name }</a>
+						<span class="badge badge-ghost">{ l(vc.Locale, "str.age") + ": " + strconv.Itoa(patient.Age) }</span>
+						<span class="badge badge-ghost">{ l(vc.Locale, "str.ocupation") + ": " + patient.Ocupation }</span>
+					</div>
 					<div class="mt-4 text-base leading-7 text-base-content/60">
 						if len(patient.Appointments) > 0 {
 							<h3 class="text-base-content text-sm font-semibold">Summary</h3>
@@ -53,13 +63,8 @@ templ PatientCard(patient models.Patient, vc *Ctx) {
 							<h3 class="text-base-content/30 text-md font-semibold">{ l(vc.Locale, "str.no_prev_apnt") }</h3>
 						}
 					</div>
-					<ul class="flex divide-x divide-base-content/10 pt-2">
-						<li class="font-semibold tracking-tight pr-2">{ patient.Name }</li>
-						<li class="text-base-content/50 px-2">{ l(vc.Locale, "str.age") + ": " + strconv.Itoa(patient.Age) }</li>
-						<li class="text-base-content/50 px-2">{ l(vc.Locale, "str.ocupation") + ": " + patient.Ocupation }</li>
-					</ul>
 					if len(patient.Appointments) > 0 {
-						<div class="mt-5 flex justify-end" hx-boost:inherited="true">
+						<div class="flex justify-end items-end grow" hx-boost:inherited="true">
 							<a href="/appointments" class="link link-hover text-sm font-medium inline-flex items-center gap-1.5">
 								<span>{ l(vc.Locale, "str.last_appointment") }</span>
 								@CmpTime(patient.Appointments[0].BookedAt)
@@ -81,6 +86,7 @@ templ AppointmentStart(appointment models.Appointment, vc *Ctx) {
 				class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
 			>
 				<h1 class="font-bold text-2xl">{ l(vc.Locale, "str.current_session") }</h1>
+				@AppointmentSessionToggle(appointment, vc)
 			</hgroup>
 			<section class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
 				<input type="hidden" name="id" value={ appointment.UID } id="mb_appointment_id"/>
@@ -88,10 +94,10 @@ templ AppointmentStart(appointment models.Appointment, vc *Ctx) {
 					@CmpTime(appointment.BookedAt)
 				</div>
 				<form
-					id="patch_appointment"
+					id="save_appointment_session"
 					method="POST"
-					action={ templ.URL("/appointments/" + appointment.UID + "/complete") }
-					hx-post={ "/appointments/" + appointment.UID + "/complete" }
+					action={ templ.URL("/appointments/" + appointment.UID + "/save-session") }
+					hx-post={ "/appointments/" + appointment.UID + "/save-session" }
 				>
 					<div class="px-4 py-6 sm:p-8">
 						<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -136,28 +142,61 @@ templ AppointmentStart(appointment models.Appointment, vc *Ctx) {
 										name="notes"
 										class="textarea textarea-bordered w-full block"
 										placeholder={ l(vc.Locale, "str.notes_ph") }
-									>1234{ appointment.Notes }</textarea>
+									>{ appointment.Notes }</textarea>
 								</div>
 							</div>
 						</div>
 					</div>
 				</form>
 				<div class="flex items-center justify-end gap-x-6 border-t border-base-content/10 px-4 py-4 sm:px-8">
-					<form
-						id="cancel_appointment"
-						method="POST"
-						action={ templ.URL("/appointments/" + appointment.UID + "/cancel") }
-						hx-post={ "/appointments/" + appointment.UID + "/cancel" }
-						hx-confirm={ l(vc.Locale, "str.are_you_sure") }
-					>
-						<button
-							type="submit"
-							class="btn btn-ghost"
-						>{ l(vc.Locale, "btn.cancel") }</button>
-					</form>
-					<button form="patch_appointment" type="submit" class="btn btn-primary">{ l(vc.Locale, "btn.save") }</button>
+					<button form="save_appointment_session" type="submit" class="btn btn-secondary">{ l(vc.Locale, "btn.save") }</button>
+					<button
+						form="save_appointment_session"
+						type="submit"
+						formaction={ "/appointments/" + appointment.UID + "/complete" }
+						class="btn btn-primary"
+					>{ l(vc.Locale, "btn.end_session") }</button>
 				</div>
 			</section>
 		</div>
+	</div>
+}
+
+templ AppointmentSessionToggle(appointment models.Appointment, vc *Ctx) {
+	<div id="session_toggle">
+		if appointment.Status == models.AppointmentInProgress {
+			<a
+				class="btn btn-secondary btn-sm"
+				href={ templ.URL("/appointments/" + appointment.UID + "/pause-session") }
+				hx-post={ "/appointments/" + appointment.UID + "/pause-session" }
+				hx-target="#session_toggle"
+				hx-swap="outerHTML"
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M9 5.25v13.5m6-13.5v13.5"></path>
+				</svg>
+				{ l(vc.Locale, "btn.pause_session") }
+			</a>
+		} else {
+			<a
+				class="btn btn-primary btn-sm"
+				href={ templ.URL("/appointments/" + appointment.UID + "/start-session") }
+				hx-post={ "/appointments/" + appointment.UID + "/start-session" }
+				hx-target="#session_toggle"
+				hx-swap="outerHTML"
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.285l-11.54 6.347c-1.25.687-2.779-.216-2.779-1.643V5.653Z"></path>
+				</svg>
+				{ l(vc.Locale, "btn.start_session") }
+			</a>
+		}
+	</div>
+}
+
+templ AppointmentSessionToggleFrg(appointment models.Appointment, toastMsg, toastLevel string, vc *Ctx) {
+	@AppointmentSessionToggle(appointment, vc)
+	<div id="toast_region" hx-swap-oob="beforeend">
+		@CmpToast(toastMsg, "", toastLevel)
 	</div>
 }

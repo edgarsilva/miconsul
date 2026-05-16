@@ -60,7 +60,7 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 
 	t.Run("start page and create/update/delete endpoints", func(t *testing.T) {
 		app := fiber.New()
-		app.Get("/appointments/:id/start", func(c fiber.Ctx) error {
+		app.Get("/appointments/:id/open", func(c fiber.Ctx) error {
 			c.Locals("current_user", user)
 			return svc.HandleStartPage(c)
 		})
@@ -93,7 +93,7 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 			return svc.HandleSearchClinics(c)
 		})
 
-		resp1, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/"+apnt.UID+"/start", nil))
+		resp1, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/"+apnt.UID+"/open", nil))
 		if err != nil || resp1.StatusCode != fiber.StatusOK {
 			t.Fatalf("start page expected 200, got status=%d err=%v", resp1.StatusCode, err)
 		}
@@ -205,7 +205,7 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 func TestAppointmentHandlerGuardBranches(t *testing.T) {
 	svc, user, _, _ := newAppointmentServiceForTests(t)
 	app := fiber.New()
-	app.Get("/appointments/start", func(c fiber.Ctx) error {
+	app.Get("/appointments/open", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
 		return svc.HandleStartPage(c)
 	})
@@ -243,7 +243,7 @@ func TestAppointmentHandlerGuardBranches(t *testing.T) {
 		t.Fatalf("price fragment missing id expected 404, got status=%d err=%v", resp1.StatusCode, err)
 	}
 
-	respStart, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/start", nil))
+	respStart, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/open", nil))
 	if err != nil || respStart.StatusCode != fiber.StatusSeeOther {
 		t.Fatalf("start without id expected 303 redirect, got status=%d err=%v", respStart.StatusCode, err)
 	}
@@ -298,12 +298,12 @@ func TestHandleStartPagePatientMissingBranch(t *testing.T) {
 	}
 
 	app := fiber.New()
-	app.Get("/appointments/:id/start", func(c fiber.Ctx) error {
+	app.Get("/appointments/:id/open", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
 		return svc.HandleStartPage(c)
 	})
 
-	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/"+apnt.UID+"/start", nil))
+	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/"+apnt.UID+"/open", nil))
 	if err != nil || resp.StatusCode != fiber.StatusSeeOther {
 		t.Fatalf("start with missing patient expected 303 redirect, got status=%d err=%v", resp.StatusCode, err)
 	}

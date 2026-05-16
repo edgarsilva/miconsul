@@ -39,7 +39,7 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	if err != nil {
 		return s.Redirect(c, "/appointments?toast=Failed to load selected clinic&level=error")
 	}
-	timeframe := strings.TrimSpace(c.Query("timeframe", ""))
+	timeframe := strings.TrimSpace(c.Query("timeframe", "day"))
 	searchTerm := strings.TrimSpace(c.Query("searchTerm", ""))
 	statusFilter := strings.TrimSpace(c.Query("status", ""))
 	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, patientID, clinicID, timeframe, searchTerm, statusFilter)
@@ -76,7 +76,7 @@ func (s *service) HandleIndexSearch(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	timeframe := strings.TrimSpace(c.Query("timeframe", ""))
+	timeframe := strings.TrimSpace(c.Query("timeframe", "day"))
 	statusFilter := strings.TrimSpace(c.Query("status", ""))
 	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, patientID, clinicID, timeframe, searchTerm, statusFilter)
 	if err != nil {
@@ -126,7 +126,7 @@ func (s *service) HandleShowPage(c fiber.Ctx) error {
 }
 
 // HandleStartPage renders the appointment start page HTML
-// GET: /appointments/:id/start
+// GET: /appointments/:id/open
 func (s *service) HandleStartPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
@@ -169,6 +169,116 @@ func (s *service) HandleStartPage(c fiber.Ctx) error {
 		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, "", ""),
 	)
 	return view.Render(c, view.AppointmentStartPage(appointment, vc))
+}
+
+// HandleStartSession handles starting an appointment session.
+// POST: /appointments/:id/start-session
+func (s *service) HandleStartSession(c fiber.Ctx) error {
+	cu := s.CurrentUser(c)
+
+	appointmentID := c.Params("id", "")
+	if appointmentID == "" {
+		appointmentID = c.FormValue("id", "")
+	}
+
+	if appointmentID == "" {
+		redirectPath := "/appointments?toast=Can't find that appointment&level=error"
+		return s.respondWithRedirect(c, redirectPath)
+	}
+
+	err := s.StartAppointmentSessionByID(c.Context(), cu.ID, appointmentID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
+		return s.respondWithRedirect(c, redirectPath)
+	}
+	if err != nil {
+		redirectPath := "/appointments?toast=Failed to start appointment session&level=error"
+		return s.respondWithRedirect(c, redirectPath)
+	}
+
+	if !s.NotHTMX(c) {
+		vc, _ := view.NewCtx(c)
+		appointment := models.Appointment{UID: appointmentID, Status: models.AppointmentInProgress}
+		return view.Render(c, view.AppointmentSessionToggleFrg(appointment, "Session started", "success", vc))
+	}
+
+	return s.respondWithRedirect(c, "/appointments/"+appointmentID+"/open?toast=Session started&level=success")
+}
+
+// HandlePauseSession handles pausing an appointment session.
+// POST: /appointments/:id/pause-session
+func (s *service) HandlePauseSession(c fiber.Ctx) error {
+	cu := s.CurrentUser(c)
+
+	appointmentID := c.Params("id", "")
+	if appointmentID == "" {
+		appointmentID = c.FormValue("id", "")
+	}
+
+	if appointmentID == "" {
+		redirectPath := "/appointments?toast=Can't find that appointment&level=error"
+		return s.respondWithRedirect(c, redirectPath)
+	}
+
+	err := s.PauseAppointmentSessionByID(c.Context(), cu.ID, appointmentID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
+		return s.respondWithRedirect(c, redirectPath)
+	}
+	if err != nil {
+		redirectPath := "/appointments?toast=Failed to pause appointment session&level=error"
+		return s.respondWithRedirect(c, redirectPath)
+	}
+
+	if !s.NotHTMX(c) {
+		vc, _ := view.NewCtx(c)
+		appointment := models.Appointment{UID: appointmentID, Status: models.AppointmentPending}
+		return view.Render(c, view.AppointmentSessionToggleFrg(appointment, "Session paused", "success", vc))
+	}
+
+	return s.respondWithRedirect(c, "/appointments/"+appointmentID+"/open?toast=Session paused&level=success")
+}
+
+// HandleSaveSession handles saving in-progress session notes.
+// POST: /appointments/:id/save-session
+func (s *service) HandleSaveSession(c fiber.Ctx) error {
+	cu := s.CurrentUser(c)
+
+	appointmentID := c.Params("id", "")
+	if appointmentID == "" {
+		appointmentID = c.FormValue("id", "")
+	}
+
+	if appointmentID == "" {
+		redirectPath := "/appointments?toast=Can't find that appointment&level=error"
+		return s.respondWithRedirect(c, redirectPath)
+	}
+
+	input := appointmentCompleteInput{}
+	err := c.Bind().Body(&input)
+	if err != nil {
+		redirectPath := "/appointments/" + appointmentID + "/open?toast=Invalid appointment input&level=error"
+		return s.respondWithRedirect(c, redirectPath)
+	}
+
+	updates := appointmentSessionUpdates{
+		Observations: input.Observations,
+		Conclusions:  input.Conclusions,
+		Summary:      input.Summary,
+		Notes:        input.Notes,
+	}
+
+	err = s.SaveAppointmentSessionByID(c.Context(), cu.ID, appointmentID, updates)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
+		return s.respondWithRedirect(c, redirectPath)
+	}
+	if err != nil {
+		redirectPath := "/appointments/" + appointmentID + "/open?toast=Failed to save appointment session&level=error"
+		return s.respondWithRedirect(c, redirectPath)
+	}
+
+	return s.respondWithRedirect(c, "/appointments/"+appointmentID+"/open?toast=Session saved&level=success")
 }
 
 // HandleComplete handles the request to mark an appointment as completed/done.

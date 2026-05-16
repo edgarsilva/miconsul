@@ -89,7 +89,7 @@ templ PatientsList(c *Ctx, patients []models.Patient) {
 								<span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
 							</span>
 							Michael Foster
-							<span class="badge badge-success badge-sm mr-2">{ c.l("str.appointment_today") }</span>
+							@CmpBadgeStatus(models.AppointmentInProgress, c)
 						</a>
 					</p>
 					<p class="flex text-xs text-base-content/60">

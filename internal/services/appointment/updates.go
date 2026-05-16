@@ -27,9 +27,21 @@ type appointmentCompleteUpdates struct {
 	Notes        string
 }
 
+type appointmentSessionUpdates struct {
+	Observations string
+	Conclusions  string
+	Summary      string
+	Notes        string
+}
+
 type appointmentCancelUpdates struct {
 	Status     models.AppointmentStatus
 	CanceledAt time.Time
+}
+
+type appointmentPauseUpdates struct {
+	Status    models.AppointmentStatus
+	PendingAt time.Time
 }
 
 type appointmentTokenUpdates struct {

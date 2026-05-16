@@ -299,7 +299,7 @@ templ AppointmentLi(vc *Ctx, appointment models.Appointment) {
 
 templ AppointmentActions(appointment models.Appointment, vc *Ctx) {
 	<div class="hidden md:flex gap-1">
-		<a href={ templ.URL("/appointments/" + appointment.UID + "/start") } class="btn btn-sm">
+		<a href={ templ.URL("/appointments/" + appointment.UID + "/open") } class="btn btn-sm">
 			@IconBookOpen("size-4")
 			{ l(vc.Locale, "btn.open") }
 		</a>

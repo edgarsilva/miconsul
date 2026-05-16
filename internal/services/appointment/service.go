@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"miconsul/internal/lib/libtime"
 	"miconsul/internal/models"
 	"miconsul/internal/server"
 
@@ -151,6 +150,49 @@ func (s *service) CompleteAppointmentByID(ctx context.Context, userID uint, appo
 	}
 
 	_ = s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionCompleted)
+	return nil
+}
+
+func (s *service) SaveAppointmentSessionByID(ctx context.Context, userID uint, appointmentID string, updates appointmentSessionUpdates) error {
+	if strings.TrimSpace(appointmentID) == "" {
+		return ErrIDRequired
+	}
+
+	columns := []string{"Observations", "Conclusions", "Summary", "Notes"}
+
+	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, columns, &updates); err != nil {
+		return err
+	}
+
+	_ = s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionUpdated)
+	return nil
+}
+
+func (s *service) StartAppointmentSessionByID(ctx context.Context, userID uint, appointmentID string) error {
+	if strings.TrimSpace(appointmentID) == "" {
+		return ErrIDRequired
+	}
+
+	updates := appointmentCompleteUpdates{Status: models.AppointmentInProgress}
+	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, []string{"Status"}, &updates); err != nil {
+		return err
+	}
+
+	_ = s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionUpdated)
+	return nil
+}
+
+func (s *service) PauseAppointmentSessionByID(ctx context.Context, userID uint, appointmentID string) error {
+	if strings.TrimSpace(appointmentID) == "" {
+		return ErrIDRequired
+	}
+
+	updates := appointmentPauseUpdates{Status: models.AppointmentPending, PendingAt: time.Now()}
+	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, []string{"Status", "PendingAt"}, &updates); err != nil {
+		return err
+	}
+
+	_ = s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionUpdated)
 	return nil
 }
 
@@ -400,7 +442,7 @@ func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, patientID
 	case "month":
 		dbquery = dbquery.Scopes(models.AppointmentBookedThisMonth)
 	default:
-		dbquery = dbquery.Where("booked_at > ?", libtime.BoD(time.Now()))
+		dbquery = dbquery.Scopes(models.AppointmentBookedToday)
 	}
 
 	statusFilter = strings.TrimSpace(statusFilter)
