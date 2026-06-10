@@ -1,3 +1,5 @@
+// Package routes provides the config for the available routes/endpoint for each service
+// e.g. /api/users, /admin/users, etc.
 package routes
 
 import (
@@ -14,8 +16,6 @@ import (
 	"miconsul/internal/services/patient"
 	"miconsul/internal/services/theme"
 	"miconsul/internal/services/user"
-
-	"github.com/gofiber/fiber/v3"
 )
 
 type routeBootstrap struct {
@@ -47,7 +47,7 @@ func RegisterServices(s *server.Server) error {
 
 	for _, rb := range bootstraps {
 		if err := rb.fn(s, authSvc); err != nil {
-			return fmt.Errorf("bootstrap %s routes: %w", rb.name, err)
+			return fmt.Errorf("failed to bootstrap %s routes: %w", rb.name, err)
 		}
 	}
 
@@ -254,15 +254,8 @@ func AdminRoutes(s *server.Server, authSvc auth.Runtime) error {
 
 	if s.AppEnv().JobsUIEnabled {
 		jobsHandler := jobs.NewMonitorHandler("/admin/jobs", s.AppEnv())
-		a.All("/admin/jobs/*", mw.MustBeAdmin(authSvc), jobsUICSPMiddleware(), jobsHandler)
+		a.All("/admin/jobs/*", mw.MustBeAdmin(authSvc), mw.JobsUICSPMiddleware(), jobsHandler)
 	}
 
 	return nil
-}
-
-func jobsUICSPMiddleware() fiber.Handler {
-	return func(c fiber.Ctx) error {
-		c.Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'")
-		return c.Next()
-	}
 }
