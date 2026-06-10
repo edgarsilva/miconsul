@@ -45,3 +45,6 @@ public/**/*.fiber.*
 
 # Generated local coverage artifacts
 coverage/
+
+# tokei
+.tokeignore

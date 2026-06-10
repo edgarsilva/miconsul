@@ -5,7 +5,7 @@ import (
 )
 
 // LocaleLang defines a universal middleware to stract Locale lang en-US, es-MX, etc
-func LocaleLang() func(c fiber.Ctx) error {
+func LocaleLang() fiber.Handler {
 	return func(c fiber.Ctx) error {
 		lang := ""
 
