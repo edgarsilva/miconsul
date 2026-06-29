@@ -8,7 +8,7 @@ import (
 	"miconsul/internal/jobs"
 )
 
-func TestEnqueueTask(t *testing.T) {
+func TestEnqueueJob(t *testing.T) {
 	s := &Server{}
 
 	_, err := s.EnqueueJob(context.Background(), "appointment:booked_alert", map[string]any{"appointment_id": "a1"})

@@ -14,8 +14,8 @@ func TestNewTask(t *testing.T) {
 		if err == nil {
 			t.Fatal("newTask() expected error")
 		}
-		if !errors.Is(err, ErrTaskTypeRequired) {
-			t.Fatalf("newTask() error = %v, want %v", err, ErrTaskTypeRequired)
+		if !errors.Is(err, ErrJobTypeRequired) {
+			t.Fatalf("newTask() error = %v, want %v", err, ErrJobTypeRequired)
 		}
 		if task != nil {
 			t.Fatal("newTask() expected nil task")
@@ -36,7 +36,7 @@ func TestNewTask(t *testing.T) {
 func TestRuntimeEnqueueGuards(t *testing.T) {
 	t.Run("returns unavailable when runtime is nil", func(t *testing.T) {
 		var runtime *Runtime
-		_, err := runtime.EnqueueTask(context.Background(), "appointment:booked_alert", map[string]any{"appointment_id": "a1"})
+		_, err := runtime.EnqueueJob(context.Background(), "appointment:booked_alert", map[string]any{"appointment_id": "a1"})
 		if !errors.Is(err, ErrRuntimeUnavailable) {
 			t.Fatalf("enqueue error = %v, want %v", err, ErrRuntimeUnavailable)
 		}
@@ -44,19 +44,19 @@ func TestRuntimeEnqueueGuards(t *testing.T) {
 
 	t.Run("returns disabled when runtime is disabled", func(t *testing.T) {
 		runtime := &Runtime{}
-		_, err := runtime.EnqueueTask(context.Background(), "appointment:booked_alert", map[string]any{"appointment_id": "a1"})
+		_, err := runtime.EnqueueJob(context.Background(), "appointment:booked_alert", map[string]any{"appointment_id": "a1"})
 		if !errors.Is(err, ErrRuntimeDisabled) {
 			t.Fatalf("enqueue error = %v, want %v", err, ErrRuntimeDisabled)
 		}
 	})
 
-	t.Run("returns task type required", func(t *testing.T) {
+	t.Run("returns job type required", func(t *testing.T) {
 		runtime := &Runtime{enabled: true, client: asynq.NewClient(asynq.RedisClientOpt{Addr: "127.0.0.1:6379"})}
 		t.Cleanup(func() { _ = runtime.client.Close() })
 
-		_, err := runtime.EnqueueTask(context.Background(), "", map[string]any{"id": "a1"})
-		if !errors.Is(err, ErrTaskTypeRequired) {
-			t.Fatalf("enqueue error = %v, want %v", err, ErrTaskTypeRequired)
+		_, err := runtime.EnqueueJob(context.Background(), "", map[string]any{"id": "a1"})
+		if !errors.Is(err, ErrJobTypeRequired) {
+			t.Fatalf("enqueue error = %v, want %v", err, ErrJobTypeRequired)
 		}
 	})
 }

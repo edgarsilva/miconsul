@@ -22,7 +22,7 @@ const (
 	ReminderSweepCronspec = "@every 1m"
 )
 
-type ReminderPayload struct {
+type JobPayload struct {
 	AppointmentID string `json:"appointment_id"`
 }
 
@@ -130,7 +130,7 @@ func (s *service) handleReminderSweepJob(ctx context.Context, _ jobs.Job) error 
 		if _, ok := notifiedSet[alertableID]; ok {
 			continue
 		}
-		if _, err := s.EnqueueJob(ctx, ReminderJob, ReminderPayload{AppointmentID: appointment.UID}); err != nil {
+		if _, err := s.EnqueueJob(ctx, ReminderJob, JobPayload{AppointmentID: appointment.UID}); err != nil {
 			log.Printf("appointment jobs: enqueue reminder failed for %s: %v", appointment.UID, err)
 		}
 	}
@@ -139,7 +139,7 @@ func (s *service) handleReminderSweepJob(ctx context.Context, _ jobs.Job) error 
 }
 
 func (s *service) handleReminderJob(ctx context.Context, job jobs.Job) error {
-	payload := ReminderPayload{}
+	payload := JobPayload{}
 	if err := json.Unmarshal(job.Payload, &payload); err != nil {
 		return fmt.Errorf("decode reminder payload: %w", err)
 	}
@@ -172,7 +172,7 @@ func (s *service) handleReminderJob(ctx context.Context, job jobs.Job) error {
 }
 
 func (s *service) handleBookedAlertJob(ctx context.Context, job jobs.Job) error {
-	payload := ReminderPayload{}
+	payload := JobPayload{}
 	if err := json.Unmarshal(job.Payload, &payload); err != nil {
 		return fmt.Errorf("decode booked alert payload: %w", err)
 	}

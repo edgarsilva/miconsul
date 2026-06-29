@@ -33,7 +33,7 @@ func TestSendReminderAlertExecutesWorkerPath(t *testing.T) {
 	}
 }
 
-func TestHandleBookedAlertTaskSkipsWhenAlreadySent(t *testing.T) {
+func TestHandleBookedAlertJobSkipsWhenAlreadySent(t *testing.T) {
 	svc, user, clinic, patient := newAppointmentServiceForTests(t)
 
 	apnt := models.Appointment{
@@ -58,7 +58,7 @@ func TestHandleBookedAlertTaskSkipsWhenAlreadySent(t *testing.T) {
 		t.Fatalf("append booked notification: %v", err)
 	}
 
-	payload, err := json.Marshal(ReminderPayload{AppointmentID: apnt.UID})
+	payload, err := json.Marshal(JobPayload{AppointmentID: apnt.UID})
 	if err != nil {
 		t.Fatalf("marshal payload: %v", err)
 	}

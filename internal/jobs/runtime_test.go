@@ -42,49 +42,49 @@ func TestNew(t *testing.T) {
 	})
 }
 
-func TestRegisterTaskHandlerGuards(t *testing.T) {
+func TestRegisterJobHandlerGuards(t *testing.T) {
 	t.Run("returns unavailable when runtime disabled", func(t *testing.T) {
 		runtime := &Runtime{}
-		err := runtime.RegisterTaskHandler("appointment:booked_alert", func(context.Context, Job) error { return nil })
+		err := runtime.RegisterJobHandler("appointment:booked_alert", func(context.Context, Job) error { return nil })
 		if !errors.Is(err, ErrRuntimeUnavailable) {
-			t.Fatalf("register task handler error = %v, want %v", err, ErrRuntimeUnavailable)
+			t.Fatalf("register job handler error = %v, want %v", err, ErrRuntimeUnavailable)
 		}
 	})
 
-	t.Run("returns task type required when missing", func(t *testing.T) {
+	t.Run("returns job type required when missing", func(t *testing.T) {
 		runtime := &Runtime{enabled: true, mux: asynq.NewServeMux()}
-		err := runtime.RegisterTaskHandler("", func(context.Context, Job) error { return nil })
-		if !errors.Is(err, ErrTaskTypeRequired) {
-			t.Fatalf("register task handler error = %v, want %v", err, ErrTaskTypeRequired)
+		err := runtime.RegisterJobHandler("", func(context.Context, Job) error { return nil })
+		if !errors.Is(err, ErrJobTypeRequired) {
+			t.Fatalf("register job handler error = %v, want %v", err, ErrJobTypeRequired)
 		}
 	})
 
 	t.Run("returns handler required when nil", func(t *testing.T) {
 		runtime := &Runtime{enabled: true, mux: asynq.NewServeMux()}
-		err := runtime.RegisterTaskHandler("appointment:booked_alert", nil)
+		err := runtime.RegisterJobHandler("appointment:booked_alert", nil)
 		if !errors.Is(err, ErrHandlerRequired) {
-			t.Fatalf("register task handler error = %v, want %v", err, ErrHandlerRequired)
+			t.Fatalf("register job handler error = %v, want %v", err, ErrHandlerRequired)
 		}
 	})
 
-	t.Run("skips duplicate task handler registrations", func(t *testing.T) {
+	t.Run("skips duplicate job handler registrations", func(t *testing.T) {
 		runtime := &Runtime{enabled: true, mux: asynq.NewServeMux(), registeredHandlers: map[JobType]struct{}{}}
 		handler := Handler(func(context.Context, Job) error { return nil })
-		if err := runtime.RegisterTaskHandler("appointment:booked_alert", handler); err != nil {
-			t.Fatalf("first register task handler error: %v", err)
+		if err := runtime.RegisterJobHandler("appointment:booked_alert", handler); err != nil {
+			t.Fatalf("first register job handler error: %v", err)
 		}
-		if err := runtime.RegisterTaskHandler("appointment:booked_alert", handler); err != nil {
-			t.Fatalf("duplicate register task handler error: %v", err)
+		if err := runtime.RegisterJobHandler("appointment:booked_alert", handler); err != nil {
+			t.Fatalf("duplicate register job handler error: %v", err)
 		}
 	})
 }
 
-func TestRegisterScheduledTaskGuards(t *testing.T) {
+func TestRegisterScheduledJobGuards(t *testing.T) {
 	t.Run("returns unavailable when runtime disabled", func(t *testing.T) {
 		runtime := &Runtime{}
-		_, err := runtime.RegisterScheduledTask("@every 1m", "appointment:reminder_sweep", map[string]any{})
+		_, err := runtime.RegisterScheduledJob("@every 1m", "appointment:reminder_sweep", map[string]any{})
 		if !errors.Is(err, ErrRuntimeUnavailable) {
-			t.Fatalf("register scheduled task error = %v, want %v", err, ErrRuntimeUnavailable)
+			t.Fatalf("register scheduled job error = %v, want %v", err, ErrRuntimeUnavailable)
 		}
 	})
 
@@ -92,23 +92,23 @@ func TestRegisterScheduledTaskGuards(t *testing.T) {
 		runtime := &Runtime{enabled: true, scheduler: asynq.NewScheduler(asynq.RedisClientOpt{Addr: "127.0.0.1:6379"}, &asynq.SchedulerOpts{})}
 		t.Cleanup(runtime.scheduler.Shutdown)
 
-		_, err := runtime.RegisterScheduledTask("", "appointment:reminder_sweep", map[string]any{})
+		_, err := runtime.RegisterScheduledJob("", "appointment:reminder_sweep", map[string]any{})
 		if !errors.Is(err, ErrScheduleSpecMissing) {
-			t.Fatalf("register scheduled task error = %v, want %v", err, ErrScheduleSpecMissing)
+			t.Fatalf("register scheduled job error = %v, want %v", err, ErrScheduleSpecMissing)
 		}
 	})
 
 	t.Run("skips duplicate schedule registrations", func(t *testing.T) {
-		registrationKey := scheduledTaskRegistrationKey("@every 1m", "appointment:reminder_sweep")
+		key := scheduleKey{cronspec: "@every 1m", jobType: "appointment:reminder_sweep"}
 		runtime := &Runtime{
 			enabled:             true,
 			scheduler:           &asynq.Scheduler{},
-			registeredSchedules: map[string]string{registrationKey: "entry-1"},
+			registeredSchedules: map[scheduleKey]string{key: "entry-1"},
 		}
 
-		entryID, err := runtime.RegisterScheduledTask("@every 1m", "appointment:reminder_sweep", map[string]any{})
+		entryID, err := runtime.RegisterScheduledJob("@every 1m", "appointment:reminder_sweep", map[string]any{})
 		if err != nil {
-			t.Fatalf("duplicate register scheduled task error: %v", err)
+			t.Fatalf("duplicate register scheduled job error: %v", err)
 		}
 		if entryID != "entry-1" {
 			t.Fatalf("entryID = %q, want %q", entryID, "entry-1")
@@ -116,7 +116,7 @@ func TestRegisterScheduledTaskGuards(t *testing.T) {
 	})
 }
 
-func TestRuntimeKeepsScheduledTasksAcrossRestart(t *testing.T) {
+func TestRuntimeKeepsScheduledJobsAcrossRestart(t *testing.T) {
 	mr, err := miniredis.Run()
 	if err != nil {
 		t.Fatalf("start miniredis: %v", err)
@@ -145,14 +145,14 @@ func TestRuntimeKeepsScheduledTasksAcrossRestart(t *testing.T) {
 	}
 
 	const taskType = "appointment:restart_probe"
-	_, err = runtime1.EnqueueTask(
+	_, err = runtime1.EnqueueJob(
 		context.Background(),
 		taskType,
 		map[string]any{"appointment_id": "apnt_restart_probe"},
 		asynq.ProcessIn(10*time.Minute),
 	)
 	if err != nil {
-		t.Fatalf("enqueue scheduled task: %v", err)
+		t.Fatalf("enqueue job: %v", err)
 	}
 
 	inspector := asynq.NewInspector(asynq.RedisClientOpt{Addr: mr.Addr()})
