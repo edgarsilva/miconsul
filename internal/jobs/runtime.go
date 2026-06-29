@@ -22,13 +22,24 @@ type Runtime struct {
 	mux       *asynq.ServeMux
 
 	registrationMu      sync.Mutex
-	registeredHandlers  map[string]struct{}
-	registeredSchedules map[string]string
+	registeredHandlers  map[JobType]struct{}
+	registeredSchedules map[scheduleKey]string
+}
+
+// scheduleKey dedups scheduled-job registrations by their (cronspec, jobType)
+// pair. Using a struct key avoids any string-delimiter collisions.
+type scheduleKey struct {
+	cronspec string
+	jobType  JobType
+}
+
+func (k scheduleKey) String() string {
+	return k.cronspec + ":" + k.jobType.String()
 }
 
 var (
 	ErrHandlerRequired     = errors.New("handler is required")
-	ErrScheduleSpecMissing = errors.New("schedule spec is required")
+	ErrScheduleSpecMissing = errors.New("schedule cronspec is required")
 )
 
 func New(env *appenv.Env) (*Runtime, error) {
@@ -42,7 +53,7 @@ func New(env *appenv.Env) (*Runtime, error) {
 
 	valkeyConfig, err := valkey.NewConfig(env)
 	if err != nil {
-		return nil, fmt.Errorf("jobs runtime valkey config: %w", err)
+		return nil, fmt.Errorf("failed to build jobs runtime config: %w", err)
 	}
 
 	redisOpt := asynq.RedisClientOpt{
@@ -60,8 +71,8 @@ func New(env *appenv.Env) (*Runtime, error) {
 		}),
 		scheduler:           asynq.NewScheduler(redisOpt, &asynq.SchedulerOpts{}),
 		mux:                 asynq.NewServeMux(),
-		registeredHandlers:  map[string]struct{}{},
-		registeredSchedules: map[string]string{},
+		registeredHandlers:  map[JobType]struct{}{},
+		registeredSchedules: map[scheduleKey]string{},
 	}
 
 	if err := runtime.server.Start(runtime.mux); err != nil {
@@ -77,14 +88,14 @@ func New(env *appenv.Env) (*Runtime, error) {
 	return runtime, nil
 }
 
-func (r *Runtime) RegisterTaskHandler(taskType string, handler HandlerFunc) error {
+func (r *Runtime) RegisterJobHandler(jobType JobType, handler Handler) error {
 	if r == nil || !r.enabled || r.mux == nil {
 		return ErrRuntimeUnavailable
 	}
 
-	taskType = strings.TrimSpace(taskType)
-	if taskType == "" {
-		return ErrTaskTypeRequired
+	jobType = JobType(strings.TrimSpace(jobType.String()))
+	if jobType == "" {
+		return ErrJobTypeRequired
 	}
 	if handler == nil {
 		return ErrHandlerRequired
@@ -94,57 +105,53 @@ func (r *Runtime) RegisterTaskHandler(taskType string, handler HandlerFunc) erro
 	defer r.registrationMu.Unlock()
 
 	if r.registeredHandlers == nil {
-		r.registeredHandlers = map[string]struct{}{}
+		r.registeredHandlers = map[JobType]struct{}{}
 	}
-	if _, exists := r.registeredHandlers[taskType]; exists {
-		log.Printf("jobs runtime: duplicate task handler registration skipped for %q", taskType)
+	if _, exists := r.registeredHandlers[jobType]; exists {
+		log.Printf("failed to register job handler: duplicate registration skipped for %q", jobType)
 		return nil
 	}
 
-	r.mux.Handle(taskType, asynqHandlerAdapter{fn: handler})
-	r.registeredHandlers[taskType] = struct{}{}
+	r.mux.Handle(jobType.String(), newJobHandler(handler))
+	r.registeredHandlers[jobType] = struct{}{}
 	return nil
 }
 
-func (r *Runtime) RegisterScheduledTask(spec, taskType string, payload any, opts ...Option) (string, error) {
+func (r *Runtime) RegisterScheduledJob(cronspec string, jobType JobType, payload any, opts ...Option) (string, error) {
 	if r == nil || !r.enabled || r.scheduler == nil {
 		return "", ErrRuntimeUnavailable
 	}
 
-	spec = strings.TrimSpace(spec)
-	if spec == "" {
+	cronspec = strings.TrimSpace(cronspec)
+	if cronspec == "" {
 		return "", ErrScheduleSpecMissing
 	}
 
-	registrationKey := scheduledTaskRegistrationKey(spec, taskType)
+	key := scheduleKey{cronspec: cronspec, jobType: jobType}
 
 	r.registrationMu.Lock()
 	defer r.registrationMu.Unlock()
 
 	if r.registeredSchedules == nil {
-		r.registeredSchedules = map[string]string{}
+		r.registeredSchedules = map[scheduleKey]string{}
 	}
-	if entryID, exists := r.registeredSchedules[registrationKey]; exists {
-		log.Printf("jobs runtime: duplicate scheduled task registration skipped for %q", registrationKey)
+	if entryID, exists := r.registeredSchedules[key]; exists {
+		log.Printf("failed to register scheduled job: duplicate registration skipped for %q", key)
 		return entryID, nil
 	}
 
-	task, err := newTask(taskType, payload, opts...)
+	task, err := newTask(jobType, payload, opts...)
 	if err != nil {
 		return "", err
 	}
 
-	entryID, err := r.scheduler.Register(spec, task)
+	entryID, err := r.scheduler.Register(cronspec, task)
 	if err != nil {
-		return "", fmt.Errorf("register scheduled task %s: %w", taskType, err)
+		return "", fmt.Errorf("failed to register scheduled job %s: %w", jobType, err)
 	}
-	r.registeredSchedules[registrationKey] = entryID
+	r.registeredSchedules[key] = entryID
 
 	return entryID, nil
-}
-
-func scheduledTaskRegistrationKey(spec, taskType string) string {
-	return strings.TrimSpace(spec) + "::" + strings.TrimSpace(taskType)
 }
 
 func (r *Runtime) Enabled() bool {

@@ -15,17 +15,17 @@ func (s *Server) JobsRuntime() *jobs.Runtime {
 	return s.jobs
 }
 
-// EnqueueTask enqueues a background task through the jobs runtime.
-func (s *Server) EnqueueTask(ctx context.Context, taskType string, payload any) (jobs.EnqueueInfo, error) {
-	return s.JobsRuntime().EnqueueTask(ctx, taskType, payload)
+// EnqueueJob enqueues a background job through the jobs runtime.
+func (s *Server) EnqueueJob(ctx context.Context, jobType jobs.JobType, payload any) (jobs.JobInfo, error) {
+	return s.JobsRuntime().EnqueueJob(ctx, jobType, payload)
 }
 
-// RegisterTaskHandler registers a task handler in the jobs runtime.
-func (s *Server) RegisterTaskHandler(taskType string, handler jobs.HandlerFunc) error {
-	return s.JobsRuntime().RegisterTaskHandler(taskType, handler)
+// RegisterJobHandler registers a job handler in the jobs runtime.
+func (s *Server) RegisterJobHandler(jobType jobs.JobType, handler jobs.Handler) error {
+	return s.JobsRuntime().RegisterJobHandler(jobType, handler)
 }
 
-// RegisterScheduledTask registers a recurring task in the jobs runtime scheduler.
-func (s *Server) RegisterScheduledTask(spec, taskType string, payload any, opts ...jobs.Option) (string, error) {
-	return s.JobsRuntime().RegisterScheduledTask(spec, taskType, payload, opts...)
+// RegisterScheduledJob registers a recurring job in the jobs runtime scheduler.
+func (s *Server) RegisterScheduledJob(cronspec string, jobType jobs.JobType, payload any, opts ...jobs.Option) (string, error) {
+	return s.JobsRuntime().RegisterScheduledJob(cronspec, jobType, payload, opts...)
 }

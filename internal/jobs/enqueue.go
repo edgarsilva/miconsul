@@ -1,3 +1,4 @@
+// Package jobs provides the jobs runtime that wraps asynq library.
 package jobs
 
 import (
@@ -14,17 +15,40 @@ import (
 var (
 	ErrRuntimeUnavailable = errors.New("jobs runtime is unavailable")
 	ErrRuntimeDisabled    = errors.New("jobs runtime is disabled")
-	ErrTaskTypeRequired   = errors.New("task type is required")
+	ErrJobTypeRequired    = errors.New("job type is required")
 )
 
 type Option = asynq.Option
 
-type EnqueueInfo struct {
-	*asynq.TaskInfo
+// JobInfo describes an enqueued job. It projects the asynq task metadata into
+// our own fields so callers never depend on asynq types.
+type JobInfo struct {
+	ID    string
+	Type  JobType
+	Queue string
+	State string
 }
 
-type Task struct {
-	Type       string
+func newJobInfo(info *asynq.TaskInfo) JobInfo {
+	if info == nil {
+		return JobInfo{}
+	}
+	return JobInfo{
+		ID:    info.ID,
+		Type:  JobType(info.Type),
+		Queue: info.Queue,
+		State: info.State.String(),
+	}
+}
+
+// JobType identifies a kind of job (the asynq task type). It is the routing
+// key that maps an enqueued job to its registered handler.
+type JobType string
+
+func (t JobType) String() string { return string(t) }
+
+type Job struct {
+	Type       JobType
 	Payload    []byte
 	ID         string
 	Queue      string
@@ -32,65 +56,39 @@ type Task struct {
 	MaxRetry   int
 }
 
-type HandlerFunc func(ctx context.Context, task Task) error
-
-type asynqHandlerAdapter struct {
-	fn HandlerFunc
-}
-
-func (a asynqHandlerAdapter) ProcessTask(ctx context.Context, task *asynq.Task) error {
-	t := Task{
-		Type:    task.Type(),
-		Payload: task.Payload(),
-	}
-	if id, ok := asynq.GetTaskID(ctx); ok {
-		t.ID = id
-	}
-	if queue, ok := asynq.GetQueueName(ctx); ok {
-		t.Queue = queue
-	}
-	if retryCount, ok := asynq.GetRetryCount(ctx); ok {
-		t.RetryCount = retryCount
-	}
-	if maxRetry, ok := asynq.GetMaxRetry(ctx); ok {
-		t.MaxRetry = maxRetry
-	}
-
-	return a.fn(ctx, t)
-}
-
-func (r *Runtime) EnqueueTask(ctx context.Context, taskType string, payload any, opts ...Option) (EnqueueInfo, error) {
+func (r *Runtime) EnqueueJob(ctx context.Context, jobType JobType, payload any, opts ...Option) (JobInfo, error) {
 	if r == nil {
-		return EnqueueInfo{}, ErrRuntimeUnavailable
+		return JobInfo{}, ErrRuntimeUnavailable
 	}
 	if !r.enabled {
-		return EnqueueInfo{}, ErrRuntimeDisabled
+		return JobInfo{}, ErrRuntimeDisabled
 	}
 	if r.client == nil {
-		return EnqueueInfo{}, ErrRuntimeUnavailable
+		return JobInfo{}, ErrRuntimeUnavailable
 	}
 
-	taskType = strings.TrimSpace(taskType)
-	if taskType == "" {
-		return EnqueueInfo{}, ErrTaskTypeRequired
+	jobType = JobType(strings.TrimSpace(jobType.String()))
+	if jobType == "" {
+		return JobInfo{}, ErrJobTypeRequired
 	}
 
-	task, err := newTask(taskType, payload, opts...)
+	task, err := newTask(jobType, payload, opts...)
 	if err != nil {
-		return EnqueueInfo{}, err
+		return JobInfo{}, err
 	}
 
 	info, err := r.client.EnqueueContext(ctx, task)
 	if err != nil {
-		return EnqueueInfo{}, fmt.Errorf("enqueue %s: %w", taskType, err)
+		return JobInfo{}, fmt.Errorf("enqueue %s: %w", jobType, err)
 	}
 
-	return EnqueueInfo{TaskInfo: info}, nil
+	return newJobInfo(info), nil
 }
 
-func newTask(taskType string, payload any, opts ...Option) (*asynq.Task, error) {
-	if strings.TrimSpace(taskType) == "" {
-		return nil, ErrTaskTypeRequired
+func newTask(jobType JobType, payload any, opts ...Option) (*asynq.Task, error) {
+	taskType := strings.TrimSpace(jobType.String())
+	if taskType == "" {
+		return nil, ErrJobTypeRequired
 	}
 
 	payloadJSON, err := json.Marshal(payload)

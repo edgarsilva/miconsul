@@ -19,8 +19,8 @@ import (
 
 func (s *service) DispatchBookedAlert(appointment models.Appointment) error {
 	if s.Env.JobsEnabled {
-		payload := TaskAppointmentPayload{AppointmentID: appointment.UID}
-		_, err := s.EnqueueTask(context.Background(), TaskBookedAlert, payload)
+		payload := JobPayload{AppointmentID: appointment.UID}
+		_, err := s.EnqueueJob(context.Background(), BookedAlertJob, payload)
 		return err
 	}
 
