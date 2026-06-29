@@ -58,12 +58,12 @@ func TestHandleBookedAlertTaskSkipsWhenAlreadySent(t *testing.T) {
 		t.Fatalf("append booked notification: %v", err)
 	}
 
-	payload, err := json.Marshal(TaskAppointmentPayload{AppointmentID: apnt.UID})
+	payload, err := json.Marshal(ReminderPayload{AppointmentID: apnt.UID})
 	if err != nil {
 		t.Fatalf("marshal payload: %v", err)
 	}
 
-	if err := svc.handleBookedAlertTask(context.Background(), jobs.Task{Payload: payload}); err != nil {
+	if err := svc.handleBookedAlertJob(context.Background(), jobs.Task{Payload: payload}); err != nil {
 		t.Fatalf("expected idempotent skip, got %v", err)
 	}
 }

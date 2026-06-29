@@ -1,3 +1,4 @@
+// Package jobs provides the jobs runtime that wraps asynq library.
 package jobs
 
 import (
@@ -32,10 +33,14 @@ type Task struct {
 	MaxRetry   int
 }
 
-type HandlerFunc func(ctx context.Context, task Task) error
+type JobHandler func(ctx context.Context, task Task) error
 
 type asynqHandlerAdapter struct {
-	fn HandlerFunc
+	fn JobHandler
+}
+
+func newJobHandler(handler JobHandler) asynqHandlerAdapter {
+	return asynqHandlerAdapter{fn: handler}
 }
 
 func (a asynqHandlerAdapter) ProcessTask(ctx context.Context, task *asynq.Task) error {

@@ -28,7 +28,7 @@ type Runtime struct {
 
 var (
 	ErrHandlerRequired     = errors.New("handler is required")
-	ErrScheduleSpecMissing = errors.New("schedule spec is required")
+	ErrScheduleSpecMissing = errors.New("schedule cronspec is required")
 )
 
 func New(env *appenv.Env) (*Runtime, error) {
@@ -77,7 +77,7 @@ func New(env *appenv.Env) (*Runtime, error) {
 	return runtime, nil
 }
 
-func (r *Runtime) RegisterTaskHandler(taskType string, handler HandlerFunc) error {
+func (r *Runtime) RegisterTaskHandler(taskType string, handler JobHandler) error {
 	if r == nil || !r.enabled || r.mux == nil {
 		return ErrRuntimeUnavailable
 	}
@@ -101,22 +101,22 @@ func (r *Runtime) RegisterTaskHandler(taskType string, handler HandlerFunc) erro
 		return nil
 	}
 
-	r.mux.Handle(taskType, asynqHandlerAdapter{fn: handler})
+	r.mux.Handle(taskType, newJobHandler(handler))
 	r.registeredHandlers[taskType] = struct{}{}
 	return nil
 }
 
-func (r *Runtime) RegisterScheduledTask(spec, taskType string, payload any, opts ...Option) (string, error) {
+func (r *Runtime) RegisterScheduledTask(cronspec, taskType string, payload any, opts ...Option) (string, error) {
 	if r == nil || !r.enabled || r.scheduler == nil {
 		return "", ErrRuntimeUnavailable
 	}
 
-	spec = strings.TrimSpace(spec)
-	if spec == "" {
+	cronspec = strings.TrimSpace(cronspec)
+	if cronspec == "" {
 		return "", ErrScheduleSpecMissing
 	}
 
-	registrationKey := scheduledTaskRegistrationKey(spec, taskType)
+	registrationKey := scheduledTaskRegistrationKey(cronspec, taskType)
 
 	r.registrationMu.Lock()
 	defer r.registrationMu.Unlock()
@@ -134,7 +134,7 @@ func (r *Runtime) RegisterScheduledTask(spec, taskType string, payload any, opts
 		return "", err
 	}
 
-	entryID, err := r.scheduler.Register(spec, task)
+	entryID, err := r.scheduler.Register(cronspec, task)
 	if err != nil {
 		return "", fmt.Errorf("register scheduled task %s: %w", taskType, err)
 	}
@@ -143,8 +143,8 @@ func (r *Runtime) RegisterScheduledTask(spec, taskType string, payload any, opts
 	return entryID, nil
 }
 
-func scheduledTaskRegistrationKey(spec, taskType string) string {
-	return strings.TrimSpace(spec) + "::" + strings.TrimSpace(taskType)
+func scheduledTaskRegistrationKey(cronspec, taskType string) string {
+	return strings.TrimSpace(cronspec) + ":" + strings.TrimSpace(taskType)
 }
 
 func (r *Runtime) Enabled() bool {

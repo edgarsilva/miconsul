@@ -69,7 +69,7 @@ func TestRegisterTaskHandlerGuards(t *testing.T) {
 
 	t.Run("skips duplicate task handler registrations", func(t *testing.T) {
 		runtime := &Runtime{enabled: true, mux: asynq.NewServeMux(), registeredHandlers: map[string]struct{}{}}
-		handler := HandlerFunc(func(context.Context, Task) error { return nil })
+		handler := JobHandler(func(context.Context, Task) error { return nil })
 		if err := runtime.RegisterTaskHandler("appointment:booked_alert", handler); err != nil {
 			t.Fatalf("first register task handler error: %v", err)
 		}
