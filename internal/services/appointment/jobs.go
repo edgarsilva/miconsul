@@ -15,11 +15,11 @@ import (
 )
 
 const (
-	JobApptBookedAlert   = "appointment:booked_alert"
-	JobApptReminder      = "appointment:reminder"
-	JobApptReminderSweep = "appointment:reminder_sweep"
+	BookedAlertJob   jobs.JobType = "appointment:booked_alert"
+	ReminderJob      jobs.JobType = "appointment:reminder"
+	ReminderSweepJob jobs.JobType = "appointment:reminder_sweep"
 
-	ApptReminderSweepCronspec = "@every 1m"
+	ReminderSweepCronspec = "@every 1m"
 )
 
 type ReminderPayload struct {
@@ -54,7 +54,7 @@ func (s *service) bootstrapJobs() error {
 		return err
 	}
 
-	if _, err := s.RegisterScheduledJob(ApptReminderSweepCronspec, JobApptReminderSweep, ReminderSweepPayload{}); err != nil {
+	if _, err := s.RegisterScheduledJob(ReminderSweepCronspec, ReminderSweepJob, ReminderSweepPayload{}); err != nil {
 		if errors.Is(err, jobs.ErrRuntimeUnavailable) {
 			return nil
 		}
@@ -65,18 +65,18 @@ func (s *service) bootstrapJobs() error {
 }
 
 func (s *service) registerReminderSweepHandler() error {
-	return s.RegisterJobHandler(JobApptReminderSweep, s.handleReminderSweepJob)
+	return s.RegisterJobHandler(ReminderSweepJob, s.handleReminderSweepJob)
 }
 
 func (s *service) registerBookedAlertHandler() error {
-	return s.RegisterJobHandler(JobApptBookedAlert, s.handleBookedAlertJob)
+	return s.RegisterJobHandler(BookedAlertJob, s.handleBookedAlertJob)
 }
 
 func (s *service) registerReminderHandler() error {
-	return s.RegisterJobHandler(JobApptReminder, s.handleReminderJob)
+	return s.RegisterJobHandler(ReminderJob, s.handleReminderJob)
 }
 
-func (s *service) handleReminderSweepJob(ctx context.Context, _ jobs.Task) error {
+func (s *service) handleReminderSweepJob(ctx context.Context, _ jobs.Job) error {
 	st := time.Now()
 	year, month, day := st.Date()
 	et := time.Date(year, month, day, st.Hour(), st.Minute(), 0, 0, st.Location()).Add(2 * time.Hour)
@@ -130,7 +130,7 @@ func (s *service) handleReminderSweepJob(ctx context.Context, _ jobs.Task) error
 		if _, ok := notifiedSet[alertableID]; ok {
 			continue
 		}
-		if _, err := s.EnqueueJob(ctx, JobApptReminder, ReminderPayload{AppointmentID: appointment.UID}); err != nil {
+		if _, err := s.EnqueueJob(ctx, ReminderJob, ReminderPayload{AppointmentID: appointment.UID}); err != nil {
 			log.Printf("appointment jobs: enqueue reminder failed for %s: %v", appointment.UID, err)
 		}
 	}
@@ -138,9 +138,9 @@ func (s *service) handleReminderSweepJob(ctx context.Context, _ jobs.Task) error
 	return nil
 }
 
-func (s *service) handleReminderJob(ctx context.Context, task jobs.Task) error {
+func (s *service) handleReminderJob(ctx context.Context, job jobs.Job) error {
 	payload := ReminderPayload{}
-	if err := json.Unmarshal(task.Payload, &payload); err != nil {
+	if err := json.Unmarshal(job.Payload, &payload); err != nil {
 		return fmt.Errorf("decode reminder payload: %w", err)
 	}
 	if payload.AppointmentID == "" {
@@ -171,9 +171,9 @@ func (s *service) handleReminderJob(ctx context.Context, task jobs.Task) error {
 	return nil
 }
 
-func (s *service) handleBookedAlertJob(ctx context.Context, task jobs.Task) error {
+func (s *service) handleBookedAlertJob(ctx context.Context, job jobs.Job) error {
 	payload := ReminderPayload{}
-	if err := json.Unmarshal(task.Payload, &payload); err != nil {
+	if err := json.Unmarshal(job.Payload, &payload); err != nil {
 		return fmt.Errorf("decode booked alert payload: %w", err)
 	}
 	if payload.AppointmentID == "" {

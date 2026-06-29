@@ -20,7 +20,7 @@ import (
 func (s *service) DispatchBookedAlert(appointment models.Appointment) error {
 	if s.Env.JobsEnabled {
 		payload := ReminderPayload{AppointmentID: appointment.UID}
-		_, err := s.EnqueueJob(context.Background(), JobApptBookedAlert, payload)
+		_, err := s.EnqueueJob(context.Background(), BookedAlertJob, payload)
 		return err
 	}
 

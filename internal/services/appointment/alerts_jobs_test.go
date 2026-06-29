@@ -63,7 +63,7 @@ func TestHandleBookedAlertTaskSkipsWhenAlreadySent(t *testing.T) {
 		t.Fatalf("marshal payload: %v", err)
 	}
 
-	if err := svc.handleBookedAlertJob(context.Background(), jobs.Task{Payload: payload}); err != nil {
+	if err := svc.handleBookedAlertJob(context.Background(), jobs.Job{Payload: payload}); err != nil {
 		t.Fatalf("expected idempotent skip, got %v", err)
 	}
 }

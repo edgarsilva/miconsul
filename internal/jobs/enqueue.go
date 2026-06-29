@@ -24,8 +24,14 @@ type EnqueueInfo struct {
 	*asynq.TaskInfo
 }
 
-type Task struct {
-	Type       string
+// JobType identifies a kind of job (the asynq task type). It is the routing
+// key that maps an enqueued job to its registered handler.
+type JobType string
+
+func (t JobType) String() string { return string(t) }
+
+type Job struct {
+	Type       JobType
 	Payload    []byte
 	ID         string
 	Queue      string
@@ -33,19 +39,19 @@ type Task struct {
 	MaxRetry   int
 }
 
-type JobHandler func(ctx context.Context, task Task) error
+type Handler func(ctx context.Context, job Job) error
 
 type asynqHandlerAdapter struct {
-	fn JobHandler
+	fn Handler
 }
 
-func newJobHandler(handler JobHandler) asynqHandlerAdapter {
+func newJobHandler(handler Handler) asynqHandlerAdapter {
 	return asynqHandlerAdapter{fn: handler}
 }
 
 func (a asynqHandlerAdapter) ProcessTask(ctx context.Context, task *asynq.Task) error {
-	t := Task{
-		Type:    task.Type(),
+	t := Job{
+		Type:    JobType(task.Type()),
 		Payload: task.Payload(),
 	}
 	if id, ok := asynq.GetTaskID(ctx); ok {
@@ -64,7 +70,7 @@ func (a asynqHandlerAdapter) ProcessTask(ctx context.Context, task *asynq.Task) 
 	return a.fn(ctx, t)
 }
 
-func (r *Runtime) EnqueueTask(ctx context.Context, taskType string, payload any, opts ...Option) (EnqueueInfo, error) {
+func (r *Runtime) EnqueueTask(ctx context.Context, jobType JobType, payload any, opts ...Option) (EnqueueInfo, error) {
 	if r == nil {
 		return EnqueueInfo{}, ErrRuntimeUnavailable
 	}
@@ -75,26 +81,27 @@ func (r *Runtime) EnqueueTask(ctx context.Context, taskType string, payload any,
 		return EnqueueInfo{}, ErrRuntimeUnavailable
 	}
 
-	taskType = strings.TrimSpace(taskType)
-	if taskType == "" {
+	jobType = JobType(strings.TrimSpace(jobType.String()))
+	if jobType == "" {
 		return EnqueueInfo{}, ErrTaskTypeRequired
 	}
 
-	task, err := newTask(taskType, payload, opts...)
+	task, err := newTask(jobType, payload, opts...)
 	if err != nil {
 		return EnqueueInfo{}, err
 	}
 
 	info, err := r.client.EnqueueContext(ctx, task)
 	if err != nil {
-		return EnqueueInfo{}, fmt.Errorf("enqueue %s: %w", taskType, err)
+		return EnqueueInfo{}, fmt.Errorf("enqueue %s: %w", jobType, err)
 	}
 
 	return EnqueueInfo{TaskInfo: info}, nil
 }
 
-func newTask(taskType string, payload any, opts ...Option) (*asynq.Task, error) {
-	if strings.TrimSpace(taskType) == "" {
+func newTask(jobType JobType, payload any, opts ...Option) (*asynq.Task, error) {
+	taskType := strings.TrimSpace(jobType.String())
+	if taskType == "" {
 		return nil, ErrTaskTypeRequired
 	}
 
