@@ -22,7 +22,7 @@ func SaveProfilePicToDisk(c fiber.Ctx, patient models.Patient, assetsDir string)
 	}
 
 	if patient.UID == "" {
-		return "", errors.New("failed to save profile pic without patient.UID")
+		return "", errors.New("save profile pic without patient.UID")
 	}
 
 	originalFilename := strings.TrimSpace(profilePic.Filename)
@@ -36,12 +36,12 @@ func SaveProfilePicToDisk(c fiber.Ctx, patient models.Patient, assetsDir string)
 	filename := patient.UID + "_ppic_" + safeFilename
 	path, err := ProfilePicPath(filename, assetsDir)
 	if err != nil {
-		return "", fmt.Errorf("failed to save profile pic without an ASSETS_DIR: %w", err)
+		return "", fmt.Errorf("save profile pic without an ASSETS_DIR: %w", err)
 	}
 
 	err = c.SaveFile(profilePic, path)
 	if err != nil {
-		return "", fmt.Errorf("failed to save profilePic to disk: %w", err)
+		return "", fmt.Errorf("save profilePic to disk: %w", err)
 	}
 
 	imgsrc := "/patients/" + patient.UID + "/profilepic/" + filename
@@ -55,12 +55,12 @@ func ProfilePicPath(filename, assetsDir string) (string, error) {
 
 	assetsDir = strings.TrimSpace(assetsDir)
 	if assetsDir == "" {
-		return "", errors.New("failed to find assets directory")
+		return "", errors.New("find assets directory")
 	}
 
 	path := filepath.Join(assetsDir, patientsDir)
 	if err := os.MkdirAll(path, 0o755); err != nil {
-		return "", errors.New("failed to create assets/patients dir")
+		return "", errors.New("create assets/patients dir")
 	}
 
 	return filepath.Join(path, filename), nil
@@ -71,7 +71,7 @@ func profilePicFormFileErr(err error) error {
 		return ErrProfilePicNotProvided
 	}
 
-	return fmt.Errorf("failed to grab profilePic from form: %w", err)
+	return fmt.Errorf("grab profilePic from form: %w", err)
 }
 
 func isMissingProfilePicErr(err error) bool {

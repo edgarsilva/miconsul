@@ -32,7 +32,7 @@ func SaveProfilePicToDisk(c fiber.Ctx, clinic models.Clinic) (string, error) {
 	profilePath := "/public/assets/profile_pics/" + clinic.UID + "_" + filename
 	err = c.SaveFile(profilePic, "."+profilePath)
 	if err != nil {
-		return "", fmt.Errorf("failed to save profilePic to disk: %w", err)
+		return "", fmt.Errorf("save profilePic to disk: %w", err)
 	}
 
 	return profilePath, nil

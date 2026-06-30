@@ -29,6 +29,12 @@ This file provides repo-specific guidance for coding assistants working on this 
   - `c.Locals(...)` writes are allowed in middleware auth/session identity binding.
   - `c.Locals(...)` reads are allowed only in `internal/views/ctx.go` and `internal/server/request.go`.
   - Everywhere else should use `s.CurrentUser(c)` and view context APIs instead of reading locals directly.
+- Error handling:
+  - Wrap with `fmt.Errorf("operation: %w", err)` — lowercase, no trailing punctuation, colon separator (Go `ST1005`).
+  - Name the operation/action, not the function (`"enqueue reminder: %w"`, not `"EnqueueReminder -> %w"`); it survives renames and reads as a chain straight to the root cause.
+  - Do not prefix wrapped/internal errors with "failed to" — it is redundant in an `error` and compounds noisily across the wrap chain.
+  - Reserve natural, conversational sentences (`"could not send email, please try again"`) for user-facing messages rendered to templates/HTTP responses — not internal plumbing.
+  - Sentinels: `var ErrX = errors.New("lowercase message")`; compare with `errors.Is` / `errors.As`.
 
 ## templ Guidance Source
 

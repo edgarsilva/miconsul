@@ -54,7 +54,7 @@ func decodeJWTToken(env *appenv.Env, tokenStr string) (claims jwt.MapClaims, err
 	tokenJWT, err := jwt.Parse(tokenStr, func(token *jwt.Token) (any, error) { // Don't forget to validate the algorithm is what you expect:
 		// Don't forget to validate the algorithm is what you expect:
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return "", errors.New("failed to jarse JWT token")
+			return "", errors.New("parse JWT token")
 		}
 
 		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
@@ -66,12 +66,12 @@ func decodeJWTToken(env *appenv.Env, tokenStr string) (claims jwt.MapClaims, err
 
 	claims, ok := tokenJWT.Claims.(jwt.MapClaims)
 	if !ok {
-		return jwt.MapClaims{}, errors.New("failed to parse JWT token claims")
+		return jwt.MapClaims{}, errors.New("parse JWT token claims")
 	}
 
 	uid, ok := claims["uid"].(string)
 	if !ok || uid == "" {
-		return jwt.MapClaims{}, errors.New("failed to parse JWT token claims, uid not found")
+		return jwt.MapClaims{}, errors.New("parse JWT token claims, uid not found")
 	}
 
 	return claims, nil
@@ -95,7 +95,7 @@ func RefreshJWTToken(env *appenv.Env, token string, claims jwt.MapClaims) (strin
 
 	uid, ok := claims["uid"].(string)
 	if !ok {
-		return "", 0, errors.New("failed to parse JWT token claims, uid not found")
+		return "", 0, errors.New("parse JWT token claims, uid not found")
 	}
 
 	rememberMe := rememberMeFromClaims(claims)

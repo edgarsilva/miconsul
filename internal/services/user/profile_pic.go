@@ -24,19 +24,19 @@ func SaveProfilePicToDisk(c fiber.Ctx, user models.User, assetsDir string) (stri
 	}
 
 	if user.UID == "" {
-		return "", errors.New("failed to save profile pic without user.UID")
+		return "", errors.New("save profile pic without user.UID")
 	}
 
 	filename := user.UID + "_avatar"
 
 	filePath, err := ProfilePicPath(filename, assetsDir)
 	if err != nil {
-		return "", fmt.Errorf("failed to save profile pic without an ASSETS_DIR: %w", err)
+		return "", fmt.Errorf("save profile pic without an ASSETS_DIR: %w", err)
 	}
 
 	err = c.SaveFile(profilePic, filePath)
 	if err != nil {
-		return "", fmt.Errorf("failed to save profilePic to disk: %w", err)
+		return "", fmt.Errorf("save profilePic to disk: %w", err)
 	}
 
 	return "/profile/avatar", nil
@@ -49,7 +49,7 @@ func SaveProfilePicPreviewToTmp(c fiber.Ctx, user models.User, assetsDir string)
 	}
 
 	if user.UID == "" {
-		return "", errors.New("failed to save profile pic preview without user.UID")
+		return "", errors.New("save profile pic preview without user.UID")
 	}
 
 	filename := user.UID + "_preview"
@@ -57,12 +57,12 @@ func SaveProfilePicPreviewToTmp(c fiber.Ctx, user models.User, assetsDir string)
 	// Save tmp preview pic to /tmp directory
 	filePath, err := ProfilePicPath(filename, assetsDir)
 	if err != nil {
-		return "", fmt.Errorf("failed to save profile pic without an ASSETS_DIR: %w", err)
+		return "", fmt.Errorf("save profile pic without an ASSETS_DIR: %w", err)
 	}
 
 	err = c.SaveFile(profilePic, filePath)
 	if err != nil {
-		return "", fmt.Errorf("failed to save profile pic preview to tmp: %w", err)
+		return "", fmt.Errorf("save profile pic preview to tmp: %w", err)
 	}
 
 	return "/profile/avatar/preview", nil
@@ -75,17 +75,17 @@ func ProfilePicPath(filename, assetsDir string) (string, error) {
 
 	assetsDir = strings.TrimSpace(assetsDir)
 	if assetsDir == "" {
-		return "", errors.New("failed to find assets directory")
+		return "", errors.New("find assets directory")
 	}
 
 	absAssetsDir, err := filepath.Abs(assetsDir)
 	if err != nil {
-		return "", fmt.Errorf("failed to resolve assets directory: %w", err)
+		return "", fmt.Errorf("resolve assets directory: %w", err)
 	}
 
 	dirPath := filepath.Join(absAssetsDir, usersDir)
 	if err := os.MkdirAll(dirPath, 0o755); err != nil {
-		return "", errors.New("failed to create assets/users dir")
+		return "", errors.New("create assets/users dir")
 	}
 
 	return filepath.Join(dirPath, filename), nil
@@ -121,7 +121,7 @@ func profilePicFormFileErr(err error) error {
 		return ErrProfilePicNotProvided
 	}
 
-	return fmt.Errorf("failed to grab profilePic from form: %w", err)
+	return fmt.Errorf("grab profilePic from form: %w", err)
 }
 
 func isMissingProfilePicErr(err error) bool {

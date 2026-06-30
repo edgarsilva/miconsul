@@ -65,7 +65,7 @@ func selectAuthenticator(rt Runtime) Authenticator {
 func TakeUserByExtID(ctx context.Context, rt Runtime, extID string) (models.User, error) {
 	user, err := gorm.G[models.User](rt.GormDB()).Where("ext_id = ?", extID).Take(ctx)
 	if err != nil {
-		return models.User{}, errors.New("failed to authenticate user")
+		return models.User{}, errors.New("authenticate user")
 	}
 
 	return user, nil
