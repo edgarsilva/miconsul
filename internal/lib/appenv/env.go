@@ -83,12 +83,12 @@ func New() (*Env, error) {
 	}
 	err := simpleenv.Load(env)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load ENV variables: %w", err)
+		return nil, fmt.Errorf("load ENV variables: %w", err)
 	}
 
 	env.AssetsDir, err = normalizeAbsPath(env.AssetsDir)
 	if err != nil {
-		return nil, fmt.Errorf("failed to normalize ASSETS_DIR: %w", err)
+		return nil, fmt.Errorf("normalize ASSETS_DIR: %w", err)
 	}
 
 	return env, nil

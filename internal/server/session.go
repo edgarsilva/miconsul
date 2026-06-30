@@ -11,7 +11,7 @@ import (
 // Session retrieves the request session from the configured store.
 func (s *Server) Session(c fiber.Ctx) (*session.Session, error) {
 	if s.SessionStore == nil {
-		err := errors.New("failed to retrieve session: session store is nil")
+		err := errors.New("retrieve session: session store is nil")
 		log.Warn(err.Error())
 		return nil, err
 	}

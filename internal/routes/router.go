@@ -47,7 +47,7 @@ func RegisterServices(s *server.Server) error {
 
 	for _, rb := range bootstraps {
 		if err := rb.fn(s, authSvc); err != nil {
-			return fmt.Errorf("failed to bootstrap %s routes: %w", rb.name, err)
+			return fmt.Errorf("bootstrap %s routes: %w", rb.name, err)
 		}
 	}
 

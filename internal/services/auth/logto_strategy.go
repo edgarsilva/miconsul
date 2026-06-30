@@ -52,7 +52,7 @@ func (lgs *LogtoStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
 
 	user, err := TakeUserByExtID(ctx, lgs.runtime, claims.Sub)
 	if err != nil {
-		return user, errors.New("failed to authenticate user")
+		return user, errors.New("authenticate user")
 	}
 
 	return user, nil

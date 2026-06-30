@@ -53,7 +53,7 @@ func New(env *appenv.Env) (*Runtime, error) {
 
 	valkeyConfig, err := valkey.NewConfig(env)
 	if err != nil {
-		return nil, fmt.Errorf("failed to build jobs runtime config: %w", err)
+		return nil, fmt.Errorf("build jobs runtime config: %w", err)
 	}
 
 	redisOpt := asynq.RedisClientOpt{
@@ -147,7 +147,7 @@ func (r *Runtime) RegisterScheduledJob(cronspec string, jobType JobType, payload
 
 	entryID, err := r.scheduler.Register(cronspec, task)
 	if err != nil {
-		return "", fmt.Errorf("failed to register scheduled job %s: %w", jobType, err)
+		return "", fmt.Errorf("register scheduled job %s: %w", jobType, err)
 	}
 	r.registeredSchedules[key] = entryID
 

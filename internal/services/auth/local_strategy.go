@@ -55,7 +55,7 @@ func NewLocalStrategy(resource LocalStrategyResource) *LocalStrategy {
 func (ls LocalStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
 	token := getToken(c)
 	if token == "" {
-		return models.User{}, errors.New("failed to retrieve JWT token, it is blank")
+		return models.User{}, errors.New("retrieve JWT token, it is blank")
 	}
 
 	userFromSession, ok := ls.currentUserFromSession(c, token)
@@ -65,7 +65,7 @@ func (ls LocalStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
 
 	user, err := ls.authenticateWithJWT(c, token)
 	if err != nil {
-		return user, errors.New("failed to authenticate user")
+		return user, errors.New("authenticate user")
 	}
 
 	ls.saveCurrentUserToSession(c, token, user)
@@ -84,7 +84,7 @@ func (ls LocalStrategy) FindUserByID(ctx context.Context, uid string) (models.Us
 func (ls LocalStrategy) authenticateWithJWT(c fiber.Ctx, token string) (models.User, error) {
 	claims, err := decodeJWTToken(ls.resource.AppEnv(), token)
 	if err != nil {
-		return models.User{}, errors.New("failed to validate JWT token")
+		return models.User{}, errors.New("validate JWT token")
 	}
 
 	uid, ok := claims["uid"].(string)
@@ -94,12 +94,12 @@ func (ls LocalStrategy) authenticateWithJWT(c fiber.Ctx, token string) (models.U
 
 	user, err := ls.FindUserByID(c.Context(), uid)
 	if err != nil {
-		return user, errors.New("failed to find user with UID in JWT token")
+		return user, errors.New("find user with UID in JWT token")
 	}
 
 	refreshedJWT, validFor, err := RefreshJWTToken(ls.resource.AppEnv(), token, claims)
 	if err != nil {
-		return user, errors.New("failed to refresh JWT token")
+		return user, errors.New("refresh JWT token")
 	}
 	if refreshedJWT != token {
 		ls.refreshAuthCookie(c, refreshedJWT, validFor)

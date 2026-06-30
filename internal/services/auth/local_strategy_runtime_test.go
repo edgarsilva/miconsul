@@ -261,7 +261,7 @@ func TestRuntimeAuthenticateAndTakeUserByExtID(t *testing.T) {
 	t.Run("TakeUserByExtID maps not found to auth error", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		_, err := TakeUserByExtID(context.Background(), svc, "missing")
-		if err == nil || !strings.Contains(err.Error(), "failed to authenticate user") {
+		if err == nil || !strings.Contains(err.Error(), "authenticate user") {
 			t.Fatalf("expected mapped auth error, got %v", err)
 		}
 	})

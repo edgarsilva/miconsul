@@ -213,7 +213,7 @@ func setupHealthcheckRoutes(s *Server) {
 func WithEnv(env *appenv.Env) ServerOption {
 	return func(server *Server) error {
 		if env == nil {
-			return errors.New("failed to start server without environment config")
+			return errors.New("start server without environment config")
 		}
 
 		server.Env = env
@@ -225,7 +225,7 @@ func WithEnv(env *appenv.Env) ServerOption {
 func WithDatabase(db *database.Database) ServerOption {
 	return func(server *Server) error {
 		if db == nil {
-			return errors.New("failed to start server without Database connection")
+			return errors.New("start server without Database connection")
 		}
 
 		server.DB = db

@@ -194,7 +194,7 @@ func (s *service) authenticateCredentials(ctx context.Context, email, password s
 func (s *service) userUpdatePassword(ctx context.Context, email, password, token string) (models.User, error) {
 	pwd, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
-		return models.User{}, errors.New("failed to update password")
+		return models.User{}, errors.New("update password")
 	}
 
 	user := models.User{
@@ -208,7 +208,7 @@ func (s *service) userUpdatePassword(ctx context.Context, email, password, token
 		Limit(1).
 		Updates(ctx, user)
 	if err != nil || rowsAffected != 1 {
-		return models.User{}, errors.New("failed to update password")
+		return models.User{}, errors.New("update password")
 	}
 
 	return user, nil
@@ -225,7 +225,7 @@ func (s *service) userUpdateConfirmToken(ctx context.Context, email, token strin
 		Limit(1).
 		Updates(ctx, user)
 	if err != nil || rowsAffected != 1 {
-		return errors.New("failed to update confirm token")
+		return errors.New("update confirm token")
 	}
 
 	return nil
@@ -249,7 +249,7 @@ func (s *service) saveLogtoUser(ctx context.Context, logtoUser LogtoUser) error 
 
 	user, err := gorm.G[models.User](s.DB.GormDB()).Where("email = ?", logtoUser.Email).Take(ctx)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return fmt.Errorf("failed to load user from logto claims, GORM error: %w", err)
+		return fmt.Errorf("load user from logto claims, GORM error: %w", err)
 	}
 
 	userExists := user.ID != 0
@@ -261,7 +261,7 @@ func (s *service) saveLogtoUser(ctx context.Context, logtoUser LogtoUser) error 
 	if user.Password == "" {
 		rndPwd, err := bcrypt.GenerateFromPassword([]byte(xid.New("rpwd")), 8)
 		if err != nil {
-			return errors.New("failed to generate password placeholder for user")
+			return errors.New("generate password placeholder for user")
 		}
 		user.Password = string(rndPwd)
 	}
@@ -279,7 +279,7 @@ func (s *service) saveLogtoUser(ctx context.Context, logtoUser LogtoUser) error 
 	}
 
 	if result := s.DB.WithContext(ctx).Save(&user); result.Error != nil {
-		return fmt.Errorf("failed to create or update user from logto claims, GORM error: %w", result.Error)
+		return fmt.Errorf("create or update user from logto claims, GORM error: %w", result.Error)
 	}
 
 	return nil

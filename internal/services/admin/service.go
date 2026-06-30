@@ -99,7 +99,7 @@ func findModelName(modelsDir string, dirEntry fs.DirEntry) (string, error) {
 func resolveModelsDir() (string, error) {
 	_, currentFile, _, ok := runtime.Caller(0)
 	if !ok {
-		return "", errors.New("failed to resolve admin service source path")
+		return "", errors.New("resolve admin service source path")
 	}
 
 	modelsDir := filepath.Clean(filepath.Join(filepath.Dir(currentFile), "../../models"))

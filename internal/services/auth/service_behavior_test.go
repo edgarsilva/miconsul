@@ -157,7 +157,7 @@ func TestSaveLogtoUserPaths(t *testing.T) {
 		if err == nil {
 			t.Fatalf("expected save error")
 		}
-		if !strings.Contains(err.Error(), "failed to create or update user from logto claims") {
+		if !strings.Contains(err.Error(), "create or update user from logto claims") {
 			t.Fatalf("expected wrapped saveLogtoUser error, got %v", err)
 		}
 	})

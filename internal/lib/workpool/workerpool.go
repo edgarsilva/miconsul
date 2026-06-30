@@ -20,7 +20,7 @@ func New(size int) (pool *Pool, shutdownFn func()) {
 
 	p, err := ants.NewPool(size)
 	if err != nil {
-		log.Fatal(fmt.Errorf("failed to initialize worker pool: %w", err))
+		log.Fatal(fmt.Errorf("initialize worker pool: %w", err))
 	}
 
 	pool = &Pool{p: p}
