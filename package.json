@@ -1,9 +1,13 @@
 {
+	"scripts": {
+		"css:build": "tailwindcss -i ./styles/global.css -o ./public/global.css --minify",
+		"css:watch": "tailwindcss -i ./styles/global.css -o ./public/global.css --minify --watch"
+	},
 	"devDependencies": {
-		"@tailwindcss/cli": "^4.1.13",
-		"@tailwindcss/forms": "^0.5.10",
-		"@tailwindcss/typography": "^0.5.19",
-		"daisyui": "^5.5.19",
-		"tailwindcss": "^4.2.2"
+		"@tailwindcss/cli": "4.3.3",
+		"@tailwindcss/forms": "0.5.11",
+		"@tailwindcss/typography": "0.5.20",
+		"daisyui": "5.7.28",
+		"tailwindcss": "4.3.3"
 	}
 }

@@ -12,6 +12,9 @@ docker-compose.*
 node_modules/
 vendor/
 
+# Generated in the build stage
+public/global.css
+
 # Binaries and plugins
 bin/
 *.exe

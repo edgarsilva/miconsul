@@ -17,7 +17,7 @@ Prerequisites:
 
 - Go 1.27+ (with CGO support for SQLite)
 - `make`
-- Bun
+- Node.js 24+ with npm
 - Docker (optional, for local observability stack)
 
 ### Toolchain Manager Guidance
@@ -29,11 +29,11 @@ Alternatives remain valid:
 - `asdf`
 - `homebrew`
 
-Use your manager to install runtime/toolchain binaries (`go`, `bun`).
+Use your manager to install runtime/toolchain binaries (`go`, `node`).
 
 Then use project tasks for repository setup:
 
-- `make install/deps`: installs project dependencies (`go mod download`, `bun install`)
+- `make install/deps`: installs project dependencies (`go mod download`, `npm ci`)
 - `make install/tools`: installs optional local CLIs (`templ`, `go-localize`)
 
 ### Environment Setup
