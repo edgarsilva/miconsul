@@ -8,6 +8,7 @@ import (
 
 	obslogging "miconsul/internal/observability/logging"
 
+	"go.opentelemetry.io/otel/attribute"
 	otellog "go.opentelemetry.io/otel/log"
 )
 
@@ -40,13 +41,13 @@ func (l GooseLogger) Fatalf(format string, v ...any) {
 func (l GooseLogger) emit(severity otellog.Severity, severityText, msg string) {
 	rec := otellog.Record{}
 	rec.SetEventName("db_migration")
-	rec.SetBody(otellog.StringValue(msg))
+	rec.SetBody(attribute.StringValue(msg))
 	rec.SetSeverity(severity)
 	rec.SetSeverityText(severityText)
 	rec.AddAttributes(
-		otellog.String("event", "db_migration"),
-		otellog.String("component", "goose"),
-		otellog.String("message", msg),
+		attribute.String("event", "db_migration"),
+		attribute.String("component", "goose"),
+		attribute.String("message", msg),
 	)
 
 	l.obsLogger.Emit(context.Background(), rec)
