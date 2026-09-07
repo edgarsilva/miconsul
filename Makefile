@@ -12,7 +12,7 @@ MAKEFLAGS += --no-print-directory
 GOBIN ?= $(shell go env GOBIN)
 DB_PATH ?= database/app.sqlite
 SESSION_PATH ?= database/fiber_session.sqlite
-GOOSE_CMD ?= go run github.com/pressly/goose/v3/cmd/goose@v3.26.0
+GOOSE_CMD ?= go run github.com/pressly/goose/v3/cmd/goose@v3.28.0
 
 ##@ Meta
 help: ## Show this help with available tasks

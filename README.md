@@ -15,7 +15,7 @@ Miconsul is a patient appointment planner and notification center.
 
 Prerequisites:
 
-- Go 1.26+ (with CGO support for SQLite)
+- Go 1.27+ (with CGO support for SQLite)
 - `make`
 - Bun
 - Docker (optional, for local observability stack)

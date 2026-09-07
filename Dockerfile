@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 
 # ---------- GO BUILD ----------
-FROM golang:1.26-bookworm AS build
+FROM golang:1.27-bookworm AS build
 WORKDIR /src
 
 # Copy module files first to maximize cache hit rate.
