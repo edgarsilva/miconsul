@@ -12,7 +12,8 @@ MAKEFLAGS += --no-print-directory
 GOBIN ?= $(shell go env GOBIN)
 DB_PATH ?= database/app.sqlite
 SESSION_PATH ?= database/fiber_session.sqlite
-GOOSE_CMD ?= go run github.com/pressly/goose/v3/cmd/goose@v3.28.0
+GO_TOOL ?= go tool -modfile=tools.mod
+GOOSE_CMD ?= $(GO_TOOL) goose
 
 ##@ Meta
 help: ## Show this help with available tasks
@@ -28,16 +29,12 @@ install/deps: check/npm ## Install project dependencies (no toolchain install)
 	go mod download
 	npm ci --ignore-scripts --allow-remote=all
 
-install/tools: install/go-localize ## Install optional local CLI tools
-	@echo "🛕 installing Templ"
-	go install github.com/a-h/templ/cmd/templ@latest
-
 check/npm: ## Ensure npm is installed in the shell
 	@command -v npm >/dev/null 2>&1 || (echo "❌ npm is required but not found in PATH. Install Node.js with your toolchain manager (e.g. mise/asdf/homebrew) and retry."; exit 1)
 
-install/go-localize: ## Install go-localize CLI
-	@echo " installing go-localize"
-	go install github.com/m1/go-localize@latest
+install/tools: ## Download pinned Go tool dependencies
+	@echo "📦 Downloading Go tools"
+	go mod download -modfile=tools.mod
 
 ##@ Code Quality
 fmt: ## Run go fmt
@@ -59,15 +56,15 @@ tailwind/watch: ## Watch Tailwind CSS
 
 templ/build: tailwind/build ## Generate Templ files (depends on tailwind)
 	@echo "🛕 Generating Templ files..."
-	templ generate
+	$(GO_TOOL) templ generate
 
 templ/watch: ## Watch Templ
 	@echo "🛕 Watching for Templ changes..."
-	templ generate --watch -v
+	$(GO_TOOL) templ generate --watch -v
 
 locales/build: ## Build locales with go-localize
 	@echo "  Building locales"
-	go-localize -input locales -output internal/lib/localize
+	$(GO_TOOL) go-localize -input locales -output internal/lib/localize
 	$(MAKE) locales/normalize
 
 locales/normalize: ## Remove volatile timestamp from generated locales file
@@ -92,19 +89,8 @@ run: templ ## Run via go run (generates Templ first)
 	@echo "👟 Running app..."
 	go run -tags fts5 cmd/app/main.go
 
-air/watch: ## Run in dev mode with air (installs if missing)
-	@if command -v air > /dev/null; then \
-	    air; \
-	else \
-	    read -p "Install air? [Y/n] " choice; \
-	    if [ "$$choice" != "n" ] && [ "$$choice" != "N" ]; then \
-	        go install github.com/cosmtrek/air@latest; \
-	        air; \
-	    else \
-	        echo "You chose not to install air. Exiting..."; \
-	        exit 1; \
-	    fi; \
-	fi
+air/watch: ## Run in dev mode with pinned Air
+	$(GO_TOOL) air
 
 dev: docker/up ## Start infra, then tailwind/watch, templ/watch, and air/watch
 	$(MAKE) -j3 tailwind/watch templ/watch air/watch
@@ -260,7 +246,7 @@ load/test: ## Run authenticated oha load test (30s, 30 concurrency)
 	./scripts/load_test.sh
 
 
-.PHONY: help install install/deps install/tools check/npm install/go-localize fmt vet lint \
+.PHONY: help install install/deps install/tools check/npm fmt vet lint \
 	tailwind tailwind/watch templ templ/watch locales/build \
 	locales/normalize \
 	ai/templ-sync \

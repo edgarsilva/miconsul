@@ -34,7 +34,7 @@ Use your manager to install runtime/toolchain binaries (`go`, `node`).
 Then use project tasks for repository setup:
 
 - `make install/deps`: installs project dependencies (`go mod download`, `npm ci`)
-- `make install/tools`: installs optional local CLIs (`templ`, `go-localize`)
+- `make install/tools`: downloads pinned Go tools
 
 ### Environment Setup
 
@@ -62,7 +62,7 @@ Install project tooling:
 make install/deps
 ```
 
-Optional local CLI tools (`templ`, `go-localize`):
+Download the Go tools pinned in `tools.mod`:
 
 ```bash
 make install/tools
