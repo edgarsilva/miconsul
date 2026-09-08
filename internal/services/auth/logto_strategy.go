@@ -2,7 +2,8 @@ package auth
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/jsontext"
+	"encoding/json/v2"
 	"errors"
 	"net/url"
 	"strings"
@@ -174,7 +175,7 @@ func logtoIDTokenClaimsJSON(logtoClient *logto.LogtoClient) string {
 		return "{}"
 	}
 
-	b, err := json.MarshalIndent(idClaims, "", "  ")
+	b, err := json.Marshal(idClaims, json.Deterministic(true), jsontext.WithIndent("  "))
 	if err != nil {
 		log.Warn("failed to marshal id token claims in logto page:", err)
 		return "{}"
@@ -190,7 +191,7 @@ func logtoCustomClaimsJSON(logtoClient *logto.LogtoClient, resource string) stri
 		return "{}"
 	}
 
-	b, err := json.MarshalIndent(customClaims, "", "  ")
+	b, err := json.Marshal(customClaims, json.Deterministic(true), jsontext.WithIndent("  "))
 	if err != nil {
 		log.Warn("failed to marshal custom access token claims in logto page:", err)
 		return "{}"

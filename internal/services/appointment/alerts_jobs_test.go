@@ -2,7 +2,7 @@ package appointment
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"strconv"
 	"testing"
 	"time"

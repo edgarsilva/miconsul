@@ -2,6 +2,7 @@ package whatsapp
 
 import (
 	"context"
+	"encoding/json/v2"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -39,8 +40,12 @@ func TestSendTemplateSuccess(t *testing.T) {
 		if values.Get("ContentSid") != "HX123" {
 			t.Fatalf("unexpected ContentSid: %s", values.Get("ContentSid"))
 		}
-		if values.Get("ContentVariables") != `{"1":"12/1","2":"3pm"}` {
-			t.Fatalf("unexpected ContentVariables: %s", values.Get("ContentVariables"))
+		var contentVariables map[string]string
+		if err := json.Unmarshal([]byte(values.Get("ContentVariables")), &contentVariables); err != nil {
+			t.Fatalf("decode ContentVariables: %v", err)
+		}
+		if len(contentVariables) != 2 || contentVariables["1"] != "12/1" || contentVariables["2"] != "3pm" {
+			t.Fatalf("unexpected ContentVariables: %v", contentVariables)
 		}
 
 		w.WriteHeader(http.StatusCreated)
