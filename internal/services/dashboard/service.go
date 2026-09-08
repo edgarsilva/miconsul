@@ -116,7 +116,7 @@ func (s service) ReadStatsCache(cachekey string) (stats view.DashboardStats, ok 
 	return stats, true
 }
 
-func (s service) CalcMonthlyStats(ctx context.Context, cu models.User, imodel interface{}) view.DashboardStat {
+func (s service) CalcMonthlyStats(ctx context.Context, cu models.User, imodel any) view.DashboardStat {
 	localCtx, span := s.Trace(ctx, "dashboard/services:CalcMonthlyStats")
 	defer span.End()
 

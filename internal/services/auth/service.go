@@ -16,6 +16,7 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/trace"
@@ -325,16 +326,16 @@ func (s *service) emitAsyncEmailError(ctx context.Context, operation, email, sta
 	rec.SetTimestamp(time.Now())
 	rec.SetObservedTimestamp(time.Now())
 	rec.SetEventName("auth_email_send")
-	rec.SetBody(otellog.StringValue("auth_email_send"))
+	rec.SetBody(attribute.StringValue("auth_email_send"))
 	rec.SetSeverity(otellog.SeverityError)
 	rec.SetSeverityText("ERROR")
 	rec.SetErr(err)
 	rec.AddAttributes(
-		otellog.String("event", "auth_email_send"),
-		otellog.String("operation", operation),
-		otellog.String("status", status),
-		otellog.String("email", email),
-		otellog.String("error", err.Error()),
+		attribute.String("event", "auth_email_send"),
+		attribute.String("operation", operation),
+		attribute.String("status", status),
+		attribute.String("email", email),
+		attribute.String("error", err.Error()),
 	)
 
 	s.RequestLog.Emit(ctx, rec)

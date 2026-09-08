@@ -7,6 +7,7 @@ import (
 	obslogging "miconsul/internal/observability/logging"
 
 	"github.com/gofiber/fiber/v3"
+	"go.opentelemetry.io/otel/attribute"
 	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -44,7 +45,7 @@ func RequestLoggerMiddleware(logger obslogging.Logger) func(c fiber.Ctx) error {
 		rec.SetTimestamp(time.Now())
 		rec.SetObservedTimestamp(time.Now())
 		rec.SetEventName("http_request")
-		rec.SetBody(otellog.StringValue("http_request"))
+		rec.SetBody(attribute.StringValue("http_request"))
 
 		if statusCode >= 500 {
 			rec.SetSeverity(otellog.SeverityError)
@@ -54,19 +55,19 @@ func RequestLoggerMiddleware(logger obslogging.Logger) func(c fiber.Ctx) error {
 			rec.SetSeverityText("INFO")
 		}
 
-		attrs := []otellog.KeyValue{
-			otellog.String("event", "http_request"),
-			otellog.String("route", routePath),
-			otellog.String("method", method),
-			otellog.Int("status", statusCode),
-			otellog.Float64("duration_ms", durationMS),
+		attrs := []attribute.KeyValue{
+			attribute.String("event", "http_request"),
+			attribute.String("route", routePath),
+			attribute.String("method", method),
+			attribute.Int("status", statusCode),
+			attribute.Float64("duration_ms", durationMS),
 		}
 		if traceID != "" {
-			attrs = append(attrs, otellog.String("trace_id", traceID))
+			attrs = append(attrs, attribute.String("trace_id", traceID))
 		}
 		if err != nil {
 			rec.SetErr(err)
-			attrs = append(attrs, otellog.String("error", err.Error()))
+			attrs = append(attrs, attribute.String("error", err.Error()))
 		}
 		rec.AddAttributes(attrs...)
 

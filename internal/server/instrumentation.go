@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
 	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -61,13 +62,13 @@ func (s *Server) emitWorkerError(ctx context.Context, err error) {
 	rec.SetTimestamp(time.Now())
 	rec.SetObservedTimestamp(time.Now())
 	rec.SetEventName("worker_panic")
-	rec.SetBody(otellog.StringValue("worker_panic"))
+	rec.SetBody(attribute.StringValue("worker_panic"))
 	rec.SetSeverity(otellog.SeverityError)
 	rec.SetSeverityText("ERROR")
 	rec.SetErr(err)
 	rec.AddAttributes(
-		otellog.String("event", "worker_panic"),
-		otellog.String("error", err.Error()),
+		attribute.String("event", "worker_panic"),
+		attribute.String("error", err.Error()),
 	)
 
 	s.RequestLog.Emit(ctx, rec)
@@ -82,16 +83,16 @@ func emitStartupBootstrapLog(s *Server) {
 	rec.SetTimestamp(time.Now())
 	rec.SetObservedTimestamp(time.Now())
 	rec.SetEventName("server_startup")
-	rec.SetBody(otellog.StringValue("server_startup"))
+	rec.SetBody(attribute.StringValue("server_startup"))
 	rec.SetSeverity(otellog.SeverityInfo)
 	rec.SetSeverityText("INFO")
 	rec.AddAttributes(
-		otellog.String("event", "server_startup"),
-		otellog.String("started_at", s.StartedAt.UTC().Format(time.RFC3339)),
-		otellog.String("ready_at", s.ReadyAt.UTC().Format(time.RFC3339)),
-		otellog.Int64("bootstrap_duration_ms", s.BootstrapDuration.Milliseconds()),
-		otellog.String("version", s.Env.AppVersion),
-		otellog.String("environment", string(s.Env.Environment)),
+		attribute.String("event", "server_startup"),
+		attribute.String("started_at", s.StartedAt.UTC().Format(time.RFC3339)),
+		attribute.String("ready_at", s.ReadyAt.UTC().Format(time.RFC3339)),
+		attribute.Int64("bootstrap_duration_ms", s.BootstrapDuration.Milliseconds()),
+		attribute.String("version", s.Env.AppVersion),
+		attribute.String("environment", string(s.Env.Environment)),
 	)
 
 	s.RequestLog.Emit(context.Background(), rec)

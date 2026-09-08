@@ -204,7 +204,7 @@ func ensureBaselineClinic(ctx context.Context, db *gorm.DB, owner models.User) (
 			Email:      "clinic-main@seed.local",
 			Phone:      "+52-55-1111-2222",
 			ProfilePic: avatar.DicebearShapeAvatarURL(baselineClinicExtID),
-			Address:    models.Address{City: "Monterrey", State: "NL", Country: "MX"},
+			City:       "Monterrey", State: "NL", Country: "MX",
 		}
 		if err := db.WithContext(ctx).Create(&clinic).Error; err != nil {
 			return models.Clinic{}, false, fmt.Errorf("create baseline clinic: %w", err)
@@ -472,7 +472,7 @@ func createBulkUsers(ctx context.Context, db *gorm.DB, rng *rand.Rand, runID int
 	}
 
 	users := make([]models.User, 0, count)
-	for i := 0; i < count; i++ {
+	for i := range count {
 		users = append(users, models.User{
 			Name:              fmt.Sprintf("Seed User %d", i+1),
 			Email:             fmt.Sprintf("seed.user.%d.%d@seed.local", runID, i+1),
@@ -498,7 +498,7 @@ func createBulkClinics(ctx context.Context, db *gorm.DB, owner models.User, rng 
 	}
 
 	clinics := make([]models.Clinic, 0, count)
-	for i := 0; i < count; i++ {
+	for i := range count {
 		extID := fmt.Sprintf("seed-bulk-clinic-%d-%d", runID, i+1)
 		clinics = append(clinics, models.Clinic{
 			ExtID:      extID,
@@ -507,7 +507,7 @@ func createBulkClinics(ctx context.Context, db *gorm.DB, owner models.User, rng 
 			Email:      fmt.Sprintf("clinic.%d.%d@seed.local", runID, i+1),
 			Phone:      fmt.Sprintf("+52-81-%04d-%04d", rng.Intn(10000), rng.Intn(10000)),
 			ProfilePic: avatar.DicebearShapeAvatarURL(extID),
-			Address:    models.Address{City: "Monterrey", State: "NL", Country: "MX"},
+			City:       "Monterrey", State: "NL", Country: "MX",
 		})
 	}
 
@@ -524,7 +524,7 @@ func createBulkPatients(ctx context.Context, db *gorm.DB, owner models.User, rng
 	}
 
 	patients := make([]models.Patient, 0, count)
-	for i := 0; i < count; i++ {
+	for i := range count {
 		patients = append(patients, models.Patient{
 			ExtID:      fmt.Sprintf("seed-bulk-patient-%d-%d", runID, i+1),
 			UserID:     owner.ID,
@@ -551,7 +551,7 @@ func createBulkAppointments(ctx context.Context, db *gorm.DB, owner models.User,
 	appointments := make([]models.Appointment, 0, count)
 	baseTime := time.Now().UTC().Add(24 * time.Hour)
 
-	for i := 0; i < count; i++ {
+	for i := range count {
 		clinic := clinics[rng.Intn(len(clinics))]
 		patient := patients[rng.Intn(len(patients))]
 

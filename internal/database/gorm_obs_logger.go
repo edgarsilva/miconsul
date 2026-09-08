@@ -8,6 +8,7 @@ import (
 
 	obslogging "miconsul/internal/observability/logging"
 
+	"go.opentelemetry.io/otel/attribute"
 	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm/logger"
@@ -68,7 +69,7 @@ func (l GormObsLogger) Trace(ctx context.Context, begin time.Time, fc func() (st
 	rec.SetTimestamp(time.Now())
 	rec.SetObservedTimestamp(time.Now())
 	rec.SetEventName("db_query")
-	rec.SetBody(otellog.StringValue("db_query"))
+	rec.SetBody(attribute.StringValue("db_query"))
 
 	if err != nil {
 		rec.SetSeverity(otellog.SeverityError)
@@ -78,19 +79,19 @@ func (l GormObsLogger) Trace(ctx context.Context, begin time.Time, fc func() (st
 		rec.SetSeverityText("INFO")
 	}
 
-	attrs := []otellog.KeyValue{
-		otellog.String("event", "db_query"),
-		otellog.String("db_operation", dbOperation),
-		otellog.String("sql", cleanSQL),
-		otellog.Int64("rows", rows),
-		otellog.Float64("duration_ms", durationMS),
+	attrs := []attribute.KeyValue{
+		attribute.String("event", "db_query"),
+		attribute.String("db_operation", dbOperation),
+		attribute.String("sql", cleanSQL),
+		attribute.Int64("rows", rows),
+		attribute.Float64("duration_ms", durationMS),
 	}
 	if traceID != "" {
-		attrs = append(attrs, otellog.String("trace_id", traceID))
+		attrs = append(attrs, attribute.String("trace_id", traceID))
 	}
 	if err != nil {
 		rec.SetErr(err)
-		attrs = append(attrs, otellog.String("error", err.Error()))
+		attrs = append(attrs, attribute.String("error", err.Error()))
 	}
 	rec.AddAttributes(attrs...)
 

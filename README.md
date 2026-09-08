@@ -15,9 +15,9 @@ Miconsul is a patient appointment planner and notification center.
 
 Prerequisites:
 
-- Go 1.26+ (with CGO support for SQLite)
+- Go 1.27+ (with CGO support for SQLite)
 - `make`
-- Bun
+- Node.js 24+ with npm
 - Docker (optional, for local observability stack)
 
 ### Toolchain Manager Guidance
@@ -29,12 +29,12 @@ Alternatives remain valid:
 - `asdf`
 - `homebrew`
 
-Use your manager to install runtime/toolchain binaries (`go`, `bun`).
+Use your manager to install runtime/toolchain binaries (`go`, `node`).
 
 Then use project tasks for repository setup:
 
-- `make install/deps`: installs project dependencies (`go mod download`, `bun install`)
-- `make install/tools`: installs optional local CLIs (`templ`, `go-localize`)
+- `make install/deps`: installs project dependencies (`go mod download`, `npm ci`)
+- `make install/tools`: downloads pinned Go tools
 
 ### Environment Setup
 
@@ -62,7 +62,7 @@ Install project tooling:
 make install/deps
 ```
 
-Optional local CLI tools (`templ`, `go-localize`):
+Download the Go tools pinned in `tools.mod`:
 
 ```bash
 make install/tools

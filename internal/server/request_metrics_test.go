@@ -1,7 +1,7 @@
 package server
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -94,7 +94,7 @@ func TestHandleDebugHealthDetails(t *testing.T) {
 	}
 
 	var payload debugHealthDetailsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+	if err := json.UnmarshalRead(resp.Body, &payload); err != nil {
 		t.Fatalf("decode response payload: %v", err)
 	}
 
@@ -148,7 +148,7 @@ func TestHandleDebugHealthDetailsDegradedWhenReadinessFails(t *testing.T) {
 	}
 
 	var payload debugHealthDetailsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+	if err := json.UnmarshalRead(resp.Body, &payload); err != nil {
 		t.Fatalf("decode response payload: %v", err)
 	}
 	if payload.Status != "degraded" {
