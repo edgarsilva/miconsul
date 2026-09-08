@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -39,7 +40,6 @@ func TestIsExpectedServerCloseError(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -66,7 +66,6 @@ func TestShouldLogServerError(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -375,9 +374,7 @@ func setRequiredEnv(t *testing.T, overrides map[string]string) {
 		"ASSETS_DIR":          "assets",
 	}
 
-	for key, value := range overrides {
-		values[key] = value
-	}
+	maps.Copy(values, overrides)
 
 	for key, value := range values {
 		t.Setenv(key, value)

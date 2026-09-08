@@ -146,8 +146,7 @@ func fiberAppErrorHandler(ctx fiber.Ctx, err error) error {
 	// Status code defaults to 500
 	code := fiber.StatusInternalServerError
 
-	var e *fiber.Error
-	if errors.As(err, &e) {
+	if e, ok := errors.AsType[*fiber.Error](err); ok {
 		code = e.Code
 	}
 

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"slices"
 	"strings"
 	"syscall"
 	"time"
@@ -74,8 +75,8 @@ func bootstrapServer(ctx context.Context) (bootstrapResult, error) {
 	}
 	result.cleanup = func() {
 		fmt.Println("🧹 Running cleanup tasks...")
-		for i := len(cleanupFns) - 1; i >= 0; i-- {
-			cleanupFns[i]()
+		for _, cleanupFn := range slices.Backward(cleanupFns) {
+			cleanupFn()
 		}
 		fmt.Println("✅ All cleanup tasks completed")
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"miconsul/internal/database"
@@ -339,13 +340,7 @@ func newTestSeedDB(t *testing.T) *database.Database {
 }
 
 func containsStep(steps []string, want string) bool {
-	for _, step := range steps {
-		if step == want {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(steps, want)
 }
 
 func TestLogStep(t *testing.T) {
