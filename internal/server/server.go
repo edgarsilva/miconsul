@@ -14,7 +14,7 @@ import (
 	obslogging "miconsul/internal/observability/logging"
 	obsmetrics "miconsul/internal/observability/metrics"
 
-	otelfiber "github.com/gofiber/contrib/v3/otel"
+	"github.com/gofiber/contrib/v3/otel"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
 	"github.com/gofiber/fiber/v3/middleware/adaptor"
@@ -153,13 +153,10 @@ func setupCoreMiddleware(s *Server) {
 
 	app.Use(recoverer.New()) // Recover MW catches panics that might stop app execution
 	app.Use(RequestMetricsMiddleware(s.Metrics))
-	app.Use(otelfiber.Middleware(
-		otelfiber.WithNext(func(c fiber.Ctx) bool {
+	app.Use(otel.New(
+		otel.WithNext(func(c fiber.Ctx) bool {
 			path := c.Path()
-			return strings.HasPrefix(path, "/public/") ||
-				strings.HasPrefix(path, "/.well-known/") ||
-				path == "/favicon.ico" ||
-				path == "/readyz" ||
+			return path == "/readyz" ||
 				path == "/metrics" ||
 				path == "/livez"
 		}),
