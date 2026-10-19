@@ -2,10 +2,10 @@ package server
 
 import "encoding/json/v2"
 
-// marshalJSON encodes Fiber JSON responses with encoding/json/v2. Deterministic
-// output keeps map keys (fiber.Map) in a stable order, as encoding/json did.
+// marshalJSON encodes Fiber JSON responses with encoding/json/v2 defaults.
+// Map key order is not guaranteed.
 func marshalJSON(v any) ([]byte, error) {
-	return json.Marshal(v, json.Deterministic(true))
+	return json.Marshal(v)
 }
 
 // unmarshalJSON decodes Fiber JSON request bodies with encoding/json/v2.

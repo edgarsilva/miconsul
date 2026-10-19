@@ -2,7 +2,6 @@ package server
 
 import (
 	jsonv1 "encoding/json"
-	"encoding/json/v2"
 	"testing"
 	"time"
 
@@ -54,11 +53,6 @@ func BenchmarkJSONEncodeMap(b *testing.B) {
 	b.Run("v2", func(b *testing.B) {
 		for b.Loop() {
 			_, _ = marshalJSON(benchMap)
-		}
-	})
-	b.Run("v2-nondeterministic", func(b *testing.B) {
-		for b.Loop() {
-			_, _ = json.Marshal(benchMap)
 		}
 	})
 }
