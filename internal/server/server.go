@@ -138,7 +138,11 @@ func setupSessionStore(s *Server) {
 }
 
 func setupFiberApp(s *Server) {
-	fiberConfig := fiber.Config{ErrorHandler: fiberAppErrorHandler}
+	fiberConfig := fiber.Config{
+		ErrorHandler: fiberAppErrorHandler,
+		JSONEncoder:  marshalJSON,
+		JSONDecoder:  unmarshalJSON,
+	}
 	s.App = fiber.New(fiberConfig)
 
 	setupCoreMiddleware(s)
