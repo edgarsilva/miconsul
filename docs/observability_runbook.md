@@ -7,7 +7,7 @@ local LGTM setup (Loki, Grafana, Tempo, Prometheus(Mimir too if needed)).
 
 - App running locally on `http://localhost:3000`
 - LGTM stack running (`make docker/up`)
-- Grafana available on `http://localhost:3001`
+- Grafana available on `http://localhost:3080` (override with `GRAFANA_PORT`)
 
 ## Health Probe Monitoring Profile (Uptime Kuma)
 
@@ -125,8 +125,11 @@ for export, so app behavior is unchanged but no remote signal export occurs.
 
 ## Signals Emitted by App
 
-- HTTP metrics: request count and duration histograms used by Prometheus
-  queries in this runbook.
+- HTTP metrics: the OpenTelemetry semconv `http.server.request.duration`
+  histogram (plus request/response body size and active requests), recorded
+  by the Fiber OTEL middleware and pushed over OTLP. Prometheus stores it as
+  `http_server_request_duration_seconds_*`. There is no `/metrics` scrape
+  endpoint.
 - HTTP logs (`event=http_request`): emitted by request logging middleware.
 - DB logs (`event=db_query`): emitted by GORM logger wrapper.
 - Traces: emitted by Fiber OTEL middleware and service spans.
@@ -162,7 +165,7 @@ After 1-2 minutes of smoke traffic, these three queries should return data.
 - Metrics (Prometheus):
 
 ```promql
-sum(rate(http_requests_total{job="miconsul"}[5m]))
+sum(rate(http_server_request_duration_seconds_count{job="miconsul"}[5m]))
 ```
 
 Expected result: non-empty series, typically `> 0` after `make obs/load/light`
@@ -190,51 +193,61 @@ after smoke traffic starts.
 
 All examples assume `job="miconsul"`.
 
+Request counts come from the histogram's `_count` series. Labels follow the
+OpenTelemetry HTTP semantic conventions: `http_request_method`, `http_route`
+(absent when no route matched), and `http_response_status_code`.
+
 - Total RPS:
 
 ```promql
-sum(rate(http_requests_total{job="miconsul"}[5m]))
+sum(rate(http_server_request_duration_seconds_count{job="miconsul"}[5m]))
 ```
 
 - Total RPM:
 
 ```promql
-60 * sum(rate(http_requests_total{job="miconsul"}[5m]))
+60 * sum(rate(http_server_request_duration_seconds_count{job="miconsul"}[5m]))
 ```
 
-- RPM by status group:
+- RPM by status code:
 
 ```promql
-60 * sum by (status_group) (rate(http_requests_total{job="miconsul"}[5m]))
+60 * sum by (http_response_status_code) (rate(http_server_request_duration_seconds_count{job="miconsul"}[5m]))
+```
+
+- 5xx RPM:
+
+```promql
+60 * sum(rate(http_server_request_duration_seconds_count{job="miconsul", http_response_status_code=~"5.."}[5m]))
 ```
 
 - Per-route RPS:
 
 ```promql
-sum by (route) (rate(http_requests_total{job="miconsul"}[5m]))
+sum by (http_route, http_request_method) (rate(http_server_request_duration_seconds_count{job="miconsul"}[5m]))
 ```
 
 - Per-route requests over last 5m (count/window):
 
 ```promql
-sum by (route) (increase(http_requests_total{job="miconsul"}[5m]))
+sum by (http_route) (increase(http_server_request_duration_seconds_count{job="miconsul"}[5m]))
 ```
 
-- Overall p95 latency (ms):
+- Overall p95 latency:
 
 ```promql
 histogram_quantile(
   0.95,
-  sum by (le) (rate(http_request_duration_seconds_bucket{job="miconsul"}[5m]))
+  sum by (le) (rate(http_server_request_duration_seconds_bucket{job="miconsul"}[5m]))
 )
 ```
 
-- Per-route p95 latency (ms):
+- Per-route p95 latency:
 
 ```promql
 histogram_quantile(
   0.95,
-  sum by (le, route) (rate(http_request_duration_seconds_bucket{job="miconsul"}[5m]))
+  sum by (le, http_route) (rate(http_server_request_duration_seconds_bucket{job="miconsul"}[5m]))
 )
 ```
 
@@ -291,5 +304,5 @@ Use `trace_id` from logs to jump into the trace in Grafana Explore.
 - `rate(counter[5m])` -> requests/second (`req/s`)
 - `60 * rate(...)` -> requests/minute (`req/min`)
 - `increase(counter[5m])` -> total count during the 5-minute window
-- `http_request_duration_seconds*` -> seconds
+- `http_server_request_duration_seconds*` -> seconds
 - `1000 * ...duration_seconds...` -> milliseconds ([!NOTE] No longer needed grafana shows them correctly)

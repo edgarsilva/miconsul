@@ -12,12 +12,10 @@ import (
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/localize"
 	"miconsul/internal/observability/logging"
-	"miconsul/internal/observability/metrics"
 
 	"github.com/gofiber/contrib/v3/otel"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
-	"github.com/gofiber/fiber/v3/middleware/adaptor"
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/encryptcookie"
 	"github.com/gofiber/fiber/v3/middleware/favicon"
@@ -32,7 +30,6 @@ import (
 	"github.com/gofiber/storage/sqlite3/v2"
 
 	"github.com/panjf2000/ants/v2"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 )
@@ -52,7 +49,6 @@ type Server struct {
 	Localizer         *localize.Localizer
 	Tracer            trace.Tracer
 	RequestLog        logging.Logger
-	Metrics           metrics.HTTPMetrics
 	StartedAt         time.Time
 	ReadyAt           time.Time
 	BootstrapDuration time.Duration
@@ -147,7 +143,6 @@ func setupFiberApp(s *Server) {
 
 	setupCoreMiddleware(s)
 	setupSecurityMiddleware(s)
-	setupObservabilityExporter(s)
 	setupStaticFiles(s)
 	setupHealthcheckRoutes(s)
 }
@@ -156,13 +151,10 @@ func setupCoreMiddleware(s *Server) {
 	app := s.App
 
 	app.Use(recoverer.New()) // Recover MW catches panics that might stop app execution
-	app.Use(RequestMetricsMiddleware(s.Metrics))
 	app.Use(otel.New(
 		otel.WithNext(func(c fiber.Ctx) bool {
 			path := c.Path()
-			return path == "/readyz" ||
-				path == "/metrics" ||
-				path == "/livez"
+			return path == "/readyz" || path == "/livez"
 		}),
 	))
 	app.Use(logger.New())
@@ -183,11 +175,6 @@ func setupSecurityMiddleware(s *Server) {
 	if rateLimiterEnabled {
 		app.Use(limiter.New(limiterConfig()))
 	}
-}
-
-func setupObservabilityExporter(s *Server) {
-	app := s.App
-	app.Get("/metrics", adaptor.HTTPHandler(promhttp.Handler()))
 }
 
 func setupStaticFiles(s *Server) {
@@ -280,14 +267,6 @@ func WithTracer(tracer trace.Tracer) ServerOption {
 		}
 
 		server.Tracer = tracer
-		return nil
-	}
-}
-
-// WithMetrics configures the HTTP metrics instruments.
-func WithMetrics(meter metrics.HTTPMetrics) ServerOption {
-	return func(server *Server) error {
-		server.Metrics = meter
 		return nil
 	}
 }

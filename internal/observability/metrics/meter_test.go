@@ -27,20 +27,6 @@ func TestNewMeterProviderGuardsAndNoEndpointPath(t *testing.T) {
 	}
 }
 
-func TestMetricsProviderAndFactoryBranches(t *testing.T) {
-	env := &appenv.Env{AppName: "miconsul"}
-	metrics, shutdown, err := New(t.Context(), env)
-	if err != nil {
-		t.Fatalf("expected metrics factory to succeed without endpoint: %v", err)
-	}
-	if metrics.HTTPDuration == nil || metrics.HTTPRequests == nil || metrics.PromHTTPDuration == nil || metrics.PromHTTPRequests == nil {
-		t.Fatalf("expected all metrics instruments to be initialized")
-	}
-	if err := shutdown(); err != nil {
-		t.Fatalf("expected metrics shutdown to succeed: %v", err)
-	}
-}
-
 func TestMetricsProviderOTLPBranch(t *testing.T) {
 	env := &appenv.Env{AppName: "miconsul", OTelOTLPEndpoint: "localhost:4317", OTelOTLPInsecure: true}
 

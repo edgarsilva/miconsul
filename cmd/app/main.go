@@ -31,7 +31,6 @@ import (
 
 type telemetryRuntime struct {
 	tracer          trace.Tracer
-	httpMetrics     metrics.HTTPMetrics
 	requestLogger   logging.Logger
 	dbLogger        logging.Logger
 	shutdownTracer  func() error
@@ -154,7 +153,6 @@ func bootstrapServer(ctx context.Context) (bootstrapResult, error) {
 		server.WithWorkPool(wp.AntsPool()),
 		server.WithJobs(jobsRuntime),
 		server.WithTracer(telemetry.tracer),
-		server.WithMetrics(telemetry.httpMetrics),
 		server.WithRequestLogger(telemetry.requestLogger),
 		server.WithLocalizer(localize.New("en-US", "es-MX")),
 	)
@@ -191,7 +189,7 @@ func setupTelemetry(ctx context.Context, env *appenv.Env) (telemetryRuntime, err
 	}
 
 	fmt.Println(" Starting metrics telemetry...")
-	httpMetrics, shutdownMetrics, err := metrics.New(ctx, env)
+	_, shutdownMetrics, err := metrics.NewMeterProvider(ctx, env)
 	if err != nil {
 		return telemetryRuntime{}, fmt.Errorf("initialize otel meter provider: %w", err)
 	}
@@ -204,7 +202,6 @@ func setupTelemetry(ctx context.Context, env *appenv.Env) (telemetryRuntime, err
 
 	return telemetryRuntime{
 		tracer:          tracer,
-		httpMetrics:     httpMetrics,
 		requestLogger:   logging.NewLogger(logProvider, env.AppName+".http"),
 		dbLogger:        logging.NewLogger(logProvider, env.AppName+".db"),
 		shutdownTracer:  shutdownTracer,

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"io"
 	"net/http"
@@ -15,6 +16,8 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
@@ -99,6 +102,63 @@ func TestOtelMiddlewareServesStaticFiles(t *testing.T) {
 
 	if errorSpans != 3 {
 		t.Fatalf("expected 3 error spans for GET /boom, got %d", errorSpans)
+	}
+}
+
+// TestOtelMiddlewareRecordsHTTPMetrics guards the only HTTP metrics stream: the
+// semconv http.server.request.duration histogram recorded by the otel middleware.
+func TestOtelMiddlewareRecordsHTTPMetrics(t *testing.T) {
+	setWorkingDirToRepoRoot(t)
+
+	reader := sdkmetric.NewManualReader()
+	previous := otel.GetMeterProvider()
+	otel.SetMeterProvider(sdkmetric.NewMeterProvider(sdkmetric.WithReader(reader)))
+	t.Cleanup(func() { otel.SetMeterProvider(previous) })
+
+	s := &Server{
+		Env: &appenv.Env{
+			Environment:   appenv.EnvironmentProduction,
+			AppProtocol:   "http",
+			CookieSecret:  "0123456789abcdef0123456789abcdef",
+			SessionDBPath: filepath.Join(t.TempDir(), "session.sqlite3"),
+		},
+		DB: &database.Database{DB: openTestDB(t)},
+	}
+	setupSessionStore(s)
+	setupFiberApp(s)
+	s.Get("/patients/:id", func(c fiber.Ctx) error { return c.SendString("ok") })
+
+	assertStatus(t, s, http.MethodGet, "/patients/123", fiber.StatusOK)
+	assertStatus(t, s, http.MethodGet, "/patients/456", fiber.StatusOK)
+	assertStatus(t, s, http.MethodGet, "/livez", fiber.StatusOK)
+
+	var rm metricdata.ResourceMetrics
+	if err := reader.Collect(context.Background(), &rm); err != nil {
+		t.Fatalf("collect metrics: %v", err)
+	}
+
+	counts := map[string]uint64{}
+	for _, sm := range rm.ScopeMetrics {
+		for _, m := range sm.Metrics {
+			if m.Name != "http.server.request.duration" {
+				continue
+			}
+			hist, ok := m.Data.(metricdata.Histogram[float64])
+			if !ok {
+				t.Fatalf("http.server.request.duration data = %T, want float64 histogram", m.Data)
+			}
+			for _, dp := range hist.DataPoints {
+				route, _ := dp.Attributes.Value("http.route")
+				counts[route.AsString()] += dp.Count
+			}
+		}
+	}
+
+	if counts["/patients/:id"] != 2 {
+		t.Fatalf("expected 2 requests recorded for /patients/:id, got %v", counts)
+	}
+	if _, ok := counts["/livez"]; ok {
+		t.Fatalf("expected probe requests to be skipped, got %v", counts)
 	}
 }
 

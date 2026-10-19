@@ -8,43 +8,9 @@ import (
 	"time"
 
 	"miconsul/internal/lib/appenv"
-	obsmetrics "miconsul/internal/observability/metrics"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/prometheus/client_golang/prometheus"
 )
-
-func TestRequestMetricsMiddlewareBranches(t *testing.T) {
-	metrics := obsmetrics.HTTPMetrics{
-		PromHTTPDuration: prometheus.NewHistogramVec(
-			prometheus.HistogramOpts{Name: "test_http_duration_seconds", Help: "test duration"},
-			[]string{"route", "method", "status_group"},
-		),
-		PromHTTPRequests: prometheus.NewCounterVec(
-			prometheus.CounterOpts{Name: "test_http_requests_total", Help: "test requests"},
-			[]string{"route", "method", "status_group"},
-		),
-	}
-
-	app := fiber.New()
-	app.Use(RequestMetricsMiddleware(metrics))
-	app.Get("/ok", func(c fiber.Ctx) error {
-		return c.SendStatus(fiber.StatusCreated)
-	})
-	app.Get("/public/ping", func(c fiber.Ctx) error {
-		return c.SendStatus(fiber.StatusNoContent)
-	})
-
-	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/ok", nil))
-	if err != nil || resp.StatusCode != fiber.StatusCreated {
-		t.Fatalf("/ok request failed status=%d err=%v", resp.StatusCode, err)
-	}
-
-	resp, err = app.Test(httptest.NewRequest(http.MethodGet, "/public/ping", nil))
-	if err != nil || resp.StatusCode != fiber.StatusNoContent {
-		t.Fatalf("/public request failed status=%d err=%v", resp.StatusCode, err)
-	}
-}
 
 func TestHandleDebugRuntime(t *testing.T) {
 	s := &Server{StartedAt: time.Now().Add(-2 * time.Second)}

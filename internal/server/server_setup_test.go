@@ -45,7 +45,7 @@ func TestSetupSessionStoreAndFiberApp(t *testing.T) {
 		t.Fatal("setupFiberApp() expected non-nil App")
 	}
 
-	assertRouteNot404(t, s, http.MethodGet, "/metrics")
+	assertStatus(t, s, http.MethodGet, "/metrics", http.StatusNotFound)
 	assertStatus(t, s, http.MethodGet, fiberhealthcheck.LivenessEndpoint, http.StatusOK)
 	assertStatus(t, s, http.MethodGet, fiberhealthcheck.ReadinessEndpoint, http.StatusOK)
 	assertStatus(t, s, http.MethodGet, fiberhealthcheck.StartupEndpoint, http.StatusOK)
@@ -100,15 +100,6 @@ func openTestDB(t *testing.T) *gorm.DB {
 	}
 
 	return db
-}
-
-func assertRouteNot404(t *testing.T, s *Server, method, path string) {
-	t.Helper()
-
-	resp := doRequest(t, s, method, path)
-	if resp.StatusCode == http.StatusNotFound {
-		t.Fatalf("expected %s %s to be registered, got 404", method, path)
-	}
 }
 
 func assertStatus(t *testing.T, s *Server, method, path string, wantStatus int) {

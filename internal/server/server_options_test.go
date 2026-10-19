@@ -9,7 +9,6 @@ import (
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/localize"
 	obslogging "miconsul/internal/observability/logging"
-	obsmetrics "miconsul/internal/observability/metrics"
 
 	"go.opentelemetry.io/otel"
 	"gorm.io/driver/sqlite"
@@ -75,9 +74,6 @@ func TestWithOptionSetters(t *testing.T) {
 
 	if err := WithLocalizer(localize.New("es-MX", "en-US"))(s); err != nil {
 		t.Fatalf("set localizer: %v", err)
-	}
-	if err := WithMetrics(obsmetrics.HTTPMetrics{})(s); err != nil {
-		t.Fatalf("set metrics: %v", err)
 	}
 	if err := WithRequestLogger(obslogging.Logger{})(s); err != nil {
 		t.Fatalf("set request logger: %v", err)
