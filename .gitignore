@@ -32,8 +32,8 @@ node_modules
 # *_templ.go
 *_templ.txt
 
-# Don't include the database file
-database/*.sqlite*
+# Don't include SQLite databases (app, session, cache) anywhere in the repo
+*.sqlite*
 
 # Don't Local store DB and Session
 store/

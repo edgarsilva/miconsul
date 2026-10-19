@@ -10,8 +10,8 @@ endif
 SHELL := /bin/bash
 MAKEFLAGS += --no-print-directory
 GOBIN ?= $(shell go env GOBIN)
-DB_PATH ?= database/app.sqlite
-SESSION_PATH ?= database/fiber_session.sqlite
+DB_PATH ?= store/app.sqlite
+SESSION_DB_PATH ?= store/session.sqlite
 GO_TOOL ?= go tool -modfile=tools.mod
 GOOSE_CMD ?= $(GO_TOOL) goose
 
@@ -153,8 +153,8 @@ db/delete: ## Delete DB (interactive confirmation)
 	if [ "$$choice" != "y" ] && [ "$$choice" != "Y" ]; then \
 		echo "🛑 Exiting..."; exit 1; \
 	else \
-		echo "🗑️ Deleting $(DB_PATH) and $(SESSION_PATH)..."; \
-		rm -f "$(DB_PATH)" "$(SESSION_PATH)"; \
+		echo "🗑️ Deleting $(DB_PATH) and $(SESSION_DB_PATH)..."; \
+		rm -f "$(DB_PATH)" "$(SESSION_DB_PATH)"; \
 	fi
 
 db/setup: ## Recreate DB, apply migrations, and seed
