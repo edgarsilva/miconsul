@@ -28,6 +28,13 @@ const csp = "default-src 'self';base-uri 'self';font-src 'self' https: data:;" +
 	"style-src 'self' https:;" +
 	"upgrade-insecure-requests"
 
+// Session store defaults, used when SESSION_DB_PATH is empty or unusable.
+// store/ is gitignored, so the session database never lands in the repo.
+const (
+	defaultSessionDBPath = "store/session.sqlite"
+	sessionDBFileName    = "session.sqlite"
+)
+
 var (
 	errorPagesOnce sync.Once
 	errorPages     = map[int]string{}
@@ -71,15 +78,15 @@ func staticMaxAge(env *appenv.Env) int {
 func sessionConfig(path string) sqlite3.Config {
 	sessPath := path
 	if sessPath == "" {
-		sessPath = "./fiber_session.sqlite3"
+		sessPath = defaultSessionDBPath
 	}
 
 	if stat, err := os.Stat(sessPath); err == nil && stat.IsDir() {
-		sessPath = filepath.Join(sessPath, "fiber_session.sqlite3")
+		sessPath = filepath.Join(sessPath, sessionDBFileName)
 	}
 
 	if err := os.MkdirAll(filepath.Dir(sessPath), 0o755); err != nil {
-		sessPath = "./fiber_session.sqlite3"
+		sessPath = filepath.Join(os.TempDir(), sessionDBFileName)
 	}
 
 	return sqlite3.Config{
