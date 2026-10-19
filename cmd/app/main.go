@@ -26,11 +26,13 @@ import (
 	"miconsul/internal/server"
 
 	"github.com/joho/godotenv"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
 type telemetryRuntime struct {
 	tracer          trace.Tracer
+	meterProvider   metric.MeterProvider
 	requestLogger   logging.Logger
 	dbLogger        logging.Logger
 	shutdownTracer  func() error
@@ -153,6 +155,7 @@ func bootstrapServer(ctx context.Context) (bootstrapResult, error) {
 		server.WithWorkPool(wp.AntsPool()),
 		server.WithJobs(jobsRuntime),
 		server.WithTracer(telemetry.tracer),
+		server.WithMeterProvider(telemetry.meterProvider),
 		server.WithRequestLogger(telemetry.requestLogger),
 		server.WithLocalizer(localize.New("en-US", "es-MX")),
 	)
@@ -189,7 +192,7 @@ func setupTelemetry(ctx context.Context, env *appenv.Env) (telemetryRuntime, err
 	}
 
 	fmt.Println(" Starting metrics telemetry...")
-	_, shutdownMetrics, err := metrics.NewMeterProvider(ctx, env)
+	meterProvider, shutdownMetrics, err := metrics.NewProvider(ctx, env)
 	if err != nil {
 		return telemetryRuntime{}, fmt.Errorf("initialize otel meter provider: %w", err)
 	}
@@ -202,6 +205,7 @@ func setupTelemetry(ctx context.Context, env *appenv.Env) (telemetryRuntime, err
 
 	return telemetryRuntime{
 		tracer:          tracer,
+		meterProvider:   meterProvider,
 		requestLogger:   logging.NewLogger(logProvider, env.AppName+".http"),
 		dbLogger:        logging.NewLogger(logProvider, env.AppName+".db"),
 		shutdownTracer:  shutdownTracer,

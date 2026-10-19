@@ -30,6 +30,8 @@ import (
 	"github.com/gofiber/storage/sqlite3/v2"
 
 	"github.com/panjf2000/ants/v2"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/metric/noop"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 )
@@ -48,6 +50,7 @@ type Server struct {
 	SessionStore      *session.Store
 	Localizer         *localize.Localizer
 	Tracer            trace.Tracer
+	MeterProvider     metric.MeterProvider
 	RequestLog        logging.Logger
 	StartedAt         time.Time
 	ReadyAt           time.Time
@@ -151,7 +154,13 @@ func setupCoreMiddleware(s *Server) {
 	app := s.App
 
 	app.Use(recoverer.New()) // Recover MW catches panics that might stop app execution
+	meterProvider := s.MeterProvider
+	if meterProvider == nil {
+		meterProvider = noop.NewMeterProvider()
+	}
+
 	app.Use(otel.New(
+		otel.WithMeterProvider(meterProvider),
 		otel.WithNext(func(c fiber.Ctx) bool {
 			path := c.Path()
 			return path == "/readyz" || path == "/livez"
@@ -267,6 +276,19 @@ func WithTracer(tracer trace.Tracer) ServerOption {
 		}
 
 		server.Tracer = tracer
+		return nil
+	}
+}
+
+// WithMeterProvider configures the meter provider the HTTP middleware records
+// metrics through. Without one, HTTP metrics are not recorded.
+func WithMeterProvider(provider metric.MeterProvider) ServerOption {
+	return func(server *Server) error {
+		if provider == nil {
+			return nil
+		}
+
+		server.MeterProvider = provider
 		return nil
 	}
 }

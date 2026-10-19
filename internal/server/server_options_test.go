@@ -11,6 +11,7 @@ import (
 	obslogging "miconsul/internal/observability/logging"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric/noop"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -74,6 +75,12 @@ func TestWithOptionSetters(t *testing.T) {
 
 	if err := WithLocalizer(localize.New("es-MX", "en-US"))(s); err != nil {
 		t.Fatalf("set localizer: %v", err)
+	}
+	if err := WithMeterProvider(nil)(s); err != nil || s.MeterProvider != nil {
+		t.Fatalf("expected WithMeterProvider nil noop: %v", err)
+	}
+	if err := WithMeterProvider(noop.NewMeterProvider())(s); err != nil || s.MeterProvider == nil {
+		t.Fatalf("set meter provider: %v", err)
 	}
 	if err := WithRequestLogger(obslogging.Logger{})(s); err != nil {
 		t.Fatalf("set request logger: %v", err)

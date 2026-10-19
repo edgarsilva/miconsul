@@ -10,19 +10,23 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/metric/noop"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
 
-func NewMeterProvider(ctx context.Context, env *appenv.Env) (metric.Meter, func() error, error) {
+// NewProvider builds the OTel meter provider, exporting over OTLP when an
+// endpoint is configured and a no-op provider otherwise. It also registers the
+// provider globally for libraries that read otel.GetMeterProvider. The returned
+// func flushes pending metrics on shutdown.
+func NewProvider(ctx context.Context, env *appenv.Env) (metric.MeterProvider, func() error, error) {
 	if env == nil {
 		return nil, nil, fmt.Errorf("otel metrics: environment config is nil")
 	}
 
 	if env.OTelOTLPEndpoint == "" {
-		meter := otel.GetMeterProvider().Meter(env.AppName + ".metrics")
-		return meter, func() error { return nil }, nil
+		return noop.NewMeterProvider(), func() error { return nil }, nil
 	}
 
 	endpoint := env.OTelOTLPEndpoint
@@ -62,7 +66,6 @@ func NewMeterProvider(ctx context.Context, env *appenv.Env) (metric.Meter, func(
 	)
 
 	otel.SetMeterProvider(mp)
-	meter := mp.Meter(env.AppName + ".metrics")
 
 	shutdown := func() error {
 		if err := mp.Shutdown(context.Background()); err != nil {
@@ -71,5 +74,5 @@ func NewMeterProvider(ctx context.Context, env *appenv.Env) (metric.Meter, func(
 		return nil
 	}
 
-	return meter, shutdown, nil
+	return mp, shutdown, nil
 }

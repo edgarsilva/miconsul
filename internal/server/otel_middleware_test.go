@@ -111,11 +111,9 @@ func TestOtelMiddlewareRecordsHTTPMetrics(t *testing.T) {
 	setWorkingDirToRepoRoot(t)
 
 	reader := sdkmetric.NewManualReader()
-	previous := otel.GetMeterProvider()
-	otel.SetMeterProvider(sdkmetric.NewMeterProvider(sdkmetric.WithReader(reader)))
-	t.Cleanup(func() { otel.SetMeterProvider(previous) })
 
 	s := &Server{
+		MeterProvider: sdkmetric.NewMeterProvider(sdkmetric.WithReader(reader)),
 		Env: &appenv.Env{
 			Environment:   appenv.EnvironmentProduction,
 			AppProtocol:   "http",
