@@ -17,9 +17,10 @@ import (
 )
 
 // NewProvider builds the OTel meter provider, exporting over OTLP when an
-// endpoint is configured and a no-op provider otherwise. It also registers the
-// provider globally for libraries that read otel.GetMeterProvider. The returned
-// func flushes pending metrics on shutdown.
+// endpoint is configured and a no-op provider otherwise (appenv requires an
+// endpoint in production). It also registers the provider globally for
+// libraries that read otel.GetMeterProvider. The returned func flushes pending
+// metrics on shutdown.
 func NewProvider(ctx context.Context, env *appenv.Env) (metric.MeterProvider, func() error, error) {
 	if env == nil {
 		return nil, nil, fmt.Errorf("otel metrics: environment config is nil")

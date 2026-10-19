@@ -2,6 +2,7 @@
 package appenv
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -68,6 +69,10 @@ type Env struct {
 	AssetsDir string `env:"ASSETS_DIR"`
 }
 
+// ErrOTLPEndpointRequired is returned when production starts without an OTLP
+// endpoint, so a deploy never runs without traces, metrics, and logs.
+var ErrOTLPEndpointRequired = errors.New("OTEL_EXPORTER_OTLP_ENDPOINT is required in production")
+
 func New() (*Env, error) {
 	env := &Env{
 		AppShutdownTimeout: 10 * time.Second,
@@ -89,6 +94,10 @@ func New() (*Env, error) {
 	env.AssetsDir, err = normalizeAbsPath(env.AssetsDir)
 	if err != nil {
 		return nil, fmt.Errorf("normalize ASSETS_DIR: %w", err)
+	}
+
+	if env.IsProduction() && env.OTelOTLPEndpoint == "" {
+		return nil, ErrOTLPEndpointRequired
 	}
 
 	return env, nil

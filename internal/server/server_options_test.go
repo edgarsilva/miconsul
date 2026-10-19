@@ -12,6 +12,7 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric/noop"
+	tracenoop "go.opentelemetry.io/otel/trace/noop"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -31,8 +32,8 @@ func TestWithOptionSetters(t *testing.T) {
 		t.Fatalf("with db error: %v", err)
 	}
 
-	if err := WithTracer(otel.Tracer("test"))(s); err != nil {
-		t.Fatalf("with tracer error: %v", err)
+	if err := WithTracerProvider(tracenoop.NewTracerProvider())(s); err != nil || s.TracerProvider == nil {
+		t.Fatalf("with tracer provider error: %v", err)
 	}
 
 	cache := &cacheStub{}
@@ -57,8 +58,8 @@ func TestWithOptionSetters(t *testing.T) {
 	if err := WithDatabase(nil)(s); err == nil {
 		t.Fatalf("expected WithDatabase nil error")
 	}
-	if err := WithTracer(nil)(s); err != nil {
-		t.Fatalf("expected WithTracer nil noop: %v", err)
+	if err := WithTracerProvider(nil)(s); err != nil {
+		t.Fatalf("expected WithTracerProvider nil noop: %v", err)
 	}
 	if err := WithLocalizer(nil)(s); err != nil {
 		t.Fatalf("expected WithLocalizer nil noop: %v", err)

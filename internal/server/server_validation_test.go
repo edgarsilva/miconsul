@@ -6,6 +6,7 @@ import (
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
 
+	metricnoop "go.opentelemetry.io/otel/metric/noop"
 	"go.opentelemetry.io/otel/trace/noop"
 )
 
@@ -20,13 +21,19 @@ func TestValidateCriticalDeps(t *testing.T) {
 		{name: "nil server", s: nil, want: "server is required"},
 		{name: "missing env", s: &Server{}, want: "environment config is required"},
 		{name: "missing db", s: &Server{Env: &appenv.Env{}}, want: "database is required"},
-		{name: "missing tracer", s: &Server{Env: &appenv.Env{}, DB: &database.Database{}}, want: "tracer is required; pass server.WithTracer(...) to server.New(...)"},
+		{name: "missing tracer provider", s: &Server{Env: &appenv.Env{}, DB: &database.Database{}}, want: "tracer provider is required; pass server.WithTracerProvider(...) to server.New(...)"},
+		{
+			name: "missing meter provider",
+			s:    &Server{Env: &appenv.Env{}, DB: &database.Database{}, TracerProvider: noop.NewTracerProvider()},
+			want: "meter provider is required; pass server.WithMeterProvider(...) to server.New(...)",
+		},
 		{
 			name: "valid deps",
 			s: &Server{
-				Env:    &appenv.Env{},
-				DB:     &database.Database{},
-				Tracer: noop.NewTracerProvider().Tracer("test"),
+				Env:            &appenv.Env{},
+				DB:             &database.Database{},
+				TracerProvider: noop.NewTracerProvider(),
+				MeterProvider:  metricnoop.NewMeterProvider(),
 			},
 			want: "",
 		},

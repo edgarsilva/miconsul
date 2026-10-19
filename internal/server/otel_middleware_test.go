@@ -14,7 +14,6 @@ import (
 	"miconsul/internal/lib/appenv"
 
 	"github.com/gofiber/fiber/v3"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
@@ -27,9 +26,10 @@ import (
 // released the request, so static paths had to be skipped from tracing.
 func TestOtelMiddlewareServesStaticFiles(t *testing.T) {
 	setWorkingDirToRepoRoot(t)
-	recorder := useSpanRecorder(t)
+	recorder := tracetest.NewSpanRecorder()
 
 	s := &Server{
+		TracerProvider: sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)),
 		Env: &appenv.Env{
 			Environment:   appenv.EnvironmentProduction,
 			AppProtocol:   "http",
@@ -158,15 +158,4 @@ func TestOtelMiddlewareRecordsHTTPMetrics(t *testing.T) {
 	if _, ok := counts["/livez"]; ok {
 		t.Fatalf("expected probe requests to be skipped, got %v", counts)
 	}
-}
-
-func useSpanRecorder(t *testing.T) *tracetest.SpanRecorder {
-	t.Helper()
-
-	recorder := tracetest.NewSpanRecorder()
-	previous := otel.GetTracerProvider()
-	otel.SetTracerProvider(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
-	t.Cleanup(func() { otel.SetTracerProvider(previous) })
-
-	return recorder
 }

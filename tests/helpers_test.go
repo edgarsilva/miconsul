@@ -19,7 +19,8 @@ import (
 	"miconsul/internal/server"
 	"miconsul/internal/services/auth"
 
-	"go.opentelemetry.io/otel"
+	metricnoop "go.opentelemetry.io/otel/metric/noop"
+	tracenoop "go.opentelemetry.io/otel/trace/noop"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -123,7 +124,8 @@ func newTestHarness(t *testing.T) *testHarness {
 	s := server.New(
 		server.WithEnv(env),
 		server.WithDatabase(db),
-		server.WithTracer(otel.Tracer("tests")),
+		server.WithTracerProvider(tracenoop.NewTracerProvider()),
+		server.WithMeterProvider(metricnoop.NewMeterProvider()),
 	)
 
 	if err := routes.RegisterServices(s); err != nil {

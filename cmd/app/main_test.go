@@ -121,8 +121,8 @@ func TestSetupTelemetry(t *testing.T) {
 		if err != nil {
 			t.Fatalf("setupTelemetry() unexpected error: %v", err)
 		}
-		if telemetry.tracer == nil {
-			t.Fatal("setupTelemetry() expected tracer")
+		if telemetry.tracerProvider == nil || telemetry.meterProvider == nil {
+			t.Fatal("setupTelemetry() expected tracer and meter providers")
 		}
 		if telemetry.shutdownTracer == nil || telemetry.shutdownMetrics == nil || telemetry.shutdownLogs == nil {
 			t.Fatal("setupTelemetry() expected shutdown callbacks")

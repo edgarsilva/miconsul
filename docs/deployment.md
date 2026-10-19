@@ -12,6 +12,7 @@ Minimum runtime vars for production deploy:
 - `EMAIL_SENDER`, `EMAIL_SECRET`, `EMAIL_FROM_ADDRESS`, `EMAIL_SMTP_URL`
 - `GOOSE_DRIVER`, `GOOSE_DBSTRING`, `GOOSE_MIGRATION_DIR`
 - `ASSETS_DIR`
+- `OTEL_EXPORTER_OTLP_ENDPOINT` (startup fails without it in production)
 
 Optional one-time admin bootstrap vars:
 

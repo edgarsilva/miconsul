@@ -120,8 +120,11 @@ Core environment variables:
 - `OTEL_TRACER_SERVER` (defaults to `miconsul.server`)
 - `OTEL_TRACER_AUTH` (defaults to `miconsul.auth`)
 
-Without `OTEL_EXPORTER_OTLP_ENDPOINT`, telemetry SDKs initialize in no-op mode
-for export, so app behavior is unchanged but no remote signal export occurs.
+Without `OTEL_EXPORTER_OTLP_ENDPOINT`, the trace, metric, and log providers are
+no-ops outside production: app behavior is unchanged but nothing is exported.
+In production (`APP_ENV=production`) the endpoint is required and startup fails
+without it. If the collector is unreachable at runtime, the app keeps serving and
+OTel logs export errors to stderr.
 
 ## Signals Emitted by App
 

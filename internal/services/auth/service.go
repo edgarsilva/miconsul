@@ -15,7 +15,6 @@ import (
 	"miconsul/internal/server"
 
 	"github.com/asaskevich/govalidator"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	otellog "go.opentelemetry.io/otel/log"
@@ -42,6 +41,9 @@ func New(s *server.Server) (*service, error) {
 	if s.Env == nil {
 		return nil, errors.New("auth service requires a non-nil server env")
 	}
+	if s.TracerProvider == nil {
+		return nil, errors.New("auth service requires a server tracer provider")
+	}
 
 	tracerName := s.Env.OTelTracerAuth
 	if tracerName == "" {
@@ -50,7 +52,7 @@ func New(s *server.Server) (*service, error) {
 
 	return &service{
 		Server: s,
-		tracer: otel.Tracer(tracerName),
+		tracer: s.TracerProvider.Tracer(tracerName),
 	}, nil
 }
 

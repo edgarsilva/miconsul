@@ -31,7 +31,7 @@ import (
 )
 
 type telemetryRuntime struct {
-	tracer          trace.Tracer
+	tracerProvider  trace.TracerProvider
 	meterProvider   metric.MeterProvider
 	requestLogger   logging.Logger
 	dbLogger        logging.Logger
@@ -154,7 +154,7 @@ func bootstrapServer(ctx context.Context) (bootstrapResult, error) {
 		server.WithDatabase(db),
 		server.WithWorkPool(wp.AntsPool()),
 		server.WithJobs(jobsRuntime),
-		server.WithTracer(telemetry.tracer),
+		server.WithTracerProvider(telemetry.tracerProvider),
 		server.WithMeterProvider(telemetry.meterProvider),
 		server.WithRequestLogger(telemetry.requestLogger),
 		server.WithLocalizer(localize.New("en-US", "es-MX")),
@@ -186,7 +186,7 @@ func setupTelemetry(ctx context.Context, env *appenv.Env) (telemetryRuntime, err
 		return telemetryRuntime{}, fmt.Errorf("environment config is required")
 	}
 
-	tracer, shutdownTracer, err := tracing.NewTracer(ctx, env.OTelTracerServer, env)
+	tracerProvider, shutdownTracer, err := tracing.NewProvider(ctx, env)
 	if err != nil {
 		return telemetryRuntime{}, fmt.Errorf("initialize otel tracer: %w", err)
 	}
@@ -204,7 +204,7 @@ func setupTelemetry(ctx context.Context, env *appenv.Env) (telemetryRuntime, err
 	}
 
 	return telemetryRuntime{
-		tracer:          tracer,
+		tracerProvider:  tracerProvider,
 		meterProvider:   meterProvider,
 		requestLogger:   logging.NewLogger(logProvider, env.AppName+".http"),
 		dbLogger:        logging.NewLogger(logProvider, env.AppName+".db"),

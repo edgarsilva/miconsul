@@ -31,7 +31,6 @@ import (
 
 	"github.com/panjf2000/ants/v2"
 	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/metric/noop"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 )
@@ -49,6 +48,7 @@ type Server struct {
 	Cache             Cache
 	SessionStore      *session.Store
 	Localizer         *localize.Localizer
+	TracerProvider    trace.TracerProvider
 	Tracer            trace.Tracer
 	MeterProvider     metric.MeterProvider
 	RequestLog        logging.Logger
@@ -80,6 +80,7 @@ func New(serverOpts ...ServerOption) *Server {
 		log.Fatal("🔴 failed to start server:", err)
 	}
 
+	setupTracer(&server)
 	setupSessionStore(&server)
 	setupFiberApp(&server)
 	server.ReadyAt = time.Now()
@@ -102,8 +103,12 @@ func validateCriticalDeps(s *Server) error {
 		return errors.New("database is required")
 	}
 
-	if s.Tracer == nil {
-		return errors.New("tracer is required; pass server.WithTracer(...) to server.New(...)")
+	if s.TracerProvider == nil {
+		return errors.New("tracer provider is required; pass server.WithTracerProvider(...) to server.New(...)")
+	}
+
+	if s.MeterProvider == nil {
+		return errors.New("meter provider is required; pass server.WithMeterProvider(...) to server.New(...)")
 	}
 
 	return nil
@@ -124,6 +129,15 @@ func validateRuntimeConfig(s *Server) error {
 	}
 
 	return nil
+}
+
+func setupTracer(s *Server) {
+	name := s.Env.OTelTracerServer
+	if name == "" {
+		name = s.Env.AppName + ".server"
+	}
+
+	s.Tracer = s.TracerProvider.Tracer(name)
 }
 
 func setupSessionStore(s *Server) {
@@ -154,13 +168,9 @@ func setupCoreMiddleware(s *Server) {
 	app := s.App
 
 	app.Use(recoverer.New()) // Recover MW catches panics that might stop app execution
-	meterProvider := s.MeterProvider
-	if meterProvider == nil {
-		meterProvider = noop.NewMeterProvider()
-	}
-
 	app.Use(otel.New(
-		otel.WithMeterProvider(meterProvider),
+		otel.WithTracerProvider(s.TracerProvider),
+		otel.WithMeterProvider(s.MeterProvider),
 		otel.WithNext(func(c fiber.Ctx) bool {
 			path := c.Path()
 			return path == "/readyz" || path == "/livez"
@@ -268,20 +278,21 @@ func WithJobs(j *jobs.Runtime) ServerOption {
 	}
 }
 
-// WithTracer configures the tracer implementation.
-func WithTracer(tracer trace.Tracer) ServerOption {
+// WithTracerProvider configures the required tracer provider. The server and
+// its HTTP middleware create their tracers from it.
+func WithTracerProvider(provider trace.TracerProvider) ServerOption {
 	return func(server *Server) error {
-		if tracer == nil {
+		if provider == nil {
 			return nil
 		}
 
-		server.Tracer = tracer
+		server.TracerProvider = provider
 		return nil
 	}
 }
 
-// WithMeterProvider configures the meter provider the HTTP middleware records
-// metrics through. Without one, HTTP metrics are not recorded.
+// WithMeterProvider configures the required meter provider the HTTP middleware
+// records metrics through.
 func WithMeterProvider(provider metric.MeterProvider) ServerOption {
 	return func(server *Server) error {
 		if provider == nil {
