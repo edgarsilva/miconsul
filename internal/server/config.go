@@ -28,8 +28,7 @@ const csp = "default-src 'self';base-uri 'self';font-src 'self' https: data:;" +
 	"style-src 'self' https:;" +
 	"upgrade-insecure-requests"
 
-// Session store defaults, used when SESSION_DB_PATH is empty or unusable.
-// store/ is gitignored, so the session database never lands in the repo.
+// Session store fallbacks for an empty or unusable SESSION_DB_PATH.
 const (
 	defaultSessionDBPath = "store/session.sqlite"
 	sessionDBFileName    = "session.sqlite"
