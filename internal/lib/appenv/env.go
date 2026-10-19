@@ -69,8 +69,7 @@ type Env struct {
 	AssetsDir string `env:"ASSETS_DIR"`
 }
 
-// ErrOTLPEndpointRequired is returned when production starts without an OTLP
-// endpoint, so a deploy never runs without traces, metrics, and logs.
+// ErrOTLPEndpointRequired is returned by New when production has no OTLP endpoint.
 var ErrOTLPEndpointRequired = errors.New("OTEL_EXPORTER_OTLP_ENDPOINT is required in production")
 
 func New() (*Env, error) {

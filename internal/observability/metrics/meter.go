@@ -16,11 +16,9 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
 
-// NewProvider builds the OTel meter provider, exporting over OTLP when an
-// endpoint is configured and a no-op provider otherwise (appenv requires an
-// endpoint in production). It also registers the provider globally for
-// libraries that read otel.GetMeterProvider. The returned func flushes pending
-// metrics on shutdown.
+// NewProvider returns the meter provider and its shutdown func. It returns a
+// no-op provider when env has no OTLP endpoint, and sets the global meter
+// provider otherwise.
 func NewProvider(ctx context.Context, env *appenv.Env) (metric.MeterProvider, func() error, error) {
 	if env == nil {
 		return nil, nil, fmt.Errorf("otel metrics: environment config is nil")

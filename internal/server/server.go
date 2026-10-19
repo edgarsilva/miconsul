@@ -278,8 +278,7 @@ func WithJobs(j *jobs.Runtime) ServerOption {
 	}
 }
 
-// WithTracerProvider configures the required tracer provider. The server and
-// its HTTP middleware create their tracers from it.
+// WithTracerProvider sets the server's tracer provider.
 func WithTracerProvider(provider trace.TracerProvider) ServerOption {
 	return func(server *Server) error {
 		if provider == nil {
@@ -291,8 +290,7 @@ func WithTracerProvider(provider trace.TracerProvider) ServerOption {
 	}
 }
 
-// WithMeterProvider configures the required meter provider the HTTP middleware
-// records metrics through.
+// WithMeterProvider sets the server's meter provider.
 func WithMeterProvider(provider metric.MeterProvider) ServerOption {
 	return func(server *Server) error {
 		if provider == nil {

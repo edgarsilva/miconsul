@@ -105,8 +105,6 @@ func TestOtelMiddlewareServesStaticFiles(t *testing.T) {
 	}
 }
 
-// TestOtelMiddlewareRecordsHTTPMetrics guards the only HTTP metrics stream: the
-// semconv http.server.request.duration histogram recorded by the otel middleware.
 func TestOtelMiddlewareRecordsHTTPMetrics(t *testing.T) {
 	setWorkingDirToRepoRoot(t)
 

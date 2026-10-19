@@ -18,11 +18,9 @@ import (
 	"go.opentelemetry.io/otel/trace/noop"
 )
 
-// NewProvider builds the OTel tracer provider, exporting over OTLP when an
-// endpoint is configured and a no-op provider otherwise (appenv requires an
-// endpoint in production). It also registers the provider and the W3C propagators globally
-// for libraries that read them. The returned func flushes pending spans on
-// shutdown.
+// NewProvider returns the tracer provider and its shutdown func. It returns a
+// no-op provider when env has no OTLP endpoint, and sets the global tracer
+// provider and propagators otherwise.
 func NewProvider(ctx context.Context, env *appenv.Env) (trace.TracerProvider, func() error, error) {
 	if env == nil {
 		return nil, nil, fmt.Errorf("otel tracing: environment config is nil")
