@@ -31,7 +31,8 @@ type service struct {
 var (
 	errAuthInvalidCredentials  = errors.New("invalid credentials")
 	errAuthPendingConfirmation = errors.New("email pending confirmation")
-	errAuthSessionCreate       = errors.New("failed to create session")
+	errAuthSessionCreate       = errors.New("create session")
+	errAuthConfirmEmailSend    = errors.New("send confirmation email")
 )
 
 func New(s *server.Server) (*service, error) {
@@ -110,7 +111,7 @@ func (s *service) sendConfirmEmail(ctx context.Context, email, token string) err
 	}
 
 	if err := mailer.ConfirmEmail(s.Env, email, token); err != nil {
-		return fmt.Errorf("failed to send confirmation email, please try again: %w", err)
+		return fmt.Errorf("%w: %w", errAuthConfirmEmailSend, err)
 	}
 	return nil
 }

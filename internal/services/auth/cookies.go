@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"fmt"
+
 	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
@@ -11,7 +13,7 @@ func (s *service) issueAuthCookie(c fiber.Ctx, user models.User, rememberMe bool
 
 	jwt, err := JWTCreateTokenWithTTL(s.AppEnv(), user.Email, user.UID, validFor, rememberMe)
 	if err != nil {
-		return errAuthSessionCreate
+		return fmt.Errorf("%w: %w", errAuthSessionCreate, err)
 	}
 
 	c.Cookie(s.NewCookie("Auth", jwt, validFor))
