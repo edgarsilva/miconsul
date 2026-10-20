@@ -18,7 +18,6 @@ require (
 	github.com/logto-io/go v1.0.6
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/panjf2000/ants/v2 v2.12.1
-	github.com/pkg/errors v0.9.1
 	github.com/pressly/goose/v3 v3.29.0
 	github.com/rs/xid v1.6.0
 	github.com/uptrace/opentelemetry-go-extra/otelgorm v0.4.0
