@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/observability"
 
 	"go.opentelemetry.io/contrib/propagators/aws/xray"
 	"go.opentelemetry.io/otel"
@@ -36,7 +35,7 @@ func NewProvider(ctx context.Context, env *appenv.Env) (trace.TracerProvider, fu
 	}
 
 	otlpOpts := []otlptracegrpc.Option{otlptracegrpc.WithEndpoint(env.OTelOTLPEndpoint)}
-	if env.OTelOTLPInsecure || observability.IsInternalOTLPEndpoint(env.OTelOTLPEndpoint) {
+	if env.OTelOTLPInsecure {
 		otlpOpts = append(otlpOpts, otlptracegrpc.WithInsecure())
 	}
 

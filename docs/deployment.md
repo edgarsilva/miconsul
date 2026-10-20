@@ -13,6 +13,7 @@ Minimum runtime vars for production deploy:
 - `GOOSE_DRIVER`, `GOOSE_DBSTRING`, `GOOSE_MIGRATION_DIR`
 - `ASSETS_DIR`
 - `OTEL_EXPORTER_OTLP_ENDPOINT` (startup fails without it in production)
+- `OTEL_EXPORTER_OTLP_INSECURE=true` when the collector has no TLS (e.g. LGTM on Coolify); otherwise exports fail the TLS handshake
 
 Optional one-time admin bootstrap vars:
 

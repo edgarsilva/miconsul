@@ -115,7 +115,7 @@ configured.
 Core environment variables:
 
 - `OTEL_EXPORTER_OTLP_ENDPOINT` (required to enable OTLP export)
-- `OTEL_EXPORTER_OTLP_INSECURE` (optional; useful for local docker stack)
+- `OTEL_EXPORTER_OTLP_INSECURE` (set to `true` for a collector without TLS, such as the local docker stack or LGTM on Coolify; nothing is inferred from the host name)
 - `OTEL_SERVICE_NAME` (defaults to `miconsul`)
 - `OTEL_TRACER_SERVER` (defaults to `miconsul.server`)
 - `OTEL_TRACER_AUTH` (defaults to `miconsul.auth`)
