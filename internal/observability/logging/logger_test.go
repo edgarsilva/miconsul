@@ -6,33 +6,27 @@ import (
 	"miconsul/internal/lib/appenv"
 
 	otellog "go.opentelemetry.io/otel/log"
+	"go.opentelemetry.io/otel/log/noop"
 )
 
-func TestLoggerProviderGuardsAndNoEndpointPath(t *testing.T) {
+func TestNewProviderNoopWithoutOTLP(t *testing.T) {
 	if _, _, err := NewProvider(t.Context(), nil); err == nil {
 		t.Fatalf("expected nil env error")
 	}
 
-	env := &appenv.Env{AppName: "miconsul"}
-	provider, shutdown, err := NewProvider(t.Context(), env)
+	provider, shutdown, err := NewProvider(t.Context(), &appenv.Env{AppName: "miconsul"})
 	if err != nil {
 		t.Fatalf("expected no-endpoint provider to succeed: %v", err)
 	}
-	if shutdown == nil {
-		t.Fatalf("expected shutdown callback")
+	if _, ok := provider.(noop.LoggerProvider); !ok {
+		t.Fatalf("expected noop logger provider, got %T", provider)
 	}
 	if err := shutdown(); err != nil {
 		t.Fatalf("expected noop shutdown without endpoint: %v", err)
 	}
-
-	logger := NewLogger(provider, "miconsul.test")
-	if logger.Enabled() {
-		t.Fatalf("expected disabled logger when provider is zero")
-	}
-	logger.Emit(t.Context(), otellog.Record{})
 }
 
-func TestLoggerProviderOTLPBranch(t *testing.T) {
+func TestNewProviderOTLPBranch(t *testing.T) {
 	env := &appenv.Env{
 		AppName:          "miconsul",
 		OTelOTLPEndpoint: "localhost:4317",
@@ -43,11 +37,10 @@ func TestLoggerProviderOTLPBranch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected otlp provider setup to succeed: %v", err)
 	}
-	logger := NewLogger(provider, "miconsul.test.otlp")
-	if !logger.Enabled() {
+	defer func() { _ = shutdown() }()
+
+	logger := provider.Logger("miconsul.test.otlp")
+	if !logger.Enabled(t.Context(), otellog.EnabledParameters{}) {
 		t.Fatalf("expected logger to be enabled with otlp provider")
-	}
-	if shutdown != nil {
-		_ = shutdown()
 	}
 }

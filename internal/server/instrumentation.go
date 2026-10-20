@@ -53,8 +53,13 @@ func (s *Server) SendToWorker(ctx context.Context, fn func()) error {
 	return nil
 }
 
+// LoggerEnabled reports whether the server logger is set and emits for ctx.
+func (s *Server) LoggerEnabled(ctx context.Context) bool {
+	return s.Logger != nil && s.Logger.Enabled(ctx, otellog.EnabledParameters{})
+}
+
 func (s *Server) emitWorkerError(ctx context.Context, err error) {
-	if err == nil || !s.RequestLog.Enabled() {
+	if err == nil || !s.LoggerEnabled(ctx) {
 		return
 	}
 
@@ -71,11 +76,11 @@ func (s *Server) emitWorkerError(ctx context.Context, err error) {
 		attribute.String("error", err.Error()),
 	)
 
-	s.RequestLog.Emit(ctx, rec)
+	s.Logger.Emit(ctx, rec)
 }
 
 func emitStartupBootstrapLog(s *Server) {
-	if !s.RequestLog.Enabled() {
+	if !s.LoggerEnabled(context.Background()) {
 		return
 	}
 
@@ -95,5 +100,5 @@ func emitStartupBootstrapLog(s *Server) {
 		attribute.String("environment", string(s.Env.Environment)),
 	)
 
-	s.RequestLog.Emit(context.Background(), rec)
+	s.Logger.Emit(context.Background(), rec)
 }

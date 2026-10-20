@@ -14,11 +14,11 @@ import (
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/models"
-	"miconsul/internal/observability/logging"
 	"miconsul/internal/routes"
 	"miconsul/internal/server"
 	"miconsul/internal/services/auth"
 
+	lognoop "go.opentelemetry.io/otel/log/noop"
 	metricnoop "go.opentelemetry.io/otel/metric/noop"
 	tracenoop "go.opentelemetry.io/otel/trace/noop"
 	"golang.org/x/crypto/bcrypt"
@@ -73,7 +73,7 @@ func newTestHarness(t *testing.T) *testHarness {
 		AssetsDir:          tmpDir,
 	}
 
-	db, err := database.New(env, logging.Logger{}, dbOpts)
+	db, err := database.New(env, lognoop.NewLoggerProvider(), tracenoop.NewTracerProvider(), dbOpts)
 	if err != nil {
 		t.Fatalf("create test database: %v", err)
 	}
@@ -126,6 +126,7 @@ func newTestHarness(t *testing.T) *testHarness {
 		server.WithDatabase(db),
 		server.WithTracerProvider(tracenoop.NewTracerProvider()),
 		server.WithMeterProvider(metricnoop.NewMeterProvider()),
+		server.WithLoggerProvider(lognoop.NewLoggerProvider()),
 	)
 
 	if err := routes.RegisterServices(s); err != nil {

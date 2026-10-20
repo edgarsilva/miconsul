@@ -6,23 +6,21 @@ import (
 	"log"
 	"os"
 
-	obslogging "miconsul/internal/observability/logging"
-
 	"go.opentelemetry.io/otel/attribute"
 	otellog "go.opentelemetry.io/otel/log"
 )
 
 type GooseLogger struct {
-	stdout    *log.Logger
-	obsLogger obslogging.Logger
+	stdout     *log.Logger
+	otelLogger otellog.Logger
 }
 
-type NoopLogger struct{}
+type NoopGooseLogger struct{}
 
-func NewGooseLogger(obsLogger obslogging.Logger) GooseLogger {
+func NewGooseLogger(otelLogger otellog.Logger) GooseLogger {
 	return GooseLogger{
-		stdout:    log.New(os.Stdout, "", log.LstdFlags),
-		obsLogger: obsLogger,
+		stdout:     log.New(os.Stdout, "", log.LstdFlags),
+		otelLogger: otelLogger,
 	}
 }
 
@@ -50,9 +48,9 @@ func (l GooseLogger) emit(severity otellog.Severity, severityText, msg string) {
 		attribute.String("message", msg),
 	)
 
-	l.obsLogger.Emit(context.Background(), rec)
+	l.otelLogger.Emit(context.Background(), rec)
 }
 
-func (NoopLogger) Printf(string, ...any) {}
+func (NoopGooseLogger) Printf(string, ...any) {}
 
-func (NoopLogger) Fatalf(string, ...any) {}
+func (NoopGooseLogger) Fatalf(string, ...any) {}

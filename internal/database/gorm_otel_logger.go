@@ -6,12 +6,10 @@ import (
 	"strings"
 	"time"
 
-	obslogging "miconsul/internal/observability/logging"
-
 	"go.opentelemetry.io/otel/attribute"
 	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/trace"
-	"gorm.io/gorm/logger"
+	gormlogger "gorm.io/gorm/logger"
 )
 
 const maxSQLLogLength = 512
@@ -24,41 +22,41 @@ var (
 	whitespaceRE          = regexp.MustCompile(`\s+`)
 )
 
-type GormObsLogger struct {
-	base      logger.Interface
-	obsLogger obslogging.Logger
+type GormOtelLogger struct {
+	gormLogger gormlogger.Interface
+	otelLogger otellog.Logger
 }
 
-func NewGormObsLogger(base logger.Interface, obsLogger obslogging.Logger) logger.Interface {
-	if base == nil {
-		base = logger.Default
+func NewGormOtelLogger(gormLogger gormlogger.Interface, otelLogger otellog.Logger) gormlogger.Interface {
+	if gormLogger == nil {
+		gormLogger = gormlogger.Default
 	}
 
-	return GormObsLogger{base: base, obsLogger: obsLogger}
+	return GormOtelLogger{gormLogger: gormLogger, otelLogger: otelLogger}
 }
 
-func (l GormObsLogger) LogMode(level logger.LogLevel) logger.Interface {
-	return GormObsLogger{base: l.base.LogMode(level), obsLogger: l.obsLogger}
+func (l GormOtelLogger) LogMode(level gormlogger.LogLevel) gormlogger.Interface {
+	return GormOtelLogger{gormLogger: l.gormLogger.LogMode(level), otelLogger: l.otelLogger}
 }
 
-func (l GormObsLogger) Info(ctx context.Context, msg string, data ...any) {
-	l.base.Info(ctx, msg, data...)
+func (l GormOtelLogger) Info(ctx context.Context, msg string, data ...any) {
+	l.gormLogger.Info(ctx, msg, data...)
 }
 
-func (l GormObsLogger) Warn(ctx context.Context, msg string, data ...any) {
-	l.base.Warn(ctx, msg, data...)
+func (l GormOtelLogger) Warn(ctx context.Context, msg string, data ...any) {
+	l.gormLogger.Warn(ctx, msg, data...)
 }
 
-func (l GormObsLogger) Error(ctx context.Context, msg string, data ...any) {
-	l.base.Error(ctx, msg, data...)
+func (l GormOtelLogger) Error(ctx context.Context, msg string, data ...any) {
+	l.gormLogger.Error(ctx, msg, data...)
 }
 
-func (l GormObsLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
+func (l GormOtelLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
 	sql, rows := fc()
 	fcCached := func() (string, int64) {
 		return sql, rows
 	}
-	l.base.Trace(ctx, begin, fcCached, err)
+	l.gormLogger.Trace(ctx, begin, fcCached, err)
 
 	cleanSQL := sanitizeSQLForLog(sql)
 	dbOperation := extractDBOperation(sql)
@@ -95,7 +93,7 @@ func (l GormObsLogger) Trace(ctx context.Context, begin time.Time, fc func() (st
 	}
 	rec.AddAttributes(attrs...)
 
-	l.obsLogger.Emit(ctx, rec)
+	l.otelLogger.Emit(ctx, rec)
 }
 
 func traceIDFromContext(ctx context.Context) string {

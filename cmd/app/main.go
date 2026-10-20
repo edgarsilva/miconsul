@@ -26,6 +26,7 @@ import (
 	"miconsul/internal/server"
 
 	"github.com/joho/godotenv"
+	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -33,8 +34,7 @@ import (
 type telemetryRuntime struct {
 	tracerProvider  trace.TracerProvider
 	meterProvider   metric.MeterProvider
-	requestLogger   logging.Logger
-	dbLogger        logging.Logger
+	loggerProvider  otellog.LoggerProvider
 	shutdownTracer  func() error
 	shutdownMetrics func() error
 	shutdownLogs    func() error
@@ -116,7 +116,7 @@ func bootstrapServer(ctx context.Context) (bootstrapResult, error) {
 	})
 
 	fmt.Println(" Connecting to database...")
-	db, err := setupDB(env, telemetry.dbLogger)
+	db, err := setupDB(env, telemetry)
 	if err != nil {
 		log.Printf("failed to initialize database: %v", err)
 		return result, err
@@ -156,7 +156,7 @@ func bootstrapServer(ctx context.Context) (bootstrapResult, error) {
 		server.WithJobs(jobsRuntime),
 		server.WithTracerProvider(telemetry.tracerProvider),
 		server.WithMeterProvider(telemetry.meterProvider),
-		server.WithRequestLogger(telemetry.requestLogger),
+		server.WithLoggerProvider(telemetry.loggerProvider),
 		server.WithLocalizer(localize.New("en-US", "es-MX")),
 	)
 	result.server = s
@@ -206,22 +206,21 @@ func setupTelemetry(ctx context.Context, env *appenv.Env) (telemetryRuntime, err
 	return telemetryRuntime{
 		tracerProvider:  tracerProvider,
 		meterProvider:   meterProvider,
-		requestLogger:   logging.NewLogger(logProvider, env.AppName+".http"),
-		dbLogger:        logging.NewLogger(logProvider, env.AppName+".db"),
+		loggerProvider:  logProvider,
 		shutdownTracer:  shutdownTracer,
 		shutdownMetrics: shutdownMetrics,
 		shutdownLogs:    shutdownLogs,
 	}, nil
 }
 
-func setupDB(env *appenv.Env, dbLogger logging.Logger) (*database.Database, error) {
-	db, err := database.New(env, dbLogger, nil)
+func setupDB(env *appenv.Env, telemetry telemetryRuntime) (*database.Database, error) {
+	db, err := database.New(env, telemetry.loggerProvider, telemetry.tracerProvider, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	fmt.Println(" Applying database migrations...")
-	if err := database.ApplyMigrations(db, dbLogger); err != nil {
+	if err := database.ApplyMigrations(db); err != nil {
 		_ = db.Close()
 		return nil, err
 	}

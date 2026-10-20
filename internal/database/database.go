@@ -15,13 +15,14 @@ import (
 
 	"miconsul/goose/migrations"
 	"miconsul/internal/lib/appenv"
-	obslogging "miconsul/internal/observability/logging"
 
 	"github.com/pressly/goose/v3"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
+	otellog "go.opentelemetry.io/otel/log"
+	"go.opentelemetry.io/otel/trace"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
+	gormlogger "gorm.io/gorm/logger"
 )
 
 var defaultSQLiteParams = map[string]string{
@@ -38,16 +39,24 @@ var defaultSQLiteParams = map[string]string{
 
 type Database struct {
 	*gorm.DB
+	otelLogger otellog.Logger
 }
 
 type SQLiteOptions map[string]string
 
-func New(env *appenv.Env, obsLogger obslogging.Logger, opts SQLiteOptions) (*Database, error) {
+func New(env *appenv.Env, loggerProvider otellog.LoggerProvider, tracerProvider trace.TracerProvider, opts SQLiteOptions) (*Database, error) {
 	if env == nil {
 		return nil, fmt.Errorf("database: environment config is nil")
 	}
+	if loggerProvider == nil {
+		return nil, fmt.Errorf("database: logger provider is nil")
+	}
+	if tracerProvider == nil {
+		return nil, fmt.Errorf("database: tracer provider is nil")
+	}
 
-	dbLogger := NewLogger(env, obsLogger)
+	otelLogger := loggerProvider.Logger(env.AppName + ".db")
+	dbLogger := NewGormLogger(env, otelLogger)
 	dsn := buildSQLiteDSN(env.DBPath, opts)
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
 		Logger:      dbLogger,
@@ -56,7 +65,7 @@ func New(env *appenv.Env, obsLogger obslogging.Logger, opts SQLiteOptions) (*Dat
 	if err != nil {
 		return nil, fmt.Errorf("database: open sqlite: %w", err)
 	}
-	pluginOpts := []otelgorm.Option{}
+	pluginOpts := []otelgorm.Option{otelgorm.WithTracerProvider(tracerProvider)}
 	dbName := filepath.Base(env.DBPath)
 	if dbName != "" && dbName != "." {
 		pluginOpts = append(pluginOpts, otelgorm.WithDBName(dbName))
@@ -67,7 +76,8 @@ func New(env *appenv.Env, obsLogger obslogging.Logger, opts SQLiteOptions) (*Dat
 	}
 
 	return &Database{
-		DB: db,
+		DB:         db,
+		otelLogger: otelLogger,
 	}, nil
 }
 
@@ -143,15 +153,15 @@ func (d *Database) Close() error {
 	return sqlDB.Close()
 }
 
-func ApplyMigrations(database *Database, obsLogger obslogging.Logger) error {
-	return applyMigrations(database, obsLogger, false)
+func ApplyMigrations(database *Database) error {
+	return applyMigrations(database, false)
 }
 
-func ApplyMigrationsSilent(database *Database, obsLogger obslogging.Logger) error {
-	return applyMigrations(database, obsLogger, true)
+func ApplyMigrationsSilent(database *Database) error {
+	return applyMigrations(database, true)
 }
 
-func applyMigrations(database *Database, obsLogger obslogging.Logger, silent bool) error {
+func applyMigrations(database *Database, silent bool) error {
 	if !silent {
 		fmt.Println(" Applying migrations...")
 	}
@@ -167,11 +177,14 @@ func applyMigrations(database *Database, obsLogger obslogging.Logger, silent boo
 	if sqlDB == nil {
 		return fmt.Errorf("database is not initialized")
 	}
+	if !silent && database.otelLogger == nil {
+		return fmt.Errorf("database logger is not set; build the database with New")
+	}
 
 	if silent {
-		goose.SetLogger(NoopLogger{})
+		goose.SetLogger(NoopGooseLogger{})
 	} else {
-		goose.SetLogger(NewGooseLogger(obsLogger))
+		goose.SetLogger(NewGooseLogger(database.otelLogger))
 	}
 
 	goose.SetBaseFS(migrations.FS)
@@ -190,17 +203,17 @@ func applyMigrations(database *Database, obsLogger obslogging.Logger, silent boo
 	return nil
 }
 
-func NewLogger(env *appenv.Env, obsLogger obslogging.Logger) logger.Interface {
-	loglevel := logger.Warn
+func NewGormLogger(env *appenv.Env, otelLogger otellog.Logger) gormlogger.Interface {
+	loglevel := gormlogger.Warn
 	hideParamValues := true
 	if env != nil && env.IsDevelopment() {
-		loglevel = logger.Info
+		loglevel = gormlogger.Info
 		hideParamValues = false
 	}
 
-	baseLogger := logger.New(
+	baseLogger := gormlogger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags),
-		logger.Config{
+		gormlogger.Config{
 			SlowThreshold:             150 * time.Millisecond,
 			LogLevel:                  loglevel,
 			IgnoreRecordNotFoundError: true,
@@ -209,5 +222,5 @@ func NewLogger(env *appenv.Env, obsLogger obslogging.Logger) logger.Interface {
 		},
 	)
 
-	return NewGormObsLogger(baseLogger, obsLogger)
+	return NewGormOtelLogger(baseLogger, otelLogger)
 }

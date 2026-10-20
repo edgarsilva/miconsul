@@ -17,7 +17,9 @@ import (
 	"time"
 
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/observability/logging"
+
+	lognoop "go.opentelemetry.io/otel/log/noop"
+	tracenoop "go.opentelemetry.io/otel/trace/noop"
 )
 
 func TestIsExpectedServerCloseError(t *testing.T) {
@@ -150,7 +152,7 @@ func TestSetupDB(t *testing.T) {
 	t.Run("creates sqlite db and applies migrations", func(t *testing.T) {
 		env := &appenv.Env{DBPath: filepath.Join(t.TempDir(), "app.sqlite")}
 
-		db, err := setupDB(env, logging.Logger{})
+		db, err := setupDB(env, noopTelemetry())
 		if err != nil {
 			if strings.Contains(err.Error(), "no such module: fts5") {
 				return
@@ -179,7 +181,7 @@ func TestSetupDB(t *testing.T) {
 	})
 
 	t.Run("returns error for nil env", func(t *testing.T) {
-		_, err := setupDB(nil, logging.Logger{})
+		_, err := setupDB(nil, noopTelemetry())
 		if err == nil {
 			t.Fatal("setupDB() expected error")
 		}
@@ -424,7 +426,7 @@ func findRepoRoot(start string) (string, error) {
 func skipIfNoFTS5(t *testing.T) {
 	t.Helper()
 
-	db, err := setupDB(&appenv.Env{DBPath: filepath.Join(t.TempDir(), "fts5_probe.sqlite")}, logging.Logger{})
+	db, err := setupDB(&appenv.Env{DBPath: filepath.Join(t.TempDir(), "fts5_probe.sqlite")}, noopTelemetry())
 	if err != nil {
 		if strings.Contains(err.Error(), "no such module: fts5") {
 			t.Skip("sqlite fts5 extension is not available in this environment")
@@ -434,4 +436,11 @@ func skipIfNoFTS5(t *testing.T) {
 	}
 
 	_ = db.Close()
+}
+
+func noopTelemetry() telemetryRuntime {
+	return telemetryRuntime{
+		loggerProvider: lognoop.NewLoggerProvider(),
+		tracerProvider: tracenoop.NewTracerProvider(),
+	}
 }

@@ -1,14 +1,16 @@
 package database
 
 import (
+	"bytes"
 	"context"
+	"log"
 	"strings"
 	"testing"
+	"time"
 
-	obslogging "miconsul/internal/observability/logging"
-
+	lognoop "go.opentelemetry.io/otel/log/noop"
 	"go.opentelemetry.io/otel/trace"
-	"gorm.io/gorm/logger"
+	gormlogger "gorm.io/gorm/logger"
 )
 
 func TestSanitizeSQLForLog(t *testing.T) {
@@ -69,29 +71,31 @@ func TestTraceIDFromContext(t *testing.T) {
 	}
 }
 
-func TestNewGormObsLoggerNilBase(t *testing.T) {
-	l := NewGormObsLogger(nil, obslogging.Logger{})
+func TestNewGormOtelLoggerNilGormLogger(t *testing.T) {
+	l := NewGormOtelLogger(nil, lognoop.Logger{})
 	if l == nil {
 		t.Fatalf("expected non-nil gorm logger wrapper")
 	}
 
-	l2 := l.LogMode(logger.Info)
+	l2 := l.LogMode(gormlogger.Info)
 	if l2 == nil {
 		t.Fatalf("expected log mode logger to be non-nil")
 	}
 }
 
-func TestDatabaseNilReceiverMethods(t *testing.T) {
-	var d *Database
-	sqlDB, err := d.SQLDB()
-	if err != nil {
-		t.Fatalf("expected nil receiver SQLDB to return nil,nil, got err=%v", err)
-	}
-	if sqlDB != nil {
-		t.Fatalf("expected nil sql db handle for nil receiver")
-	}
+func TestGormOtelLoggerDelegatesAndTrace(t *testing.T) {
+	buf := &bytes.Buffer{}
+	gormLogger := gormlogger.New(log.New(buf, "", 0), gormlogger.Config{LogLevel: gormlogger.Info})
+	wrapped := NewGormOtelLogger(gormLogger, lognoop.Logger{})
 
-	if err := d.Close(); err != nil {
-		t.Fatalf("expected nil receiver Close to be no-op, got %v", err)
+	wrapped.Info(context.Background(), "info %s", "msg")
+	wrapped.Warn(context.Background(), "warn")
+	wrapped.Error(context.Background(), "err")
+	wrapped.Trace(context.Background(), time.Now().Add(-5*time.Millisecond), func() (string, int64) {
+		return "SELECT * FROM users WHERE id = 1", 1
+	}, nil)
+
+	if buf.Len() == 0 {
+		t.Fatalf("expected gorm logger output after delegated calls")
 	}
 }

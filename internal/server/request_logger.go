@@ -4,17 +4,15 @@ import (
 	"strings"
 	"time"
 
-	obslogging "miconsul/internal/observability/logging"
-
 	"github.com/gofiber/fiber/v3"
 	"go.opentelemetry.io/otel/attribute"
 	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/trace"
 )
 
-func RequestLoggerMiddleware(logger obslogging.Logger) func(c fiber.Ctx) error {
+func RequestLoggerMiddleware(logger otellog.Logger) func(c fiber.Ctx) error {
 	return func(c fiber.Ctx) error {
-		if !logger.Enabled() {
+		if logger == nil || !logger.Enabled(c.Context(), otellog.EnabledParameters{}) {
 			return c.Next()
 		}
 

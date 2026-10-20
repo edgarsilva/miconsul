@@ -11,9 +11,10 @@ import (
 	"miconsul/internal/database"
 	"miconsul/internal/database/seeder"
 	"miconsul/internal/lib/appenv"
-	obslogging "miconsul/internal/observability/logging"
 
 	"github.com/joho/godotenv"
+	lognoop "go.opentelemetry.io/otel/log/noop"
+	tracenoop "go.opentelemetry.io/otel/trace/noop"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
 )
@@ -56,10 +57,10 @@ func defaultSeedRuntimeDeps() seedRuntimeDeps {
 		loadDotEnv: godotenv.Load,
 		loadEnv:    appenv.New,
 		openDB: func(env *appenv.Env) (*database.Database, error) {
-			return database.New(env, obslogging.Logger{}, nil)
+			return database.New(env, lognoop.NewLoggerProvider(), tracenoop.NewTracerProvider(), nil)
 		},
 		applyMigrations: func(db *database.Database) error {
-			return database.ApplyMigrationsSilent(db, obslogging.Logger{})
+			return database.ApplyMigrationsSilent(db)
 		},
 		runSeeder: seeder.Run,
 		logPrintf: log.Printf,
