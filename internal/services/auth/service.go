@@ -31,7 +31,7 @@ type service struct {
 var (
 	errAuthInvalidCredentials  = errors.New("invalid credentials")
 	errAuthPendingConfirmation = errors.New("email pending confirmation")
-	errAuthSessionCreate       = errors.New("failed to create session")
+	errAuthSessionCreate       = errors.New("create session")
 )
 
 func New(s *server.Server) (*service, error) {
