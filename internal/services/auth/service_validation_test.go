@@ -6,6 +6,8 @@ import (
 
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/server"
+
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 func TestNewServiceValidation(t *testing.T) {
@@ -17,7 +19,11 @@ func TestNewServiceValidation(t *testing.T) {
 		t.Fatalf("expected nil env error")
 	}
 
-	svc, err := New(&server.Server{Env: &appenv.Env{AppName: "miconsul"}})
+	if _, err := New(&server.Server{Env: &appenv.Env{AppName: "miconsul"}}); err == nil {
+		t.Fatalf("expected missing tracer provider error")
+	}
+
+	svc, err := New(&server.Server{Env: &appenv.Env{AppName: "miconsul"}, TracerProvider: noop.NewTracerProvider()})
 	if err != nil {
 		t.Fatalf("expected valid constructor with env, got %v", err)
 	}

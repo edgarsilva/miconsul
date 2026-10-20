@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"io"
 	"net/http"
@@ -13,8 +14,9 @@ import (
 	"miconsul/internal/lib/appenv"
 
 	"github.com/gofiber/fiber/v3"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
@@ -24,9 +26,10 @@ import (
 // released the request, so static paths had to be skipped from tracing.
 func TestOtelMiddlewareServesStaticFiles(t *testing.T) {
 	setWorkingDirToRepoRoot(t)
-	recorder := useSpanRecorder(t)
+	recorder := tracetest.NewSpanRecorder()
 
 	s := &Server{
+		TracerProvider: sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)),
 		Env: &appenv.Env{
 			Environment:   appenv.EnvironmentProduction,
 			AppProtocol:   "http",
@@ -102,13 +105,55 @@ func TestOtelMiddlewareServesStaticFiles(t *testing.T) {
 	}
 }
 
-func useSpanRecorder(t *testing.T) *tracetest.SpanRecorder {
-	t.Helper()
+func TestOtelMiddlewareRecordsHTTPMetrics(t *testing.T) {
+	setWorkingDirToRepoRoot(t)
 
-	recorder := tracetest.NewSpanRecorder()
-	previous := otel.GetTracerProvider()
-	otel.SetTracerProvider(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
-	t.Cleanup(func() { otel.SetTracerProvider(previous) })
+	reader := sdkmetric.NewManualReader()
 
-	return recorder
+	s := &Server{
+		MeterProvider: sdkmetric.NewMeterProvider(sdkmetric.WithReader(reader)),
+		Env: &appenv.Env{
+			Environment:   appenv.EnvironmentProduction,
+			AppProtocol:   "http",
+			CookieSecret:  "0123456789abcdef0123456789abcdef",
+			SessionDBPath: filepath.Join(t.TempDir(), "session.sqlite3"),
+		},
+		DB: &database.Database{DB: openTestDB(t)},
+	}
+	setupSessionStore(s)
+	setupFiberApp(s)
+	s.Get("/patients/:id", func(c fiber.Ctx) error { return c.SendString("ok") })
+
+	assertStatus(t, s, http.MethodGet, "/patients/123", fiber.StatusOK)
+	assertStatus(t, s, http.MethodGet, "/patients/456", fiber.StatusOK)
+	assertStatus(t, s, http.MethodGet, "/livez", fiber.StatusOK)
+
+	var rm metricdata.ResourceMetrics
+	if err := reader.Collect(context.Background(), &rm); err != nil {
+		t.Fatalf("collect metrics: %v", err)
+	}
+
+	counts := map[string]uint64{}
+	for _, sm := range rm.ScopeMetrics {
+		for _, m := range sm.Metrics {
+			if m.Name != "http.server.request.duration" {
+				continue
+			}
+			hist, ok := m.Data.(metricdata.Histogram[float64])
+			if !ok {
+				t.Fatalf("http.server.request.duration data = %T, want float64 histogram", m.Data)
+			}
+			for _, dp := range hist.DataPoints {
+				route, _ := dp.Attributes.Value("http.route")
+				counts[route.AsString()] += dp.Count
+			}
+		}
+	}
+
+	if counts["/patients/:id"] != 2 {
+		t.Fatalf("expected 2 requests recorded for /patients/:id, got %v", counts)
+	}
+	if _, ok := counts["/livez"]; ok {
+		t.Fatalf("expected probe requests to be skipped, got %v", counts)
+	}
 }

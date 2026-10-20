@@ -12,12 +12,10 @@ import (
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/localize"
 	"miconsul/internal/observability/logging"
-	"miconsul/internal/observability/metrics"
 
 	"github.com/gofiber/contrib/v3/otel"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
-	"github.com/gofiber/fiber/v3/middleware/adaptor"
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/encryptcookie"
 	"github.com/gofiber/fiber/v3/middleware/favicon"
@@ -32,7 +30,7 @@ import (
 	"github.com/gofiber/storage/sqlite3/v2"
 
 	"github.com/panjf2000/ants/v2"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 )
@@ -50,9 +48,10 @@ type Server struct {
 	Cache             Cache
 	SessionStore      *session.Store
 	Localizer         *localize.Localizer
+	TracerProvider    trace.TracerProvider
 	Tracer            trace.Tracer
+	MeterProvider     metric.MeterProvider
 	RequestLog        logging.Logger
-	Metrics           metrics.HTTPMetrics
 	StartedAt         time.Time
 	ReadyAt           time.Time
 	BootstrapDuration time.Duration
@@ -81,6 +80,7 @@ func New(serverOpts ...ServerOption) *Server {
 		log.Fatal("🔴 failed to start server:", err)
 	}
 
+	setupTracer(&server)
 	setupSessionStore(&server)
 	setupFiberApp(&server)
 	server.ReadyAt = time.Now()
@@ -103,8 +103,12 @@ func validateCriticalDeps(s *Server) error {
 		return errors.New("database is required")
 	}
 
-	if s.Tracer == nil {
-		return errors.New("tracer is required; pass server.WithTracer(...) to server.New(...)")
+	if s.TracerProvider == nil {
+		return errors.New("tracer provider is required; pass server.WithTracerProvider(...) to server.New(...)")
+	}
+
+	if s.MeterProvider == nil {
+		return errors.New("meter provider is required; pass server.WithMeterProvider(...) to server.New(...)")
 	}
 
 	return nil
@@ -127,6 +131,15 @@ func validateRuntimeConfig(s *Server) error {
 	return nil
 }
 
+func setupTracer(s *Server) {
+	name := s.Env.OTelTracerServer
+	if name == "" {
+		name = s.Env.AppName + ".server"
+	}
+
+	s.Tracer = s.TracerProvider.Tracer(name)
+}
+
 func setupSessionStore(s *Server) {
 	sessionPath := s.Env.SessionDBPath
 	storage := sqlite3.New(sessionConfig(sessionPath))
@@ -147,7 +160,6 @@ func setupFiberApp(s *Server) {
 
 	setupCoreMiddleware(s)
 	setupSecurityMiddleware(s)
-	setupObservabilityExporter(s)
 	setupStaticFiles(s)
 	setupHealthcheckRoutes(s)
 }
@@ -156,13 +168,12 @@ func setupCoreMiddleware(s *Server) {
 	app := s.App
 
 	app.Use(recoverer.New()) // Recover MW catches panics that might stop app execution
-	app.Use(RequestMetricsMiddleware(s.Metrics))
 	app.Use(otel.New(
+		otel.WithTracerProvider(s.TracerProvider),
+		otel.WithMeterProvider(s.MeterProvider),
 		otel.WithNext(func(c fiber.Ctx) bool {
 			path := c.Path()
-			return path == "/readyz" ||
-				path == "/metrics" ||
-				path == "/livez"
+			return path == "/readyz" || path == "/livez"
 		}),
 	))
 	app.Use(logger.New())
@@ -183,11 +194,6 @@ func setupSecurityMiddleware(s *Server) {
 	if rateLimiterEnabled {
 		app.Use(limiter.New(limiterConfig()))
 	}
-}
-
-func setupObservabilityExporter(s *Server) {
-	app := s.App
-	app.Get("/metrics", adaptor.HTTPHandler(promhttp.Handler()))
 }
 
 func setupStaticFiles(s *Server) {
@@ -272,22 +278,26 @@ func WithJobs(j *jobs.Runtime) ServerOption {
 	}
 }
 
-// WithTracer configures the tracer implementation.
-func WithTracer(tracer trace.Tracer) ServerOption {
+// WithTracerProvider sets the server's tracer provider.
+func WithTracerProvider(provider trace.TracerProvider) ServerOption {
 	return func(server *Server) error {
-		if tracer == nil {
+		if provider == nil {
 			return nil
 		}
 
-		server.Tracer = tracer
+		server.TracerProvider = provider
 		return nil
 	}
 }
 
-// WithMetrics configures the HTTP metrics instruments.
-func WithMetrics(meter metrics.HTTPMetrics) ServerOption {
+// WithMeterProvider sets the server's meter provider.
+func WithMeterProvider(provider metric.MeterProvider) ServerOption {
 	return func(server *Server) error {
-		server.Metrics = meter
+		if provider == nil {
+			return nil
+		}
+
+		server.MeterProvider = provider
 		return nil
 	}
 }

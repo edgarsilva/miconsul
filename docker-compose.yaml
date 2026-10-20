@@ -33,7 +33,7 @@ services:
   lgtm:
     image: grafana/otel-lgtm:latest
     ports:
-      - 3001:3000
+      - ${GRAFANA_PORT:-3080}:3000
       - 4317:4317
       - 4318:4318
     volumes:

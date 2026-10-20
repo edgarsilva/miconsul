@@ -1,6 +1,7 @@
 package appenv
 
 import (
+	"errors"
 	"os"
 	"testing"
 	"time"
@@ -211,6 +212,20 @@ func TestNewLoadsEnvironment(t *testing.T) {
 	}
 	if env.RateLimiterEnabled != true {
 		t.Fatalf("expected default rate limiter enabled true")
+	}
+}
+
+func TestNewRequiresOTLPEndpointInProduction(t *testing.T) {
+	setRequiredEnv(t)
+	t.Setenv("APP_ENV", "production")
+
+	if _, err := New(); !errors.Is(err, ErrOTLPEndpointRequired) {
+		t.Fatalf("expected ErrOTLPEndpointRequired, got %v", err)
+	}
+
+	t.Setenv("OTEL_EXPORTER_OTLP_ENDPOINT", "lgtm:4317")
+	if _, err := New(); err != nil {
+		t.Fatalf("expected production env with endpoint to load, got %v", err)
 	}
 }
 

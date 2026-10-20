@@ -9,9 +9,10 @@ import (
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/localize"
 	obslogging "miconsul/internal/observability/logging"
-	obsmetrics "miconsul/internal/observability/metrics"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric/noop"
+	tracenoop "go.opentelemetry.io/otel/trace/noop"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -31,8 +32,8 @@ func TestWithOptionSetters(t *testing.T) {
 		t.Fatalf("with db error: %v", err)
 	}
 
-	if err := WithTracer(otel.Tracer("test"))(s); err != nil {
-		t.Fatalf("with tracer error: %v", err)
+	if err := WithTracerProvider(tracenoop.NewTracerProvider())(s); err != nil || s.TracerProvider == nil {
+		t.Fatalf("with tracer provider error: %v", err)
 	}
 
 	cache := &cacheStub{}
@@ -57,8 +58,8 @@ func TestWithOptionSetters(t *testing.T) {
 	if err := WithDatabase(nil)(s); err == nil {
 		t.Fatalf("expected WithDatabase nil error")
 	}
-	if err := WithTracer(nil)(s); err != nil {
-		t.Fatalf("expected WithTracer nil noop: %v", err)
+	if err := WithTracerProvider(nil)(s); err != nil {
+		t.Fatalf("expected WithTracerProvider nil noop: %v", err)
 	}
 	if err := WithLocalizer(nil)(s); err != nil {
 		t.Fatalf("expected WithLocalizer nil noop: %v", err)
@@ -76,8 +77,11 @@ func TestWithOptionSetters(t *testing.T) {
 	if err := WithLocalizer(localize.New("es-MX", "en-US"))(s); err != nil {
 		t.Fatalf("set localizer: %v", err)
 	}
-	if err := WithMetrics(obsmetrics.HTTPMetrics{})(s); err != nil {
-		t.Fatalf("set metrics: %v", err)
+	if err := WithMeterProvider(nil)(s); err != nil || s.MeterProvider != nil {
+		t.Fatalf("expected WithMeterProvider nil noop: %v", err)
+	}
+	if err := WithMeterProvider(noop.NewMeterProvider())(s); err != nil || s.MeterProvider == nil {
+		t.Fatalf("set meter provider: %v", err)
 	}
 	if err := WithRequestLogger(obslogging.Logger{})(s); err != nil {
 		t.Fatalf("set request logger: %v", err)

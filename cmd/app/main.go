@@ -26,12 +26,13 @@ import (
 	"miconsul/internal/server"
 
 	"github.com/joho/godotenv"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
 type telemetryRuntime struct {
-	tracer          trace.Tracer
-	httpMetrics     metrics.HTTPMetrics
+	tracerProvider  trace.TracerProvider
+	meterProvider   metric.MeterProvider
 	requestLogger   logging.Logger
 	dbLogger        logging.Logger
 	shutdownTracer  func() error
@@ -153,8 +154,8 @@ func bootstrapServer(ctx context.Context) (bootstrapResult, error) {
 		server.WithDatabase(db),
 		server.WithWorkPool(wp.AntsPool()),
 		server.WithJobs(jobsRuntime),
-		server.WithTracer(telemetry.tracer),
-		server.WithMetrics(telemetry.httpMetrics),
+		server.WithTracerProvider(telemetry.tracerProvider),
+		server.WithMeterProvider(telemetry.meterProvider),
 		server.WithRequestLogger(telemetry.requestLogger),
 		server.WithLocalizer(localize.New("en-US", "es-MX")),
 	)
@@ -185,13 +186,13 @@ func setupTelemetry(ctx context.Context, env *appenv.Env) (telemetryRuntime, err
 		return telemetryRuntime{}, fmt.Errorf("environment config is required")
 	}
 
-	tracer, shutdownTracer, err := tracing.NewTracer(ctx, env.OTelTracerServer, env)
+	tracerProvider, shutdownTracer, err := tracing.NewProvider(ctx, env)
 	if err != nil {
 		return telemetryRuntime{}, fmt.Errorf("initialize otel tracer: %w", err)
 	}
 
 	fmt.Println(" Starting metrics telemetry...")
-	httpMetrics, shutdownMetrics, err := metrics.New(ctx, env)
+	meterProvider, shutdownMetrics, err := metrics.NewProvider(ctx, env)
 	if err != nil {
 		return telemetryRuntime{}, fmt.Errorf("initialize otel meter provider: %w", err)
 	}
@@ -203,8 +204,8 @@ func setupTelemetry(ctx context.Context, env *appenv.Env) (telemetryRuntime, err
 	}
 
 	return telemetryRuntime{
-		tracer:          tracer,
-		httpMetrics:     httpMetrics,
+		tracerProvider:  tracerProvider,
+		meterProvider:   meterProvider,
 		requestLogger:   logging.NewLogger(logProvider, env.AppName+".http"),
 		dbLogger:        logging.NewLogger(logProvider, env.AppName+".db"),
 		shutdownTracer:  shutdownTracer,

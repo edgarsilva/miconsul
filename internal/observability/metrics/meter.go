@@ -3,95 +3,29 @@ package metrics
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/observability"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/metric"
-	metricapi "go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/metric/noop"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
 
-type HTTPMetrics struct {
-	PromHTTPDuration *prometheus.HistogramVec
-	PromHTTPRequests *prometheus.CounterVec
-
-	HTTPDuration metricapi.Float64Histogram
-	HTTPRequests metricapi.Int64Counter
-}
-
-var registerPromMetricsOnce sync.Once
-
-func New(ctx context.Context, env *appenv.Env) (HTTPMetrics, func() error, error) {
-	provider, shutdownFn, err := NewMeterProvider(ctx, env)
-	if err != nil {
-		return HTTPMetrics{}, shutdownFn, err
-	}
-
-	otelHTTPDuration, err := provider.Float64Histogram(
-		"http_request_duration_seconds",
-		metricapi.WithDescription("HTTP request duration in seconds."),
-	)
-	if err != nil {
-		return HTTPMetrics{}, shutdownFn, err
-	}
-
-	otelHTTPRequests, err := provider.Int64Counter(
-		"http_requests_total",
-		metricapi.WithDescription("Total number of HTTP requests."),
-	)
-	if err != nil {
-		return HTTPMetrics{}, shutdownFn, err
-	}
-
-	promHTTPDuration := prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name: "http_request_duration_seconds",
-			Help: "HTTP request duration in seconds.",
-			Buckets: []float64{
-				0.005, 0.01, 0.025, 0.05, 0.075,
-				0.1, 0.15, 0.2, 0.3, 0.5,
-				0.75, 1, 1.5, 2, 3, 5, 10,
-			},
-		},
-		[]string{"route", "method", "status_group"},
-	)
-
-	promHTTPRequests := prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "http_requests_total",
-			Help: "Total number of HTTP requests.",
-		},
-		[]string{"route", "method", "status_group"},
-	)
-
-	// Compatibility fallback for pull-based environments (/metrics scrape).
-	registerPromMetricsOnce.Do(func() {
-		prometheus.MustRegister(promHTTPDuration, promHTTPRequests)
-	})
-
-	return HTTPMetrics{
-		PromHTTPDuration: promHTTPDuration,
-		PromHTTPRequests: promHTTPRequests,
-		HTTPDuration:     otelHTTPDuration,
-		HTTPRequests:     otelHTTPRequests,
-	}, shutdownFn, nil
-}
-
-func NewMeterProvider(ctx context.Context, env *appenv.Env) (metric.Meter, func() error, error) {
+// NewProvider returns the meter provider and its shutdown func. It returns a
+// no-op provider when env has no OTLP endpoint, and sets the global meter
+// provider otherwise.
+func NewProvider(ctx context.Context, env *appenv.Env) (metric.MeterProvider, func() error, error) {
 	if env == nil {
 		return nil, nil, fmt.Errorf("otel metrics: environment config is nil")
 	}
 
 	if env.OTelOTLPEndpoint == "" {
-		meter := otel.GetMeterProvider().Meter(env.AppName + ".metrics")
-		return meter, func() error { return nil }, nil
+		return noop.NewMeterProvider(), func() error { return nil }, nil
 	}
 
 	endpoint := env.OTelOTLPEndpoint
@@ -131,7 +65,6 @@ func NewMeterProvider(ctx context.Context, env *appenv.Env) (metric.Meter, func(
 	)
 
 	otel.SetMeterProvider(mp)
-	meter := mp.Meter(env.AppName + ".metrics")
 
 	shutdown := func() error {
 		if err := mp.Shutdown(context.Background()); err != nil {
@@ -140,5 +73,5 @@ func NewMeterProvider(ctx context.Context, env *appenv.Env) (metric.Meter, func(
 		return nil
 	}
 
-	return meter, shutdown, nil
+	return mp, shutdown, nil
 }

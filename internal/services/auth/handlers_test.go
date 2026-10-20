@@ -17,6 +17,7 @@ import (
 	"miconsul/internal/server"
 
 	"github.com/gofiber/fiber/v3"
+	"go.opentelemetry.io/otel/trace/noop"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -1020,7 +1021,8 @@ func newAuthServiceForTests(t *testing.T) *service {
 			AppName:   "miconsul",
 			JWTSecret: strings.Repeat("x", 32),
 		},
-		DB: &database.Database{DB: gdb},
+		DB:             &database.Database{DB: gdb},
+		TracerProvider: noop.NewTracerProvider(),
 	}
 
 	svc, err := New(srv)
@@ -1049,7 +1051,8 @@ func newAuthServiceForTestsNoLegacyColumns(t *testing.T) *service {
 			AppName:   "miconsul",
 			JWTSecret: strings.Repeat("x", 32),
 		},
-		DB: &database.Database{DB: gdb},
+		DB:             &database.Database{DB: gdb},
+		TracerProvider: noop.NewTracerProvider(),
 	}
 
 	svc, err := New(srv)
