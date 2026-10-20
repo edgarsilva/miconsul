@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -489,6 +490,36 @@ func TestAuthHandlersSignupPaths(t *testing.T) {
 		}
 		if resp.StatusCode != fiber.StatusOK {
 			t.Fatalf("expected 200 signup re-render, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("HandleSignup hides SMTP errors from the page", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		svc.Env.EmailSMTPURL = "127.0.0.1"
+		app := fiber.New()
+		app.Post("/signup", svc.HandleSignup)
+
+		form := url.Values{"email": {"smtpfail@example.com"}, "password": {"Password1!"}, "confirm": {"Password1!"}}
+		req := httptest.NewRequest(http.MethodPost, "/signup", strings.NewReader(form.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		if resp.StatusCode != fiber.StatusOK {
+			t.Fatalf("expected 200 signup re-render, got %d", resp.StatusCode)
+		}
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			t.Fatalf("read body: %v", err)
+		}
+		page := string(body)
+		if !strings.Contains(page, "failed to send confirmation email, please try again") {
+			t.Fatalf("expected generic email error on page, got %q", page)
+		}
+		if strings.Contains(page, "127.0.0.1") || strings.Contains(page, "dial tcp") {
+			t.Fatalf("expected SMTP error details to stay off the page, got %q", page)
 		}
 	})
 

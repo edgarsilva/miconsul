@@ -175,6 +175,9 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 	if err := s.signup(ctx, email, password); err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "signup failed")
+		if errors.Is(err, errAuthConfirmEmailSend) {
+			err = errors.New("failed to send confirmation email, please try again")
+		}
 		return view.Render(c, view.SignupPage(vc, email, err))
 	}
 	span.SetStatus(codes.Ok, "signup confirmation email sent")
