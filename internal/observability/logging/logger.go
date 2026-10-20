@@ -7,13 +7,14 @@ import (
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/observability"
 
-	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
 	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/log/global"
 	"go.opentelemetry.io/otel/log/noop"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+
+	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
 )
 
 // NewProvider returns the logger provider and its shutdown func. It returns a

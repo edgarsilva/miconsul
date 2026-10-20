@@ -11,16 +11,16 @@ import (
 )
 
 type GooseLogger struct {
-	stdout *log.Logger
-	logger otellog.Logger
+	stdout     *log.Logger
+	otelLogger otellog.Logger
 }
 
 type NoopLogger struct{}
 
-func NewGooseLogger(logger otellog.Logger) GooseLogger {
+func NewGooseLogger(otelLogger otellog.Logger) GooseLogger {
 	return GooseLogger{
-		stdout: log.New(os.Stdout, "", log.LstdFlags),
-		logger: logger,
+		stdout:     log.New(os.Stdout, "", log.LstdFlags),
+		otelLogger: otelLogger,
 	}
 }
 
@@ -48,7 +48,7 @@ func (l GooseLogger) emit(severity otellog.Severity, severityText, msg string) {
 		attribute.String("message", msg),
 	)
 
-	l.logger.Emit(context.Background(), rec)
+	l.otelLogger.Emit(context.Background(), rec)
 }
 
 func (NoopLogger) Printf(string, ...any) {}

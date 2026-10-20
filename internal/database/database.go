@@ -39,7 +39,7 @@ var defaultSQLiteParams = map[string]string{
 
 type Database struct {
 	*gorm.DB
-	logger otellog.Logger
+	otelLogger otellog.Logger
 }
 
 type SQLiteOptions map[string]string
@@ -55,8 +55,8 @@ func New(env *appenv.Env, loggerProvider otellog.LoggerProvider, tracerProvider 
 		return nil, fmt.Errorf("database: tracer provider is nil")
 	}
 
-	logger := loggerProvider.Logger(env.AppName + ".db")
-	dbLogger := NewLogger(env, logger)
+	otelLogger := loggerProvider.Logger(env.AppName + ".db")
+	dbLogger := NewGormLogger(env, otelLogger)
 	dsn := buildSQLiteDSN(env.DBPath, opts)
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
 		Logger:      dbLogger,
@@ -76,8 +76,8 @@ func New(env *appenv.Env, loggerProvider otellog.LoggerProvider, tracerProvider 
 	}
 
 	return &Database{
-		DB:     db,
-		logger: logger,
+		DB:         db,
+		otelLogger: otelLogger,
 	}, nil
 }
 
@@ -177,14 +177,14 @@ func applyMigrations(database *Database, silent bool) error {
 	if sqlDB == nil {
 		return fmt.Errorf("database is not initialized")
 	}
-	if !silent && database.logger == nil {
+	if !silent && database.otelLogger == nil {
 		return fmt.Errorf("database logger is not set; build the database with New")
 	}
 
 	if silent {
 		goose.SetLogger(NoopLogger{})
 	} else {
-		goose.SetLogger(NewGooseLogger(database.logger))
+		goose.SetLogger(NewGooseLogger(database.otelLogger))
 	}
 
 	goose.SetBaseFS(migrations.FS)
@@ -203,7 +203,7 @@ func applyMigrations(database *Database, silent bool) error {
 	return nil
 }
 
-func NewLogger(env *appenv.Env, logger otellog.Logger) gormlogger.Interface {
+func NewGormLogger(env *appenv.Env, otelLogger otellog.Logger) gormlogger.Interface {
 	loglevel := gormlogger.Warn
 	hideParamValues := true
 	if env != nil && env.IsDevelopment() {
@@ -222,5 +222,5 @@ func NewLogger(env *appenv.Env, logger otellog.Logger) gormlogger.Interface {
 		},
 	)
 
-	return NewGormObsLogger(baseLogger, logger)
+	return NewGormOtelLogger(baseLogger, otelLogger)
 }

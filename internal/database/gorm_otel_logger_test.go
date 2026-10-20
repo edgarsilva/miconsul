@@ -68,8 +68,8 @@ func TestTraceIDFromContext(t *testing.T) {
 	}
 }
 
-func TestNewGormObsLoggerNilBase(t *testing.T) {
-	l := NewGormObsLogger(nil, lognoop.Logger{})
+func TestNewGormOtelLoggerNilBase(t *testing.T) {
+	l := NewGormOtelLogger(nil, lognoop.Logger{})
 	if l == nil {
 		t.Fatalf("expected non-nil gorm logger wrapper")
 	}

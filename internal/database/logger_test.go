@@ -15,12 +15,12 @@ import (
 )
 
 func TestNewLoggerAndDatabaseHelpers(t *testing.T) {
-	devLogger := NewLogger(&appenv.Env{Environment: appenv.EnvironmentDevelopment}, lognoop.Logger{})
+	devLogger := NewGormLogger(&appenv.Env{Environment: appenv.EnvironmentDevelopment}, lognoop.Logger{})
 	if devLogger == nil {
 		t.Fatalf("expected development logger")
 	}
 
-	prodLogger := NewLogger(&appenv.Env{Environment: appenv.EnvironmentProduction}, lognoop.Logger{})
+	prodLogger := NewGormLogger(&appenv.Env{Environment: appenv.EnvironmentProduction}, lognoop.Logger{})
 	if prodLogger == nil {
 		t.Fatalf("expected production logger")
 	}
@@ -51,10 +51,10 @@ func TestGooseAndNoopLoggerAdapters(t *testing.T) {
 	NoopLogger{}.Fatalf("ignored")
 }
 
-func TestGormObsLoggerDelegatesAndTrace(t *testing.T) {
+func TestGormOtelLoggerDelegatesAndTrace(t *testing.T) {
 	buf := &bytes.Buffer{}
 	base := logger.New(log.New(buf, "", 0), logger.Config{LogLevel: logger.Info})
-	wrapped := NewGormObsLogger(base, lognoop.Logger{})
+	wrapped := NewGormOtelLogger(base, lognoop.Logger{})
 
 	wrapped.Info(context.Background(), "info %s", "msg")
 	wrapped.Warn(context.Background(), "warn")

@@ -22,36 +22,36 @@ var (
 	whitespaceRE          = regexp.MustCompile(`\s+`)
 )
 
-type GormObsLogger struct {
-	base   gormlogger.Interface
-	logger otellog.Logger
+type GormOtelLogger struct {
+	base       gormlogger.Interface
+	otelLogger otellog.Logger
 }
 
-func NewGormObsLogger(base gormlogger.Interface, logger otellog.Logger) gormlogger.Interface {
+func NewGormOtelLogger(base gormlogger.Interface, otelLogger otellog.Logger) gormlogger.Interface {
 	if base == nil {
 		base = gormlogger.Default
 	}
 
-	return GormObsLogger{base: base, logger: logger}
+	return GormOtelLogger{base: base, otelLogger: otelLogger}
 }
 
-func (l GormObsLogger) LogMode(level gormlogger.LogLevel) gormlogger.Interface {
-	return GormObsLogger{base: l.base.LogMode(level), logger: l.logger}
+func (l GormOtelLogger) LogMode(level gormlogger.LogLevel) gormlogger.Interface {
+	return GormOtelLogger{base: l.base.LogMode(level), otelLogger: l.otelLogger}
 }
 
-func (l GormObsLogger) Info(ctx context.Context, msg string, data ...any) {
+func (l GormOtelLogger) Info(ctx context.Context, msg string, data ...any) {
 	l.base.Info(ctx, msg, data...)
 }
 
-func (l GormObsLogger) Warn(ctx context.Context, msg string, data ...any) {
+func (l GormOtelLogger) Warn(ctx context.Context, msg string, data ...any) {
 	l.base.Warn(ctx, msg, data...)
 }
 
-func (l GormObsLogger) Error(ctx context.Context, msg string, data ...any) {
+func (l GormOtelLogger) Error(ctx context.Context, msg string, data ...any) {
 	l.base.Error(ctx, msg, data...)
 }
 
-func (l GormObsLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
+func (l GormOtelLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
 	sql, rows := fc()
 	fcCached := func() (string, int64) {
 		return sql, rows
@@ -93,7 +93,7 @@ func (l GormObsLogger) Trace(ctx context.Context, begin time.Time, fc func() (st
 	}
 	rec.AddAttributes(attrs...)
 
-	l.logger.Emit(ctx, rec)
+	l.otelLogger.Emit(ctx, rec)
 }
 
 func traceIDFromContext(ctx context.Context) string {

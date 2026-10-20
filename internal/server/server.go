@@ -27,6 +27,7 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/session"
 	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/gofiber/storage/sqlite3/v2"
+
 	"github.com/panjf2000/ants/v2"
 	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/metric"
