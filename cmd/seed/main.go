@@ -57,10 +57,10 @@ func defaultSeedRuntimeDeps() seedRuntimeDeps {
 		loadDotEnv: godotenv.Load,
 		loadEnv:    appenv.New,
 		openDB: func(env *appenv.Env) (*database.Database, error) {
-			return database.New(env, lognoop.Logger{}, tracenoop.NewTracerProvider(), nil)
+			return database.New(env, lognoop.NewLoggerProvider(), tracenoop.NewTracerProvider(), nil)
 		},
 		applyMigrations: func(db *database.Database) error {
-			return database.ApplyMigrationsSilent(db, lognoop.Logger{})
+			return database.ApplyMigrationsSilent(db)
 		},
 		runSeeder: seeder.Run,
 		logPrintf: log.Printf,

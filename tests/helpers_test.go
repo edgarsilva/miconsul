@@ -73,7 +73,7 @@ func newTestHarness(t *testing.T) *testHarness {
 		AssetsDir:          tmpDir,
 	}
 
-	db, err := database.New(env, lognoop.Logger{}, tracenoop.NewTracerProvider(), dbOpts)
+	db, err := database.New(env, lognoop.NewLoggerProvider(), tracenoop.NewTracerProvider(), dbOpts)
 	if err != nil {
 		t.Fatalf("create test database: %v", err)
 	}

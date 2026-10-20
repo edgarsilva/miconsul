@@ -25,14 +25,14 @@ func TestNewLoggerAndDatabaseHelpers(t *testing.T) {
 		t.Fatalf("expected production logger")
 	}
 
-	if err := ApplyMigrations(nil, lognoop.Logger{}); err == nil {
+	if err := ApplyMigrations(nil); err == nil {
 		t.Fatalf("expected migrations to fail for nil database")
 	}
-	if err := ApplyMigrationsSilent(&Database{}, lognoop.Logger{}); err == nil {
+	if err := ApplyMigrationsSilent(&Database{}); err == nil {
 		t.Fatalf("expected silent migrations to fail for nil sql handle")
 	}
 
-	if _, err := New(nil, lognoop.Logger{}, tracenoop.NewTracerProvider(), nil); err == nil {
+	if _, err := New(nil, lognoop.NewLoggerProvider(), tracenoop.NewTracerProvider(), nil); err == nil {
 		t.Fatalf("expected New to fail with nil env")
 	}
 

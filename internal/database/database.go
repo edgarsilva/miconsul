@@ -39,21 +39,23 @@ var defaultSQLiteParams = map[string]string{
 
 type Database struct {
 	*gorm.DB
+	logger otellog.Logger
 }
 
 type SQLiteOptions map[string]string
 
-func New(env *appenv.Env, obsLogger otellog.Logger, tracerProvider trace.TracerProvider, opts SQLiteOptions) (*Database, error) {
+func New(env *appenv.Env, loggerProvider otellog.LoggerProvider, tracerProvider trace.TracerProvider, opts SQLiteOptions) (*Database, error) {
 	if env == nil {
 		return nil, fmt.Errorf("database: environment config is nil")
 	}
-	if obsLogger == nil {
-		return nil, fmt.Errorf("database: logger is nil")
+	if loggerProvider == nil {
+		return nil, fmt.Errorf("database: logger provider is nil")
 	}
 	if tracerProvider == nil {
 		return nil, fmt.Errorf("database: tracer provider is nil")
 	}
 
+	obsLogger := loggerProvider.Logger(env.AppName + ".db")
 	dbLogger := NewLogger(env, obsLogger)
 	dsn := buildSQLiteDSN(env.DBPath, opts)
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
@@ -74,7 +76,8 @@ func New(env *appenv.Env, obsLogger otellog.Logger, tracerProvider trace.TracerP
 	}
 
 	return &Database{
-		DB: db,
+		DB:     db,
+		logger: obsLogger,
 	}, nil
 }
 
@@ -150,15 +153,15 @@ func (d *Database) Close() error {
 	return sqlDB.Close()
 }
 
-func ApplyMigrations(database *Database, obsLogger otellog.Logger) error {
-	return applyMigrations(database, obsLogger, false)
+func ApplyMigrations(database *Database) error {
+	return applyMigrations(database, false)
 }
 
-func ApplyMigrationsSilent(database *Database, obsLogger otellog.Logger) error {
-	return applyMigrations(database, obsLogger, true)
+func ApplyMigrationsSilent(database *Database) error {
+	return applyMigrations(database, true)
 }
 
-func applyMigrations(database *Database, obsLogger otellog.Logger, silent bool) error {
+func applyMigrations(database *Database, silent bool) error {
 	if !silent {
 		fmt.Println(" Applying migrations...")
 	}
@@ -174,11 +177,14 @@ func applyMigrations(database *Database, obsLogger otellog.Logger, silent bool) 
 	if sqlDB == nil {
 		return fmt.Errorf("database is not initialized")
 	}
+	if !silent && database.logger == nil {
+		return fmt.Errorf("database logger is not set; build the database with New")
+	}
 
 	if silent {
 		goose.SetLogger(NoopLogger{})
 	} else {
-		goose.SetLogger(NewGooseLogger(obsLogger))
+		goose.SetLogger(NewGooseLogger(database.logger))
 	}
 
 	goose.SetBaseFS(migrations.FS)

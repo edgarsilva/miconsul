@@ -116,7 +116,7 @@ func bootstrapServer(ctx context.Context) (bootstrapResult, error) {
 	})
 
 	fmt.Println(" Connecting to database...")
-	db, err := setupDB(env, telemetry.loggerProvider.Logger(env.AppName+".db"), telemetry.tracerProvider)
+	db, err := setupDB(env, telemetry)
 	if err != nil {
 		log.Printf("failed to initialize database: %v", err)
 		return result, err
@@ -213,14 +213,14 @@ func setupTelemetry(ctx context.Context, env *appenv.Env) (telemetryRuntime, err
 	}, nil
 }
 
-func setupDB(env *appenv.Env, dbLogger otellog.Logger, tracerProvider trace.TracerProvider) (*database.Database, error) {
-	db, err := database.New(env, dbLogger, tracerProvider, nil)
+func setupDB(env *appenv.Env, telemetry telemetryRuntime) (*database.Database, error) {
+	db, err := database.New(env, telemetry.loggerProvider, telemetry.tracerProvider, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	fmt.Println(" Applying database migrations...")
-	if err := database.ApplyMigrations(db, dbLogger); err != nil {
+	if err := database.ApplyMigrations(db); err != nil {
 		_ = db.Close()
 		return nil, err
 	}

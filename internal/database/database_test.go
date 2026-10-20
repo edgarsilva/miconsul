@@ -135,7 +135,7 @@ func TestNewTracesQueriesWithInjectedProvider(t *testing.T) {
 	recorder := tracetest.NewSpanRecorder()
 	tp := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder))
 
-	db, err := New(&appenv.Env{DBPath: filepath.Join(t.TempDir(), "trace.sqlite")}, lognoop.Logger{}, tp, nil)
+	db, err := New(&appenv.Env{DBPath: filepath.Join(t.TempDir(), "trace.sqlite")}, lognoop.NewLoggerProvider(), tp, nil)
 	if err != nil {
 		t.Fatalf("new database: %v", err)
 	}
@@ -151,7 +151,7 @@ func TestNewTracesQueriesWithInjectedProvider(t *testing.T) {
 }
 
 func TestNewRequiresTracerProvider(t *testing.T) {
-	if _, err := New(&appenv.Env{DBPath: filepath.Join(t.TempDir(), "x.sqlite")}, lognoop.Logger{}, nil, nil); err == nil {
+	if _, err := New(&appenv.Env{DBPath: filepath.Join(t.TempDir(), "x.sqlite")}, lognoop.NewLoggerProvider(), nil, nil); err == nil {
 		t.Fatal("expected nil tracer provider error")
 	}
 }
