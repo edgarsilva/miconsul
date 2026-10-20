@@ -15,10 +15,11 @@ import (
 
 	"miconsul/goose/migrations"
 	"miconsul/internal/lib/appenv"
-	obslogging "miconsul/internal/observability/logging"
 
 	"github.com/pressly/goose/v3"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
+	otellog "go.opentelemetry.io/otel/log"
+	"go.opentelemetry.io/otel/trace"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -42,9 +43,15 @@ type Database struct {
 
 type SQLiteOptions map[string]string
 
-func New(env *appenv.Env, obsLogger obslogging.Logger, opts SQLiteOptions) (*Database, error) {
+func New(env *appenv.Env, obsLogger otellog.Logger, tracerProvider trace.TracerProvider, opts SQLiteOptions) (*Database, error) {
 	if env == nil {
 		return nil, fmt.Errorf("database: environment config is nil")
+	}
+	if obsLogger == nil {
+		return nil, fmt.Errorf("database: logger is nil")
+	}
+	if tracerProvider == nil {
+		return nil, fmt.Errorf("database: tracer provider is nil")
 	}
 
 	dbLogger := NewLogger(env, obsLogger)
@@ -56,7 +63,7 @@ func New(env *appenv.Env, obsLogger obslogging.Logger, opts SQLiteOptions) (*Dat
 	if err != nil {
 		return nil, fmt.Errorf("database: open sqlite: %w", err)
 	}
-	pluginOpts := []otelgorm.Option{}
+	pluginOpts := []otelgorm.Option{otelgorm.WithTracerProvider(tracerProvider)}
 	dbName := filepath.Base(env.DBPath)
 	if dbName != "" && dbName != "." {
 		pluginOpts = append(pluginOpts, otelgorm.WithDBName(dbName))
@@ -143,15 +150,15 @@ func (d *Database) Close() error {
 	return sqlDB.Close()
 }
 
-func ApplyMigrations(database *Database, obsLogger obslogging.Logger) error {
+func ApplyMigrations(database *Database, obsLogger otellog.Logger) error {
 	return applyMigrations(database, obsLogger, false)
 }
 
-func ApplyMigrationsSilent(database *Database, obsLogger obslogging.Logger) error {
+func ApplyMigrationsSilent(database *Database, obsLogger otellog.Logger) error {
 	return applyMigrations(database, obsLogger, true)
 }
 
-func applyMigrations(database *Database, obsLogger obslogging.Logger, silent bool) error {
+func applyMigrations(database *Database, obsLogger otellog.Logger, silent bool) error {
 	if !silent {
 		fmt.Println(" Applying migrations...")
 	}
@@ -190,7 +197,7 @@ func applyMigrations(database *Database, obsLogger obslogging.Logger, silent boo
 	return nil
 }
 
-func NewLogger(env *appenv.Env, obsLogger obslogging.Logger) logger.Interface {
+func NewLogger(env *appenv.Env, obsLogger otellog.Logger) logger.Interface {
 	loglevel := logger.Warn
 	hideParamValues := true
 	if env != nil && env.IsDevelopment() {

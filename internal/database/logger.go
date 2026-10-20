@@ -6,20 +6,18 @@ import (
 	"log"
 	"os"
 
-	obslogging "miconsul/internal/observability/logging"
-
 	"go.opentelemetry.io/otel/attribute"
 	otellog "go.opentelemetry.io/otel/log"
 )
 
 type GooseLogger struct {
 	stdout    *log.Logger
-	obsLogger obslogging.Logger
+	obsLogger otellog.Logger
 }
 
 type NoopLogger struct{}
 
-func NewGooseLogger(obsLogger obslogging.Logger) GooseLogger {
+func NewGooseLogger(obsLogger otellog.Logger) GooseLogger {
 	return GooseLogger{
 		stdout:    log.New(os.Stdout, "", log.LstdFlags),
 		obsLogger: obsLogger,

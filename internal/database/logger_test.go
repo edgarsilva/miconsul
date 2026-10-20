@@ -8,30 +8,31 @@ import (
 	"time"
 
 	"miconsul/internal/lib/appenv"
-	obslogging "miconsul/internal/observability/logging"
 
+	lognoop "go.opentelemetry.io/otel/log/noop"
+	tracenoop "go.opentelemetry.io/otel/trace/noop"
 	"gorm.io/gorm/logger"
 )
 
 func TestNewLoggerAndDatabaseHelpers(t *testing.T) {
-	devLogger := NewLogger(&appenv.Env{Environment: appenv.EnvironmentDevelopment}, obslogging.Logger{})
+	devLogger := NewLogger(&appenv.Env{Environment: appenv.EnvironmentDevelopment}, lognoop.Logger{})
 	if devLogger == nil {
 		t.Fatalf("expected development logger")
 	}
 
-	prodLogger := NewLogger(&appenv.Env{Environment: appenv.EnvironmentProduction}, obslogging.Logger{})
+	prodLogger := NewLogger(&appenv.Env{Environment: appenv.EnvironmentProduction}, lognoop.Logger{})
 	if prodLogger == nil {
 		t.Fatalf("expected production logger")
 	}
 
-	if err := ApplyMigrations(nil, obslogging.Logger{}); err == nil {
+	if err := ApplyMigrations(nil, lognoop.Logger{}); err == nil {
 		t.Fatalf("expected migrations to fail for nil database")
 	}
-	if err := ApplyMigrationsSilent(&Database{}, obslogging.Logger{}); err == nil {
+	if err := ApplyMigrationsSilent(&Database{}, lognoop.Logger{}); err == nil {
 		t.Fatalf("expected silent migrations to fail for nil sql handle")
 	}
 
-	if _, err := New(nil, obslogging.Logger{}, nil); err == nil {
+	if _, err := New(nil, lognoop.Logger{}, tracenoop.NewTracerProvider(), nil); err == nil {
 		t.Fatalf("expected New to fail with nil env")
 	}
 
@@ -42,7 +43,7 @@ func TestNewLoggerAndDatabaseHelpers(t *testing.T) {
 }
 
 func TestGooseAndNoopLoggerAdapters(t *testing.T) {
-	adapter := NewGooseLogger(obslogging.Logger{})
+	adapter := NewGooseLogger(lognoop.Logger{})
 	adapter.Printf("hello %s", "db")
 	adapter.Fatalf("fatal %s", "db")
 
@@ -53,7 +54,7 @@ func TestGooseAndNoopLoggerAdapters(t *testing.T) {
 func TestGormObsLoggerDelegatesAndTrace(t *testing.T) {
 	buf := &bytes.Buffer{}
 	base := logger.New(log.New(buf, "", 0), logger.Config{LogLevel: logger.Info})
-	wrapped := NewGormObsLogger(base, obslogging.Logger{})
+	wrapped := NewGormObsLogger(base, lognoop.Logger{})
 
 	wrapped.Info(context.Background(), "info %s", "msg")
 	wrapped.Warn(context.Background(), "warn")

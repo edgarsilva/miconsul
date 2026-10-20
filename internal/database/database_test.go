@@ -2,8 +2,15 @@ package database
 
 import (
 	"net/url"
+	"path/filepath"
 	"strings"
 	"testing"
+
+	"miconsul/internal/lib/appenv"
+
+	lognoop "go.opentelemetry.io/otel/log/noop"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
 func TestBuildSQLiteDSNAddsDefaultsForFilePath(t *testing.T) {
@@ -121,5 +128,30 @@ func assertDefaultSQLiteParamsExceptMode(t *testing.T, params url.Values) {
 		if got := params.Get(key); got != value {
 			t.Fatalf("expected %s=%s, got %q", key, value, got)
 		}
+	}
+}
+
+func TestNewTracesQueriesWithInjectedProvider(t *testing.T) {
+	recorder := tracetest.NewSpanRecorder()
+	tp := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder))
+
+	db, err := New(&appenv.Env{DBPath: filepath.Join(t.TempDir(), "trace.sqlite")}, lognoop.Logger{}, tp, nil)
+	if err != nil {
+		t.Fatalf("new database: %v", err)
+	}
+	defer func() { _ = db.Close() }()
+
+	if err := db.Exec("SELECT 1").Error; err != nil {
+		t.Fatalf("exec query: %v", err)
+	}
+
+	if len(recorder.Ended()) == 0 {
+		t.Fatal("expected a query span from the injected tracer provider")
+	}
+}
+
+func TestNewRequiresTracerProvider(t *testing.T) {
+	if _, err := New(&appenv.Env{DBPath: filepath.Join(t.TempDir(), "x.sqlite")}, lognoop.Logger{}, nil, nil); err == nil {
+		t.Fatal("expected nil tracer provider error")
 	}
 }

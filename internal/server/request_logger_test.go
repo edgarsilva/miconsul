@@ -10,11 +10,12 @@ import (
 	obslogging "miconsul/internal/observability/logging"
 
 	"github.com/gofiber/fiber/v3"
+	lognoop "go.opentelemetry.io/otel/log/noop"
 )
 
 func TestRequestLoggerMiddlewareBranches(t *testing.T) {
 	app := fiber.New()
-	app.Use(RequestLoggerMiddleware(obslogging.Logger{}))
+	app.Use(RequestLoggerMiddleware(lognoop.Logger{}))
 	app.Get("/disabled", func(c fiber.Ctx) error { return c.SendStatus(fiber.StatusNoContent) })
 
 	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/disabled", nil))
@@ -28,7 +29,7 @@ func TestRequestLoggerMiddlewareBranches(t *testing.T) {
 	}
 	defer func() { _ = shutdown() }()
 
-	logger := obslogging.NewLogger(provider, "miconsul.test.requestlogger")
+	logger := provider.Logger("miconsul.test.requestlogger")
 	app2 := fiber.New()
 	app2.Use(RequestLoggerMiddleware(logger))
 	app2.Get("/ok", func(c fiber.Ctx) error { return c.SendStatus(fiber.StatusOK) })

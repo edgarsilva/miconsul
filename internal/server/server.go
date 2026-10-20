@@ -11,7 +11,6 @@ import (
 	"miconsul/internal/jobs"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/localize"
-	"miconsul/internal/observability/logging"
 
 	"github.com/gofiber/contrib/v3/otel"
 	"github.com/gofiber/fiber/v3"
@@ -28,8 +27,8 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/session"
 	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/gofiber/storage/sqlite3/v2"
-
 	"github.com/panjf2000/ants/v2"
+	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
@@ -51,7 +50,8 @@ type Server struct {
 	TracerProvider    trace.TracerProvider
 	Tracer            trace.Tracer
 	MeterProvider     metric.MeterProvider
-	RequestLog        logging.Logger
+	LoggerProvider    otellog.LoggerProvider
+	RequestLog        otellog.Logger
 	StartedAt         time.Time
 	ReadyAt           time.Time
 	BootstrapDuration time.Duration
@@ -80,7 +80,7 @@ func New(serverOpts ...ServerOption) *Server {
 		log.Fatal("🔴 failed to start server:", err)
 	}
 
-	setupTracer(&server)
+	setupTelemetry(&server)
 	setupSessionStore(&server)
 	setupFiberApp(&server)
 	server.ReadyAt = time.Now()
@@ -111,6 +111,10 @@ func validateCriticalDeps(s *Server) error {
 		return errors.New("meter provider is required; pass server.WithMeterProvider(...) to server.New(...)")
 	}
 
+	if s.LoggerProvider == nil {
+		return errors.New("logger provider is required; pass server.WithLoggerProvider(...) to server.New(...)")
+	}
+
 	return nil
 }
 
@@ -131,13 +135,14 @@ func validateRuntimeConfig(s *Server) error {
 	return nil
 }
 
-func setupTracer(s *Server) {
-	name := s.Env.OTelTracerServer
-	if name == "" {
-		name = s.Env.AppName + ".server"
+func setupTelemetry(s *Server) {
+	tracerName := s.Env.OTelTracerServer
+	if tracerName == "" {
+		tracerName = s.Env.AppName + ".server"
 	}
 
-	s.Tracer = s.TracerProvider.Tracer(name)
+	s.Tracer = s.TracerProvider.Tracer(tracerName)
+	s.RequestLog = s.LoggerProvider.Logger(s.Env.AppName + ".http")
 }
 
 func setupSessionStore(s *Server) {
@@ -302,10 +307,14 @@ func WithMeterProvider(provider metric.MeterProvider) ServerOption {
 	}
 }
 
-// WithRequestLogger configures the optional OTLP request logger.
-func WithRequestLogger(logger logging.Logger) ServerOption {
+// WithLoggerProvider sets the server's logger provider.
+func WithLoggerProvider(provider otellog.LoggerProvider) ServerOption {
 	return func(server *Server) error {
-		server.RequestLog = logger
+		if provider == nil {
+			return nil
+		}
+
+		server.LoggerProvider = provider
 		return nil
 	}
 }

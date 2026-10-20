@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	obslogging "miconsul/internal/observability/logging"
-
 	"go.opentelemetry.io/otel/attribute"
 	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/trace"
@@ -26,10 +24,10 @@ var (
 
 type GormObsLogger struct {
 	base      logger.Interface
-	obsLogger obslogging.Logger
+	obsLogger otellog.Logger
 }
 
-func NewGormObsLogger(base logger.Interface, obsLogger obslogging.Logger) logger.Interface {
+func NewGormObsLogger(base logger.Interface, obsLogger otellog.Logger) logger.Interface {
 	if base == nil {
 		base = logger.Default
 	}

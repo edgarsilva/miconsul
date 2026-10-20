@@ -54,7 +54,7 @@ func (s *Server) SendToWorker(ctx context.Context, fn func()) error {
 }
 
 func (s *Server) emitWorkerError(ctx context.Context, err error) {
-	if err == nil || !s.RequestLog.Enabled() {
+	if err == nil || !logEnabled(ctx, s.RequestLog) {
 		return
 	}
 
@@ -75,7 +75,7 @@ func (s *Server) emitWorkerError(ctx context.Context, err error) {
 }
 
 func emitStartupBootstrapLog(s *Server) {
-	if !s.RequestLog.Enabled() {
+	if !logEnabled(context.Background(), s.RequestLog) {
 		return
 	}
 

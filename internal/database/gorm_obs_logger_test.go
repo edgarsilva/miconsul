@@ -5,8 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	obslogging "miconsul/internal/observability/logging"
-
+	lognoop "go.opentelemetry.io/otel/log/noop"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm/logger"
 )
@@ -70,7 +69,7 @@ func TestTraceIDFromContext(t *testing.T) {
 }
 
 func TestNewGormObsLoggerNilBase(t *testing.T) {
-	l := NewGormObsLogger(nil, obslogging.Logger{})
+	l := NewGormObsLogger(nil, lognoop.Logger{})
 	if l == nil {
 		t.Fatalf("expected non-nil gorm logger wrapper")
 	}

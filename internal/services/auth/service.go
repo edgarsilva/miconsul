@@ -320,7 +320,7 @@ func (s *service) sendResetPasswordEmailAsync(ctx context.Context, email, token 
 }
 
 func (s *service) emitAsyncEmailError(ctx context.Context, operation, email, status string, err error) {
-	if err == nil || !s.RequestLog.Enabled() {
+	if err == nil || s.RequestLog == nil || !s.RequestLog.Enabled(ctx, otellog.EnabledParameters{}) {
 		return
 	}
 

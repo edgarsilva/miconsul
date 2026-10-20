@@ -8,9 +8,9 @@ import (
 	"miconsul/internal/jobs"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/localize"
-	obslogging "miconsul/internal/observability/logging"
 
 	"go.opentelemetry.io/otel"
+	lognoop "go.opentelemetry.io/otel/log/noop"
 	"go.opentelemetry.io/otel/metric/noop"
 	tracenoop "go.opentelemetry.io/otel/trace/noop"
 	"gorm.io/driver/sqlite"
@@ -83,8 +83,11 @@ func TestWithOptionSetters(t *testing.T) {
 	if err := WithMeterProvider(noop.NewMeterProvider())(s); err != nil || s.MeterProvider == nil {
 		t.Fatalf("set meter provider: %v", err)
 	}
-	if err := WithRequestLogger(obslogging.Logger{})(s); err != nil {
-		t.Fatalf("set request logger: %v", err)
+	if err := WithLoggerProvider(nil)(s); err != nil || s.LoggerProvider != nil {
+		t.Fatalf("expected WithLoggerProvider nil noop: %v", err)
+	}
+	if err := WithLoggerProvider(lognoop.NewLoggerProvider())(s); err != nil || s.LoggerProvider == nil {
+		t.Fatalf("set logger provider: %v", err)
 	}
 }
 

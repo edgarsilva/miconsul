@@ -1,10 +1,9 @@
 package server
 
 import (
+	"context"
 	"strings"
 	"time"
-
-	obslogging "miconsul/internal/observability/logging"
 
 	"github.com/gofiber/fiber/v3"
 	"go.opentelemetry.io/otel/attribute"
@@ -12,9 +11,9 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-func RequestLoggerMiddleware(logger obslogging.Logger) func(c fiber.Ctx) error {
+func RequestLoggerMiddleware(logger otellog.Logger) func(c fiber.Ctx) error {
 	return func(c fiber.Ctx) error {
-		if !logger.Enabled() {
+		if !logEnabled(c.Context(), logger) {
 			return c.Next()
 		}
 
@@ -75,4 +74,9 @@ func RequestLoggerMiddleware(logger obslogging.Logger) func(c fiber.Ctx) error {
 
 		return err
 	}
+}
+
+// logEnabled reports whether logger is set and emits for ctx.
+func logEnabled(ctx context.Context, logger otellog.Logger) bool {
+	return logger != nil && logger.Enabled(ctx, otellog.EnabledParameters{})
 }
