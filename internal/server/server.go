@@ -11,8 +11,8 @@ import (
 	"miconsul/internal/jobs"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/localize"
-	obslogging "miconsul/internal/observability/logging"
-	obsmetrics "miconsul/internal/observability/metrics"
+	"miconsul/internal/observability/logging"
+	"miconsul/internal/observability/metrics"
 
 	"github.com/gofiber/contrib/v3/otel"
 	"github.com/gofiber/fiber/v3"
@@ -51,8 +51,8 @@ type Server struct {
 	SessionStore      *session.Store
 	Localizer         *localize.Localizer
 	Tracer            trace.Tracer
-	RequestLog        obslogging.Logger
-	Metrics           obsmetrics.HTTPMetrics
+	RequestLog        logging.Logger
+	Metrics           metrics.HTTPMetrics
 	StartedAt         time.Time
 	ReadyAt           time.Time
 	BootstrapDuration time.Duration
@@ -285,7 +285,7 @@ func WithTracer(tracer trace.Tracer) ServerOption {
 }
 
 // WithMetrics configures the HTTP metrics instruments.
-func WithMetrics(meter obsmetrics.HTTPMetrics) ServerOption {
+func WithMetrics(meter metrics.HTTPMetrics) ServerOption {
 	return func(server *Server) error {
 		server.Metrics = meter
 		return nil
@@ -293,7 +293,7 @@ func WithMetrics(meter obsmetrics.HTTPMetrics) ServerOption {
 }
 
 // WithRequestLogger configures the optional OTLP request logger.
-func WithRequestLogger(logger obslogging.Logger) ServerOption {
+func WithRequestLogger(logger logging.Logger) ServerOption {
 	return func(server *Server) error {
 		server.RequestLog = logger
 		return nil
