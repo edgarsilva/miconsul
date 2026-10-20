@@ -23,32 +23,32 @@ var (
 )
 
 type GormOtelLogger struct {
-	base       gormlogger.Interface
+	gormLogger gormlogger.Interface
 	otelLogger otellog.Logger
 }
 
-func NewGormOtelLogger(base gormlogger.Interface, otelLogger otellog.Logger) gormlogger.Interface {
-	if base == nil {
-		base = gormlogger.Default
+func NewGormOtelLogger(gormLogger gormlogger.Interface, otelLogger otellog.Logger) gormlogger.Interface {
+	if gormLogger == nil {
+		gormLogger = gormlogger.Default
 	}
 
-	return GormOtelLogger{base: base, otelLogger: otelLogger}
+	return GormOtelLogger{gormLogger: gormLogger, otelLogger: otelLogger}
 }
 
 func (l GormOtelLogger) LogMode(level gormlogger.LogLevel) gormlogger.Interface {
-	return GormOtelLogger{base: l.base.LogMode(level), otelLogger: l.otelLogger}
+	return GormOtelLogger{gormLogger: l.gormLogger.LogMode(level), otelLogger: l.otelLogger}
 }
 
 func (l GormOtelLogger) Info(ctx context.Context, msg string, data ...any) {
-	l.base.Info(ctx, msg, data...)
+	l.gormLogger.Info(ctx, msg, data...)
 }
 
 func (l GormOtelLogger) Warn(ctx context.Context, msg string, data ...any) {
-	l.base.Warn(ctx, msg, data...)
+	l.gormLogger.Warn(ctx, msg, data...)
 }
 
 func (l GormOtelLogger) Error(ctx context.Context, msg string, data ...any) {
-	l.base.Error(ctx, msg, data...)
+	l.gormLogger.Error(ctx, msg, data...)
 }
 
 func (l GormOtelLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
@@ -56,7 +56,7 @@ func (l GormOtelLogger) Trace(ctx context.Context, begin time.Time, fc func() (s
 	fcCached := func() (string, int64) {
 		return sql, rows
 	}
-	l.base.Trace(ctx, begin, fcCached, err)
+	l.gormLogger.Trace(ctx, begin, fcCached, err)
 
 	cleanSQL := sanitizeSQLForLog(sql)
 	dbOperation := extractDBOperation(sql)

@@ -31,8 +31,8 @@ func TestSetupTracerAndLoggerUseInjectedProviders(t *testing.T) {
 	emitStartupBootstrapLog(s)
 
 	scopes := exporter.scopes()
-	if len(scopes) != 1 || scopes[0] != "miconsul.http" {
-		t.Fatalf("expected one record from scope miconsul.http, got %v", scopes)
+	if len(scopes) != 1 || scopes[0] != "miconsul.server" {
+		t.Fatalf("expected one record from scope miconsul.server, got %v", scopes)
 	}
 }
 

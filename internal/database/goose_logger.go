@@ -15,7 +15,7 @@ type GooseLogger struct {
 	otelLogger otellog.Logger
 }
 
-type NoopLogger struct{}
+type NoopGooseLogger struct{}
 
 func NewGooseLogger(otelLogger otellog.Logger) GooseLogger {
 	return GooseLogger{
@@ -51,6 +51,6 @@ func (l GooseLogger) emit(severity otellog.Severity, severityText, msg string) {
 	l.otelLogger.Emit(context.Background(), rec)
 }
 
-func (NoopLogger) Printf(string, ...any) {}
+func (NoopGooseLogger) Printf(string, ...any) {}
 
-func (NoopLogger) Fatalf(string, ...any) {}
+func (NoopGooseLogger) Fatalf(string, ...any) {}

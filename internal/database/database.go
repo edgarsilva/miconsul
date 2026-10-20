@@ -182,7 +182,7 @@ func applyMigrations(database *Database, silent bool) error {
 	}
 
 	if silent {
-		goose.SetLogger(NoopLogger{})
+		goose.SetLogger(NoopGooseLogger{})
 	} else {
 		goose.SetLogger(NewGooseLogger(database.otelLogger))
 	}

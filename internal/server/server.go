@@ -138,16 +138,20 @@ func validateRuntimeConfig(s *Server) error {
 }
 
 func setupTracer(s *Server) {
-	name := s.Env.OTelTracerServer
-	if name == "" {
-		name = s.Env.AppName + ".server"
-	}
-
-	s.Tracer = s.TracerProvider.Tracer(name)
+	s.Tracer = s.TracerProvider.Tracer(scopeName(s.Env))
 }
 
 func setupLogger(s *Server) {
-	s.Logger = s.LoggerProvider.Logger(s.Env.AppName + ".http")
+	s.Logger = s.LoggerProvider.Logger(scopeName(s.Env))
+}
+
+// scopeName returns the instrumentation scope for the server's tracer and logger.
+func scopeName(env *appenv.Env) string {
+	if env.OTelTracerServer != "" {
+		return env.OTelTracerServer
+	}
+
+	return env.AppName + ".server"
 }
 
 func setupSessionStore(s *Server) {
