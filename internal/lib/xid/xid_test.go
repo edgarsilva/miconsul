@@ -3,59 +3,37 @@ package xid
 import (
 	"strings"
 	"testing"
+
+	"github.com/rs/xid"
 )
 
 func TestNew(t *testing.T) {
 	t.Run("New", func(t *testing.T) {
 		got := New("tdo")
-		err := Validate("tdo", got)
-		if err != nil {
+		id, ok := strings.CutPrefix(got, "tdo")
+		if !ok {
+			t.Fatalf("expected prefix %q in %q", "tdo", got)
+		}
+		if _, err := xid.FromString(id); err != nil {
 			t.Errorf("%v", err)
 		}
 	})
 
 	t.Run("New Without prefix", func(t *testing.T) {
 		got := New("")
-		err := Validate("", got)
-		if err != nil {
+		if _, err := xid.FromString(got); err != nil {
 			t.Errorf("%v", err)
-		}
-	})
-}
-
-func TestValidate(t *testing.T) {
-	t.Run("Validate with empty str", func(t *testing.T) {
-		xid := ""
-		val := Validate("XID", xid)
-		if !strings.Contains(val.Error(), "cannot be blank") {
-			t.Errorf("%v", "validate must return error with blank string")
-		}
-	})
-
-	t.Run("Validate with short str", func(t *testing.T) {
-		xid := "12345"
-		val := Validate("XID", xid)
-		if !strings.Contains(val.Error(), "characters long") {
-			t.Errorf("%v", "Validate must return error short string")
-		}
-	})
-
-	t.Run("Validate with unsafe chars", func(t *testing.T) {
-		xid := "ABC!@#$qwf1234678899999"
-		val := Validate("XID", xid)
-		if !strings.Contains(val.Error(), "invalid characters") {
-			t.Errorf("%v", "Validate must return error short string")
 		}
 	})
 }
 
 func TestPure(t *testing.T) {
 	id := Pure()
-	if len(id) != length {
-		t.Fatalf("expected Pure() length %d, got %d", length, len(id))
+	if len(id) != 20 {
+		t.Fatalf("expected Pure() length %d, got %d", 20, len(id))
 	}
-	if err := Validate("", id); err != nil {
-		t.Fatalf("expected Pure() id to validate: %v", err)
+	if _, err := xid.FromString(id); err != nil {
+		t.Fatalf("expected Pure() id to parse: %v", err)
 	}
 }
 
