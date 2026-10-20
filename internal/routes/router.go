@@ -24,21 +24,20 @@ type routeBootstrap struct {
 }
 
 func RegisterServices(s *server.Server) error {
-	authSvc, err := auth.New(s)
-	if err != nil {
-		return fmt.Errorf("bootstrap auth service: %w", err)
-	}
-
-	// Middlewares implemented in all halders
+	// Middlewares implemented in all handlers
 	s.Use(mw.LocaleLang())
 	s.Use(mw.UITheme())
 
+	authSvc, err := AuthRoutes(s)
+	if err != nil {
+		return fmt.Errorf("bootstrap auth routes: %w", err)
+	}
+
 	bootstraps := []routeBootstrap{
-		{name: "auth", fn: AuthRoutes},
 		{name: "debug", fn: DebugRoutes},
 		{name: "user", fn: UserRoutes},
 		{name: "admin", fn: AdminRoutes},
-		{name: "dashboard", fn: DashbordhRoutes},
+		{name: "dashboard", fn: DashboardRoutes},
 		{name: "clinic", fn: ClinicsRoutes},
 		{name: "patient", fn: PatientRoutes},
 		{name: "appointment", fn: AppointmentRoutes},
@@ -61,13 +60,15 @@ func DebugRoutes(s *server.Server, authSvc auth.Runtime) error {
 	return nil
 }
 
-func AuthRoutes(s *server.Server, authSvc auth.Runtime) error {
+// AuthRoutes builds the auth service, registers its routes and returns it
+// so the other route groups can use it in their auth middleware.
+func AuthRoutes(s *server.Server) (auth.Runtime, error) {
 	a, err := auth.New(s)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	a.Get("/signin", mw.MaybeAuthenticate(authSvc), a.HandleSigninPage)
+	a.Get("/signin", mw.MaybeAuthenticate(a), a.HandleSigninPage)
 	a.Post("/signin", a.HandleSignin)
 	a.All("/logout", a.HandleLogout)
 	a.Get("/signup", a.HandleSignupPage)
@@ -86,13 +87,13 @@ func AuthRoutes(s *server.Server, authSvc auth.Runtime) error {
 
 	g := a.Group("/api/auth")
 	g.Post("/signin", a.HandleAPISignin)
-	g.Get("/protected", mw.MustAuthenticate(authSvc), a.HandleShowUser)
-	g.Post("/validate", mw.MustAuthenticate(authSvc), a.HandleValidate)
+	g.Get("/protected", mw.MustAuthenticate(a), a.HandleShowUser)
+	g.Post("/validate", mw.MustAuthenticate(a), a.HandleValidate)
 
-	return nil
+	return a, nil
 }
 
-func DashbordhRoutes(s *server.Server, authSvc auth.Runtime) error {
+func DashboardRoutes(s *server.Server, authSvc auth.Runtime) error {
 	d, err := dashboard.NewService(s)
 	if err != nil {
 		return err
