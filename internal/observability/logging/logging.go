@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/observability"
 
 	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/log/global"
@@ -35,7 +34,7 @@ func NewProvider(ctx context.Context, env *appenv.Env) (otellog.LoggerProvider, 
 	}
 
 	otlpOpts := []otlploggrpc.Option{otlploggrpc.WithEndpoint(env.OTelOTLPEndpoint)}
-	if env.OTelOTLPInsecure || observability.IsInternalOTLPEndpoint(env.OTelOTLPEndpoint) {
+	if env.OTelOTLPInsecure {
 		otlpOpts = append(otlpOpts, otlploggrpc.WithInsecure())
 	}
 

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/observability"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
@@ -35,7 +34,7 @@ func NewProvider(ctx context.Context, env *appenv.Env) (metric.MeterProvider, fu
 	}
 
 	otlpOpts := []otlpmetricgrpc.Option{otlpmetricgrpc.WithEndpoint(endpoint)}
-	if env.OTelOTLPInsecure || observability.IsInternalOTLPEndpoint(endpoint) {
+	if env.OTelOTLPInsecure {
 		otlpOpts = append(otlpOpts, otlpmetricgrpc.WithInsecure())
 	}
 
