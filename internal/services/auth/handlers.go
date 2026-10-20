@@ -71,6 +71,8 @@ func (s *service) HandleSignin(c fiber.Ctx) error {
 
 	rememberMe := c.FormValue("remember_me", "") != ""
 	if err := s.issueAuthCookie(c, user, rememberMe); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "create session failed")
 		return s.respondWithRedirect(c, "/", "Failed to login, please try again")
 	}
 
@@ -108,6 +110,8 @@ func (s *service) HandleAPISignin(c fiber.Ctx) error {
 	}
 
 	if err := s.issueAuthCookie(c, user, req.RememberMe); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "create session failed")
 		return apiError(c, fiber.StatusInternalServerError, "failed to create session")
 	}
 

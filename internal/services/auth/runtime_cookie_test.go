@@ -83,6 +83,9 @@ func TestIssueAuthCookie(t *testing.T) {
 			if !errors.Is(err, errAuthSessionCreate) {
 				t.Fatalf("expected errAuthSessionCreate, got %v", err)
 			}
+			if got, want := err.Error(), "create session: jwt secret not configured"; got != want {
+				t.Fatalf("expected error %q, got %q", want, got)
+			}
 			return c.SendStatus(fiber.StatusNoContent)
 		})
 
