@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"strings"
 	"time"
 
@@ -13,7 +12,7 @@ import (
 
 func RequestLoggerMiddleware(logger otellog.Logger) func(c fiber.Ctx) error {
 	return func(c fiber.Ctx) error {
-		if !logEnabled(c.Context(), logger) {
+		if logger == nil || !logger.Enabled(c.Context(), otellog.EnabledParameters{}) {
 			return c.Next()
 		}
 
@@ -74,9 +73,4 @@ func RequestLoggerMiddleware(logger otellog.Logger) func(c fiber.Ctx) error {
 
 		return err
 	}
-}
-
-// logEnabled reports whether logger is set and emits for ctx.
-func logEnabled(ctx context.Context, logger otellog.Logger) bool {
-	return logger != nil && logger.Enabled(ctx, otellog.EnabledParameters{})
 }

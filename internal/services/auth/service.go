@@ -320,7 +320,7 @@ func (s *service) sendResetPasswordEmailAsync(ctx context.Context, email, token 
 }
 
 func (s *service) emitAsyncEmailError(ctx context.Context, operation, email, status string, err error) {
-	if err == nil || s.RequestLog == nil || !s.RequestLog.Enabled(ctx, otellog.EnabledParameters{}) {
+	if err == nil || !s.LoggerEnabled(ctx) {
 		return
 	}
 
@@ -340,5 +340,5 @@ func (s *service) emitAsyncEmailError(ctx context.Context, operation, email, sta
 		attribute.String("error", err.Error()),
 	)
 
-	s.RequestLog.Emit(ctx, rec)
+	s.Logger.Emit(ctx, rec)
 }

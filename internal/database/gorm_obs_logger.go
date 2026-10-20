@@ -9,7 +9,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/trace"
-	"gorm.io/gorm/logger"
+	gormlogger "gorm.io/gorm/logger"
 )
 
 const maxSQLLogLength = 512
@@ -23,20 +23,20 @@ var (
 )
 
 type GormObsLogger struct {
-	base      logger.Interface
-	obsLogger otellog.Logger
+	base   gormlogger.Interface
+	logger otellog.Logger
 }
 
-func NewGormObsLogger(base logger.Interface, obsLogger otellog.Logger) logger.Interface {
+func NewGormObsLogger(base gormlogger.Interface, logger otellog.Logger) gormlogger.Interface {
 	if base == nil {
-		base = logger.Default
+		base = gormlogger.Default
 	}
 
-	return GormObsLogger{base: base, obsLogger: obsLogger}
+	return GormObsLogger{base: base, logger: logger}
 }
 
-func (l GormObsLogger) LogMode(level logger.LogLevel) logger.Interface {
-	return GormObsLogger{base: l.base.LogMode(level), obsLogger: l.obsLogger}
+func (l GormObsLogger) LogMode(level gormlogger.LogLevel) gormlogger.Interface {
+	return GormObsLogger{base: l.base.LogMode(level), logger: l.logger}
 }
 
 func (l GormObsLogger) Info(ctx context.Context, msg string, data ...any) {
@@ -93,7 +93,7 @@ func (l GormObsLogger) Trace(ctx context.Context, begin time.Time, fc func() (st
 	}
 	rec.AddAttributes(attrs...)
 
-	l.obsLogger.Emit(ctx, rec)
+	l.logger.Emit(ctx, rec)
 }
 
 func traceIDFromContext(ctx context.Context) string {

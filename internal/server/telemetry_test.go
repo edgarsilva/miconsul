@@ -12,7 +12,7 @@ import (
 	"go.opentelemetry.io/otel/trace/noop"
 )
 
-func TestSetupTelemetryUsesInjectedProviders(t *testing.T) {
+func TestSetupTracerAndLoggerUseInjectedProviders(t *testing.T) {
 	exporter := &recordingLogExporter{}
 	s := &Server{
 		Env:            &appenv.Env{AppName: "miconsul", OTelTracerServer: "miconsul.server"},
@@ -22,7 +22,8 @@ func TestSetupTelemetryUsesInjectedProviders(t *testing.T) {
 		ReadyAt:        time.Now(),
 	}
 
-	setupTelemetry(s)
+	setupTracer(s)
+	setupLogger(s)
 	if s.Tracer == nil {
 		t.Fatal("expected tracer from the injected tracer provider")
 	}

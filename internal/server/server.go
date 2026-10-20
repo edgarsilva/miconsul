@@ -51,7 +51,7 @@ type Server struct {
 	Tracer            trace.Tracer
 	MeterProvider     metric.MeterProvider
 	LoggerProvider    otellog.LoggerProvider
-	RequestLog        otellog.Logger
+	Logger            otellog.Logger
 	StartedAt         time.Time
 	ReadyAt           time.Time
 	BootstrapDuration time.Duration
@@ -80,7 +80,8 @@ func New(serverOpts ...ServerOption) *Server {
 		log.Fatal("🔴 failed to start server:", err)
 	}
 
-	setupTelemetry(&server)
+	setupTracer(&server)
+	setupLogger(&server)
 	setupSessionStore(&server)
 	setupFiberApp(&server)
 	server.ReadyAt = time.Now()
@@ -135,14 +136,17 @@ func validateRuntimeConfig(s *Server) error {
 	return nil
 }
 
-func setupTelemetry(s *Server) {
-	tracerName := s.Env.OTelTracerServer
-	if tracerName == "" {
-		tracerName = s.Env.AppName + ".server"
+func setupTracer(s *Server) {
+	name := s.Env.OTelTracerServer
+	if name == "" {
+		name = s.Env.AppName + ".server"
 	}
 
-	s.Tracer = s.TracerProvider.Tracer(tracerName)
-	s.RequestLog = s.LoggerProvider.Logger(s.Env.AppName + ".http")
+	s.Tracer = s.TracerProvider.Tracer(name)
+}
+
+func setupLogger(s *Server) {
+	s.Logger = s.LoggerProvider.Logger(s.Env.AppName + ".http")
 }
 
 func setupSessionStore(s *Server) {
@@ -184,7 +188,7 @@ func setupCoreMiddleware(s *Server) {
 	app.Use(logger.New())
 	app.Use(cors.New())
 	app.Use(requestid.New())
-	app.Use(RequestLoggerMiddleware(s.RequestLog))
+	app.Use(RequestLoggerMiddleware(s.Logger))
 }
 
 func setupSecurityMiddleware(s *Server) {

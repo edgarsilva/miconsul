@@ -22,7 +22,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
+	gormlogger "gorm.io/gorm/logger"
 )
 
 var defaultSQLiteParams = map[string]string{
@@ -55,8 +55,8 @@ func New(env *appenv.Env, loggerProvider otellog.LoggerProvider, tracerProvider 
 		return nil, fmt.Errorf("database: tracer provider is nil")
 	}
 
-	obsLogger := loggerProvider.Logger(env.AppName + ".db")
-	dbLogger := NewLogger(env, obsLogger)
+	logger := loggerProvider.Logger(env.AppName + ".db")
+	dbLogger := NewLogger(env, logger)
 	dsn := buildSQLiteDSN(env.DBPath, opts)
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
 		Logger:      dbLogger,
@@ -77,7 +77,7 @@ func New(env *appenv.Env, loggerProvider otellog.LoggerProvider, tracerProvider 
 
 	return &Database{
 		DB:     db,
-		logger: obsLogger,
+		logger: logger,
 	}, nil
 }
 
@@ -203,17 +203,17 @@ func applyMigrations(database *Database, silent bool) error {
 	return nil
 }
 
-func NewLogger(env *appenv.Env, obsLogger otellog.Logger) logger.Interface {
-	loglevel := logger.Warn
+func NewLogger(env *appenv.Env, logger otellog.Logger) gormlogger.Interface {
+	loglevel := gormlogger.Warn
 	hideParamValues := true
 	if env != nil && env.IsDevelopment() {
-		loglevel = logger.Info
+		loglevel = gormlogger.Info
 		hideParamValues = false
 	}
 
-	baseLogger := logger.New(
+	baseLogger := gormlogger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags),
-		logger.Config{
+		gormlogger.Config{
 			SlowThreshold:             150 * time.Millisecond,
 			LogLevel:                  loglevel,
 			IgnoreRecordNotFoundError: true,
@@ -222,5 +222,5 @@ func NewLogger(env *appenv.Env, obsLogger otellog.Logger) logger.Interface {
 		},
 	)
 
-	return NewGormObsLogger(baseLogger, obsLogger)
+	return NewGormObsLogger(baseLogger, logger)
 }
