@@ -22,7 +22,7 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/helmet"
 	"github.com/gofiber/fiber/v3/middleware/limiter"
 	"github.com/gofiber/fiber/v3/middleware/logger"
-	recoverer "github.com/gofiber/fiber/v3/middleware/recover"
+	fiberrecover "github.com/gofiber/fiber/v3/middleware/recover"
 	"github.com/gofiber/fiber/v3/middleware/requestid"
 	"github.com/gofiber/fiber/v3/middleware/session"
 	"github.com/gofiber/fiber/v3/middleware/static"
@@ -181,7 +181,7 @@ func setupFiberApp(s *Server) {
 func setupCoreMiddleware(s *Server) {
 	app := s.App
 
-	app.Use(recoverer.New()) // Recover MW catches panics that might stop app execution
+	app.Use(fiberrecover.New()) // Recover MW catches panics that might stop app execution
 	app.Use(otel.New(
 		otel.WithTracerProvider(s.TracerProvider),
 		otel.WithMeterProvider(s.MeterProvider),
