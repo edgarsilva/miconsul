@@ -22,18 +22,18 @@ const (
 
 // User represents a DB users row in the application.
 type User struct {
-	ConfirmEmailExpiresAt time.Time
-	ResetTokenExpiresAt   time.Time
-	ID                    uint   `gorm:"primaryKey" form:"__blank__"`
-	UID                   string `gorm:"uniqueIndex;default:null;not null" form:"__blank__"`
+	ConfirmEmailExpiresAt time.Time `json:"-" form:"-"`
+	ResetTokenExpiresAt   time.Time `json:"-" form:"-"`
+	ID                    uint      `gorm:"primaryKey" form:"__blank__"`
+	UID                   string    `gorm:"uniqueIndex;default:null;not null" form:"__blank__"`
 	ExtID                 string
 	ProfilePic            string
 	Name                  string
 	Email                 string `gorm:"uniqueIndex;default:null;not null"`
-	Password              string `json:"-"`
+	Password              string `json:"-" form:"-"`
 	Theme                 string
-	ResetToken            string
-	ConfirmEmailToken     string
+	ResetToken            string `json:"-" form:"-"`
+	ConfirmEmailToken     string `json:"-" form:"-"`
 	Phone                 string
 	Timezone              string
 	// LocaleLang            string
@@ -75,4 +75,36 @@ func (u User) ProfilePicPath() string {
 
 func (u User) AvatarPic() string {
 	return u.ProfilePicPath()
+}
+
+// PublicUser is the JSON view of a User for API responses.
+type PublicUser struct {
+	UID        string
+	ExtID      string
+	Name       string
+	Email      string
+	ProfilePic string
+	Phone      string
+	Timezone   string
+	Theme      string
+	Role       UserRole
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+}
+
+// Public returns the user's public fields.
+func (u User) Public() PublicUser {
+	return PublicUser{
+		UID:        u.UID,
+		ExtID:      u.ExtID,
+		Name:       u.Name,
+		Email:      u.Email,
+		ProfilePic: u.ProfilePic,
+		Phone:      u.Phone,
+		Timezone:   u.Timezone,
+		Theme:      u.Theme,
+		Role:       u.Role,
+		CreatedAt:  u.CreatedAt,
+		UpdatedAt:  u.UpdatedAt,
+	}
 }

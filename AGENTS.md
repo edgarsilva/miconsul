@@ -23,6 +23,13 @@ This file provides repo-specific guidance for coding assistants working on this 
 - Prefer `c.Context()` when passing request context to non-Fiber libraries (DB, tracing, etc.).
 - In service/handler files, keep primary exported handlers/entrypoints near the top and move private helpers/utilities to the bottom.
 - Avoid code fragmentation: keep module logic cohesive in `handlers.go` (transport) and `service.go` (business orchestration); split only when a concern is clearly standalone and reused.
+- Request and response data (inputs and outputs):
+  - Never bind requests into, or serialize responses from, `models.*` structs directly.
+  - Bind request data into unexported `xxxInput` types in the service's `inputs.go`. Map them to models with methods like `toClinic(...)`, and set IDs and ownership (`ID`, `UID`, `UserID`) on the server.
+  - Return JSON through unexported `xxxOutput` types in the service's `outputs.go`, built by `newXxxOutput(...)`. Use a shared model view such as `models.PublicUser` (`User.Public()`) for the fields; don't use anonymous structs as response envelopes.
+  - Handlers then only orchestrate the request: bind the input, call the service, build the output.
+  - One-off `fiber.Map{"error": ...}` replies are fine.
+  - Tag secret model fields `json:"-" form:"-"`. Fiber's form binder ignores `json` tags.
 - Keep structural refactors separate from behavior changes.
 - Avoid introducing runtime `os.Getenv` reads in application/service code; route configuration access through `internal/lib/appenv` instead. If you encounter new `os.Getenv` usage outside mailer or env-loading boundaries, warn and offer to move it into `appenv.Env`.
 - Request locals boundary:

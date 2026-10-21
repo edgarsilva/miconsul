@@ -109,3 +109,32 @@ func TestHandleUserProfilePicImgSrc(t *testing.T) {
 		t.Fatalf("missing avatar pic expected 404, got status=%d err=%v", resp2.StatusCode, err)
 	}
 }
+
+func TestHandleAPIUsersOmitsSecrets(t *testing.T) {
+	svc, currentUser := newUserServiceForTests(t)
+	currentUser.ResetToken = "reset-token-secret"
+	currentUser.ConfirmEmailToken = "confirm-token-secret"
+	if err := svc.DB.GormDB().Save(&currentUser).Error; err != nil {
+		t.Fatalf("save user tokens: %v", err)
+	}
+
+	app := fiber.New()
+	app.Get("/api/users", svc.HandleAPIUsers)
+
+	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/api/users", nil))
+	if err != nil || resp.StatusCode != fiber.StatusOK {
+		t.Fatalf("api users expected 200, got status=%d err=%v", resp.StatusCode, err)
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("read body: %v", err)
+	}
+	if !strings.Contains(string(body), currentUser.UID) {
+		t.Fatalf("expected user %s in response: %s", currentUser.UID, body)
+	}
+	for _, leak := range []string{"hash", "reset-token-secret", "confirm-token-secret", `"ID"`} {
+		if strings.Contains(string(body), leak) {
+			t.Errorf("response leaks %q: %s", leak, body)
+		}
+	}
+}

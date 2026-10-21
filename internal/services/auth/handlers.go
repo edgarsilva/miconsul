@@ -397,19 +397,14 @@ func (s *service) HandleValidate(c fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusOK)
 }
 
-// HandleShowUser returns a JSON models.User if the session is valid
+// HandleShowUser returns the current user's public fields as JSON.
 // GET: /api/auth/protected
 func (s *service) HandleShowUser(c fiber.Ctx) error {
 	_, span := s.Trace(c.Context(), "auth/handlers:HandleShowUser")
 	defer span.End()
 
-	user := s.CurrentUser(c)
-
-	res := struct{ User models.User }{
-		User: user,
-	}
-
-	return c.JSON(res)
+	out := newShowUserOutput(s.CurrentUser(c))
+	return c.JSON(out)
 }
 
 func (s *service) providerSigninRedirect(c fiber.Ctx, msg string) (redirectURL string, nextMsg string) {

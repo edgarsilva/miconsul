@@ -10,6 +10,7 @@ import (
 
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
+	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -99,4 +100,58 @@ func postJSON(t *testing.T, s *Server, body string) string {
 	}
 
 	return string(out)
+}
+
+func TestUserSecretsSkippedByFiber(t *testing.T) {
+	secrets := []string{"hashed-password", "reset-token-secret", "confirm-token-secret"}
+	app := fiber.New(fiber.Config{JSONEncoder: marshalJSON, JSONDecoder: unmarshalJSON})
+	app.Get("/user", func(c fiber.Ctx) error {
+		return c.JSON(models.User{
+			UID:               "user_123",
+			Password:          "hashed-password",
+			ResetToken:        "reset-token-secret",
+			ConfirmEmailToken: "confirm-token-secret",
+		})
+	})
+	app.Post("/user", func(c fiber.Ctx) error {
+		var u models.User
+		if err := c.Bind().Body(&u); err != nil {
+			return err
+		}
+		if u.Name != "Ana" {
+			t.Errorf("%s: expected Name to bind, got %q", c.Get(fiber.HeaderContentType), u.Name)
+		}
+		if u.Password != "" || u.ResetToken != "" || u.ConfirmEmailToken != "" {
+			t.Errorf("%s: secret fields bound: Password=%q ResetToken=%q ConfirmEmailToken=%q",
+				c.Get(fiber.HeaderContentType), u.Password, u.ResetToken, u.ConfirmEmailToken)
+		}
+		return c.SendStatus(fiber.StatusNoContent)
+	})
+
+	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/user", nil))
+	if err != nil {
+		t.Fatalf("GET /user: %v", err)
+	}
+	body, _ := io.ReadAll(resp.Body)
+	if !strings.Contains(string(body), "user_123") {
+		t.Fatalf("expected UID in response: %s", body)
+	}
+	for _, secret := range secrets {
+		if strings.Contains(string(body), secret) {
+			t.Errorf("c.JSON leaks %q: %s", secret, body)
+		}
+	}
+
+	for _, tc := range []struct{ contentType, body string }{
+		{fiber.MIMEApplicationJSON, `{"Name":"Ana","Password":"hashed-password","ResetToken":"reset-token-secret","ConfirmEmailToken":"confirm-token-secret"}`},
+		{fiber.MIMEApplicationForm, "Name=Ana&Password=hashed-password&ResetToken=reset-token-secret&ConfirmEmailToken=confirm-token-secret"},
+		{fiber.MIMEApplicationForm, "name=Ana&password=hashed-password&resettoken=reset-token-secret&confirmemailtoken=confirm-token-secret"},
+	} {
+		req := httptest.NewRequest(http.MethodPost, "/user", strings.NewReader(tc.body))
+		req.Header.Set(fiber.HeaderContentType, tc.contentType)
+		resp, err := app.Test(req)
+		if err != nil || resp.StatusCode != fiber.StatusNoContent {
+			t.Fatalf("POST /user %s: status=%d err=%v", tc.contentType, resp.StatusCode, err)
+		}
+	}
 }

@@ -198,10 +198,8 @@ func (s *service) HandleAPIUsers(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	res := struct{ Users []models.User }{
-		Users: users,
-	}
-	return c.Status(fiber.StatusOK).JSON(res)
+	out := newAPIUsersOutput(users)
+	return c.Status(fiber.StatusOK).JSON(out)
 }
 
 // HandleAPIMakeUsers creates mock users for admin testing.
