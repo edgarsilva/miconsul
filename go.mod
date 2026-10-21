@@ -5,7 +5,6 @@ go 1.27.2
 require (
 	github.com/a-h/templ v0.3.1070
 	github.com/alicebob/miniredis/v2 v2.40.0
-	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/dustin/go-humanize v1.1.0
 	github.com/edgarsilva/simpleenv v1.3.0
 	github.com/gofiber/contrib/v3/otel v1.3.1

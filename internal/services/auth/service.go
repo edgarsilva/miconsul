@@ -6,15 +6,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/mail"
 	"strings"
 	"time"
+	"unicode"
 
 	"miconsul/internal/lib/xid"
 	"miconsul/internal/mailer"
 	"miconsul/internal/models"
 	"miconsul/internal/server"
 
-	"github.com/asaskevich/govalidator"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	otellog "go.opentelemetry.io/otel/log"
@@ -92,8 +93,7 @@ func (s *service) signup(ctx context.Context, email string, password string) err
 
 // IsEmailValidForSignup returns nil if valid, otherwise returns an error
 func (s *service) signupIsEmailValid(ctx context.Context, email string) error {
-	validEmail := govalidator.IsEmail(email)
-	if !validEmail {
+	if !isEmail(email) {
 		return errors.New("email address is invalid")
 	}
 
@@ -342,4 +342,17 @@ func (s *service) emitAsyncEmailError(ctx context.Context, operation, email, sta
 	)
 
 	s.Logger.Emit(ctx, rec)
+}
+
+// isEmail reports whether email is a bare address whose domain is dotted
+// and ends in a label with a letter, which rules out IP literals.
+func isEmail(email string) bool {
+	addr, err := mail.ParseAddress(email)
+	if err != nil || addr.Address != email {
+		return false
+	}
+
+	domain := email[strings.LastIndexByte(email, '@')+1:]
+	dot := strings.LastIndexByte(domain, '.')
+	return dot > 0 && strings.ContainsFunc(domain[dot+1:], unicode.IsLetter)
 }

@@ -83,3 +83,48 @@ func TestJWTCreateTokenRequiresSecret(t *testing.T) {
 		t.Fatalf("expected JWTCreateToken success, got %v", err)
 	}
 }
+
+func TestIsEmail(t *testing.T) {
+	valid := []string{
+		"bob@example.com",
+		"bob.smith+tag@sub.example.co.uk",
+		"BOB@EXAMPLE.COM",
+		"josé@example.com",
+		"bob@exämple.com",
+		"a@b.c",
+		"bob@example.c0m",
+		"bob@10.0.0.4.com",
+	}
+	invalid := []string{
+		"",
+		"bob",
+		"bob@",
+		"@example.com",
+		"bob@@example.com",
+		"bob@localhost",
+		"bob@example",
+		"bob@.com",
+		"bob@example..com",
+		"bob@example.com.",
+		"bob@10.0.0.4",
+		"bob@[10.0.0.4]",
+		"bob@[10.0.0.4].com",
+		`"Bob" <bob@example.com>`,
+		"<bob@example.com>",
+		"bob@example.com (Bob)",
+		" bob@example.com",
+		"bob@example.com ",
+		"bob@example.com, alice@example.com",
+	}
+
+	for _, email := range valid {
+		if !isEmail(email) {
+			t.Errorf("expected %q to be valid", email)
+		}
+	}
+	for _, email := range invalid {
+		if isEmail(email) {
+			t.Errorf("expected %q to be invalid", email)
+		}
+	}
+}
