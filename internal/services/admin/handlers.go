@@ -10,15 +10,12 @@ import (
 // HandleAdminModelsPage renders a list of available model types.
 // GET: /admin/models
 func (s *service) HandleAdminModelsPage(c fiber.Ctx) error {
-	cu := s.CurrentUser(c)
-
 	models, err := s.modelNameProvider.ListModelNames()
 	if err != nil {
 		log.Error("failed to list model names:", err)
 		models = []string{}
 	}
 
-	theme := s.SessionUITheme(c)
-	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.AdminModelsPage(vc, models))
 }

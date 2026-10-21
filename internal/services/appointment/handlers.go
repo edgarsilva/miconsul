@@ -115,12 +115,7 @@ func (s *service) HandleShowPage(c fiber.Ctx) error {
 		return s.Redirect(c, "/appointments?toast=Failed to load patients&level=error")
 	}
 
-	theme := s.SessionUITheme(c)
-	toast := c.Query("toast", "")
-	vc, _ := view.NewCtx(
-		c,
-		view.WithTheme(theme), view.WithCurrentUser(cu), view.WithToast(toast, "", ""),
-	)
+	vc, _ := view.NewCtx(c)
 
 	return view.Render(c, view.AppointmentPage(vc, appointment, patients, clinics))
 }
@@ -549,12 +544,7 @@ func (s *service) HandlePatientConfirm(c fiber.Ctx) error {
 		return s.Redirect(c, "/signin?toast=Failed to load appointment&level=error")
 	}
 
-	theme := s.SessionUITheme(c)
-	toast := c.Query("toast", "")
-	vc, _ := view.NewCtx(
-		c,
-		view.WithTheme(theme), view.WithToast(toast, "", ""),
-	)
+	vc, _ := view.NewCtx(c)
 
 	return view.Render(c, view.AppointmentConfirmPage(vc, appointment))
 }
@@ -576,12 +566,7 @@ func (s *service) HandlePatientCancelPage(c fiber.Ctx) error {
 		return s.Redirect(c, "/signin?toast=Failed to load appointment&level=error")
 	}
 
-	theme := s.SessionUITheme(c)
-	toast := c.Query("toast", "")
-	vc, _ := view.NewCtx(
-		c,
-		view.WithTheme(theme), view.WithToast(toast, "", ""),
-	)
+	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.AppointmentCancelPage(vc, appointment))
 }
 
@@ -607,11 +592,10 @@ func (s *service) HandlePatientCancel(c fiber.Ctx) error {
 		return s.Redirect(c, "/signin?toast=Failed to load appointment&level=error")
 	}
 
-	theme := s.SessionUITheme(c)
 	toast := c.Query("toast", "Success!")
 	vc, _ := view.NewCtx(
 		c,
-		view.WithTheme(theme), view.WithToast(toast, "", "success"),
+		view.WithToast(toast, "", "success"),
 	)
 	return view.Render(c, view.AppointmentCancelPage(vc, appointment))
 }
@@ -656,8 +640,7 @@ func (s *service) HandlePriceFrg(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	toast := c.Query("toast", "")
-	vc, _ := view.NewCtx(c, view.WithToast(toast, "", ""))
+	vc, _ := view.NewCtx(c)
 
 	return view.Render(c, view.ApptPrice(vc, models.Appointment{}, clinic, false))
 }
@@ -674,8 +657,7 @@ func (s *service) HandleSearchClinics(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	theme := s.SessionUITheme(c)
-	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	vc, _ := view.NewCtx(c)
 
 	return view.Render(c, view.ApptSearchClinicsFrg(vc, clinics))
 }
@@ -734,8 +716,7 @@ func (s *service) selectedClinicFromQuery(c fiber.Ctx, userID uint, clinicID str
 }
 
 func (s *service) renderAppointmentNotFoundPage(c fiber.Ctx, toast, level string) error {
-	theme := s.SessionUITheme(c)
-	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithToast(toast, "", level))
+	vc, _ := view.NewCtx(c, view.WithToast(toast, "", level))
 	return view.Render(c, view.AppointmentNotFoundPage(vc))
 }
 

@@ -26,11 +26,6 @@ func TestSessionReadWriteAndHelpers(t *testing.T) {
 			t.Fatalf("expected default value for missing key, got %q", got)
 		}
 
-		c.Locals("theme", "dark")
-		if got := s.SessionUITheme(c); got != "dark" {
-			t.Fatalf("expected dark theme, got %q", got)
-		}
-
 		return c.SendStatus(http.StatusNoContent)
 	})
 
@@ -41,48 +36,6 @@ func TestSessionReadWriteAndHelpers(t *testing.T) {
 	if resp.StatusCode != http.StatusNoContent {
 		t.Fatalf("expected 204, got %d", resp.StatusCode)
 	}
-}
-
-func TestCurrentLocaleBranches(t *testing.T) {
-	t.Run("without session store uses locals fallback", func(t *testing.T) {
-		s := &Server{}
-		app := fiber.New()
-		app.Get("/locale", func(c fiber.Ctx) error {
-			if got := s.CurrentLocale(c); got != "es-MX" {
-				t.Fatalf("expected default locale es-MX, got %q", got)
-			}
-			c.Locals("locale", "en-US")
-			if got := s.CurrentLocale(c); got != "en-US" {
-				t.Fatalf("expected local fallback en-US, got %q", got)
-			}
-			return c.SendStatus(http.StatusNoContent)
-		})
-
-		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/locale", nil))
-		if err != nil || resp.StatusCode != http.StatusNoContent {
-			t.Fatalf("locale request failed status=%d err=%v", resp.StatusCode, err)
-		}
-	})
-
-	t.Run("with session store persists locale", func(t *testing.T) {
-		s := &Server{SessionStore: session.NewStore()}
-		app := fiber.New()
-		app.Get("/locale", func(c fiber.Ctx) error {
-			c.Locals("locale", "en-US")
-			if got := s.CurrentLocale(c); got != "en-US" {
-				t.Fatalf("expected en-US locale, got %q", got)
-			}
-			if got := s.CurrentLocale(c); got != "en-US" {
-				t.Fatalf("expected persisted en-US locale, got %q", got)
-			}
-			return c.SendStatus(http.StatusNoContent)
-		})
-
-		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/locale", nil))
-		if err != nil || resp.StatusCode != http.StatusNoContent {
-			t.Fatalf("locale request failed status=%d err=%v", resp.StatusCode, err)
-		}
-	})
 }
 
 func TestSessionIDTagAndLocalize(t *testing.T) {

@@ -26,8 +26,7 @@ const (
 func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
-	theme := s.SessionUITheme(c)
-	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	vc, _ := view.NewCtx(c)
 
 	patients, err := s.FindRecentPatientsByUser(c.Context(), cu, QUERY_LIMIT)
 	if err != nil {
@@ -61,8 +60,7 @@ func (s *service) HandlePatientsIndexSearch(c fiber.Ctx) error {
 func (s *service) HandlePatientFormPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
-	theme := s.SessionUITheme(c)
-	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	vc, _ := view.NewCtx(c)
 
 	id := strings.TrimSpace(c.Params("id", ""))
 	if id == "" {
@@ -124,11 +122,8 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 	}
 
 	c.Set("HX-Push-Url", "/patients/"+patient.UID)
-	theme := s.SessionUITheme(c)
 	vc, _ := view.NewCtx(
 		c,
-		view.WithTheme(theme),
-		view.WithCurrentUser(cu),
 		view.WithToast("New patient created", "", ""),
 	)
 	return view.Render(c, view.PatientFormPage(patient, vc))
@@ -247,8 +242,7 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 		return s.Redirect(c, "/patients/"+patient.UID)
 	}
 
-	theme := s.SessionUITheme(c)
-	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.PatientFormPage(patient, vc))
 }
 
@@ -284,8 +278,7 @@ func (s *service) HandleDeletePatient(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, "/patients?toast=Failed to load patients&level=error")
 	}
 
-	theme := s.SessionUITheme(c)
-	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.PatientsList(vc, patients))
 }
 
@@ -306,8 +299,7 @@ func (s *service) HandlePatientSearch(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, redirectPath)
 	}
 
-	theme := s.SessionUITheme(c)
-	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	vc, _ := view.NewCtx(c)
 	return view.Render(c, view.PatientSearchResults(patients, vc))
 }
 

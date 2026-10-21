@@ -48,8 +48,7 @@ func (s *service) HandleSignin(c fiber.Ctx) error {
 	ctx, span := s.Trace(c.Context(), "auth/handlers:HandleSignin")
 	defer span.End()
 
-	theme := s.SessionUITheme(c)
-	vc, _ := view.NewCtx(c, view.WithTheme(theme))
+	vc, _ := view.NewCtx(c)
 	respErr := errors.New("incorrect email and password combination")
 
 	email, password, err := credentialsFromRequest(c)
@@ -133,8 +132,7 @@ func (s *service) HandleSignupPage(c fiber.Ctx) error {
 	if msg == "" {
 		err = nil
 	}
-	theme := s.SessionUITheme(c)
-	vc, _ := view.NewCtx(c, view.WithTheme(theme))
+	vc, _ := view.NewCtx(c)
 
 	return view.Render(c, view.SignupPage(vc, "", err))
 }
@@ -147,8 +145,7 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 	defer span.End()
 	span.SetAttributes(attribute.String("auth.provider", "local"))
 
-	theme := s.SessionUITheme(c)
-	vc, _ := view.NewCtx(c, view.WithTheme(theme))
+	vc, _ := view.NewCtx(c)
 	email, password, err := credentialsFromRequest(c)
 	if err != nil {
 		span.RecordError(err)
