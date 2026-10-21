@@ -231,14 +231,16 @@ func TestBootstrapServerSetupEnvFailure(t *testing.T) {
 }
 
 func TestSetupWorkpool(t *testing.T) {
-	pool, shutdown := setupWorkpool(1)
+	pool, shutdown := setupWorkpool(1, time.Second)
 	if pool == nil {
 		t.Fatal("setupWorkpool() expected pool")
 	}
 	if pool.AntsPool() == nil {
 		t.Fatal("setupWorkpool() expected ants pool")
 	}
-	shutdown()
+	if err := shutdown(); err != nil {
+		t.Fatalf("shutdown() error = %v", err)
+	}
 }
 
 func TestSetupJobs(t *testing.T) {

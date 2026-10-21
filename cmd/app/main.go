@@ -129,10 +129,12 @@ func bootstrapServer(ctx context.Context) (bootstrapResult, error) {
 	})
 
 	fmt.Println(" Starting workpool...")
-	wp, shutdownWorkPool := setupWorkpool(10)
+	wp, shutdownWorkPool := setupWorkpool(10, env.AppShutdownTimeout)
 	pushCleanup(func() {
 		fmt.Println("🐜 Ants workpool shutting down...")
-		shutdownWorkPool()
+		if err := shutdownWorkPool(); err != nil {
+			log.Printf("workpool shutdown error: %v", err)
+		}
 	})
 
 	fmt.Println(" Starting jobs runtime...")
@@ -233,8 +235,8 @@ func setupDB(env *appenv.Env, telemetry telemetryRuntime) (*database.Database, e
 	return db, nil
 }
 
-func setupWorkpool(size int) (*workpool.Pool, func()) {
-	return workpool.New(size)
+func setupWorkpool(size int, releaseTimeout time.Duration) (*workpool.Pool, func() error) {
+	return workpool.New(size, releaseTimeout)
 }
 
 func setupJobs(env *appenv.Env) (*jobs.Runtime, error) {
