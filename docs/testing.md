@@ -137,7 +137,7 @@ work is now coverage hardening and contract expansion, tracked in
 | `POST /api/auth/signin` | `400` bad payload/blank fields, `401` invalid credentials, `403` pending confirmation | `200` JSON `{ok:true}` + `Auth` cookie | JSON contract checked in handler and integration tests. |
 | `POST /logout` | `302/303` redirect `/signin` (or Logto signout path) | same | HTMX requests return `307` + `HX-Redirect` header. |
 | `POST /api/auth/validate` | `401` behind auth middleware | `200` | Endpoint itself returns `200`; middleware enforces auth. |
-| `GET /api/auth/protected` | `401` behind auth middleware | `200` JSON user payload | User identity must match authenticated request context. |
+| `GET /api/auth/protected` | `401` behind auth middleware | `200` JSON public user fields | User identity must match authenticated request context; no tokens or password. |
 
 ### Provider Callback Error Matrix (Logto)
 

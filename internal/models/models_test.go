@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json/v2"
 	"strings"
 	"testing"
 	"time"
@@ -251,5 +252,47 @@ func TestAppointmentAndIdentityHelpers(t *testing.T) {
 	c := Clinic{Name: "A"}
 	if got := c.Initials(); got != "CL" {
 		t.Fatalf("expected clinic fallback initials CL, got %q", got)
+	}
+}
+
+func TestUserJSONOmitsSecrets(t *testing.T) {
+	u := User{
+		UID:                   "user_123",
+		Email:                 "u@example.com",
+		Password:              "hashed-password",
+		ResetToken:            "reset-token-secret",
+		ResetTokenExpiresAt:   time.Now(),
+		ConfirmEmailToken:     "confirm-token-secret",
+		ConfirmEmailExpiresAt: time.Now(),
+	}
+
+	for name, v := range map[string]any{"User": u, "PublicUser": u.Public()} {
+		b, err := json.Marshal(v)
+		if err != nil {
+			t.Fatalf("marshal %s: %v", name, err)
+		}
+		for _, leak := range []string{"hashed-password", "reset-token-secret", "confirm-token-secret", "ResetTokenExpiresAt", "ConfirmEmailExpiresAt"} {
+			if strings.Contains(string(b), leak) {
+				t.Errorf("%s JSON leaks %q: %s", name, leak, b)
+			}
+		}
+	}
+}
+
+func TestUserPublic(t *testing.T) {
+	now := time.Now()
+	u := User{
+		ID: 42, UID: "user_123", ExtID: "logto_1", Name: "Ana", Email: "ana@example.com",
+		ProfilePic: "/p.png", Phone: "555", Timezone: "America/Mexico_City", Theme: "dark",
+		Role: UserRoleAdmin, ModelBase: ModelBase{CreatedAt: now, UpdatedAt: now},
+	}
+
+	want := PublicUser{
+		UID: "user_123", ExtID: "logto_1", Name: "Ana", Email: "ana@example.com",
+		ProfilePic: "/p.png", Phone: "555", Timezone: "America/Mexico_City", Theme: "dark",
+		Role: UserRoleAdmin, CreatedAt: now, UpdatedAt: now,
+	}
+	if got := u.Public(); got != want {
+		t.Fatalf("Public() = %+v, want %+v", got, want)
 	}
 }

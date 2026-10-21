@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"io"
@@ -371,11 +372,20 @@ func TestAuthHandlersLogoutAndSessionEndpoints(t *testing.T) {
 		}
 	})
 
-	t.Run("HandleShowUser returns current user json", func(t *testing.T) {
+	t.Run("HandleShowUser returns only public user fields", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		app := fiber.New()
 		app.Get("/api/auth/protected", func(c fiber.Ctx) error {
-			c.Locals("current_user", models.User{UID: "user_123", Email: "u@example.com"})
+			c.Locals("current_user", models.User{
+				ID:                    42,
+				UID:                   "user_123",
+				Email:                 "u@example.com",
+				Password:              "hashed-password",
+				ResetToken:            "reset-token-secret",
+				ResetTokenExpiresAt:   time.Now().Add(time.Hour),
+				ConfirmEmailToken:     "confirm-token-secret",
+				ConfirmEmailExpiresAt: time.Now().Add(time.Hour),
+			})
 			return svc.HandleShowUser(c)
 		})
 
@@ -385,6 +395,28 @@ func TestAuthHandlersLogoutAndSessionEndpoints(t *testing.T) {
 		}
 		if resp.StatusCode != fiber.StatusOK {
 			t.Fatalf("expected 200, got %d", resp.StatusCode)
+		}
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			t.Fatalf("read body: %v", err)
+		}
+		var payload struct{ User map[string]any }
+		if err := json.Unmarshal(body, &payload); err != nil {
+			t.Fatalf("decode body %s: %v", body, err)
+		}
+		if payload.User["UID"] != "user_123" || payload.User["Email"] != "u@example.com" {
+			t.Fatalf("expected UID and Email in response, got %s", body)
+		}
+		for _, key := range []string{"ID", "Password", "ResetToken", "ResetTokenExpiresAt", "ConfirmEmailToken", "ConfirmEmailExpiresAt"} {
+			if _, ok := payload.User[key]; ok {
+				t.Errorf("response must not include %s: %s", key, body)
+			}
+		}
+		for _, secret := range []string{"hashed-password", "reset-token-secret", "confirm-token-secret"} {
+			if strings.Contains(string(body), secret) {
+				t.Errorf("response leaks %q: %s", secret, body)
+			}
 		}
 	})
 }

@@ -123,3 +123,43 @@ func runViewCtx(t *testing.T, target string, fn func(c fiber.Ctx)) {
 		t.Fatalf("expected helper 204, got %d", resp.StatusCode)
 	}
 }
+
+func TestUserViewsOmitSecrets(t *testing.T) {
+	user := models.User{
+		UID:               "usr_1",
+		Name:              "Ana Zyxwv",
+		Email:             "ana@example.com",
+		Role:              models.UserRoleAdmin,
+		Password:          "hashed-password",
+		ResetToken:        "reset-token-secret",
+		ConfirmEmailToken: "confirm-token-secret",
+	}
+
+	runViewCtx(t, "/ctx", func(c fiber.Ctx) {
+		vc, err := NewCtx(c, WithLocale("en-US"), WithCurrentUser(user))
+		if err != nil {
+			t.Fatalf("new ctx: %v", err)
+		}
+
+		pages := map[string]interface {
+			Render(context.Context, io.Writer) error
+		}{
+			"UsersIndexPage": UsersIndexPage(vc, []models.User{user}),
+			"UserEditPage":   UserEditPage(vc, user),
+		}
+		for name, page := range pages {
+			var html strings.Builder
+			if err := page.Render(c.Context(), &html); err != nil {
+				t.Fatalf("render %s: %v", name, err)
+			}
+			if !strings.Contains(html.String(), user.Name) {
+				t.Fatalf("%s: expected the user's name in the page", name)
+			}
+			for _, secret := range []string{"hashed-password", "reset-token-secret", "confirm-token-secret"} {
+				if strings.Contains(html.String(), secret) {
+					t.Errorf("%s renders %q", name, secret)
+				}
+			}
+		}
+	})
+}
