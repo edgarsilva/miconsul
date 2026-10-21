@@ -18,6 +18,26 @@ func (s *Server) CurrentUser(c fiber.Ctx) models.User {
 	return cu
 }
 
+// CurrentTheme returns the UI theme (light|dark) set by the theme middleware.
+func (s *Server) CurrentTheme(c fiber.Ctx) string {
+	theme, ok := c.Locals("theme").(string)
+	if !ok || theme == "" {
+		return "light"
+	}
+
+	return theme
+}
+
+// CurrentLocale returns the locale set by the locale middleware.
+func (s *Server) CurrentLocale(c fiber.Ctx) string {
+	locale, ok := c.Locals("locale").(string)
+	if !ok || locale == "" {
+		return "es-MX"
+	}
+
+	return locale
+}
+
 // IsHTMX returns true if the request was initiated by HTMX.
 func (s *Server) IsHTMX(c fiber.Ctx) bool {
 	isHTMX := c.Get("HX-Request", "")

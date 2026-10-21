@@ -18,7 +18,6 @@ func (s *service) HandleAdminModelsPage(c fiber.Ctx) error {
 		models = []string{}
 	}
 
-	theme := s.SessionUITheme(c)
-	vc, _ := view.NewCtx(c, view.WithTheme(theme), view.WithCurrentUser(cu))
+	vc, _ := view.NewCtx(c, view.WithCurrentUser(cu))
 	return view.Render(c, view.AdminModelsPage(vc, models))
 }
