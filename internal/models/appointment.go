@@ -37,7 +37,7 @@ func (s AppointmentStatus) IsValid() bool {
 }
 
 type Appointment struct {
-	BookedAt      time.Time `gorm:"index;default:null;not null" form:"_"`
+	BookedAt      time.Time `gorm:"index;default:null;not null" form:"-"`
 	ViewedAt      time.Time `gorm:"default:null"`
 	ConfirmedAt   time.Time `gorm:"default:null"`
 	DoneAt        time.Time `gorm:"default:null"`
@@ -46,17 +46,17 @@ type Appointment struct {
 	RescheduledAt time.Time `gorm:"default:null"`
 	DeletedAt     gorm.DeletedAt
 	ModelBase
-	ID            uint              `gorm:"primaryKey" form:"_"`
-	UID           string            `gorm:"uniqueIndex;default:null;not null" form:"_"`
+	ID            uint              `gorm:"primaryKey" form:"-"`
+	UID           string            `gorm:"uniqueIndex;default:null;not null" form:"-"`
 	ExtID         string            `form:"extId"`
-	Token         string            `form:"_"`
+	Token         string            `form:"-"`
 	Summary       string            `form:"summary"`
 	Observations  string            `form:"observations"`
 	Conclusions   string            `form:"conclusions"`
 	Notes         string            `form:"notes"`
 	Hashtags      string            `form:"hashtags"`
 	Timezone      string            `form:"timezone"`
-	UserID        uint              `gorm:"index;default:null;not null"`
+	UserID        uint              `gorm:"index;default:null;not null" form:"-"`
 	ClinicID      uint              `gorm:"index;default:null;not null" form:"clinicId"`
 	PatientID     uint              `gorm:"index;default:null;not null" form:"patientId"`
 	Status        AppointmentStatus `gorm:"index;default:pending;not null;type:string" form:"status"`
@@ -66,7 +66,7 @@ type Appointment struct {
 	User          User
 	Patient       Patient
 	Duration      int `form:"duration"`
-	Price         int `form:"_"`
+	Price         int `form:"-"`
 	BookedYear    int
 	BookedMonth   int
 	BookedDay     int
