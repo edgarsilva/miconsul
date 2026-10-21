@@ -155,3 +155,47 @@ func TestUserSecretsSkippedByFiber(t *testing.T) {
 		}
 	}
 }
+
+func TestModelServerFieldsSkippedByFormBinding(t *testing.T) {
+	bodies := map[string]string{
+		"field names":  "id=99&uid=forged&userid=7&role=admin&price=1&token=forged&extid=forged&name=Ana",
+		"old skip key": "_=99&__blank__=99&name=Ana",
+	}
+
+	for label, body := range bodies {
+		bind := func(dst any) {
+			app := fiber.New()
+			app.Post("/", func(c fiber.Ctx) error { return c.Bind().Body(dst) })
+			req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(body))
+			req.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationForm)
+			resp, err := app.Test(req)
+			if err != nil || resp.StatusCode != fiber.StatusOK {
+				t.Errorf("%s: bind %T: status=%d err=%v", label, dst, resp.StatusCode, err)
+			}
+		}
+
+		var u models.User
+		bind(&u)
+		if u.ID != 0 || u.UID != "" || u.Role != "" {
+			t.Errorf("%s: User server fields bound: ID=%d UID=%q Role=%q", label, u.ID, u.UID, u.Role)
+		}
+
+		var cl models.Clinic
+		bind(&cl)
+		if cl.ID != 0 || cl.UID != "" || cl.ExtID != "" || cl.UserID != 0 || cl.Price != 0 {
+			t.Errorf("%s: Clinic server fields bound: ID=%d UID=%q ExtID=%q UserID=%d Price=%d", label, cl.ID, cl.UID, cl.ExtID, cl.UserID, cl.Price)
+		}
+
+		var p models.Patient
+		bind(&p)
+		if p.ID != 0 || p.UID != "" || p.UserID != 0 {
+			t.Errorf("%s: Patient server fields bound: ID=%d UID=%q UserID=%d", label, p.ID, p.UID, p.UserID)
+		}
+
+		var a models.Appointment
+		bind(&a)
+		if a.ID != 0 || a.UID != "" || a.UserID != 0 || a.Token != "" || a.Price != 0 {
+			t.Errorf("%s: Appointment server fields bound: ID=%d UID=%q UserID=%d Token=%q Price=%d", label, a.ID, a.UID, a.UserID, a.Token, a.Price)
+		}
+	}
+}

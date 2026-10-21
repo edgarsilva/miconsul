@@ -24,8 +24,8 @@ const (
 type User struct {
 	ConfirmEmailExpiresAt time.Time `json:"-" form:"-"`
 	ResetTokenExpiresAt   time.Time `json:"-" form:"-"`
-	ID                    uint      `gorm:"primaryKey" form:"__blank__"`
-	UID                   string    `gorm:"uniqueIndex;default:null;not null" form:"__blank__"`
+	ID                    uint      `gorm:"primaryKey" form:"-"`
+	UID                   string    `gorm:"uniqueIndex;default:null;not null" form:"-"`
 	ExtID                 string
 	ProfilePic            string
 	Name                  string
@@ -37,7 +37,7 @@ type User struct {
 	Phone                 string
 	Timezone              string
 	// LocaleLang            string
-	Role UserRole `gorm:"index;default:null;not null;type:string" form:"__blank__"`
+	Role UserRole `gorm:"index;default:null;not null;type:string" form:"-"`
 	ModelBase
 	Clinics      []Clinic
 	Patients     []Patient

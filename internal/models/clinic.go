@@ -9,10 +9,10 @@ import (
 )
 
 type Clinic struct {
-	ID         uint   `gorm:"primaryKey" form:"_"`
-	UID        string `gorm:"uniqueIndex;default:null;not null" form:"_"`
-	ExtID      string `gorm:"index;default:null;" form:"_"`
-	UserID     uint   `gorm:"index;default:null;not null"`
+	ID         uint   `gorm:"primaryKey" form:"-"`
+	UID        string `gorm:"uniqueIndex;default:null;not null" form:"-"`
+	ExtID      string `gorm:"index;default:null;" form:"-"`
+	UserID     uint   `gorm:"index;default:null;not null" form:"-"`
 	CoverPic   string
 	ProfilePic string         `form:"profilePic"`
 	Name       string         `gorm:"default:null;not null" form:"name"`
@@ -24,7 +24,7 @@ type Clinic struct {
 	ModelBase
 	User     User
 	Favorite bool `form:"favorite"`
-	Price    int  `form:"_"`
+	Price    int  `form:"-"`
 }
 
 func (c *Clinic) BeforeCreate(tx *gorm.DB) error {

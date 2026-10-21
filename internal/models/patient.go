@@ -14,19 +14,19 @@ type Patient struct {
 	Address
 	SocialMedia
 	ModelBase
-	ID                uint   `gorm:"primaryKey" form:"_"`
-	UID               string `gorm:"uniqueIndex;default:null;not null" form:"_"`
+	ID                uint   `gorm:"primaryKey" form:"-"`
+	UID               string `gorm:"uniqueIndex;default:null;not null" form:"-"`
 	ExtID             string
 	Email             string         `form:"email"`
 	Phone             string         `form:"phone"`
 	Ocupation         string         `form:"ocupation"`
-	UserID            uint           `gorm:"index;default:null;not null"`
+	UserID            uint           `gorm:"index;default:null;not null" form:"-"`
 	Name              string         `gorm:"default:null;not null" form:"name"`
 	ProfilePic        string         `form:"profilePic"`
 	FamilyHistory     string         `form:"familyHistory"`
 	MedicalBackground string         `form:"medicalBackground"`
 	Notes             string         `form:"notes"`
-	DeletedAt         gorm.DeletedAt `form:"_"`
+	DeletedAt         gorm.DeletedAt `form:"-"`
 	User              User
 	Appointments      []Appointment
 	Age               int `form:"age"`
