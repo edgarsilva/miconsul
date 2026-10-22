@@ -2,6 +2,7 @@ package appointment
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"strings"
@@ -9,7 +10,6 @@ import (
 
 	"miconsul/internal/lib/amount"
 	"miconsul/internal/lib/libtime"
-	"miconsul/internal/lib/xid"
 	"miconsul/internal/models"
 	view "miconsul/internal/views"
 
@@ -337,7 +337,7 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 	}
 
 	appointment := models.Appointment{
-		Token:        xid.New("tkn_"),
+		Token:        rand.Text(),
 		UserID:       cu.ID,
 		BookedAt:     bookedAt,
 		BookedYear:   bookedAt.Year(),

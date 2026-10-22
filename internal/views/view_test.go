@@ -175,3 +175,24 @@ func TestUserViewsOmitSecrets(t *testing.T) {
 		}
 	})
 }
+
+func TestHTMLPageCSSURLStableAcrossRenders(t *testing.T) {
+	runViewCtx(t, "/ctx", func(c fiber.Ctx) {
+		vc := NewCtx(c)
+
+		var first, second strings.Builder
+		if err := HTMLPage(vc).Render(c.Context(), &first); err != nil {
+			t.Fatalf("render first page: %v", err)
+		}
+		if err := HTMLPage(vc).Render(c.Context(), &second); err != nil {
+			t.Fatalf("render second page: %v", err)
+		}
+
+		want := `href="/public/global.css?v=` + assetVersion + `"`
+		for name, html := range map[string]string{"first": first.String(), "second": second.String()} {
+			if !strings.Contains(html, want) {
+				t.Errorf("%s render: expected %s in the page", name, want)
+			}
+		}
+	})
+}

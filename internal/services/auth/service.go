@@ -4,6 +4,7 @@ package auth
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"net/mail"
@@ -11,7 +12,6 @@ import (
 	"time"
 	"unicode"
 
-	"miconsul/internal/lib/xid"
 	"miconsul/internal/mailer"
 	"miconsul/internal/models"
 	"miconsul/internal/server"
@@ -263,7 +263,7 @@ func (s *service) saveLogtoUser(ctx context.Context, logtoUser LogtoUser) error 
 	}
 
 	if user.Password == "" {
-		rndPwd, err := bcrypt.GenerateFromPassword([]byte(xid.New("rpwd")), 8)
+		rndPwd, err := bcrypt.GenerateFromPassword([]byte(rand.Text()), 8)
 		if err != nil {
 			return errors.New("generate password placeholder for user")
 		}

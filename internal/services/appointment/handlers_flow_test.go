@@ -112,6 +112,16 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 			t.Fatalf("create expected 303, got status=%d err=%v", resp2.StatusCode, err)
 		}
 
+		var created models.Appointment
+		if err := svc.DB.WithContext(t.Context()).Where("user_id = ? AND uid <> ?", user.ID, apnt.UID).Order("id desc").Take(&created).Error; err != nil {
+			t.Fatalf("load created appointment: %v", err)
+		}
+		// The UID's first 16 xid chars encode time, machine and pid.
+		uidBody := strings.TrimPrefix(created.UID, "apnt")
+		if created.Token == "" || strings.Contains(created.Token, uidBody[:16]) {
+			t.Fatalf("token must not be derived from the UID: uid=%q token=%q", created.UID, created.Token)
+		}
+
 		updForm := url.Values{
 			"bookedAt":  {time.Now().Add(2 * time.Hour).Format("2006-01-02T15:04")},
 			"price":     {"120.0"},

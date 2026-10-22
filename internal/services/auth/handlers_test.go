@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -843,7 +844,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		}
 	})
 
-	t.Run("HandleResetPasswordUpdate validates token and nonce branches", func(t *testing.T) {
+	t.Run("HandleResetPasswordUpdate redirects when token is missing", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		seedAuthUserWithOptions(t, svc, authUserSeedOptions{
 			Email:               "flow@example.com",
@@ -855,7 +856,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		app := fiber.New()
 		app.Post("/resetpassword/change", svc.HandleResetPasswordUpdate)
 
-		missingToken := url.Values{"email": {"flow@example.com"}, "nonce": {"abc"}, "password": {"Password1!"}, "confirm": {"Password1!"}}
+		missingToken := url.Values{"email": {"flow@example.com"}, "password": {"Password1!"}, "confirm": {"Password1!"}}
 		req1 := httptest.NewRequest(http.MethodPost, "/resetpassword/change", strings.NewReader(missingToken.Encode()))
 		req1.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		resp1, err := app.Test(req1)
@@ -865,16 +866,49 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		if resp1.StatusCode != fiber.StatusSeeOther {
 			t.Fatalf("expected 303 for missing token, got %d", resp1.StatusCode)
 		}
-
-		badNonce := url.Values{"email": {"flow@example.com"}, "token": {"reset-ok-token"}, "nonce": {""}, "password": {"Password1!"}, "confirm": {"Password1!"}}
-		req2 := httptest.NewRequest(http.MethodPost, "/resetpassword/change", strings.NewReader(badNonce.Encode()))
-		req2.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		resp2, err := app.Test(req2)
-		if err != nil {
-			t.Fatalf("request failed: %v", err)
+		if loc := resp1.Header.Get("Location"); !strings.Contains(loc, "something went wrong with the token") {
+			t.Fatalf("expected missing token redirect, got %q", loc)
 		}
-		if resp2.StatusCode != fiber.StatusSeeOther {
-			t.Fatalf("expected 303 for nonce issue, got %d", resp2.StatusCode)
+	})
+
+	t.Run("reset password change page and update round trip", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		seedAuthUserWithOptions(t, svc, authUserSeedOptions{
+			Email:               "roundtrip@example.com",
+			Password:            "Password1!",
+			ResetToken:          "roundtrip-token",
+			ResetTokenExpiresAt: time.Now().Add(time.Hour),
+		})
+
+		app := fiber.New()
+		app.Get("/resetpassword/change/:token", svc.HandleResetPasswordChange)
+		app.Post("/resetpassword/change", svc.HandleResetPasswordUpdate)
+
+		pageResp, err := app.Test(httptest.NewRequest(http.MethodGet, "/resetpassword/change/roundtrip-token", nil))
+		if err != nil {
+			t.Fatalf("change page request failed: %v", err)
+		}
+		page, err := io.ReadAll(pageResp.Body)
+		if err != nil {
+			t.Fatalf("read change page: %v", err)
+		}
+
+		form := url.Values{"password": {"NewPassword1!"}, "confirm": {"NewPassword1!"}}
+		for _, m := range regexp.MustCompile(`<input type="hidden" name="(\w+)" value="([^"]*)"`).FindAllSubmatch(page, -1) {
+			form.Set(string(m[1]), string(m[2]))
+		}
+		if form.Get("token") != "roundtrip-token" || form.Get("email") != "roundtrip@example.com" {
+			t.Fatalf("expected token and email hidden inputs in the change page, got %v", form)
+		}
+
+		req := httptest.NewRequest(http.MethodPost, "/resetpassword/change", strings.NewReader(form.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
+		if err != nil {
+			t.Fatalf("update request failed: %v", err)
+		}
+		if got := resp.Header.Get("Location"); got != "/signin" {
+			t.Fatalf("expected /signin redirect, got %q", got)
 		}
 	})
 
@@ -890,7 +924,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		app := fiber.New()
 		app.Post("/resetpassword/change", svc.HandleResetPasswordUpdate)
 
-		blankPwd := url.Values{"email": {"flow2@example.com"}, "token": {"reset-ok-token-2"}, "nonce": {"nonce-1"}, "password": {""}, "confirm": {""}}
+		blankPwd := url.Values{"email": {"flow2@example.com"}, "token": {"reset-ok-token-2"}, "password": {""}, "confirm": {""}}
 		req1 := httptest.NewRequest(http.MethodPost, "/resetpassword/change", strings.NewReader(blankPwd.Encode()))
 		req1.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		resp1, err := app.Test(req1)
@@ -901,7 +935,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 			t.Fatalf("expected 200 form error for blank password, got %d", resp1.StatusCode)
 		}
 
-		mismatch := url.Values{"email": {"flow2@example.com"}, "token": {"reset-ok-token-2"}, "nonce": {"nonce-2"}, "password": {"Password1!"}, "confirm": {"Different1!"}}
+		mismatch := url.Values{"email": {"flow2@example.com"}, "token": {"reset-ok-token-2"}, "password": {"Password1!"}, "confirm": {"Different1!"}}
 		req2 := httptest.NewRequest(http.MethodPost, "/resetpassword/change", strings.NewReader(mismatch.Encode()))
 		req2.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		resp2, err := app.Test(req2)
@@ -921,7 +955,6 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		form := url.Values{
 			"email":    {"unknown@example.com"},
 			"token":    {"missing-token"},
-			"nonce":    {"nonce-3"},
 			"password": {"Password1!"},
 			"confirm":  {"Password1!"},
 		}
@@ -933,6 +966,9 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		}
 		if resp.StatusCode != fiber.StatusSeeOther {
 			t.Fatalf("expected 303 for expired token path, got %d", resp.StatusCode)
+		}
+		if loc := resp.Header.Get("Location"); !strings.Contains(loc, "token has expired") {
+			t.Fatalf("expected expired token redirect, got %q", loc)
 		}
 	})
 
@@ -951,7 +987,6 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		form := url.Values{
 			"email":    {"different@example.com"},
 			"token":    {"update-ok-token"},
-			"nonce":    {"nonce-4"},
 			"password": {"Password1!"},
 			"confirm":  {"Password1!"},
 		}
@@ -963,6 +998,9 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		}
 		if resp.StatusCode != fiber.StatusSeeOther {
 			t.Fatalf("expected 303 on update failure, got %d", resp.StatusCode)
+		}
+		if loc := resp.Header.Get("Location"); !strings.Contains(loc, "something went wrong, try again") {
+			t.Fatalf("expected update failure redirect, got %q", loc)
 		}
 	})
 
@@ -981,7 +1019,6 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		form := url.Values{
 			"email":    {"updatesuccess@example.com"},
 			"token":    {"update-success-token"},
-			"nonce":    {"nonce-5"},
 			"password": {"NewPassword1!"},
 			"confirm":  {"NewPassword1!"},
 		}
