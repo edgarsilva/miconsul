@@ -4,7 +4,6 @@ package user
 import (
 	"errors"
 	"os"
-	"strconv"
 	"strings"
 
 	"miconsul/internal/models"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"gorm.io/gorm"
-	"syreclabs.com/go/faker"
 )
 
 // HandleIndexPage renders the admin users index page.
@@ -200,41 +198,6 @@ func (s *service) HandleAPIUsers(c fiber.Ctx) error {
 
 	out := newAPIUsersOutput(users)
 	return c.Status(fiber.StatusOK).JSON(out)
-}
-
-// HandleAPIMakeUsers creates mock users for admin testing.
-// POST: /api/users/make/:n
-func (s *service) HandleAPIMakeUsers(c fiber.Ctx) error {
-	const maxMockUsers = 10000
-
-	n, err := strconv.Atoi(c.Params("n", ""))
-	if err != nil || n <= 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "n must be a positive integer",
-		})
-	}
-	if n > maxMockUsers {
-		n = maxMockUsers
-	}
-
-	users := []models.User{}
-	for i := 0; i < n; i++ {
-		users = append(users, models.User{
-			Name:  strings.TrimSpace(faker.Name().Name()),
-			Email: strings.ToLower(strings.TrimSpace(faker.Internet().Email())),
-		})
-	}
-
-	err = s.CreateUsersInBatches(c.Context(), users, 1000)
-	if err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
-			"error": "unprocessable entity",
-		})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"created": len(users),
-	})
 }
 
 func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string) error {

@@ -3,19 +3,15 @@ package clinic
 import (
 	"cmp"
 	"errors"
-	"strconv"
 	"strings"
 
 	"miconsul/internal/lib/amount"
-	"miconsul/internal/lib/avatar"
-	"miconsul/internal/lib/xid"
 	"miconsul/internal/models"
 	view "miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
 	"gorm.io/gorm"
-	"syreclabs.com/go/faker"
 )
 
 const (
@@ -181,37 +177,6 @@ func (s *service) HandleClinicsIndexSearch(c fiber.Ctx) error {
 
 	vc := view.NewCtx(c)
 	return view.Render(c, view.ClinicsList(vc, clinics))
-}
-
-// HandleMockManyClinics creates many mock clinics for admin/testing flows.
-// GET: /clinics/makeaton
-func (s *service) HandleMockManyClinics(c fiber.Ctx) error {
-	cu := s.CurrentUser(c)
-
-	n, err := strconv.Atoi(c.Query("n", "100000"))
-	if err != nil {
-		n = 100000
-	}
-
-	var clinics []models.Clinic
-	for i := 0; i <= n; i++ {
-		ExtID := xid.New("prav")
-		clinics = append(clinics, models.Clinic{
-			ExtID:      ExtID,
-			ProfilePic: avatar.DicebearShapeAvatarURL(ExtID),
-			Name:       faker.Company().Name(),
-			Email:      faker.Internet().Email(),
-			Phone:      faker.PhoneNumber().CellPhone(),
-			UserID:     cu.ID,
-		})
-	}
-
-	result := s.DB.CreateInBatches(&clinics, 1000)
-	if err := result.Error; err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).SendString("Unprocessable entity")
-	}
-
-	return c.SendString("Rowsaffected:" + strconv.Itoa(int(result.RowsAffected)))
 }
 
 func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string) error {

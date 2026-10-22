@@ -3,18 +3,14 @@ package patient
 import (
 	"errors"
 	"os"
-	"strconv"
 	"strings"
 
-	"miconsul/internal/lib/avatar"
-	"miconsul/internal/lib/xid"
 	"miconsul/internal/models"
 	view "miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
 	"gorm.io/gorm"
-	"syreclabs.com/go/faker"
 )
 
 const (
@@ -310,45 +306,6 @@ func normalizeSearchTerm(raw string) (string, error) {
 	}
 
 	return term, nil
-}
-
-// HandleMockManyPatients creates many mock patients for admin/testing flows.
-// GET: /patients/makeaton
-func (s *service) HandleMockManyPatients(c fiber.Ctx) error {
-	cu := s.CurrentUser(c)
-	const (
-		defaultMockPatients = 1000
-		maxMockPatients     = 10000
-	)
-
-	n, err := strconv.Atoi(c.Query("n", strconv.Itoa(defaultMockPatients)))
-	if err != nil || n <= 0 {
-		n = defaultMockPatients
-	}
-	if n > maxMockPatients {
-		n = maxMockPatients
-	}
-
-	patients := []models.Patient{}
-	for i := 0; i < n; i++ {
-		ExtID := xid.New("prav")
-		patients = append(patients, models.Patient{
-			ExtID:      ExtID,
-			ProfilePic: avatar.DicebearFunEmojiAvatarURL(ExtID),
-			Name:       faker.Name().Name(),
-			Email:      faker.Internet().Email(),
-			Phone:      faker.PhoneNumber().CellPhone(),
-			Age:        25,
-			UserID:     cu.ID,
-		})
-	}
-
-	rowsAffected, err := s.CreatePatientsInBatches(c.Context(), patients, 1000)
-	if err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).SendString("Unprocessable entity")
-	}
-
-	return c.SendString("Rowsaffected:" + strconv.Itoa(int(rowsAffected)))
 }
 
 // HandlePatientProfilePicImgSrc serves a patient's profile picture file.

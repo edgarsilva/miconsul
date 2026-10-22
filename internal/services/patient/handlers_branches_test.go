@@ -1,14 +1,11 @@
 package patient
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
-
-	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -93,27 +90,5 @@ func TestPatientHandlerGuardBranches(t *testing.T) {
 	resp8, err := app.Test(httptest.NewRequest(http.MethodGet, "/patients//profilepic/", nil))
 	if err != nil || resp8.StatusCode != fiber.StatusNotFound {
 		t.Fatalf("profile pic missing params expected 404, got status=%d err=%v", resp8.StatusCode, err)
-	}
-}
-
-func TestHandleMockManyPatientsCreatesRows(t *testing.T) {
-	svc, user := newPatientServiceForTests(t)
-	app := fiber.New()
-	app.Get("/patients/makeaton", func(c fiber.Ctx) error {
-		c.Locals("current_user", user)
-		return svc.HandleMockManyPatients(c)
-	})
-
-	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/patients/makeaton?n=1", nil))
-	if err != nil || resp.StatusCode != fiber.StatusOK {
-		t.Fatalf("mock many patients expected 200, got status=%d err=%v", resp.StatusCode, err)
-	}
-
-	var count int64
-	if err := svc.DB.WithContext(context.Background()).Model(&models.Patient{}).Where("user_id = ?", user.ID).Count(&count).Error; err != nil {
-		t.Fatalf("count patients: %v", err)
-	}
-	if count == 0 {
-		t.Fatalf("expected at least one generated patient")
 	}
 }

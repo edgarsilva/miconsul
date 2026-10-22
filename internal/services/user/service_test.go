@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -133,38 +132,6 @@ func TestServiceValidationGuards(t *testing.T) {
 		_, err := svc.UpdateUserProfileByUID(ctx, "user_1", tooLongName)
 		if err == nil {
 			t.Fatalf("expected validation error for long name")
-		}
-	})
-}
-
-func TestHandleAPIMakeUsersInputValidation(t *testing.T) {
-	svc := service{Server: &server.Server{}}
-	app := fiber.New()
-	app.Post("/api/users/make/:n", svc.HandleAPIMakeUsers)
-
-	t.Run("non-numeric n returns 400", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/api/users/make/not-a-number", nil)
-		resp, err := app.Test(req)
-		if err != nil {
-			t.Fatalf("request failed: %v", err)
-		}
-		if resp.StatusCode != fiber.StatusBadRequest {
-			t.Fatalf("expected 400, got %d", resp.StatusCode)
-		}
-		body, _ := io.ReadAll(resp.Body)
-		if !strings.Contains(string(body), "positive integer") {
-			t.Fatalf("expected validation message, got %q", string(body))
-		}
-	})
-
-	t.Run("negative n returns 400", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/api/users/make/-5", nil)
-		resp, err := app.Test(req)
-		if err != nil {
-			t.Fatalf("request failed: %v", err)
-		}
-		if resp.StatusCode != fiber.StatusBadRequest {
-			t.Fatalf("expected 400, got %d", resp.StatusCode)
 		}
 	})
 }

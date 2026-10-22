@@ -51,24 +51,6 @@ func TestUserServiceDBFlows(t *testing.T) {
 			t.Fatalf("expected not found on missing update, got %v", err)
 		}
 	})
-
-	t.Run("create users in batches", func(t *testing.T) {
-		batch := []models.User{
-			{Email: "batch1@example.com", Password: "hash", Role: models.UserRoleUser},
-			{Email: "batch2@example.com", Password: "hash", Role: models.UserRoleUser},
-		}
-		if err := svc.CreateUsersInBatches(ctx, batch, 2); err != nil {
-			t.Fatalf("create users in batches: %v", err)
-		}
-
-		users, err := svc.FindRecentUsers(ctx, 20)
-		if err != nil {
-			t.Fatalf("find users after batch: %v", err)
-		}
-		if len(users) < 3 {
-			t.Fatalf("expected seeded + batch users, got %d", len(users))
-		}
-	})
 }
 
 func newUserServiceForTests(t *testing.T) (service, models.User) {
