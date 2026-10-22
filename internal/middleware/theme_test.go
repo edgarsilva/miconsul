@@ -14,10 +14,10 @@ func TestUITheme(t *testing.T) {
 		cookie string
 		want   string
 	}{
-		{"no cookie", "", "light"},
+		{"no cookie follows the OS", "", ""},
 		{"light", "light", "light"},
 		{"dark", "dark", "dark"},
-		{"unknown value", "dracula", "light"},
+		{"unknown value follows the OS", "dracula", ""},
 	}
 
 	for _, tt := range tests {

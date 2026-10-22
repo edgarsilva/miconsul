@@ -75,8 +75,8 @@ func TestCurrentThemeAndLocale(t *testing.T) {
 	s := &Server{}
 
 	runWithCtx(t, http.MethodGet, "/", nil, func(c fiber.Ctx) {
-		if got := s.CurrentTheme(c); got != "light" {
-			t.Fatalf("expected default theme light, got %q", got)
+		if got := s.CurrentTheme(c); got != "" {
+			t.Fatalf("expected no theme (follow the OS) by default, got %q", got)
 		}
 		if got := s.CurrentLocale(c); got != "es-MX" {
 			t.Fatalf("expected default locale es-MX, got %q", got)

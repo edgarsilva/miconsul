@@ -1,6 +1,7 @@
 package server
 
 import (
+	"miconsul/internal/lib/preferences"
 	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
@@ -18,14 +19,11 @@ func (s *Server) CurrentUser(c fiber.Ctx) models.User {
 	return cu
 }
 
-// CurrentTheme returns the UI theme (light|dark) set by the theme middleware.
+// CurrentTheme returns the UI theme set by the theme middleware: light, dark,
+// or "" to follow the OS setting.
 func (s *Server) CurrentTheme(c fiber.Ctx) string {
-	theme, ok := c.Locals("theme").(string)
-	if !ok || theme == "" {
-		return "light"
-	}
-
-	return theme
+	theme, _ := c.Locals("theme").(string)
+	return preferences.Theme(theme)
 }
 
 // CurrentLocale returns the locale set by the locale middleware.
