@@ -105,6 +105,8 @@ var localizations = map[string]string{
 	"en-US.str.clinics":                                  "Clinics",
 	"en-US.str.conclusions":                              "Conclusions",
 	"en-US.str.conclusions_ph":                           "",
+	"en-US.str.confirm_appointment_desc":                 "Please confirm you will attend. Here are your appointment details.",
+	"en-US.str.confirm_appointment_title":                "Confirm your appointment",
 	"en-US.str.confirmed":                                "confirmed",
 	"en-US.str.cost":                                     "Cost",
 	"en-US.str.cover_photo":                              "Cover photo",
@@ -223,6 +225,7 @@ var localizations = map[string]string{
 	"en-US.str.viewed":                                   "viewed",
 	"en-US.str.whatsapp":                                 "Whatsapp",
 	"en-US.str.yes_cancel_my_appointment":                "Cancel my appointment",
+	"en-US.str.yes_confirm_my_appointment":               "Confirm my appointment",
 	"es-MX.btn.appointments":                             "Citas",
 	"es-MX.btn.back":                                     "Regresar",
 	"es-MX.btn.cancel":                                   "Cancelar",
@@ -318,6 +321,8 @@ var localizations = map[string]string{
 	"es-MX.str.clinics":                                  "Consultorios",
 	"es-MX.str.conclusions":                              "Conclusiones",
 	"es-MX.str.conclusions_ph":                           "",
+	"es-MX.str.confirm_appointment_desc":                 "Por favor confirma tu asistencia. Estos son los detalles de tu cita.",
+	"es-MX.str.confirm_appointment_title":                "Confirma tu cita",
 	"es-MX.str.confirmed":                                "confirmada",
 	"es-MX.str.cost":                                     "Costo",
 	"es-MX.str.cover_photo":                              "Archivos adjuntos",
@@ -436,6 +441,7 @@ var localizations = map[string]string{
 	"es-MX.str.viewed":                                   "vista",
 	"es-MX.str.whatsapp":                                 "Whatsapp",
 	"es-MX.str.yes_cancel_my_appointment":                "Cancelar mi cita",
+	"es-MX.str.yes_confirm_my_appointment":               "Confirmar mi cita",
 }
 
 type Replacements map[string]interface{}

@@ -16,6 +16,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
 	"github.com/gofiber/fiber/v3/middleware/cors"
+	"github.com/gofiber/fiber/v3/middleware/csrf"
 	"github.com/gofiber/fiber/v3/middleware/encryptcookie"
 	"github.com/gofiber/fiber/v3/middleware/favicon"
 	"github.com/gofiber/fiber/v3/middleware/healthcheck"
@@ -201,6 +202,7 @@ func setupSecurityMiddleware(s *Server) {
 	cookieSecret := s.Env.CookieSecret
 
 	app.Use(helmet.New(helmetConfig()))
+	app.Use(csrf.NewCrossOriginProtection())
 	app.Use(encryptcookie.New(encryptcookie.Config{Key: cookieSecret}))
 	app.Use(favicon.New(favicon.Config{File: "./public/favicon.ico", URL: "/favicon.ico"}))
 

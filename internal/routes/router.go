@@ -196,8 +196,9 @@ func AppointmentRoutes(s *server.Server, authSvc auth.Runtime) error {
 	g.Post("/:id/delete", a.HandleDelete)
 	g.Delete("/:id", a.HandleDelete)
 
-	g.Get("/:id/patient/confirm/:token", a.HandlePatientConfirm)
-	g.Get("/:id/patient/changedate/:token", a.HandlePatientChangeDate)
+	g.Get("/:id/patient/confirm/:token", a.HandlePatientConfirmPage)
+	g.Post("/:id/patient/confirm/:token", a.HandlePatientConfirm)
+	g.Post("/:id/patient/changedate/:token", a.HandlePatientChangeDate)
 	g.Get("/:id/patient/cancel/:token", a.HandlePatientCancelPage)
 	g.Post("/:id/patient/cancel/:token", a.HandlePatientCancel)
 
@@ -228,7 +229,6 @@ func UserRoutes(s *server.Server, authSvc auth.Runtime) error {
 	u.Patch("/profile", mw.MustAuthenticate(authSvc), u.HandleUpdateProfile)
 	u.Post("/profile/avatar/preview", mw.MustAuthenticate(authSvc), u.HandleProfilePicPreview)
 	u.Delete("/profile/avatar", mw.MustAuthenticate(authSvc), u.HandleRemoveProfilePic)
-	u.Get("/profile/avatar/remove", mw.MustAuthenticate(authSvc), u.HandleRemoveProfilePic)
 	u.Get("/profile/avatar", mw.MustAuthenticate(authSvc), u.HandleUserProfilePicImgSrc)
 	u.Get("/profile/avatar/preview", mw.MustAuthenticate(authSvc), u.HandleUserProfilePicImgSrc)
 

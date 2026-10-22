@@ -32,15 +32,27 @@ templ AppointmentConfirmPage(vc *Ctx, appointment models.Appointment) {
 				<img src="/public/miconsul-v2-sub1.png" alt="Miconsul" class=""/>
 			</figure>
 			<div class="card-body p-6 md:w-2/3">
-				<h2 class="card-title">
-					{ l(vc.Locale, "str.appointment_confirmed") }
-				</h2>
-				<p class="text-base-content/80">{ l(vc.Locale, "str.appointment_confirmed_desc") }</p>
+				if appointment.ConfirmedAt.IsZero() {
+					<h2 class="card-title">
+						{ l(vc.Locale, "str.confirm_appointment_title") }
+					</h2>
+					<p class="text-base-content/80">{ l(vc.Locale, "str.confirm_appointment_desc") }</p>
+				} else {
+					<h2 class="card-title">
+						{ l(vc.Locale, "str.appointment_confirmed") }
+					</h2>
+					<p class="text-base-content/80">{ l(vc.Locale, "str.appointment_confirmed_desc") }</p>
+				}
 				<div class="pt-8 pb-12">
 					@AppointmentDescription(vc, appointment)
 				</div>
-				<div class="card-actions justify-end">
-					<a href={ templ.URL("/appointments/" + appointment.UID + "/patient/cancel/" + appointment.Token) } class="btn btn-primary">{ l(vc.Locale, "str.appt_need_changes") }</a>
+				<div class="card-actions justify-end gap-3">
+					<a href={ templ.URL(appointment.CancelPath()) } class="btn btn-soft">{ l(vc.Locale, "str.appt_need_changes") }</a>
+					if appointment.ConfirmedAt.IsZero() {
+						<form action={ templ.URL(appointment.ConfirmPath()) } method="POST" hx-boost="true">
+							<button type="submit" class="btn btn-primary">{ l(vc.Locale, "str.yes_confirm_my_appointment") }</button>
+						</form>
+					}
 				</div>
 			</div>
 		</div>

@@ -49,6 +49,30 @@ func TestSetupSessionStoreAndFiberApp(t *testing.T) {
 	assertStatus(t, s, http.MethodGet, fiberhealthcheck.LivenessEndpoint, http.StatusOK)
 	assertStatus(t, s, http.MethodGet, fiberhealthcheck.ReadinessEndpoint, http.StatusOK)
 	assertStatus(t, s, http.MethodGet, fiberhealthcheck.StartupEndpoint, http.StatusOK)
+
+	tests := []struct {
+		name       string
+		headers    map[string]string
+		wantStatus int
+	}{
+		{"cross-site browser POST", map[string]string{"Sec-Fetch-Site": "cross-site", "Origin": "https://evil.example"}, http.StatusForbidden},
+		{"same-site sibling POST", map[string]string{"Sec-Fetch-Site": "same-site", "Origin": "https://other.example.com"}, http.StatusForbidden},
+		{"same-origin browser POST", map[string]string{"Sec-Fetch-Site": "same-origin", "Origin": "http://example.com"}, http.StatusNotFound},
+		{"server-to-server POST without browser headers", nil, http.StatusNotFound},
+	}
+	for _, tt := range tests {
+		req := httptest.NewRequest(http.MethodPost, "/no-such-route", nil)
+		for k, v := range tt.headers {
+			req.Header.Set(k, v)
+		}
+		resp, err := s.App.Test(req)
+		if err != nil {
+			t.Fatalf("%s: request failed: %v", tt.name, err)
+		}
+		if resp.StatusCode != tt.wantStatus {
+			t.Errorf("%s: status = %d, want %d", tt.name, resp.StatusCode, tt.wantStatus)
+		}
+	}
 }
 
 func setWorkingDirToRepoRoot(t *testing.T) {

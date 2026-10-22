@@ -237,19 +237,18 @@ templ ProfileAvatarPic(c *Ctx, user models.User) {
 	<figure id="avatar_pic" class="flex flex-col gap-2 items-center">
 		if user.ProfilePic != "" {
 			@CmpAvatar(user)
-			<a
+			<button
+				type="button"
 				if c.CurrentUser.Role == models.UserRoleAdmin && user.UID != c.CurrentUser.UID {
-					href={ templ.URL("/admin/users/" + user.UID + "/removepic") }
 					hx-patch={ "/admin/users/" + user.UID + "/removepic" }
 				} else {
-					href={ templ.URL("/profile/avatar/remove") }
 					hx-delete="/profile/avatar"
 				}
 				hx-select="#avatar_pic"
 				hx-swap="outerHTML"
 				hx-target="closest figure"
 				class="link text-xs link-secondary"
-			>{ c.l("btn.remove") }</a>
+			>{ c.l("btn.remove") }</button>
 		} else {
 			<div class="avatar avatar-placeholder">
 				<div class="bg-neutral text-neutral-content w-12 rounded-full">

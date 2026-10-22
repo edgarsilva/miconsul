@@ -521,8 +521,29 @@ func (s *service) HandleDelete(c fiber.Ctx) error {
 	return s.respondWithRedirect(c, "/appointments")
 }
 
-// HandlePatientConfirm lets a patient mark an appointment as confirmed
+// HandlePatientConfirmPage shows a patient the appointment to confirm
 // GET: /appointments/:id/patient/confirm/:token
+func (s *service) HandlePatientConfirmPage(c fiber.Ctx) error {
+	appointmentID := c.Params("id", "")
+	token := c.Params("token", "")
+	if appointmentID == "" || token == "" {
+		return s.renderAppointmentNotFoundPage(c, c.Query("toast", ""), "")
+	}
+
+	appointment, err := s.TakeAppointmentByIDAndToken(c.Context(), appointmentID, token)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return s.renderAppointmentNotFoundPage(c, c.Query("toast", ""), "")
+	}
+	if err != nil {
+		return s.Redirect(c, "/signin?toast=Failed to load appointment&level=error")
+	}
+
+	vc := view.NewCtx(c)
+	return view.Render(c, view.AppointmentConfirmPage(vc, appointment))
+}
+
+// HandlePatientConfirm lets a patient mark an appointment as confirmed
+// POST: /appointments/:id/patient/confirm/:token
 func (s *service) HandlePatientConfirm(c fiber.Ctx) error {
 	appointmentID := c.Params("id", "")
 	token := c.Params("token", "")
@@ -602,7 +623,7 @@ func (s *service) HandlePatientCancel(c fiber.Ctx) error {
 
 // HandlePatientChangeDate lets a patient mark an appointment as needs
 // to change the date
-// GET: /appointments/:id/patient/changedate/:token
+// POST: /appointments/:id/patient/changedate/:token
 func (s *service) HandlePatientChangeDate(c fiber.Ctx) error {
 	appointmentID := c.Params("id", "")
 	token := c.Params("token", "")
