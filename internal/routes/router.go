@@ -116,7 +116,6 @@ func ClinicsRoutes(s *server.Server, authSvc auth.Runtime) error {
 	// Pages
 	g := c.Group("/clinics", mw.MustAuthenticate(authSvc))
 	g.Get("/", c.HandleClinicsIndexPage)
-	g.Get("/makeaton", mw.MustBeAdmin(authSvc), c.HandleMockManyClinics)
 	g.Get("/search", c.HandleClinicsIndexSearch)
 	g.Get("/new", c.HandleClinicsNewPage)
 	g.Get("/:id", c.HandleClinicsShowPage)
@@ -140,7 +139,6 @@ func PatientRoutes(s *server.Server, authSvc auth.Runtime) error {
 
 	g := p.Group("/patients", mw.MustAuthenticate(authSvc))
 	g.Get("/", p.HandleIndexPage)
-	g.Get("/makeaton", mw.MustBeAdmin(authSvc), p.HandleMockManyPatients)
 	g.Get("/search", p.HandlePatientsIndexSearch)
 	g.Post("/search", p.HandlePatientSearch)
 
@@ -242,7 +240,6 @@ func UserRoutes(s *server.Server, authSvc auth.Runtime) error {
 	// API
 	api := u.Group("/api/users", mw.MustBeAdmin(authSvc))
 	api.Get("", u.HandleAPIUsers)
-	api.Post("/make/:n", u.HandleAPIMakeUsers)
 
 	return nil
 }

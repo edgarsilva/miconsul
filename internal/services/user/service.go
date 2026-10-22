@@ -83,10 +83,6 @@ func (s service) UpdateUserProfileByUID(ctx context.Context, userUID string, upd
 	return user, nil
 }
 
-func (s service) CreateUsersInBatches(ctx context.Context, users []models.User, batchSize int) error {
-	return gorm.G[models.User](s.DB.GormDB()).CreateInBatches(ctx, &users, batchSize)
-}
-
 func normalizeUserWriteInput(user *models.User) error {
 	if user == nil {
 		return errors.New("user is required")

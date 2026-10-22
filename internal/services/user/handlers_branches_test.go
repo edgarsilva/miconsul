@@ -27,9 +27,6 @@ func TestUserHandlerBranches(t *testing.T) {
 	app.Get("/api/users", func(c fiber.Ctx) error {
 		return svc.HandleAPIUsers(c)
 	})
-	app.Post("/api/users/make/:n", func(c fiber.Ctx) error {
-		return svc.HandleAPIMakeUsers(c)
-	})
 
 	resp1, err := app.Test(httptest.NewRequest(http.MethodGet, "/admin/users/%20", nil))
 	if err != nil || resp1.StatusCode != fiber.StatusSeeOther {
@@ -51,22 +48,13 @@ func TestUserHandlerBranches(t *testing.T) {
 	if err != nil || resp3.StatusCode != fiber.StatusOK {
 		t.Fatalf("api users expected 200, got status=%d err=%v", resp3.StatusCode, err)
 	}
-
-	resp4, err := app.Test(httptest.NewRequest(http.MethodPost, "/api/users/make/1", nil))
-	if err != nil || resp4.StatusCode != fiber.StatusUnprocessableEntity {
-		t.Fatalf("api make users expected 422 on db constraints, got status=%d err=%v", resp4.StatusCode, err)
-	}
-	body, _ := io.ReadAll(resp4.Body)
-	if !strings.Contains(string(body), "unprocessable entity") {
-		t.Fatalf("expected unprocessable entity payload, got %q", string(body))
-	}
 }
 
 func TestHandleEditPageSuccess(t *testing.T) {
 	svc, currentUser := newUserServiceForTests(t)
 
 	admin := models.User{Email: "admin@example.com", Password: "hash", Role: models.UserRoleAdmin}
-	if err := svc.CreateUsersInBatches(t.Context(), []models.User{admin}, 1); err != nil {
+	if err := svc.DB.GormDB().Create(&admin).Error; err != nil {
 		t.Fatalf("seed admin: %v", err)
 	}
 
