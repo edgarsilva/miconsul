@@ -31,7 +31,7 @@ func (s *service) HandleClinicsIndexPage(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	return view.Render(c, view.ClinicsPage(vc, clinics))
 }
 
@@ -39,7 +39,7 @@ func (s *service) HandleClinicsIndexPage(c fiber.Ctx) error {
 // GET: /clinics/new
 func (s *service) HandleClinicsNewPage(c fiber.Ctx) error {
 	clinic := models.Clinic{}
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	return view.Render(c, view.ClinicPage(vc, clinic))
 }
 
@@ -63,7 +63,7 @@ func (s *service) HandleClinicsShowPage(c fiber.Ctx) error {
 		return s.Redirect(c, "/clinics?toast=Failed to load clinic&level=error")
 	}
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	return view.Render(c, view.ClinicPage(vc, clinic))
 }
 
@@ -179,7 +179,7 @@ func (s *service) HandleClinicsIndexSearch(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	return view.Render(c, view.ClinicsList(vc, clinics))
 }
 
@@ -229,7 +229,7 @@ func (s *service) respondWithClinicPage(c fiber.Ctx, clinic models.Clinic) error
 	}
 
 	c.Set("HX-Push-Url", "/clinics/"+clinic.UID)
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	return view.Render(c, view.ClinicPage(vc, clinic))
 }
 

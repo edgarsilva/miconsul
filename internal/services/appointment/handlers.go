@@ -47,7 +47,7 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 		return s.Redirect(c, "/appointments?toast=Failed to load appointments&level=error")
 	}
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	return view.Render(c, view.AppointmentsPage(vc, appointments, patient, clinic))
 }
 
@@ -83,7 +83,7 @@ func (s *service) HandleIndexSearch(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	return view.Render(c, view.AppointmentsSection(vc, appointments, false, patient, clinic))
 }
 
@@ -115,7 +115,7 @@ func (s *service) HandleShowPage(c fiber.Ctx) error {
 		return s.Redirect(c, "/appointments?toast=Failed to load patients&level=error")
 	}
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 
 	return view.Render(c, view.AppointmentPage(vc, appointment, patients, clinics))
 }
@@ -157,7 +157,7 @@ func (s *service) HandleOpenPage(c fiber.Ctx) error {
 
 	appointment.Patient = patient
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	return view.Render(c, view.AppointmentStartPage(appointment, vc))
 }
 
@@ -190,7 +190,7 @@ func (s *service) HandleStartSession(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, "/appointments/"+appointmentID+"/open")
 	}
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	appointment := models.Appointment{UID: appointmentID, Status: models.AppointmentInProgress}
 	return view.Render(c, view.AppointmentSessionToggleFrg(appointment, vc))
 }
@@ -224,7 +224,7 @@ func (s *service) HandlePauseSession(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, "/appointments/"+appointmentID+"/open")
 	}
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	appointment := models.Appointment{UID: appointmentID, Status: models.AppointmentPending}
 	return view.Render(c, view.AppointmentSessionToggleFrg(appointment, vc))
 }
@@ -544,7 +544,7 @@ func (s *service) HandlePatientConfirm(c fiber.Ctx) error {
 		return s.Redirect(c, "/signin?toast=Failed to load appointment&level=error")
 	}
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 
 	return view.Render(c, view.AppointmentConfirmPage(vc, appointment))
 }
@@ -566,7 +566,7 @@ func (s *service) HandlePatientCancelPage(c fiber.Ctx) error {
 		return s.Redirect(c, "/signin?toast=Failed to load appointment&level=error")
 	}
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	return view.Render(c, view.AppointmentCancelPage(vc, appointment))
 }
 
@@ -593,7 +593,7 @@ func (s *service) HandlePatientCancel(c fiber.Ctx) error {
 	}
 
 	toast := c.Query("toast", "Success!")
-	vc, _ := view.NewCtx(
+	vc := view.NewCtx(
 		c,
 		view.WithToast(toast, "", "success"),
 	)
@@ -640,7 +640,7 @@ func (s *service) HandlePriceFrg(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 
 	return view.Render(c, view.ApptPrice(vc, models.Appointment{}, clinic, false))
 }
@@ -657,7 +657,7 @@ func (s *service) HandleSearchClinics(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 
 	return view.Render(c, view.ApptSearchClinicsFrg(vc, clinics))
 }
@@ -716,7 +716,7 @@ func (s *service) selectedClinicFromQuery(c fiber.Ctx, userID uint, clinicID str
 }
 
 func (s *service) renderAppointmentNotFoundPage(c fiber.Ctx, toast, level string) error {
-	vc, _ := view.NewCtx(c, view.WithToast(toast, "", level))
+	vc := view.NewCtx(c, view.WithToast(toast, "", level))
 	return view.Render(c, view.AppointmentNotFoundPage(vc))
 }
 

@@ -36,7 +36,7 @@ func (s *service) HandleSigninPage(c fiber.Ctx) error {
 
 	msg = nextMsg
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	return view.Render(c, view.LoginPage(email, msg, nil, vc))
 }
 
@@ -48,7 +48,7 @@ func (s *service) HandleSignin(c fiber.Ctx) error {
 	ctx, span := s.Trace(c.Context(), "auth/handlers:HandleSignin")
 	defer span.End()
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	respErr := errors.New("incorrect email and password combination")
 
 	email, password, err := credentialsFromRequest(c)
@@ -132,7 +132,7 @@ func (s *service) HandleSignupPage(c fiber.Ctx) error {
 	if msg == "" {
 		err = nil
 	}
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 
 	return view.Render(c, view.SignupPage(vc, "", err))
 }
@@ -145,7 +145,7 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 	defer span.End()
 	span.SetAttributes(attribute.String("auth.provider", "local"))
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	email, password, err := credentialsFromRequest(c)
 	if err != nil {
 		span.RecordError(err)
@@ -275,7 +275,7 @@ func (s *service) HandleLogout(c fiber.Ctx) error {
 // HandleResetPasswordPage renders the reset password request page.
 // GET: /resetpassword
 func (s *service) HandleResetPasswordPage(c fiber.Ctx) error {
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 
 	msg := s.SessionRead(c, "msg", "")
 	if msg == "" {
@@ -289,7 +289,7 @@ func (s *service) HandleResetPasswordPage(c fiber.Ctx) error {
 // as query param, url param or body param
 // POST: /resetpassword
 func (s *service) HandleResetPassword(c fiber.Ctx) error {
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	email, err := resetPasswordEmailFromRequest(c)
 	if err != nil {
 		errView := errors.New("email can't be blank")
@@ -339,7 +339,7 @@ func (s *service) HandleResetPasswordChange(c fiber.Ctx) error {
 	nonce := xid.New("rpnnce")
 	_ = s.SessionWrite(c, "nonce", nonce)
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	return view.Render(c, view.ResetPasswordChangePage(email, token, nonce, nil, vc))
 }
 
@@ -367,7 +367,7 @@ func (s *service) HandleResetPasswordUpdate(c fiber.Ctx) error {
 		return s.Redirect(c, "/resetpassword?msg=seems like your token has expired, try again!")
 	}
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	password := c.FormValue("password", "")
 	if password == "" {
 		err := errors.New("password can't be blank")

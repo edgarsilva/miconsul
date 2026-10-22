@@ -46,10 +46,7 @@ func TestNewCtxAndOptions(t *testing.T) {
 		expectedCU := models.User{UID: "usr_1", Email: "u@example.com"}
 		c.Locals("current_user", expectedCU)
 
-		vc, err := NewCtx(c)
-		if err != nil {
-			t.Fatalf("new ctx failed: %v", err)
-		}
+		vc := NewCtx(c)
 		if vc.Locale != "en-US" || vc.Theme != "dark" {
 			t.Fatalf("unexpected locale/theme: %+v", vc)
 		}
@@ -62,10 +59,7 @@ func TestNewCtxAndOptions(t *testing.T) {
 	})
 
 	runViewCtx(t, "/ctx", func(c fiber.Ctx) {
-		vc, err := NewCtx(c, WithTheme("dark"), WithLocale("en-US"), WithToast("ok", "sub", "info"), WithCurrentUser(models.User{UID: "usr_2"}))
-		if err != nil {
-			t.Fatalf("new ctx with options failed: %v", err)
-		}
+		vc := NewCtx(c, WithTheme("dark"), WithLocale("en-US"), WithToast("ok", "sub", "info"), WithCurrentUser(models.User{UID: "usr_2"}))
 		if vc.Theme != "dark" || vc.Locale != "en-US" {
 			t.Fatalf("unexpected option values: %+v", vc)
 		}
@@ -75,25 +69,46 @@ func TestNewCtxAndOptions(t *testing.T) {
 	})
 }
 
-func TestWithThemeValidation(t *testing.T) {
-	ctx := &Ctx{}
-	if err := WithTheme("")(ctx); err == nil {
-		t.Fatalf("expected blank theme error")
+func TestNewCtxOptionsFallBackAndAllApply(t *testing.T) {
+	runViewCtx(t, "/ctx", func(c fiber.Ctx) {
+		c.Locals("theme", "dark")
+
+		vc := NewCtx(c, WithTheme("blue"), WithLocale("en-US"), WithToast("Saved", "", "success"))
+		if vc.Theme != "light" {
+			t.Fatalf("invalid theme must fall back to light, got %q", vc.Theme)
+		}
+		if vc.Locale != "en-US" || vc.Toast.Msg != "Saved" || vc.Toast.Level != "success" {
+			t.Fatalf("options after an invalid one must still apply, got locale=%q toast=%+v", vc.Locale, vc.Toast)
+		}
+	})
+}
+
+func TestWithThemeAndLocaleFallbacks(t *testing.T) {
+	tests := []struct {
+		name string
+		opt  ContextOption
+		want Ctx
+	}{
+		{"dark theme", WithTheme("dark"), Ctx{Theme: "dark"}},
+		{"light theme", WithTheme("light"), Ctx{Theme: "light"}},
+		{"blank theme", WithTheme(""), Ctx{Theme: "light"}},
+		{"unknown theme", WithTheme("blue"), Ctx{Theme: "light"}},
+		{"locale", WithLocale("en-US"), Ctx{Locale: "en-US"}},
+		{"blank locale", WithLocale(""), Ctx{Locale: "es-MX"}},
 	}
-	if err := WithTheme("blue")(ctx); err == nil {
-		t.Fatalf("expected invalid theme error")
-	}
-	if err := WithTheme("light")(ctx); err != nil {
-		t.Fatalf("expected valid theme, got %v", err)
+
+	for _, tt := range tests {
+		var got Ctx
+		tt.opt(&got)
+		if got.Theme != tt.want.Theme || got.Locale != tt.want.Locale {
+			t.Errorf("%s: got theme=%q locale=%q, want theme=%q locale=%q", tt.name, got.Theme, got.Locale, tt.want.Theme, tt.want.Locale)
+		}
 	}
 }
 
 func TestQueryParams(t *testing.T) {
 	runViewCtx(t, "/ctx?timeframe=week", func(c fiber.Ctx) {
-		vc, err := NewCtx(c)
-		if err != nil {
-			t.Fatalf("new ctx failed: %v", err)
-		}
+		vc := NewCtx(c)
 
 		params := QueryParams(vc, "timeframe=day", "clinic=myclinic", "invalid")
 		if !strings.Contains(params, "timeframe=day") {
@@ -136,10 +151,7 @@ func TestUserViewsOmitSecrets(t *testing.T) {
 	}
 
 	runViewCtx(t, "/ctx", func(c fiber.Ctx) {
-		vc, err := NewCtx(c, WithLocale("en-US"), WithCurrentUser(user))
-		if err != nil {
-			t.Fatalf("new ctx: %v", err)
-		}
+		vc := NewCtx(c, WithLocale("en-US"), WithCurrentUser(user))
 
 		pages := map[string]interface {
 			Render(context.Context, io.Writer) error

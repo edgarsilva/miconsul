@@ -18,7 +18,7 @@ func (s *service) HandleHomePage(c fiber.Ctx) error {
 		return s.Redirect(c, "/dashboard?timeframe=day")
 	}
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	return view.Render(c, view.LandingPage(vc))
 }
 
@@ -58,7 +58,7 @@ func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 	_ = query.Limit(10).Find(&appointments).Error
 
 	clinic, _ := s.FavoriteClinic(c, cu.ID)
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	stats := s.CalcDashboardStats(c.Context(), cu)
 
 	feedEvents, _ := s.FindFeedEventsByUserID(c.Context(), cu.ID, 10)

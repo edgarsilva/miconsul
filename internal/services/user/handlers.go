@@ -26,7 +26,7 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	return view.Render(c, view.UsersIndexPage(vc, users))
 }
 
@@ -45,7 +45,7 @@ func (s *service) HandleEditPage(c fiber.Ctx) error {
 		return s.Redirect(c, "/admin/users?toast=Failed to load user&level=error")
 	}
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	return view.Render(c, view.UserEditPage(vc, user))
 }
 
@@ -58,7 +58,7 @@ func (s *service) HandleProfilePage(c fiber.Ctx) error {
 		return s.Redirect(c, "/profile?toast=User does not exist&level=warning")
 	}
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	return view.Render(c, view.UserEditPage(vc, user))
 }
 
@@ -95,7 +95,7 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 		return s.Redirect(c, "/profile?toast=Profile updated&level=success")
 	}
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	return view.Render(c, view.UserEditPage(vc, updatedUser))
 }
 
@@ -115,7 +115,7 @@ func (s *service) HandleProfilePicPreview(c fiber.Ctx) error {
 	}
 
 	user.ProfilePic = previewPath
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	return view.Render(c, view.ProfileAvatarPic(vc, user))
 }
 
@@ -186,7 +186,7 @@ func (s *service) HandleAdminRemoveProfilePic(c fiber.Ctx) error {
 		return s.Redirect(c, "/admin/users/"+updatedUser.UID+"?toast=Profile picture removed&level=success")
 	}
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	return view.Render(c, view.UserEditPage(vc, updatedUser))
 }
 
