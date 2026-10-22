@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"miconsul/internal/lib/xid"
 	"miconsul/internal/models"
 	view "miconsul/internal/views"
 
@@ -336,11 +335,8 @@ func (s *service) HandleResetPasswordChange(c fiber.Ctx) error {
 		return s.Redirect(c, "/resetpassword?msg=invalid email or token")
 	}
 
-	nonce := xid.New("rpnnce")
-	_ = s.SessionWrite(c, "nonce", nonce)
-
 	vc := view.NewCtx(c)
-	return view.Render(c, view.ResetPasswordChangePage(email, token, nonce, nil, vc))
+	return view.Render(c, view.ResetPasswordChangePage(email, token, nil, vc))
 }
 
 // HandleResetPasswordUpdate updates the user password in the DB
@@ -356,12 +352,6 @@ func (s *service) HandleResetPasswordUpdate(c fiber.Ctx) error {
 		return s.Redirect(c, "/resetpassword?msg=something went wrong with the token, try again!")
 	}
 
-	nonce := c.FormValue("nonce", "")
-	cmpNonce := s.SessionRead(c, "nonce", nonce)
-	if nonce == "" || nonce != cmpNonce {
-		return s.Redirect(c, "/resetpassword?msg=something went wrong with the nonce, try again!")
-	}
-
 	_, err = s.resetPasswordVerifyToken(c.Context(), token)
 	if err != nil {
 		return s.Redirect(c, "/resetpassword?msg=seems like your token has expired, try again!")
@@ -371,13 +361,13 @@ func (s *service) HandleResetPasswordUpdate(c fiber.Ctx) error {
 	password := c.FormValue("password", "")
 	if password == "" {
 		err := errors.New("password can't be blank")
-		return view.Render(c, view.ResetPasswordChangePage(email, token, nonce, err, vc))
+		return view.Render(c, view.ResetPasswordChangePage(email, token, err, vc))
 	}
 
 	confirm := c.FormValue("confirm", "")
 	if confirm == "" || password != confirm {
 		err := errors.New("passwords don't match")
-		return view.Render(c, view.ResetPasswordChangePage(email, token, nonce, err, vc))
+		return view.Render(c, view.ResetPasswordChangePage(email, token, err, vc))
 	}
 
 	_, err = s.userUpdatePassword(c.Context(), email, password, token)
