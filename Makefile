@@ -77,7 +77,7 @@ ai/templ-sync: ## Refresh templ LLM upstream snapshot and metadata
 	./scripts/update-templ-llms.sh
 
 ##@ Build & Run
-build: templ locales/build ## Build Go binary with fts5
+build: templ/build locales/build ## Build Go binary with fts5
 	@echo "📦 Building"
 	go build -tags fts5 -o bin/app cmd/app/main.go
 
@@ -85,7 +85,7 @@ start: ## Start the built binary
 	@echo "👟 Starting the app..."
 	bin/app
 
-run: templ ## Run via go run (generates Templ first)
+run: templ/build ## Run via go run (generates Templ first)
 	@echo "👟 Running app..."
 	go run -tags fts5 cmd/app/main.go
 
@@ -247,7 +247,7 @@ load/test: ## Run authenticated oha load test (30s, 30 concurrency)
 
 
 .PHONY: help install install/deps install/tools check/npm fmt vet lint \
-	tailwind tailwind/watch templ templ/watch locales/build \
+	tailwind/build tailwind/watch templ/build templ/watch locales/build \
 	locales/normalize \
 	ai/templ-sync \
 	build start run air/watch dev \

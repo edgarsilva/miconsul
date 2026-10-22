@@ -52,7 +52,7 @@ This file provides repo-specific guidance for coding assistants working on this 
 ## Build/Test Workflow
 
 - Regenerate templ output after templ changes:
-  - `make templ` (preferred)
+  - `make templ/build` (preferred; also rebuilds Tailwind)
   - or `templ generate` if using the CLI directly
 - Validate with:
   - `go test ./...`
