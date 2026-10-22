@@ -8,7 +8,7 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-func ResetPasswordPage(vc *Ctx, email, msg, success string, err error) templ.Component {
+func ResetPasswordPage(c *Ctx, email, msg, success string, err error) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -45,7 +45,7 @@ func ResetPasswordPage(vc *Ctx, email, msg, success string, err error) templ.Com
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = CmpBtnTheme(vc.Theme).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpBtnTheme(c.Theme).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -62,9 +62,9 @@ func ResetPasswordPage(vc *Ctx, email, msg, success string, err error) templ.Com
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.login_instead"))
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.login_instead"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/authresetpasswordpage.templ`, Line: 21, Col: 123}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/authresetpasswordpage.templ`, Line: 21, Col: 122}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -140,9 +140,9 @@ func ResetPasswordPage(vc *Ctx, email, msg, success string, err error) templ.Com
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var7 string
-			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.reset_my_password"))
+			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.reset_my_password"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/authresetpasswordpage.templ`, Line: 45, Col: 93}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/authresetpasswordpage.templ`, Line: 45, Col: 92}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -153,9 +153,9 @@ func ResetPasswordPage(vc *Ctx, email, msg, success string, err error) templ.Com
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var8 string
-			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.not_a_member"))
+			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.not_a_member"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/authresetpasswordpage.templ`, Line: 52, Col: 30}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/authresetpasswordpage.templ`, Line: 52, Col: 29}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -166,9 +166,9 @@ func ResetPasswordPage(vc *Ctx, email, msg, success string, err error) templ.Com
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var9 string
-			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.create_account"))
+			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.create_account"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/authresetpasswordpage.templ`, Line: 53, Col: 113}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/authresetpasswordpage.templ`, Line: 53, Col: 112}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -180,7 +180,7 @@ func ResetPasswordPage(vc *Ctx, email, msg, success string, err error) templ.Com
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = LayoutAuth(vc).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = LayoutAuth(c).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

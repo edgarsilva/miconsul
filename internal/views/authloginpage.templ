@@ -1,9 +1,9 @@
 package views
 
-templ LoginPage(email, msg string, err error, vc *Ctx) {
-	@LayoutAuth(vc) {
+templ LoginPage(email, msg string, err error, c *Ctx) {
+	@LayoutAuth(c) {
 		<div class="absolute top-4 right-4">
-			@CmpBtnTheme(vc.Theme)
+			@CmpBtnTheme(c.Theme)
 		</div>
 		<div class="pt-10 card glass bg-base-100 shadow w-full sm:max-w-[480px] sm:mx-auto">
 			<div class="flex justify-center overflow-visible">
@@ -22,9 +22,9 @@ templ LoginPage(email, msg string, err error, vc *Ctx) {
 					@CmpInputEmail(email)
 					@CmpInputPassword("")
 					<div class="flex items-center justify-between">
-						@CmpCheckbox(vc.l("str.keep_me_signed_in"), "remember_me", "true", false)
+						@CmpCheckbox(c.l("str.keep_me_signed_in"), "remember_me", "true", false)
 						<div class="text-sm leading-6">
-							<a href="/resetpassword" class="link link-secondary link-hover font-semibold underline-offset-2">{ vc.l("str.forgot_password") }</a>
+							<a href="/resetpassword" class="link link-secondary link-hover font-semibold underline-offset-2">{ c.l("str.forgot_password") }</a>
 						</div>
 					</div>
 					if msg != "" {
@@ -40,10 +40,10 @@ templ LoginPage(email, msg string, err error, vc *Ctx) {
 						</div>
 					}
 					<div>
-						<button type="submit" class="btn btn-primary btn-block">{ vc.l("btn.sign_in") }</button>
+						<button type="submit" class="btn btn-primary btn-block">{ c.l("btn.sign_in") }</button>
 					</div>
 				</form>
-				<div class="divider py-6">{ vc.l("str.or_continue_with") }</div>
+				<div class="divider py-6">{ c.l("str.or_continue_with") }</div>
 				<div>
 					<div class="grid grid-cols-2 gap-4">
 						<a href="#" class="btn">
@@ -67,15 +67,15 @@ templ LoginPage(email, msg string, err error, vc *Ctx) {
 		</div>
 		<div>
 			<p class="mt-10 text-center text-sm">
-				{ vc.l("str.not_a_member") }
-				<a href="/signup" class="ml-1 link link-info link-hover font-semibold leading-6">{ vc.l("str.create_an_account") }</a>
+				{ c.l("str.not_a_member") }
+				<a href="/signup" class="ml-1 link link-info link-hover font-semibold leading-6">{ c.l("str.create_an_account") }</a>
 			</p>
 		</div>
 	}
 }
 
-templ LogtoPage(vc *Ctx, authState string, idTokenClaimsJSON string, customClaimsJSON string) {
-	@Layout(vc) {
+templ LogtoPage(c *Ctx, authState string, idTokenClaimsJSON string, customClaimsJSON string) {
+	@Layout(c) {
 		<div id="content" class="container md:mx-auto md:px-4">
 			<section class="app-card p-4 md:p-6 space-y-4">
 				<div class="flex items-center justify-between gap-4">

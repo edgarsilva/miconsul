@@ -24,7 +24,7 @@ type DashboardStats struct {
 	Appointments DashboardStat
 }
 
-func DashboardPage(vc *Ctx, stats DashboardStats, appointments []models.Appointment, favClinic models.Clinic, feedEvents []models.FeedEvent) templ.Component {
+func DashboardPage(c *Ctx, stats DashboardStats, appointments []models.Appointment, favClinic models.Clinic, feedEvents []models.FeedEvent) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -61,7 +61,7 @@ func DashboardPage(vc *Ctx, stats DashboardStats, appointments []models.Appointm
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = MonthTrends(stats, vc).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = MonthTrends(stats, c).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -69,7 +69,7 @@ func DashboardPage(vc *Ctx, stats DashboardStats, appointments []models.Appointm
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = AppointmentsSection(vc, appointments, true, models.Patient{}, models.Clinic{}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = AppointmentsSection(c, appointments, true, models.Patient{}, models.Clinic{}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -77,11 +77,11 @@ func DashboardPage(vc *Ctx, stats DashboardStats, appointments []models.Appointm
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = Clinic(vc, favClinic).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = Clinic(c, favClinic).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = Feed(vc, feedEvents).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = Feed(c, feedEvents).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -91,7 +91,7 @@ func DashboardPage(vc *Ctx, stats DashboardStats, appointments []models.Appointm
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = Layout(vc).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = Layout(c).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -99,7 +99,7 @@ func DashboardPage(vc *Ctx, stats DashboardStats, appointments []models.Appointm
 	})
 }
 
-func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
+func MonthTrends(stats DashboardStats, c *Ctx) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -125,9 +125,9 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.stats"))
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.stats"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 42, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 42, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -138,9 +138,9 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
-		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.patients"))
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.patients"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 52, Col: 28}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 52, Col: 27}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -164,9 +164,9 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.increased_by"))
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.increased_by"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 61, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 61, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -190,9 +190,9 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("btn.view_all"))
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("btn.view_all"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 65, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 65, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -203,9 +203,9 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var10 string
-		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.patients"))
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.patients"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 65, Col: 122}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 65, Col: 120}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -216,9 +216,9 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var11 string
-		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.appointments"))
+		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.appointments"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 78, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 78, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -242,9 +242,9 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var13 string
-		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.increased_by"))
+		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.increased_by"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 89, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 89, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -268,9 +268,9 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var15 string
-		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("btn.view_all"))
+		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("btn.view_all"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 93, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 93, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -281,9 +281,9 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var16 string
-		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.all_appointmens"))
+		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.all_appointmens"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 93, Col: 129}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 93, Col: 127}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -294,9 +294,9 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var17 string
-		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.revenue_month"))
+		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.revenue_month"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 104, Col: 96}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 104, Col: 95}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -307,9 +307,9 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var18 string
-		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.decreased_by"))
+		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.decreased_by"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 112, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 112, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -320,9 +320,9 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var19 string
-		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("btn.view_all"))
+		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("btn.view_all"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 116, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 116, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -333,9 +333,9 @@ func MonthTrends(stats DashboardStats, vc *Ctx) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var20 string
-		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.all_revenue"))
+		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.all_revenue"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 116, Col: 125}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 116, Col: 123}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -580,9 +580,9 @@ func feedEventColorClass(action string) string {
 	}
 }
 
-func feedEventSubjectLabel(vc *Ctx, event models.FeedEvent) string {
+func feedEventSubjectLabel(c *Ctx, event models.FeedEvent) string {
 	if event.SubjectType == "appointments" {
-		return vc.l("str.appointment")
+		return c.l("str.appointment")
 	}
 
 	return event.Subject
@@ -596,12 +596,12 @@ func feedEventShortDateTime(t time.Time) string {
 	return t.Format("02 Jan, 3:04pm")
 }
 
-func feedEventTitle(vc *Ctx, event models.FeedEvent) string {
+func feedEventTitle(c *Ctx, event models.FeedEvent) string {
 	if event.SubjectType == "appointments" && event.Action == "created" {
-		return vc.l("str.feed_new_appointment")
+		return c.l("str.feed_new_appointment")
 	}
 
-	return feedEventSubjectLabel(vc, event) + " " + vc.l(FeedActionLocaleKey(event.Action))
+	return feedEventSubjectLabel(c, event) + " " + c.l(FeedActionLocaleKey(event.Action))
 }
 
 func feedEventIcon(action string) templ.Component {
@@ -661,7 +661,7 @@ func feedEventIcon(action string) templ.Component {
 	})
 }
 
-func Feed(vc *Ctx, events []models.FeedEvent) templ.Component {
+func Feed(c *Ctx, events []models.FeedEvent) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -692,9 +692,9 @@ func Feed(vc *Ctx, events []models.FeedEvent) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var31 string
-			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.no_recent_activity"))
+			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.no_recent_activity"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 383, Col: 80}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 383, Col: 79}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 			if templ_7745c5c3_Err != nil {
@@ -769,9 +769,9 @@ func Feed(vc *Ctx, events []models.FeedEvent) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var35 string
-				templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(feedEventTitle(vc, event))
+				templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(feedEventTitle(c, event))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 402, Col: 103}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 402, Col: 102}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 				if templ_7745c5c3_Err != nil {
@@ -782,9 +782,9 @@ func Feed(vc *Ctx, events []models.FeedEvent) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var36 string
-				templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.patient"))
+				templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.patient"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 405, Col: 35}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/dashboardpage.templ`, Line: 405, Col: 34}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 				if templ_7745c5c3_Err != nil {

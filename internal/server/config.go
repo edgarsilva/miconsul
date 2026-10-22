@@ -128,27 +128,27 @@ func loadErrorPages() {
 	})
 }
 
-func sendErrorPage(ctx fiber.Ctx, code int) error {
+func sendErrorPage(c fiber.Ctx, code int) error {
 	loadErrorPages()
 
 	if page, ok := errorPages[code]; ok && page != "" {
-		return ctx.Status(code).Type("html", "utf-8").SendString(page)
+		return c.Status(code).Type("html", "utf-8").SendString(page)
 	}
 
 	if page, ok := errorPages[fiber.StatusInternalServerError]; ok && page != "" {
-		return ctx.Status(code).Type("html", "utf-8").SendString(page)
+		return c.Status(code).Type("html", "utf-8").SendString(page)
 	}
 
 	if code >= fiber.StatusInternalServerError {
-		return ctx.Status(code).SendString("Internal Server Error")
+		return c.Status(code).SendString("Internal Server Error")
 	}
 
-	return ctx.Status(code).SendString("Not Found")
+	return c.Status(code).SendString("Not Found")
 }
 
 // recoverConfig returns recover middleware config object with the yield func
 // executed with the request ctx to trace the panic error
-func fiberAppErrorHandler(ctx fiber.Ctx, err error) error {
+func fiberAppErrorHandler(c fiber.Ctx, err error) error {
 	// Status code defaults to 500
 	code := fiber.StatusInternalServerError
 
@@ -156,15 +156,15 @@ func fiberAppErrorHandler(ctx fiber.Ctx, err error) error {
 		code = e.Code
 	}
 
-	span := trace.SpanFromContext(ctx.Context())
+	span := trace.SpanFromContext(c.Context())
 
 	if err != nil && code >= fiber.StatusInternalServerError {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 	}
 
-	if sendErr := sendErrorPage(ctx, code); sendErr != nil {
-		return ctx.Status(fiber.StatusInternalServerError).SendString("Internal Server Error")
+	if sendErr := sendErrorPage(c, code); sendErr != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString("Internal Server Error")
 	}
 
 	return nil

@@ -2,32 +2,32 @@ package views
 
 import "miconsul/internal/models"
 
-templ CmpBadgeStatus(status models.AppointmentStatus, vc *Ctx) {
+templ CmpBadgeStatus(status models.AppointmentStatus, c *Ctx) {
 	switch status {
 		case "viewed":
 			<div class="badge badge-secondary bagce-sm">
-				{ vc.l("str.viewed") }
+				{ c.l("str.viewed") }
 			</div>
 		case "confirmed":
 			<div class="badge badge-success badge-sm">
-				{ vc.l("str.confirmed") }
+				{ c.l("str.confirmed") }
 			</div>
 		case "in_progress":
 			<div class="badge badge-accent badge-sm gap-1">
 				<span class="inline-block h-1.5 w-1.5 rounded-full bg-current animate-pulse"></span>
-				{ vc.l("str.in_progress") }
+				{ c.l("str.in_progress") }
 			</div>
 		case "done":
 			<div class="badge badge-primary badge-sm">
-				{ vc.l("str.done") }
+				{ c.l("str.done") }
 			</div>
 		case "canceled":
 			<div class="badge badge-warning badge-sm">
-				{ vc.l("str.canceled") }
+				{ c.l("str.canceled") }
 			</div>
 		default:
 			<div class="badge badge-neutral badge-sm">
-				{ vc.l("str.pending") }
+				{ c.l("str.pending") }
 			</div>
 	}
 }

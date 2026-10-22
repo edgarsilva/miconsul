@@ -5,8 +5,8 @@ import (
 	"strconv"
 )
 
-templ ClinicsPage(vc *Ctx, clinics []models.Clinic) {
-	@LayoutWithBackBtn(vc, "/") {
+templ ClinicsPage(c *Ctx, clinics []models.Clinic) {
+	@LayoutWithBackBtn(c, "/") {
 		<section class="grow flex flex-col px-0 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<div
 				class="relative"
@@ -14,63 +14,63 @@ templ ClinicsPage(vc *Ctx, clinics []models.Clinic) {
 				<hgroup class="md:flex md:justify-between md:items-center pb-4 px-2 md:px-0 w-full" hx-boost:inherited="true">
 					<div class="md:flex md:gap-2 items-baseline w-full md:justify-between md:pr-4">
 						<h1 class="flex w-full md:w-auto font-bold text-2xl mb-4 md:mb-0">
-							{ vc.l("str.clinics") }
+							{ c.l("str.clinics") }
 							<a
 								href="/clinics/new"
 								class="ml-auto btn btn-primary btn-sm md:hidden"
 							>
 								@IconBuilding("size-5")
-								{ vc.l("btn.new") }
+								{ c.l("btn.new") }
 							</a>
 						</h1>
-						@CmpSearchInput(vc, vc.l("str.search_clinics"), "/clinics/search", "#clinics_list")
+						@CmpSearchInput(c, c.l("str.search_clinics"), "/clinics/search", "#clinics_list")
 					</div>
 					<a
 						href="/clinics/new"
 						class="hidden md:flex btn btn-primary btn-sm"
 					>
 						@IconBuilding("size-5")
-						{ vc.l("btn.new") }
+						{ c.l("btn.new") }
 					</a>
 				</hgroup>
 				if (len(clinics) > 0) {
-					@ClinicsList(vc, clinics)
+					@ClinicsList(c, clinics)
 				} else {
-					@ClinicsEmptyList(vc)
+					@ClinicsEmptyList(c)
 				}
 			</div>
 		</section>
 	}
 }
 
-templ ClinicPage(vc *Ctx, clinic models.Clinic) {
-	@Layout(vc) {
+templ ClinicPage(c *Ctx, clinic models.Clinic) {
+	@Layout(c) {
 		<div class="px-4 lg:px-8">
-			@CmpBtnBack(vc.l("btn.back"), "/clinics")
+			@CmpBtnBack(c.l("btn.back"), "/clinics")
 		</div>
 		<section id="clinic_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			if clinic.UID == "" || clinic.UID == "new" {
-				<h1 class="px-4 sm:px-0 font-bold text-2xl pb-0 w-full">{ vc.l("str.new_clinic") }</h1>
+				<h1 class="px-4 sm:px-0 font-bold text-2xl pb-0 w-full">{ c.l("str.new_clinic") }</h1>
 			} else {
 				<h1 class="px-4 sm:px-0 font-bold text-2xl pb-0 w-full inline-flex">
-					{ vc.l("str.edit_clinic") }
-					@ClinicDeleteForm(vc, clinic)
+					{ c.l("str.edit_clinic") }
+					@ClinicDeleteForm(c, clinic)
 				</h1>
 			}
-			@ClinicProfile(clinic, vc)
+			@ClinicProfile(clinic, c)
 		</section>
 	}
 }
 
-templ ClinicsList(vc *Ctx, clinics []models.Clinic) {
+templ ClinicsList(c *Ctx, clinics []models.Clinic) {
 	<ul id="clinics_list" role="list" class="app-card divide-y divide-base-content/10 overflow-hidden2">
 		for _, clinic := range clinics {
-			@ClinicLi(clinic, vc)
+			@ClinicLi(clinic, c)
 		}
 	</ul>
 }
 
-templ ClinicLi(clinic models.Clinic, vc *Ctx) {
+templ ClinicLi(clinic models.Clinic, c *Ctx) {
 	<li class="relative flex justify-between items-center gap-x-6 px-2 py-2 hover:bg-base-200/75">
 		<div class="flex items-center min-w-0 gap-x-4">
 			if clinic.ProfilePic != "" {
@@ -116,7 +116,7 @@ templ ClinicLi(clinic models.Clinic, vc *Ctx) {
 				hx-boost="true"
 			>
 				@IconCalendar("size-4")
-				{ vc.l("btn.appointments") }
+				{ c.l("btn.appointments") }
 			</a>
 			<a
 				href={ templ.URL("/clinics/" + clinic.UID) }
@@ -124,19 +124,19 @@ templ ClinicLi(clinic models.Clinic, vc *Ctx) {
 				hx-boost="true"
 			>
 				@IconEdit("size-4")
-				{ vc.l("btn.edit") }
+				{ c.l("btn.edit") }
 			</a>
 		</div>
 	</li>
 }
 
-templ ClinicDeleteForm(vc *Ctx, clinic models.Clinic) {
+templ ClinicDeleteForm(c *Ctx, clinic models.Clinic) {
 	<form
 		class="ml-auto"
 		method="POST"
 		action={ templ.URL("/clinics/"+clinic.UID) + "/delete" }
 		hx-delete={ "/clinics/" + clinic.UID }
-		hx-confirm={ vc.l("str.are_you_sure") }
+		hx-confirm={ c.l("str.are_you_sure") }
 		hx-target="this"
 		hx-swap="none"
 	>
@@ -149,28 +149,28 @@ templ ClinicDeleteForm(vc *Ctx, clinic models.Clinic) {
 	</form>
 }
 
-templ ClinicsEmptyList(vc *Ctx) {
+templ ClinicsEmptyList(c *Ctx) {
 	<div class="app-card flex">
 		<a href="/clinics/new" class="relative block w-full rounded-lg border-2 border-dashed border-base-content/30 p-12 text-center hover:border-base-content/40 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
 			@IconUserAdd("mx-auto w-12 h-12 text-base-content/60")
-			<span class="mt-2 block text-sm font-semibold">{ vc.l("str.new_clinic") }</span>
+			<span class="mt-2 block text-sm font-semibold">{ c.l("str.new_clinic") }</span>
 		</a>
 	</div>
 }
 
-templ ClinicProfile(clinic models.Clinic, vc *Ctx) {
+templ ClinicProfile(clinic models.Clinic, c *Ctx) {
 	<div id="clinic_profile" class="space-y-10 divide-y divide-base-content/10">
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
-				<h2 class="text-base font-semibold leading-7">{ vc.l("str.clinic_info") }</h2>
-				<p class="mt-1 text-sm leading-6 text-base-content/60">{ vc.l("str.clinic_info_desc") }</p>
+				<h2 class="text-base font-semibold leading-7">{ c.l("str.clinic_info") }</h2>
+				<p class="mt-1 text-sm leading-6 text-base-content/60">{ c.l("str.clinic_info_desc") }</p>
 			</div>
-			@ClinicForm(clinic, vc) {
+			@ClinicForm(clinic, c) {
 				<input type="hidden" name="id" value={ clinic.UID } id="pi_clinic_id"/>
 				<div class="px-4 py-6 sm:p-8">
 					<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
 						<div class="col-span-full">
-							<label for="profile_pic" class="block text-sm font-medium leading-6">{ vc.l("str.profile_pic") }</label>
+							<label for="profile_pic" class="block text-sm font-medium leading-6">{ c.l("str.profile_pic") }</label>
 							<div class="mt-2 flex items-center gap-x-3">
 								if clinic.ProfilePic != "" {
 									<div class="avatar">
@@ -195,7 +195,7 @@ templ ClinicProfile(clinic models.Clinic, vc *Ctx) {
 							</div>
 						</div>
 						<div class="sm:col-span-4">
-							<label for="name" class="block text-sm font-medium leading-6">{ vc.l("str.clinic_name") }</label>
+							<label for="name" class="block text-sm font-medium leading-6">{ c.l("str.clinic_name") }</label>
 							<div class="mt-2 form-control">
 								<input required min="2" type="text" name="name" value={ clinic.Name } id="name" autocomplete="organization" class="input input-bordered block w-full"/>
 								if clinic.FieldError("name") != "" {
@@ -206,25 +206,25 @@ templ ClinicProfile(clinic models.Clinic, vc *Ctx) {
 							</div>
 						</div>
 						<div class="sm:col-span-4">
-							<label for="email" class="block text-sm font-medium leading-6 text-base-content">{ vc.l("str.email_address") }</label>
+							<label for="email" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.email_address") }</label>
 							<div class="mt-2">
 								<input required type="email" name="email" value={ clinic.Email } id="email" autocomplete="email" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-2 flex flex-col">
-							<label for="favorite" class="block text-sm font-medium leading-6 text-base-content">{ vc.l("str.favorite") }</label>
+							<label for="favorite" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.favorite") }</label>
 							<div class="flex items-center grow">
 								<input type="checkbox" name="favorite" value={ strconv.FormatBool(clinic.Favorite) } id="favorite" class="toggle toggle-warning"/>
 							</div>
 						</div>
 						<div class="sm:col-span-4">
-							<label for="phone" class="block text-sm font-medium leading-6 text-base-content">{ vc.l("str.phone") }</label>
+							<label for="phone" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.phone") }</label>
 							<div class="mt-2">
 								<input required type="text" name="phone" value={ clinic.Phone } id="phone" autocomplete="phone" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-3">
-							<label for="price" class="block text-sm font-medium leading-6 text-base-content">{ vc.l("str.appt_price") }</label>
+							<label for="price" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.appt_price") }</label>
 							<div class="mt-2">
 								<input
 									required
@@ -244,7 +244,7 @@ templ ClinicProfile(clinic models.Clinic, vc *Ctx) {
 							</div>
 						</div>
 						<div class="col-span-full">
-							<label for="file_upload" class="block text-sm font-medium leading-6">{ vc.l("str.cover_photo") }</label>
+							<label for="file_upload" class="block text-sm font-medium leading-6">{ c.l("str.cover_photo") }</label>
 							<div class="mt-2 flex justify-center rounded-lg border border-dashed border-base-content/25 px-6 py-10">
 								<div class="text-center">
 									<svg class="mx-auto h-12 w-12 text-base-content/60" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -252,59 +252,59 @@ templ ClinicProfile(clinic models.Clinic, vc *Ctx) {
 									</svg>
 									<div class="mt-4 flex text-sm leading-6 text-base-content/60">
 										<label for="file_upload" class="relative link link-primary font-semibold leading-6">
-											<span>{ vc.l("str.upload_file") }</span>
+											<span>{ c.l("str.upload_file") }</span>
 											<input id="file_upload" name="profilePic" type="file" class="sr-only"/>
 										</label>
-										<p class="pl-1">{ vc.l("str.or_drag_and_drop") }</p>
+										<p class="pl-1">{ c.l("str.or_drag_and_drop") }</p>
 									</div>
-									<p class="text-xs leading-5 text-base-content/60">PNG, JPG, GIF { vc.l("str.up_to_10mb") }</p>
+									<p class="text-xs leading-5 text-base-content/60">PNG, JPG, GIF { c.l("str.up_to_10mb") }</p>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
 				<div class="flex items-center justify-end gap-x-6 border-t border-base-content/10 px-4 py-4 sm:px-8">
-					<button type="button" class="btn btn-ghost">{ vc.l("btn.cancel") }</button>
-					<button type="submit" class="btn btn-primary">{ vc.l("btn.save") }</button>
+					<button type="button" class="btn btn-ghost">{ c.l("btn.cancel") }</button>
+					<button type="submit" class="btn btn-primary">{ c.l("btn.save") }</button>
 				</div>
 			}
 		</div>
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
-				<h2 class="text-base font-semibold leading-7">{ vc.l("str.address") }</h2>
-				<p class="mt-1 text-sm leading-6 text-base-content/60">{ vc.l("str.address_desc") }</p>
+				<h2 class="text-base font-semibold leading-7">{ c.l("str.address") }</h2>
+				<p class="mt-1 text-sm leading-6 text-base-content/60">{ c.l("str.address_desc") }</p>
 			</div>
-			@ClinicForm(clinic, vc) {
+			@ClinicForm(clinic, c) {
 				<input type="hidden" name="id" value={ clinic.UID } id="address_clinic_id"/>
 				<div class="px-4 py-6 sm:p-8">
 					<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
 						<div class="col-span-full">
-							<label for="address_line1" class="block text-sm font-medium leading-6">{ vc.l("str.address_street") }</label>
+							<label for="address_line1" class="block text-sm font-medium leading-6">{ c.l("str.address_street") }</label>
 							<div class="mt-2">
 								<input type="text" name="addressLine1" value={ clinic.Address.Line1 } id="address_line1" autocomplete="street-address" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-2 sm:col-start-1">
-							<label for="address_city" class="block text-sm font-medium leading-6">{ vc.l("str.address_city") }</label>
+							<label for="address_city" class="block text-sm font-medium leading-6">{ c.l("str.address_city") }</label>
 							<div class="mt-2">
 								<input type="text" name="addressCity" value={ clinic.Address.City } id="address_city" autocomplete="address-level2" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-2">
-							<label for="address_state" class="block text-sm font-medium leading-6">{ vc.l("str.address_state") }</label>
+							<label for="address_state" class="block text-sm font-medium leading-6">{ c.l("str.address_state") }</label>
 							<div class="mt-2">
 								<input type="text" name="addressState" value={ clinic.Address.State } id="address_state" autocomplete="address-level1" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-2">
-							<label for="address_zip_code" class="block text-sm font-medium leading-6">{ vc.l("str.address_zip_code") }</label>
+							<label for="address_zip_code" class="block text-sm font-medium leading-6">{ c.l("str.address_zip_code") }</label>
 							<div class="mt-2">
 								<input type="text" name="addressZipCode" value={ clinic.Address.Zip } id="address_zip_code" autocomplete="postal-code" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 					</div>
 					<div class="sm:col-span-4">
-						<label for="address_country" class="block text-sm font-medium leading-6 text-base-content">{ vc.l("str.address_country") }</label>
+						<label for="address_country" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.address_country") }</label>
 						<div class="mt-2">
 							<select id="address_country" name="addressCountry" autocomplete="country-name" class="select select-bordered block w-full">
 								@CountryOption("none", "none", clinic.Country)
@@ -316,40 +316,40 @@ templ ClinicProfile(clinic models.Clinic, vc *Ctx) {
 					</div>
 				</div>
 				<div class="flex items-center justify-end gap-x-6 border-t border-base-content/10 px-4 py-4 sm:px-8">
-					<button type="button" class="btn btn-ghost">{ vc.l("btn.cancel") }</button>
-					<button type="submit" class="btn btn-primary">{ vc.l("btn.save") }</button>
+					<button type="button" class="btn btn-ghost">{ c.l("btn.cancel") }</button>
+					<button type="submit" class="btn btn-primary">{ c.l("btn.save") }</button>
 				</div>
 			}
 		</div>
 		<div class="grid grid-cols-1 pt-8 gap-x-8 gap-y-8 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
-				<h2 class="text-base font-semibold leading-7">{ vc.l("str.social_media") }</h2>
-				<p class="mt-1 text-sm leading-6 text-base-content/60">{ vc.l("str.social_media_desc") }</p>
+				<h2 class="text-base font-semibold leading-7">{ c.l("str.social_media") }</h2>
+				<p class="mt-1 text-sm leading-6 text-base-content/60">{ c.l("str.social_media_desc") }</p>
 			</div>
-			@ClinicForm(clinic, vc) {
+			@ClinicForm(clinic, c) {
 				<input type="hidden" name="id" value={ clinic.UID } id="mb_clinic_id"/>
 				<div class="px-4 py-6 sm:p-8">
 					<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
 						<div class="sm:col-span-4">
-							<label for="email" class="block text-sm font-medium leading-6 text-base-content">{ vc.l("str.facebook") }</label>
+							<label for="email" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.facebook") }</label>
 							<div class="mt-2">
 								<input type="url" name="facebook" value={ clinic.Facebook } id="facebook" autocomplete="url" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-4">
-							<label for="email" class="block text-sm font-medium leading-6 text-base-content">{ vc.l("str.instagram") }</label>
+							<label for="email" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.instagram") }</label>
 							<div class="mt-2">
 								<input type="url" name="instagram" value={ clinic.Facebook } id="instagram" autocomplete="url" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-4">
-							<label for="email" class="block text-sm font-medium leading-6 text-base-content">{ vc.l("str.whatsapp") }</label>
+							<label for="email" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.whatsapp") }</label>
 							<div class="mt-2">
 								<input type="tel" name="whatsapp" value={ clinic.Whatsapp } id="whatsapp" autocomplete="phone" class="input input-bordered block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-4">
-							<label for="email" class="block text-sm font-medium leading-6 text-base-content">{ vc.l("str.telegram") }</label>
+							<label for="email" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.telegram") }</label>
 							<div class="mt-2">
 								<input type="tel" name="telegram" value={ clinic.Telegram } id="telegram" autocomplete="phone" class="input input-bordered block w-full"/>
 							</div>
@@ -357,15 +357,15 @@ templ ClinicProfile(clinic models.Clinic, vc *Ctx) {
 					</div>
 				</div>
 				<div class="flex items-center justify-end gap-x-6 border-t border-base-content/10 px-4 py-4 sm:px-8">
-					<button type="button" class="btn btn-ghost">{ vc.l("btn.cancel") }</button>
-					<button type="submit" class="btn btn-primary">{ vc.l("btn.save") }</button>
+					<button type="button" class="btn btn-ghost">{ c.l("btn.cancel") }</button>
+					<button type="submit" class="btn btn-primary">{ c.l("btn.save") }</button>
 				</div>
 			}
 		</div>
 	</div>
 }
 
-templ ClinicForm(clinic models.Clinic, vc *Ctx) {
+templ ClinicForm(clinic models.Clinic, c *Ctx) {
 	<form
 		class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2"
 		method="POST"

@@ -11,9 +11,9 @@ import (
 // req ctx and appends(or updates) params passed in the form "name=value"
 //
 //	e.g.
-//		QueryParams(vc, "timeframe=day", "clinic=myclinic")
-func QueryParams(vc *Ctx, params ...string) string {
-	queryParams := vc.Queries()
+//		QueryParams(c, "timeframe=day", "clinic=myclinic")
+func QueryParams(c *Ctx, params ...string) string {
+	queryParams := c.Queries()
 	merged := map[string]string{}
 	for k, v := range queryParams {
 		key := strings.TrimSpace(k)
