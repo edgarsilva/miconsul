@@ -279,6 +279,21 @@ func TestUserJSONOmitsSecrets(t *testing.T) {
 	}
 }
 
+func TestTokenJSONOmitted(t *testing.T) {
+	for name, v := range map[string]any{
+		"Appointment": Appointment{UID: "appt_123", Token: "appt-token-secret"},
+		"Session":     Session{UID: "session_123", Token: "session-token-secret"},
+	} {
+		b, err := json.Marshal(v)
+		if err != nil {
+			t.Fatalf("marshal %s: %v", name, err)
+		}
+		if strings.Contains(string(b), "token-secret") {
+			t.Errorf("%s JSON leaks its token: %s", name, b)
+		}
+	}
+}
+
 func TestUserPublic(t *testing.T) {
 	now := time.Now()
 	u := User{
