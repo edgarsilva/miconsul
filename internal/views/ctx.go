@@ -30,12 +30,12 @@ var (
 	locales    = localize.New("es-MX", "en-US")
 )
 
-func (ctx *Ctx) l(key string) string {
-	return locales.GetWithLocale(ctx.Locale, key)
+func (c *Ctx) l(key string) string {
+	return locales.GetWithLocale(c.Locale, key)
 }
 
-func localeFromLocals(c fiber.Ctx) string {
-	iloc := c.Locals("locale")
+func localeFromLocals(fc fiber.Ctx) string {
+	iloc := fc.Locals("locale")
 	loc, ok := iloc.(string)
 	if !ok {
 		loc = "es-MX"
@@ -44,8 +44,8 @@ func localeFromLocals(c fiber.Ctx) string {
 	return loc
 }
 
-func themeFromLocals(c fiber.Ctx) string {
-	itheme := c.Locals("theme")
+func themeFromLocals(fc fiber.Ctx) string {
+	itheme := fc.Locals("theme")
 	theme, ok := itheme.(string)
 	if !ok {
 		theme = "light"
@@ -54,8 +54,8 @@ func themeFromLocals(c fiber.Ctx) string {
 	return theme
 }
 
-func currentUserFromLocals(c fiber.Ctx) models.User {
-	iuser := c.Locals("current_user")
+func currentUserFromLocals(fc fiber.Ctx) models.User {
+	iuser := fc.Locals("current_user")
 	cu, ok := iuser.(models.User)
 	if !ok {
 		return models.User{}
@@ -64,55 +64,55 @@ func currentUserFromLocals(c fiber.Ctx) models.User {
 	return cu
 }
 
-func CU(c fiber.Ctx) models.User {
-	return currentUserFromLocals(c)
+func CU(fc fiber.Ctx) models.User {
+	return currentUserFromLocals(fc)
 }
 
 // NewCtx builds the view context from request locals and the query, then
 // applies the options.
-func NewCtx(c fiber.Ctx, ctxOpts ...ContextOption) *Ctx {
-	ctx := Ctx{
-		Ctx:         c,
-		CurrentUser: currentUserFromLocals(c),
-		Locale:      localeFromLocals(c),
-		Theme:       themeFromLocals(c),
+func NewCtx(fc fiber.Ctx, ctxOpts ...ContextOption) *Ctx {
+	c := Ctx{
+		Ctx:         fc,
+		CurrentUser: currentUserFromLocals(fc),
+		Locale:      localeFromLocals(fc),
+		Theme:       themeFromLocals(fc),
 		Toast: Toast{
-			Msg:   c.Query("toast", ""),
-			Sub:   c.Query("sub", ""),
-			Level: c.Query("level", ""),
+			Msg:   fc.Query("toast", ""),
+			Sub:   fc.Query("sub", ""),
+			Level: fc.Query("level", ""),
 		},
 	}
 
 	for _, opt := range ctxOpts {
-		opt(&ctx)
+		opt(&c)
 	}
 
-	return &ctx
+	return &c
 }
 
 func WithCurrentUser(cu models.User) ContextOption {
-	return func(props *Ctx) {
-		props.CurrentUser = cu
+	return func(c *Ctx) {
+		c.CurrentUser = cu
 	}
 }
 
 // WithTheme sets the UI theme; values other than light|dark fall back to light.
 func WithTheme(theme string) ContextOption {
-	return func(props *Ctx) {
-		props.Theme = "light"
+	return func(c *Ctx) {
+		c.Theme = "light"
 		if theme == "dark" {
-			props.Theme = "dark"
+			c.Theme = "dark"
 		}
 	}
 }
 
 func WithLocale(lang string) ContextOption {
-	return func(props *Ctx) {
+	return func(c *Ctx) {
 		if lang == "" {
 			lang = "es-MX"
 		}
 
-		props.Locale = lang
+		c.Locale = lang
 	}
 }
 
@@ -125,8 +125,8 @@ func WithLocale(lang string) ContextOption {
 //   - sub: optional subtitle,
 //   - level: alert level, one of success, error, warning or info (defaults to info)
 func WithToast(toast, sub, level string) ContextOption {
-	return func(props *Ctx) {
-		props.Toast = Toast{
+	return func(c *Ctx) {
+		c.Toast = Toast{
 			Msg:   toast,
 			Sub:   sub,
 			Level: level,

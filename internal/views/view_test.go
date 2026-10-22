@@ -22,8 +22,8 @@ func (c staticComponent) Render(_ context.Context, w io.Writer) error {
 
 func TestRender(t *testing.T) {
 	app := fiber.New()
-	app.Get("/", func(c fiber.Ctx) error {
-		return Render(c, staticComponent{body: "ok"})
+	app.Get("/", func(fc fiber.Ctx) error {
+		return Render(fc, staticComponent{body: "ok"})
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -40,45 +40,45 @@ func TestRender(t *testing.T) {
 }
 
 func TestNewCtxAndOptions(t *testing.T) {
-	runViewCtx(t, "/ctx?toast=Saved&sub=Done&level=success", func(c fiber.Ctx) {
-		c.Locals("locale", "en-US")
-		c.Locals("theme", "dark")
+	runViewCtx(t, "/ctx?toast=Saved&sub=Done&level=success", func(fc fiber.Ctx) {
+		fc.Locals("locale", "en-US")
+		fc.Locals("theme", "dark")
 		expectedCU := models.User{UID: "usr_1", Email: "u@example.com"}
-		c.Locals("current_user", expectedCU)
+		fc.Locals("current_user", expectedCU)
 
-		vc := NewCtx(c)
-		if vc.Locale != "en-US" || vc.Theme != "dark" {
-			t.Fatalf("unexpected locale/theme: %+v", vc)
+		c := NewCtx(fc)
+		if c.Locale != "en-US" || c.Theme != "dark" {
+			t.Fatalf("unexpected locale/theme: %+v", c)
 		}
-		if vc.CurrentUser.UID != expectedCU.UID {
-			t.Fatalf("unexpected current user: %+v", vc.CurrentUser)
+		if c.CurrentUser.UID != expectedCU.UID {
+			t.Fatalf("unexpected current user: %+v", c.CurrentUser)
 		}
-		if vc.Toast.Msg != "Saved" || vc.Toast.Level != "success" {
-			t.Fatalf("unexpected toast: %+v", vc.Toast)
+		if c.Toast.Msg != "Saved" || c.Toast.Level != "success" {
+			t.Fatalf("unexpected toast: %+v", c.Toast)
 		}
 	})
 
-	runViewCtx(t, "/ctx", func(c fiber.Ctx) {
-		vc := NewCtx(c, WithTheme("dark"), WithLocale("en-US"), WithToast("ok", "sub", "info"), WithCurrentUser(models.User{UID: "usr_2"}))
-		if vc.Theme != "dark" || vc.Locale != "en-US" {
-			t.Fatalf("unexpected option values: %+v", vc)
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		c := NewCtx(fc, WithTheme("dark"), WithLocale("en-US"), WithToast("ok", "sub", "info"), WithCurrentUser(models.User{UID: "usr_2"}))
+		if c.Theme != "dark" || c.Locale != "en-US" {
+			t.Fatalf("unexpected option values: %+v", c)
 		}
-		if vc.Toast.Msg != "ok" || vc.CurrentUser.UID != "usr_2" {
-			t.Fatalf("unexpected option mapping: %+v", vc)
+		if c.Toast.Msg != "ok" || c.CurrentUser.UID != "usr_2" {
+			t.Fatalf("unexpected option mapping: %+v", c)
 		}
 	})
 }
 
 func TestNewCtxOptionsFallBackAndAllApply(t *testing.T) {
-	runViewCtx(t, "/ctx", func(c fiber.Ctx) {
-		c.Locals("theme", "dark")
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		fc.Locals("theme", "dark")
 
-		vc := NewCtx(c, WithTheme("blue"), WithLocale("en-US"), WithToast("Saved", "", "success"))
-		if vc.Theme != "light" {
-			t.Fatalf("invalid theme must fall back to light, got %q", vc.Theme)
+		c := NewCtx(fc, WithTheme("blue"), WithLocale("en-US"), WithToast("Saved", "", "success"))
+		if c.Theme != "light" {
+			t.Fatalf("invalid theme must fall back to light, got %q", c.Theme)
 		}
-		if vc.Locale != "en-US" || vc.Toast.Msg != "Saved" || vc.Toast.Level != "success" {
-			t.Fatalf("options after an invalid one must still apply, got locale=%q toast=%+v", vc.Locale, vc.Toast)
+		if c.Locale != "en-US" || c.Toast.Msg != "Saved" || c.Toast.Level != "success" {
+			t.Fatalf("options after an invalid one must still apply, got locale=%q toast=%+v", c.Locale, c.Toast)
 		}
 	})
 }
@@ -107,10 +107,10 @@ func TestWithThemeAndLocaleFallbacks(t *testing.T) {
 }
 
 func TestQueryParams(t *testing.T) {
-	runViewCtx(t, "/ctx?timeframe=week", func(c fiber.Ctx) {
-		vc := NewCtx(c)
+	runViewCtx(t, "/ctx?timeframe=week", func(fc fiber.Ctx) {
+		c := NewCtx(fc)
 
-		params := QueryParams(vc, "timeframe=day", "clinic=myclinic", "invalid")
+		params := QueryParams(c, "timeframe=day", "clinic=myclinic", "invalid")
 		if !strings.Contains(params, "timeframe=day") {
 			t.Fatalf("expected timeframe override, got %q", params)
 		}
@@ -120,13 +120,13 @@ func TestQueryParams(t *testing.T) {
 	})
 }
 
-func runViewCtx(t *testing.T, target string, fn func(c fiber.Ctx)) {
+func runViewCtx(t *testing.T, target string, fn func(fc fiber.Ctx)) {
 	t.Helper()
 
 	app := fiber.New()
-	app.Get("/ctx", func(c fiber.Ctx) error {
-		fn(c)
-		return c.SendStatus(http.StatusNoContent)
+	app.Get("/ctx", func(fc fiber.Ctx) error {
+		fn(fc)
+		return fc.SendStatus(http.StatusNoContent)
 	})
 
 	req := httptest.NewRequest(http.MethodGet, target, nil)
@@ -150,18 +150,18 @@ func TestUserViewsOmitSecrets(t *testing.T) {
 		ConfirmEmailToken: "confirm-token-secret",
 	}
 
-	runViewCtx(t, "/ctx", func(c fiber.Ctx) {
-		vc := NewCtx(c, WithLocale("en-US"), WithCurrentUser(user))
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		c := NewCtx(fc, WithLocale("en-US"), WithCurrentUser(user))
 
 		pages := map[string]interface {
 			Render(context.Context, io.Writer) error
 		}{
-			"UsersIndexPage": UsersIndexPage(vc, []models.User{user}),
-			"UserEditPage":   UserEditPage(vc, user),
+			"UsersIndexPage": UsersIndexPage(c, []models.User{user}),
+			"UserEditPage":   UserEditPage(c, user),
 		}
 		for name, page := range pages {
 			var html strings.Builder
-			if err := page.Render(c.Context(), &html); err != nil {
+			if err := page.Render(fc.Context(), &html); err != nil {
 				t.Fatalf("render %s: %v", name, err)
 			}
 			if !strings.Contains(html.String(), user.Name) {
@@ -177,14 +177,14 @@ func TestUserViewsOmitSecrets(t *testing.T) {
 }
 
 func TestHTMLPageCSSURLStableAcrossRenders(t *testing.T) {
-	runViewCtx(t, "/ctx", func(c fiber.Ctx) {
-		vc := NewCtx(c)
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		c := NewCtx(fc)
 
 		var first, second strings.Builder
-		if err := HTMLPage(vc).Render(c.Context(), &first); err != nil {
+		if err := HTMLPage(c).Render(fc.Context(), &first); err != nil {
 			t.Fatalf("render first page: %v", err)
 		}
-		if err := HTMLPage(vc).Render(c.Context(), &second); err != nil {
+		if err := HTMLPage(c).Render(fc.Context(), &second); err != nil {
 			t.Fatalf("render second page: %v", err)
 		}
 

@@ -1,7 +1,7 @@
 package views
 
-templ LandingPage(vc *Ctx) {
-	@HTMLPage(vc) {
+templ LandingPage(c *Ctx) {
+	@HTMLPage(c) {
 		<div id="root" class="min-h-screen flex flex-col bg-base-200">
 			<header class="border-y border-base-content/10 bg-base-100">
 				<nav class="navbar px-4 lg:px-8">
@@ -16,8 +16,8 @@ templ LandingPage(vc *Ctx) {
 						</a>
 					</div>
 					<div class="navbar-end gap-2">
-						<a href="/signup" class="btn btn-ghost">{ vc.l("btn.signup") }</a>
-						<a href="/signin" class="btn btn-primary">{ vc.l("btn.sign_in") }</a>
+						<a href="/signup" class="btn btn-ghost">{ c.l("btn.signup") }</a>
+						<a href="/signin" class="btn btn-primary">{ c.l("btn.sign_in") }</a>
 					</div>
 				</nav>
 			</header>
@@ -28,16 +28,16 @@ templ LandingPage(vc *Ctx) {
 						<div class="w-full max-w-sm">
 							<img src="/public/miconsul-gestion-de-citas.png" alt="Miconsul" class="w-full h-auto rounded-lg"/>
 						</div>
-						<p class="text-base-content/70 max-w-lg">{ vc.l("str.landing_hero_desc") }</p>
+						<p class="text-base-content/70 max-w-lg">{ c.l("str.landing_hero_desc") }</p>
 						<div class="flex flex-wrap items-center justify-center gap-3 pt-2">
-							<a href="/signup" class="btn btn-soft min-w-40">{ vc.l("btn.signup") }</a>
-							<a href="/signin" class="btn btn-primary min-w-40">{ vc.l("btn.sign_in") }</a>
+							<a href="/signup" class="btn btn-soft min-w-40">{ c.l("btn.signup") }</a>
+							<a href="/signin" class="btn btn-primary min-w-40">{ c.l("btn.sign_in") }</a>
 						</div>
 					</div>
 				</div>
 			</main>
 
-			@CmpFooter(vc)
+			@CmpFooter(c)
 		</div>
 	}
 }
