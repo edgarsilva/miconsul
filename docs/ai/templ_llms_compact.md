@@ -63,7 +63,7 @@ Scope: preserves core templ rules, removes long tutorials and ecosystem walkthro
 When touching templates in this project:
 
 1. Edit `internal/view/*.templ` or `internal/mailer/*.templ`.
-2. Regenerate templates with `make templ`.
+2. Regenerate templates with `make templ/build`.
 3. Run `go test ./...`.
 4. Include both source and regenerated file changes in review.
 

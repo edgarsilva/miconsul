@@ -5,14 +5,13 @@ import (
 	"fmt"
 
 	"miconsul/internal/lib/appenv"
+	"miconsul/internal/observability"
 
 	"go.opentelemetry.io/contrib/propagators/aws/xray"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"go.opentelemetry.io/otel/trace"
 	"go.opentelemetry.io/otel/trace/noop"
 )
@@ -29,11 +28,6 @@ func NewProvider(ctx context.Context, env *appenv.Env) (trace.TracerProvider, fu
 		return noop.NewTracerProvider(), func() error { return nil }, nil
 	}
 
-	serviceName := env.OTelServiceName
-	if serviceName == "" {
-		serviceName = env.AppName
-	}
-
 	otlpOpts := []otlptracegrpc.Option{otlptracegrpc.WithEndpoint(env.OTelOTLPEndpoint)}
 	if env.OTelOTLPInsecure {
 		otlpOpts = append(otlpOpts, otlptracegrpc.WithInsecure())
@@ -44,18 +38,9 @@ func NewProvider(ctx context.Context, env *appenv.Env) (trace.TracerProvider, fu
 		return nil, nil, fmt.Errorf("otel tracing: create otlp exporter: %w", err)
 	}
 
-	res, err := resource.New(
-		ctx,
-		resource.WithHost(),
-		resource.WithTelemetrySDK(),
-		resource.WithAttributes(
-			semconv.ServiceNameKey.String(serviceName),
-			semconv.ServiceVersionKey.String(env.AppVersion),
-			semconv.DeploymentEnvironmentKey.String(string(env.Environment)),
-		),
-	)
+	res, err := observability.NewResource(ctx, env)
 	if err != nil {
-		return nil, nil, fmt.Errorf("otel tracing: create resource: %w", err)
+		return nil, nil, fmt.Errorf("otel tracing: %w", err)
 	}
 
 	bsp := sdktrace.NewBatchSpanProcessor(exporter,
