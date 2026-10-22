@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	otellog "go.opentelemetry.io/otel/log"
+	"go.opentelemetry.io/otel/log/embedded"
 	lognoop "go.opentelemetry.io/otel/log/noop"
 	"go.opentelemetry.io/otel/trace"
 	gormlogger "gorm.io/gorm/logger"
@@ -98,4 +100,57 @@ func TestGormOtelLoggerDelegatesAndTrace(t *testing.T) {
 	if buf.Len() == 0 {
 		t.Fatalf("expected gorm logger output after delegated calls")
 	}
+}
+
+func TestGormOtelLoggerEmitsMessagesAtLevel(t *testing.T) {
+	gormLogger := gormlogger.New(log.New(&bytes.Buffer{}, "", 0), gormlogger.Config{LogLevel: gormlogger.Warn})
+	rec := &recordingLogger{}
+	wrapped := NewGormOtelLogger(gormLogger, rec)
+
+	wrapped.Info(context.Background(), "info %s", "skipped")
+	wrapped.Warn(context.Background(), "warn %d", 7)
+	wrapped.Error(context.Background(), "error %s", "boom")
+
+	if got := rec.bodies("db_message"); strings.Join(got, "|") != "warn 7|error boom" {
+		t.Fatalf("at Warn level expected warn and error messages only, got %q", got)
+	}
+	if rec.records[0].Severity() != otellog.SeverityWarn || rec.records[1].Severity() != otellog.SeverityError {
+		t.Fatalf("unexpected severities: %v, %v", rec.records[0].Severity(), rec.records[1].Severity())
+	}
+
+	rec.records = nil
+	wrapped.LogMode(gormlogger.Info).Info(context.Background(), "info %s", "kept")
+	if got := rec.bodies("db_message"); len(got) != 1 || got[0] != "info kept" {
+		t.Fatalf("at Info level expected the info message, got %q", got)
+	}
+
+	rec.records = nil
+	wrapped.Trace(context.Background(), time.Now(), func() (string, int64) { return "SELECT 1", 1 }, nil)
+	if got := rec.bodies("db_query"); len(got) != 1 {
+		t.Fatalf("expected one db_query record, got %d", len(got))
+	}
+}
+
+type recordingLogger struct {
+	embedded.Logger
+	records []otellog.Record
+}
+
+func (r *recordingLogger) Emit(_ context.Context, record otellog.Record) {
+	r.records = append(r.records, record)
+}
+
+func (r *recordingLogger) Enabled(context.Context, otellog.EnabledParameters) bool {
+	return true
+}
+
+func (r *recordingLogger) bodies(eventName string) []string {
+	var out []string
+	for _, rec := range r.records {
+		if rec.EventName() == eventName {
+			out = append(out, rec.Body().AsString())
+		}
+	}
+
+	return out
 }

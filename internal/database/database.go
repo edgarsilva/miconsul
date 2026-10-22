@@ -222,5 +222,5 @@ func NewGormLogger(env *appenv.Env, otelLogger otellog.Logger) gormlogger.Interf
 		},
 	)
 
-	return NewGormOtelLogger(baseLogger, otelLogger)
+	return NewGormOtelLogger(baseLogger, otelLogger).LogMode(loglevel)
 }

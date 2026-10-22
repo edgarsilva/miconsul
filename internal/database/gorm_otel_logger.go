@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -25,30 +26,37 @@ var (
 type GormOtelLogger struct {
 	gormLogger gormlogger.Interface
 	otelLogger otellog.Logger
+	level      gormlogger.LogLevel
 }
 
+// NewGormOtelLogger wraps gormLogger and also emits its output as OTel log
+// records. Messages start at the Warn level, like gormlogger.Default; use
+// LogMode to change it.
 func NewGormOtelLogger(gormLogger gormlogger.Interface, otelLogger otellog.Logger) gormlogger.Interface {
 	if gormLogger == nil {
 		gormLogger = gormlogger.Default
 	}
 
-	return GormOtelLogger{gormLogger: gormLogger, otelLogger: otelLogger}
+	return GormOtelLogger{gormLogger: gormLogger, otelLogger: otelLogger, level: gormlogger.Warn}
 }
 
 func (l GormOtelLogger) LogMode(level gormlogger.LogLevel) gormlogger.Interface {
-	return GormOtelLogger{gormLogger: l.gormLogger.LogMode(level), otelLogger: l.otelLogger}
+	return GormOtelLogger{gormLogger: l.gormLogger.LogMode(level), otelLogger: l.otelLogger, level: level}
 }
 
 func (l GormOtelLogger) Info(ctx context.Context, msg string, data ...any) {
 	l.gormLogger.Info(ctx, msg, data...)
+	l.emitMessage(ctx, gormlogger.Info, otellog.SeverityInfo, "INFO", msg, data)
 }
 
 func (l GormOtelLogger) Warn(ctx context.Context, msg string, data ...any) {
 	l.gormLogger.Warn(ctx, msg, data...)
+	l.emitMessage(ctx, gormlogger.Warn, otellog.SeverityWarn, "WARN", msg, data)
 }
 
 func (l GormOtelLogger) Error(ctx context.Context, msg string, data ...any) {
 	l.gormLogger.Error(ctx, msg, data...)
+	l.emitMessage(ctx, gormlogger.Error, otellog.SeverityError, "ERROR", msg, data)
 }
 
 func (l GormOtelLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
@@ -90,6 +98,29 @@ func (l GormOtelLogger) Trace(ctx context.Context, begin time.Time, fc func() (s
 	if err != nil {
 		rec.SetErr(err)
 		attrs = append(attrs, attribute.String("error", err.Error()))
+	}
+	rec.AddAttributes(attrs...)
+
+	l.otelLogger.Emit(ctx, rec)
+}
+
+func (l GormOtelLogger) emitMessage(ctx context.Context, level gormlogger.LogLevel, severity otellog.Severity, severityText, msg string, data []any) {
+	if l.level < level {
+		return
+	}
+
+	now := time.Now()
+	rec := otellog.Record{}
+	rec.SetTimestamp(now)
+	rec.SetObservedTimestamp(now)
+	rec.SetEventName("db_message")
+	rec.SetBody(attribute.StringValue(fmt.Sprintf(msg, data...)))
+	rec.SetSeverity(severity)
+	rec.SetSeverityText(severityText)
+
+	attrs := []attribute.KeyValue{attribute.String("event", "db_message")}
+	if traceID := traceIDFromContext(ctx); traceID != "" {
+		attrs = append(attrs, attribute.String("trace_id", traceID))
 	}
 	rec.AddAttributes(attrs...)
 
