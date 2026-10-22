@@ -1,8 +1,6 @@
 package views
 
 import (
-	"errors"
-
 	"miconsul/internal/lib/localize"
 	"miconsul/internal/models"
 
@@ -25,7 +23,7 @@ type Ctx struct {
 	CurrentUser models.User
 }
 
-type ContextOption func(*Ctx) error
+type ContextOption func(*Ctx)
 
 var (
 	phoneRegex = "^[\\+]?[(]?[0-9]{3}[)]?[-\\s\\.]?[0-9]{3}[-\\s\\.]?[0-9]{4,6}$"
@@ -74,7 +72,9 @@ func CU(c fiber.Ctx) models.User {
 	return currentUserFromLocals(c)
 }
 
-func NewCtx(c fiber.Ctx, ctxOpts ...ContextOption) (*Ctx, error) {
+// NewCtx builds the view context from request locals and the query, then
+// applies the options.
+func NewCtx(c fiber.Ctx, ctxOpts ...ContextOption) *Ctx {
 	ctx := Ctx{
 		Ctx:         c,
 		CurrentUser: currentUserFromLocals(c),
@@ -87,48 +87,36 @@ func NewCtx(c fiber.Ctx, ctxOpts ...ContextOption) (*Ctx, error) {
 		},
 	}
 
-	for _, fnOpt := range ctxOpts {
-		err := fnOpt(&ctx)
-		if err != nil {
-			return &ctx, nil
-		}
+	for _, opt := range ctxOpts {
+		opt(&ctx)
 	}
 
-	return &ctx, nil
+	return &ctx
 }
 
 func WithCurrentUser(cu models.User) ContextOption {
-	return func(props *Ctx) error {
+	return func(props *Ctx) {
 		props.CurrentUser = cu
-		return nil
 	}
 }
 
+// WithTheme sets the UI theme; values other than light|dark fall back to light.
 func WithTheme(theme string) ContextOption {
-	return func(props *Ctx) error {
-		if theme == "" {
-			return errors.New("theme can't be blank if you are trying to set it)")
+	return func(props *Ctx) {
+		props.Theme = "light"
+		if theme == "dark" {
+			props.Theme = "dark"
 		}
-
-		if theme != "light" && theme != "dark" {
-			return errors.New("theme must be either light or dark)")
-		}
-
-		props.Theme = theme
-
-		return nil
 	}
 }
 
 func WithLocale(lang string) ContextOption {
-	return func(props *Ctx) error {
+	return func(props *Ctx) {
 		if lang == "" {
 			lang = "es-MX"
 		}
 
 		props.Locale = lang
-
-		return nil
 	}
 }
 
@@ -141,13 +129,11 @@ func WithLocale(lang string) ContextOption {
 //   - sub: optional subtitle,
 //   - level: alert level, one of success, error, warning or info (defaults to info)
 func WithToast(toast, sub, level string) ContextOption {
-	return func(props *Ctx) error {
+	return func(props *Ctx) {
 		props.Toast = Toast{
 			Msg:   toast,
 			Sub:   sub,
 			Level: level,
 		}
-
-		return nil
 	}
 }

@@ -16,6 +16,6 @@ func (s *service) HandleAdminModelsPage(c fiber.Ctx) error {
 		models = []string{}
 	}
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	return view.Render(c, view.AdminModelsPage(vc, models))
 }

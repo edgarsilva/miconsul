@@ -206,7 +206,7 @@ func (s *service) HandleLogtoPage(c fiber.Ctx) error {
 
 	notAuthenticated := !logtoClient.IsAuthenticated()
 	if notAuthenticated {
-		vc, _ := view.NewCtx(c)
+		vc := view.NewCtx(c)
 		return view.Render(c, view.LogtoPage(
 			vc,
 			"You are not logged in to this website. :(",
@@ -219,7 +219,7 @@ func (s *service) HandleLogtoPage(c fiber.Ctx) error {
 	idTokenClaimsJSON := logtoIDTokenClaimsJSON(logtoClient)
 	customClaimsJSON := logtoCustomClaimsJSON(logtoClient, s.Env.LogtoResource)
 
-	vc, _ := view.NewCtx(c)
+	vc := view.NewCtx(c)
 	return view.Render(c, view.LogtoPage(vc, authState, idTokenClaimsJSON, customClaimsJSON))
 }
 
