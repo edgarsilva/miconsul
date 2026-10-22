@@ -3,6 +3,7 @@
 package middleware
 
 import (
+	"miconsul/internal/lib/preferences"
 	"miconsul/internal/models"
 	"miconsul/internal/services/auth"
 
@@ -28,9 +29,7 @@ func MustAuthenticate(authRuntime auth.Runtime) fiber.Handler {
 			}
 		}
 
-		// Bind resolved identity to request locals for downstream handlers/views.
-		c.Locals("current_user", cu)
-		c.Locals("uid", cu.UID)
+		bindCurrentUser(c, cu)
 		return c.Next()
 	}
 }
@@ -67,10 +66,7 @@ func MustBeAdmin(authRuntime auth.Runtime) fiber.Handler {
 			}
 		}
 
-		// Bind resolved identity to request locals for downstream handlers/views.
-		c.Locals("current_user", cu)
-		c.Locals("uid", cu.UID)
-
+		bindCurrentUser(c, cu)
 		return c.Next()
 	}
 }
@@ -79,10 +75,22 @@ func MaybeAuthenticate(authRuntime auth.Runtime) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		cu, _ := auth.Authenticate(c, authRuntime)
 
-		// Bind resolved identity to request locals for downstream handlers/views.
-		c.Locals("current_user", cu)
-		c.Locals("uid", cu.UID)
-
+		bindCurrentUser(c, cu)
 		return c.Next()
+	}
+}
+
+// bindCurrentUser binds the resolved identity to request locals for
+// downstream handlers and views. Without a theme cookie, the user's saved
+// theme replaces the OS default.
+func bindCurrentUser(c fiber.Ctx, cu models.User) {
+	c.Locals("current_user", cu)
+	c.Locals("uid", cu.UID)
+
+	if preferences.Theme(c.Cookies("theme")) != "" {
+		return
+	}
+	if theme := preferences.Theme(cu.Theme); theme != "" {
+		c.Locals("theme", theme)
 	}
 }

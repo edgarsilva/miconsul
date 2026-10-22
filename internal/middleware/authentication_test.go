@@ -301,3 +301,42 @@ func newMiddlewareAdminRuntime(t *testing.T) (testAuthRuntime, models.User, stri
 
 	return rt, regular, regularToken, admin, adminToken
 }
+
+func TestAuthenticatedUserThemeFallback(t *testing.T) {
+	rt, user, token := newMiddlewareAuthRuntime(t)
+	if err := rt.db.Model(&user).Update("theme", "dark").Error; err != nil {
+		t.Fatalf("save user theme: %v", err)
+	}
+
+	tests := []struct {
+		name   string
+		token  string
+		cookie string
+		want   string
+	}{
+		{"signed in without cookie uses the saved theme", token, "", "dark"},
+		{"signed in with cookie keeps the cookie", token, "light", "light"},
+		{"anonymous without cookie follows the OS", "", "", ""},
+	}
+
+	for _, tt := range tests {
+		app := fiber.New()
+		app.Get("/maybe", UITheme(), MaybeAuthenticate(rt), func(c fiber.Ctx) error {
+			if got, _ := c.Locals("theme").(string); got != tt.want {
+				t.Errorf("%s: theme = %q, want %q", tt.name, got, tt.want)
+			}
+			return c.SendStatus(http.StatusNoContent)
+		})
+
+		req := httptest.NewRequest(http.MethodGet, "/maybe", nil)
+		if tt.token != "" {
+			req.Header.Set("Authorization", "Bearer "+tt.token)
+		}
+		if tt.cookie != "" {
+			req.AddCookie(&http.Cookie{Name: "theme", Value: tt.cookie})
+		}
+		if _, err := app.Test(req); err != nil {
+			t.Fatalf("%s: request failed: %v", tt.name, err)
+		}
+	}
+}
