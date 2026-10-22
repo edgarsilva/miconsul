@@ -69,7 +69,7 @@ templ AppointmentsPage(vc *Ctx, appointments []models.Appointment, selectedPatie
 						class="hidden md:flex btn btn-primary btn-sm"
 					>
 						@IconCalendar("size-5")
-						{ l(vc.Locale, "btn.new") }
+						{ vc.l("btn.new") }
 					</a>
 				</hgroup>
 				@AppointmentsSection(vc, appointments, false, selectedPatient, selectedClinic)
@@ -82,9 +82,9 @@ templ AppointmentPage(vc *Ctx, appointment models.Appointment, patients []models
 	@LayoutWithBackBtn(vc, "/appointments") {
 		<section id="appointment_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 md:py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			if appointment.UID == "" || appointment.UID == "new" {
-				<h1 class="px-4 sm:px-0 font-bold text-2xl pb-0 w-full">{ l(vc.Locale, "str.new_appointment") }</h1>
+				<h1 class="px-4 sm:px-0 font-bold text-2xl pb-0 w-full">{ vc.l("str.new_appointment") }</h1>
 			} else {
-				<h1 class="px-4 sm:px-0 font-bold text-2xl pb-0 w-full">{ l(vc.Locale, "str.edit_appointment") }</h1>
+				<h1 class="px-4 sm:px-0 font-bold text-2xl pb-0 w-full">{ vc.l("str.edit_appointment") }</h1>
 			}
 			@AppointmentCont(vc, appointment, patients, clinics)
 		</section>
@@ -171,7 +171,7 @@ templ AppointmentsSection(c *Ctx, appointments []models.Appointment, showTitle b
 							href={ templ.URL(c.Path() + QueryParams(c, "timeframe=day")) }
 							hx-get={ c.Path() + QueryParams(c, "timeframe=day") }
 							hx-push-url={ c.Path() + QueryParams(c, "timeframe=day") }
-						>{ l(c.Locale, "nav.my_day") }</a>
+						>{ c.l("nav.my_day") }</a>
 					</li>
 					<li>
 						<a
@@ -189,7 +189,7 @@ templ AppointmentsSection(c *Ctx, appointments []models.Appointment, showTitle b
 							href={ templ.URL(c.Path() + QueryParams(c, "timeframe=month")) }
 							hx-get={ c.Path() + QueryParams(c, "timeframe=month") }
 							hx-push-url={ c.Path() + QueryParams(c, "timeframe=month") }
-						>{ l(c.Locale, "nav.my_month") }</a>
+						>{ c.l("nav.my_month") }</a>
 					</li>
 				</ul>
 			</details>
@@ -203,7 +203,7 @@ templ AppointmentsSection(c *Ctx, appointments []models.Appointment, showTitle b
 						href={ templ.URL(c.Path() + QueryParams(c, "timeframe=day")) }
 						hx-get={ c.Path() + QueryParams(c, "timeframe=day") }
 						hx-push-url={ c.Path() + QueryParams(c, "timeframe=day") }
-					>{ l(c.Locale, "nav.my_day") }</a>
+					>{ c.l("nav.my_day") }</a>
 					<a
 						class={ "btn btn-sm btn-secondary", templ.KV("opacity-45", c.Query("timeframe", "day") != "week") }
 						href={ templ.URL(c.Path() + QueryParams(c, "timeframe=week")) }
@@ -215,7 +215,7 @@ templ AppointmentsSection(c *Ctx, appointments []models.Appointment, showTitle b
 						href={ templ.URL(c.Path() + QueryParams(c, "timeframe=month")) }
 						hx-get={ c.Path() + QueryParams(c, "timeframe=month") }
 						hx-push-url={ c.Path() + QueryParams(c, "timeframe=month") }
-					>{ l(c.Locale, "nav.my_month") }</a>
+					>{ c.l("nav.my_month") }</a>
 				</nav>
 			</div>
 		</div>
@@ -259,7 +259,7 @@ templ AppointmentLi(vc *Ctx, appointment models.Appointment) {
 			<dl class="mt-2 flex flex-col text-base-content xl:flex-row">
 				<div class="flex items-center space-x-3 text-base-content/50">
 					<dt class="mt-0.5">
-						<span class="sr-only">{ l(vc.Locale, "str.date") }</span>
+						<span class="sr-only">{ vc.l("str.date") }</span>
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							fill="none"
@@ -277,7 +277,7 @@ templ AppointmentLi(vc *Ctx, appointment models.Appointment) {
 				</div>
 				<div class="mt-2 flex items-center space-x-3 xl:ml-3.5 xl:mt-0 xl:border-l xl:border-base-300 xl:border-opacity-50 xl:pl-3.5">
 					<dt>
-						<span class="sr-only">{ l(vc.Locale, "str.location") }</span>
+						<span class="sr-only">{ vc.l("str.location") }</span>
 						<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
 							<path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clip-rule="evenodd"></path>
 						</svg>
@@ -301,11 +301,11 @@ templ AppointmentActions(appointment models.Appointment, vc *Ctx) {
 	<div class="hidden md:flex gap-1">
 		<a href={ templ.URL("/appointments/" + appointment.UID + "/open") } class="btn btn-sm">
 			@IconBookOpen("size-4")
-			{ l(vc.Locale, "btn.open") }
+			{ vc.l("btn.open") }
 		</a>
 		<a href={ templ.URL("/appointments/" + appointment.UID) } class="btn btn-sm">
 			@IconCalendar("size-4")
-			{ l(vc.Locale, "btn.change") }
+			{ vc.l("btn.change") }
 		</a>
 	</div>
 }
@@ -314,7 +314,7 @@ templ AppointmentsEmptyList(vc *Ctx) {
 	<div id="appointments_list" class="flex mt-4">
 		<a href="/appointments/new" class="relative block w-full rounded-lg border-2 border-dashed border-base-content/10 p-12 text-center hover:border-base-content/30 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
 			@IconCalendar("mx-auto w-12 h-12 text-base-content/30")
-			<span class="mt-2 block text-sm font-semibold">{ l(vc.Locale, "str.create_new_appointment") }</span>
+			<span class="mt-2 block text-sm font-semibold">{ vc.l("str.create_new_appointment") }</span>
 			<p class="mt-1 text-sm text-base-content/40">No se encontraron citas.</p>
 		</a>
 	</div>
@@ -324,22 +324,22 @@ templ AppointmentCont(vc *Ctx, appointment models.Appointment, patients []models
 	<div id="appointment_profile" class="space-y-10 divide-y divide-base-content/10">
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
-				<h2 class="text-base font-semibold leading-7">{ l(vc.Locale, "str.apnt_step_1") }</h2>
-				<p class="mt-1 text-sm leading-6 text-base-content/50">{ l(vc.Locale, "str.apnt_step_1_desc") }</p>
+				<h2 class="text-base font-semibold leading-7">{ vc.l("str.apnt_step_1") }</h2>
+				<p class="mt-1 text-sm leading-6 text-base-content/50">{ vc.l("str.apnt_step_1_desc") }</p>
 			</div>
 			@ClinicSearch(vc, clinics)
 		</div>
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
-				<h2 class="text-base font-semibold leading-7">{ l(vc.Locale, "str.apnt_step_2") }</h2>
-				<p class="mt-1 text-sm leading-6 text-base-content/50">{ l(vc.Locale, "str.apnt_step_2_desc") }</p>
+				<h2 class="text-base font-semibold leading-7">{ vc.l("str.apnt_step_2") }</h2>
+				<p class="mt-1 text-sm leading-6 text-base-content/50">{ vc.l("str.apnt_step_2_desc") }</p>
 			</div>
 			@PatientSearch(vc, patients)
 		</div>
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
-				<h2 class="text-base font-semibold leading-7">{ l(vc.Locale, "str.apnt_step_3") }</h2>
-				<p class="mt-1 text-sm leading-6 text-base-content/50">{ l(vc.Locale, "str.apnt_step_3_desc") }</p>
+				<h2 class="text-base font-semibold leading-7">{ vc.l("str.apnt_step_3") }</h2>
+				<p class="mt-1 text-sm leading-6 text-base-content/50">{ vc.l("str.apnt_step_3_desc") }</p>
 			</div>
 			<section class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
 				@AppointmentForm(appointment, vc) {
@@ -347,7 +347,7 @@ templ AppointmentCont(vc *Ctx, appointment models.Appointment, patients []models
 					<div class="px-4 py-6 sm:p-8">
 						<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
 							<div class="sm:col-span-4">
-								<label for="street-address" class="block text-sm font-medium leading-6">{ l(vc.Locale, "str.booked_at") } 123</label>
+								<label for="street-address" class="block text-sm font-medium leading-6">{ vc.l("str.booked_at") } 123</label>
 								<div class="mt-2">
 									<input
 										required
@@ -364,7 +364,7 @@ templ AppointmentCont(vc *Ctx, appointment models.Appointment, patients []models
 								</div>
 							</div>
 							<div class="sm:col-span-3">
-								<label for="duration" class="block text-sm font-medium leading-6 text-base-content">{ l(vc.Locale, "str.duration") }</label>
+								<label for="duration" class="block text-sm font-medium leading-6 text-base-content">{ vc.l("str.duration") }</label>
 								<div class="mt-2">
 									<input
 										required
@@ -391,14 +391,14 @@ templ AppointmentCont(vc *Ctx, appointment models.Appointment, patients []models
 						form="new_appointment"
 						type="submit"
 						class="btn btn-primary"
-					>{ l(vc.Locale, "btn.save") }</button>
+					>{ vc.l("btn.save") }</button>
 				</div>
 			</section>
 		</div>
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
-				<h2 class="text-base font-semibold leading-7">{ l(vc.Locale, "str.apnt_step_4") }</h2>
-				<p class="mt-1 text-sm leading-6 text-base-content/50">{ l(vc.Locale, "str.apnt_step_4_desc") }</p>
+				<h2 class="text-base font-semibold leading-7">{ vc.l("str.apnt_step_4") }</h2>
+				<p class="mt-1 text-sm leading-6 text-base-content/50">{ vc.l("str.apnt_step_4_desc") }</p>
 			</div>
 			<section class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
 				<div class="px-4 py-6 sm:p-8">
@@ -484,7 +484,7 @@ templ ApptPrice(vc *Ctx, appointment models.Appointment, clinic models.Clinic, s
 			hx-swap-oob="true"
 		}
 	>
-		<label for="price" class="block text-sm font-medium leading-6 text-base-content">{ l(vc.Locale, "str.price") }</label>
+		<label for="price" class="block text-sm font-medium leading-6 text-base-content">{ vc.l("str.price") }</label>
 		<div class="mt-2">
 			<input
 				required
@@ -523,7 +523,7 @@ templ ClinicSearch(vc *Ctx, clinics []models.Clinic) {
 				class="grow"
 				type="search"
 				name="searchTerm"
-				placeholder={ l(vc.Locale, "str.search_clinics") }
+				placeholder={ vc.l("str.search_clinics") }
 				hx-post="/appointments/search/clinics"
 				hx-trigger="input changed delay:300ms, search"
 				hx-select="#clinic_search_results"
@@ -572,8 +572,8 @@ templ ApptSearchClinicsResults(vc *Ctx, clinics []models.Clinic) {
 		}
 		if len(clinics) == 0 {
 			<li class="p-4 w-full">
-				<p class="text-sm font-semibold text-base-content/60">{ l(vc.Locale, "str.no_clinics_found") }</p>
-				<a href="/clinics/new" class="link link-primary text-sm">{ l(vc.Locale, "str.add_clinic") }</a>
+				<p class="text-sm font-semibold text-base-content/60">{ vc.l("str.no_clinics_found") }</p>
+				<a href="/clinics/new" class="link link-primary text-sm">{ vc.l("str.add_clinic") }</a>
 			</li>
 		}
 	</ul>
@@ -604,7 +604,7 @@ templ PatientSearch(vc *Ctx, patients []models.Patient) {
 				class="grow"
 				type="search"
 				name="searchTerm"
-				placeholder={ l(vc.Locale, "str.search_patients") }
+				placeholder={ vc.l("str.search_patients") }
 				hx-post="/patients/search"
 				hx-trigger="input changed delay:300ms, search"
 				hx-target="#patient_search_results"
@@ -648,8 +648,8 @@ templ PatientSearchResults(patients []models.Patient, vc *Ctx) {
 		}
 		if len(patients) == 0 {
 			<li class="p-4 w-full">
-				<p class="text-sm font-semibold text-base-content/60">{ l(vc.Locale, "str.no_patients_found") }</p>
-				<a href="/patients/new" class="link link-primary text-sm">{ l(vc.Locale, "str.add_patient") }</a>
+				<p class="text-sm font-semibold text-base-content/60">{ vc.l("str.no_patients_found") }</p>
+				<a href="/patients/new" class="link link-primary text-sm">{ vc.l("str.add_patient") }</a>
 			</li>
 		}
 	</ul>

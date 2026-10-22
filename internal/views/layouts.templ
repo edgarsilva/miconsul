@@ -63,7 +63,7 @@ templ Layout(c *Ctx) {
 templ LayoutWithBackBtn(c *Ctx, backpath string) {
 	@Layout(c) {
 		<div class="hidden md:block px-4 lg:px-8">
-			@CmpBtnBack(l(c.Locale, "btn.back"), backpath)
+			@CmpBtnBack(c.l("btn.back"), backpath)
 		</div>
 		{ children... }
 	}
