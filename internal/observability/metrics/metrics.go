@@ -5,14 +5,13 @@ import (
 	"fmt"
 
 	"miconsul/internal/lib/appenv"
+	"miconsul/internal/observability"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/noop"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
-	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
 
 // NewProvider returns the meter provider and its shutdown func. It returns a
@@ -28,11 +27,6 @@ func NewProvider(ctx context.Context, env *appenv.Env) (metric.MeterProvider, fu
 	}
 
 	endpoint := env.OTelOTLPEndpoint
-	serviceName := env.OTelServiceName
-	if serviceName == "" {
-		serviceName = env.AppName
-	}
-
 	otlpOpts := []otlpmetricgrpc.Option{otlpmetricgrpc.WithEndpoint(endpoint)}
 	if env.OTelOTLPInsecure {
 		otlpOpts = append(otlpOpts, otlpmetricgrpc.WithInsecure())
@@ -43,18 +37,9 @@ func NewProvider(ctx context.Context, env *appenv.Env) (metric.MeterProvider, fu
 		return nil, nil, fmt.Errorf("otel metrics: create otlp exporter: %w", err)
 	}
 
-	res, err := resource.New(
-		ctx,
-		resource.WithHost(),
-		resource.WithTelemetrySDK(),
-		resource.WithAttributes(
-			semconv.ServiceNameKey.String(serviceName),
-			semconv.ServiceVersionKey.String(env.AppVersion),
-			semconv.DeploymentEnvironmentKey.String(string(env.Environment)),
-		),
-	)
+	res, err := observability.NewResource(ctx, env)
 	if err != nil {
-		return nil, nil, fmt.Errorf("otel metrics: create resource: %w", err)
+		return nil, nil, fmt.Errorf("otel metrics: %w", err)
 	}
 
 	reader := sdkmetric.NewPeriodicReader(exporter)
