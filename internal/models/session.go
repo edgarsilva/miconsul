@@ -17,9 +17,9 @@ const (
 type Session struct {
 	ExpiresAt time.Time
 	ModelBase
-	ID       uint   `gorm:"primaryKey"`
-	UID      string `gorm:"uniqueIndex;default:null;not null"`
-	Token    string
+	ID       uint        `gorm:"primaryKey"`
+	UID      string      `gorm:"uniqueIndex;default:null;not null"`
+	Token    string      `json:"-" form:"-"`
 	Email    string      `gorm:"index;default:null;not null"`
 	UserID   uint        `gorm:"index;default:null;not null"`
 	AuthType SessionType `gorm:"default:null;not null;type:string"`

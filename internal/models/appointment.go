@@ -49,7 +49,7 @@ type Appointment struct {
 	ID            uint              `gorm:"primaryKey" form:"-"`
 	UID           string            `gorm:"uniqueIndex;default:null;not null" form:"-"`
 	ExtID         string            `form:"extId"`
-	Token         string            `form:"-"`
+	Token         string            `json:"-" form:"-"`
 	Summary       string            `form:"summary"`
 	Observations  string            `form:"observations"`
 	Conclusions   string            `form:"conclusions"`
