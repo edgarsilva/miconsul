@@ -56,9 +56,9 @@ func AppointmentNotFoundPage(vc *Ctx) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.appt_not_found"))
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.appt_not_found"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentconfirmpage.templ`, Line: 14, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentconfirmpage.templ`, Line: 14, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -142,9 +142,9 @@ func AppointmentConfirmPage(vc *Ctx, appointment models.Appointment) templ.Compo
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var7 string
-				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.confirm_appointment_title"))
+				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.confirm_appointment_title"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentconfirmpage.templ`, Line: 37, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentconfirmpage.templ`, Line: 37, Col: 45}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -155,9 +155,9 @@ func AppointmentConfirmPage(vc *Ctx, appointment models.Appointment) templ.Compo
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var8 string
-				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.confirm_appointment_desc"))
+				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.confirm_appointment_desc"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentconfirmpage.templ`, Line: 39, Col: 83}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentconfirmpage.templ`, Line: 39, Col: 75}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -173,9 +173,9 @@ func AppointmentConfirmPage(vc *Ctx, appointment models.Appointment) templ.Compo
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var9 string
-				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.appointment_confirmed"))
+				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.appointment_confirmed"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentconfirmpage.templ`, Line: 42, Col: 49}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentconfirmpage.templ`, Line: 42, Col: 41}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -186,9 +186,9 @@ func AppointmentConfirmPage(vc *Ctx, appointment models.Appointment) templ.Compo
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var10 string
-				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.appointment_confirmed_desc"))
+				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.appointment_confirmed_desc"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentconfirmpage.templ`, Line: 44, Col: 85}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentconfirmpage.templ`, Line: 44, Col: 77}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 				if templ_7745c5c3_Err != nil {
@@ -225,9 +225,9 @@ func AppointmentConfirmPage(vc *Ctx, appointment models.Appointment) templ.Compo
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var12 string
-			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.appt_need_changes"))
+			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.appt_need_changes"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentconfirmpage.templ`, Line: 50, Col: 113}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentconfirmpage.templ`, Line: 50, Col: 105}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -256,9 +256,9 @@ func AppointmentConfirmPage(vc *Ctx, appointment models.Appointment) templ.Compo
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var14 string
-				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.yes_confirm_my_appointment"))
+				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.yes_confirm_my_appointment"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentconfirmpage.templ`, Line: 53, Col: 101}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentconfirmpage.templ`, Line: 53, Col: 93}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
@@ -329,9 +329,9 @@ func AppointmentCancelPage(vc *Ctx, appointment models.Appointment) templ.Compon
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var17 string
-			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.cancel_appointment_confirmation"))
+			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.cancel_appointment_confirmation"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentconfirmpage.templ`, Line: 73, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentconfirmpage.templ`, Line: 73, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 			if templ_7745c5c3_Err != nil {
@@ -389,9 +389,9 @@ func AppointmentCancelPage(vc *Ctx, appointment models.Appointment) templ.Compon
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var20 string
-				templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(l(vc.Locale, "str.yes_cancel_my_appointment"))
+				templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(vc.l("str.yes_cancel_my_appointment"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentconfirmpage.templ`, Line: 87, Col: 107}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentconfirmpage.templ`, Line: 87, Col: 99}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 				if templ_7745c5c3_Err != nil {

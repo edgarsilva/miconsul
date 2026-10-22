@@ -11,7 +11,7 @@ templ AppointmentNotFoundPage(vc *Ctx) {
 			<div class="px-6 py-24 sm:px-6 sm:py-20 lg:px-8">
 				<div class="mx-auto max-w-2xl text-center">
 					<h2 class="text-3xl font-bold tracking-tight text-primary-content sm:text-4xl">
-						{ l(vc.Locale, "str.appt_not_found") }
+						{ vc.l("str.appt_not_found") }
 					</h2>
 					<p class="mx-auto mt-6 max-w-xl text-lg leading-8 text-primary-content/90">
 						{ vc.l("str.appt_not_found_desc") }
@@ -34,23 +34,23 @@ templ AppointmentConfirmPage(vc *Ctx, appointment models.Appointment) {
 			<div class="card-body p-6 md:w-2/3">
 				if appointment.ConfirmedAt.IsZero() {
 					<h2 class="card-title">
-						{ l(vc.Locale, "str.confirm_appointment_title") }
+						{ vc.l("str.confirm_appointment_title") }
 					</h2>
-					<p class="text-base-content/80">{ l(vc.Locale, "str.confirm_appointment_desc") }</p>
+					<p class="text-base-content/80">{ vc.l("str.confirm_appointment_desc") }</p>
 				} else {
 					<h2 class="card-title">
-						{ l(vc.Locale, "str.appointment_confirmed") }
+						{ vc.l("str.appointment_confirmed") }
 					</h2>
-					<p class="text-base-content/80">{ l(vc.Locale, "str.appointment_confirmed_desc") }</p>
+					<p class="text-base-content/80">{ vc.l("str.appointment_confirmed_desc") }</p>
 				}
 				<div class="pt-8 pb-12">
 					@AppointmentDescription(vc, appointment)
 				</div>
 				<div class="card-actions justify-end gap-3">
-					<a href={ templ.URL(appointment.CancelPath()) } class="btn btn-soft">{ l(vc.Locale, "str.appt_need_changes") }</a>
+					<a href={ templ.URL(appointment.CancelPath()) } class="btn btn-soft">{ vc.l("str.appt_need_changes") }</a>
 					if appointment.ConfirmedAt.IsZero() {
 						<form action={ templ.URL(appointment.ConfirmPath()) } method="POST" hx-boost="true">
-							<button type="submit" class="btn btn-primary">{ l(vc.Locale, "str.yes_confirm_my_appointment") }</button>
+							<button type="submit" class="btn btn-primary">{ vc.l("str.yes_confirm_my_appointment") }</button>
 						</form>
 					}
 				</div>
@@ -70,7 +70,7 @@ templ AppointmentCancelPage(vc *Ctx, appointment models.Appointment) {
 			</figure>
 			<div class="card-body p-6 md:w-2/3">
 				<h2 class="card-title">
-					{ l(vc.Locale, "str.cancel_appointment_confirmation") }
+					{ vc.l("str.cancel_appointment_confirmation") }
 				</h2>
 				<div class="pt-6 pb-10">
 					@AppointmentDescription(vc, appointment)
@@ -84,7 +84,7 @@ templ AppointmentCancelPage(vc *Ctx, appointment models.Appointment) {
 					><span class="inline-flex items-center gap-2"><span>Contact us in</span>@IconWhatsapp("size-6")</span></a>
 					if appointment.CanceledAt.IsZero() {
 						<form action={ templ.URL("/appointments/" + appointment.UID + "/patient/cancel/" + appointment.Token) } method="POST" hx-boost="true">
-							<button type="submit" class="btn btn-error btn-soft">{ l(vc.Locale, "str.yes_cancel_my_appointment") }</button>
+							<button type="submit" class="btn btn-error btn-soft">{ vc.l("str.yes_cancel_my_appointment") }</button>
 						</form>
 					} else {
 						<div role="alert" class="alert shadow-lg">

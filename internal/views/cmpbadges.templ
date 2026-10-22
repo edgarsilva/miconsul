@@ -6,28 +6,28 @@ templ CmpBadgeStatus(status models.AppointmentStatus, vc *Ctx) {
 	switch status {
 		case "viewed":
 			<div class="badge badge-secondary bagce-sm">
-				{ l(vc.Locale, "str.viewed") }
+				{ vc.l("str.viewed") }
 			</div>
 		case "confirmed":
 			<div class="badge badge-success badge-sm">
-				{ l(vc.Locale, "str.confirmed") }
+				{ vc.l("str.confirmed") }
 			</div>
 		case "in_progress":
 			<div class="badge badge-accent badge-sm gap-1">
 				<span class="inline-block h-1.5 w-1.5 rounded-full bg-current animate-pulse"></span>
-				{ l(vc.Locale, "str.in_progress") }
+				{ vc.l("str.in_progress") }
 			</div>
 		case "done":
 			<div class="badge badge-primary badge-sm">
-				{ l(vc.Locale, "str.done") }
+				{ vc.l("str.done") }
 			</div>
 		case "canceled":
 			<div class="badge badge-warning badge-sm">
-				{ l(vc.Locale, "str.canceled") }
+				{ vc.l("str.canceled") }
 			</div>
 		default:
 			<div class="badge badge-neutral badge-sm">
-				{ l(vc.Locale, "str.pending") }
+				{ vc.l("str.pending") }
 			</div>
 	}
 }

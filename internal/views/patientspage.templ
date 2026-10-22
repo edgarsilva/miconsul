@@ -21,7 +21,7 @@ templ PatientsPage(c *Ctx, patients []models.Patient) {
 								class="md:hidden ml-auto btn btn-primary btn-sm"
 							>
 								@IconUserAdd("size-4")
-								{ l(c.Locale, "btn.new_patient") }
+								{ c.l("btn.new_patient") }
 							</a>
 						</h1>
 						@CmpSearchInput(c, c.l("str.search_patients"), "/patients/search", "#patients_list")

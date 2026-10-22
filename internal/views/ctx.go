@@ -31,11 +31,7 @@ var (
 )
 
 func (ctx *Ctx) l(key string) string {
-	return l(ctx.Locale, key)
-}
-
-func l(lang, key string) string {
-	return locales.GetWithLocale(lang, key)
+	return locales.GetWithLocale(ctx.Locale, key)
 }
 
 func localeFromLocals(c fiber.Ctx) string {

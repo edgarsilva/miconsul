@@ -39,7 +39,7 @@ templ DashboardPage(vc *Ctx, stats DashboardStats, appointments []models.Appoint
 
 templ MonthTrends(stats DashboardStats, vc *Ctx) {
 	<div>
-		<h3 class="sr-only">{ l(vc.Locale, "str.stats") }</h3>
+		<h3 class="sr-only">{ vc.l("str.stats") }</h3>
 		<dl class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
 			<div class="app-card relative">
 				<dt>
@@ -49,7 +49,7 @@ templ MonthTrends(stats DashboardStats, vc *Ctx) {
 						</div>
 					</div>
 					<p class="ml-16 truncate text-sm font-medium text-base-content">
-						{ l(vc.Locale, "str.patients") }
+						{ vc.l("str.patients") }
 					</p>
 				</dt>
 				<dd class="ml-16 flex items-baseline">
@@ -58,11 +58,11 @@ templ MonthTrends(stats DashboardStats, vc *Ctx) {
 						<svg class="h-5 w-5 flex-shrink-0 self-center text-success" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
 							<path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clip-rule="evenodd"></path>
 						</svg>
-						<span class="sr-only">{ l(vc.Locale, "str.increased_by") }</span>
+						<span class="sr-only">{ vc.l("str.increased_by") }</span>
 						{ strconv.Itoa(stats.Patients.Diff) }
 					</p>
 					<div class="ml-auto">
-						<a href="#" class="font-medium link link-hover">{ l(vc.Locale, "btn.view_all") }<span class="sr-only">{ l(vc.Locale, "str.patients") }</span></a>
+						<a href="#" class="font-medium link link-hover">{ vc.l("btn.view_all") }<span class="sr-only">{ vc.l("str.patients") }</span></a>
 					</div>
 				</dd>
 			</div>
@@ -75,7 +75,7 @@ templ MonthTrends(stats DashboardStats, vc *Ctx) {
 					</div>
 					<p
 						class="ml-16 truncate text-sm font-medium text-base-content"
-					>{ l(vc.Locale, "str.appointments") }</p>
+					>{ vc.l("str.appointments") }</p>
 				</dt>
 				<dd class="ml-16 flex items-baseline">
 					<p
@@ -86,11 +86,11 @@ templ MonthTrends(stats DashboardStats, vc *Ctx) {
 						<svg class="h-5 w-5 flex-shrink-0 self-center text-success" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
 							<path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clip-rule="evenodd"></path>
 						</svg>
-						<span class="sr-only">{ l(vc.Locale, "str.increased_by") }</span>
+						<span class="sr-only">{ vc.l("str.increased_by") }</span>
 						{ strconv.Itoa(stats.Appointments.Diff) }
 					</p>
 					<div class="ml-auto">
-						<a href="#" class="font-medium link link-hover">{ l(vc.Locale, "btn.view_all") }<span class="sr-only">{ l(vc.Locale, "str.all_appointmens") }</span></a>
+						<a href="#" class="font-medium link link-hover">{ vc.l("btn.view_all") }<span class="sr-only">{ vc.l("str.all_appointmens") }</span></a>
 					</div>
 				</dd>
 			</div>
@@ -101,7 +101,7 @@ templ MonthTrends(stats DashboardStats, vc *Ctx) {
 							<img class="" src="/public/images/funds.png"/>
 						</div>
 					</div>
-					<p class="ml-16 truncate text-sm font-medium text-base-content">{ l(vc.Locale, "str.revenue_month") }</p>
+					<p class="ml-16 truncate text-sm font-medium text-base-content">{ vc.l("str.revenue_month") }</p>
 				</dt>
 				<dd class="ml-16 flex items-baseline">
 					<p class="text-2xl font-semibold text-base-content">24500</p>
@@ -109,11 +109,11 @@ templ MonthTrends(stats DashboardStats, vc *Ctx) {
 						<svg class="h-5 w-5 flex-shrink-0 self-center text-error" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
 							<path fill-rule="evenodd" d="M10 3a.75.75 0 01.75.75v10.638l3.96-4.158a.75.75 0 111.08 1.04l-5.25 5.5a.75.75 0 01-1.08 0l-5.25-5.5a.75.75 0 111.08-1.04l3.96 4.158V3.75A.75.75 0 0110 3z" clip-rule="evenodd"></path>
 						</svg>
-						<span class="sr-only">{ l(vc.Locale, "str.decreased_by") }</span>
+						<span class="sr-only">{ vc.l("str.decreased_by") }</span>
 						3.2%
 					</p>
 					<div class="ml-auto">
-						<a href="#" class="font-medium link link-hover">{ l(vc.Locale, "btn.view_all") }<span class="sr-only">{ l(vc.Locale, "str.all_revenue") }</span></a>
+						<a href="#" class="font-medium link link-hover">{ vc.l("btn.view_all") }<span class="sr-only">{ vc.l("str.all_revenue") }</span></a>
 					</div>
 				</dd>
 			</div>
@@ -337,7 +337,7 @@ func feedEventColorClass(action string) string {
 
 func feedEventSubjectLabel(vc *Ctx, event models.FeedEvent) string {
 	if event.SubjectType == "appointments" {
-		return l(vc.Locale, "str.appointment")
+		return vc.l("str.appointment")
 	}
 
 	return event.Subject
@@ -353,10 +353,10 @@ func feedEventShortDateTime(t time.Time) string {
 
 func feedEventTitle(vc *Ctx, event models.FeedEvent) string {
 	if event.SubjectType == "appointments" && event.Action == "created" {
-		return l(vc.Locale, "str.feed_new_appointment")
+		return vc.l("str.feed_new_appointment")
 	}
 
-	return feedEventSubjectLabel(vc, event) + " " + l(vc.Locale, FeedActionLocaleKey(event.Action))
+	return feedEventSubjectLabel(vc, event) + " " + vc.l(FeedActionLocaleKey(event.Action))
 }
 
 templ feedEventIcon(action string) {
@@ -380,7 +380,7 @@ templ Feed(vc *Ctx, events []models.FeedEvent) {
 	<div class="app-card">
 		<h3 class="font-semibold text-xl mb-6">My feed</h3>
 		if len(events) == 0 {
-			<p class="text-sm text-base-content/60 py-4">{ l(vc.Locale, "str.no_recent_activity") }</p>
+			<p class="text-sm text-base-content/60 py-4">{ vc.l("str.no_recent_activity") }</p>
 		} else {
 			<ul role="list" class="space-y-6">
 				for i, event := range events {
@@ -402,7 +402,7 @@ templ Feed(vc *Ctx, events []models.FeedEvent) {
 								<a href={ templ.SafeURL(event.SubjectURL) } class="hover:underline">{ feedEventTitle(vc, event) }</a>
 							</p>
 							<p class="text-[11px] text-base-content/50 mt-0.5">
-								<span>{ l(vc.Locale, "str.patient") }</span>
+								<span>{ vc.l("str.patient") }</span>
 								<a href={ templ.SafeURL(event.TargetURL) } class="font-medium text-base-content hover:underline">{ event.Target }</a>
 								if feedEventShortDateTime(event.OcurredAt) != "" {
 									<span>{ " • " }</span>
