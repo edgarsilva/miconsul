@@ -313,3 +313,25 @@ func TestUserProfileLanguageSelect(t *testing.T) {
 		}
 	})
 }
+
+func TestAuthPagesGitHubIconFollowsTheme(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		c := NewCtx(fc)
+		pages := map[string]interface {
+			Render(context.Context, io.Writer) error
+		}{
+			"LoginPage":  LoginPage("", "", nil, c),
+			"SignupPage": SignupPage(c, "", nil),
+		}
+		for name, page := range pages {
+			var html strings.Builder
+			if err := page.Render(fc.Context(), &html); err != nil {
+				t.Fatalf("render %s: %v", name, err)
+			}
+			if strings.Contains(html.String(), "fill-[#24292F]") {
+				t.Errorf("%s: GitHub icon has a fixed fill that disappears on dark themes", name)
+			}
+		}
+
+	})
+}
