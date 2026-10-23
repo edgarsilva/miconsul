@@ -152,7 +152,7 @@ func bootstrapServer(ctx context.Context) (bootstrapResult, error) {
 	})
 
 	fmt.Println(" Starting localizer...")
-	s := server.New(
+	s, err := server.New(
 		server.WithEnv(env),
 		server.WithDatabase(db),
 		server.WithWorkPool(wp.AntsPool()),
@@ -162,6 +162,10 @@ func bootstrapServer(ctx context.Context) (bootstrapResult, error) {
 		server.WithLoggerProvider(telemetry.loggerProvider),
 		server.WithLocalizer(localize.New(preferences.LocaleSpanish, preferences.LocaleEnglish)),
 	)
+	if err != nil {
+		log.Printf("failed to initialize server: %v", err)
+		return result, err
+	}
 	result.server = s
 
 	fmt.Println(" Registering routes...")

@@ -3,6 +3,7 @@ package server
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -62,24 +63,26 @@ type Server struct {
 
 type ServerOption func(*Server) error
 
-// New constructs a Server with the provided options and core setup.
-func New(serverOpts ...ServerOption) *Server {
+// New constructs a Server with the provided options and core setup. It
+// returns an error when an option fails or a required dependency or setting
+// is missing.
+func New(serverOpts ...ServerOption) (*Server, error) {
 	server := Server{
 		StartedAt: time.Now(),
 	}
 
 	for _, fnOpt := range serverOpts {
 		if err := fnOpt(&server); err != nil {
-			log.Fatal("🔴 failed to start server: option setup error:", err)
+			return nil, fmt.Errorf("apply server option: %w", err)
 		}
 	}
 
 	if err := validateCriticalDeps(&server); err != nil {
-		log.Fatal("🔴 failed to start server:", err)
+		return nil, fmt.Errorf("validate server dependencies: %w", err)
 	}
 
 	if err := validateRuntimeConfig(&server); err != nil {
-		log.Fatal("🔴 failed to start server:", err)
+		return nil, fmt.Errorf("validate server config: %w", err)
 	}
 
 	setupTracer(&server)
@@ -90,7 +93,7 @@ func New(serverOpts ...ServerOption) *Server {
 	server.BootstrapDuration = server.ReadyAt.Sub(server.StartedAt)
 	emitStartupBootstrapLog(&server)
 
-	return &server
+	return &server, nil
 }
 
 func validateCriticalDeps(s *Server) error {

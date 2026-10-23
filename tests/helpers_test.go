@@ -121,13 +121,16 @@ func newTestHarness(t *testing.T) *testHarness {
 		_ = os.Remove("public/favicon.ico")
 	})
 
-	s := server.New(
+	s, err := server.New(
 		server.WithEnv(env),
 		server.WithDatabase(db),
 		server.WithTracerProvider(tracenoop.NewTracerProvider()),
 		server.WithMeterProvider(metricnoop.NewMeterProvider()),
 		server.WithLoggerProvider(lognoop.NewLoggerProvider()),
 	)
+	if err != nil {
+		t.Fatalf("new server: %v", err)
+	}
 
 	if err := routes.RegisterServices(s); err != nil {
 		t.Fatalf("register routes: %v", err)
