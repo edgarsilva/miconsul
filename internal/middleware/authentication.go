@@ -8,6 +8,8 @@ import (
 	"miconsul/internal/services/auth"
 
 	"github.com/gofiber/fiber/v3"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func MustAuthenticate(authRuntime auth.Runtime) fiber.Handler {
@@ -17,6 +19,7 @@ func MustAuthenticate(authRuntime auth.Runtime) fiber.Handler {
 			err = fiber.ErrUnauthorized
 		}
 		if err != nil {
+			markDenied(c, "unauthenticated")
 			switch c.Accepts("text/html", "text/plain", "application/json") {
 			case "text/plain", "application/json":
 				return c.SendStatus(fiber.StatusUnauthorized)
@@ -41,6 +44,7 @@ func MustBeAdmin(authRuntime auth.Runtime) fiber.Handler {
 			err = fiber.ErrUnauthorized
 		}
 		if err != nil {
+			markDenied(c, "unauthenticated")
 			switch c.Accepts("text/html", "text/plain", "application/json") {
 			case "text/html":
 				c.Set("HX-Redirect", "/logout")
@@ -54,6 +58,7 @@ func MustBeAdmin(authRuntime auth.Runtime) fiber.Handler {
 		}
 
 		if cu.Role != models.UserRoleAdmin {
+			markDenied(c, "forbidden")
 			switch c.Accepts("text/html", "text/plain", "application/json") {
 			case "text/plain", "application/json":
 				return c.SendStatus(fiber.StatusForbidden)
@@ -97,4 +102,9 @@ func bindCurrentUser(c fiber.Ctx, cu models.User) {
 			c.Locals("locale", locale)
 		}
 	}
+}
+
+// markDenied records why the request was refused on the request span.
+func markDenied(c fiber.Ctx, reason string) {
+	trace.SpanFromContext(c.Context()).SetAttributes(attribute.String("auth.denied", reason))
 }

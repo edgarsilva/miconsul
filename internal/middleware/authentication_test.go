@@ -15,6 +15,9 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/session"
+	"go.opentelemetry.io/otel/codes"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -380,5 +383,67 @@ func TestAuthenticatedUserLocaleFallback(t *testing.T) {
 		if _, err := app.Test(req); err != nil {
 			t.Fatalf("%s: request failed: %v", tt.name, err)
 		}
+	}
+}
+
+func TestAuthOutcomeOnRequestSpan(t *testing.T) {
+	rt, regular, regularToken, admin, adminToken := newMiddlewareAdminRuntime(t)
+
+	tests := []struct {
+		name       string
+		token      string
+		wantResult string
+		wantDenied string
+		wantUser   string
+	}{
+		{"anonymous", "", "unauthenticated", "unauthenticated", ""},
+		{"regular user on an admin route", regularToken, "authenticated", "forbidden", regular.UID},
+		{"admin", adminToken, "authenticated", "", admin.UID},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rec := tracetest.NewSpanRecorder()
+			tp := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(rec))
+
+			app := fiber.New()
+			app.Use(func(c fiber.Ctx) error {
+				ctx, span := tp.Tracer("test").Start(c.Context(), "request")
+				defer span.End()
+				c.SetContext(ctx)
+				return c.Next()
+			})
+			app.Get("/admin", MustBeAdmin(rt), func(c fiber.Ctx) error { return c.SendStatus(http.StatusNoContent) })
+
+			req := httptest.NewRequest(http.MethodGet, "/admin", nil)
+			req.Header.Set("Accept", "application/json")
+			if tt.token != "" {
+				req.Header.Set("Authorization", "Bearer "+tt.token)
+			}
+			if _, err := app.Test(req, fiber.TestConfig{Timeout: 0}); err != nil {
+				t.Fatalf("request failed: %v", err)
+			}
+
+			spans := rec.Ended()
+			if len(spans) != 1 {
+				t.Fatalf("recorded %d spans, want 1", len(spans))
+			}
+			attrs := map[string]string{}
+			for _, kv := range spans[0].Attributes() {
+				attrs[string(kv.Key)] = kv.Value.AsString()
+			}
+			if attrs["auth.provider"] != "local" || attrs["auth.result"] != tt.wantResult {
+				t.Errorf("auth.provider=%q auth.result=%q, want local/%s", attrs["auth.provider"], attrs["auth.result"], tt.wantResult)
+			}
+			if attrs["auth.denied"] != tt.wantDenied {
+				t.Errorf("auth.denied = %q, want %q", attrs["auth.denied"], tt.wantDenied)
+			}
+			if attrs["user.id"] != tt.wantUser {
+				t.Errorf("user.id = %q, want %q", attrs["user.id"], tt.wantUser)
+			}
+			if spans[0].Status().Code != codes.Unset {
+				t.Errorf("span status = %v, want unset", spans[0].Status().Code)
+			}
+		})
 	}
 }
