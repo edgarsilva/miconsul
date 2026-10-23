@@ -10,6 +10,12 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "miconsul/internal/lib/preferences"
 
+// daisyThemes maps each theme to its daisyUI theme in styles/global.css.
+var daisyThemes = map[string]string{
+	preferences.ThemeLight: "cupcake",
+	preferences.ThemeDark:  "dracula",
+}
+
 // CmpBtnTheme renders the daisyUI swap theme toggle; a click only saves the
 // choice. With a saved theme the page is light (data-theme on <html>) and the
 // checked box applies dark. With none the page follows the OS, so one of two
@@ -38,16 +44,16 @@ func CmpBtnTheme(theme string) templ.Component {
 		ctx = templ.ClearChildren(ctx)
 		switch theme {
 		case preferences.ThemeLight, preferences.ThemeDark:
-			templ_7745c5c3_Err = themeSwap(preferences.DaisyThemeDark, theme == preferences.ThemeDark, preferences.ThemeLight, false).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = themeSwap(preferences.ThemeDark, preferences.ThemeLight, theme == preferences.ThemeDark, false).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		default:
-			templ_7745c5c3_Err = themeSwap(preferences.DaisyThemeDark, false, preferences.ThemeLight, true, "dark:hidden").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = themeSwap(preferences.ThemeDark, preferences.ThemeLight, false, true, "dark:hidden").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = themeSwap(preferences.DaisyThemeLight, false, preferences.ThemeDark, true, "hidden", "dark:inline-grid").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = themeSwap(preferences.ThemeLight, preferences.ThemeDark, false, true, "hidden", "dark:inline-grid").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -56,10 +62,10 @@ func CmpBtnTheme(theme string) templ.Component {
 	})
 }
 
-// themeSwap is one swap toggle. Checking it applies daisyTheme; unchecked, it
-// posts uncheckedTheme so the saved choice matches what the page shows.
-// fromOS marks the toggles shown while the page follows the OS.
-func themeSwap(daisyTheme string, checked bool, uncheckedTheme string, fromOS bool, classes ...string) templ.Component {
+// themeSwap is one swap toggle: checked it applies checkedTheme, unchecked the
+// page shows uncheckedTheme. It posts both, so the handler saves the one on
+// screen. fromOS marks the toggles shown while the page follows the OS.
+func themeSwap(checkedTheme, uncheckedTheme string, checked, fromOS bool, classes ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -103,9 +109,9 @@ func themeSwap(daisyTheme string, checked bool, uncheckedTheme string, fromOS bo
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
-		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.JSONString(themeSwapVals(uncheckedTheme, fromOS)))
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.JSONString(themeSwapVals(checkedTheme, uncheckedTheme, fromOS)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmpthemetoggle.templ`, Line: 30, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmpthemetoggle.templ`, Line: 36, Col: 81}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -116,9 +122,9 @@ func themeSwap(daisyTheme string, checked bool, uncheckedTheme string, fromOS bo
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
-		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(daisyTheme)
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(daisyThemes[checkedTheme])
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmpthemetoggle.templ`, Line: 36, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmpthemetoggle.templ`, Line: 42, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 		if templ_7745c5c3_Err != nil {
@@ -138,7 +144,7 @@ func themeSwap(daisyTheme string, checked bool, uncheckedTheme string, fromOS bo
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if daisyTheme == preferences.DaisyThemeDark {
+		if checkedTheme == preferences.ThemeDark {
 			templ_7745c5c3_Err = themeIconSun("swap-off").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -259,8 +265,8 @@ func themeIconMoon(class string) templ.Component {
 	})
 }
 
-func themeSwapVals(uncheckedTheme string, fromOS bool) map[string]string {
-	vals := map[string]string{"unchecked": uncheckedTheme}
+func themeSwapVals(checkedTheme, uncheckedTheme string, fromOS bool) map[string]string {
+	vals := map[string]string{"checked": checkedTheme, "unchecked": uncheckedTheme}
 	if fromOS {
 		vals["from"] = "os"
 	}

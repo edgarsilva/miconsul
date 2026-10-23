@@ -2,6 +2,12 @@ package views
 
 import "miconsul/internal/lib/preferences"
 
+// daisyThemes maps each theme to its daisyUI theme in styles/global.css.
+var daisyThemes = map[string]string{
+	preferences.ThemeLight: "cupcake",
+	preferences.ThemeDark:  "dracula",
+}
+
 // CmpBtnTheme renders the daisyUI swap theme toggle; a click only saves the
 // choice. With a saved theme the page is light (data-theme on <html>) and the
 // checked box applies dark. With none the page follows the OS, so one of two
@@ -10,35 +16,35 @@ import "miconsul/internal/lib/preferences"
 templ CmpBtnTheme(theme string) {
 	switch theme {
 		case preferences.ThemeLight, preferences.ThemeDark:
-			@themeSwap(preferences.DaisyThemeDark, theme == preferences.ThemeDark, preferences.ThemeLight, false)
+			@themeSwap(preferences.ThemeDark, preferences.ThemeLight, theme == preferences.ThemeDark, false)
 		default:
-			@themeSwap(preferences.DaisyThemeDark, false, preferences.ThemeLight, true, "dark:hidden")
-			@themeSwap(preferences.DaisyThemeLight, false, preferences.ThemeDark, true, "hidden", "dark:inline-grid")
+			@themeSwap(preferences.ThemeDark, preferences.ThemeLight, false, true, "dark:hidden")
+			@themeSwap(preferences.ThemeLight, preferences.ThemeDark, false, true, "hidden", "dark:inline-grid")
 	}
 }
 
-// themeSwap is one swap toggle. Checking it applies daisyTheme; unchecked, it
-// posts uncheckedTheme so the saved choice matches what the page shows.
-// fromOS marks the toggles shown while the page follows the OS.
-templ themeSwap(daisyTheme string, checked bool, uncheckedTheme string, fromOS bool, classes ...string) {
+// themeSwap is one swap toggle: checked it applies checkedTheme, unchecked the
+// page shows uncheckedTheme. It posts both, so the handler saves the one on
+// screen. fromOS marks the toggles shown while the page follows the OS.
+templ themeSwap(checkedTheme, uncheckedTheme string, checked, fromOS bool, classes ...string) {
 	<label
 		class={ "swap swap-rotate", classes }
 		hx-post="/theme/toggle"
 		hx-trigger="change"
 		hx-swap="none"
 		hx-include="this"
-		hx-vals={ templ.JSONString(themeSwapVals(uncheckedTheme, fromOS)) }
+		hx-vals={ templ.JSONString(themeSwapVals(checkedTheme, uncheckedTheme, fromOS)) }
 	>
 		<input
 			name="theme"
 			type="checkbox"
 			class="theme-controller"
-			value={ daisyTheme }
+			value={ daisyThemes[checkedTheme] }
 			if checked {
 				checked="true"
 			}
 		/>
-		if daisyTheme == preferences.DaisyThemeDark {
+		if checkedTheme == preferences.ThemeDark {
 			@themeIconSun("swap-off")
 			@themeIconMoon("swap-on")
 		} else {
@@ -56,8 +62,8 @@ templ themeIconMoon(class string) {
 	<svg class={ class, "fill-current size-8" } xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21.64,13a1,1,0,0,0-1.05-.14,8.05,8.05,0,0,1-3.37.73A8.15,8.15,0,0,1,9.08,5.49a8.59,8.59,0,0,1,.25-2A1,1,0,0,0,8,2.36,10.14,10.14,0,1,0,22,14.05,1,1,0,0,0,21.64,13Zm-9.5,6.69A8.14,8.14,0,0,1,7.08,5.22v.27A10.15,10.15,0,0,0,17.22,15.63a9.79,9.79,0,0,0,2.1-.22A8.11,8.11,0,0,1,12.14,19.73Z"></path></svg>
 }
 
-func themeSwapVals(uncheckedTheme string, fromOS bool) map[string]string {
-	vals := map[string]string{"unchecked": uncheckedTheme}
+func themeSwapVals(checkedTheme, uncheckedTheme string, fromOS bool) map[string]string {
+	vals := map[string]string{"checked": checkedTheme, "unchecked": uncheckedTheme}
 	if fromOS {
 		vals["from"] = "os"
 	}

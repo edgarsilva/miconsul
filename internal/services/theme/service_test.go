@@ -41,7 +41,7 @@ func TestHandleToggleTheme(t *testing.T) {
 		svc := service{Server: &server.Server{}}
 		app.Post("/theme/toggle", svc.HandleToggleTheme)
 
-		req := httptest.NewRequest(http.MethodPost, "/theme/toggle", strings.NewReader("theme=dracula"))
+		req := httptest.NewRequest(http.MethodPost, "/theme/toggle", strings.NewReader("theme=on&checked=dark&unchecked=light"))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 		resp, err := app.Test(req)
@@ -107,7 +107,7 @@ func TestHandleToggleThemeSavesSignedInUserTheme(t *testing.T) {
 		return svc.HandleToggleTheme(c)
 	})
 
-	req := httptest.NewRequest(http.MethodPost, "/theme/toggle", strings.NewReader("theme=dracula"))
+	req := httptest.NewRequest(http.MethodPost, "/theme/toggle", strings.NewReader("theme=on&checked=dark&unchecked=light"))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	resp, err := app.Test(req)
 	if err != nil {
@@ -138,10 +138,11 @@ func TestHandleToggleThemeReadsTheToggleThatWasClicked(t *testing.T) {
 		body string
 		want string
 	}{
-		{"theme=dracula&unchecked=light", "theme=dark"},
-		{"unchecked=light", "theme=light"},
-		{"theme=cupcake&unchecked=dark", "theme=light"},
-		{"unchecked=dark", "theme=dark"},
+		{"theme=on&checked=dark&unchecked=light", "theme=dark"},
+		{"checked=dark&unchecked=light", "theme=light"},
+		{"theme=on&checked=light&unchecked=dark", "theme=light"},
+		{"checked=light&unchecked=dark", "theme=dark"},
+		{"theme=on&checked=blue&unchecked=light", "theme=light"},
 		{"", "theme=light"},
 	}
 
@@ -164,8 +165,8 @@ func TestHandleToggleThemeReadsTheToggleThatWasClicked(t *testing.T) {
 
 func TestHandleToggleThemeRefreshesOnlyWhenTheChoiceComesFromTheOS(t *testing.T) {
 	tests := map[string]string{
-		"theme=cupcake&unchecked=dark&from=os": "true",
-		"theme=dracula&unchecked=light":        "",
+		"theme=on&checked=light&unchecked=dark&from=os": "true",
+		"theme=on&checked=dark&unchecked=light":         "",
 	}
 
 	for body, want := range tests {
