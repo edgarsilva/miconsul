@@ -2,6 +2,9 @@ package server
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"miconsul/internal/database"
@@ -173,5 +176,28 @@ func TestNewReturnsSetupErrors(t *testing.T) {
 
 	if _, err := New(func(*Server) error { return errOption }); !errors.Is(err, errOption) {
 		t.Fatalf("expected the option error to be wrapped, got %v", err)
+	}
+}
+
+func TestNewReturnsSessionStoreError(t *testing.T) {
+	t.Parallel()
+
+	sessionPath := filepath.Join(t.TempDir(), "session.sqlite")
+	if err := os.WriteFile(sessionPath, []byte(strings.Repeat("not a database ", 64)), 0o600); err != nil {
+		t.Fatalf("write session file: %v", err)
+	}
+
+	s, err := New(
+		WithEnv(&appenv.Env{Environment: appenv.EnvironmentTest, CookieSecret: "0123456789abcdef", SessionDBPath: sessionPath}),
+		WithDatabase(&database.Database{}),
+		WithTracerProvider(noop.NewTracerProvider()),
+		WithMeterProvider(metricnoop.NewMeterProvider()),
+		WithLoggerProvider(lognoop.NewLoggerProvider()),
+	)
+	if err == nil || !strings.HasPrefix(err.Error(), "open session store: ") {
+		t.Fatalf("New() error = %v, want an open session store error", err)
+	}
+	if s != nil {
+		t.Fatalf("New() server = %v, want nil on error", s)
 	}
 }

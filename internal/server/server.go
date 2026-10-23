@@ -87,7 +87,9 @@ func New(serverOpts ...ServerOption) (*Server, error) {
 
 	setupTracer(&server)
 	setupLogger(&server)
-	setupSessionStore(&server)
+	if err := setupSessionStore(&server); err != nil {
+		return nil, err
+	}
 	setupFiberApp(&server)
 	server.ReadyAt = time.Now()
 	server.BootstrapDuration = server.ReadyAt.Sub(server.StartedAt)
@@ -158,14 +160,37 @@ func scopeName(env *appenv.Env) string {
 	return env.AppName + ".server"
 }
 
-func setupSessionStore(s *Server) {
-	sessionPath := s.Env.SessionDBPath
-	storage := sqlite3.New(sessionConfig(sessionPath))
+func setupSessionStore(s *Server) error {
+	storage, err := openSessionStorage(sessionConfig(s.Env.SessionDBPath))
+	if err != nil {
+		return err
+	}
+
 	cookieSecure := s.Env.IsProduction() || strings.EqualFold(s.Env.AppProtocol, "https")
 	s.SessionStore = session.NewStore(session.Config{
 		Storage:      storage,
 		CookieSecure: cookieSecure,
 	})
+
+	return nil
+}
+
+// openSessionStorage opens the session database, returning the sqlite3
+// driver's setup panics as an error.
+func openSessionStorage(cfg sqlite3.Config) (storage *sqlite3.Storage, err error) {
+	defer func() {
+		r := recover()
+		if r == nil {
+			return
+		}
+		if rerr, ok := r.(error); ok {
+			err = fmt.Errorf("open session store: %w", rerr)
+			return
+		}
+		err = fmt.Errorf("open session store: %v", r)
+	}()
+
+	return sqlite3.New(cfg), nil
 }
 
 func setupFiberApp(s *Server) {
