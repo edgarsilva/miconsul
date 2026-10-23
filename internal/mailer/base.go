@@ -5,13 +5,10 @@ import (
 
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/localize"
+	"miconsul/internal/lib/preferences"
 )
 
-const (
-	defaultEmailLocale = "es-MX"
-)
-
-var locales = localize.New("es-MX", "en-US")
+var locales = localize.New(preferences.LocaleSpanish, preferences.LocaleEnglish)
 
 const (
 	FormTimeFormat = "2006-01-02T15:04"
@@ -83,5 +80,5 @@ func removeChars(input string, charsToRemove string) string {
 }
 
 func emailLocale() string {
-	return defaultEmailLocale
+	return preferences.DefaultLocale
 }

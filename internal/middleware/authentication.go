@@ -81,16 +81,20 @@ func MaybeAuthenticate(authRuntime auth.Runtime) fiber.Handler {
 }
 
 // bindCurrentUser binds the resolved identity to request locals for
-// downstream handlers and views. Without a theme cookie, the user's saved
-// theme replaces the OS default.
+// downstream handlers and views. Without a theme or locale cookie, the user's
+// saved theme or locale replaces the OS or browser default.
 func bindCurrentUser(c fiber.Ctx, cu models.User) {
 	c.Locals("current_user", cu)
 	c.Locals("uid", cu.UID)
 
-	if preferences.Theme(c.Cookies("theme")) != "" {
-		return
+	if preferences.Theme(c.Cookies("theme")) == "" {
+		if theme := preferences.Theme(cu.Theme); theme != "" {
+			c.Locals("theme", theme)
+		}
 	}
-	if theme := preferences.Theme(cu.Theme); theme != "" {
-		c.Locals("theme", theme)
+	if preferences.Locale(c.Cookies("locale")) == "" {
+		if locale := preferences.Locale(cu.Locale); locale != "" {
+			c.Locals("locale", locale)
+		}
 	}
 }

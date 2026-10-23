@@ -5,6 +5,9 @@ import (
 	"net/url"
 	"sort"
 	"strings"
+
+	"miconsul/internal/lib/preferences"
+	"miconsul/internal/models"
 )
 
 // QueryParams returns the queryParams (AKA searchParams) in the
@@ -57,6 +60,27 @@ func QueryParams(c *Ctx, params ...string) string {
 	}
 
 	return "?" + encoded.Encode()
+}
+
+// localeLabels are the locale names, each in its own language.
+var localeLabels = map[string]string{
+	preferences.LocaleSpanish: "Español (México)",
+	preferences.LocaleEnglish: "English (US)",
+}
+
+// localeLabel returns the name of locale in its own language.
+func localeLabel(locale string) string {
+	return localeLabels[locale]
+}
+
+// profileLocale returns the user's saved locale, or the request's locale when
+// none is saved.
+func profileLocale(c *Ctx, user models.User) string {
+	if locale := preferences.Locale(user.Locale); locale != "" {
+		return locale
+	}
+
+	return c.Locale
 }
 
 // FeedActionLocaleKey returns the localization key for a feed event action.

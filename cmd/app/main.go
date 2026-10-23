@@ -18,6 +18,7 @@ import (
 	"miconsul/internal/jobs"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/localize"
+	"miconsul/internal/lib/preferences"
 	"miconsul/internal/lib/workpool"
 	"miconsul/internal/observability/logging"
 	"miconsul/internal/observability/metrics"
@@ -159,7 +160,7 @@ func bootstrapServer(ctx context.Context) (bootstrapResult, error) {
 		server.WithTracerProvider(telemetry.tracerProvider),
 		server.WithMeterProvider(telemetry.meterProvider),
 		server.WithLoggerProvider(telemetry.loggerProvider),
-		server.WithLocalizer(localize.New("en-US", "es-MX")),
+		server.WithLocalizer(localize.New(preferences.LocaleSpanish, preferences.LocaleEnglish)),
 	)
 	result.server = s
 

@@ -1,6 +1,7 @@
 package views
 
 import (
+	"miconsul/internal/lib/preferences"
 	"miconsul/internal/models"
 )
 
@@ -181,6 +182,16 @@ templ UserProfile(c *Ctx, user models.User) {
 										<span class="label-text-alt text-error">{ user.FieldError("email") }</span>
 									</div>
 								}
+							</div>
+						</div>
+						<div class="sm:col-span-4">
+							<label for="locale" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.language") }</label>
+							<div class="mt-2">
+								<select name="locale" id="locale" class="select block w-full">
+									for _, locale := range preferences.Locales {
+										<option value={ locale } lang={ locale } selected?={ locale == profileLocale(c, user) }>{ localeLabel(locale) }</option>
+									}
+								</select>
 							</div>
 						</div>
 						<div class="col-span-full">

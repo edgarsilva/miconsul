@@ -27,3 +27,23 @@ var themeNames = map[string]string{
 func ThemeName(theme string) string {
 	return themeNames[theme]
 }
+
+// Locales a user can choose. DefaultLocale applies when nothing else matches.
+const (
+	LocaleSpanish = "es-MX"
+	LocaleEnglish = "en-US"
+	DefaultLocale = LocaleSpanish
+)
+
+// Locales lists the allowed locales in display order.
+var Locales = []string{LocaleSpanish, LocaleEnglish}
+
+// Locale returns v when it is an allowed locale, or "" otherwise.
+func Locale(v string) string {
+	switch v {
+	case LocaleSpanish, LocaleEnglish:
+		return v
+	default:
+		return ""
+	}
+}

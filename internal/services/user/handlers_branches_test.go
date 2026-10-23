@@ -1,9 +1,11 @@
 package user
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"strings"
 	"testing"
@@ -124,5 +126,63 @@ func TestHandleAPIUsersOmitsSecrets(t *testing.T) {
 		if strings.Contains(string(body), leak) {
 			t.Errorf("response leaks %q: %s", leak, body)
 		}
+	}
+}
+
+func TestHandleUpdateProfileLocale(t *testing.T) {
+	tests := []struct {
+		name          string
+		current       string
+		posted        string
+		wantSaved     string
+		wantCookie    bool
+		wantRefreshed bool
+	}{
+		{"new locale saves the cookie and reloads", "es-MX", "en-US", "en-US", true, true},
+		{"current locale is saved without a cookie", "es-MX", "es-MX", "es-MX", false, false},
+		{"unknown locale is ignored", "es-MX", "fr-CA", "", false, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc, currentUser := newUserServiceForTests(t)
+
+			app := fiber.New()
+			app.Post("/profile", func(c fiber.Ctx) error {
+				c.Locals("current_user", currentUser)
+				c.Locals("locale", tt.current)
+				return svc.HandleUpdateProfile(c)
+			})
+
+			form := url.Values{"name": {"Seed User"}, "email": {currentUser.Email}, "phone": {"5551234567"}, "locale": {tt.posted}}
+			req := httptest.NewRequest(http.MethodPost, "/profile", strings.NewReader(form.Encode()))
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			req.Header.Set("HX-Request", "true")
+			resp, err := app.Test(req)
+			if err != nil || resp.StatusCode != fiber.StatusOK {
+				t.Fatalf("profile update expected 200, got status=%d err=%v", resp.StatusCode, err)
+			}
+
+			gotCookie := false
+			for _, ck := range resp.Cookies() {
+				if ck.Name == "locale" && ck.Value == tt.posted {
+					gotCookie = true
+				}
+			}
+			if gotCookie != tt.wantCookie {
+				t.Errorf("locale cookie set = %v, want %v", gotCookie, tt.wantCookie)
+			}
+			if got := resp.Header.Get("HX-Refresh") == "true"; got != tt.wantRefreshed {
+				t.Errorf("HX-Refresh = %v, want %v", got, tt.wantRefreshed)
+			}
+
+			saved, err := svc.TakeUserByUID(context.Background(), currentUser.UID)
+			if err != nil {
+				t.Fatalf("load user: %v", err)
+			}
+			if saved.Locale != tt.wantSaved {
+				t.Errorf("saved locale = %q, want %q", saved.Locale, tt.wantSaved)
+			}
+		})
 	}
 }

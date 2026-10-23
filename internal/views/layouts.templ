@@ -12,6 +12,7 @@ var assetVersion = strconv.FormatInt(time.Now().Unix(), 36)
 templ HTMLPage(c *Ctx) {
 	<!DOCTYPE html>
 	<html
+		lang={ c.Locale }
 		if c.Theme != "" {
 			data-theme={ preferences.ThemeName(preferences.ThemeLight) }
 		}

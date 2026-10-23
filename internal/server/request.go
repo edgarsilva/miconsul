@@ -26,11 +26,12 @@ func (s *Server) CurrentTheme(c fiber.Ctx) string {
 	return preferences.Theme(theme)
 }
 
-// CurrentLocale returns the locale set by the locale middleware.
+// CurrentLocale returns the locale set by the locale middleware, or the
+// default locale.
 func (s *Server) CurrentLocale(c fiber.Ctx) string {
-	locale, ok := c.Locals("locale").(string)
-	if !ok || locale == "" {
-		return "es-MX"
+	locale, _ := c.Locals("locale").(string)
+	if locale = preferences.Locale(locale); locale == "" {
+		return preferences.DefaultLocale
 	}
 
 	return locale

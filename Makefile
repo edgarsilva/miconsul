@@ -165,7 +165,7 @@ db/setup: ## Recreate DB, apply migrations, and seed
 db/reset: db/setup ## Alias for full DB reset (drop/migrate/seed)
 
 db/dump_schema: ## Dump DB schema
-	sqlite3 store/app.sqlite3 .schema > goose/schema.sql
+	sqlite3 $(DB_PATH) .schema > goose/schema.sql
 
 migrations/apply: ## Apply migrations with goose
 	@echo "🪿 Running migrations with momma goose"

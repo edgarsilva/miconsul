@@ -28,7 +28,7 @@ type ContextOption func(*Ctx)
 
 var (
 	phoneRegex = "^[\\+]?[(]?[0-9]{3}[)]?[-\\s\\.]?[0-9]{3}[-\\s\\.]?[0-9]{4,6}$"
-	locales    = localize.New("es-MX", "en-US")
+	locales    = localize.New(preferences.LocaleSpanish, preferences.LocaleEnglish)
 )
 
 func (c *Ctx) l(key string) string {
@@ -36,13 +36,12 @@ func (c *Ctx) l(key string) string {
 }
 
 func localeFromLocals(fc fiber.Ctx) string {
-	iloc := fc.Locals("locale")
-	loc, ok := iloc.(string)
-	if !ok {
-		loc = "es-MX"
+	locale, _ := fc.Locals("locale").(string)
+	if locale = preferences.Locale(locale); locale == "" {
+		return preferences.DefaultLocale
 	}
 
-	return loc
+	return locale
 }
 
 func themeFromLocals(fc fiber.Ctx) string {
@@ -99,10 +98,11 @@ func WithTheme(theme string) ContextOption {
 	}
 }
 
+// WithLocale sets the locale; values outside the allowlist use the default.
 func WithLocale(lang string) ContextOption {
 	return func(c *Ctx) {
-		if lang == "" {
-			lang = "es-MX"
+		if lang = preferences.Locale(lang); lang == "" {
+			lang = preferences.DefaultLocale
 		}
 
 		c.Locale = lang

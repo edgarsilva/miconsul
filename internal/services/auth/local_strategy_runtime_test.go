@@ -119,7 +119,7 @@ func TestLocalStrategyAuthenticateSessionHydration(t *testing.T) {
 	svc := newAuthServiceForTests(t)
 	svc.SessionStore = session.NewStore()
 	strategy := NewLocalStrategy(svc)
-	user := seedAuthUserWithOptions(t, svc, authUserSeedOptions{Email: "session-cache@example.com", Password: "Password1!"})
+	user := seedAuthUserWithOptions(t, svc, authUserSeedOptions{Email: "session-cache@example.com", Password: "Password1!", Theme: "dark", Locale: "en-US"})
 
 	token, err := JWTCreateTokenWithTTL(svc.Env, user.Email, user.UID, 2*time.Hour, false)
 	if err != nil {
@@ -137,6 +137,12 @@ func TestLocalStrategyAuthenticateSessionHydration(t *testing.T) {
 		}
 		if authed.ID != user.ID {
 			t.Fatalf("expected authenticated user id %d, got %d", user.ID, authed.ID)
+		}
+		if authed.Theme != user.Theme {
+			t.Fatalf("expected authenticated user theme %q, got %q", user.Theme, authed.Theme)
+		}
+		if authed.Locale != user.Locale {
+			t.Fatalf("expected authenticated user locale %q, got %q", user.Locale, authed.Locale)
 		}
 		return c.SendStatus(fiber.StatusNoContent)
 	})

@@ -60,10 +60,15 @@ func TestNewService(t *testing.T) {
 }
 
 func TestUserProfileUpdateInputToUserProfileUpdates(t *testing.T) {
-	in := userProfileUpdateInput{Name: "A", Email: "a@example.com", Phone: "1"}
+	in := userProfileUpdateInput{Name: "A", Email: "a@example.com", Phone: "1", Locale: "en-US"}
 	out := in.toUserProfileUpdates()
-	if out.Name != in.Name || out.Email != in.Email || out.Phone != in.Phone {
+	if out.Name != in.Name || out.Email != in.Email || out.Phone != in.Phone || out.Locale != in.Locale {
 		t.Fatalf("unexpected input mapping: %#v", out)
+	}
+
+	in.Locale = "fr-CA"
+	if out := in.toUserProfileUpdates(); out.Locale != "" {
+		t.Fatalf("expected an unknown locale to be dropped, got %q", out.Locale)
 	}
 }
 
