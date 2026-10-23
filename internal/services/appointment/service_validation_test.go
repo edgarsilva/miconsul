@@ -53,6 +53,29 @@ func TestServiceInputValidation(t *testing.T) {
 		}
 	})
 
+	t.Run("token-guarded lookups and mutations fail fast on blank token", func(t *testing.T) {
+		for _, token := range []string{"", "   "} {
+			if _, err := svc.TakeAppointmentByIDAndToken(ctx, "apnt_1", token); !errors.Is(err, ErrTokenRequired) {
+				t.Fatalf("take with token %q: expected ErrTokenRequired, got %v", token, err)
+			}
+			if err := svc.UpdateAppointmentByIDAndToken(ctx, "apnt_1", token, []string{"Status"}, appointmentTokenUpdates{}); !errors.Is(err, ErrTokenRequired) {
+				t.Fatalf("update with token %q: expected ErrTokenRequired, got %v", token, err)
+			}
+			if err := svc.ConfirmAppointmentByIDAndToken(ctx, "apnt_1", token); !errors.Is(err, ErrTokenRequired) {
+				t.Fatalf("confirm with token %q: expected ErrTokenRequired, got %v", token, err)
+			}
+			if err := svc.CancelAppointmentByIDAndToken(ctx, "apnt_1", token); !errors.Is(err, ErrTokenRequired) {
+				t.Fatalf("cancel with token %q: expected ErrTokenRequired, got %v", token, err)
+			}
+			if err := svc.RequestAppointmentDateChangeByIDAndToken(ctx, "apnt_1", token); !errors.Is(err, ErrTokenRequired) {
+				t.Fatalf("date change with token %q: expected ErrTokenRequired, got %v", token, err)
+			}
+		}
+		if _, err := svc.TakeAppointmentByIDAndToken(ctx, "", "tok"); !errors.Is(err, ErrIDRequired) {
+			t.Fatalf("take with blank id: expected ErrIDRequired, got %v", err)
+		}
+	})
+
 	t.Run("status validation catches invalid mutations", func(t *testing.T) {
 		if err := svc.CompleteAppointmentByID(ctx, 1, "apnt_1", appointmentCompleteUpdates{Status: models.AppointmentStatus("invalid")}); err == nil {
 			t.Fatalf("expected complete invalid status error")
