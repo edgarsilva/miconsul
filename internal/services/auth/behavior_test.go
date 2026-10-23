@@ -127,20 +127,16 @@ func TestTokenHelpers(t *testing.T) {
 		}
 	})
 
-	t.Run("newConfirmEmailToken has non-empty token", func(t *testing.T) {
+	t.Run("newConfirmEmailToken is a 128-bit base32 token", func(t *testing.T) {
 		token := newConfirmEmailToken()
-		if token == "" {
-			t.Fatalf("expected non-empty confirm email token")
+		if len(token) != 26 {
+			t.Fatalf("expected token length 26, got %d", len(token))
 		}
-	})
-
-	t.Run("randomTokenRunes honors charset and length", func(t *testing.T) {
-		token := randomTokenRunes(24)
-		if len(token) != 24 {
-			t.Fatalf("expected token length 24, got %d", len(token))
+		if strings.Trim(token, "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567") != "" {
+			t.Fatalf("expected base32 token, got %q", token)
 		}
-		if strings.Trim(token, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890") != "" {
-			t.Fatalf("token contains invalid characters: %q", token)
+		if token == newConfirmEmailToken() {
+			t.Fatalf("expected a new token per call")
 		}
 	})
 }
