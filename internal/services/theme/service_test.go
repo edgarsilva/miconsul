@@ -5,10 +5,15 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
+	"miconsul/internal/database"
+	"miconsul/internal/models"
 	"miconsul/internal/server"
 
 	"github.com/gofiber/fiber/v3"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func TestNewService(t *testing.T) {
@@ -80,4 +85,50 @@ func TestHandleToggleTheme(t *testing.T) {
 			t.Fatalf("expected theme cookie set to light, got %q", setCookie)
 		}
 	})
+}
+
+func TestHandleToggleThemeSavesSignedInUserTheme(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open("file:theme_toggle_user?mode=memory&cache=shared"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open db: %v", err)
+	}
+	if err := db.AutoMigrate(&models.User{}); err != nil {
+		t.Fatalf("migrate user: %v", err)
+	}
+	user := models.User{UID: "usr_theme", Email: "theme@example.com", Role: models.UserRoleUser, Theme: "light"}
+	if err := db.Create(&user).Error; err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+
+	svc := service{Server: &server.Server{DB: &database.Database{DB: db}}}
+	app := fiber.New()
+	app.Post("/theme/toggle", func(c fiber.Ctx) error {
+		c.Locals("current_user", user)
+		return svc.HandleToggleTheme(c)
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/theme/toggle", strings.NewReader("theme=dracula"))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+
+	var saved models.User
+	if err := db.First(&saved, user.ID).Error; err != nil {
+		t.Fatalf("load user: %v", err)
+	}
+	if saved.Theme != "dark" {
+		t.Fatalf("expected saved theme dark, got %q", saved.Theme)
+	}
+
+	cookie := resp.Header.Get("Set-Cookie")
+	if !strings.Contains(cookie, "theme=dark") {
+		t.Fatalf("expected theme cookie set to dark, got %q", cookie)
+	}
+	for _, c := range resp.Cookies() {
+		if c.Name == "theme" && time.Until(c.Expires) < 360*24*time.Hour {
+			t.Fatalf("expected the theme cookie to last about a year, expires %v", c.Expires)
+		}
+	}
 }

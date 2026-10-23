@@ -74,8 +74,8 @@ func TestNewCtxOptionsFallBackAndAllApply(t *testing.T) {
 		fc.Locals("theme", "dark")
 
 		c := NewCtx(fc, WithTheme("blue"), WithLocale("en-US"), WithToast("Saved", "", "success"))
-		if c.Theme != "light" {
-			t.Fatalf("invalid theme must fall back to light, got %q", c.Theme)
+		if c.Theme != "" {
+			t.Fatalf("invalid theme must follow the OS, got %q", c.Theme)
 		}
 		if c.Locale != "en-US" || c.Toast.Msg != "Saved" || c.Toast.Level != "success" {
 			t.Fatalf("options after an invalid one must still apply, got locale=%q toast=%+v", c.Locale, c.Toast)
@@ -91,8 +91,8 @@ func TestWithThemeAndLocaleFallbacks(t *testing.T) {
 	}{
 		{"dark theme", WithTheme("dark"), Ctx{Theme: "dark"}},
 		{"light theme", WithTheme("light"), Ctx{Theme: "light"}},
-		{"blank theme", WithTheme(""), Ctx{Theme: "light"}},
-		{"unknown theme", WithTheme("blue"), Ctx{Theme: "light"}},
+		{"blank theme", WithTheme(""), Ctx{Theme: ""}},
+		{"unknown theme", WithTheme("blue"), Ctx{Theme: ""}},
 		{"locale", WithLocale("en-US"), Ctx{Locale: "en-US"}},
 		{"blank locale", WithLocale(""), Ctx{Locale: "es-MX"}},
 	}
@@ -195,4 +195,58 @@ func TestHTMLPageCSSURLStableAcrossRenders(t *testing.T) {
 			}
 		}
 	})
+}
+
+func TestHTMLPageDataTheme(t *testing.T) {
+	tests := []struct {
+		theme string
+		want  string
+	}{
+		{"", "<html>"},
+		{"light", `<html data-theme="cupcake">`},
+		{"dark", `<html data-theme="dracula">`},
+	}
+
+	for _, tt := range tests {
+		runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+			c := NewCtx(fc, WithTheme(tt.theme))
+
+			var html strings.Builder
+			if err := HTMLPage(c).Render(fc.Context(), &html); err != nil {
+				t.Fatalf("render: %v", err)
+			}
+			if !strings.Contains(html.String(), tt.want) {
+				t.Errorf("theme %q: expected %s in the page", tt.theme, tt.want)
+			}
+		})
+	}
+}
+
+func TestCmpBtnThemeStartsFromOSOnlyWithoutATheme(t *testing.T) {
+	tests := []struct {
+		theme       string
+		wantChecked bool
+		wantInit    bool
+	}{
+		{"", false, true},
+		{"light", false, false},
+		{"dark", true, false},
+	}
+
+	for _, tt := range tests {
+		var html strings.Builder
+		if err := CmpBtnTheme(tt.theme).Render(context.Background(), &html); err != nil {
+			t.Fatalf("render: %v", err)
+		}
+		got := html.String()
+		if strings.Contains(got, `checked="true"`) != tt.wantChecked {
+			t.Errorf("theme %q: checked = %v, want %v", tt.theme, !tt.wantChecked, tt.wantChecked)
+		}
+		if strings.Contains(got, "x-init") != tt.wantInit {
+			t.Errorf("theme %q: x-init present = %v, want %v", tt.theme, !tt.wantInit, tt.wantInit)
+		}
+		if !strings.Contains(got, `value="dracula"`) || !strings.Contains(got, "x-on:change") {
+			t.Errorf("theme %q: expected dracula theme-controller with a change handler, got %s", tt.theme, got)
+		}
+	}
 }

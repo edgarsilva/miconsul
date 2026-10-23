@@ -2,6 +2,7 @@ package views
 
 import (
 	"miconsul/internal/lib/localize"
+	"miconsul/internal/lib/preferences"
 	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
@@ -45,13 +46,8 @@ func localeFromLocals(fc fiber.Ctx) string {
 }
 
 func themeFromLocals(fc fiber.Ctx) string {
-	itheme := fc.Locals("theme")
-	theme, ok := itheme.(string)
-	if !ok {
-		theme = "light"
-	}
-
-	return theme
+	theme, _ := fc.Locals("theme").(string)
+	return preferences.Theme(theme)
 }
 
 func currentUserFromLocals(fc fiber.Ctx) models.User {
@@ -96,13 +92,10 @@ func WithCurrentUser(cu models.User) ContextOption {
 	}
 }
 
-// WithTheme sets the UI theme; values other than light|dark fall back to light.
+// WithTheme sets the UI theme; values other than light|dark follow the OS setting.
 func WithTheme(theme string) ContextOption {
 	return func(c *Ctx) {
-		c.Theme = "light"
-		if theme == "dark" {
-			c.Theme = "dark"
-		}
+		c.Theme = preferences.Theme(theme)
 	}
 }
 

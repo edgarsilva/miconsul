@@ -205,13 +205,13 @@ func AppointmentRoutes(s *server.Server, authSvc auth.Runtime) error {
 	return nil
 }
 
-func ThemeRoutes(s *server.Server, _ auth.Runtime) error {
+func ThemeRoutes(s *server.Server, authSvc auth.Runtime) error {
 	t, err := theme.NewService(s)
 	if err != nil {
 		return err
 	}
 
-	g := s.Group("/theme")
+	g := s.Group("/theme", mw.MaybeAuthenticate(authSvc))
 	g.Post("/toggle", t.HandleToggleTheme)
 
 	return nil
