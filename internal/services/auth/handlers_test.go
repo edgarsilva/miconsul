@@ -1193,6 +1193,7 @@ type authUserSeedOptions struct {
 	ConfirmTokenExpiresAt time.Time
 	ResetToken            string
 	ResetTokenExpiresAt   time.Time
+	Theme                 string
 }
 
 func seedAuthUserWithOptions(t *testing.T, svc *service, opts authUserSeedOptions) models.User {
@@ -1215,6 +1216,7 @@ func seedAuthUserWithOptions(t *testing.T, svc *service, opts authUserSeedOption
 		ConfirmEmailExpiresAt: confirmExp,
 		ResetToken:            opts.ResetToken,
 		ResetTokenExpiresAt:   opts.ResetTokenExpiresAt,
+		Theme:                 opts.Theme,
 		Role:                  models.UserRoleUser,
 	}
 	if err := gorm.G[models.User](svc.DB.GormDB()).Create(context.Background(), &u); err != nil {
