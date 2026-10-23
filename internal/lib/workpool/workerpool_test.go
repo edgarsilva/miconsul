@@ -10,7 +10,10 @@ import (
 )
 
 func TestNewUsesDefaultSizeAndShutdown(t *testing.T) {
-	pool, shutdown := New(0, time.Second)
+	pool, shutdown, err := New(0, time.Second)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
 	if pool == nil {
 		t.Fatal("New(0) expected non-nil pool")
 	}
@@ -43,7 +46,10 @@ func TestReleaseNilSafe(t *testing.T) {
 }
 
 func TestShutdownWaitsForRunningTasks(t *testing.T) {
-	pool, shutdown := New(1, 2*time.Second)
+	pool, shutdown, err := New(1, 2*time.Second)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
 
 	started := make(chan struct{})
 	var finished atomic.Bool
@@ -65,7 +71,10 @@ func TestShutdownWaitsForRunningTasks(t *testing.T) {
 }
 
 func TestShutdownTimesOut(t *testing.T) {
-	pool, shutdown := New(1, 50*time.Millisecond)
+	pool, shutdown, err := New(1, 50*time.Millisecond)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
 
 	started := make(chan struct{})
 	release := make(chan struct{})

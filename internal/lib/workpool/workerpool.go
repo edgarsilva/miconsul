@@ -4,7 +4,6 @@ package workpool
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/panjf2000/ants/v2"
@@ -16,18 +15,18 @@ type Pool struct {
 
 // New starts a pool of size workers. shutdownFn releases it and waits up to
 // releaseTimeout for running tasks to finish.
-func New(size int, releaseTimeout time.Duration) (pool *Pool, shutdownFn func() error) {
+func New(size int, releaseTimeout time.Duration) (pool *Pool, shutdownFn func() error, err error) {
 	if size <= 0 {
 		size = 10
 	}
 
 	p, err := ants.NewPool(size)
 	if err != nil {
-		log.Fatal(fmt.Errorf("initialize worker pool: %w", err))
+		return nil, nil, fmt.Errorf("initialize worker pool: %w", err)
 	}
 
 	pool = &Pool{p: p}
-	return pool, func() error { return pool.Release(releaseTimeout) }
+	return pool, func() error { return pool.Release(releaseTimeout) }, nil
 }
 
 func (p *Pool) AntsPool() *ants.Pool {

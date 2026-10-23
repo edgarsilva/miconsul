@@ -231,7 +231,10 @@ func TestBootstrapServerSetupEnvFailure(t *testing.T) {
 }
 
 func TestSetupWorkpool(t *testing.T) {
-	pool, shutdown := setupWorkpool(1, time.Second)
+	pool, shutdown, err := setupWorkpool(1, time.Second)
+	if err != nil {
+		t.Fatalf("setupWorkpool() error = %v", err)
+	}
 	if pool == nil {
 		t.Fatal("setupWorkpool() expected pool")
 	}
