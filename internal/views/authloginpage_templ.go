@@ -77,14 +77,14 @@ func LoginPage(email, msg string, err error, c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"text-sm leading-6\"><a href=\"/resetpassword\" class=\"link link-secondary link-hover font-semibold underline-offset-2\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"text-sm leading-6\"><a href=\"/resetpassword\" class=\"link font-semibold underline-offset-2\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.forgot_password"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/authloginpage.templ`, Line: 27, Col: 132}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/authloginpage.templ`, Line: 27, Col: 106}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {

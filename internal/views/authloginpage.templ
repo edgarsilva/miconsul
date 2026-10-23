@@ -24,7 +24,7 @@ templ LoginPage(email, msg string, err error, c *Ctx) {
 					<div class="flex items-center justify-between">
 						@CmpCheckbox(c.l("str.keep_me_signed_in"), "remember_me", "true", false)
 						<div class="text-sm leading-6">
-							<a href="/resetpassword" class="link link-secondary link-hover font-semibold underline-offset-2">{ c.l("str.forgot_password") }</a>
+							<a href="/resetpassword" class="link font-semibold underline-offset-2">{ c.l("str.forgot_password") }</a>
 						</div>
 					</div>
 					if msg != "" {
