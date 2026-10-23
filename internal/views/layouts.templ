@@ -13,7 +13,7 @@ templ HTMLPage(c *Ctx) {
 	<!DOCTYPE html>
 	<html
 		if c.Theme != "" {
-			data-theme={ daisyThemes[preferences.ThemeLight] }
+			data-theme={ preferences.ThemeName(preferences.ThemeLight) }
 		}
 	>
 		<head>

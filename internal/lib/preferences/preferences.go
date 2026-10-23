@@ -16,3 +16,14 @@ func Theme(v string) string {
 		return ""
 	}
 }
+
+// themeNames are the theme names in styles/global.css.
+var themeNames = map[string]string{
+	ThemeLight: "cupcake",
+	ThemeDark:  "dracula",
+}
+
+// ThemeName returns the theme name for theme, or "" when it follows the OS setting.
+func ThemeName(theme string) string {
+	return themeNames[theme]
+}

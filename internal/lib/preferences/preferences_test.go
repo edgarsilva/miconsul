@@ -16,3 +16,17 @@ func TestTheme(t *testing.T) {
 		}
 	}
 }
+
+func TestThemeName(t *testing.T) {
+	tests := map[string]string{
+		ThemeLight: "cupcake",
+		ThemeDark:  "dracula",
+		"":         "",
+		"blue":     "",
+	}
+	for in, want := range tests {
+		if got := ThemeName(in); got != want {
+			t.Errorf("ThemeName(%q) = %q, want %q", in, got, want)
+		}
+	}
+}

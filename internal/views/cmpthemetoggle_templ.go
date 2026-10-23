@@ -10,13 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "miconsul/internal/lib/preferences"
 
-// daisyThemes maps each theme to its daisyUI theme in styles/global.css.
-var daisyThemes = map[string]string{
-	preferences.ThemeLight: "cupcake",
-	preferences.ThemeDark:  "dracula",
-}
-
-// CmpBtnTheme renders the daisyUI swap theme toggle; a click only saves the
+// CmpBtnTheme renders the swap theme toggle; a click only saves the
 // choice. With a saved theme the page is light (data-theme on <html>) and the
 // checked box applies dark. With none the page follows the OS, so one of two
 // toggles shows, matching the OS, and a click always flips what is on screen;
@@ -111,7 +105,7 @@ func themeSwap(checkedTheme, uncheckedTheme string, checked, fromOS bool, classe
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.JSONString(themeSwapVals(checkedTheme, uncheckedTheme, fromOS)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmpthemetoggle.templ`, Line: 36, Col: 81}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmpthemetoggle.templ`, Line: 30, Col: 81}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -122,9 +116,9 @@ func themeSwap(checkedTheme, uncheckedTheme string, checked, fromOS bool, classe
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
-		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(daisyThemes[checkedTheme])
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(preferences.ThemeName(checkedTheme))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmpthemetoggle.templ`, Line: 42, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmpthemetoggle.templ`, Line: 36, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 		if templ_7745c5c3_Err != nil {
