@@ -41,7 +41,7 @@ func TestHandleToggleTheme(t *testing.T) {
 		svc := service{Server: &server.Server{}}
 		app.Post("/theme/toggle", svc.HandleToggleTheme)
 
-		req := httptest.NewRequest(http.MethodPost, "/theme/toggle", strings.NewReader("theme=dark"))
+		req := httptest.NewRequest(http.MethodPost, "/theme/toggle", strings.NewReader("theme=on&checked=dark&unchecked=light"))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 		resp, err := app.Test(req)
@@ -107,7 +107,7 @@ func TestHandleToggleThemeSavesSignedInUserTheme(t *testing.T) {
 		return svc.HandleToggleTheme(c)
 	})
 
-	req := httptest.NewRequest(http.MethodPost, "/theme/toggle", strings.NewReader("theme=dracula"))
+	req := httptest.NewRequest(http.MethodPost, "/theme/toggle", strings.NewReader("theme=on&checked=dark&unchecked=light"))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	resp, err := app.Test(req)
 	if err != nil {
@@ -129,6 +129,59 @@ func TestHandleToggleThemeSavesSignedInUserTheme(t *testing.T) {
 	for _, c := range resp.Cookies() {
 		if c.Name == "theme" && time.Until(c.Expires) < 360*24*time.Hour {
 			t.Fatalf("expected the theme cookie to last about a year, expires %v", c.Expires)
+		}
+	}
+}
+
+func TestHandleToggleThemeReadsTheToggleThatWasClicked(t *testing.T) {
+	tests := []struct {
+		body string
+		want string
+	}{
+		{"theme=on&checked=dark&unchecked=light", "theme=dark"},
+		{"checked=dark&unchecked=light", "theme=light"},
+		{"theme=on&checked=light&unchecked=dark", "theme=light"},
+		{"checked=light&unchecked=dark", "theme=dark"},
+		{"theme=on&checked=blue&unchecked=light", "theme=light"},
+		{"", "theme=light"},
+	}
+
+	for _, tt := range tests {
+		app := fiber.New()
+		svc := service{Server: &server.Server{}}
+		app.Post("/theme/toggle", svc.HandleToggleTheme)
+
+		req := httptest.NewRequest(http.MethodPost, "/theme/toggle", strings.NewReader(tt.body))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		resp, err := app.Test(req)
+		if err != nil {
+			t.Fatalf("%q: request failed: %v", tt.body, err)
+		}
+		if got := resp.Header.Get("Set-Cookie"); !strings.Contains(got, tt.want) {
+			t.Errorf("%q: expected cookie %s, got %q", tt.body, tt.want, got)
+		}
+	}
+}
+
+func TestHandleToggleThemeRefreshesOnlyWhenTheChoiceComesFromTheOS(t *testing.T) {
+	tests := map[string]string{
+		"theme=on&checked=light&unchecked=dark&from=os": "true",
+		"theme=on&checked=dark&unchecked=light":         "",
+	}
+
+	for body, want := range tests {
+		app := fiber.New()
+		svc := service{Server: &server.Server{}}
+		app.Post("/theme/toggle", svc.HandleToggleTheme)
+
+		req := httptest.NewRequest(http.MethodPost, "/theme/toggle", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		resp, err := app.Test(req)
+		if err != nil {
+			t.Fatalf("%q: request failed: %v", body, err)
+		}
+		if got := resp.Header.Get("HX-Refresh"); got != want {
+			t.Errorf("%q: HX-Refresh = %q, want %q", body, got, want)
 		}
 	}
 }
