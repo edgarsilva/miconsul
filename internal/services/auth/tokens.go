@@ -1,23 +1,16 @@
 package auth
 
-import (
-	"crypto/rand"
-	"encoding/hex"
-)
+import "crypto/rand"
 
-func newResetPasswordToken() (string, error) {
-	return newHexToken(32)
+func newResetPasswordToken() string {
+	return newSecretToken()
 }
 
 func newConfirmEmailToken() string {
-	return rand.Text()
+	return newSecretToken()
 }
 
-func newHexToken(n int) (string, error) {
-	bytes := make([]byte, n)
-	if _, err := rand.Read(bytes); err != nil {
-		return "", err
-	}
-
-	return hex.EncodeToString(bytes), nil
+// newSecretToken returns a random token for links sent to users.
+func newSecretToken() string {
+	return rand.Text()
 }

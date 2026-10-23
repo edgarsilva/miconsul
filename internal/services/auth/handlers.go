@@ -297,12 +297,7 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
 	}
 
-	token, err := newResetPasswordToken()
-	if err != nil {
-		return s.Redirect(c, "/resetpassword")
-	}
-
-	user.ResetToken = token
+	user.ResetToken = newResetPasswordToken()
 	user.ResetTokenExpiresAt = time.Now().Add(time.Hour * 1)
 	rowsAffected, err := gorm.G[models.User](s.DB.GormDB()).
 		Select("reset_token", "reset_token_expires_at").
@@ -313,7 +308,7 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
 	}
 
-	s.sendResetPasswordEmailAsync(c.Context(), email, token)
+	s.sendResetPasswordEmailAsync(c.Context(), email, user.ResetToken)
 
 	return view.Render(c, view.ResetPasswordPage(vc, email, "", "check your email for a reset password link", nil))
 }
