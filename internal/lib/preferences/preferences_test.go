@@ -17,16 +17,16 @@ func TestTheme(t *testing.T) {
 	}
 }
 
-func TestDaisyTheme(t *testing.T) {
+func TestThemeFromDaisy(t *testing.T) {
 	tests := map[string]string{
-		ThemeLight: DaisyThemeLight,
-		ThemeDark:  DaisyThemeDark,
-		"":         "",
-		"blue":     "",
+		DaisyThemeLight: ThemeLight,
+		DaisyThemeDark:  ThemeDark,
+		"":              "",
+		"synthwave":     "",
 	}
 	for in, want := range tests {
-		if got := DaisyTheme(in); got != want {
-			t.Errorf("DaisyTheme(%q) = %q, want %q", in, got, want)
+		if got := ThemeFromDaisy(in); got != want {
+			t.Errorf("ThemeFromDaisy(%q) = %q, want %q", in, got, want)
 		}
 	}
 }

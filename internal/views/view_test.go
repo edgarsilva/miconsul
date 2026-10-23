@@ -204,7 +204,7 @@ func TestHTMLPageDataTheme(t *testing.T) {
 	}{
 		{"", "<html>"},
 		{"light", `<html data-theme="cupcake">`},
-		{"dark", `<html data-theme="dracula">`},
+		{"dark", `<html data-theme="cupcake">`},
 	}
 
 	for _, tt := range tests {
@@ -222,15 +222,17 @@ func TestHTMLPageDataTheme(t *testing.T) {
 	}
 }
 
-func TestCmpBtnThemeStartsFromOSOnlyWithoutATheme(t *testing.T) {
+func TestCmpBtnTheme(t *testing.T) {
 	tests := []struct {
 		theme       string
+		wantSwaps   int
 		wantChecked bool
-		wantInit    bool
+		wantClasses []string
+		wantValues  []string
 	}{
-		{"", false, true},
-		{"light", false, false},
-		{"dark", true, false},
+		{"", 2, false, []string{`class="swap swap-rotate dark:hidden"`, `class="swap swap-rotate hidden dark:inline-grid"`}, []string{`value="dracula"`, `value="cupcake"`}},
+		{"light", 1, false, []string{`class="swap swap-rotate"`}, []string{`value="dracula"`}},
+		{"dark", 1, true, []string{`class="swap swap-rotate"`}, []string{`value="dracula"`}},
 	}
 
 	for _, tt := range tests {
@@ -239,14 +241,22 @@ func TestCmpBtnThemeStartsFromOSOnlyWithoutATheme(t *testing.T) {
 			t.Fatalf("render: %v", err)
 		}
 		got := html.String()
+		if n := strings.Count(got, `class="theme-controller"`); n != tt.wantSwaps {
+			t.Errorf("theme %q: %d toggles, want %d", tt.theme, n, tt.wantSwaps)
+		}
 		if strings.Contains(got, `checked="true"`) != tt.wantChecked {
 			t.Errorf("theme %q: checked = %v, want %v", tt.theme, !tt.wantChecked, tt.wantChecked)
 		}
-		if strings.Contains(got, "x-init") != tt.wantInit {
-			t.Errorf("theme %q: x-init present = %v, want %v", tt.theme, !tt.wantInit, tt.wantInit)
+		for _, want := range append(tt.wantClasses, tt.wantValues...) {
+			if !strings.Contains(got, want) {
+				t.Errorf("theme %q: expected %s", tt.theme, want)
+			}
 		}
-		if !strings.Contains(got, `value="dracula"`) || !strings.Contains(got, "x-on:change") {
-			t.Errorf("theme %q: expected dracula theme-controller with a change handler, got %s", tt.theme, got)
+		if fromOS := strings.Count(got, "&#34;from&#34;:&#34;os&#34;"); fromOS != map[string]int{"": 2}[tt.theme] {
+			t.Errorf("theme %q: %d toggles post from=os, want %d", tt.theme, fromOS, map[string]int{"": 2}[tt.theme])
+		}
+		if strings.Contains(got, " x-") {
+			t.Errorf("theme %q: toggle must not use Alpine, got %s", tt.theme, got)
 		}
 	}
 }

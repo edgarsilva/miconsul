@@ -16,6 +16,7 @@ templ LandingPage(c *Ctx) {
 						</a>
 					</div>
 					<div class="navbar-end gap-2">
+						@CmpBtnTheme(c.Theme)
 						<a href="/signup" class="btn btn-ghost">{ c.l("btn.signup") }</a>
 						<a href="/signin" class="btn btn-primary">{ c.l("btn.sign_in") }</a>
 					</div>

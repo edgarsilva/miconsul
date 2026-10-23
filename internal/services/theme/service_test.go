@@ -41,7 +41,7 @@ func TestHandleToggleTheme(t *testing.T) {
 		svc := service{Server: &server.Server{}}
 		app.Post("/theme/toggle", svc.HandleToggleTheme)
 
-		req := httptest.NewRequest(http.MethodPost, "/theme/toggle", strings.NewReader("theme=dark"))
+		req := httptest.NewRequest(http.MethodPost, "/theme/toggle", strings.NewReader("theme=dracula"))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 		resp, err := app.Test(req)
@@ -129,6 +129,58 @@ func TestHandleToggleThemeSavesSignedInUserTheme(t *testing.T) {
 	for _, c := range resp.Cookies() {
 		if c.Name == "theme" && time.Until(c.Expires) < 360*24*time.Hour {
 			t.Fatalf("expected the theme cookie to last about a year, expires %v", c.Expires)
+		}
+	}
+}
+
+func TestHandleToggleThemeReadsTheToggleThatWasClicked(t *testing.T) {
+	tests := []struct {
+		body string
+		want string
+	}{
+		{"theme=dracula&unchecked=light", "theme=dark"},
+		{"unchecked=light", "theme=light"},
+		{"theme=cupcake&unchecked=dark", "theme=light"},
+		{"unchecked=dark", "theme=dark"},
+		{"", "theme=light"},
+	}
+
+	for _, tt := range tests {
+		app := fiber.New()
+		svc := service{Server: &server.Server{}}
+		app.Post("/theme/toggle", svc.HandleToggleTheme)
+
+		req := httptest.NewRequest(http.MethodPost, "/theme/toggle", strings.NewReader(tt.body))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		resp, err := app.Test(req)
+		if err != nil {
+			t.Fatalf("%q: request failed: %v", tt.body, err)
+		}
+		if got := resp.Header.Get("Set-Cookie"); !strings.Contains(got, tt.want) {
+			t.Errorf("%q: expected cookie %s, got %q", tt.body, tt.want, got)
+		}
+	}
+}
+
+func TestHandleToggleThemeRefreshesOnlyWhenTheChoiceComesFromTheOS(t *testing.T) {
+	tests := map[string]string{
+		"theme=cupcake&unchecked=dark&from=os": "true",
+		"theme=dracula&unchecked=light":        "",
+	}
+
+	for body, want := range tests {
+		app := fiber.New()
+		svc := service{Server: &server.Server{}}
+		app.Post("/theme/toggle", svc.HandleToggleTheme)
+
+		req := httptest.NewRequest(http.MethodPost, "/theme/toggle", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		resp, err := app.Test(req)
+		if err != nil {
+			t.Fatalf("%q: request failed: %v", body, err)
+		}
+		if got := resp.Header.Get("HX-Refresh"); got != want {
+			t.Errorf("%q: HX-Refresh = %q, want %q", body, got, want)
 		}
 	}
 }

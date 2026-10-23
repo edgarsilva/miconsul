@@ -13,12 +13,18 @@ import (
 const themeCookieTTL = 365 * 24 * time.Hour
 
 // HandleToggleTheme saves the chosen theme to the cookie and, for a signed-in
-// user, to their record, then renders the theme button.
+// user, to their record, then renders the theme button. A checked toggle posts
+// its daisyUI theme; an unchecked one posts only the theme it stands for. The
+// first choice made while the page follows the OS (from=os) reloads the page,
+// since boosted swaps keep the old <html> and its missing data-theme.
 // POST: /theme/toggle
 func (s *service) HandleToggleTheme(c fiber.Ctx) error {
-	theme := preferences.ThemeLight
-	if c.FormValue("theme", "") != "" {
-		theme = preferences.ThemeDark
+	theme := preferences.ThemeFromDaisy(c.FormValue("theme", ""))
+	if theme == "" {
+		theme = preferences.Theme(c.FormValue("unchecked", ""))
+	}
+	if theme == "" {
+		theme = preferences.ThemeLight
 	}
 
 	c.Cookie(s.NewCookie("theme", theme, themeCookieTTL))
@@ -27,6 +33,10 @@ func (s *service) HandleToggleTheme(c fiber.Ctx) error {
 		if err := s.SaveUserTheme(c.Context(), cu.ID, theme); err != nil {
 			trace.SpanFromContext(c.Context()).RecordError(err)
 		}
+	}
+
+	if c.FormValue("from", "") == "os" {
+		c.Set("HX-Refresh", "true")
 	}
 
 	return view.Render(c, view.CmpBtnTheme(theme))

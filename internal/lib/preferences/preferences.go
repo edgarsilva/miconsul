@@ -23,13 +23,13 @@ func Theme(v string) string {
 	}
 }
 
-// DaisyTheme returns the daisyUI theme for theme, or "" when it follows the OS setting.
-func DaisyTheme(theme string) string {
-	switch theme {
-	case ThemeLight:
-		return DaisyThemeLight
-	case ThemeDark:
-		return DaisyThemeDark
+// ThemeFromDaisy returns the theme for a daisyUI theme name, or "" when the name is not one of ours.
+func ThemeFromDaisy(name string) string {
+	switch name {
+	case DaisyThemeLight:
+		return ThemeLight
+	case DaisyThemeDark:
+		return ThemeDark
 	default:
 		return ""
 	}

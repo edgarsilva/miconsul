@@ -14,7 +14,7 @@ func TestThemeHandlers(t *testing.T) {
 		if resp.StatusCode != http.StatusOK {
 			t.Fatalf("expected 200 for theme toggle, got %d", resp.StatusCode)
 		}
-		if !strings.Contains(body, "theme_toggle") {
+		if !strings.Contains(body, `class="theme-controller"`) {
 			t.Fatalf("expected response body to include theme toggle markup")
 		}
 	})
