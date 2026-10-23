@@ -63,6 +63,10 @@ func (s *service) HandleSignin(c fiber.Ctx) error {
 		err := errors.New("email pending confirmation, check your inbox")
 		return view.Render(c, view.LoginPage(email, "", err, vc))
 	}
+	if errors.Is(err, errAuthLocalSigninDisabled) {
+		err := errors.New("sign in with Logto, password sign-in is for admins only")
+		return view.Render(c, view.LoginPage(email, "", err, vc))
+	}
 	if err != nil {
 		return s.respondWithRedirect(c, "/", "Failed to login, please try again")
 	}
@@ -98,6 +102,9 @@ func (s *service) HandleAPISignin(c fiber.Ctx) error {
 	}
 	if errors.Is(err, errAuthPendingConfirmation) {
 		return apiError(c, fiber.StatusForbidden, "email pending confirmation")
+	}
+	if errors.Is(err, errAuthLocalSigninDisabled) {
+		return apiError(c, fiber.StatusForbidden, "password sign-in is for admins only, use Logto")
 	}
 	if err != nil {
 		return apiError(c, fiber.StatusInternalServerError, "authentication failed")

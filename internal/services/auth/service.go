@@ -34,6 +34,7 @@ var (
 	errAuthPendingConfirmation = errors.New("email pending confirmation")
 	errAuthSessionCreate       = errors.New("create session")
 	errAuthConfirmEmailSend    = errors.New("send confirmation email")
+	errAuthLocalSigninDisabled = errors.New("local sign-in is limited to admins")
 )
 
 func New(s *server.Server) (*service, error) {
@@ -189,6 +190,10 @@ func (s *service) authenticateCredentials(ctx context.Context, email, password s
 
 	if user.ConfirmEmailToken != "" {
 		return models.User{}, errAuthPendingConfirmation
+	}
+
+	if logtoEnabled(s.Env) && user.Role != models.UserRoleAdmin {
+		return models.User{}, errAuthLocalSigninDisabled
 	}
 
 	return user, nil
