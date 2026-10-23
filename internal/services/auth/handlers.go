@@ -255,15 +255,20 @@ func (s *service) respondWithRedirect(c fiber.Ctx, path, message string) error {
 	return s.Redirect(c, path+sep+"msg="+url.QueryEscape(message))
 }
 
-// HandleLogout destroys session state and redirects to login.
+// HandleLogout destroys session state and redirects to login. With Logto
+// enabled, a local admin session returns to the local form instead of Logto.
 // ALL: /logout
 func (s *service) HandleLogout(c fiber.Ctx) error {
+	localSession := c.Cookies("Auth", "") != ""
 	s.SessionDestroy(c)
 	s.InvalidateCookies(c, "Auth", "JWT")
 
 	redirectURL := "/signin"
 	if logtoEnabled(s.Env) {
 		redirectURL = "/logto/signout"
+		if localSession {
+			redirectURL = "/signin?logged_out=1"
+		}
 	}
 
 	if c.Get("HX-Request") == "true" {

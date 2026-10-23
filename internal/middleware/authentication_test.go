@@ -382,3 +382,38 @@ func TestAuthenticatedUserLocaleFallback(t *testing.T) {
 		}
 	}
 }
+
+func TestMustBeAdminLocalFallbackWithLogtoEnabled(t *testing.T) {
+	rt, _, regularToken, _, adminToken := newMiddlewareAdminRuntime(t)
+	env := *rt.env
+	env.LogtoURL = "https://logto.example.com"
+	env.LogtoAppID = "appid"
+	env.LogtoAppSecret = "secret"
+	env.LogtoResource = "https://api.example.com"
+	rt.env = &env
+
+	tests := []struct {
+		name  string
+		token string
+		want  int
+	}{
+		{"admin local token passes", adminToken, http.StatusNoContent},
+		{"regular local token is unauthenticated", regularToken, http.StatusUnauthorized},
+	}
+
+	for _, tt := range tests {
+		app := fiber.New()
+		app.Get("/admin", MustBeAdmin(rt), func(c fiber.Ctx) error { return c.SendStatus(http.StatusNoContent) })
+
+		req := httptest.NewRequest(http.MethodGet, "/admin", nil)
+		req.Header.Set("Accept", "application/json")
+		req.AddCookie(&http.Cookie{Name: "Auth", Value: tt.token})
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
+		if err != nil {
+			t.Fatalf("%s: request failed: %v", tt.name, err)
+		}
+		if resp.StatusCode != tt.want {
+			t.Fatalf("%s: status = %d, want %d", tt.name, resp.StatusCode, tt.want)
+		}
+	}
+}

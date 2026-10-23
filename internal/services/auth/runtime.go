@@ -10,6 +10,7 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/session"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 )
@@ -43,14 +44,25 @@ type AuthenticatorMeta struct {
 
 // Authenticate resolves request identity (session snapshot/JWT strategy fallback)
 // and returns the current user for this request.
+// With Logto enabled and no Logto session, an admin's local sign-in is
+// accepted.
 func Authenticate(c fiber.Ctx, rt Runtime) (models.User, error) {
 	authenticator := selectAuthenticator(rt)
 	user, err := authenticator.Authenticate(c)
-	if err != nil {
+	if err == nil {
+		return user, nil
+	}
+	if !logtoEnabled(rt.AppEnv()) {
 		return models.User{}, err
 	}
 
-	return user, nil
+	admin, localErr := NewLocalStrategy(rt).Authenticate(c)
+	if localErr != nil || admin.Role != models.UserRoleAdmin {
+		return models.User{}, err
+	}
+
+	trace.SpanFromContext(c.Context()).SetAttributes(attribute.String("auth.strategy", "local_admin_fallback"))
+	return admin, nil
 }
 
 func selectAuthenticator(rt Runtime) Authenticator {
