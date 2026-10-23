@@ -90,6 +90,11 @@ func TestCurrentThemeAndLocale(t *testing.T) {
 		if got := s.CurrentLocale(c); got != "en-US" {
 			t.Fatalf("expected locale from locals, got %q", got)
 		}
+
+		c.Locals("locale", "fr-CA")
+		if got := s.CurrentLocale(c); got != "es-MX" {
+			t.Fatalf("expected default locale for an unknown value, got %q", got)
+		}
 	})
 }
 

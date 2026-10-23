@@ -95,6 +95,7 @@ func TestWithThemeAndLocaleFallbacks(t *testing.T) {
 		{"unknown theme", WithTheme("blue"), Ctx{Theme: ""}},
 		{"locale", WithLocale("en-US"), Ctx{Locale: "en-US"}},
 		{"blank locale", WithLocale(""), Ctx{Locale: "es-MX"}},
+		{"unknown locale", WithLocale("fr-CA"), Ctx{Locale: "es-MX"}},
 	}
 
 	for _, tt := range tests {

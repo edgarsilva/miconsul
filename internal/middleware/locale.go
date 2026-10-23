@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"miconsul/internal/lib/preferences"
+
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -9,13 +11,11 @@ func LocaleLang() fiber.Handler {
 	return func(c fiber.Ctx) error {
 		lang := ""
 
-		switch c.AcceptsLanguages("en-US", "es-MX", "es-US", "en", "es") {
-		case "es-US", "es-MX", "es":
-			lang = "es-MX"
-		case "en-US", "en":
-			lang = "en-US"
+		switch c.AcceptsLanguages(preferences.LocaleEnglish, preferences.LocaleSpanish, "es-US", "en", "es") {
+		case preferences.LocaleEnglish, "en":
+			lang = preferences.LocaleEnglish
 		default:
-			lang = "es-MX"
+			lang = preferences.DefaultLocale
 		}
 
 		c.Locals("locale", lang)
