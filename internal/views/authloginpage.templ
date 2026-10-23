@@ -104,3 +104,34 @@ templ LogtoPage(c *Ctx, authState string, idTokenClaimsJSON string, customClaims
 		</div>
 	}
 }
+
+// ProviderSigninPage is the sign-in page while a sign-in provider such as
+// Logto handles authentication; it links to the provider instead of showing
+// a password form.
+templ ProviderSigninPage(c *Ctx, msg, signinPath string) {
+	@LayoutAuth(c) {
+		<div class="absolute top-4 right-4">
+			@CmpBtnTheme(c.Theme)
+		</div>
+		<div class="pt-10 card glass bg-base-100 shadow w-full sm:max-w-[480px] sm:mx-auto">
+			<div class="flex justify-center overflow-visible">
+				<div class="w-28 rounded-lg overflow-clip">
+					@CmpLogo()
+				</div>
+			</div>
+			<div class="card-body space-y-6">
+				<h2 class="card-title">
+					Miconsul
+					<div class="badge badge-secondary">INC</div>
+				</h2>
+				if msg != "" {
+					<div role="alert" class="alert shadow-lg">
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+						<span>{ msg }</span>
+					</div>
+				}
+				<a href={ templ.SafeURL(signinPath) } class="btn btn-primary btn-block">{ c.l("btn.sign_in") }</a>
+			</div>
+		</div>
+	}
+}

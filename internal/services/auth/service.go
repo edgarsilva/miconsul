@@ -177,6 +177,11 @@ func (s *service) userFetch(ctx context.Context, email string) (models.User, err
 	return user, nil
 }
 
+// LogtoEnabled reports whether Logto handles sign-in; local auth is off then.
+func (s *service) LogtoEnabled() bool {
+	return logtoEnabled(s.Env)
+}
+
 func (s *service) authenticateCredentials(ctx context.Context, email, password string) (models.User, error) {
 	user, err := s.userFetch(ctx, email)
 	if err != nil {
