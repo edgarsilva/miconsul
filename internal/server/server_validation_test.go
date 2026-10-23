@@ -1,6 +1,10 @@
 package server
 
 import (
+	"errors"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"miconsul/internal/database"
@@ -120,5 +124,80 @@ func TestValidateRuntimeConfig(t *testing.T) {
 				t.Fatalf("validateRuntimeConfig() error = %q, want %q", err.Error(), tc.want)
 			}
 		})
+	}
+}
+
+func TestNewReturnsSetupErrors(t *testing.T) {
+	t.Parallel()
+
+	errOption := errors.New("option failed")
+	validDeps := []ServerOption{
+		WithDatabase(&database.Database{}),
+		WithTracerProvider(noop.NewTracerProvider()),
+		WithMeterProvider(metricnoop.NewMeterProvider()),
+		WithLoggerProvider(lognoop.NewLoggerProvider()),
+	}
+
+	tests := []struct {
+		name string
+		opts []ServerOption
+		want string
+	}{
+		{
+			name: "failing option",
+			opts: []ServerOption{func(*Server) error { return errOption }},
+			want: "apply server option: option failed",
+		},
+		{
+			name: "missing dependency",
+			opts: nil,
+			want: "validate server dependencies: environment config is required",
+		},
+		{
+			name: "invalid config",
+			opts: append([]ServerOption{WithEnv(&appenv.Env{Environment: "nope"})}, validDeps...),
+			want: "validate server config: APP_ENV is invalid",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			s, err := New(tc.opts...)
+			if err == nil || err.Error() != tc.want {
+				t.Fatalf("New() error = %v, want %q", err, tc.want)
+			}
+			if s != nil {
+				t.Fatalf("New() server = %v, want nil on error", s)
+			}
+		})
+	}
+
+	if _, err := New(func(*Server) error { return errOption }); !errors.Is(err, errOption) {
+		t.Fatalf("expected the option error to be wrapped, got %v", err)
+	}
+}
+
+func TestNewReturnsSessionStoreError(t *testing.T) {
+	t.Parallel()
+
+	sessionPath := filepath.Join(t.TempDir(), "session.sqlite")
+	if err := os.WriteFile(sessionPath, []byte(strings.Repeat("not a database ", 64)), 0o600); err != nil {
+		t.Fatalf("write session file: %v", err)
+	}
+
+	s, err := New(
+		WithEnv(&appenv.Env{Environment: appenv.EnvironmentTest, CookieSecret: "0123456789abcdef", SessionDBPath: sessionPath}),
+		WithDatabase(&database.Database{}),
+		WithTracerProvider(noop.NewTracerProvider()),
+		WithMeterProvider(metricnoop.NewMeterProvider()),
+		WithLoggerProvider(lognoop.NewLoggerProvider()),
+	)
+	if err == nil || !strings.HasPrefix(err.Error(), "open session store: ") {
+		t.Fatalf("New() error = %v, want an open session store error", err)
+	}
+	if s != nil {
+		t.Fatalf("New() server = %v, want nil on error", s)
 	}
 }

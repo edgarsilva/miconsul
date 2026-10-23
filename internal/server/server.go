@@ -3,6 +3,7 @@ package server
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -62,35 +63,39 @@ type Server struct {
 
 type ServerOption func(*Server) error
 
-// New constructs a Server with the provided options and core setup.
-func New(serverOpts ...ServerOption) *Server {
+// New constructs a Server with the provided options and core setup. It
+// returns an error when an option fails or a required dependency or setting
+// is missing.
+func New(serverOpts ...ServerOption) (*Server, error) {
 	server := Server{
 		StartedAt: time.Now(),
 	}
 
 	for _, fnOpt := range serverOpts {
 		if err := fnOpt(&server); err != nil {
-			log.Fatal("🔴 failed to start server: option setup error:", err)
+			return nil, fmt.Errorf("apply server option: %w", err)
 		}
 	}
 
 	if err := validateCriticalDeps(&server); err != nil {
-		log.Fatal("🔴 failed to start server:", err)
+		return nil, fmt.Errorf("validate server dependencies: %w", err)
 	}
 
 	if err := validateRuntimeConfig(&server); err != nil {
-		log.Fatal("🔴 failed to start server:", err)
+		return nil, fmt.Errorf("validate server config: %w", err)
 	}
 
 	setupTracer(&server)
 	setupLogger(&server)
-	setupSessionStore(&server)
+	if err := setupSessionStore(&server); err != nil {
+		return nil, err
+	}
 	setupFiberApp(&server)
 	server.ReadyAt = time.Now()
 	server.BootstrapDuration = server.ReadyAt.Sub(server.StartedAt)
 	emitStartupBootstrapLog(&server)
 
-	return &server
+	return &server, nil
 }
 
 func validateCriticalDeps(s *Server) error {
@@ -155,14 +160,37 @@ func scopeName(env *appenv.Env) string {
 	return env.AppName + ".server"
 }
 
-func setupSessionStore(s *Server) {
-	sessionPath := s.Env.SessionDBPath
-	storage := sqlite3.New(sessionConfig(sessionPath))
+func setupSessionStore(s *Server) error {
+	storage, err := openSessionStorage(sessionConfig(s.Env.SessionDBPath))
+	if err != nil {
+		return err
+	}
+
 	cookieSecure := s.Env.IsProduction() || strings.EqualFold(s.Env.AppProtocol, "https")
 	s.SessionStore = session.NewStore(session.Config{
 		Storage:      storage,
 		CookieSecure: cookieSecure,
 	})
+
+	return nil
+}
+
+// openSessionStorage opens the session database, returning the sqlite3
+// driver's setup panics as an error.
+func openSessionStorage(cfg sqlite3.Config) (storage *sqlite3.Storage, err error) {
+	defer func() {
+		r := recover()
+		if r == nil {
+			return
+		}
+		if rerr, ok := r.(error); ok {
+			err = fmt.Errorf("open session store: %w", rerr)
+			return
+		}
+		err = fmt.Errorf("open session store: %v", r)
+	}()
+
+	return sqlite3.New(cfg), nil
 }
 
 func setupFiberApp(s *Server) {

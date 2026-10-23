@@ -130,7 +130,11 @@ func bootstrapServer(ctx context.Context) (bootstrapResult, error) {
 	})
 
 	fmt.Println(" Starting workpool...")
-	wp, shutdownWorkPool := setupWorkpool(10, env.AppShutdownTimeout)
+	wp, shutdownWorkPool, err := setupWorkpool(10, env.AppShutdownTimeout)
+	if err != nil {
+		log.Printf("failed to initialize workpool: %v", err)
+		return result, err
+	}
 	pushCleanup(func() {
 		fmt.Println("🐜 Ants workpool shutting down...")
 		if err := shutdownWorkPool(); err != nil {
@@ -152,7 +156,7 @@ func bootstrapServer(ctx context.Context) (bootstrapResult, error) {
 	})
 
 	fmt.Println(" Starting localizer...")
-	s := server.New(
+	s, err := server.New(
 		server.WithEnv(env),
 		server.WithDatabase(db),
 		server.WithWorkPool(wp.AntsPool()),
@@ -162,6 +166,10 @@ func bootstrapServer(ctx context.Context) (bootstrapResult, error) {
 		server.WithLoggerProvider(telemetry.loggerProvider),
 		server.WithLocalizer(localize.New(preferences.LocaleSpanish, preferences.LocaleEnglish)),
 	)
+	if err != nil {
+		log.Printf("failed to initialize server: %v", err)
+		return result, err
+	}
 	result.server = s
 
 	fmt.Println(" Registering routes...")
@@ -236,7 +244,7 @@ func setupDB(env *appenv.Env, telemetry telemetryRuntime) (*database.Database, e
 	return db, nil
 }
 
-func setupWorkpool(size int, releaseTimeout time.Duration) (*workpool.Pool, func() error) {
+func setupWorkpool(size int, releaseTimeout time.Duration) (*workpool.Pool, func() error, error) {
 	return workpool.New(size, releaseTimeout)
 }
 
