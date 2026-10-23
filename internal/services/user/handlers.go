@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"strings"
+	"time"
 
 	"miconsul/internal/models"
 	view "miconsul/internal/views"
@@ -12,6 +13,8 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"gorm.io/gorm"
 )
+
+const localeCookieTTL = 365 * 24 * time.Hour
 
 // HandleIndexPage renders the admin users index page.
 // GET: /admin/users
@@ -60,7 +63,9 @@ func (s *service) HandleProfilePage(c fiber.Ctx) error {
 	return view.Render(c, view.UserEditPage(vc, user))
 }
 
-// HandleUpdateProfile updates the current user's profile data.
+// HandleUpdateProfile updates the current user's profile data. A new locale
+// is also saved to the locale cookie, and HTMX requests reload the page so
+// the whole layout switches language.
 // POST: /profile
 func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
@@ -87,6 +92,13 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 	}
 	if err != nil {
 		return s.respondWithRedirect(c, "/profile?toast=Failed to update profile&level=error")
+	}
+
+	if locale := userUpds.Locale; locale != "" && locale != s.CurrentLocale(c) {
+		c.Cookie(s.NewCookie("locale", locale, localeCookieTTL))
+		if s.IsHTMX(c) {
+			c.Set("HX-Refresh", "true")
+		}
 	}
 
 	if s.NotHTMX(c) {

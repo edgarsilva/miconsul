@@ -203,9 +203,9 @@ func TestHTMLPageDataTheme(t *testing.T) {
 		theme string
 		want  string
 	}{
-		{"", "<html>"},
-		{"light", `<html data-theme="cupcake">`},
-		{"dark", `<html data-theme="cupcake">`},
+		{"", `<html lang="es-MX">`},
+		{"light", `<html lang="es-MX" data-theme="cupcake">`},
+		{"dark", `<html lang="es-MX" data-theme="cupcake">`},
 	}
 
 	for _, tt := range tests {
@@ -260,4 +260,56 @@ func TestCmpBtnTheme(t *testing.T) {
 			t.Errorf("theme %q: toggle must not use Alpine, got %s", tt.theme, got)
 		}
 	}
+}
+
+func TestHTMLPageLang(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		for _, locale := range []string{"es-MX", "en-US"} {
+			var html strings.Builder
+			if err := HTMLPage(NewCtx(fc, WithLocale(locale))).Render(fc.Context(), &html); err != nil {
+				t.Fatalf("render page: %v", err)
+			}
+			if want := `<html lang="` + locale + `"`; !strings.Contains(html.String(), want) {
+				t.Errorf("expected %s in the page", want)
+			}
+		}
+	})
+}
+
+func TestUserProfileLanguageSelect(t *testing.T) {
+	tests := []struct {
+		name       string
+		ctxLocale  string
+		userLocale string
+		want       string
+	}{
+		{"saved locale is selected", "es-MX", "en-US", "en-US"},
+		{"request locale is selected without a saved one", "en-US", "", "en-US"},
+		{"default", "es-MX", "", "es-MX"},
+	}
+
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		for _, tt := range tests {
+			user := models.User{UID: "usr_1", Name: "Ana", Locale: tt.userLocale}
+			var html strings.Builder
+			if err := UserProfile(NewCtx(fc, WithLocale(tt.ctxLocale)), user).Render(fc.Context(), &html); err != nil {
+				t.Fatalf("%s: render profile: %v", tt.name, err)
+			}
+
+			got := html.String()
+			if !strings.Contains(got, `<select name="locale"`) {
+				t.Fatalf("%s: expected the language select", tt.name)
+			}
+			label := map[string]string{"es-MX": ">Idioma<", "en-US": ">Language<"}[tt.ctxLocale]
+			if !strings.Contains(got, label) {
+				t.Errorf("%s: expected the %s label", tt.name, label)
+			}
+			if want := `<option value="` + tt.want + `" lang="` + tt.want + `" selected>`; !strings.Contains(got, want) {
+				t.Errorf("%s: expected %s", tt.name, want)
+			}
+			if n := strings.Count(got, " selected>"); n != 1 {
+				t.Errorf("%s: expected one selected option, got %d", tt.name, n)
+			}
+		}
+	})
 }
