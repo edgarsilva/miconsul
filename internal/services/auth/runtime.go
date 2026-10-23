@@ -10,6 +10,7 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/session"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 )
@@ -42,14 +43,27 @@ type AuthenticatorMeta struct {
 }
 
 // Authenticate resolves request identity (session snapshot/JWT strategy fallback)
-// and returns the current user for this request.
+// and returns the current user for this request. The outcome is recorded on
+// the request span as auth.provider, auth.result and, when signed in, user.id.
 func Authenticate(c fiber.Ctx, rt Runtime) (models.User, error) {
+	span := trace.SpanFromContext(c.Context())
+	provider := "local"
+	if logtoEnabled(rt.AppEnv()) {
+		provider = "logto"
+	}
+
 	authenticator := selectAuthenticator(rt)
 	user, err := authenticator.Authenticate(c)
 	if err != nil {
+		span.SetAttributes(attribute.String("auth.provider", provider), attribute.String("auth.result", "unauthenticated"))
 		return models.User{}, err
 	}
 
+	span.SetAttributes(
+		attribute.String("auth.provider", provider),
+		attribute.String("auth.result", "authenticated"),
+		attribute.String("user.id", user.UID),
+	)
 	return user, nil
 }
 

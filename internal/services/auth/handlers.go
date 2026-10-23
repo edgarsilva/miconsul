@@ -16,7 +16,9 @@ import (
 	"gorm.io/gorm"
 )
 
-// HandleSigninPage returns the signin page html
+// HandleSigninPage returns the signin page html. With a sign-in provider
+// enabled it redirects there, or shows a page linking to it after a sign-out
+// or provider error.
 //
 // GET: /signin
 func (s *service) HandleSigninPage(c fiber.Ctx) error {
@@ -36,7 +38,19 @@ func (s *service) HandleSigninPage(c fiber.Ctx) error {
 	msg = nextMsg
 
 	vc := view.NewCtx(c)
+	if meta := selectAuthenticator(s).Metadata(); meta.Enabled {
+		return view.Render(c, view.ProviderSigninPage(vc, msg, meta.SigninPath))
+	}
+
 	return view.Render(c, view.LoginPage(email, msg, nil, vc))
+}
+
+// HandleProviderSignin redirects to the sign-in provider, which also handles
+// sign-up and password resets.
+//
+// GET: /signup, /resetpassword (provider enabled)
+func (s *service) HandleProviderSignin(c fiber.Ctx) error {
+	return s.Redirect(c, selectAuthenticator(s).Metadata().SigninPath)
 }
 
 // HandleSignin compares hash and password and sets the user Auth session cookie

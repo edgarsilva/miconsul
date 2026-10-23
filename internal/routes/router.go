@@ -69,15 +69,22 @@ func AuthRoutes(s *server.Server) (auth.Runtime, error) {
 	}
 
 	a.Get("/signin", mw.MaybeAuthenticate(a), a.HandleSigninPage)
-	a.Post("/signin", a.HandleSignin)
 	a.All("/logout", a.HandleLogout)
-	a.Get("/signup", a.HandleSignupPage)
-	a.Post("/signup", a.HandleSignup)
-	a.Get("/signup/confirm/:token", a.HandleSignupConfirmEmail)
-	a.Get("/resetpassword", a.HandleResetPasswordPage)
-	a.Post("/resetpassword", a.HandleResetPassword)
-	a.Get("/resetpassword/change/:token", a.HandleResetPasswordChange)
-	a.Post("/resetpassword/change", a.HandleResetPasswordUpdate)
+
+	// Local auth only when Logto is off; Logto handles sign-up and resets.
+	if a.LogtoEnabled() {
+		a.Get("/signup", a.HandleProviderSignin)
+		a.Get("/resetpassword", a.HandleProviderSignin)
+	} else {
+		a.Post("/signin", a.HandleSignin)
+		a.Get("/signup", a.HandleSignupPage)
+		a.Post("/signup", a.HandleSignup)
+		a.Get("/signup/confirm/:token", a.HandleSignupConfirmEmail)
+		a.Get("/resetpassword", a.HandleResetPasswordPage)
+		a.Post("/resetpassword", a.HandleResetPassword)
+		a.Get("/resetpassword/change/:token", a.HandleResetPasswordChange)
+		a.Post("/resetpassword/change", a.HandleResetPasswordUpdate)
+	}
 
 	// Logto
 	a.Get("/logto", a.HandleLogtoPage)
@@ -86,7 +93,9 @@ func AuthRoutes(s *server.Server) (auth.Runtime, error) {
 	a.Get("/logto/signout", a.HandleLogtoSignout)
 
 	g := a.Group("/api/auth")
-	g.Post("/signin", a.HandleAPISignin)
+	if !a.LogtoEnabled() {
+		g.Post("/signin", a.HandleAPISignin)
+	}
 	g.Get("/protected", mw.MustAuthenticate(a), a.HandleShowUser)
 	g.Post("/validate", mw.MustAuthenticate(a), a.HandleValidate)
 

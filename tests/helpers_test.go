@@ -42,7 +42,7 @@ type requestOptions struct {
 	contentTyp string
 }
 
-func newTestHarness(t *testing.T) *testHarness {
+func newTestHarness(t *testing.T, envOpts ...func(*appenv.Env)) *testHarness {
 	t.Helper()
 
 	tmpDir := t.TempDir()
@@ -71,6 +71,9 @@ func newTestHarness(t *testing.T) *testHarness {
 		DBPath:             dbPath,
 		SessionDBPath:      filepath.Join(tmpDir, "session.db"),
 		AssetsDir:          tmpDir,
+	}
+	for _, opt := range envOpts {
+		opt(env)
 	}
 
 	db, err := database.New(env, lognoop.NewLoggerProvider(), tracenoop.NewTracerProvider(), dbOpts)
