@@ -32,12 +32,12 @@ type User struct {
 	Email                 string `gorm:"uniqueIndex;default:null;not null"`
 	Password              string `json:"-" form:"-"`
 	Theme                 string
+	Locale                string
 	ResetToken            string `json:"-" form:"-"`
 	ConfirmEmailToken     string `json:"-" form:"-"`
 	Phone                 string
 	Timezone              string
-	// LocaleLang            string
-	Role UserRole `gorm:"index;default:null;not null;type:string" form:"-"`
+	Role                  UserRole `gorm:"index;default:null;not null;type:string" form:"-"`
 	ModelBase
 	Clinics      []Clinic
 	Patients     []Patient
@@ -87,6 +87,7 @@ type PublicUser struct {
 	Phone      string
 	Timezone   string
 	Theme      string
+	Locale     string
 	Role       UserRole
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
@@ -103,6 +104,7 @@ func (u User) Public() PublicUser {
 		Phone:      u.Phone,
 		Timezone:   u.Timezone,
 		Theme:      u.Theme,
+		Locale:     u.Locale,
 		Role:       u.Role,
 		CreatedAt:  u.CreatedAt,
 		UpdatedAt:  u.UpdatedAt,

@@ -32,6 +32,7 @@ type AuthSnapshot struct {
 	UserName       string          // nm
 	UserProfilePic string          // pp
 	UserTheme      string          // th
+	UserLocale     string          // lc
 	CachedAtUnix   int64           // cat
 }
 
@@ -156,6 +157,7 @@ func (ls LocalStrategy) saveCurrentUserToSession(c fiber.Ctx, token string, user
 		UserName:       user.Name,
 		UserProfilePic: user.ProfilePic,
 		UserTheme:      user.Theme,
+		UserLocale:     user.Locale,
 		CachedAtUnix:   time.Now().Unix(),
 	})
 }
@@ -188,6 +190,7 @@ func EncodeAuthSnapshot(sa AuthSnapshot) string {
 	v.Set("nm", sa.UserName)
 	v.Set("pp", sa.UserProfilePic)
 	v.Set("th", sa.UserTheme)
+	v.Set("lc", sa.UserLocale)
 	v.Set("cat", strconv.FormatInt(sa.CachedAtUnix, 10))
 
 	return v.Encode()
@@ -217,6 +220,7 @@ func DecodeAuthSnapshot(raw string) (AuthSnapshot, bool) {
 		UserName:       v.Get("nm"),
 		UserProfilePic: v.Get("pp"),
 		UserTheme:      v.Get("th"),
+		UserLocale:     v.Get("lc"),
 		CachedAtUnix:   cachedAtUnix,
 	}
 
@@ -256,5 +260,6 @@ func (sa AuthSnapshot) toUser() models.User {
 		Name:       sa.UserName,
 		ProfilePic: sa.UserProfilePic,
 		Theme:      sa.UserTheme,
+		Locale:     sa.UserLocale,
 	}
 }

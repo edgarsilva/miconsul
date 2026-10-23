@@ -340,3 +340,45 @@ func TestAuthenticatedUserThemeFallback(t *testing.T) {
 		}
 	}
 }
+
+func TestAuthenticatedUserLocaleFallback(t *testing.T) {
+	rt, user, token := newMiddlewareAuthRuntime(t)
+	if err := rt.db.Model(&user).Update("locale", "en-US").Error; err != nil {
+		t.Fatalf("save user locale: %v", err)
+	}
+
+	tests := []struct {
+		name           string
+		token          string
+		cookie         string
+		acceptLanguage string
+		want           string
+	}{
+		{"signed in without cookie uses the saved locale", token, "", "es-MX", "en-US"},
+		{"signed in with cookie keeps the cookie", token, "es-MX", "en-US", "es-MX"},
+		{"signed in with an unknown cookie uses the saved locale", token, "fr-CA", "es-MX", "en-US"},
+		{"anonymous without cookie uses the browser", "", "", "es-MX", "es-MX"},
+	}
+
+	for _, tt := range tests {
+		app := fiber.New()
+		app.Get("/maybe", LocaleLang(), MaybeAuthenticate(rt), func(c fiber.Ctx) error {
+			if got, _ := c.Locals("locale").(string); got != tt.want {
+				t.Errorf("%s: locale = %q, want %q", tt.name, got, tt.want)
+			}
+			return c.SendStatus(http.StatusNoContent)
+		})
+
+		req := httptest.NewRequest(http.MethodGet, "/maybe", nil)
+		if tt.token != "" {
+			req.Header.Set("Authorization", "Bearer "+tt.token)
+		}
+		if tt.cookie != "" {
+			req.AddCookie(&http.Cookie{Name: "locale", Value: tt.cookie})
+		}
+		req.Header.Set("Accept-Language", tt.acceptLanguage)
+		if _, err := app.Test(req); err != nil {
+			t.Fatalf("%s: request failed: %v", tt.name, err)
+		}
+	}
+}
