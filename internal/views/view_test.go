@@ -313,3 +313,32 @@ func TestUserProfileLanguageSelect(t *testing.T) {
 		}
 	})
 }
+
+func TestAuthPagesUseThemeColors(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		c := NewCtx(fc)
+		pages := map[string]interface {
+			Render(context.Context, io.Writer) error
+		}{
+			"LoginPage":  LoginPage("", "", nil, c),
+			"SignupPage": SignupPage(c, "", nil),
+		}
+		for name, page := range pages {
+			var html strings.Builder
+			if err := page.Render(fc.Context(), &html); err != nil {
+				t.Fatalf("render %s: %v", name, err)
+			}
+			if strings.Contains(html.String(), "fill-[#24292F]") {
+				t.Errorf("%s: GitHub icon has a fixed fill that disappears on dark themes", name)
+			}
+		}
+
+		var login strings.Builder
+		if err := LoginPage("", "", nil, c).Render(fc.Context(), &login); err != nil {
+			t.Fatalf("render LoginPage: %v", err)
+		}
+		if !strings.Contains(login.String(), `<a href="/resetpassword" class="link font-semibold`) {
+			t.Errorf("LoginPage: expected the forgot password link in the base text color")
+		}
+	})
+}

@@ -83,20 +83,16 @@ func (s *service) HandleAPISignin(c fiber.Ctx) error {
 	ctx, span := s.Trace(c.Context(), "auth/handlers:HandleAPISignin")
 	defer span.End()
 
-	req := struct {
-		Email      string `json:"email" form:"email"`
-		Password   string `json:"password" form:"password"`
-		RememberMe bool   `json:"remember_me" form:"remember_me"`
-	}{}
-	if err := c.Bind().Body(&req); err != nil {
+	input := signinInput{}
+	if err := c.Bind().Body(&input); err != nil {
 		return apiError(c, fiber.StatusBadRequest, "invalid request body")
 	}
 
-	if req.Email == "" || req.Password == "" {
+	if input.Email == "" || input.Password == "" {
 		return apiError(c, fiber.StatusBadRequest, "email and password can't be blank")
 	}
 
-	user, err := s.authenticateCredentials(ctx, req.Email, req.Password)
+	user, err := s.authenticateCredentials(ctx, input.Email, input.Password)
 	if errors.Is(err, errAuthInvalidCredentials) {
 		return apiError(c, fiber.StatusUnauthorized, "invalid credentials")
 	}
@@ -107,7 +103,7 @@ func (s *service) HandleAPISignin(c fiber.Ctx) error {
 		return apiError(c, fiber.StatusInternalServerError, "authentication failed")
 	}
 
-	if err := s.issueAuthCookie(c, user, req.RememberMe); err != nil {
+	if err := s.issueAuthCookie(c, user, input.RememberMe); err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "create session failed")
 		return apiError(c, fiber.StatusInternalServerError, "failed to create session")
@@ -301,12 +297,7 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
 	}
 
-	token, err := newResetPasswordToken()
-	if err != nil {
-		return s.Redirect(c, "/resetpassword")
-	}
-
-	user.ResetToken = token
+	user.ResetToken = newResetPasswordToken()
 	user.ResetTokenExpiresAt = time.Now().Add(time.Hour * 1)
 	rowsAffected, err := gorm.G[models.User](s.DB.GormDB()).
 		Select("reset_token", "reset_token_expires_at").
@@ -317,7 +308,7 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
 	}
 
-	s.sendResetPasswordEmailAsync(c.Context(), email, token)
+	s.sendResetPasswordEmailAsync(c.Context(), email, user.ResetToken)
 
 	return view.Render(c, view.ResetPasswordPage(vc, email, "", "check your email for a reset password link", nil))
 }

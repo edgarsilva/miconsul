@@ -17,7 +17,10 @@ type service struct {
 	*server.Server
 }
 
-var ErrIDRequired = errors.New("id is required")
+var (
+	ErrIDRequired    = errors.New("id is required")
+	ErrTokenRequired = errors.New("token is required")
+)
 
 const (
 	defaultWorkerContextTimeout  = 10 * time.Second
@@ -257,6 +260,13 @@ func (s *service) DeleteAppointmentByID(ctx context.Context, userID uint, appoin
 }
 
 func (s *service) TakeAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) (models.Appointment, error) {
+	if strings.TrimSpace(appointmentID) == "" {
+		return models.Appointment{}, ErrIDRequired
+	}
+	if strings.TrimSpace(token) == "" {
+		return models.Appointment{}, ErrTokenRequired
+	}
+
 	appointment, err := gorm.G[models.Appointment](s.DB.GormDB()).
 		Preload("Clinic", nil).
 		Preload("User", nil).
@@ -292,6 +302,9 @@ func (s *service) TakePatientByUIDWithLastDoneAppointment(ctx context.Context, u
 func (s *service) UpdateAppointmentByIDAndToken(ctx context.Context, appointmentID, token string, selectColumns []string, updates appointmentTokenUpdates) error {
 	if strings.TrimSpace(appointmentID) == "" {
 		return ErrIDRequired
+	}
+	if strings.TrimSpace(token) == "" {
+		return ErrTokenRequired
 	}
 
 	if len(selectColumns) == 0 {

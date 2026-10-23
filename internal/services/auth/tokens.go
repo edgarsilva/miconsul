@@ -1,39 +1,16 @@
 package auth
 
-import (
-	"crypto/rand"
-	"encoding/hex"
-	mrand "math/rand"
-)
+import "crypto/rand"
 
-func newResetPasswordToken() (string, error) {
-	return newHexToken(32)
+func newResetPasswordToken() string {
+	return newSecretToken()
 }
 
 func newConfirmEmailToken() string {
-	token, err := newHexToken(32)
-	if err != nil {
-		return randomTokenRunes(32)
-	}
-
-	return token
+	return newSecretToken()
 }
 
-func newHexToken(n int) (string, error) {
-	bytes := make([]byte, n)
-	if _, err := rand.Read(bytes); err != nil {
-		return "", err
-	}
-
-	return hex.EncodeToString(bytes), nil
-}
-
-func randomTokenRunes(n int) string {
-	letterRunes := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letterRunes[mrand.Intn(len(letterRunes))]
-	}
-
-	return string(b)
+// newSecretToken returns a random token for links sent to users.
+func newSecretToken() string {
+	return rand.Text()
 }

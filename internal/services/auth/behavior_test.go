@@ -104,45 +104,23 @@ func TestResetPasswordEmailFromRequest(t *testing.T) {
 }
 
 func TestTokenHelpers(t *testing.T) {
-	t.Run("newHexToken returns expected hex length", func(t *testing.T) {
-		token, err := newHexToken(16)
-		if err != nil {
-			t.Fatalf("newHexToken error: %v", err)
+	tokens := map[string]func() string{
+		"newSecretToken":        newSecretToken,
+		"newConfirmEmailToken":  newConfirmEmailToken,
+		"newResetPasswordToken": newResetPasswordToken,
+	}
+	for name, newToken := range tokens {
+		token := newToken()
+		if len(token) != 26 {
+			t.Fatalf("%s: expected token length 26, got %d", name, len(token))
 		}
-		if len(token) != 32 {
-			t.Fatalf("expected token length 32, got %d", len(token))
+		if strings.Trim(token, "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567") != "" {
+			t.Fatalf("%s: expected base32 token, got %q", name, token)
 		}
-		if strings.Trim(token, "0123456789abcdef") != "" {
-			t.Fatalf("expected lowercase hex token, got %q", token)
+		if token == newToken() {
+			t.Fatalf("%s: expected a new token per call", name)
 		}
-	})
-
-	t.Run("newResetPasswordToken uses secure token size", func(t *testing.T) {
-		token, err := newResetPasswordToken()
-		if err != nil {
-			t.Fatalf("newResetPasswordToken error: %v", err)
-		}
-		if len(token) != 64 {
-			t.Fatalf("expected token length 64, got %d", len(token))
-		}
-	})
-
-	t.Run("newConfirmEmailToken has non-empty token", func(t *testing.T) {
-		token := newConfirmEmailToken()
-		if token == "" {
-			t.Fatalf("expected non-empty confirm email token")
-		}
-	})
-
-	t.Run("randomTokenRunes honors charset and length", func(t *testing.T) {
-		token := randomTokenRunes(24)
-		if len(token) != 24 {
-			t.Fatalf("expected token length 24, got %d", len(token))
-		}
-		if strings.Trim(token, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890") != "" {
-			t.Fatalf("token contains invalid characters: %q", token)
-		}
-	})
+	}
 }
 
 func TestJWTHelpers(t *testing.T) {
