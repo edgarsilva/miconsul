@@ -58,7 +58,7 @@ func TestServiceInputValidation(t *testing.T) {
 			if _, err := svc.TakeAppointmentByToken(ctx, token); !errors.Is(err, ErrTokenRequired) {
 				t.Fatalf("take with token %q: expected ErrTokenRequired, got %v", token, err)
 			}
-			if err := svc.UpdateAppointmentByToken(ctx, token, []string{"Status"}, appointmentTokenUpdates{}); !errors.Is(err, ErrTokenRequired) {
+			if err := svc.UpdateAppointmentByToken(ctx, token, []string{"Status"}, nil, appointmentTokenUpdates{}); !errors.Is(err, ErrTokenRequired) {
 				t.Fatalf("update with token %q: expected ErrTokenRequired, got %v", token, err)
 			}
 			if err := svc.ConfirmAppointmentByToken(ctx, token); !errors.Is(err, ErrTokenRequired) {
@@ -80,7 +80,7 @@ func TestServiceInputValidation(t *testing.T) {
 		if err := svc.CancelAppointmentByID(ctx, 1, "apnt_1", appointmentCancelUpdates{Status: models.AppointmentStatus("invalid")}); err == nil {
 			t.Fatalf("expected cancel invalid status error")
 		}
-		if err := svc.UpdateAppointmentByToken(ctx, "tok", []string{"Status"}, appointmentTokenUpdates{Status: models.AppointmentStatus("invalid")}); err == nil {
+		if err := svc.UpdateAppointmentByToken(ctx, "tok", []string{"Status"}, nil, appointmentTokenUpdates{Status: models.AppointmentStatus("invalid")}); err == nil {
 			t.Fatalf("expected token update invalid status error")
 		}
 	})

@@ -227,8 +227,8 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 		}
 
 		resp4, err := app.Test(httptest.NewRequest(http.MethodPost, "/p/a/"+tokenApnt.Token+"/changedate", nil))
-		if err != nil || resp4.StatusCode != fiber.StatusOK {
-			t.Fatalf("patient change date expected 200, got status=%d err=%v", resp4.StatusCode, err)
+		if err != nil || resp4.StatusCode != fiber.StatusConflict {
+			t.Fatalf("patient change date after cancel expected 409, got status=%d err=%v", resp4.StatusCode, err)
 		}
 	})
 }

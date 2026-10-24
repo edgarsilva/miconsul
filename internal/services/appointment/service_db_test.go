@@ -2,6 +2,7 @@ package appointment
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -68,9 +69,6 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 		if err := svc.ConfirmAppointmentByToken(ctx, apnt.Token); err != nil {
 			t.Fatalf("confirm by token: %v", err)
 		}
-		if err := svc.CancelAppointmentByToken(ctx, apnt.Token); err != nil {
-			t.Fatalf("cancel by token: %v", err)
-		}
 		if err := svc.RequestAppointmentDateChangeByToken(ctx, apnt.Token); err != nil {
 			t.Fatalf("request date change by token: %v", err)
 		}
@@ -81,6 +79,13 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 		}
 		if got.Status != models.AppointmentPending {
 			t.Fatalf("expected pending status after date change, got %q", got.Status)
+		}
+
+		if err := svc.CancelAppointmentByToken(ctx, apnt.Token); err != nil {
+			t.Fatalf("cancel by token: %v", err)
+		}
+		if err := svc.RequestAppointmentDateChangeByToken(ctx, apnt.Token); !errors.Is(err, ErrAppointmentClosed) {
+			t.Fatalf("date change after cancel: err = %v, want ErrAppointmentClosed", err)
 		}
 	})
 

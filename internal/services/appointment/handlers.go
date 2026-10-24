@@ -13,6 +13,7 @@ import (
 	"miconsul/internal/models"
 	view "miconsul/internal/views"
 
+	"github.com/a-h/templ"
 	"github.com/gofiber/fiber/v3"
 	"gorm.io/gorm"
 )
@@ -550,6 +551,9 @@ func (s *service) HandlePatientConfirm(c fiber.Ctx) error {
 	}
 
 	err := s.ConfirmAppointmentByToken(c.Context(), token)
+	if errors.Is(err, ErrAppointmentClosed) {
+		return s.renderPatientPage(c, token, view.AppointmentConfirmPage)
+	}
 	if err != nil {
 		return s.renderAppointmentNotFoundPage(c, "Failed to confirm appointment", "error")
 	}
@@ -596,6 +600,9 @@ func (s *service) HandlePatientCancel(c fiber.Ctx) error {
 	}
 
 	err := s.CancelAppointmentByToken(c.Context(), token)
+	if errors.Is(err, ErrAppointmentClosed) {
+		return s.renderPatientPage(c, token, view.AppointmentCancelPage)
+	}
 	if err != nil {
 		return s.renderAppointmentNotFoundPage(c, "Failed to cancel appointment", "error")
 	}
@@ -626,6 +633,9 @@ func (s *service) HandlePatientChangeDate(c fiber.Ctx) error {
 	}
 
 	err := s.RequestAppointmentDateChangeByToken(c.Context(), token)
+	if errors.Is(err, ErrAppointmentClosed) {
+		return c.Status(fiber.StatusConflict).SendString("This appointment can no longer be changed.")
+	}
 	if err != nil {
 		return s.renderAppointmentNotFoundPage(c, "Failed to request appointment date change", "error")
 	}
@@ -727,6 +737,18 @@ func (s *service) selectedClinicFromQuery(c fiber.Ctx, userID uint, clinicID str
 	}
 
 	return clinic, nil
+}
+
+// renderPatientPage renders a patient link page for an appointment that can
+// no longer be changed, with a warning toast.
+func (s *service) renderPatientPage(c fiber.Ctx, token string, page func(*view.Ctx, models.Appointment) templ.Component) error {
+	appointment, err := s.TakeAppointmentByToken(c.Context(), token)
+	if err != nil {
+		return s.renderAppointmentNotFoundPage(c, "Failed to load appointment", "error")
+	}
+
+	vc := view.NewCtx(c, view.WithToast("This appointment can no longer be changed", "", "warning"))
+	return view.Render(c, page(vc, appointment))
 }
 
 func (s *service) renderAppointmentNotFoundPage(c fiber.Ctx, toast, level string) error {

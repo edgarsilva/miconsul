@@ -20,6 +20,9 @@ type service struct {
 var (
 	ErrIDRequired    = errors.New("id is required")
 	ErrTokenRequired = errors.New("token is required")
+	// ErrAppointmentClosed means a valid patient link asked for an action the
+	// appointment's status no longer allows.
+	ErrAppointmentClosed = errors.New("appointment can no longer be changed")
 )
 
 const (
@@ -268,7 +271,7 @@ func (s *service) TakeAppointmentByToken(ctx context.Context, token string) (mod
 		Preload("Clinic", nil).
 		Preload("User", nil).
 		Preload("Patient", nil).
-		Where("token = ?", token).
+		Where("token = ? AND booked_at > ?", token, patientLinkValidAfter()).
 		Take(ctx)
 	if err != nil {
 		return models.Appointment{}, err
@@ -296,7 +299,10 @@ func (s *service) TakePatientByUIDWithLastDoneAppointment(ctx context.Context, u
 	return patient, nil
 }
 
-func (s *service) UpdateAppointmentByToken(ctx context.Context, token string, selectColumns []string, updates appointmentTokenUpdates) error {
+// UpdateAppointmentByToken applies a patient link action. It returns
+// gorm.ErrRecordNotFound for a wrong or expired token, and ErrAppointmentClosed
+// when the appointment is in one of the blocked statuses.
+func (s *service) UpdateAppointmentByToken(ctx context.Context, token string, selectColumns []string, blocked []models.AppointmentStatus, updates appointmentTokenUpdates) error {
 	if strings.TrimSpace(token) == "" {
 		return ErrTokenRequired
 	}
@@ -309,20 +315,28 @@ func (s *service) UpdateAppointmentByToken(ctx context.Context, token string, se
 		return errors.New("invalid appointment status")
 	}
 
-	result := s.DB.WithContext(ctx).
+	query := s.DB.WithContext(ctx).
 		Model(&models.Appointment{}).
-		Where("token = ?", token).
+		Where("token = ? AND booked_at > ?", token, patientLinkValidAfter())
+	if len(blocked) > 0 {
+		query = query.Where("status NOT IN ?", blocked)
+	}
+	result := query.
 		Select(selectColumns).
 		Omit("UserID", "Clinic", "Patient", "User", "FeedEvents", "Notifications").
 		Updates(&updates)
 	if result.Error != nil {
 		return result.Error
 	}
-	if result.RowsAffected != 1 {
-		return gorm.ErrRecordNotFound
+	if result.RowsAffected == 1 {
+		return nil
 	}
 
-	return nil
+	if _, err := s.TakeAppointmentByToken(ctx, token); err != nil {
+		return err
+	}
+
+	return ErrAppointmentClosed
 }
 
 func (s *service) ConfirmAppointmentByToken(ctx context.Context, token string) error {
@@ -330,7 +344,7 @@ func (s *service) ConfirmAppointmentByToken(ctx context.Context, token string) e
 		ConfirmedAt: time.Now(),
 		Status:      models.AppointmentConfirmed,
 	}
-	if err := s.UpdateAppointmentByToken(ctx, token, []string{"ConfirmedAt", "Status"}, updates); err != nil {
+	if err := s.UpdateAppointmentByToken(ctx, token, []string{"ConfirmedAt", "Status"}, models.PatientConfirmBlocked(), updates); err != nil {
 		return err
 	}
 
@@ -352,7 +366,7 @@ func (s *service) CancelAppointmentByToken(ctx context.Context, token string) er
 		CanceledAt: time.Now(),
 		Status:     models.AppointmentCanceled,
 	}
-	if err := s.UpdateAppointmentByToken(ctx, token, []string{"CanceledAt", "Status"}, updates); err != nil {
+	if err := s.UpdateAppointmentByToken(ctx, token, []string{"CanceledAt", "Status"}, models.PatientCancelBlocked(), updates); err != nil {
 		return err
 	}
 
@@ -374,7 +388,7 @@ func (s *service) RequestAppointmentDateChangeByToken(ctx context.Context, token
 		PendingAt: time.Now(),
 		Status:    models.AppointmentPending,
 	}
-	return s.UpdateAppointmentByToken(ctx, token, []string{"PendingAt", "Status"}, updates)
+	return s.UpdateAppointmentByToken(ctx, token, []string{"PendingAt", "Status"}, models.PatientConfirmBlocked(), updates)
 }
 
 func (s *service) recordFeedEvent(ctx context.Context, userID uint, appointmentUID string, action models.EventAction) error {
@@ -561,4 +575,10 @@ func (s *service) FindRecentPatientsByUserID(ctx context.Context, userID uint, l
 	}
 
 	return patients, nil
+}
+
+// patientLinkValidAfter is the earliest appointment time a patient link still
+// works for.
+func patientLinkValidAfter() time.Time {
+	return time.Now().UTC().Add(-models.PatientLinkGrace)
 }
