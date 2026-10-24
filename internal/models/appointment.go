@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"slices"
 	"strconv"
 	"time"
 
@@ -112,26 +111,25 @@ func (a *Appointment) PriceInputValue() string {
 // keep working.
 const PatientLinkGrace = time.Hour
 
-// PatientConfirmBlocked lists the statuses in which a patient can no longer
-// confirm or ask to change the date.
-func PatientConfirmBlocked() []AppointmentStatus {
-	return []AppointmentStatus{AppointmentCanceled, AppointmentInProgress, AppointmentDone}
-}
-
-// PatientCancelBlocked lists the statuses in which a patient can no longer
-// cancel.
-func PatientCancelBlocked() []AppointmentStatus {
-	return []AppointmentStatus{AppointmentInProgress, AppointmentDone}
-}
-
-// PatientCanConfirm reports whether the patient may still confirm.
+// PatientCanConfirm reports whether the patient may still confirm or ask to
+// change the date.
 func (a Appointment) PatientCanConfirm() bool {
-	return !slices.Contains(PatientConfirmBlocked(), a.Status)
+	switch a.Status {
+	case AppointmentCanceled, AppointmentInProgress, AppointmentDone:
+		return false
+	default:
+		return true
+	}
 }
 
 // PatientCanCancel reports whether the patient may still cancel.
 func (a Appointment) PatientCanCancel() bool {
-	return !slices.Contains(PatientCancelBlocked(), a.Status)
+	switch a.Status {
+	case AppointmentInProgress, AppointmentDone:
+		return false
+	default:
+		return true
+	}
 }
 
 // ConfirmPath is the patient's public link to confirm the appointment.
