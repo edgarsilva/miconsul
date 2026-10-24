@@ -65,17 +65,17 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 			t.Fatalf("create appointment: %v", err)
 		}
 
-		if err := svc.ConfirmAppointmentByIDAndToken(ctx, apnt.UID, apnt.Token); err != nil {
+		if err := svc.ConfirmAppointmentByToken(ctx, apnt.Token); err != nil {
 			t.Fatalf("confirm by token: %v", err)
 		}
-		if err := svc.CancelAppointmentByIDAndToken(ctx, apnt.UID, apnt.Token); err != nil {
+		if err := svc.CancelAppointmentByToken(ctx, apnt.Token); err != nil {
 			t.Fatalf("cancel by token: %v", err)
 		}
-		if err := svc.RequestAppointmentDateChangeByIDAndToken(ctx, apnt.UID, apnt.Token); err != nil {
+		if err := svc.RequestAppointmentDateChangeByToken(ctx, apnt.Token); err != nil {
 			t.Fatalf("request date change by token: %v", err)
 		}
 
-		got, err := svc.TakeAppointmentByIDAndToken(ctx, apnt.UID, apnt.Token)
+		got, err := svc.TakeAppointmentByToken(ctx, apnt.Token)
 		if err != nil {
 			t.Fatalf("take by id and token: %v", err)
 		}

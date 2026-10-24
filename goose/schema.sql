@@ -254,3 +254,4 @@ CREATE INDEX idx_feed_events_ext_id ON feed_events(ext_id);
 CREATE INDEX idx_notifications_status ON notifications(status);
 CREATE INDEX idx_notifications_name ON notifications(name);
 CREATE INDEX idx_notifications_medium ON notifications(medium);
+CREATE UNIQUE INDEX idx_appointments_token ON appointments(token) WHERE token IS NOT NULL AND token != '';

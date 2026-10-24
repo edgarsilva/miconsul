@@ -522,20 +522,19 @@ func (s *service) HandleDelete(c fiber.Ctx) error {
 }
 
 // HandlePatientConfirmPage shows a patient the appointment to confirm
-// GET: /appointments/:id/patient/confirm/:token
+// GET: /p/a/:token/confirm
 func (s *service) HandlePatientConfirmPage(c fiber.Ctx) error {
-	appointmentID := c.Params("id", "")
 	token := c.Params("token", "")
-	if appointmentID == "" || token == "" {
+	if token == "" {
 		return s.renderAppointmentNotFoundPage(c, c.Query("toast", ""), "")
 	}
 
-	appointment, err := s.TakeAppointmentByIDAndToken(c.Context(), appointmentID, token)
+	appointment, err := s.TakeAppointmentByToken(c.Context(), token)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.renderAppointmentNotFoundPage(c, c.Query("toast", ""), "")
 	}
 	if err != nil {
-		return s.Redirect(c, "/signin?toast=Failed to load appointment&level=error")
+		return s.renderAppointmentNotFoundPage(c, "Failed to load appointment", "error")
 	}
 
 	vc := view.NewCtx(c)
@@ -543,26 +542,24 @@ func (s *service) HandlePatientConfirmPage(c fiber.Ctx) error {
 }
 
 // HandlePatientConfirm lets a patient mark an appointment as confirmed
-// POST: /appointments/:id/patient/confirm/:token
+// POST: /p/a/:token/confirm
 func (s *service) HandlePatientConfirm(c fiber.Ctx) error {
-	appointmentID := c.Params("id", "")
 	token := c.Params("token", "")
-	if appointmentID == "" || token == "" {
-		return s.Redirect(c, "/signin?toast=Failed to confirm appointment&level=error")
+	if token == "" {
+		return s.renderAppointmentNotFoundPage(c, "Failed to confirm appointment", "error")
 	}
 
-	err := s.ConfirmAppointmentByIDAndToken(c.Context(), appointmentID, token)
+	err := s.ConfirmAppointmentByToken(c.Context(), token)
 	if err != nil {
-		redirectPath := "/signin?toast=Failed to confirm appointment&level=error"
-		return s.Redirect(c, redirectPath)
+		return s.renderAppointmentNotFoundPage(c, "Failed to confirm appointment", "error")
 	}
 
-	appointment, err := s.TakeAppointmentByIDAndToken(c.Context(), appointmentID, token)
+	appointment, err := s.TakeAppointmentByToken(c.Context(), token)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.renderAppointmentNotFoundPage(c, c.Query("toast", ""), "warning")
 	}
 	if err != nil {
-		return s.Redirect(c, "/signin?toast=Failed to load appointment&level=error")
+		return s.renderAppointmentNotFoundPage(c, "Failed to load appointment", "error")
 	}
 
 	vc := view.NewCtx(c)
@@ -571,20 +568,19 @@ func (s *service) HandlePatientConfirm(c fiber.Ctx) error {
 }
 
 // HandlePatientCancelPage lets a patient cancel an appointment
-// GET: /appointments/:id/patient/cancel/:token
+// GET: /p/a/:token/cancel
 func (s *service) HandlePatientCancelPage(c fiber.Ctx) error {
-	appointmentID := c.Params("id", "")
 	token := c.Params("token", "")
-	if appointmentID == "" || token == "" {
+	if token == "" {
 		return s.renderAppointmentNotFoundPage(c, c.Query("toast", ""), "")
 	}
 
-	appointment, err := s.TakeAppointmentByIDAndToken(c.Context(), appointmentID, token)
+	appointment, err := s.TakeAppointmentByToken(c.Context(), token)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.renderAppointmentNotFoundPage(c, c.Query("toast", ""), "")
 	}
 	if err != nil {
-		return s.Redirect(c, "/signin?toast=Failed to load appointment&level=error")
+		return s.renderAppointmentNotFoundPage(c, "Failed to load appointment", "error")
 	}
 
 	vc := view.NewCtx(c)
@@ -592,25 +588,24 @@ func (s *service) HandlePatientCancelPage(c fiber.Ctx) error {
 }
 
 // HandlePatientCancel lets a patient cancel an appointment
-// POST: /appointments/:id/patient/cancel/:token
+// POST: /p/a/:token/cancel
 func (s *service) HandlePatientCancel(c fiber.Ctx) error {
-	appointmentID := c.Params("id", "")
 	token := c.Params("token", "")
-	if appointmentID == "" || token == "" {
-		return s.Redirect(c, "/signin?toast=Failed to cancel appointment&level=error")
+	if token == "" {
+		return s.renderAppointmentNotFoundPage(c, "Failed to cancel appointment", "error")
 	}
 
-	err := s.CancelAppointmentByIDAndToken(c.Context(), appointmentID, token)
+	err := s.CancelAppointmentByToken(c.Context(), token)
 	if err != nil {
-		return s.Redirect(c, "/signin?toast=Failed to cancel appointment&level=error")
+		return s.renderAppointmentNotFoundPage(c, "Failed to cancel appointment", "error")
 	}
 
-	appointment, err := s.TakeAppointmentByIDAndToken(c.Context(), appointmentID, token)
+	appointment, err := s.TakeAppointmentByToken(c.Context(), token)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.renderAppointmentNotFoundPage(c, "Appointment not found", "warning")
 	}
 	if err != nil {
-		return s.Redirect(c, "/signin?toast=Failed to load appointment&level=error")
+		return s.renderAppointmentNotFoundPage(c, "Failed to load appointment", "error")
 	}
 
 	toast := c.Query("toast", "Success!")
@@ -623,18 +618,16 @@ func (s *service) HandlePatientCancel(c fiber.Ctx) error {
 
 // HandlePatientChangeDate lets a patient mark an appointment as needs
 // to change the date
-// POST: /appointments/:id/patient/changedate/:token
+// POST: /p/a/:token/changedate
 func (s *service) HandlePatientChangeDate(c fiber.Ctx) error {
-	appointmentID := c.Params("id", "")
 	token := c.Params("token", "")
-	if appointmentID == "" || token == "" {
-		return s.Redirect(c, "/signin?toast=Can't find that appointment&level=error")
+	if token == "" {
+		return s.renderAppointmentNotFoundPage(c, "Can't find that appointment", "error")
 	}
 
-	err := s.RequestAppointmentDateChangeByIDAndToken(c.Context(), appointmentID, token)
+	err := s.RequestAppointmentDateChangeByToken(c.Context(), token)
 	if err != nil {
-		redirectPath := "/signin?toast=Failed to request appointment date change&level=error"
-		return s.Redirect(c, redirectPath)
+		return s.renderAppointmentNotFoundPage(c, "Failed to request appointment date change", "error")
 	}
 
 	return c.SendString("A new date for your appointment has been requested.")

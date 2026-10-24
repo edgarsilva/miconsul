@@ -259,10 +259,7 @@ func (s *service) DeleteAppointmentByID(ctx context.Context, userID uint, appoin
 	return nil
 }
 
-func (s *service) TakeAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) (models.Appointment, error) {
-	if strings.TrimSpace(appointmentID) == "" {
-		return models.Appointment{}, ErrIDRequired
-	}
+func (s *service) TakeAppointmentByToken(ctx context.Context, token string) (models.Appointment, error) {
 	if strings.TrimSpace(token) == "" {
 		return models.Appointment{}, ErrTokenRequired
 	}
@@ -271,7 +268,7 @@ func (s *service) TakeAppointmentByIDAndToken(ctx context.Context, appointmentID
 		Preload("Clinic", nil).
 		Preload("User", nil).
 		Preload("Patient", nil).
-		Where("uid = ? AND token = ?", appointmentID, token).
+		Where("token = ?", token).
 		Take(ctx)
 	if err != nil {
 		return models.Appointment{}, err
@@ -299,10 +296,7 @@ func (s *service) TakePatientByUIDWithLastDoneAppointment(ctx context.Context, u
 	return patient, nil
 }
 
-func (s *service) UpdateAppointmentByIDAndToken(ctx context.Context, appointmentID, token string, selectColumns []string, updates appointmentTokenUpdates) error {
-	if strings.TrimSpace(appointmentID) == "" {
-		return ErrIDRequired
-	}
+func (s *service) UpdateAppointmentByToken(ctx context.Context, token string, selectColumns []string, updates appointmentTokenUpdates) error {
 	if strings.TrimSpace(token) == "" {
 		return ErrTokenRequired
 	}
@@ -317,7 +311,7 @@ func (s *service) UpdateAppointmentByIDAndToken(ctx context.Context, appointment
 
 	result := s.DB.WithContext(ctx).
 		Model(&models.Appointment{}).
-		Where("uid = ? AND token = ?", appointmentID, token).
+		Where("token = ?", token).
 		Select(selectColumns).
 		Omit("UserID", "Clinic", "Patient", "User", "FeedEvents", "Notifications").
 		Updates(&updates)
@@ -331,16 +325,16 @@ func (s *service) UpdateAppointmentByIDAndToken(ctx context.Context, appointment
 	return nil
 }
 
-func (s *service) ConfirmAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) error {
+func (s *service) ConfirmAppointmentByToken(ctx context.Context, token string) error {
 	updates := appointmentTokenUpdates{
 		ConfirmedAt: time.Now(),
 		Status:      models.AppointmentConfirmed,
 	}
-	if err := s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"ConfirmedAt", "Status"}, updates); err != nil {
+	if err := s.UpdateAppointmentByToken(ctx, token, []string{"ConfirmedAt", "Status"}, updates); err != nil {
 		return err
 	}
 
-	appointment, err := s.TakeAppointmentByIDAndToken(ctx, appointmentID, token)
+	appointment, err := s.TakeAppointmentByToken(ctx, token)
 	if err != nil {
 		return err
 	}
@@ -353,16 +347,16 @@ func (s *service) ConfirmAppointmentByIDAndToken(ctx context.Context, appointmen
 	return s.DB.WithContext(ctx).Create(&event).Error
 }
 
-func (s *service) CancelAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) error {
+func (s *service) CancelAppointmentByToken(ctx context.Context, token string) error {
 	updates := appointmentTokenUpdates{
 		CanceledAt: time.Now(),
 		Status:     models.AppointmentCanceled,
 	}
-	if err := s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"CanceledAt", "Status"}, updates); err != nil {
+	if err := s.UpdateAppointmentByToken(ctx, token, []string{"CanceledAt", "Status"}, updates); err != nil {
 		return err
 	}
 
-	appointment, err := s.TakeAppointmentByIDAndToken(ctx, appointmentID, token)
+	appointment, err := s.TakeAppointmentByToken(ctx, token)
 	if err != nil {
 		return err
 	}
@@ -375,12 +369,12 @@ func (s *service) CancelAppointmentByIDAndToken(ctx context.Context, appointment
 	return s.DB.WithContext(ctx).Create(&event).Error
 }
 
-func (s *service) RequestAppointmentDateChangeByIDAndToken(ctx context.Context, appointmentID, token string) error {
+func (s *service) RequestAppointmentDateChangeByToken(ctx context.Context, token string) error {
 	updates := appointmentTokenUpdates{
 		PendingAt: time.Now(),
 		Status:    models.AppointmentPending,
 	}
-	return s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"PendingAt", "Status"}, updates)
+	return s.UpdateAppointmentByToken(ctx, token, []string{"PendingAt", "Status"}, updates)
 }
 
 func (s *service) recordFeedEvent(ctx context.Context, userID uint, appointmentUID string, action models.EventAction) error {

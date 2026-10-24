@@ -185,18 +185,18 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 		}
 
 		app := fiber.New()
-		app.Get("/appointments/:id/patient/confirm/:token", svc.HandlePatientConfirmPage)
-		app.Post("/appointments/:id/patient/confirm/:token", svc.HandlePatientConfirm)
-		app.Get("/appointments/:id/patient/cancel/:token", svc.HandlePatientCancelPage)
-		app.Post("/appointments/:id/patient/cancel/:token", svc.HandlePatientCancel)
-		app.Post("/appointments/:id/patient/changedate/:token", svc.HandlePatientChangeDate)
+		app.Get("/p/a/:token/confirm", svc.HandlePatientConfirmPage)
+		app.Post("/p/a/:token/confirm", svc.HandlePatientConfirm)
+		app.Get("/p/a/:token/cancel", svc.HandlePatientCancelPage)
+		app.Post("/p/a/:token/cancel", svc.HandlePatientCancel)
+		app.Post("/p/a/:token/changedate", svc.HandlePatientChangeDate)
 
 		confirmPath := tokenApnt.ConfirmPath()
 		resp0, err := app.Test(httptest.NewRequest(http.MethodGet, confirmPath, nil))
 		if err != nil || resp0.StatusCode != fiber.StatusOK {
 			t.Fatalf("patient confirm page expected 200, got status=%d err=%v", resp0.StatusCode, err)
 		}
-		afterPage, err := svc.TakeAppointmentByIDAndToken(t.Context(), tokenApnt.UID, tokenApnt.Token)
+		afterPage, err := svc.TakeAppointmentByToken(t.Context(), tokenApnt.Token)
 		if err != nil {
 			t.Fatalf("load appointment after confirm page: %v", err)
 		}
@@ -208,7 +208,7 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 		if err != nil || resp1.StatusCode != fiber.StatusOK {
 			t.Fatalf("patient confirm expected 200, got status=%d err=%v", resp1.StatusCode, err)
 		}
-		afterPost, err := svc.TakeAppointmentByIDAndToken(t.Context(), tokenApnt.UID, tokenApnt.Token)
+		afterPost, err := svc.TakeAppointmentByToken(t.Context(), tokenApnt.Token)
 		if err != nil {
 			t.Fatalf("load appointment after confirm: %v", err)
 		}
@@ -216,17 +216,17 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 			t.Fatalf("POST confirm must confirm the appointment")
 		}
 
-		resp2, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/"+tokenApnt.UID+"/patient/cancel/"+tokenApnt.Token, nil))
+		resp2, err := app.Test(httptest.NewRequest(http.MethodGet, tokenApnt.CancelPath(), nil))
 		if err != nil || resp2.StatusCode != fiber.StatusOK {
 			t.Fatalf("patient cancel page expected 200, got status=%d err=%v", resp2.StatusCode, err)
 		}
 
-		resp3, err := app.Test(httptest.NewRequest(http.MethodPost, "/appointments/"+tokenApnt.UID+"/patient/cancel/"+tokenApnt.Token, nil))
+		resp3, err := app.Test(httptest.NewRequest(http.MethodPost, tokenApnt.CancelPath(), nil))
 		if err != nil || resp3.StatusCode != fiber.StatusOK {
 			t.Fatalf("patient cancel expected 200, got status=%d err=%v", resp3.StatusCode, err)
 		}
 
-		resp4, err := app.Test(httptest.NewRequest(http.MethodPost, "/appointments/"+tokenApnt.UID+"/patient/changedate/"+tokenApnt.Token, nil))
+		resp4, err := app.Test(httptest.NewRequest(http.MethodPost, "/p/a/"+tokenApnt.Token+"/changedate", nil))
 		if err != nil || resp4.StatusCode != fiber.StatusOK {
 			t.Fatalf("patient change date expected 200, got status=%d err=%v", resp4.StatusCode, err)
 		}

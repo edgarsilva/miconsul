@@ -83,7 +83,7 @@ templ AppointmentCancelPage(c *Ctx, appointment models.Appointment) {
 						class="btn btn-soft"
 					><span class="inline-flex items-center gap-2"><span>Contact us in</span>@IconWhatsapp("size-6")</span></a>
 					if appointment.CanceledAt.IsZero() {
-						<form action={ templ.URL("/appointments/" + appointment.UID + "/patient/cancel/" + appointment.Token) } method="POST" hx-boost="true">
+						<form action={ templ.URL(appointment.CancelPath()) } method="POST" hx-boost="true">
 							<button type="submit" class="btn btn-error btn-soft">{ c.l("str.yes_cancel_my_appointment") }</button>
 						</form>
 					} else {

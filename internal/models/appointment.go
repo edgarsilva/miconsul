@@ -104,12 +104,14 @@ func (a *Appointment) PriceInputValue() string {
 	return v
 }
 
+// ConfirmPath is the patient's public link to confirm the appointment.
 func (a *Appointment) ConfirmPath() string {
-	return "/appointments/" + a.UID + "/patient/confirm/" + a.Token
+	return "/p/a/" + a.Token + "/confirm"
 }
 
+// CancelPath is the patient's public link to cancel the appointment.
 func (a *Appointment) CancelPath() string {
-	return "/appointments/" + a.UID + "/patient/cancel/" + a.Token
+	return "/p/a/" + a.Token + "/cancel"
 }
 
 func (a Appointment) AlertableID() string {
