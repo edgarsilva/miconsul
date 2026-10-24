@@ -205,11 +205,13 @@ func AppointmentRoutes(s *server.Server, authSvc auth.Runtime) error {
 	g.Post("/:id/delete", a.HandleDelete)
 	g.Delete("/:id", a.HandleDelete)
 
-	g.Get("/:id/patient/confirm/:token", a.HandlePatientConfirmPage)
-	g.Post("/:id/patient/confirm/:token", a.HandlePatientConfirm)
-	g.Post("/:id/patient/changedate/:token", a.HandlePatientChangeDate)
-	g.Get("/:id/patient/cancel/:token", a.HandlePatientCancelPage)
-	g.Post("/:id/patient/cancel/:token", a.HandlePatientCancel)
+	// Patient links are public: the token in the link is the credential.
+	pg := a.Group("/p/a")
+	pg.Get("/:token/confirm", a.HandlePatientConfirmPage)
+	pg.Post("/:token/confirm", a.HandlePatientConfirm)
+	pg.Post("/:token/changedate", a.HandlePatientChangeDate)
+	pg.Get("/:token/cancel", a.HandlePatientCancelPage)
+	pg.Post("/:token/cancel", a.HandlePatientCancel)
 
 	return nil
 }

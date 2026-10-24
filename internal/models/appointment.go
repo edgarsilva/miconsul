@@ -85,7 +85,10 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
+// BeforeSave stores BookedAt in UTC and validates the status.
 func (a *Appointment) BeforeSave(tx *gorm.DB) error {
+	a.BookedAt = a.BookedAt.UTC()
+
 	// Allow partial updates where status is intentionally omitted.
 	if a.Status == "" {
 		return nil
@@ -104,12 +107,39 @@ func (a *Appointment) PriceInputValue() string {
 	return v
 }
 
-func (a *Appointment) ConfirmPath() string {
-	return "/appointments/" + a.UID + "/patient/confirm/" + a.Token
+// PatientLinkGrace is how long after the appointment time its patient links
+// keep working.
+const PatientLinkGrace = time.Hour
+
+// PatientCanConfirm reports whether the patient may still confirm or ask to
+// change the date.
+func (a Appointment) PatientCanConfirm() bool {
+	switch a.Status {
+	case AppointmentCanceled, AppointmentInProgress, AppointmentDone:
+		return false
+	default:
+		return true
+	}
 }
 
+// PatientCanCancel reports whether the patient may still cancel.
+func (a Appointment) PatientCanCancel() bool {
+	switch a.Status {
+	case AppointmentInProgress, AppointmentDone:
+		return false
+	default:
+		return true
+	}
+}
+
+// ConfirmPath is the patient's public link to confirm the appointment.
+func (a *Appointment) ConfirmPath() string {
+	return "/p/a/" + a.Token + "/confirm"
+}
+
+// CancelPath is the patient's public link to cancel the appointment.
 func (a *Appointment) CancelPath() string {
-	return "/appointments/" + a.UID + "/patient/cancel/" + a.Token
+	return "/p/a/" + a.Token + "/cancel"
 }
 
 func (a Appointment) AlertableID() string {

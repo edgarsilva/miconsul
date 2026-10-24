@@ -53,26 +53,11 @@ func TestServiceInputValidation(t *testing.T) {
 		}
 	})
 
-	t.Run("token-guarded lookups and mutations fail fast on blank token", func(t *testing.T) {
+	t.Run("token lookup fails fast on blank token", func(t *testing.T) {
 		for _, token := range []string{"", "   "} {
-			if _, err := svc.TakeAppointmentByIDAndToken(ctx, "apnt_1", token); !errors.Is(err, ErrTokenRequired) {
+			if _, err := svc.TakeAppointmentByToken(ctx, token); !errors.Is(err, ErrTokenRequired) {
 				t.Fatalf("take with token %q: expected ErrTokenRequired, got %v", token, err)
 			}
-			if err := svc.UpdateAppointmentByIDAndToken(ctx, "apnt_1", token, []string{"Status"}, appointmentTokenUpdates{}); !errors.Is(err, ErrTokenRequired) {
-				t.Fatalf("update with token %q: expected ErrTokenRequired, got %v", token, err)
-			}
-			if err := svc.ConfirmAppointmentByIDAndToken(ctx, "apnt_1", token); !errors.Is(err, ErrTokenRequired) {
-				t.Fatalf("confirm with token %q: expected ErrTokenRequired, got %v", token, err)
-			}
-			if err := svc.CancelAppointmentByIDAndToken(ctx, "apnt_1", token); !errors.Is(err, ErrTokenRequired) {
-				t.Fatalf("cancel with token %q: expected ErrTokenRequired, got %v", token, err)
-			}
-			if err := svc.RequestAppointmentDateChangeByIDAndToken(ctx, "apnt_1", token); !errors.Is(err, ErrTokenRequired) {
-				t.Fatalf("date change with token %q: expected ErrTokenRequired, got %v", token, err)
-			}
-		}
-		if _, err := svc.TakeAppointmentByIDAndToken(ctx, "", "tok"); !errors.Is(err, ErrIDRequired) {
-			t.Fatalf("take with blank id: expected ErrIDRequired, got %v", err)
 		}
 	})
 
@@ -82,9 +67,6 @@ func TestServiceInputValidation(t *testing.T) {
 		}
 		if err := svc.CancelAppointmentByID(ctx, 1, "apnt_1", appointmentCancelUpdates{Status: models.AppointmentStatus("invalid")}); err == nil {
 			t.Fatalf("expected cancel invalid status error")
-		}
-		if err := svc.UpdateAppointmentByIDAndToken(ctx, "apnt_1", "tok", []string{"Status"}, appointmentTokenUpdates{Status: models.AppointmentStatus("invalid")}); err == nil {
-			t.Fatalf("expected token update invalid status error")
 		}
 	})
 
