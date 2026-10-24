@@ -23,6 +23,10 @@ var (
 	// ErrAppointmentClosed means a valid patient link asked for an action the
 	// appointment's status no longer allows.
 	ErrAppointmentClosed = errors.New("appointment can no longer be changed")
+
+	// errAlreadyApplied means the appointment already has the status a patient
+	// link action sets.
+	errAlreadyApplied = errors.New("appointment already has that status")
 )
 
 const (
@@ -300,8 +304,9 @@ func (s *service) TakePatientByUIDWithLastDoneAppointment(ctx context.Context, u
 }
 
 // UpdateAppointmentByToken applies a patient link action. It returns
-// gorm.ErrRecordNotFound for a wrong or expired token, and ErrAppointmentClosed
-// when the appointment is in one of the blocked statuses.
+// gorm.ErrRecordNotFound for a wrong or expired token, errAlreadyApplied when
+// the appointment already has the target status, and ErrAppointmentClosed when
+// it is in another blocked status.
 func (s *service) UpdateAppointmentByToken(ctx context.Context, token string, selectColumns []string, blocked []models.AppointmentStatus, updates appointmentTokenUpdates) error {
 	if strings.TrimSpace(token) == "" {
 		return ErrTokenRequired
@@ -332,8 +337,12 @@ func (s *service) UpdateAppointmentByToken(ctx context.Context, token string, se
 		return nil
 	}
 
-	if _, err := s.TakeAppointmentByToken(ctx, token); err != nil {
+	appointment, err := s.TakeAppointmentByToken(ctx, token)
+	if err != nil {
 		return err
+	}
+	if updates.Status != "" && appointment.Status == updates.Status {
+		return errAlreadyApplied
 	}
 
 	return ErrAppointmentClosed
@@ -344,7 +353,12 @@ func (s *service) ConfirmAppointmentByToken(ctx context.Context, token string) e
 		ConfirmedAt: time.Now(),
 		Status:      models.AppointmentConfirmed,
 	}
-	if err := s.UpdateAppointmentByToken(ctx, token, []string{"ConfirmedAt", "Status"}, models.PatientConfirmBlocked(), updates); err != nil {
+	blocked := append(models.PatientConfirmBlocked(), models.AppointmentConfirmed)
+	err := s.UpdateAppointmentByToken(ctx, token, []string{"ConfirmedAt", "Status"}, blocked, updates)
+	if errors.Is(err, errAlreadyApplied) {
+		return nil
+	}
+	if err != nil {
 		return err
 	}
 
@@ -366,7 +380,12 @@ func (s *service) CancelAppointmentByToken(ctx context.Context, token string) er
 		CanceledAt: time.Now(),
 		Status:     models.AppointmentCanceled,
 	}
-	if err := s.UpdateAppointmentByToken(ctx, token, []string{"CanceledAt", "Status"}, models.PatientCancelBlocked(), updates); err != nil {
+	blocked := append(models.PatientCancelBlocked(), models.AppointmentCanceled)
+	err := s.UpdateAppointmentByToken(ctx, token, []string{"CanceledAt", "Status"}, blocked, updates)
+	if errors.Is(err, errAlreadyApplied) {
+		return nil
+	}
+	if err != nil {
 		return err
 	}
 

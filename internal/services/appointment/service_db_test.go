@@ -236,3 +236,57 @@ func newAppointmentServiceForTests(t *testing.T) (*service, models.User, models.
 
 	return svc, u, cl, pt
 }
+
+func TestPatientLinkActionsAreIdempotent(t *testing.T) {
+	svc, user, clinic, patient := newAppointmentServiceForTests(t)
+	ctx := context.Background()
+
+	apnt := models.Appointment{
+		UserID:    user.ID,
+		ClinicID:  clinic.ID,
+		PatientID: patient.ID,
+		BookedAt:  time.Now().Add(24 * time.Hour),
+		Token:     "tok_idempotent",
+	}
+	if err := svc.CreateAppointment(ctx, &apnt); err != nil {
+		t.Fatalf("create appointment: %v", err)
+	}
+
+	countEvents := func(action models.EventAction) int64 {
+		var n int64
+		if err := svc.DB.GormDB().Model(&models.FeedEvent{}).Where("action = ? AND feed_eventable_id = ?", string(action), apnt.UID).Count(&n).Error; err != nil {
+			t.Fatalf("count feed events: %v", err)
+		}
+		return n
+	}
+
+	for range 2 {
+		if err := svc.ConfirmAppointmentByToken(ctx, apnt.Token); err != nil {
+			t.Fatalf("confirm: %v", err)
+		}
+	}
+	first, err := svc.TakeAppointmentByToken(ctx, apnt.Token)
+	if err != nil {
+		t.Fatalf("take: %v", err)
+	}
+	if n := countEvents(models.EventActionConfirmed); n != 1 {
+		t.Fatalf("confirmed feed events after two confirms = %d, want 1", n)
+	}
+
+	if err := svc.ConfirmAppointmentByToken(ctx, apnt.Token); err != nil {
+		t.Fatalf("third confirm: %v", err)
+	}
+	again, _ := svc.TakeAppointmentByToken(ctx, apnt.Token)
+	if !again.ConfirmedAt.Equal(first.ConfirmedAt) {
+		t.Fatalf("a repeat confirm changed ConfirmedAt")
+	}
+
+	for range 2 {
+		if err := svc.CancelAppointmentByToken(ctx, apnt.Token); err != nil {
+			t.Fatalf("cancel: %v", err)
+		}
+	}
+	if n := countEvents(models.EventActionCanceled); n != 1 {
+		t.Fatalf("canceled feed events after two cancels = %d, want 1", n)
+	}
+}
