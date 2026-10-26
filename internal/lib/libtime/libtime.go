@@ -12,6 +12,15 @@ import (
 
 type Timezone = string
 
+// Timeframe is a calendar day, a week starting Monday, or a month.
+type Timeframe string
+
+const (
+	TimeframeDay   Timeframe = "day"
+	TimeframeWeek  Timeframe = "week"
+	TimeframeMonth Timeframe = "month"
+)
+
 const (
 	AmericaNewYork      Timezone = "America/New_York"
 	AmericaChicago      Timezone = "America/Chicago"
@@ -20,7 +29,6 @@ const (
 	AmericaAnchorage    Timezone = "America/Anchorage"
 	PacificHonolulu     Timezone = "Pacific/Honolulu"
 	AmericaMexicoCity   Timezone = "America/Mexico_City"
-	AmericaGuadalajara  Timezone = "America/Guadalajara"
 	AmericaTijuana      Timezone = "America/Tijuana"
 	AmericaChihuahua    Timezone = "America/Chihuahua"
 	AmericaMazatlan     Timezone = "America/Mazatlan"
@@ -37,7 +45,7 @@ const (
 	AmericaEirunepe     Timezone = "America/Eirunepe"
 	AmericaRioBranco    Timezone = "America/Rio_Branco"
 	AmericaWinnipeg     Timezone = "America/Winnipeg"
-	AmericaSaskatchewan Timezone = "America/Saskatchewan"
+	AmericaRegina       Timezone = "America/Regina"
 	AmericaAdak         Timezone = "America/Adak"
 	PacificMidway       Timezone = "Pacific/Midway"
 )
@@ -60,6 +68,24 @@ func BoW(t time.Time) time.Time {
 func BoM(t time.Time) time.Time {
 	year, month, _ := t.Date()
 	return time.Date(year, month, 1, 0, 0, 0, 0, t.Location())
+}
+
+// TimeframeBounds returns the bounds [start, end) of the timeframe that
+// contains t in timezone tz. Any other timeframe means a day.
+func TimeframeBounds(t time.Time, tz Timezone, tf Timeframe) (start, end time.Time) {
+	local := InTimezone(t, tz)
+
+	switch tf {
+	case TimeframeWeek:
+		start = BoW(local)
+		return start, start.AddDate(0, 0, 7)
+	case TimeframeMonth:
+		start = BoM(local)
+		return start, start.AddDate(0, 1, 0)
+	default:
+		start = BoD(local)
+		return start, start.AddDate(0, 0, 1)
+	}
 }
 
 func DaysInMonth(m time.Month, year int) time.Duration {

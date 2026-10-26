@@ -90,12 +90,6 @@ func TestScopesAndBaseHelpers(t *testing.T) {
 		t.Fatalf("open sqlite dry-run: %v", err)
 	}
 
-	stmt := db.Model(&Appointment{}).Scopes(AppointmentWithPendingNotifications).Find(&[]Appointment{}).Statement
-	sql := strings.ToLower(stmt.SQL.String())
-	if !strings.Contains(sql, "not exists") || !strings.Contains(sql, "notifications") {
-		t.Fatalf("expected pending notifications scope filter, got %q", stmt.SQL.String())
-	}
-
 	today := db.Model(&Appointment{}).Scopes(AppointmentBookedToday).Find(&[]Appointment{}).Statement.SQL.String()
 	if !strings.Contains(strings.ToLower(today), "booked_at") {
 		t.Fatalf("expected booked today scope to query booked_at")
@@ -309,5 +303,43 @@ func TestUserPublic(t *testing.T) {
 	}
 	if got := u.Public(); got != want {
 		t.Fatalf("Public() = %+v, want %+v", got, want)
+	}
+}
+
+func TestAppointmentBookedWithinMatchesUTCStorage(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open("file:"+t.Name()+"?mode=memory"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open sqlite: %v", err)
+	}
+	if err := db.Exec("CREATE TABLE appointments (id INTEGER PRIMARY KEY, booked_at DATETIME)").Error; err != nil {
+		t.Fatalf("create table: %v", err)
+	}
+
+	mx, err := time.LoadLocation(DefaultTimezone)
+	if err != nil {
+		t.Fatalf("load %s: %v", DefaultTimezone, err)
+	}
+	now := time.Date(2026, 10, 28, 20, 30, 0, 0, mx)
+
+	bookings := map[string]time.Time{
+		"start of the day":   time.Date(2026, 10, 28, 0, 0, 0, 0, mx),
+		"tonight":            time.Date(2026, 10, 28, 21, 0, 0, 0, mx),
+		"last minute":        time.Date(2026, 10, 28, 23, 59, 59, 0, mx),
+		"yesterday late":     time.Date(2026, 10, 27, 23, 59, 59, 0, mx),
+		"start of tomorrow":  time.Date(2026, 10, 29, 0, 0, 0, 0, mx),
+		"tomorrow afternoon": time.Date(2026, 10, 29, 15, 0, 0, 0, mx),
+	}
+	for name, bookedAt := range bookings {
+		if err := db.Exec("INSERT INTO appointments (booked_at) VALUES (?)", bookedAt.UTC()).Error; err != nil {
+			t.Fatalf("insert %s: %v", name, err)
+		}
+	}
+
+	var count int64
+	if err := appointmentBookedWithin(db.Table("appointments"), now, "day").Count(&count).Error; err != nil {
+		t.Fatalf("count: %v", err)
+	}
+	if count != 3 {
+		t.Fatalf("booked today = %d, want 3 (start of the day, tonight, last minute)", count)
 	}
 }

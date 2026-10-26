@@ -123,8 +123,10 @@ func (s service) CalcMonthlyStats(ctx context.Context, cu models.User, imodel an
 	var cnt int64
 	s.DB.WithContext(localCtx).Model(imodel).Where(imodel).Count(&cnt)
 
+	bom := libtime.BoM(libtime.InTimezone(time.Now(), models.DefaultTimezone))
+
 	var lastMonth int64
-	s.DB.WithContext(localCtx).Model(imodel).Where("user_id = ? AND created_at <= ?", cu.ID, libtime.BoM(time.Now())).Count(&lastMonth)
+	s.DB.WithContext(localCtx).Model(imodel).Where("user_id = ? AND created_at < ?", cu.ID, bom.In(time.Local)).Count(&lastMonth)
 
 	diff := cnt - lastMonth
 

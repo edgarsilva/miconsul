@@ -77,14 +77,7 @@ func (s *service) registerReminderHandler() error {
 }
 
 func (s *service) handleReminderSweepJob(ctx context.Context, _ jobs.Job) error {
-	st := time.Now()
-	year, month, day := st.Date()
-	et := time.Date(year, month, day, st.Hour(), st.Minute(), 0, 0, st.Location()).Add(2 * time.Hour)
-
-	appointments, err := gorm.G[models.Appointment](s.DB.GormDB()).
-		Where("booked_at > ?", st).
-		Where("booked_at <= ?", et).
-		Find(ctx)
+	appointments, err := s.findAppointmentsDueForReminder(ctx, time.Now())
 	if err != nil {
 		return fmt.Errorf("load appointments for reminder sweep: %w", err)
 	}
@@ -218,4 +211,16 @@ func (s *service) notificationSentAnyMedium(ctx context.Context, appointment mod
 	}
 
 	return count > 0, nil
+}
+
+// findAppointmentsDueForReminder returns appointments booked within the two
+// hours after now.
+func (s *service) findAppointmentsDueForReminder(ctx context.Context, now time.Time) ([]models.Appointment, error) {
+	start := now.UTC()
+	end := start.Truncate(time.Minute).Add(2 * time.Hour)
+
+	return gorm.G[models.Appointment](s.DB.GormDB()).
+		Where("booked_at > ?", start).
+		Where("booked_at <= ?", end).
+		Find(ctx)
 }

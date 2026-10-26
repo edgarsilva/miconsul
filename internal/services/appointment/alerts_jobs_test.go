@@ -33,6 +33,42 @@ func TestSendReminderAlertExecutesWorkerPath(t *testing.T) {
 	}
 }
 
+func TestFindAppointmentsDueForReminderComparesInUTC(t *testing.T) {
+	svc, user, clinic, patient := newAppointmentServiceForTests(t)
+
+	mx, err := time.LoadLocation(models.DefaultTimezone)
+	if err != nil {
+		t.Fatalf("load %s: %v", models.DefaultTimezone, err)
+	}
+	now := time.Now().In(mx)
+
+	bookings := map[string]time.Duration{
+		"tok_soon":  time.Hour,
+		"tok_later": 3 * time.Hour,
+		"tok_past":  -time.Hour,
+	}
+	for token, in := range bookings {
+		apnt := models.Appointment{
+			UserID:    user.ID,
+			ClinicID:  clinic.ID,
+			PatientID: patient.ID,
+			BookedAt:  now.Add(in),
+			Token:     token,
+		}
+		if err := svc.CreateAppointment(t.Context(), &apnt); err != nil {
+			t.Fatalf("create appointment %s: %v", token, err)
+		}
+	}
+
+	due, err := svc.findAppointmentsDueForReminder(t.Context(), now)
+	if err != nil {
+		t.Fatalf("find due appointments: %v", err)
+	}
+	if len(due) != 1 || due[0].Token != "tok_soon" {
+		t.Fatalf("due = %d appointments %v, want only tok_soon", len(due), dueTokens(due))
+	}
+}
+
 func TestHandleBookedAlertJobSkipsWhenAlreadySent(t *testing.T) {
 	svc, user, clinic, patient := newAppointmentServiceForTests(t)
 
@@ -142,4 +178,12 @@ func TestNotificationSentAnyMediumUsesPrimaryKeyAlertableID(t *testing.T) {
 	if !sent {
 		t.Fatalf("expected reminder to be treated as already sent")
 	}
+}
+
+func dueTokens(appointments []models.Appointment) []string {
+	tokens := make([]string, 0, len(appointments))
+	for _, a := range appointments {
+		tokens = append(tokens, a.Token)
+	}
+	return tokens
 }

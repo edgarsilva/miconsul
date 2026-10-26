@@ -156,34 +156,16 @@ func (a Appointment) AlertableType() string {
 
 // Scopes
 
-func AppointmentWithPendingNotifications(db *gorm.DB) *gorm.DB {
-	st := time.Now()
-	year, month, day := st.Date()
-	et := time.Date(year, month, day, st.Hour(), st.Minute(), 0, 0, st.Location()).Add(2 * time.Hour)
-
-	return db.
-		Where("booked_at > ?", st).
-		Where("booked_at <= ?", et).
-		Where("NOT EXISTS (SELECT 1 FROM notifications WHERE notifications.notificationable_id = CAST(appointments.id AS TEXT) AND notifications.notificationable_type = ? AND notifications.name = ? AND notifications.medium = ? AND notifications.status IN ?)", "appointments", "appointment_reminder", NotificationMediumEmail, []NotificationStatus{NotificationSent, NotificationSuccess})
-}
-
 func AppointmentBookedToday(db *gorm.DB) *gorm.DB {
-	t := libtime.BoD(time.Now())
-
-	return db.Where("booked_at > ?", t).Where("booked_at < ?", t.Add(time.Hour*24))
+	return appointmentBookedWithin(db, time.Now(), "day")
 }
 
 func AppointmentBookedThisWeek(db *gorm.DB) *gorm.DB {
-	t := libtime.BoW(time.Now())
-
-	return db.Where("booked_at > ?", t).Where("booked_at < ?", t.Add(time.Hour*24*7))
+	return appointmentBookedWithin(db, time.Now(), "week")
 }
 
 func AppointmentBookedThisMonth(db *gorm.DB) *gorm.DB {
-	t := libtime.BoM(time.Now())
-	dinm := libtime.DaysInMonth(t.Month(), t.Year())
-
-	return db.Where("booked_at > ?", t).Where("booked_at < ?", t.Add(time.Hour*24*dinm))
+	return appointmentBookedWithin(db, time.Now(), "month")
 }
 
 func (a *Appointment) LocalTimezone() string {
@@ -216,4 +198,10 @@ func (a Appointment) FeedEventSubject() (name, id, typ, url string) {
 // FeedEventTarget returns the patient as the target of the event.
 func (a Appointment) FeedEventTarget() (name, id, typ, url string) {
 	return a.Patient.Name, a.Patient.UID, "patients", "/patients/" + a.Patient.UID
+}
+
+func appointmentBookedWithin(db *gorm.DB, now time.Time, timeframe string) *gorm.DB {
+	start, end := libtime.TimeframeBounds(now, DefaultTimezone, libtime.Timeframe(timeframe))
+
+	return db.Where("booked_at >= ?", start.UTC()).Where("booked_at < ?", end.UTC())
 }
