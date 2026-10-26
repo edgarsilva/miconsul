@@ -4,6 +4,7 @@ package appointment
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -20,6 +21,9 @@ type service struct {
 var (
 	ErrIDRequired    = errors.New("id is required")
 	ErrTokenRequired = errors.New("token is required")
+	// ErrAppointmentChanged means the appointment's status changed after it
+	// was loaded, so the action was not applied.
+	ErrAppointmentChanged = errors.New("appointment changed since it was loaded")
 )
 
 const (
@@ -259,10 +263,7 @@ func (s *service) DeleteAppointmentByID(ctx context.Context, userID uint, appoin
 	return nil
 }
 
-func (s *service) TakeAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) (models.Appointment, error) {
-	if strings.TrimSpace(appointmentID) == "" {
-		return models.Appointment{}, ErrIDRequired
-	}
+func (s *service) TakeAppointmentByToken(ctx context.Context, token string) (models.Appointment, error) {
 	if strings.TrimSpace(token) == "" {
 		return models.Appointment{}, ErrTokenRequired
 	}
@@ -271,7 +272,7 @@ func (s *service) TakeAppointmentByIDAndToken(ctx context.Context, appointmentID
 		Preload("Clinic", nil).
 		Preload("User", nil).
 		Preload("Patient", nil).
-		Where("uid = ? AND token = ?", appointmentID, token).
+		Where("token = ? AND booked_at > ?", token, patientLinkValidAfter()).
 		Take(ctx)
 	if err != nil {
 		return models.Appointment{}, err
@@ -299,88 +300,56 @@ func (s *service) TakePatientByUIDWithLastDoneAppointment(ctx context.Context, u
 	return patient, nil
 }
 
-func (s *service) UpdateAppointmentByIDAndToken(ctx context.Context, appointmentID, token string, selectColumns []string, updates appointmentTokenUpdates) error {
-	if strings.TrimSpace(appointmentID) == "" {
-		return ErrIDRequired
-	}
-	if strings.TrimSpace(token) == "" {
-		return ErrTokenRequired
-	}
-
-	if len(selectColumns) == 0 {
-		return errors.New("columns are required")
+// ConfirmAppointment marks a loaded appointment as confirmed by its patient
+// and records a feed event. Confirming an already confirmed appointment is a
+// no-op. It returns ErrAppointmentChanged when the status changed since the
+// appointment was loaded.
+func (s *service) ConfirmAppointment(ctx context.Context, appointment models.Appointment) (models.Appointment, error) {
+	if appointment.Status == models.AppointmentConfirmed {
+		return appointment, nil
 	}
 
-	if updates.Status != "" && !updates.Status.IsValid() {
-		return errors.New("invalid appointment status")
+	now := time.Now()
+	if err := s.setAppointmentStatus(ctx, appointment, models.AppointmentConfirmed, "confirmed_at", now); err != nil {
+		return appointment, err
 	}
+	appointment.Status = models.AppointmentConfirmed
+	appointment.ConfirmedAt = now
 
-	result := s.DB.WithContext(ctx).
-		Model(&models.Appointment{}).
-		Where("uid = ? AND token = ?", appointmentID, token).
-		Select(selectColumns).
-		Omit("UserID", "Clinic", "Patient", "User", "FeedEvents", "Notifications").
-		Updates(&updates)
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected != 1 {
-		return gorm.ErrRecordNotFound
-	}
-
-	return nil
+	return appointment, s.recordPatientFeedEvent(ctx, appointment, models.EventActionConfirmed)
 }
 
-func (s *service) ConfirmAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) error {
-	updates := appointmentTokenUpdates{
-		ConfirmedAt: time.Now(),
-		Status:      models.AppointmentConfirmed,
-	}
-	if err := s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"ConfirmedAt", "Status"}, updates); err != nil {
-		return err
-	}
-
-	appointment, err := s.TakeAppointmentByIDAndToken(ctx, appointmentID, token)
-	if err != nil {
-		return err
+// CancelAppointment marks a loaded appointment as canceled by its patient and
+// records a feed event. Canceling an already canceled appointment is a no-op.
+// It returns ErrAppointmentChanged when the status changed since the
+// appointment was loaded.
+func (s *service) CancelAppointment(ctx context.Context, appointment models.Appointment) (models.Appointment, error) {
+	if appointment.Status == models.AppointmentCanceled {
+		return appointment, nil
 	}
 
-	actorName := appointment.Patient.Name
-	if actorName == "" {
-		actorName = "Miconsul"
+	now := time.Now()
+	if err := s.setAppointmentStatus(ctx, appointment, models.AppointmentCanceled, "canceled_at", now); err != nil {
+		return appointment, err
 	}
-	event := models.NewFeedEvent(models.EventActionConfirmed, actorName, appointment.Patient.UID, "/patients/"+appointment.Patient.UID, appointment)
-	return s.DB.WithContext(ctx).Create(&event).Error
+	appointment.Status = models.AppointmentCanceled
+	appointment.CanceledAt = now
+
+	return appointment, s.recordPatientFeedEvent(ctx, appointment, models.EventActionCanceled)
 }
 
-func (s *service) CancelAppointmentByIDAndToken(ctx context.Context, appointmentID, token string) error {
-	updates := appointmentTokenUpdates{
-		CanceledAt: time.Now(),
-		Status:     models.AppointmentCanceled,
+// RequestAppointmentDateChange marks a loaded appointment as pending a new
+// date. It returns ErrAppointmentChanged when the status changed since the
+// appointment was loaded.
+func (s *service) RequestAppointmentDateChange(ctx context.Context, appointment models.Appointment) (models.Appointment, error) {
+	now := time.Now()
+	if err := s.setAppointmentStatus(ctx, appointment, models.AppointmentPending, "pending_at", now); err != nil {
+		return appointment, err
 	}
-	if err := s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"CanceledAt", "Status"}, updates); err != nil {
-		return err
-	}
+	appointment.Status = models.AppointmentPending
+	appointment.PendingAt = now
 
-	appointment, err := s.TakeAppointmentByIDAndToken(ctx, appointmentID, token)
-	if err != nil {
-		return err
-	}
-
-	actorName := appointment.Patient.Name
-	if actorName == "" {
-		actorName = "Miconsul"
-	}
-	event := models.NewFeedEvent(models.EventActionCanceled, actorName, appointment.Patient.UID, "/patients/"+appointment.Patient.UID, appointment)
-	return s.DB.WithContext(ctx).Create(&event).Error
-}
-
-func (s *service) RequestAppointmentDateChangeByIDAndToken(ctx context.Context, appointmentID, token string) error {
-	updates := appointmentTokenUpdates{
-		PendingAt: time.Now(),
-		Status:    models.AppointmentPending,
-	}
-	return s.UpdateAppointmentByIDAndToken(ctx, appointmentID, token, []string{"PendingAt", "Status"}, updates)
+	return appointment, nil
 }
 
 func (s *service) recordFeedEvent(ctx context.Context, userID uint, appointmentUID string, action models.EventAction) error {
@@ -567,4 +536,42 @@ func (s *service) FindRecentPatientsByUserID(ctx context.Context, userID uint, l
 	}
 
 	return patients, nil
+}
+
+// patientLinkValidAfter is the earliest appointment time a patient link still
+// works for.
+func patientLinkValidAfter() time.Time {
+	return time.Now().UTC().Add(-models.PatientLinkGrace)
+}
+
+// setAppointmentStatus sets status and stamps column with at, only while the
+// appointment still has the status it was loaded with.
+func (s *service) setAppointmentStatus(ctx context.Context, appointment models.Appointment, status models.AppointmentStatus, column string, at time.Time) error {
+	result := s.DB.WithContext(ctx).
+		Model(&models.Appointment{}).
+		Where("id = ? AND status = ?", appointment.ID, appointment.Status).
+		Updates(map[string]any{"status": status, column: at})
+	if result.Error != nil {
+		return fmt.Errorf("set appointment status: %w", result.Error)
+	}
+	if result.RowsAffected != 1 {
+		return ErrAppointmentChanged
+	}
+
+	return nil
+}
+
+// recordPatientFeedEvent records an action the patient took on the
+// appointment.
+func (s *service) recordPatientFeedEvent(ctx context.Context, appointment models.Appointment, action models.EventAction) error {
+	actorName := appointment.Patient.Name
+	if actorName == "" {
+		actorName = "Miconsul"
+	}
+	event := models.NewFeedEvent(action, actorName, appointment.Patient.UID, "/patients/"+appointment.Patient.UID, appointment)
+	if err := s.DB.WithContext(ctx).Create(&event).Error; err != nil {
+		return fmt.Errorf("record feed event: %w", err)
+	}
+
+	return nil
 }

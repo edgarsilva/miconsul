@@ -71,10 +71,10 @@ func TestAppointmentBeforeSaveAndHelpers(t *testing.T) {
 
 	apnt.UID = "apnt_1"
 	apnt.Token = "tok_1"
-	if got := apnt.ConfirmPath(); got != "/appointments/apnt_1/patient/confirm/tok_1" {
+	if got := apnt.ConfirmPath(); got != "/p/a/tok_1/confirm" {
 		t.Fatalf("unexpected confirm path %q", got)
 	}
-	if got := apnt.CancelPath(); got != "/appointments/apnt_1/patient/cancel/tok_1" {
+	if got := apnt.CancelPath(); got != "/p/a/tok_1/cancel" {
 		t.Fatalf("unexpected cancel path %q", got)
 	}
 	apnt.BookedAt = time.Date(2026, 1, 2, 15, 4, 0, 0, time.UTC)
@@ -232,10 +232,10 @@ func TestAppointmentAndIdentityHelpers(t *testing.T) {
 	if got := a.LocalTimezone(); got != DefaultTimezone {
 		t.Fatalf("expected default timezone fallback, got %q", got)
 	}
-	if !strings.Contains(a.ConfirmPath(), "/appointments/apnt_1/patient/confirm/tok_1") {
+	if !strings.Contains(a.ConfirmPath(), "/p/a/tok_1/confirm") {
 		t.Fatalf("unexpected confirm path %q", a.ConfirmPath())
 	}
-	if !strings.Contains(a.CancelPath(), "/appointments/apnt_1/patient/cancel/tok_1") {
+	if !strings.Contains(a.CancelPath(), "/p/a/tok_1/cancel") {
 		t.Fatalf("unexpected cancel path %q", a.CancelPath())
 	}
 

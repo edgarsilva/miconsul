@@ -2,6 +2,7 @@ package appointment
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -52,7 +53,7 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 		}
 	})
 
-	t.Run("token update wrappers execute", func(t *testing.T) {
+	t.Run("patient link actions", func(t *testing.T) {
 		apnt := models.Appointment{
 			UserID:    user.ID,
 			ClinicID:  clinic.ID,
@@ -65,22 +66,30 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 			t.Fatalf("create appointment: %v", err)
 		}
 
-		if err := svc.ConfirmAppointmentByIDAndToken(ctx, apnt.UID, apnt.Token); err != nil {
-			t.Fatalf("confirm by token: %v", err)
+		loaded, err := svc.TakeAppointmentByToken(ctx, apnt.Token)
+		if err != nil {
+			t.Fatalf("take by token: %v", err)
 		}
-		if err := svc.CancelAppointmentByIDAndToken(ctx, apnt.UID, apnt.Token); err != nil {
-			t.Fatalf("cancel by token: %v", err)
+		if loaded, err = svc.ConfirmAppointment(ctx, loaded); err != nil {
+			t.Fatalf("confirm: %v", err)
 		}
-		if err := svc.RequestAppointmentDateChangeByIDAndToken(ctx, apnt.UID, apnt.Token); err != nil {
-			t.Fatalf("request date change by token: %v", err)
+		if loaded, err = svc.RequestAppointmentDateChange(ctx, loaded); err != nil {
+			t.Fatalf("request date change: %v", err)
 		}
 
-		got, err := svc.TakeAppointmentByIDAndToken(ctx, apnt.UID, apnt.Token)
+		got, err := svc.TakeAppointmentByToken(ctx, apnt.Token)
 		if err != nil {
-			t.Fatalf("take by id and token: %v", err)
+			t.Fatalf("take by token: %v", err)
 		}
-		if got.Status != models.AppointmentPending {
-			t.Fatalf("expected pending status after date change, got %q", got.Status)
+		if got.Status != models.AppointmentPending || loaded.Status != models.AppointmentPending {
+			t.Fatalf("expected pending status after date change, got stored %q, returned %q", got.Status, loaded.Status)
+		}
+
+		if loaded, err = svc.CancelAppointment(ctx, loaded); err != nil {
+			t.Fatalf("cancel: %v", err)
+		}
+		if loaded.PatientCanConfirm() {
+			t.Fatalf("a canceled appointment must not allow confirm or date change")
 		}
 	})
 
@@ -230,4 +239,98 @@ func newAppointmentServiceForTests(t *testing.T) (*service, models.User, models.
 	}
 
 	return svc, u, cl, pt
+}
+
+func TestPatientLinkActionsAreIdempotent(t *testing.T) {
+	svc, user, clinic, patient := newAppointmentServiceForTests(t)
+	ctx := context.Background()
+
+	apnt := models.Appointment{
+		UserID:    user.ID,
+		ClinicID:  clinic.ID,
+		PatientID: patient.ID,
+		BookedAt:  time.Now().Add(24 * time.Hour),
+		Token:     "tok_idempotent",
+	}
+	if err := svc.CreateAppointment(ctx, &apnt); err != nil {
+		t.Fatalf("create appointment: %v", err)
+	}
+
+	countEvents := func(action models.EventAction) int64 {
+		var n int64
+		if err := svc.DB.GormDB().Model(&models.FeedEvent{}).Where("action = ? AND feed_eventable_id = ?", string(action), apnt.UID).Count(&n).Error; err != nil {
+			t.Fatalf("count feed events: %v", err)
+		}
+		return n
+	}
+
+	act := func(name string, fn func(context.Context, models.Appointment) (models.Appointment, error)) {
+		t.Helper()
+		loaded, err := svc.TakeAppointmentByToken(ctx, apnt.Token)
+		if err != nil {
+			t.Fatalf("%s: take: %v", name, err)
+		}
+		if _, err := fn(ctx, loaded); err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+	}
+
+	for range 2 {
+		act("confirm", svc.ConfirmAppointment)
+	}
+	first, err := svc.TakeAppointmentByToken(ctx, apnt.Token)
+	if err != nil {
+		t.Fatalf("take: %v", err)
+	}
+	if n := countEvents(models.EventActionConfirmed); n != 1 {
+		t.Fatalf("confirmed feed events after two confirms = %d, want 1", n)
+	}
+
+	act("third confirm", svc.ConfirmAppointment)
+	again, _ := svc.TakeAppointmentByToken(ctx, apnt.Token)
+	if !again.ConfirmedAt.Equal(first.ConfirmedAt) {
+		t.Fatalf("a repeat confirm changed ConfirmedAt")
+	}
+
+	for range 2 {
+		act("cancel", svc.CancelAppointment)
+	}
+	if n := countEvents(models.EventActionCanceled); n != 1 {
+		t.Fatalf("canceled feed events after two cancels = %d, want 1", n)
+	}
+}
+
+func TestPatientActionRefusedAfterConcurrentChange(t *testing.T) {
+	svc, user, clinic, patient := newAppointmentServiceForTests(t)
+	ctx := context.Background()
+
+	apnt := models.Appointment{
+		UserID:    user.ID,
+		ClinicID:  clinic.ID,
+		PatientID: patient.ID,
+		BookedAt:  time.Now().Add(24 * time.Hour),
+		Token:     "tok_concurrent",
+	}
+	if err := svc.CreateAppointment(ctx, &apnt); err != nil {
+		t.Fatalf("create appointment: %v", err)
+	}
+
+	loaded, err := svc.TakeAppointmentByToken(ctx, apnt.Token)
+	if err != nil {
+		t.Fatalf("take: %v", err)
+	}
+	if err := svc.DB.GormDB().Model(&models.Appointment{}).Where("id = ?", apnt.ID).Update("status", models.AppointmentCanceled).Error; err != nil {
+		t.Fatalf("cancel underneath: %v", err)
+	}
+
+	if _, err := svc.ConfirmAppointment(ctx, loaded); !errors.Is(err, ErrAppointmentChanged) {
+		t.Fatalf("confirm after a concurrent cancel: err = %v, want ErrAppointmentChanged", err)
+	}
+	got, err := svc.TakeAppointmentByToken(ctx, apnt.Token)
+	if err != nil {
+		t.Fatalf("take: %v", err)
+	}
+	if got.Status != models.AppointmentCanceled {
+		t.Fatalf("status = %q, want still canceled", got.Status)
+	}
 }

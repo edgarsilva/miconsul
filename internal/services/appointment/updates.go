@@ -43,10 +43,3 @@ type appointmentPauseUpdates struct {
 	Status    models.AppointmentStatus
 	PendingAt time.Time
 }
-
-type appointmentTokenUpdates struct {
-	Status      models.AppointmentStatus
-	ConfirmedAt time.Time
-	CanceledAt  time.Time
-	PendingAt   time.Time
-}
