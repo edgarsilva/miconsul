@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"miconsul/internal/models"
 	"miconsul/internal/server"
 	view "miconsul/internal/views"
 )
@@ -119,22 +118,4 @@ func (c *inMemoryCache) Write(key string, src *[]byte, ttl time.Duration) error 
 	b := append([]byte(nil), (*src)...)
 	c.data[key] = b
 	return nil
-}
-
-func TestMonthStartUsesMexicoCityMonth(t *testing.T) {
-	mx, err := time.LoadLocation(models.DefaultTimezone)
-	if err != nil {
-		t.Fatalf("load %s: %v", models.DefaultTimezone, err)
-	}
-	// October 31 at 20:00 in Mexico City is already November in UTC.
-	now := time.Date(2026, 10, 31, 20, 0, 0, 0, mx)
-
-	got := monthStart(now)
-	want := time.Date(2026, 10, 1, 0, 0, 0, 0, mx)
-	if !got.Equal(want) {
-		t.Fatalf("monthStart() = %v, want %v", got, want)
-	}
-	if got.Location() != time.Local {
-		t.Fatalf("monthStart() location = %v, want Local", got.Location())
-	}
 }

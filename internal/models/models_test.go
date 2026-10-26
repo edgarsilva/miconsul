@@ -306,34 +306,6 @@ func TestUserPublic(t *testing.T) {
 	}
 }
 
-func TestBookedWindowIsLocalCalendarInUTC(t *testing.T) {
-	mx, err := time.LoadLocation(DefaultTimezone)
-	if err != nil {
-		t.Fatalf("load %s: %v", DefaultTimezone, err)
-	}
-	// Wednesday 20:30 in Mexico City is already Thursday in UTC.
-	now := time.Date(2026, 10, 28, 20, 30, 0, 0, mx)
-
-	tests := []struct {
-		timeframe  string
-		start, end time.Time
-	}{
-		{"day", time.Date(2026, 10, 28, 6, 0, 0, 0, time.UTC), time.Date(2026, 10, 29, 6, 0, 0, 0, time.UTC)},
-		{"week", time.Date(2026, 10, 26, 6, 0, 0, 0, time.UTC), time.Date(2026, 11, 2, 6, 0, 0, 0, time.UTC)},
-		{"month", time.Date(2026, 10, 1, 6, 0, 0, 0, time.UTC), time.Date(2026, 11, 1, 6, 0, 0, 0, time.UTC)},
-		{"", time.Date(2026, 10, 28, 6, 0, 0, 0, time.UTC), time.Date(2026, 10, 29, 6, 0, 0, 0, time.UTC)},
-	}
-	for _, tt := range tests {
-		start, end := bookedWindow(now, DefaultTimezone, tt.timeframe)
-		if !start.Equal(tt.start) || !end.Equal(tt.end) {
-			t.Errorf("bookedWindow(%q) = [%v, %v), want [%v, %v)", tt.timeframe, start, end, tt.start, tt.end)
-		}
-		if start.Location() != time.UTC || end.Location() != time.UTC {
-			t.Errorf("bookedWindow(%q) bounds are not UTC: %v, %v", tt.timeframe, start.Location(), end.Location())
-		}
-	}
-}
-
 func TestAppointmentBookedWithinMatchesUTCStorage(t *testing.T) {
 	db, err := gorm.Open(sqlite.Open("file:"+t.Name()+"?mode=memory"), &gorm.Config{})
 	if err != nil {

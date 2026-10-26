@@ -201,27 +201,7 @@ func (a Appointment) FeedEventTarget() (name, id, typ, url string) {
 }
 
 func appointmentBookedWithin(db *gorm.DB, now time.Time, timeframe string) *gorm.DB {
-	start, end := bookedWindow(now, DefaultTimezone, timeframe)
+	start, end := libtime.TimeframeBounds(now, DefaultTimezone, libtime.Timeframe(timeframe))
 
-	return db.Where("booked_at >= ?", start).Where("booked_at < ?", end)
-}
-
-// bookedWindow returns the UTC bounds [start, end) of the day, week or month
-// that contains now in timezone tz. Any other timeframe means day.
-func bookedWindow(now time.Time, tz string, timeframe string) (start, end time.Time) {
-	local := libtime.InTimezone(now, tz)
-
-	switch timeframe {
-	case "week":
-		start = libtime.BoW(local)
-		end = start.AddDate(0, 0, 7)
-	case "month":
-		start = libtime.BoM(local)
-		end = start.AddDate(0, 1, 0)
-	default:
-		start = libtime.BoD(local)
-		end = start.AddDate(0, 0, 1)
-	}
-
-	return start.UTC(), end.UTC()
+	return db.Where("booked_at >= ?", start.UTC()).Where("booked_at < ?", end.UTC())
 }

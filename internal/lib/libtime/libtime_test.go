@@ -157,3 +157,28 @@ func TestTimezonesLoad(t *testing.T) {
 		}
 	}
 }
+
+func TestTimeframeBounds(t *testing.T) {
+	mx, err := time.LoadLocation(AmericaMexicoCity)
+	if err != nil {
+		t.Fatalf("load %s: %v", AmericaMexicoCity, err)
+	}
+	// Saturday October 31 at 20:00 in Mexico City is already November in UTC.
+	now := time.Date(2026, 10, 31, 20, 0, 0, 0, time.UTC).Add(6 * time.Hour)
+
+	tests := []struct {
+		timeframe  Timeframe
+		start, end time.Time
+	}{
+		{TimeframeDay, time.Date(2026, 10, 31, 0, 0, 0, 0, mx), time.Date(2026, 11, 1, 0, 0, 0, 0, mx)},
+		{TimeframeWeek, time.Date(2026, 10, 26, 0, 0, 0, 0, mx), time.Date(2026, 11, 2, 0, 0, 0, 0, mx)},
+		{TimeframeMonth, time.Date(2026, 10, 1, 0, 0, 0, 0, mx), time.Date(2026, 11, 1, 0, 0, 0, 0, mx)},
+		{"", time.Date(2026, 10, 31, 0, 0, 0, 0, mx), time.Date(2026, 11, 1, 0, 0, 0, 0, mx)},
+	}
+	for _, tt := range tests {
+		start, end := TimeframeBounds(now, AmericaMexicoCity, tt.timeframe)
+		if !start.Equal(tt.start) || !end.Equal(tt.end) {
+			t.Errorf("TimeframeBounds(%q) = [%v, %v), want [%v, %v)", tt.timeframe, start, end, tt.start, tt.end)
+		}
+	}
+}
