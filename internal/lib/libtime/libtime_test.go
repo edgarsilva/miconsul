@@ -141,3 +141,19 @@ func TestTimeHelpers(t *testing.T) {
 		}
 	})
 }
+
+func TestTimezonesLoad(t *testing.T) {
+	zones := []Timezone{
+		AmericaNewYork, AmericaChicago, AmericaDenver, AmericaLosAngeles, AmericaAnchorage,
+		PacificHonolulu, AmericaMexicoCity, AmericaTijuana, AmericaChihuahua, AmericaMazatlan,
+		AmericaOjinaga, AmericaCancun, AmericaHermosillo, AmericaSantiago, AmericaMontevideo,
+		AmericaLaPaz, AmericaPortoVelho, AmericaMontreal, AmericaSaoPaulo, AmericaCambridgeBay,
+		AmericaEirunepe, AmericaRioBranco, AmericaWinnipeg, AmericaRegina, AmericaAdak,
+		PacificMidway,
+	}
+	for _, tz := range zones {
+		if _, err := time.LoadLocation(tz); err != nil {
+			t.Errorf("LoadLocation(%q): %v", tz, err)
+		}
+	}
+}

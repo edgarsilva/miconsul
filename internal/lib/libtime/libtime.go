@@ -20,7 +20,6 @@ const (
 	AmericaAnchorage    Timezone = "America/Anchorage"
 	PacificHonolulu     Timezone = "Pacific/Honolulu"
 	AmericaMexicoCity   Timezone = "America/Mexico_City"
-	AmericaGuadalajara  Timezone = "America/Guadalajara"
 	AmericaTijuana      Timezone = "America/Tijuana"
 	AmericaChihuahua    Timezone = "America/Chihuahua"
 	AmericaMazatlan     Timezone = "America/Mazatlan"
@@ -37,7 +36,7 @@ const (
 	AmericaEirunepe     Timezone = "America/Eirunepe"
 	AmericaRioBranco    Timezone = "America/Rio_Branco"
 	AmericaWinnipeg     Timezone = "America/Winnipeg"
-	AmericaSaskatchewan Timezone = "America/Saskatchewan"
+	AmericaRegina       Timezone = "America/Regina"
 	AmericaAdak         Timezone = "America/Adak"
 	PacificMidway       Timezone = "Pacific/Midway"
 )
