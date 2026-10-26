@@ -62,7 +62,7 @@ templ MonthTrends(stats DashboardStats, c *Ctx) {
 						{ strconv.Itoa(stats.Patients.Diff) }
 					</p>
 					<div class="ml-auto">
-						<a href="#" class="font-medium link link-hover">{ c.l("btn.view_all") }<span class="sr-only">{ c.l("str.patients") }</span></a>
+						<a href="/patients" class="font-medium link link-hover">{ c.l("btn.view_all") }<span class="sr-only">{ c.l("str.patients") }</span></a>
 					</div>
 				</dd>
 			</div>
@@ -90,7 +90,7 @@ templ MonthTrends(stats DashboardStats, c *Ctx) {
 						{ strconv.Itoa(stats.Appointments.Diff) }
 					</p>
 					<div class="ml-auto">
-						<a href="#" class="font-medium link link-hover">{ c.l("btn.view_all") }<span class="sr-only">{ c.l("str.all_appointmens") }</span></a>
+						<a href="/appointments?timeframe=month" class="font-medium link link-hover">{ c.l("btn.view_all") }<span class="sr-only">{ c.l("str.all_appointmens") }</span></a>
 					</div>
 				</dd>
 			</div>
@@ -113,7 +113,7 @@ templ MonthTrends(stats DashboardStats, c *Ctx) {
 						3.2%
 					</p>
 					<div class="ml-auto">
-						<a href="#" class="font-medium link link-hover">{ c.l("btn.view_all") }<span class="sr-only">{ c.l("str.all_revenue") }</span></a>
+						<a href="/appointments?timeframe=month&amp;status=done" class="font-medium link link-hover">{ c.l("btn.view_all") }<span class="sr-only">{ c.l("str.all_revenue") }</span></a>
 					</div>
 				</dd>
 			</div>
