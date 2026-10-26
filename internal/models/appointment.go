@@ -156,17 +156,6 @@ func (a Appointment) AlertableType() string {
 
 // Scopes
 
-func AppointmentWithPendingNotifications(db *gorm.DB) *gorm.DB {
-	st := time.Now()
-	year, month, day := st.Date()
-	et := time.Date(year, month, day, st.Hour(), st.Minute(), 0, 0, st.Location()).Add(2 * time.Hour)
-
-	return db.
-		Where("booked_at > ?", st).
-		Where("booked_at <= ?", et).
-		Where("NOT EXISTS (SELECT 1 FROM notifications WHERE notifications.notificationable_id = CAST(appointments.id AS TEXT) AND notifications.notificationable_type = ? AND notifications.name = ? AND notifications.medium = ? AND notifications.status IN ?)", "appointments", "appointment_reminder", NotificationMediumEmail, []NotificationStatus{NotificationSent, NotificationSuccess})
-}
-
 func AppointmentBookedToday(db *gorm.DB) *gorm.DB {
 	return appointmentBookedWithin(db, time.Now(), "day")
 }

@@ -90,12 +90,6 @@ func TestScopesAndBaseHelpers(t *testing.T) {
 		t.Fatalf("open sqlite dry-run: %v", err)
 	}
 
-	stmt := db.Model(&Appointment{}).Scopes(AppointmentWithPendingNotifications).Find(&[]Appointment{}).Statement
-	sql := strings.ToLower(stmt.SQL.String())
-	if !strings.Contains(sql, "not exists") || !strings.Contains(sql, "notifications") {
-		t.Fatalf("expected pending notifications scope filter, got %q", stmt.SQL.String())
-	}
-
 	today := db.Model(&Appointment{}).Scopes(AppointmentBookedToday).Find(&[]Appointment{}).Statement.SQL.String()
 	if !strings.Contains(strings.ToLower(today), "booked_at") {
 		t.Fatalf("expected booked today scope to query booked_at")
