@@ -124,7 +124,7 @@ func (s service) CalcMonthlyStats(ctx context.Context, cu models.User, imodel an
 	s.DB.WithContext(localCtx).Model(imodel).Where(imodel).Count(&cnt)
 
 	var lastMonth int64
-	s.DB.WithContext(localCtx).Model(imodel).Where("user_id = ? AND created_at <= ?", cu.ID, libtime.BoM(time.Now())).Count(&lastMonth)
+	s.DB.WithContext(localCtx).Model(imodel).Where("user_id = ? AND created_at < ?", cu.ID, monthStart(time.Now())).Count(&lastMonth)
 
 	diff := cnt - lastMonth
 
@@ -158,4 +158,10 @@ func Deserialize(statsB []byte) (view.DashboardStats, error) {
 	}
 
 	return stats, err
+}
+
+// monthStart returns the start of the Mexico City month that contains now, in
+// the server's local zone.
+func monthStart(now time.Time) time.Time {
+	return libtime.BoM(libtime.InTimezone(now, models.DefaultTimezone)).In(time.Local)
 }
