@@ -168,22 +168,15 @@ func AppointmentWithPendingNotifications(db *gorm.DB) *gorm.DB {
 }
 
 func AppointmentBookedToday(db *gorm.DB) *gorm.DB {
-	t := libtime.BoD(time.Now())
-
-	return db.Where("booked_at > ?", t).Where("booked_at < ?", t.Add(time.Hour*24))
+	return appointmentBookedWithin(db, time.Now(), "day")
 }
 
 func AppointmentBookedThisWeek(db *gorm.DB) *gorm.DB {
-	t := libtime.BoW(time.Now())
-
-	return db.Where("booked_at > ?", t).Where("booked_at < ?", t.Add(time.Hour*24*7))
+	return appointmentBookedWithin(db, time.Now(), "week")
 }
 
 func AppointmentBookedThisMonth(db *gorm.DB) *gorm.DB {
-	t := libtime.BoM(time.Now())
-	dinm := libtime.DaysInMonth(t.Month(), t.Year())
-
-	return db.Where("booked_at > ?", t).Where("booked_at < ?", t.Add(time.Hour*24*dinm))
+	return appointmentBookedWithin(db, time.Now(), "month")
 }
 
 func (a *Appointment) LocalTimezone() string {
@@ -216,4 +209,30 @@ func (a Appointment) FeedEventSubject() (name, id, typ, url string) {
 // FeedEventTarget returns the patient as the target of the event.
 func (a Appointment) FeedEventTarget() (name, id, typ, url string) {
 	return a.Patient.Name, a.Patient.UID, "patients", "/patients/" + a.Patient.UID
+}
+
+func appointmentBookedWithin(db *gorm.DB, now time.Time, timeframe string) *gorm.DB {
+	start, end := bookedWindow(now, DefaultTimezone, timeframe)
+
+	return db.Where("booked_at >= ?", start).Where("booked_at < ?", end)
+}
+
+// bookedWindow returns the UTC bounds [start, end) of the day, week or month
+// that contains now in timezone tz. Any other timeframe means day.
+func bookedWindow(now time.Time, tz string, timeframe string) (start, end time.Time) {
+	local := libtime.InTimezone(now, tz)
+
+	switch timeframe {
+	case "week":
+		start = libtime.BoW(local)
+		end = start.AddDate(0, 0, 7)
+	case "month":
+		start = libtime.BoM(local)
+		end = start.AddDate(0, 1, 0)
+	default:
+		start = libtime.BoD(local)
+		end = start.AddDate(0, 0, 1)
+	}
+
+	return start.UTC(), end.UTC()
 }
