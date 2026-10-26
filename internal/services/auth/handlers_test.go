@@ -383,9 +383,9 @@ func TestAuthHandlersLogoutAndSessionEndpoints(t *testing.T) {
 				Email:                 "u@example.com",
 				Password:              "hashed-password",
 				ResetToken:            "reset-token-secret",
-				ResetTokenExpiresAt:   time.Now().Add(time.Hour),
+				ResetTokenExpiresAt:   time.Now().UTC().Add(time.Hour),
 				ConfirmEmailToken:     "confirm-token-secret",
-				ConfirmEmailExpiresAt: time.Now().Add(time.Hour),
+				ConfirmEmailExpiresAt: time.Now().UTC().Add(time.Hour),
 			})
 			return svc.HandleShowUser(c)
 		})
@@ -671,7 +671,7 @@ func TestAuthHandlersSignupConfirmEmailPaths(t *testing.T) {
 			Email:                 "confirm@example.com",
 			Password:              "Password1!",
 			ConfirmToken:          "confirm-ok-token",
-			ConfirmTokenExpiresAt: time.Now().Add(time.Hour),
+			ConfirmTokenExpiresAt: time.Now().UTC().Add(time.Hour),
 		})
 
 		app := fiber.New()
@@ -695,7 +695,7 @@ func TestAuthHandlersSignupConfirmEmailPaths(t *testing.T) {
 			Email:                 "confirm-update-err@example.com",
 			Password:              "Password1!",
 			ConfirmToken:          "confirm-update-err",
-			ConfirmTokenExpiresAt: time.Now().Add(time.Hour),
+			ConfirmTokenExpiresAt: time.Now().UTC().Add(time.Hour),
 		})
 
 		app := fiber.New()
@@ -720,7 +720,7 @@ func TestAuthHandlersSignupConfirmEmailPaths(t *testing.T) {
 			Email:                 "confirm-jwt-err@example.com",
 			Password:              "Password1!",
 			ConfirmToken:          "confirm-jwt-err",
-			ConfirmTokenExpiresAt: time.Now().Add(time.Hour),
+			ConfirmTokenExpiresAt: time.Now().UTC().Add(time.Hour),
 		})
 
 		app := fiber.New()
@@ -829,7 +829,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 			Email:               "change@example.com",
 			Password:            "Password1!",
 			ResetToken:          "change-ok-token",
-			ResetTokenExpiresAt: time.Now().Add(time.Hour),
+			ResetTokenExpiresAt: time.Now().UTC().Add(time.Hour),
 		})
 
 		app := fiber.New()
@@ -850,7 +850,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 			Email:               "flow@example.com",
 			Password:            "Password1!",
 			ResetToken:          "reset-ok-token",
-			ResetTokenExpiresAt: time.Now().Add(time.Hour),
+			ResetTokenExpiresAt: time.Now().UTC().Add(time.Hour),
 		})
 
 		app := fiber.New()
@@ -877,7 +877,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 			Email:               "roundtrip@example.com",
 			Password:            "Password1!",
 			ResetToken:          "roundtrip-token",
-			ResetTokenExpiresAt: time.Now().Add(time.Hour),
+			ResetTokenExpiresAt: time.Now().UTC().Add(time.Hour),
 		})
 
 		app := fiber.New()
@@ -918,7 +918,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 			Email:               "flow2@example.com",
 			Password:            "Password1!",
 			ResetToken:          "reset-ok-token-2",
-			ResetTokenExpiresAt: time.Now().Add(time.Hour),
+			ResetTokenExpiresAt: time.Now().UTC().Add(time.Hour),
 		})
 
 		app := fiber.New()
@@ -978,7 +978,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 			Email:               "updatefail@example.com",
 			Password:            "Password1!",
 			ResetToken:          "update-ok-token",
-			ResetTokenExpiresAt: time.Now().Add(time.Hour),
+			ResetTokenExpiresAt: time.Now().UTC().Add(time.Hour),
 		})
 
 		app := fiber.New()
@@ -1010,7 +1010,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 			Email:               "updatesuccess@example.com",
 			Password:            "Password1!",
 			ResetToken:          "update-success-token",
-			ResetTokenExpiresAt: time.Now().Add(time.Hour),
+			ResetTokenExpiresAt: time.Now().UTC().Add(time.Hour),
 		})
 
 		app := fiber.New()

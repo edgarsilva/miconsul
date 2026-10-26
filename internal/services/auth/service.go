@@ -151,7 +151,7 @@ func (s *service) userCreate(ctx context.Context, email, password, token string)
 		Email:                 email,
 		Password:              password,
 		ConfirmEmailToken:     token,
-		ConfirmEmailExpiresAt: time.Now().Add(time.Hour * 1),
+		ConfirmEmailExpiresAt: time.Now().UTC().Add(time.Hour * 1),
 		Role:                  models.UserRoleUser,
 	}
 
@@ -213,7 +213,7 @@ func (s *service) userUpdatePassword(ctx context.Context, email, password, token
 
 	rowsAffected, err := gorm.G[models.User](s.DB.GormDB()).
 		Select("password", "reset_token", "reset_token_expires_at").
-		Where("email = ? AND reset_token = ? AND reset_token_expires_at > ?", email, token, time.Now()).
+		Where("email = ? AND reset_token = ? AND reset_token_expires_at > ?", email, token, time.Now().UTC()).
 		Limit(1).
 		Updates(ctx, user)
 	if err != nil || rowsAffected != 1 {
@@ -226,7 +226,7 @@ func (s *service) userUpdatePassword(ctx context.Context, email, password, token
 func (s *service) userUpdateConfirmToken(ctx context.Context, email, token string) error {
 	user := models.User{
 		ConfirmEmailToken:     token,
-		ConfirmEmailExpiresAt: time.Now().Add(time.Hour * 24),
+		ConfirmEmailExpiresAt: time.Now().UTC().Add(time.Hour * 24),
 	}
 	rowsAffected, err := gorm.G[models.User](s.DB.GormDB()).
 		Select("confirm_email_token", "confirm_email_expires_at").
@@ -243,7 +243,7 @@ func (s *service) userUpdateConfirmToken(ctx context.Context, email, token strin
 func (s *service) resetPasswordVerifyToken(ctx context.Context, token string) (email string, err error) {
 	user, err := gorm.G[models.User](s.DB.GormDB()).
 		Select("id, email").
-		Where("reset_token != '' AND reset_token IS NOT null AND reset_token = ? AND reset_token_expires_at > ?", token, time.Now()).
+		Where("reset_token != '' AND reset_token IS NOT null AND reset_token = ? AND reset_token_expires_at > ?", token, time.Now().UTC()).
 		Take(ctx)
 	if err != nil {
 		return "", errors.New("password reset token not found or expired")

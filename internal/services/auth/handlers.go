@@ -210,7 +210,7 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 
 	user, err := gorm.G[models.User](s.DB.GormDB()).
 		Select("uid, email, confirm_email_token").
-		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
+		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now().UTC()).
 		Take(ctx)
 	if err != nil {
 		span.RecordError(err)
@@ -221,7 +221,7 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 
 	_, err = gorm.G[models.User](s.DB.GormDB()).
 		Select("confirm_email_token", "confirm_email_expires_at").
-		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now()).
+		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now().UTC()).
 		Updates(ctx, models.User{})
 	if err != nil {
 		span.RecordError(err)
@@ -312,7 +312,7 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 	}
 
 	user.ResetToken = newResetPasswordToken()
-	user.ResetTokenExpiresAt = time.Now().Add(time.Hour * 1)
+	user.ResetTokenExpiresAt = time.Now().UTC().Add(time.Hour * 1)
 	rowsAffected, err := gorm.G[models.User](s.DB.GormDB()).
 		Select("reset_token", "reset_token_expires_at").
 		Where("id = ?", user.ID).

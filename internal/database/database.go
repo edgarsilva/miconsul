@@ -61,6 +61,7 @@ func New(env *appenv.Env, loggerProvider otellog.LoggerProvider, tracerProvider 
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
 		Logger:      dbLogger,
 		PrepareStmt: true,
+		NowFunc:     nowUTC,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("database: open sqlite: %w", err)
@@ -223,4 +224,9 @@ func NewGormLogger(env *appenv.Env, otelLogger otellog.Logger) gormlogger.Interf
 	)
 
 	return NewGormOtelLogger(baseLogger, otelLogger).LogMode(loglevel)
+}
+
+// nowUTC is GORM's clock for CreatedAt, UpdatedAt and DeletedAt.
+func nowUTC() time.Time {
+	return time.Now().UTC()
 }

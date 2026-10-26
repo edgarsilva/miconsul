@@ -485,7 +485,7 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 
 	appointment := appointmentCancelUpdates{
 		Status:     models.AppointmentCanceled,
-		CanceledAt: time.Now(),
+		CanceledAt: time.Now().UTC(),
 	}
 	err := s.CancelAppointmentByID(c.Context(), cu.ID, appointmentID, appointment)
 	if errors.Is(err, gorm.ErrRecordNotFound) {

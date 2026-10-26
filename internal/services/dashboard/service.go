@@ -50,7 +50,7 @@ func (s service) FavoriteClinic(c fiber.Ctx, userID uint) (models.Clinic, error)
 
 func (s service) FindFeedEventsByUserID(ctx context.Context, userID uint, limit int) ([]models.FeedEvent, error) {
 	var events []models.FeedEvent
-	since := time.Now().AddDate(0, 0, -3)
+	since := time.Now().UTC().AddDate(0, 0, -3)
 	err := s.DB.WithContext(ctx).
 		Model(&models.FeedEvent{}).
 		Joins("JOIN appointments ON appointments.uid = feed_events.feed_eventable_id AND feed_events.feed_eventable_type = ?", "appointments").
@@ -126,7 +126,7 @@ func (s service) CalcMonthlyStats(ctx context.Context, cu models.User, imodel an
 	bom := libtime.BoM(libtime.InTimezone(time.Now(), models.DefaultTimezone))
 
 	var lastMonth int64
-	s.DB.WithContext(localCtx).Model(imodel).Where("user_id = ? AND created_at < ?", cu.ID, bom.In(time.Local)).Count(&lastMonth)
+	s.DB.WithContext(localCtx).Model(imodel).Where("user_id = ? AND created_at < ?", cu.ID, bom.UTC()).Count(&lastMonth)
 
 	diff := cnt - lastMonth
 
