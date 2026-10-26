@@ -342,3 +342,26 @@ func TestAuthPagesUseThemeColors(t *testing.T) {
 		}
 	})
 }
+
+func TestDashboardViewAllLinks(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		var html strings.Builder
+		if err := MonthTrends(DashboardStats{}, NewCtx(fc)).Render(fc.Context(), &html); err != nil {
+			t.Fatalf("render: %v", err)
+		}
+
+		got := html.String()
+		if strings.Contains(got, `href="#"`) {
+			t.Errorf("a View all link still points at #")
+		}
+		for _, want := range []string{
+			`href="/patients"`,
+			`href="/appointments?timeframe=month"`,
+			`href="/appointments?timeframe=month&amp;status=done"`,
+		} {
+			if !strings.Contains(got, want) {
+				t.Errorf("expected %s", want)
+			}
+		}
+	})
+}
