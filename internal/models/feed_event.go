@@ -59,7 +59,7 @@ func NewFeedEvent(action EventAction, actorName, actorID, actorURL string, sourc
 		ActorURL:          actorURL,
 		FeedEventableID:   refID,
 		FeedEventableType: refType,
-		OcurredAt:         time.Now(),
+		OcurredAt:         time.Now().UTC(),
 	}
 }
 

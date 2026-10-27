@@ -391,7 +391,7 @@ func seedFeedEvents(ctx context.Context, db *gorm.DB, owner models.User) (int, e
 		models.EventActionCanceled,
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	created := 0
 	for i, apnt := range appointments {
 		// Create 1-3 feed events per appointment with recent timestamps

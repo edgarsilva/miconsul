@@ -194,7 +194,7 @@ func (s *service) PauseAppointmentSessionByID(ctx context.Context, userID uint, 
 		return ErrIDRequired
 	}
 
-	updates := appointmentPauseUpdates{Status: models.AppointmentPending, PendingAt: time.Now()}
+	updates := appointmentPauseUpdates{Status: models.AppointmentPending, PendingAt: time.Now().UTC()}
 	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, []string{"Status", "PendingAt"}, &updates); err != nil {
 		return err
 	}
@@ -309,7 +309,7 @@ func (s *service) ConfirmAppointment(ctx context.Context, appointment models.App
 		return appointment, nil
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	if err := s.setAppointmentStatus(ctx, appointment, models.AppointmentConfirmed, "confirmed_at", now); err != nil {
 		return appointment, err
 	}
@@ -328,7 +328,7 @@ func (s *service) CancelAppointment(ctx context.Context, appointment models.Appo
 		return appointment, nil
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	if err := s.setAppointmentStatus(ctx, appointment, models.AppointmentCanceled, "canceled_at", now); err != nil {
 		return appointment, err
 	}
@@ -342,7 +342,7 @@ func (s *service) CancelAppointment(ctx context.Context, appointment models.Appo
 // date. It returns ErrAppointmentChanged when the status changed since the
 // appointment was loaded.
 func (s *service) RequestAppointmentDateChange(ctx context.Context, appointment models.Appointment) (models.Appointment, error) {
-	now := time.Now()
+	now := time.Now().UTC()
 	if err := s.setAppointmentStatus(ctx, appointment, models.AppointmentPending, "pending_at", now); err != nil {
 		return appointment, err
 	}
