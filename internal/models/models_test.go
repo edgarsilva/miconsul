@@ -331,7 +331,7 @@ func TestAppointmentBookedWithinMatchesUTCStorage(t *testing.T) {
 		"tomorrow afternoon": time.Date(2026, 10, 29, 15, 0, 0, 0, mx),
 	}
 	for name, bookedAt := range bookings {
-		if err := db.Exec("INSERT INTO appointments (booked_at) VALUES (?)", bookedAt.UTC()).Error; err != nil {
+		if err := db.Exec("INSERT INTO appointments (booked_at) VALUES (?)", bookedAt).Error; err != nil {
 			t.Fatalf("insert %s: %v", name, err)
 		}
 	}

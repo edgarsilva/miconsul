@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"miconsul/internal/lib/appenv"
 
@@ -148,6 +149,44 @@ func TestNewTracesQueriesWithInjectedProvider(t *testing.T) {
 
 	if len(recorder.Ended()) == 0 {
 		t.Fatal("expected a query span from the injected tracer provider")
+	}
+}
+
+func TestNewStampsTimestampsInUTC(t *testing.T) {
+	mx, err := time.LoadLocation("America/Mexico_City")
+	if err != nil {
+		t.Fatalf("load location: %v", err)
+	}
+	local := time.Local
+	time.Local = mx
+	t.Cleanup(func() { time.Local = local })
+
+	db, err := New(&appenv.Env{DBPath: filepath.Join(t.TempDir(), "stamps.sqlite")}, lognoop.NewLoggerProvider(), tracenoop.NewTracerProvider(), nil)
+	if err != nil {
+		t.Fatalf("new database: %v", err)
+	}
+	defer func() { _ = db.Close() }()
+
+	if err := db.Exec("CREATE TABLE stamps (id INTEGER PRIMARY KEY, created_at DATETIME, updated_at DATETIME)").Error; err != nil {
+		t.Fatalf("create table: %v", err)
+	}
+	type stamp struct {
+		ID        uint
+		CreatedAt time.Time
+		UpdatedAt time.Time
+	}
+	if err := db.Table("stamps").Create(&stamp{}).Error; err != nil {
+		t.Fatalf("create stamp: %v", err)
+	}
+
+	var createdAt, updatedAt string
+	if err := db.Raw("SELECT CAST(created_at AS TEXT), CAST(updated_at AS TEXT) FROM stamps").Row().Scan(&createdAt, &updatedAt); err != nil {
+		t.Fatalf("read stamps: %v", err)
+	}
+	for _, v := range []string{createdAt, updatedAt} {
+		if !strings.HasSuffix(v, "+00:00") {
+			t.Errorf("timestamp %q is not stored in UTC", v)
+		}
 	}
 }
 

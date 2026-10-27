@@ -216,11 +216,10 @@ func (s *service) notificationSentAnyMedium(ctx context.Context, appointment mod
 // findAppointmentsDueForReminder returns appointments booked within the two
 // hours after now.
 func (s *service) findAppointmentsDueForReminder(ctx context.Context, now time.Time) ([]models.Appointment, error) {
-	start := now.UTC()
-	end := start.Truncate(time.Minute).Add(2 * time.Hour)
+	end := now.Truncate(time.Minute).Add(2 * time.Hour)
 
 	return gorm.G[models.Appointment](s.DB.GormDB()).
-		Where("booked_at > ?", start).
+		Where("booked_at > ?", now).
 		Where("booked_at <= ?", end).
 		Find(ctx)
 }

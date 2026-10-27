@@ -541,7 +541,7 @@ func (s *service) FindRecentPatientsByUserID(ctx context.Context, userID uint, l
 // patientLinkValidAfter is the earliest appointment time a patient link still
 // works for.
 func patientLinkValidAfter() time.Time {
-	return time.Now().UTC().Add(-models.PatientLinkGrace)
+	return time.Now().Add(-models.PatientLinkGrace)
 }
 
 // setAppointmentStatus sets status and stamps column with at, only while the

@@ -85,10 +85,8 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
-// BeforeSave stores BookedAt in UTC and validates the status.
+// BeforeSave validates the status.
 func (a *Appointment) BeforeSave(tx *gorm.DB) error {
-	a.BookedAt = a.BookedAt.UTC()
-
 	// Allow partial updates where status is intentionally omitted.
 	if a.Status == "" {
 		return nil
@@ -203,5 +201,5 @@ func (a Appointment) FeedEventTarget() (name, id, typ, url string) {
 func appointmentBookedWithin(db *gorm.DB, now time.Time, timeframe string) *gorm.DB {
 	start, end := libtime.TimeframeBounds(now, DefaultTimezone, libtime.Timeframe(timeframe))
 
-	return db.Where("booked_at >= ?", start.UTC()).Where("booked_at < ?", end.UTC())
+	return db.Where("booked_at >= ?", start).Where("booked_at < ?", end)
 }
