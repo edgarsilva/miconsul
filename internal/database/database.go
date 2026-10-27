@@ -14,13 +14,13 @@ import (
 	"time"
 
 	"miconsul/goose/migrations"
+	"miconsul/internal/database/sqliteutc"
 	"miconsul/internal/lib/appenv"
 
 	"github.com/pressly/goose/v3"
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/trace"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
 )
@@ -58,7 +58,7 @@ func New(env *appenv.Env, loggerProvider otellog.LoggerProvider, tracerProvider 
 	otelLogger := loggerProvider.Logger(env.AppName + ".db")
 	dbLogger := NewGormLogger(env, otelLogger)
 	dsn := buildSQLiteDSN(env.DBPath, opts)
-	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
+	db, err := gorm.Open(sqliteutc.Open(dsn), &gorm.Config{
 		Logger:      dbLogger,
 		PrepareStmt: true,
 	})
