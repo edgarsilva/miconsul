@@ -9,9 +9,9 @@ import (
 
 	"miconsul/internal/database"
 	"miconsul/internal/database/seeder"
+	"miconsul/internal/database/sqliteutc"
 	"miconsul/internal/lib/appenv"
 
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -326,7 +326,7 @@ func TestDefaultSeedRuntimeDeps(t *testing.T) {
 func newTestSeedDB(t *testing.T) *database.Database {
 	t.Helper()
 
-	db, err := gorm.Open(sqlite.Open("file:seed_test?mode=memory&cache=shared"), &gorm.Config{})
+	db, err := gorm.Open(sqliteutc.Open("file:seed_test?mode=memory&cache=shared"), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}

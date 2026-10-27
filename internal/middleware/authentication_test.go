@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"miconsul/internal/database/sqliteutc"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/models"
 	"miconsul/internal/services/auth"
@@ -19,7 +20,6 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -268,7 +268,7 @@ func TestMaybeAuthenticate(t *testing.T) {
 func newMiddlewareAuthRuntime(t *testing.T) (testAuthRuntime, models.User, string) {
 	t.Helper()
 	dsn := fmt.Sprintf("file:middleware_auth_%d?mode=memory&cache=shared", time.Now().UnixNano())
-	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(sqliteutc.Open(dsn), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("open db: %v", err)
 	}

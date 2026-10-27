@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"miconsul/internal/database"
+	"miconsul/internal/database/sqliteutc"
 
 	"github.com/gofiber/fiber/v3"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -163,7 +163,7 @@ func TestReadinessProbeFailsWhenDatabaseIsLockedBeyondProbeTimeout(t *testing.T)
 func readyServer(t *testing.T) *Server {
 	t.Helper()
 
-	db, err := gorm.Open(sqlite.Open("file:server_probe?mode=memory&cache=shared"), &gorm.Config{})
+	db, err := gorm.Open(sqliteutc.Open("file:server_probe?mode=memory&cache=shared"), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("open in-memory sqlite: %v", err)
 	}
@@ -176,7 +176,7 @@ func readyServerWithBusyTimeout(t *testing.T) *Server {
 
 	path := filepath.Join(t.TempDir(), "server_probe_busy.sqlite")
 	dsn := fmt.Sprintf("%s?_busy_timeout=5000", path)
-	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(sqliteutc.Open(dsn), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("open sqlite with busy timeout: %v", err)
 	}

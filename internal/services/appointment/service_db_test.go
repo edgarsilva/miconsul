@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"miconsul/internal/database"
+	"miconsul/internal/database/sqliteutc"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/models"
 	"miconsul/internal/server"
 
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -205,7 +205,7 @@ func newAppointmentServiceForTests(t *testing.T) (*service, models.User, models.
 	t.Helper()
 
 	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())
-	gdb, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+	gdb, err := gorm.Open(sqliteutc.Open(dsn), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}

@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"miconsul/internal/database"
+	"miconsul/internal/database/sqliteutc"
 	"miconsul/internal/models"
 	"miconsul/internal/server"
 
 	"github.com/gofiber/fiber/v3"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -88,7 +88,7 @@ func TestHandleToggleTheme(t *testing.T) {
 }
 
 func TestHandleToggleThemeSavesSignedInUserTheme(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open("file:theme_toggle_user?mode=memory&cache=shared"), &gorm.Config{})
+	db, err := gorm.Open(sqliteutc.Open("file:theme_toggle_user?mode=memory&cache=shared"), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("open db: %v", err)
 	}

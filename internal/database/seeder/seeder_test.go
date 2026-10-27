@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
+	"miconsul/internal/database/sqliteutc"
 	"miconsul/internal/models"
 
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -140,7 +140,7 @@ func newSeederDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
 	dsn := "file:" + strings.ReplaceAll(t.Name(), "/", "_") + "?mode=memory&cache=shared"
-	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(sqliteutc.Open(dsn), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("open sqlite db: %v", err)
 	}

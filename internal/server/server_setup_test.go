@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"miconsul/internal/database"
+	"miconsul/internal/database/sqliteutc"
 	"miconsul/internal/lib/appenv"
 
 	fiberhealthcheck "github.com/gofiber/fiber/v3/middleware/healthcheck"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -118,7 +118,7 @@ func findRepoRoot(start string) (string, error) {
 func openTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
-	db, err := gorm.Open(sqlite.Open("file:server_setup?mode=memory&cache=shared"), &gorm.Config{})
+	db, err := gorm.Open(sqliteutc.Open("file:server_setup?mode=memory&cache=shared"), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("open in-memory sqlite: %v", err)
 	}

@@ -4,11 +4,11 @@ import (
 	"path/filepath"
 	"testing"
 
+	"miconsul/internal/database/sqliteutc"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/models"
 
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -74,7 +74,7 @@ func TestEnsureAdminUser(t *testing.T) {
 func newAdminTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
-	db, err := gorm.Open(sqlite.Open(filepath.Join(t.TempDir(), "ensure_admin_test.sqlite")), &gorm.Config{})
+	db, err := gorm.Open(sqliteutc.Open(filepath.Join(t.TempDir(), "ensure_admin_test.sqlite")), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}

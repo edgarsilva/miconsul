@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"miconsul/internal/database"
+	"miconsul/internal/database/sqliteutc"
 	"miconsul/internal/jobs"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/localize"
@@ -13,7 +14,6 @@ import (
 	lognoop "go.opentelemetry.io/otel/log/noop"
 	"go.opentelemetry.io/otel/metric/noop"
 	tracenoop "go.opentelemetry.io/otel/trace/noop"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -24,7 +24,7 @@ func TestWithOptionSetters(t *testing.T) {
 		t.Fatalf("with env error: %v", err)
 	}
 
-	db, err := gorm.Open(sqlite.Open("file:server_opts?mode=memory&cache=shared"), &gorm.Config{})
+	db, err := gorm.Open(sqliteutc.Open("file:server_opts?mode=memory&cache=shared"), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
@@ -92,7 +92,7 @@ func TestWithOptionSetters(t *testing.T) {
 }
 
 func TestServerHelperPassthroughs(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open("file:server_helper_passthrough?mode=memory&cache=shared"), &gorm.Config{})
+	db, err := gorm.Open(sqliteutc.Open("file:server_helper_passthrough?mode=memory&cache=shared"), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}

@@ -6,7 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"gorm.io/driver/sqlite"
+	"miconsul/internal/database/sqliteutc"
+
 	"gorm.io/gorm"
 )
 
@@ -85,7 +86,7 @@ func TestAppointmentBeforeSaveAndHelpers(t *testing.T) {
 }
 
 func TestScopesAndBaseHelpers(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{DryRun: true})
+	db, err := gorm.Open(sqliteutc.Open("file::memory:?cache=shared"), &gorm.Config{DryRun: true})
 	if err != nil {
 		t.Fatalf("open sqlite dry-run: %v", err)
 	}
@@ -190,7 +191,7 @@ func TestModelBaseFieldErrorsHelpers(t *testing.T) {
 }
 
 func TestGlobalFTSScopeSQL(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{DryRun: true})
+	db, err := gorm.Open(sqliteutc.Open("file::memory:?cache=shared"), &gorm.Config{DryRun: true})
 	if err != nil {
 		t.Fatalf("open sqlite dry-run: %v", err)
 	}
@@ -307,7 +308,7 @@ func TestUserPublic(t *testing.T) {
 }
 
 func TestAppointmentBookedWithinMatchesUTCStorage(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open("file:"+t.Name()+"?mode=memory"), &gorm.Config{})
+	db, err := gorm.Open(sqliteutc.Open("file:"+t.Name()+"?mode=memory"), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
