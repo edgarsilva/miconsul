@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"miconsul/internal/lib/appenv"
 	"miconsul/internal/models"
 )
 
@@ -213,4 +214,25 @@ func onlySessionCookie(t *testing.T, resp *http.Response) *http.Cookie {
 	}
 
 	return found[0]
+}
+
+func TestLogtoDebugPageOnlyOutsideProduction(t *testing.T) {
+	tests := []struct {
+		name        string
+		environment appenv.Environment
+		wantStatus  int
+	}{
+		{"served in development", appenv.EnvironmentDevelopment, http.StatusOK},
+		{"not found in production", appenv.EnvironmentProduction, http.StatusNotFound},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newTestHarness(t, func(env *appenv.Env) { env.Environment = tt.environment })
+
+			resp, _ := h.doRequest(requestOptions{method: http.MethodGet, path: "/logto"})
+			if resp.StatusCode != tt.wantStatus {
+				t.Fatalf("expected %d for /logto, got %d", tt.wantStatus, resp.StatusCode)
+			}
+		})
+	}
 }

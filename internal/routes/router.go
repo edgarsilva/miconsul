@@ -86,8 +86,10 @@ func AuthRoutes(s *server.Server) (auth.Runtime, error) {
 		a.Post("/resetpassword/change", a.HandleResetPasswordUpdate)
 	}
 
-	// Logto
-	a.Get("/logto", a.HandleLogtoPage)
+	// Logto; the claims debug page only outside production.
+	if !s.Env.IsProduction() {
+		a.Get("/logto", a.HandleLogtoPage)
+	}
 	a.Get("/logto/signin", a.HandleLogtoSignin)
 	a.Get("/logto/callback", a.HandleLogtoCallback)
 	a.Get("/logto/signout", a.HandleLogtoSignout)

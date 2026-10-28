@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
+	"io"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
@@ -292,4 +293,43 @@ func writeTestJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(v)
+}
+
+func TestHandleLogtoPage(t *testing.T) {
+	tests := []struct {
+		name      string
+		expiresAt time.Time
+		wantText  string
+	}{
+		{name: "valid sign-in shows signed in", expiresAt: time.Now().Add(time.Hour), wantText: "You are logged in"},
+		{name: "expired sign-in shows signed out", expiresAt: time.Now().Add(-time.Minute), wantText: "You are not logged in"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc, user, logtoServer := newLogtoTestService(t)
+			logtoServer.revoke = true
+			cookies := seedLogtoSession(t, svc, user, "revoked", tt.expiresAt)
+
+			app := fiber.New()
+			app.Get("/logto", svc.HandleLogtoPage)
+
+			req := httptest.NewRequest(http.MethodGet, "/logto", nil)
+			for _, c := range cookies {
+				req.AddCookie(c)
+			}
+			resp, err := app.Test(req)
+			if err != nil {
+				t.Fatalf("request failed: %v", err)
+			}
+
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("read body: %v", err)
+			}
+			if !strings.Contains(string(body), tt.wantText) {
+				t.Fatalf("expected page to contain %q", tt.wantText)
+			}
+		})
+	}
 }
