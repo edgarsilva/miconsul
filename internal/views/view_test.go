@@ -10,6 +10,7 @@ import (
 
 	"miconsul/internal/models"
 
+	"github.com/a-h/templ"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -386,4 +387,48 @@ func TestIsSelected(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestNoAlpine(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		c := NewCtx(fc, WithToast("Saved", "", "success"))
+		for name, component := range map[string]templ.Component{
+			"page":             HTMLPage(c),
+			"toast":            CmpToast("Saved", "", "success"),
+			"password":         CmpInputPassword(""),
+			"confirm password": CmpInputConfirmPassword(""),
+		} {
+			var html strings.Builder
+			if err := component.Render(fc.Context(), &html); err != nil {
+				t.Fatalf("render %s: %v", name, err)
+			}
+			got := html.String()
+			for _, alpine := range []string{"alpinejs", " x-data", " x-show", " x-init", " x-bind", "@click"} {
+				if strings.Contains(got, alpine) {
+					t.Errorf("%s still uses Alpine (%s)", name, alpine)
+				}
+			}
+		}
+	})
+}
+
+func TestToastAndPasswordToggleMarkup(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		var toast, password strings.Builder
+		if err := CmpToast("Saved", "", "success").Render(fc.Context(), &toast); err != nil {
+			t.Fatalf("render toast: %v", err)
+		}
+		if err := CmpInputPassword("").Render(fc.Context(), &password); err != nil {
+			t.Fatalf("render password: %v", err)
+		}
+
+		for _, want := range []string{`toast-card`, `has-checked:hidden`, `type="checkbox"`} {
+			if !strings.Contains(toast.String(), want) {
+				t.Errorf("toast: expected %s", want)
+			}
+		}
+		if !strings.Contains(password.String(), `hx-on:click=`) {
+			t.Errorf("password: expected an hx-on:click toggle")
+		}
+	})
 }
