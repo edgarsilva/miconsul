@@ -57,7 +57,9 @@ func TestRefreshSessionUser(t *testing.T) {
 	}
 }
 
+// mapSessionStore is a Runtime whose session is a map.
 type mapSessionStore struct {
+	mockRuntime
 	values map[string]string
 }
 
