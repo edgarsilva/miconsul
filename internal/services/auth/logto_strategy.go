@@ -34,15 +34,15 @@ func NewLogtoStrategy(runtime Runtime) *LogtoStrategy {
 // Authenticate returns the user of the session's Logto sign-in. Logto checks
 // the session's access token on every request and, once it expires, refreshes
 // it with the refresh token; an expired or revoked sign-in returns an error.
-func (lgs *LogtoStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
-	sess, err := lgs.runtime.Session(c)
+func (lts LogtoStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
+	sess, err := lts.runtime.Session(c)
 	if err != nil {
 		return models.User{}, err
 	}
 
-	logtoClient, saveSess := NewLogtoClient(sess, LogtoConfig(lgs.runtime.AppEnv()))
+	logtoClient, saveSess := NewLogtoClient(sess, LogtoConfig(lts.runtime.AppEnv()))
 
-	ctx, span := lgs.Trace(c.Context(), "auth/services:logtoStrategy")
+	ctx, span := lts.Trace(c.Context(), "auth/services:logtoStrategy")
 	defer span.End()
 	defer func() {
 		if err := saveSess(); err != nil {
@@ -59,7 +59,7 @@ func (lgs *LogtoStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
 		return models.User{}, err
 	}
 
-	user, err := TakeUserByExtID(ctx, lgs.runtime, claims.Sub)
+	user, err := TakeUserByExtID(ctx, lts.runtime, claims.Sub)
 	if err != nil {
 		return user, errors.New("authenticate user")
 	}
@@ -67,13 +67,13 @@ func (lgs *LogtoStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
 	return user, nil
 }
 
-func (lgs LogtoStrategy) Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
-	return lgs.runtime.Trace(ctx, spanName, opts...)
+func (lts LogtoStrategy) Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
+	return lts.runtime.Trace(ctx, spanName, opts...)
 }
 
-func (lgs LogtoStrategy) Metadata() AuthenticatorMeta {
+func (lts LogtoStrategy) Metadata() AuthenticatorMeta {
 	return AuthenticatorMeta{
-		Enabled:                logtoEnabled(lgs.runtime.AppEnv()),
+		Enabled:                logtoEnabled(lts.runtime.AppEnv()),
 		SigninPath:             "/logto/signin",
 		ErrorQueryKey:          "logto_error",
 		LoggedOutQueryKey:      "logged_out",
