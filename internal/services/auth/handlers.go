@@ -11,6 +11,7 @@ import (
 	view "miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/log"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"gorm.io/gorm"
@@ -315,7 +316,11 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
 	}
 
-	s.sendResetPasswordEmailAsync(c.Context(), email, user.ResetToken)
+	if err := s.sendResetPasswordEmailAsync(c.Context(), email, user.ResetToken); err != nil {
+		log.Error("queue reset password email:", err)
+		errView := errors.New("could not send the reset password email, please try again")
+		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
+	}
 
 	return view.Render(c, view.ResetPasswordPage(vc, email, "", "check your email for a reset password link", nil))
 }
@@ -406,9 +411,13 @@ func (s *service) providerSigninRedirect(c fiber.Ctx, msg string) (redirectURL s
 		maxErrorRedirects = 3
 	}
 	if skipAutoRedirect {
-		_ = s.SessionWrite(c, meta.SkipRedirectSessionKey, "")
+		if err := s.SessionWrite(c, meta.SkipRedirectSessionKey, ""); err != nil {
+			log.Warn("save sign-in redirect state:", err)
+		}
 		if meta.ErrorCountSessionKey != "" {
-			_ = s.SessionWrite(c, meta.ErrorCountSessionKey, "0")
+			if err := s.SessionWrite(c, meta.ErrorCountSessionKey, "0"); err != nil {
+				log.Warn("save sign-in redirect state:", err)
+			}
 		}
 	}
 
@@ -424,13 +433,17 @@ func (s *service) providerSigninRedirect(c fiber.Ctx, msg string) (redirectURL s
 	if providerError != "" {
 		errorCount++
 		if meta.ErrorCountSessionKey != "" {
-			_ = s.SessionWrite(c, meta.ErrorCountSessionKey, strconv.Itoa(errorCount))
+			if err := s.SessionWrite(c, meta.ErrorCountSessionKey, strconv.Itoa(errorCount)); err != nil {
+				log.Warn("save sign-in redirect state:", err)
+			}
 		}
 		if errorCount < maxErrorRedirects {
 			return meta.SigninPath, msg
 		}
 	} else if meta.ErrorCountSessionKey != "" {
-		_ = s.SessionWrite(c, meta.ErrorCountSessionKey, "0")
+		if err := s.SessionWrite(c, meta.ErrorCountSessionKey, "0"); err != nil {
+			log.Warn("save sign-in redirect state:", err)
+		}
 	}
 
 	if providerError == "" && loggedOut == "" && !skipAutoRedirect {
