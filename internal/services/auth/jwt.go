@@ -51,31 +51,6 @@ func JWTCreateToken(env *appenv.Env, claims AuthClaims) (string, error) {
 	return tokenStr, nil
 }
 
-// RefreshJWTToken returns a refreshed JWT token for claims if expiring in less than 1h and still valid, optionally error
-func RefreshJWTToken(env *appenv.Env, token string, claims AuthClaims) (string, time.Duration, error) {
-	exp, err := claims.GetExpirationTime()
-	if err != nil {
-		return "", 0, err
-	}
-	if exp == nil {
-		return "", 0, errors.New("parse JWT token claims, exp not found")
-	}
-
-	if time.Until(exp.Time) > time.Hour {
-		return token, time.Until(exp.Time), nil
-	}
-
-	validFor := authTokenTTL(claims.RememberMe)
-	claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(validFor))
-
-	refreshed, err := JWTCreateToken(env, claims)
-	if err != nil {
-		return "", 0, err
-	}
-
-	return refreshed, validFor, nil
-}
-
 // decodeJWTToken returns the claims of a valid, unexpired JWT token
 func decodeJWTToken(env *appenv.Env, tokenStr string) (AuthClaims, error) {
 	secret, err := jwtSecretFromEnv(env)
@@ -100,6 +75,21 @@ func decodeJWTToken(env *appenv.Env, tokenStr string) (AuthClaims, error) {
 	}
 
 	return claims, nil
+}
+
+// needsRefresh reports whether less than half of the token's lifetime is left.
+func (ac AuthClaims) needsRefresh(now time.Time) bool {
+	if ac.ExpiresAt == nil {
+		return true
+	}
+
+	return ac.ExpiresAt.Sub(now) < authTokenTTL(ac.RememberMe)/2
+}
+
+// renewed returns the claims with a full lifetime from now.
+func (ac AuthClaims) renewed(now time.Time) AuthClaims {
+	ac.ExpiresAt = jwt.NewNumericDate(now.Add(authTokenTTL(ac.RememberMe)))
+	return ac
 }
 
 func authTokenTTL(rememberMe bool) time.Duration {

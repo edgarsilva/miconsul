@@ -65,8 +65,8 @@ func (ls LocalStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
 }
 
 // SignIn starts a session for user under a new session ID. The session holds
-// a JWT that expires after 24h, or 7 days with rememberMe; a request in the
-// token's last hour refreshes it.
+// a JWT that expires after 24h, or 7 days with rememberMe; a request once less
+// than half of its lifetime is left refreshes it.
 func (ls LocalStrategy) SignIn(c fiber.Ctx, user models.User, rememberMe bool) error {
 	token, err := JWTCreateToken(ls.resource.AppEnv(), NewAuthClaims(user, rememberMe))
 	if err != nil {
@@ -105,7 +105,8 @@ func (ls LocalStrategy) authenticateWithJWT(c fiber.Ctx, token string) (models.U
 
 // authenticateWithSession returns the session's user while its JWT is valid.
 // It reloads the user from the DB once the cached copy is older than
-// authSessionHydrationTTL, and refreshes the JWT when it is about to expire.
+// authSessionHydrationTTL, and refreshes the JWT once less than half of its
+// lifetime is left.
 func (ls LocalStrategy) authenticateWithSession(c fiber.Ctx) (models.User, error) {
 	snapshot, ok := DecodeAuthSnapshotQuery(ls.resource.SessionRead(c, authSessionKey, ""))
 	if !ok {
@@ -118,10 +119,11 @@ func (ls LocalStrategy) authenticateWithSession(c fiber.Ctx) (models.User, error
 		return models.User{}, errors.New("session token expired or invalid")
 	}
 
+	now := time.Now()
 	user := snapshot.toUser()
 	changed := false
 
-	if !snapshot.isFresh(time.Now()) {
+	if !snapshot.isFresh(now) {
 		user, err = ls.FindUserByID(c.Context(), snapshot.UserUID)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			ls.signOutSession(c)
@@ -135,11 +137,12 @@ func (ls LocalStrategy) authenticateWithSession(c fiber.Ctx) (models.User, error
 		changed = true
 	}
 
-	token, _, err := RefreshJWTToken(ls.resource.AppEnv(), snapshot.Token, claims)
-	if err != nil {
-		return models.User{}, fmt.Errorf("refresh session token: %w", err)
-	}
-	if token != snapshot.Token {
+	if claims.needsRefresh(now) {
+		token, err := JWTCreateToken(ls.resource.AppEnv(), claims.renewed(now))
+		if err != nil {
+			return models.User{}, fmt.Errorf("refresh session token: %w", err)
+		}
+
 		snapshot.Token = token
 		changed = true
 	}

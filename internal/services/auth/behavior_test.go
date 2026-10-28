@@ -192,43 +192,47 @@ func TestJWTHelpers(t *testing.T) {
 		}
 	})
 
-	t.Run("refresh keeps token if expiration is far", func(t *testing.T) {
-		token := authTokenForTest(t, env, testUser, false, 2*time.Hour)
+	t.Run("needsRefresh once less than half of the lifetime is left", func(t *testing.T) {
+		now := time.Now()
+		tests := []struct {
+			name       string
+			rememberMe bool
+			left       time.Duration
+			noExp      bool
+			want       bool
+		}{
+			{name: "24h token with 13h left", left: 13 * time.Hour, want: false},
+			{name: "24h token with 11h left", left: 11 * time.Hour, want: true},
+			{name: "7 day token with 4 days left", rememberMe: true, left: 4 * 24 * time.Hour, want: false},
+			{name: "7 day token with 3 days left", rememberMe: true, left: 3 * 24 * time.Hour, want: true},
+			{name: "token without exp", noExp: true, want: true},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				claims := NewAuthClaims(testUser, tt.rememberMe)
+				claims.ExpiresAt = jwt.NewNumericDate(now.Add(tt.left))
+				if tt.noExp {
+					claims.ExpiresAt = nil
+				}
 
-		claims, err := decodeJWTToken(env, token)
-		if err != nil {
-			t.Fatalf("decode token: %v", err)
-		}
-
-		refreshed, ttl, err := RefreshJWTToken(env, token, claims)
-		if err != nil {
-			t.Fatalf("refresh token: %v", err)
-		}
-		if refreshed != token {
-			t.Fatalf("expected token unchanged when expiration is far")
-		}
-		if ttl <= time.Hour {
-			t.Fatalf("expected ttl > 1h, got %v", ttl)
+				if got := claims.needsRefresh(now); got != tt.want {
+					t.Fatalf("needsRefresh() = %v, want %v", got, tt.want)
+				}
+			})
 		}
 	})
 
-	t.Run("refresh issues new token when expiration is near", func(t *testing.T) {
-		token := authTokenForTest(t, env, testUser, true, 30*time.Minute)
+	t.Run("renewed restores a full lifetime and keeps the claims", func(t *testing.T) {
+		now := time.Now()
+		claims := NewAuthClaims(testUser, true)
+		claims.ExpiresAt = jwt.NewNumericDate(now.Add(time.Hour))
 
-		claims, err := decodeJWTToken(env, token)
-		if err != nil {
-			t.Fatalf("decode token: %v", err)
+		renewed := claims.renewed(now)
+		if got := renewed.ExpiresAt.Sub(now); got < rememberAuthTokenTTL-time.Second || got > rememberAuthTokenTTL {
+			t.Fatalf("expected a %v lifetime, got %v", rememberAuthTokenTTL, got)
 		}
-
-		refreshed, ttl, err := RefreshJWTToken(env, token, claims)
-		if err != nil {
-			t.Fatalf("refresh token: %v", err)
-		}
-		if refreshed == token {
-			t.Fatalf("expected refreshed token to differ when expiration is near")
-		}
-		if ttl != rememberAuthTokenTTL {
-			t.Fatalf("expected remember-me ttl %v, got %v", rememberAuthTokenTTL, ttl)
+		if renewed.Subject != testUser.Email || renewed.UID != testUser.UID || !renewed.RememberMe {
+			t.Fatalf("unexpected renewed claims: %+v", renewed)
 		}
 	})
 
