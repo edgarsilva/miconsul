@@ -14,6 +14,7 @@ import (
 	view "miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/log"
 	"gorm.io/gorm"
 )
 
@@ -38,7 +39,7 @@ func (s service) FavoriteClinic(c fiber.Ctx, userID uint) (models.Clinic, error)
 		Limit(1).
 		Find(c.Context())
 	if err != nil {
-		return models.Clinic{}, err
+		return models.Clinic{}, fmt.Errorf("find favorite clinic: %w", err)
 	}
 
 	if len(clinics) == 0 {
@@ -60,31 +61,43 @@ func (s service) FindFeedEventsByUserID(ctx context.Context, userID uint, limit 
 		Limit(limit).
 		Find(&events).Error
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("find feed events: %w", err)
 	}
 
 	return events, nil
 }
 
-func (s service) CalcDashboardStats(ctx context.Context, cu models.User) view.DashboardStats {
+// CalcDashboardStats returns the user's patient and appointment stats, cached
+// for 15 minutes. Stats are only cached when every count succeeds.
+func (s service) CalcDashboardStats(ctx context.Context, cu models.User) (view.DashboardStats, error) {
 	ctx, span := s.Trace(ctx, "dashboard/services.CalcDashboardStats")
 	defer span.End()
 
 	cacheKey := cu.UID + ".dashboard.stats"
 	if stats, ok := s.ReadStatsCache(cacheKey); ok {
-		return stats
+		return stats, nil
 	}
 
-	patStats := s.CalcMonthlyStats(ctx, cu, &models.Patient{UserID: cu.ID})
-	apptStats := s.CalcMonthlyStats(ctx, cu, &models.Appointment{UserID: cu.ID})
+	patStats, err := s.CalcMonthlyStats(ctx, cu, &models.Patient{UserID: cu.ID})
+	if err != nil {
+		return view.DashboardStats{}, fmt.Errorf("count patients: %w", err)
+	}
+
+	apptStats, err := s.CalcMonthlyStats(ctx, cu, &models.Appointment{UserID: cu.ID})
+	if err != nil {
+		return view.DashboardStats{}, fmt.Errorf("count appointments: %w", err)
+	}
+
 	stats := view.DashboardStats{
 		Patients:     patStats,
 		Appointments: apptStats,
 	}
 
-	_ = s.WriteStatsCache(cacheKey, stats)
+	if err := s.WriteStatsCache(cacheKey, stats); err != nil {
+		log.Warn("cache dashboard stats:", err)
+	}
 
-	return stats
+	return stats, nil
 }
 
 func (s service) WriteStatsCache(cachekey string, stats view.DashboardStats) error {
@@ -116,24 +129,28 @@ func (s service) ReadStatsCache(cachekey string) (stats view.DashboardStats, ok 
 	return stats, true
 }
 
-func (s service) CalcMonthlyStats(ctx context.Context, cu models.User, imodel any) view.DashboardStat {
+func (s service) CalcMonthlyStats(ctx context.Context, cu models.User, imodel any) (view.DashboardStat, error) {
 	localCtx, span := s.Trace(ctx, "dashboard/services:CalcMonthlyStats")
 	defer span.End()
 
 	var cnt int64
-	s.DB.WithContext(localCtx).Model(imodel).Where(imodel).Count(&cnt)
+	if err := s.DB.WithContext(localCtx).Model(imodel).Where(imodel).Count(&cnt).Error; err != nil {
+		return view.DashboardStat{}, err
+	}
 
 	bom := libtime.BoM(libtime.InTimezone(time.Now(), models.DefaultTimezone))
 
 	var lastMonth int64
-	s.DB.WithContext(localCtx).Model(imodel).Where("user_id = ? AND created_at < ?", cu.ID, bom.UTC()).Count(&lastMonth)
+	if err := s.DB.WithContext(localCtx).Model(imodel).Where("user_id = ? AND created_at < ?", cu.ID, bom.UTC()).Count(&lastMonth).Error; err != nil {
+		return view.DashboardStat{}, err
+	}
 
 	diff := cnt - lastMonth
 
 	return view.DashboardStat{
 		Total: int(cnt),
 		Diff:  int(diff),
-	}
+	}, nil
 }
 
 func Serialize(stats view.DashboardStats) ([]byte, error) {

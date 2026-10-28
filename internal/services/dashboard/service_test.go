@@ -1,12 +1,21 @@
 package dashboard
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"strings"
 	"testing"
 	"time"
 
+	"miconsul/internal/database"
+	"miconsul/internal/models"
 	"miconsul/internal/server"
 	view "miconsul/internal/views"
+
+	"go.opentelemetry.io/otel/trace/noop"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func TestSerializeDeserializeRoundTrip(t *testing.T) {
@@ -118,4 +127,62 @@ func (c *inMemoryCache) Write(key string, src *[]byte, ttl time.Duration) error 
 	b := append([]byte(nil), (*src)...)
 	c.data[key] = b
 	return nil
+}
+
+func TestCalcDashboardStats(t *testing.T) {
+	t.Run("caches stats when every count succeeds", func(t *testing.T) {
+		svc, cache := newStatsServiceForTests(t)
+		user := models.User{ID: 1, UID: "user_1"}
+
+		if _, err := svc.CalcDashboardStats(context.Background(), user); err != nil {
+			t.Fatalf("CalcDashboardStats: %v", err)
+		}
+		if _, ok := cache.data[user.UID+".dashboard.stats"]; !ok {
+			t.Fatalf("expected the stats to be cached")
+		}
+	})
+
+	t.Run("returns the error and doesn't cache when a count fails", func(t *testing.T) {
+		svc, cache := newStatsServiceForTests(t)
+		user := models.User{ID: 1, UID: "user_1"}
+		err := svc.DB.GormDB().Callback().Query().Before("gorm:query").Register("test_force_patients_count_error", func(db *gorm.DB) {
+			if db.Statement != nil && db.Statement.Table == "patients" {
+				db.AddError(errors.New("forced patients count error"))
+			}
+		})
+		if err != nil {
+			t.Fatalf("register query callback: %v", err)
+		}
+
+		if _, err := svc.CalcDashboardStats(context.Background(), user); err == nil {
+			t.Fatalf("expected the count error")
+		}
+		if _, ok := cache.data[user.UID+".dashboard.stats"]; ok {
+			t.Fatalf("expected no cached stats after a failed count")
+		}
+	})
+}
+
+// newStatsServiceForTests returns a dashboard service with an in-memory
+// database and cache.
+func newStatsServiceForTests(t *testing.T) (service, *inMemoryCache) {
+	t.Helper()
+
+	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", strings.ReplaceAll(t.Name(), "/", "_"))
+	gdb, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open sqlite: %v", err)
+	}
+	if err := gdb.AutoMigrate(&models.Patient{}, &models.Appointment{}); err != nil {
+		t.Fatalf("migrate: %v", err)
+	}
+
+	cache := &inMemoryCache{}
+	svc := service{Server: &server.Server{
+		DB:             &database.Database{DB: gdb},
+		Cache:          cache,
+		TracerProvider: noop.NewTracerProvider(),
+	}}
+
+	return svc, cache
 }
