@@ -2,9 +2,8 @@ package auth
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
+	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -15,6 +14,7 @@ import (
 	"miconsul/internal/lib/appenv"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/log"
 	"gorm.io/gorm"
 )
 
@@ -42,10 +42,10 @@ type LocalStrategy struct {
 
 type LocalStrategyResource interface {
 	GormDB() *gorm.DB
-	NewCookie(name, value string, validFor time.Duration) *fiber.Cookie
 	AppEnv() *appenv.Env
 	SessionRead(c fiber.Ctx, key string, defaultVal string) string
 	SessionWrite(c fiber.Ctx, k string, v any) error
+	SessionRotate(c fiber.Ctx, k string, v any) error
 }
 
 func NewLocalStrategy(resource LocalStrategyResource) *LocalStrategy {
@@ -54,25 +54,31 @@ func NewLocalStrategy(resource LocalStrategyResource) *LocalStrategy {
 	}
 }
 
+// Authenticate returns the user of a bearer token (API clients) or of the
+// signed-in session.
 func (ls LocalStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
-	token := getToken(c)
-	if token == "" {
-		return models.User{}, errors.New("retrieve JWT token, it is blank")
+	if token, ok := bearerToken(c); ok {
+		return ls.authenticateWithJWT(c, token)
 	}
 
-	userFromSession, ok := ls.currentUserFromSession(c, token)
-	if ok {
-		return userFromSession, nil
-	}
+	return ls.authenticateWithSession(c)
+}
 
-	user, err := ls.authenticateWithJWT(c, token)
+// SignIn starts a session for user under a new session ID. The session holds
+// a JWT that expires after 24h, or 7 days with rememberMe; a request in the
+// token's last hour refreshes it.
+func (ls LocalStrategy) SignIn(c fiber.Ctx, user models.User, rememberMe bool) error {
+	token, err := JWTCreateTokenWithTTL(ls.resource.AppEnv(), user.Email, user.UID, authTokenTTL(rememberMe), rememberMe)
 	if err != nil {
-		return user, errors.New("authenticate user")
+		return fmt.Errorf("%w: %w", errAuthSessionCreate, err)
 	}
 
-	ls.saveCurrentUserToSession(c, token, user)
+	snapshot := newAuthSnapshot(user, token)
+	if err := ls.resource.SessionRotate(c, authSessionKey, snapshot.EncodeQuery()); err != nil {
+		return fmt.Errorf("%w: %w", errAuthSessionCreate, err)
+	}
 
-	return user, nil
+	return nil
 }
 
 func (ls LocalStrategy) Metadata() AuthenticatorMeta {
@@ -99,57 +105,79 @@ func (ls LocalStrategy) authenticateWithJWT(c fiber.Ctx, token string) (models.U
 		return user, errors.New("find user with UID in JWT token")
 	}
 
-	refreshedJWT, validFor, err := RefreshJWTToken(ls.resource.AppEnv(), token, claims)
-	if err != nil {
-		return user, errors.New("refresh JWT token")
+	return user, nil
+}
+
+// authenticateWithSession returns the session's user while its JWT is valid.
+// It reloads the user from the DB once the cached copy is older than
+// authSessionHydrationTTL, and refreshes the JWT when it is about to expire.
+func (ls LocalStrategy) authenticateWithSession(c fiber.Ctx) (models.User, error) {
+	snapshot, ok := DecodeAuthSnapshotQuery(ls.resource.SessionRead(c, authSessionKey, ""))
+	if !ok {
+		return models.User{}, errors.New("no signed-in session")
 	}
-	if refreshedJWT != token {
-		ls.refreshAuthCookie(c, refreshedJWT, validFor)
+
+	claims, err := decodeJWTToken(ls.resource.AppEnv(), snapshot.Token)
+	if err != nil || claims["uid"] != snapshot.UserUID {
+		ls.signOutSession(c)
+		return models.User{}, errors.New("session token expired or invalid")
+	}
+
+	user := snapshot.toUser()
+	changed := false
+
+	if !snapshot.isFresh(time.Now()) {
+		user, err = ls.FindUserByID(c.Context(), snapshot.UserUID)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			ls.signOutSession(c)
+			return models.User{}, errors.New("signed-in user not found")
+		}
+		if err != nil {
+			return models.User{}, fmt.Errorf("find signed-in user: %w", err)
+		}
+
+		snapshot = newAuthSnapshot(user, snapshot.Token)
+		changed = true
+	}
+
+	token, _, err := RefreshJWTToken(ls.resource.AppEnv(), snapshot.Token, claims)
+	if err != nil {
+		return models.User{}, fmt.Errorf("refresh session token: %w", err)
+	}
+	if token != snapshot.Token {
+		snapshot.Token = token
+		changed = true
+	}
+
+	if changed {
+		if err := ls.resource.SessionWrite(c, authSessionKey, snapshot.EncodeQuery()); err != nil {
+			log.Warn("save refreshed auth session:", err)
+		}
 	}
 
 	return user, nil
 }
 
-// getToken returns the JWT token from the request
-func getToken(c fiber.Ctx) string {
-	token := c.Cookies("Auth", "")
-	if token == "" {
-		token = strings.TrimPrefix(c.Get("Authorization", ""), "Bearer ")
+// signOutSession removes the signed-in user from the session.
+func (ls LocalStrategy) signOutSession(c fiber.Ctx) {
+	if err := ls.resource.SessionWrite(c, authSessionKey, ""); err != nil {
+		log.Warn("remove signed-in user from session:", err)
 	}
-
-	return token
 }
 
-func (ls LocalStrategy) refreshAuthCookie(c fiber.Ctx, jwt string, validFor time.Duration) {
-	if validFor <= 0 {
-		validFor = defaultAuthTokenTTL
+// bearerToken returns the token of an "Authorization: Bearer" header.
+func bearerToken(c fiber.Ctx) (string, bool) {
+	token, ok := strings.CutPrefix(c.Get(fiber.HeaderAuthorization), "Bearer ")
+	if !ok || token == "" {
+		return "", false
 	}
 
-	c.Cookie(ls.resource.NewCookie("Auth", jwt, validFor))
+	return token, true
 }
 
-func (ls LocalStrategy) currentUserFromSession(c fiber.Ctx, token string) (models.User, bool) {
-	snapshot, ok := ls.readAuthSnapshot(c)
-	if !ok {
-		return models.User{}, false
-	}
-
-	tokenHash := tokenDigest(token)
-	isInvalidToken := !snapshot.isValidForToken(tokenHash, time.Now())
-	if isInvalidToken {
-		return models.User{}, false
-	}
-
-	return snapshot.toUser(), true
-}
-
-func (ls LocalStrategy) saveCurrentUserToSession(c fiber.Ctx, token string, user models.User) {
-	if token == "" || user.ID == 0 || user.UID == "" {
-		return
-	}
-
-	ls.writeAuthSnapshot(c, AuthSnapshot{
-		Token:          tokenDigest(token),
+func newAuthSnapshot(user models.User, token string) AuthSnapshot {
+	return AuthSnapshot{
+		Token:          token,
 		UserID:         user.ID,
 		UserUID:        user.UID,
 		UserEmail:      user.Email,
@@ -159,28 +187,11 @@ func (ls LocalStrategy) saveCurrentUserToSession(c fiber.Ctx, token string, user
 		UserTheme:      user.Theme,
 		UserLocale:     user.Locale,
 		CachedAtUnix:   time.Now().Unix(),
-	})
-}
-
-func tokenDigest(token string) string {
-	if token == "" {
-		return ""
 	}
-
-	sum := sha256.Sum256([]byte(token))
-	return hex.EncodeToString(sum[:])
 }
 
-func (ls LocalStrategy) readAuthSnapshot(c fiber.Ctx) (AuthSnapshot, bool) {
-	raw := ls.resource.SessionRead(c, authSessionKey, "")
-	return DecodeAuthSnapshot(raw)
-}
-
-func (ls LocalStrategy) writeAuthSnapshot(c fiber.Ctx, snapshot AuthSnapshot) {
-	_ = ls.resource.SessionWrite(c, authSessionKey, EncodeAuthSnapshot(snapshot))
-}
-
-func EncodeAuthSnapshot(sa AuthSnapshot) string {
+// EncodeQuery encodes the snapshot as URL query values.
+func (sa AuthSnapshot) EncodeQuery() string {
 	v := url.Values{}
 	v.Set("t", sa.Token)
 	v.Set("id", strconv.FormatUint(uint64(sa.UserID), 10))
@@ -196,7 +207,8 @@ func EncodeAuthSnapshot(sa AuthSnapshot) string {
 	return v.Encode()
 }
 
-func DecodeAuthSnapshot(raw string) (AuthSnapshot, bool) {
+// DecodeAuthSnapshotQuery decodes a snapshot encoded by EncodeQuery.
+func DecodeAuthSnapshotQuery(raw string) (AuthSnapshot, bool) {
 	if raw == "" {
 		return AuthSnapshot{}, false
 	}
@@ -237,13 +249,8 @@ func DecodeAuthSnapshot(raw string) (AuthSnapshot, bool) {
 	return sa, true
 }
 
-func (sa AuthSnapshot) isValidForToken(token string, now time.Time) bool {
-	if token == "" || sa.Token == "" || sa.UserUID == "" || sa.UserID == 0 {
-		return false
-	}
-	if sa.Token != token {
-		return false
-	}
+// isFresh reports whether the cached user is recent enough to skip the DB.
+func (sa AuthSnapshot) isFresh(now time.Time) bool {
 	if sa.CachedAtUnix <= 0 {
 		return false
 	}

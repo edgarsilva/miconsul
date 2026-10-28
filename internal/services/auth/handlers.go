@@ -53,8 +53,8 @@ func (s *service) HandleProviderSignin(c fiber.Ctx) error {
 	return s.Redirect(c, selectAuthenticator(s).Metadata().SigninPath)
 }
 
-// HandleSignin compares hash and password and sets the user Auth session cookie
-// if the email & password combination are valid
+// HandleSignin compares hash and password and starts the user's session if
+// the email & password combination are valid
 //
 // POST: /signin
 func (s *service) HandleSignin(c fiber.Ctx) error {
@@ -82,7 +82,7 @@ func (s *service) HandleSignin(c fiber.Ctx) error {
 	}
 
 	rememberMe := c.FormValue("remember_me", "") != ""
-	if err := s.issueAuthCookie(c, user, rememberMe); err != nil {
+	if err := NewLocalStrategy(s).SignIn(c, user, rememberMe); err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "create session failed")
 		return s.respondWithRedirect(c, "/", "Failed to login, please try again")
@@ -91,7 +91,8 @@ func (s *service) HandleSignin(c fiber.Ctx) error {
 	return s.Redirect(c, "/?timeframe=day")
 }
 
-// HandleAPISignin authenticates a user and creates an auth cookie for API clients.
+// HandleAPISignin authenticates a user and starts a session (session_id cookie)
+// for API clients.
 // POST: /api/auth/signin
 func (s *service) HandleAPISignin(c fiber.Ctx) error {
 	ctx, span := s.Trace(c.Context(), "auth/handlers:HandleAPISignin")
@@ -117,7 +118,7 @@ func (s *service) HandleAPISignin(c fiber.Ctx) error {
 		return apiError(c, fiber.StatusInternalServerError, "authentication failed")
 	}
 
-	if err := s.issueAuthCookie(c, user, input.RememberMe); err != nil {
+	if err := NewLocalStrategy(s).SignIn(c, user, input.RememberMe); err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "create session failed")
 		return apiError(c, fiber.StatusInternalServerError, "failed to create session")
@@ -229,14 +230,6 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, "/signin", "Email confirmed, you should be able to signin now")
 	}
 
-	jwt, err := JWTCreateToken(s.AppEnv(), user.Email, user.UID)
-	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, "jwt creation after confirmation failed")
-		return s.respondWithRedirect(c, "/signin", "Email confirmed, you should be able to signin now")
-	}
-
-	c.Cookie(s.NewCookie("Auth", jwt, time.Hour*24))
 	span.SetStatus(codes.Ok, "email confirmed")
 	return s.respondWithRedirect(c, "/signin", "Email confirmed, you should be able to signin now")
 }
@@ -266,7 +259,7 @@ func (s *service) respondWithRedirect(c fiber.Ctx, path, message string) error {
 // ALL: /logout
 func (s *service) HandleLogout(c fiber.Ctx) error {
 	s.SessionDestroy(c)
-	s.InvalidateCookies(c, "Auth", "JWT")
+	s.InvalidateCookies(c, "Auth")
 
 	redirectURL := "/signin"
 	if logtoEnabled(s.Env) {
