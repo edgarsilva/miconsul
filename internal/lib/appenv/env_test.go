@@ -3,8 +3,6 @@ package appenv
 import (
 	"errors"
 	"os"
-	"slices"
-	"strings"
 	"testing"
 	"time"
 
@@ -228,45 +226,6 @@ func TestNewRequiresOTLPEndpointInProduction(t *testing.T) {
 	t.Setenv("OTEL_EXPORTER_OTLP_ENDPOINT", "lgtm:4317")
 	if _, err := New(); err != nil {
 		t.Fatalf("expected production env with endpoint to load, got %v", err)
-	}
-}
-
-func TestNewRequiresLogtoSettingsTogether(t *testing.T) {
-	logto := map[string]string{
-		"LOGTO_URL":        "https://logto.example.com",
-		"LOGTO_APP_ID":     "app_id_123456",
-		"LOGTO_APP_SECRET": "app_secret_123456",
-		"LOGTO_RESOURCE":   "https://api.example.com",
-	}
-	tests := []struct {
-		name    string
-		unset   []string
-		wantErr bool
-	}{
-		{name: "all set", wantErr: false},
-		{name: "none set", unset: []string{"LOGTO_URL", "LOGTO_APP_ID", "LOGTO_APP_SECRET", "LOGTO_RESOURCE"}, wantErr: false},
-		{name: "secret missing", unset: []string{"LOGTO_APP_SECRET"}, wantErr: true},
-		{name: "only url set", unset: []string{"LOGTO_APP_ID", "LOGTO_APP_SECRET", "LOGTO_RESOURCE"}, wantErr: true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			setRequiredEnv(t)
-			for name, value := range logto {
-				if !slices.Contains(tt.unset, name) {
-					t.Setenv(name, value)
-				}
-			}
-
-			_, err := New()
-			if gotErr := errors.Is(err, ErrLogtoPartiallyConfigured); gotErr != tt.wantErr {
-				t.Fatalf("New() error = %v, want ErrLogtoPartiallyConfigured %v", err, tt.wantErr)
-			}
-			for _, name := range tt.unset {
-				if tt.wantErr && !strings.Contains(err.Error(), name) {
-					t.Fatalf("expected the error to name %s, got %v", name, err)
-				}
-			}
-		})
 	}
 }
 

@@ -34,6 +34,10 @@ var (
 	errAuthPendingConfirmation = errors.New("email pending confirmation")
 	errAuthSessionCreate       = errors.New("create session")
 	errAuthConfirmEmailSend    = errors.New("send confirmation email")
+
+	// ErrLogtoPartiallyConfigured is returned by New when some, but not all,
+	// Logto settings are set.
+	ErrLogtoPartiallyConfigured = errors.New("LOGTO_URL, LOGTO_APP_ID, LOGTO_APP_SECRET and LOGTO_RESOURCE must be set together")
 )
 
 func New(s *server.Server) (*service, error) {
@@ -45,6 +49,9 @@ func New(s *server.Server) (*service, error) {
 	}
 	if s.TracerProvider == nil {
 		return nil, errors.New("auth service requires a server tracer provider")
+	}
+	if missing := missingLogtoSettings(s.Env); len(missing) > 0 && len(missing) < 4 {
+		return nil, fmt.Errorf("%w: missing %s", ErrLogtoPartiallyConfigured, strings.Join(missing, ", "))
 	}
 
 	tracerName := s.Env.OTelTracerAuth

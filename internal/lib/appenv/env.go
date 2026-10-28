@@ -69,13 +69,8 @@ type Env struct {
 	AssetsDir string `env:"ASSETS_DIR"`
 }
 
-var (
-	// ErrOTLPEndpointRequired is returned by New when production has no OTLP endpoint.
-	ErrOTLPEndpointRequired = errors.New("OTEL_EXPORTER_OTLP_ENDPOINT is required in production")
-	// ErrLogtoPartiallyConfigured is returned by New when some, but not all,
-	// Logto settings are set.
-	ErrLogtoPartiallyConfigured = errors.New("LOGTO_URL, LOGTO_APP_ID, LOGTO_APP_SECRET and LOGTO_RESOURCE must be set together")
-)
+// ErrOTLPEndpointRequired is returned by New when production has no OTLP endpoint.
+var ErrOTLPEndpointRequired = errors.New("OTEL_EXPORTER_OTLP_ENDPOINT is required in production")
 
 func New() (*Env, error) {
 	env := &Env{
@@ -104,33 +99,7 @@ func New() (*Env, error) {
 		return nil, ErrOTLPEndpointRequired
 	}
 
-	if missing := env.missingLogtoSettings(); len(missing) > 0 && len(missing) < 4 {
-		return nil, fmt.Errorf("%w: missing %s", ErrLogtoPartiallyConfigured, strings.Join(missing, ", "))
-	}
-
 	return env, nil
-}
-
-// missingLogtoSettings returns the names of the Logto settings that are unset.
-func (e *Env) missingLogtoSettings() []string {
-	settings := []struct {
-		name  string
-		value string
-	}{
-		{"LOGTO_URL", e.LogtoURL},
-		{"LOGTO_APP_ID", e.LogtoAppID},
-		{"LOGTO_APP_SECRET", e.LogtoAppSecret},
-		{"LOGTO_RESOURCE", e.LogtoResource},
-	}
-
-	missing := []string{}
-	for _, setting := range settings {
-		if setting.value == "" {
-			missing = append(missing, setting.name)
-		}
-	}
-
-	return missing
 }
 
 func normalizeAbsPath(p string) (string, error) {

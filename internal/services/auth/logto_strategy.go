@@ -255,14 +255,31 @@ func logtoDecodeAccessToken(token string) (LogtoUser, error) {
 }
 
 func logtoEnabled(env *appenv.Env) bool {
+	return len(missingLogtoSettings(env)) == 0
+}
+
+// missingLogtoSettings returns the names of the Logto settings that are unset.
+func missingLogtoSettings(env *appenv.Env) []string {
 	if env == nil {
-		return false
+		env = &appenv.Env{}
 	}
 
-	logtoURL := env.LogtoURL
-	logtoAppID := env.LogtoAppID
-	logtoAppSecret := env.LogtoAppSecret
-	logtoResource := env.LogtoResource
+	settings := []struct {
+		name  string
+		value string
+	}{
+		{"LOGTO_URL", env.LogtoURL},
+		{"LOGTO_APP_ID", env.LogtoAppID},
+		{"LOGTO_APP_SECRET", env.LogtoAppSecret},
+		{"LOGTO_RESOURCE", env.LogtoResource},
+	}
 
-	return logtoURL != "" && logtoAppID != "" && logtoAppSecret != "" && logtoResource != ""
+	missing := []string{}
+	for _, setting := range settings {
+		if setting.value == "" {
+			missing = append(missing, setting.name)
+		}
+	}
+
+	return missing
 }

@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -30,6 +31,40 @@ func TestNewServiceValidation(t *testing.T) {
 	}
 	if svc == nil || svc.Server == nil {
 		t.Fatalf("expected service with server reference")
+	}
+}
+
+func TestNewRequiresLogtoSettingsTogether(t *testing.T) {
+	all := appenv.Env{
+		LogtoURL:       "https://logto.example.com",
+		LogtoAppID:     "app_id_123456",
+		LogtoAppSecret: "app_secret_123456",
+		LogtoResource:  "https://api.example.com",
+	}
+	tests := []struct {
+		name    string
+		env     func() appenv.Env
+		missing []string
+	}{
+		{name: "all set", env: func() appenv.Env { return all }},
+		{name: "none set", env: func() appenv.Env { return appenv.Env{} }},
+		{name: "secret missing", env: func() appenv.Env { e := all; e.LogtoAppSecret = ""; return e }, missing: []string{"LOGTO_APP_SECRET"}},
+		{name: "only url set", env: func() appenv.Env { return appenv.Env{LogtoURL: all.LogtoURL} }, missing: []string{"LOGTO_APP_ID", "LOGTO_APP_SECRET", "LOGTO_RESOURCE"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			env := tt.env()
+			_, err := New(&server.Server{Env: &env, TracerProvider: noop.NewTracerProvider()})
+
+			if wantErr := len(tt.missing) > 0; errors.Is(err, ErrLogtoPartiallyConfigured) != wantErr {
+				t.Fatalf("New() error = %v, want ErrLogtoPartiallyConfigured %v", err, wantErr)
+			}
+			for _, name := range tt.missing {
+				if !strings.Contains(err.Error(), name) {
+					t.Fatalf("expected the error to name %s, got %v", name, err)
+				}
+			}
+		})
 	}
 }
 
