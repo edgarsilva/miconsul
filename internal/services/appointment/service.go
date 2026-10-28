@@ -12,6 +12,7 @@ import (
 	"miconsul/internal/models"
 	"miconsul/internal/server"
 
+	"github.com/gofiber/fiber/v3/log"
 	"gorm.io/gorm"
 )
 
@@ -93,7 +94,7 @@ func (s *service) CreateAppointment(ctx context.Context, appointment *models.App
 	}
 
 	if appointment.UID != "" {
-		_ = s.recordFeedEvent(ctx, appointment.UserID, appointment.UID, models.EventActionCreated)
+		s.recordFeedEvent(ctx, appointment.UserID, appointment.UID, models.EventActionCreated)
 	}
 
 	return nil
@@ -138,7 +139,7 @@ func (s *service) UpdateAppointmentByID(ctx context.Context, userID uint, appoin
 		return err
 	}
 
-	_ = s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionUpdated)
+	s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionUpdated)
 	return nil
 }
 
@@ -157,7 +158,7 @@ func (s *service) CompleteAppointmentByID(ctx context.Context, userID uint, appo
 		return err
 	}
 
-	_ = s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionCompleted)
+	s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionCompleted)
 	return nil
 }
 
@@ -172,7 +173,7 @@ func (s *service) SaveAppointmentSessionByID(ctx context.Context, userID uint, a
 		return err
 	}
 
-	_ = s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionUpdated)
+	s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionUpdated)
 	return nil
 }
 
@@ -186,7 +187,7 @@ func (s *service) StartAppointmentSessionByID(ctx context.Context, userID uint, 
 		return err
 	}
 
-	_ = s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionUpdated)
+	s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionUpdated)
 	return nil
 }
 
@@ -200,7 +201,7 @@ func (s *service) PauseAppointmentSessionByID(ctx context.Context, userID uint, 
 		return err
 	}
 
-	_ = s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionUpdated)
+	s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionUpdated)
 	return nil
 }
 
@@ -219,7 +220,7 @@ func (s *service) CancelAppointmentByID(ctx context.Context, userID uint, appoin
 		return err
 	}
 
-	_ = s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionCanceled)
+	s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionCanceled)
 	return nil
 }
 
@@ -249,7 +250,7 @@ func (s *service) DeleteAppointmentByID(ctx context.Context, userID uint, appoin
 		return ErrIDRequired
 	}
 
-	_ = s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionDeleted)
+	s.recordFeedEvent(ctx, userID, appointmentID, models.EventActionDeleted)
 
 	rowsAffected, err := gorm.G[models.Appointment](s.DB.GormDB()).
 		Where("uid = ? AND user_id = ?", appointmentID, userID).
@@ -353,14 +354,20 @@ func (s *service) RequestAppointmentDateChange(ctx context.Context, appointment 
 	return appointment, nil
 }
 
-func (s *service) recordFeedEvent(ctx context.Context, userID uint, appointmentUID string, action models.EventAction) error {
+// recordFeedEvent records an appointment feed event. It is best-effort: a
+// failure is logged and doesn't affect the appointment change.
+func (s *service) recordFeedEvent(ctx context.Context, userID uint, appointmentUID string, action models.EventAction) {
 	if appointmentUID == "" {
-		return nil
+		return
 	}
 
 	appointment, err := s.TakeAppointmentByUID(ctx, userID, appointmentUID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return
+	}
 	if err != nil {
-		return err
+		log.Warnf("record %s feed event for appointment %s: %v", action, appointmentUID, err)
+		return
 	}
 
 	var actorName, actorID string
@@ -376,7 +383,9 @@ func (s *service) recordFeedEvent(ctx context.Context, userID uint, appointmentU
 	}
 
 	event := models.NewFeedEvent(action, actorName, actorID, "/users/"+actorID, appointment)
-	return s.DB.WithContext(ctx).Create(&event).Error
+	if err := s.DB.WithContext(ctx).Create(&event).Error; err != nil {
+		log.Warnf("record %s feed event for appointment %s: %v", action, appointmentUID, err)
+	}
 }
 
 func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, patientID, clinicID, timeframe, searchTerm, statusFilter string) ([]models.Appointment, error) {
