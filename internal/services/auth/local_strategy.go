@@ -56,46 +56,46 @@ func NewLocalStrategy(resource LocalStrategyResource) *LocalStrategy {
 
 // Authenticate returns the user of a bearer token (API clients) or of the
 // signed-in session.
-func (lcs LocalStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
+func (s LocalStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
 	if token, ok := bearerToken(c); ok {
-		return lcs.authenticateWithJWT(c, token)
+		return s.authenticateWithJWT(c, token)
 	}
 
-	return lcs.authenticateWithSession(c)
+	return s.authenticateWithSession(c)
 }
 
 // SignIn starts a session for user under a new session ID. The session holds
 // a JWT that expires after 24h, or 7 days with rememberMe; a request once less
 // than half of its lifetime is left refreshes it.
-func (lcs LocalStrategy) SignIn(c fiber.Ctx, user models.User, rememberMe bool) error {
-	token, err := JWTCreateToken(lcs.resource.AppEnv(), NewAuthClaims(user, rememberMe))
+func (s LocalStrategy) SignIn(c fiber.Ctx, user models.User, rememberMe bool) error {
+	token, err := JWTCreateToken(s.resource.AppEnv(), NewAuthClaims(user, rememberMe))
 	if err != nil {
 		return fmt.Errorf("%w: %w", errAuthSessionCreate, err)
 	}
 
 	snapshot := newAuthSnapshot(user, token)
-	if err := lcs.resource.SessionRotate(c, authSessionKey, snapshot.EncodeQuery()); err != nil {
+	if err := s.resource.SessionRotate(c, authSessionKey, snapshot.EncodeQuery()); err != nil {
 		return fmt.Errorf("%w: %w", errAuthSessionCreate, err)
 	}
 
 	return nil
 }
 
-func (lcs LocalStrategy) Metadata() AuthenticatorMeta {
+func (s LocalStrategy) Metadata() AuthenticatorMeta {
 	return AuthenticatorMeta{}
 }
 
-func (lcs LocalStrategy) FindUserByID(ctx context.Context, uid string) (models.User, error) {
-	return gorm.G[models.User](lcs.resource.GormDB()).Where("uid = ?", uid).Take(ctx)
+func (s LocalStrategy) FindUserByID(ctx context.Context, uid string) (models.User, error) {
+	return gorm.G[models.User](s.resource.GormDB()).Where("uid = ?", uid).Take(ctx)
 }
 
-func (lcs LocalStrategy) authenticateWithJWT(c fiber.Ctx, token string) (models.User, error) {
-	claims, err := decodeJWTToken(lcs.resource.AppEnv(), token)
+func (s LocalStrategy) authenticateWithJWT(c fiber.Ctx, token string) (models.User, error) {
+	claims, err := decodeJWTToken(s.resource.AppEnv(), token)
 	if err != nil {
 		return models.User{}, errors.New("validate JWT token")
 	}
 
-	user, err := lcs.FindUserByID(c.Context(), claims.UID)
+	user, err := s.FindUserByID(c.Context(), claims.UID)
 	if err != nil {
 		return user, errors.New("find user with UID in JWT token")
 	}
@@ -107,15 +107,15 @@ func (lcs LocalStrategy) authenticateWithJWT(c fiber.Ctx, token string) (models.
 // It reloads the user from the DB once the cached copy is older than
 // authSessionHydrationTTL, and refreshes the JWT once less than half of its
 // lifetime is left.
-func (lcs LocalStrategy) authenticateWithSession(c fiber.Ctx) (models.User, error) {
-	snapshot, ok := DecodeAuthSnapshotQuery(lcs.resource.SessionRead(c, authSessionKey, ""))
+func (s LocalStrategy) authenticateWithSession(c fiber.Ctx) (models.User, error) {
+	snapshot, ok := DecodeAuthSnapshotQuery(s.resource.SessionRead(c, authSessionKey, ""))
 	if !ok {
 		return models.User{}, errors.New("no signed-in session")
 	}
 
-	claims, err := decodeJWTToken(lcs.resource.AppEnv(), snapshot.Token)
+	claims, err := decodeJWTToken(s.resource.AppEnv(), snapshot.Token)
 	if err != nil || claims.UID != snapshot.UserUID {
-		lcs.signOutSession(c)
+		s.signOutSession(c)
 		return models.User{}, errors.New("session token expired or invalid")
 	}
 
@@ -124,9 +124,9 @@ func (lcs LocalStrategy) authenticateWithSession(c fiber.Ctx) (models.User, erro
 	changed := false
 
 	if !snapshot.isFresh(now) {
-		user, err = lcs.FindUserByID(c.Context(), snapshot.UserUID)
+		user, err = s.FindUserByID(c.Context(), snapshot.UserUID)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			lcs.signOutSession(c)
+			s.signOutSession(c)
 			return models.User{}, errors.New("signed-in user not found")
 		}
 		if err != nil {
@@ -138,7 +138,7 @@ func (lcs LocalStrategy) authenticateWithSession(c fiber.Ctx) (models.User, erro
 	}
 
 	if claims.needsRefresh(now) {
-		token, err := JWTCreateToken(lcs.resource.AppEnv(), claims.renewed(now))
+		token, err := JWTCreateToken(s.resource.AppEnv(), claims.renewed(now))
 		if err != nil {
 			return models.User{}, fmt.Errorf("refresh session token: %w", err)
 		}
@@ -148,7 +148,7 @@ func (lcs LocalStrategy) authenticateWithSession(c fiber.Ctx) (models.User, erro
 	}
 
 	if changed {
-		if err := lcs.resource.SessionWrite(c, authSessionKey, snapshot.EncodeQuery()); err != nil {
+		if err := s.resource.SessionWrite(c, authSessionKey, snapshot.EncodeQuery()); err != nil {
 			log.Warn("save refreshed auth session:", err)
 		}
 	}
@@ -157,8 +157,8 @@ func (lcs LocalStrategy) authenticateWithSession(c fiber.Ctx) (models.User, erro
 }
 
 // signOutSession removes the signed-in user from the session.
-func (lcs LocalStrategy) signOutSession(c fiber.Ctx) {
-	if err := lcs.resource.SessionWrite(c, authSessionKey, ""); err != nil {
+func (s LocalStrategy) signOutSession(c fiber.Ctx) {
+	if err := s.resource.SessionWrite(c, authSessionKey, ""); err != nil {
 		log.Warn("remove signed-in user from session:", err)
 	}
 }
