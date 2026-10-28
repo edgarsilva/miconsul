@@ -1556,20 +1556,20 @@ func AppointmentCont(c *Ctx, appointment models.Appointment, patients []models.P
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 113, "\" id=\"apnt_datetime_id\"><div class=\"px-4 py-6 sm:p-8\"><div class=\"grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6\"><div class=\"sm:col-span-4\"><label for=\"street-address\" class=\"block text-sm font-medium leading-6\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 113, "\" id=\"apnt_datetime_id\"><div class=\"px-4 py-6 sm:p-8\"><div class=\"grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6\"><div class=\"sm:col-span-4\"><label for=\"booked_at\" class=\"block text-sm font-medium leading-6\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var95 string
 			templ_7745c5c3_Var95, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.booked_at"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentspage.templ`, Line: 350, Col: 102}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentspage.templ`, Line: 350, Col: 97}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var95))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 114, " 123</label><div class=\"mt-2\"><input required type=\"datetime-local\" name=\"bookedAt\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 114, "</label><div class=\"mt-2\"><input required type=\"datetime-local\" name=\"bookedAt\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
