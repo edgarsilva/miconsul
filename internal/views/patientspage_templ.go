@@ -1212,7 +1212,7 @@ func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 98, "</label><div class=\"mt-2\"><select id=\"country\" name=\"addressCountry\" autocomplete=\"country-name\" class=\"select select-bordered block w-full\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 98, "</label><div class=\"mt-2\"><select id=\"country\" name=\"addressCountry\" autocomplete=\"country-name\" class=\"select block w-full\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1323,7 +1323,7 @@ func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 106, "</label><div class=\"mt-2\"><textarea name=\"familyHistory\" class=\"textarea textarea-bordered w-full block\" placeholder=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 106, "</label><div class=\"mt-2\"><textarea name=\"familyHistory\" class=\"textarea w-full block\" placeholder=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1362,7 +1362,7 @@ func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 109, "</label><div class=\"mt-2\"><textarea name=\"medicalBackground\" class=\"textarea textarea-bordered w-full block\" placeholder=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 109, "</label><div class=\"mt-2\"><textarea name=\"medicalBackground\" class=\"textarea w-full block\" placeholder=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1401,7 +1401,7 @@ func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 112, "</label><div class=\"mt-2\"><textarea name=\"notes\" class=\"textarea textarea-bordered w-full block\" placeholder=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 112, "</label><div class=\"mt-2\"><textarea name=\"notes\" class=\"textarea w-full block\" placeholder=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
