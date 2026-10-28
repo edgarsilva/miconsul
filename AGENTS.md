@@ -42,6 +42,8 @@ This file provides repo-specific guidance for coding assistants working on this 
   - Do not prefix wrapped/internal errors with "failed to" — it is redundant in an `error` and compounds noisily across the wrap chain.
   - Reserve natural, conversational sentences (`"could not send email, please try again"`) for user-facing messages rendered to templates/HTTP responses — not internal plumbing.
   - Sentinels: `var ErrX = errors.New("lowercase message")`; compare with `errors.Is` / `errors.As`.
+  - Check every GORM chain's error: end it in `.Error` and check it (`if err := db...Count(&n).Error; err != nil`), or use the `gorm.G` API that returns `err`. A bare `s.DB...Count(&n)` or `Find(&x)` statement drops the error silently, and errcheck can't flag it because the chain returns `*gorm.DB`, not an `error`.
+  - Discard an error with `_ =` only for best-effort work whose failure must not change the outcome; otherwise return it, or log it and tell the user.
 
 ## templ Guidance Source
 
