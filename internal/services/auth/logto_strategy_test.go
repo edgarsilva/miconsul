@@ -19,7 +19,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/session"
 	"github.com/golang-jwt/jwt/v5"
-	logtoclient "github.com/logto-io/go/client"
+	logto "github.com/logto-io/go/client"
 )
 
 func TestLogtoStrategyAuthenticate(t *testing.T) {
@@ -240,7 +240,7 @@ func seedLogtoSession(t *testing.T, svc *service, user models.User, refreshToken
 	if err != nil {
 		t.Fatalf("sign id token: %v", err)
 	}
-	accessToken := logtoclient.AccessToken{Token: "access_1", ExpiresAt: expiresAt.Unix()}
+	accessToken := logto.AccessToken{Token: "access_1", ExpiresAt: expiresAt.Unix()}
 
 	app := fiber.New()
 	app.Get("/", func(c fiber.Ctx) error {
@@ -395,7 +395,7 @@ func TestLogtoStrategyAuthenticateCachesUser(t *testing.T) {
 		cookies := seedLogtoSession(t, svc, user, "revoked", time.Now().Add(-time.Minute))
 
 		editLogtoSession(t, svc, cookies, func(sess *session.Session) {
-			idToken, _ := sess.Get(logtoclient.StorageKeyIdToken).(string)
+			idToken, _ := sess.Get(logto.StorageKeyIdToken).(string)
 			sess.Set(authSessionKey, newAuthSnapshot(user, idToken).EncodeQuery())
 		})
 

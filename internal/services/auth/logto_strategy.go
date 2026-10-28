@@ -18,7 +18,7 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/session"
 	"go.opentelemetry.io/otel/trace"
 
-	logtoclient "github.com/logto-io/go/client"
+	logto "github.com/logto-io/go/client"
 	logtocore "github.com/logto-io/go/core"
 )
 
@@ -37,15 +37,15 @@ func NewLogtoStrategy(runtime Runtime) *LogtoStrategy {
 // it with the refresh token; an expired or revoked sign-in returns an error.
 // The user is cached in the session for the current ID token and reloaded
 // from the DB once the cached copy is older than authSessionHydrationTTL.
-func (logto LogtoStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
-	sess, err := logto.runtime.Session(c)
+func (s LogtoStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
+	sess, err := s.runtime.Session(c)
 	if err != nil {
 		return models.User{}, err
 	}
 
-	logtoClient, saveSess := NewLogtoClient(sess, LogtoConfig(logto.runtime.AppEnv()))
+	logtoClient, saveSess := NewLogtoClient(sess, LogtoConfig(s.runtime.AppEnv()))
 
-	ctx, span := logto.Trace(c.Context(), "auth/services:logtoStrategy")
+	ctx, span := s.Trace(c.Context(), "auth/services:logtoStrategy")
 	defer span.End()
 	defer func() {
 		if err := saveSess(); err != nil {
@@ -69,7 +69,7 @@ func (logto LogtoStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
 		return models.User{}, err
 	}
 
-	user, err := TakeUserByExtID(ctx, logto.runtime, claims.Sub)
+	user, err := TakeUserByExtID(ctx, s.runtime, claims.Sub)
 	if err != nil {
 		return user, errors.New("authenticate user")
 	}
@@ -79,13 +79,13 @@ func (logto LogtoStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
 	return user, nil
 }
 
-func (logto LogtoStrategy) Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
-	return logto.runtime.Trace(ctx, spanName, opts...)
+func (s LogtoStrategy) Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
+	return s.runtime.Trace(ctx, spanName, opts...)
 }
 
-func (logto LogtoStrategy) Metadata() AuthenticatorMeta {
+func (s LogtoStrategy) Metadata() AuthenticatorMeta {
 	return AuthenticatorMeta{
-		Enabled:                logtoEnabled(logto.runtime.AppEnv()),
+		Enabled:                logtoEnabled(s.runtime.AppEnv()),
 		SigninPath:             "/logto/signin",
 		ErrorQueryKey:          "logto_error",
 		LoggedOutQueryKey:      "logged_out",
@@ -97,8 +97,8 @@ func (logto LogtoStrategy) Metadata() AuthenticatorMeta {
 	}
 }
 
-func LogtoConfig(env *appenv.Env) *logtoclient.LogtoConfig {
-	config := logtoclient.LogtoConfig{
+func LogtoConfig(env *appenv.Env) *logto.LogtoConfig {
+	config := logto.LogtoConfig{
 		Resources: []string{},
 		// Keep login scopes minimal. If downstream API flows break, re-evaluate
 		// whether resource scopes (for example app:write) are actually required.
@@ -123,9 +123,9 @@ func LogtoConfig(env *appenv.Env) *logtoclient.LogtoConfig {
 //	e.g.
 //		logtoClient, saveSess := NewLogtoClient(sess, resource.LogtoConfig())
 //		defer saveSess()
-func NewLogtoClient(sess *session.Session, config *logtoclient.LogtoConfig) (client *logtoclient.LogtoClient, save func() error) {
+func NewLogtoClient(sess *session.Session, config *logto.LogtoConfig) (client *logto.LogtoClient, save func() error) {
 	storage := NewLogtoStorage(sess)
-	logtoClient := logtoclient.NewLogtoClient(
+	logtoClient := logto.NewLogtoClient(
 		config,
 		storage,
 	)
@@ -188,7 +188,7 @@ func logtoRedirectURI(env *appenv.Env, path string) (string, error) {
 	return uri.String(), nil
 }
 
-func logtoIDTokenClaimsJSON(logtoClient *logtoclient.LogtoClient) string {
+func logtoIDTokenClaimsJSON(logtoClient *logto.LogtoClient) string {
 	idClaims, err := logtoClient.GetIdTokenClaims()
 	if err != nil {
 		log.Warn("failed to get id token claims in logto page:", err)
@@ -204,7 +204,7 @@ func logtoIDTokenClaimsJSON(logtoClient *logtoclient.LogtoClient) string {
 	return string(b)
 }
 
-func logtoCustomClaimsJSON(logtoClient *logtoclient.LogtoClient, resource string) string {
+func logtoCustomClaimsJSON(logtoClient *logto.LogtoClient, resource string) string {
 	customClaims, err := logtoCustomClaims(logtoClient, resource)
 	if err != nil {
 		log.Warn("failed to decode custom access token claims in logto page:", err)
@@ -220,7 +220,7 @@ func logtoCustomClaimsJSON(logtoClient *logtoclient.LogtoClient, resource string
 	return string(b)
 }
 
-func logtoCustomClaims(logtoClient *logtoclient.LogtoClient, resource string) (LogtoUser, error) {
+func logtoCustomClaims(logtoClient *logto.LogtoClient, resource string) (LogtoUser, error) {
 	resource = strings.TrimSpace(resource)
 	if resource == "" {
 		return LogtoUser{}, errors.New("logto resource is not configured")
