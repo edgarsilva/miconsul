@@ -8,7 +8,6 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
 	"github.com/gofiber/fiber/v3/middleware/adaptor"
-	logto "github.com/logto-io/go/client"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 )
@@ -127,7 +126,7 @@ func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "session regenerate failed")
 		log.Error("failed to regenerate session in logto callback:", err)
-		sess.Delete(logto.StorageKeyIdToken)
+		logtoClient.SetIdToken("")
 		return s.Redirect(c, "/signin?logto_error=session")
 	}
 
