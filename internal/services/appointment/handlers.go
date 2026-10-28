@@ -116,8 +116,8 @@ func (s *service) HandleShowPage(c fiber.Ctx) error {
 		return s.Redirect(c, "/appointments?toast=Failed to load patients&level=error")
 	}
 
-	clinics = withAppointmentClinic(clinics, appointment)
-	patients = withAppointmentPatient(patients, appointment)
+	clinics = ensureClinicListed(clinics, appointment)
+	patients = ensurePatientListed(patients, appointment)
 	vc := view.NewCtx(c)
 
 	return view.Render(c, view.AppointmentPage(vc, appointment, patients, clinics))

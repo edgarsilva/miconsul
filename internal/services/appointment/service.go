@@ -577,9 +577,9 @@ func (s *service) recordPatientFeedEvent(ctx context.Context, appointment models
 	return nil
 }
 
-// withAppointmentClinic returns clinics with the appointment's clinic first
-// when it isn't listed, so the edit page can show it as selected.
-func withAppointmentClinic(clinics []models.Clinic, appointment models.Appointment) []models.Clinic {
+// ensureClinicListed returns clinics with the appointment's clinic added at
+// the top when it isn't listed, so the edit page can show it as selected.
+func ensureClinicListed(clinics []models.Clinic, appointment models.Appointment) []models.Clinic {
 	listed := slices.ContainsFunc(clinics, func(clinic models.Clinic) bool { return clinic.ID == appointment.Clinic.ID })
 	if appointment.Clinic.ID == 0 || listed {
 		return clinics
@@ -588,9 +588,9 @@ func withAppointmentClinic(clinics []models.Clinic, appointment models.Appointme
 	return append([]models.Clinic{appointment.Clinic}, clinics...)
 }
 
-// withAppointmentPatient returns patients with the appointment's patient first
-// when it isn't listed, so the edit page can show it as selected.
-func withAppointmentPatient(patients []models.Patient, appointment models.Appointment) []models.Patient {
+// ensurePatientListed returns patients with the appointment's patient added
+// at the top when it isn't listed, so the edit page can show it as selected.
+func ensurePatientListed(patients []models.Patient, appointment models.Appointment) []models.Patient {
 	listed := slices.ContainsFunc(patients, func(patient models.Patient) bool { return patient.ID == appointment.Patient.ID })
 	if appointment.Patient.ID == 0 || listed {
 		return patients
