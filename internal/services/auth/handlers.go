@@ -411,9 +411,13 @@ func (s *service) providerSigninRedirect(c fiber.Ctx, msg string) (redirectURL s
 		maxErrorRedirects = 3
 	}
 	if skipAutoRedirect {
-		_ = s.SessionWrite(c, meta.SkipRedirectSessionKey, "")
+		if err := s.SessionWrite(c, meta.SkipRedirectSessionKey, ""); err != nil {
+			log.Warn("save sign-in redirect state:", err)
+		}
 		if meta.ErrorCountSessionKey != "" {
-			_ = s.SessionWrite(c, meta.ErrorCountSessionKey, "0")
+			if err := s.SessionWrite(c, meta.ErrorCountSessionKey, "0"); err != nil {
+				log.Warn("save sign-in redirect state:", err)
+			}
 		}
 	}
 
@@ -429,13 +433,17 @@ func (s *service) providerSigninRedirect(c fiber.Ctx, msg string) (redirectURL s
 	if providerError != "" {
 		errorCount++
 		if meta.ErrorCountSessionKey != "" {
-			_ = s.SessionWrite(c, meta.ErrorCountSessionKey, strconv.Itoa(errorCount))
+			if err := s.SessionWrite(c, meta.ErrorCountSessionKey, strconv.Itoa(errorCount)); err != nil {
+				log.Warn("save sign-in redirect state:", err)
+			}
 		}
 		if errorCount < maxErrorRedirects {
 			return meta.SigninPath, msg
 		}
 	} else if meta.ErrorCountSessionKey != "" {
-		_ = s.SessionWrite(c, meta.ErrorCountSessionKey, "0")
+		if err := s.SessionWrite(c, meta.ErrorCountSessionKey, "0"); err != nil {
+			log.Warn("save sign-in redirect state:", err)
+		}
 	}
 
 	if providerError == "" && loggedOut == "" && !skipAutoRedirect {
