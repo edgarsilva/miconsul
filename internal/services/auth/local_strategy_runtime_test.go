@@ -211,13 +211,13 @@ func TestLocalStrategySessionToken(t *testing.T) {
 		}
 	})
 
-	t.Run("refreshes a token about to expire and keeps remember me", func(t *testing.T) {
+	t.Run("refreshes a token past half its lifetime and keeps remember me", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		user := seedAuthUserWithOptions(t, svc, authUserSeedOptions{Email: "refresh@example.com", Password: "Password1!"})
 		app := newLocalStrategyTestApp(t, svc, user)
 		sessionID := signInForTest(t, app)
 
-		expiring := authTokenForTest(t, svc.Env, user, true, 30*time.Minute)
+		expiring := authTokenForTest(t, svc.Env, user, true, 3*24*time.Hour)
 		editSnapshotForTest(t, svc, sessionID, func(s *AuthSnapshot) { s.Token = expiring })
 
 		if resp := authenticateWithSession(t, app, sessionID); resp.StatusCode != fiber.StatusOK {
