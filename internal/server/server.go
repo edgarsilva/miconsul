@@ -58,6 +58,7 @@ type Server struct {
 	StartedAt         time.Time
 	ReadyAt           time.Time
 	BootstrapDuration time.Duration
+	healthChecks      []healthCheck
 	*fiber.App
 }
 

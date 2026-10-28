@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"runtime"
 	"time"
 
@@ -32,10 +33,11 @@ func (s *Server) HandleDebugHealthDetails(c fiber.Ctx) error {
 	livez := livenessProbe(s)(c)
 	readyz := readinessProbe(s)(c)
 	startupz := startupProbe(s)(c)
+	dependencies, dependenciesOK := s.runHealthChecks(c.Context())
 
 	status := "ok"
 	httpStatus := fiber.StatusOK
-	if !livez || !readyz || !startupz {
+	if !livez || !readyz || !startupz || !dependenciesOK {
 		status = "degraded"
 		httpStatus = fiber.StatusServiceUnavailable
 	}
@@ -49,9 +51,10 @@ func (s *Server) HandleDebugHealthDetails(c fiber.Ctx) error {
 		Version:             s.Env.AppVersion,
 		Environment:         string(s.Env.Environment),
 		Checks: debugHealthChecksPayload{
-			Livez:    livez,
-			Readyz:   readyz,
-			Startupz: startupz,
+			Livez:        livez,
+			Readyz:       readyz,
+			Startupz:     startupz,
+			Dependencies: dependencies,
 		},
 	}
 
@@ -70,9 +73,46 @@ type debugHealthDetailsPayload struct {
 }
 
 type debugHealthChecksPayload struct {
-	Livez    bool `json:"livez"`
-	Readyz   bool `json:"readyz"`
-	Startupz bool `json:"startupz"`
+	Livez        bool                              `json:"livez"`
+	Readyz       bool                              `json:"readyz"`
+	Startupz     bool                              `json:"startupz"`
+	Dependencies map[string]debugDependencyPayload `json:"dependencies"`
+}
+
+type debugDependencyPayload struct {
+	OK        bool   `json:"ok"`
+	LatencyMS int64  `json:"latency_ms"`
+	Error     string `json:"error,omitempty"`
+}
+
+type healthCheck struct {
+	name  string
+	check func(context.Context) error
+}
+
+// AddHealthCheck registers a dependency check that /debug/health runs and
+// reports. Register checks at startup, before the server serves requests.
+func (s *Server) AddHealthCheck(name string, check func(context.Context) error) {
+	s.healthChecks = append(s.healthChecks, healthCheck{name: name, check: check})
+}
+
+// runHealthChecks runs the registered dependency checks and reports whether
+// all of them passed.
+func (s *Server) runHealthChecks(ctx context.Context) (map[string]debugDependencyPayload, bool) {
+	results := make(map[string]debugDependencyPayload, len(s.healthChecks))
+	allOK := true
+	for _, hc := range s.healthChecks {
+		start := time.Now()
+		err := hc.check(ctx)
+		result := debugDependencyPayload{OK: err == nil, LatencyMS: time.Since(start).Milliseconds()}
+		if err != nil {
+			result.Error = err.Error()
+			allOK = false
+		}
+		results[hc.name] = result
+	}
+
+	return results, allOK
 }
 
 func timeStringOrEmpty(t time.Time) string {
