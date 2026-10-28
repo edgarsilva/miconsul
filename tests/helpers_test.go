@@ -230,7 +230,7 @@ func (h *testHarness) createAppointment(userID, patientID, clinicID uint) models
 func (h *testHarness) authToken(user models.User) string {
 	h.t.Helper()
 
-	token, err := auth.JWTCreateToken(h.env, user.Email, user.UID)
+	token, err := auth.JWTCreateToken(h.env, auth.NewAuthClaims(user, false))
 	if err != nil {
 		h.t.Fatalf("create auth token: %v", err)
 	}

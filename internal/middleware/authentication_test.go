@@ -286,7 +286,7 @@ func newMiddlewareAuthRuntime(t *testing.T) (testAuthRuntime, models.User, strin
 		t.Fatalf("create user: %v", err)
 	}
 
-	token, err := auth.JWTCreateToken(rt.env, user.Email, user.UID)
+	token, err := auth.JWTCreateToken(rt.env, auth.NewAuthClaims(user, false))
 	if err != nil {
 		t.Fatalf("create token: %v", err)
 	}
@@ -301,7 +301,7 @@ func newMiddlewareAdminRuntime(t *testing.T) (testAuthRuntime, models.User, stri
 	if err := rt.db.Create(&admin).Error; err != nil {
 		t.Fatalf("create admin user: %v", err)
 	}
-	adminToken, err := auth.JWTCreateToken(rt.env, admin.Email, admin.UID)
+	adminToken, err := auth.JWTCreateToken(rt.env, auth.NewAuthClaims(admin, false))
 	if err != nil {
 		t.Fatalf("create admin token: %v", err)
 	}

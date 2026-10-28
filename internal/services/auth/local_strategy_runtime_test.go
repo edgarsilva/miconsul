@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"miconsul/internal/lib/appenv"
 	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
@@ -44,7 +45,7 @@ func TestLocalStrategyAuthenticateFailures(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		app := newLocalStrategyTestApp(t, svc, models.User{})
 
-		token, err := JWTCreateToken(svc.Env, "missing@example.com", "user_missing")
+		token, err := JWTCreateToken(svc.Env, NewAuthClaims(models.User{Email: "missing@example.com", UID: "user_missing"}, false))
 		if err != nil {
 			t.Fatalf("create token: %v", err)
 		}
@@ -62,7 +63,7 @@ func TestLocalStrategyBearerTokenIsStateless(t *testing.T) {
 	user := seedAuthUserWithOptions(t, svc, authUserSeedOptions{Email: "bearer@example.com", Password: "Password1!"})
 	app := newLocalStrategyTestApp(t, svc, user)
 
-	token, err := JWTCreateToken(svc.Env, user.Email, user.UID)
+	token, err := JWTCreateToken(svc.Env, NewAuthClaims(user, false))
 	if err != nil {
 		t.Fatalf("create token: %v", err)
 	}
@@ -141,7 +142,7 @@ func TestLocalStrategySignIn(t *testing.T) {
 			if got := time.Until(exp.Time); got < tt.lifetime-time.Minute || got > tt.lifetime {
 				t.Fatalf("token expires in %v, want %v", got, tt.lifetime)
 			}
-			if got := rememberMeFromClaims(claims); got != tt.rememberMe {
+			if got := claims.RememberMe; got != tt.rememberMe {
 				t.Fatalf("token remember me = %v, want %v", got, tt.rememberMe)
 			}
 		})
@@ -216,10 +217,7 @@ func TestLocalStrategySessionToken(t *testing.T) {
 		app := newLocalStrategyTestApp(t, svc, user)
 		sessionID := signInForTest(t, app)
 
-		expiring, err := JWTCreateTokenWithTTL(svc.Env, user.Email, user.UID, 30*time.Minute, true)
-		if err != nil {
-			t.Fatalf("create token: %v", err)
-		}
+		expiring := authTokenForTest(t, svc.Env, user, true, 30*time.Minute)
 		editSnapshotForTest(t, svc, sessionID, func(s *AuthSnapshot) { s.Token = expiring })
 
 		if resp := authenticateWithSession(t, app, sessionID); resp.StatusCode != fiber.StatusOK {
@@ -234,7 +232,7 @@ func TestLocalStrategySessionToken(t *testing.T) {
 		if got := time.Until(exp.Time); got < rememberAuthTokenTTL-time.Minute {
 			t.Fatalf("expected a refreshed 7 day token, expires in %v", got)
 		}
-		if !rememberMeFromClaims(claims) {
+		if !claims.RememberMe {
 			t.Fatalf("expected the refreshed token to keep remember me")
 		}
 	})
@@ -316,7 +314,7 @@ func TestRuntimeAuthenticateAndTakeUserByExtID(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		user := seedAuthUserWithOptions(t, svc, authUserSeedOptions{Email: "runtime@example.com", Password: "Password1!"})
 
-		token, err := JWTCreateToken(svc.Env, user.Email, user.UID)
+		token, err := JWTCreateToken(svc.Env, NewAuthClaims(user, false))
 		if err != nil {
 			t.Fatalf("create token: %v", err)
 		}
@@ -523,7 +521,7 @@ func editSnapshotForTest(t *testing.T, svc *service, sessionID string, edit func
 	}
 }
 
-func sessionTokenClaimsForTest(t *testing.T, svc *service, sessionID string) jwt.MapClaims {
+func sessionTokenClaimsForTest(t *testing.T, svc *service, sessionID string) AuthClaims {
 	t.Helper()
 
 	claims, err := decodeJWTToken(svc.Env, snapshotForTest(t, svc, sessionID).Token)
@@ -532,6 +530,20 @@ func sessionTokenClaimsForTest(t *testing.T, svc *service, sessionID string) jwt
 	}
 
 	return claims
+}
+
+// authTokenForTest returns a sign-in token for user that expires after validFor.
+func authTokenForTest(t *testing.T, env *appenv.Env, user models.User, rememberMe bool, validFor time.Duration) string {
+	t.Helper()
+
+	claims := NewAuthClaims(user, rememberMe)
+	claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(validFor))
+	token, err := JWTCreateToken(env, claims)
+	if err != nil {
+		t.Fatalf("create token: %v", err)
+	}
+
+	return token
 }
 
 func signTokenForTest(t *testing.T, secret string, claims jwt.MapClaims) string {

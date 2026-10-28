@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"miconsul/internal/lib/appenv"
+	"miconsul/internal/models"
 	"miconsul/internal/server"
 
 	"go.opentelemetry.io/otel/trace/noop"
@@ -74,12 +75,12 @@ func TestLogtoTokenHelpersValidation(t *testing.T) {
 }
 
 func TestJWTCreateTokenRequiresSecret(t *testing.T) {
-	if _, err := JWTCreateToken(&appenv.Env{}, "user@example.com", "uid_1"); err == nil {
+	if _, err := JWTCreateToken(&appenv.Env{}, NewAuthClaims(models.User{Email: "user@example.com", UID: "uid_1"}, false)); err == nil {
 		t.Fatalf("expected jwt secret validation error")
 	}
 
 	env := &appenv.Env{JWTSecret: strings.Repeat("x", 32)}
-	if _, err := JWTCreateToken(env, "user@example.com", "uid_1"); err != nil {
+	if _, err := JWTCreateToken(env, NewAuthClaims(models.User{Email: "user@example.com", UID: "uid_1"}, false)); err != nil {
 		t.Fatalf("expected JWTCreateToken success, got %v", err)
 	}
 }
