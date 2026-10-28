@@ -154,7 +154,7 @@ templ UserProfile(c *Ctx, user models.User) {
 						<div class="sm:col-span-3">
 							<label for="name" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.name") }</label>
 							<div class="mt-2">
-								<input required min="2" type="text" name="name" value={ user.Name } id="name" autocomplete="family-name" class="input input-bordered block w-full"/>
+								<input required min="2" type="text" name="name" value={ user.Name } id="name" autocomplete="family-name" class="input block w-full"/>
 								if user.FieldError("name") != "" {
 									<div class="label">
 										<span class="label-text-alt text-error">{ user.FieldError("name") }</span>
@@ -165,7 +165,7 @@ templ UserProfile(c *Ctx, user models.User) {
 						<div class="sm:col-span-4">
 							<label for="phone" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.phone") }</label>
 							<div class="mt-2">
-								<input required type="tel" name="phone" value={ user.Phone } id="phone" autocomplete="tel" class="input input-bordered block w-full"/>
+								<input required type="tel" name="phone" value={ user.Phone } id="phone" autocomplete="tel" class="input block w-full"/>
 								if user.FieldError("phone") != "" {
 									<div class="label">
 										<span class="label-text-alt text-error">{ user.FieldError("phone") }</span>
@@ -176,7 +176,7 @@ templ UserProfile(c *Ctx, user models.User) {
 						<div class="sm:col-span-4">
 							<label for="email" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.email_address") }</label>
 							<div class="mt-2">
-								<input type="email" name="email" value={ user.Email } id="email" autocomplete="email" class="input input-bordered block w-full"/>
+								<input type="email" name="email" value={ user.Email } id="email" autocomplete="email" class="input block w-full"/>
 								if user.FieldError("email") != "" {
 									<div class="label">
 										<span class="label-text-alt text-error">{ user.FieldError("email") }</span>
@@ -231,7 +231,7 @@ templ ProfilePic(c *Ctx, user models.User) {
 				id="profile_pic_input"
 				name="profilePic"
 				type="file"
-				class="file-input file-input-bordered w-full file-input-primary"
+				class="file-input w-full file-input-primary"
 				accept="image/*"
 				hx-post="/profile/avatar/preview"
 				hx-encoding="multipart/form-data"
