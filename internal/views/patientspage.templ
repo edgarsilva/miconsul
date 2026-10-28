@@ -340,7 +340,7 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 						<div class="sm:col-span-4">
 							<label for="country" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.address_country") }</label>
 							<div class="mt-2">
-								<select id="country" name="addressCountry" autocomplete="country-name" class="select select-bordered block w-full">
+								<select id="country" name="addressCountry" autocomplete="country-name" class="select block w-full">
 									@CountryOption("none", "none", patient.Country)
 									@CountryOption("Mexico", "Mexico", patient.Country)
 									@CountryOption("United States", "United States", patient.Country)
@@ -369,7 +369,7 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 							<div class="mt-2">
 								<textarea
 									name="familyHistory"
-									class="textarea textarea-bordered w-full block"
+									class="textarea w-full block"
 									placeholder={ c.l("str.family_history_ph") }
 								>{ patient.FamilyHistory }</textarea>
 							</div>
@@ -379,7 +379,7 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 							<div class="mt-2">
 								<textarea
 									name="medicalBackground"
-									class="textarea textarea-bordered w-full block"
+									class="textarea w-full block"
 									placeholder={ c.l("str.background_ph") }
 								>{ patient.MedicalBackground }</textarea>
 							</div>
@@ -389,7 +389,7 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 							<div class="mt-2">
 								<textarea
 									name="notes"
-									class="textarea textarea-bordered w-full block"
+									class="textarea w-full block"
 									placeholder={ c.l("str.notes_ph") }
 								>
 									{ patient.Notes }

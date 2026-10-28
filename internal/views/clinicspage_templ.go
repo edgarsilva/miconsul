@@ -1104,7 +1104,7 @@ func ClinicProfile(clinic models.Clinic, c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 87, "</label><div class=\"mt-2\"><select id=\"address_country\" name=\"addressCountry\" autocomplete=\"country-name\" class=\"select select-bordered block w-full\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 87, "</label><div class=\"mt-2\"><select id=\"address_country\" name=\"addressCountry\" autocomplete=\"country-name\" class=\"select block w-full\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

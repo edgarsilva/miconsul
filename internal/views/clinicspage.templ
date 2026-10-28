@@ -306,7 +306,7 @@ templ ClinicProfile(clinic models.Clinic, c *Ctx) {
 					<div class="sm:col-span-4">
 						<label for="address_country" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.address_country") }</label>
 						<div class="mt-2">
-							<select id="address_country" name="addressCountry" autocomplete="country-name" class="select select-bordered block w-full">
+							<select id="address_country" name="addressCountry" autocomplete="country-name" class="select block w-full">
 								@CountryOption("none", "none", clinic.Country)
 								@CountryOption("Mexico", "Mexico", clinic.Country)
 								@CountryOption("United States", "United States", clinic.Country)
