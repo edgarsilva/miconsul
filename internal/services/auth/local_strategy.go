@@ -68,7 +68,7 @@ func (ls LocalStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
 // a JWT that expires after 24h, or 7 days with rememberMe; a request in the
 // token's last hour refreshes it.
 func (ls LocalStrategy) SignIn(c fiber.Ctx, user models.User, rememberMe bool) error {
-	token, err := JWTCreateTokenWithTTL(ls.resource.AppEnv(), user.Email, user.UID, authTokenTTL(rememberMe), rememberMe)
+	token, err := JWTCreateToken(ls.resource.AppEnv(), NewAuthClaims(user, rememberMe))
 	if err != nil {
 		return fmt.Errorf("%w: %w", errAuthSessionCreate, err)
 	}
@@ -95,12 +95,7 @@ func (ls LocalStrategy) authenticateWithJWT(c fiber.Ctx, token string) (models.U
 		return models.User{}, errors.New("validate JWT token")
 	}
 
-	uid, ok := claims["uid"].(string)
-	if !ok {
-		uid = ""
-	}
-
-	user, err := ls.FindUserByID(c.Context(), uid)
+	user, err := ls.FindUserByID(c.Context(), claims.UID)
 	if err != nil {
 		return user, errors.New("find user with UID in JWT token")
 	}
@@ -118,7 +113,7 @@ func (ls LocalStrategy) authenticateWithSession(c fiber.Ctx) (models.User, error
 	}
 
 	claims, err := decodeJWTToken(ls.resource.AppEnv(), snapshot.Token)
-	if err != nil || claims["uid"] != snapshot.UserUID {
+	if err != nil || claims.UID != snapshot.UserUID {
 		ls.signOutSession(c)
 		return models.User{}, errors.New("session token expired or invalid")
 	}

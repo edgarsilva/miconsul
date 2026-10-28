@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"miconsul/internal/lib/appenv"
+	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/golang-jwt/jwt/v5"
@@ -125,6 +126,7 @@ func TestTokenHelpers(t *testing.T) {
 
 func TestJWTHelpers(t *testing.T) {
 	env := &appenv.Env{JWTSecret: strings.Repeat("x", 32)}
+	testUser := models.User{Email: "u@example.com", UID: "uid_1"}
 
 	t.Run("jwtSecretFromEnv validates config", func(t *testing.T) {
 		if _, err := jwtSecretFromEnv(nil); err == nil {
@@ -135,8 +137,8 @@ func TestJWTHelpers(t *testing.T) {
 		}
 	})
 
-	t.Run("JWTCreateTokenWithTTL defaults when ttl non-positive", func(t *testing.T) {
-		token, err := JWTCreateTokenWithTTL(env, "u@example.com", "uid_1", 0, false)
+	t.Run("token round-trips its claims", func(t *testing.T) {
+		token, err := JWTCreateToken(env, NewAuthClaims(testUser, true))
 		if err != nil {
 			t.Fatalf("create token: %v", err)
 		}
@@ -145,15 +147,13 @@ func TestJWTHelpers(t *testing.T) {
 		if err != nil {
 			t.Fatalf("decode token: %v", err)
 		}
-
-		exp, err := claims.GetExpirationTime()
-		if err != nil {
-			t.Fatalf("exp claim: %v", err)
+		if claims.Subject != testUser.Email || claims.UID != testUser.UID || !claims.RememberMe {
+			t.Fatalf("unexpected claims: %+v", claims)
 		}
 
-		remaining := time.Until(exp.Time)
-		if remaining < defaultAuthTokenTTL-time.Minute || remaining > defaultAuthTokenTTL+time.Minute {
-			t.Fatalf("expected remaining close to default ttl, got %v", remaining)
+		remaining := time.Until(claims.ExpiresAt.Time)
+		if remaining < rememberAuthTokenTTL-time.Minute || remaining > rememberAuthTokenTTL {
+			t.Fatalf("expected remaining close to remember-me ttl, got %v", remaining)
 		}
 	})
 
@@ -170,11 +170,30 @@ func TestJWTHelpers(t *testing.T) {
 		}
 	})
 
-	t.Run("refresh keeps token if expiration is far", func(t *testing.T) {
-		token, err := JWTCreateTokenWithTTL(env, "u@example.com", "uid_1", 2*time.Hour, false)
+	t.Run("decodeJWTToken reads tokens issued with map claims", func(t *testing.T) {
+		secret, _ := jwtSecretFromEnv(env)
+		token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
+			"sub": "u@example.com",
+			"uid": "uid_1",
+			"rmb": true,
+			"exp": time.Now().Add(time.Hour).Unix(),
+		})
+		tokenStr, err := token.SignedString([]byte(secret))
 		if err != nil {
-			t.Fatalf("create token: %v", err)
+			t.Fatalf("sign token: %v", err)
 		}
+
+		claims, err := decodeJWTToken(env, tokenStr)
+		if err != nil {
+			t.Fatalf("decode token: %v", err)
+		}
+		if claims.Subject != "u@example.com" || claims.UID != "uid_1" || !claims.RememberMe {
+			t.Fatalf("unexpected claims: %+v", claims)
+		}
+	})
+
+	t.Run("refresh keeps token if expiration is far", func(t *testing.T) {
+		token := authTokenForTest(t, env, testUser, false, 2*time.Hour)
 
 		claims, err := decodeJWTToken(env, token)
 		if err != nil {
@@ -194,10 +213,7 @@ func TestJWTHelpers(t *testing.T) {
 	})
 
 	t.Run("refresh issues new token when expiration is near", func(t *testing.T) {
-		token, err := JWTCreateTokenWithTTL(env, "u@example.com", "uid_1", 30*time.Minute, true)
-		if err != nil {
-			t.Fatalf("create token: %v", err)
-		}
+		token := authTokenForTest(t, env, testUser, true, 30*time.Minute)
 
 		claims, err := decodeJWTToken(env, token)
 		if err != nil {
@@ -216,13 +232,7 @@ func TestJWTHelpers(t *testing.T) {
 		}
 	})
 
-	t.Run("rememberMeFromClaims and authTokenTTL helpers", func(t *testing.T) {
-		if !rememberMeFromClaims(jwt.MapClaims{"rmb": true}) {
-			t.Fatalf("expected rememberMe true")
-		}
-		if rememberMeFromClaims(jwt.MapClaims{"rmb": "true"}) {
-			t.Fatalf("expected rememberMe false for non-bool claim")
-		}
+	t.Run("authTokenTTL helper", func(t *testing.T) {
 		if authTokenTTL(true) != rememberAuthTokenTTL || authTokenTTL(false) != defaultAuthTokenTTL {
 			t.Fatalf("unexpected token ttl helper values")
 		}
