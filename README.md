@@ -54,7 +54,7 @@ Optional but commonly used:
 
 - `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_INSECURE`
 - `JOBS_ENABLED`, `JOBS_UI_ENABLED`, `VALKEY_HOST`, `VALKEY_PORT`, `VALKEY_DB`
-- `LOGTO_URL`, `LOGTO_APP_ID`, `LOGTO_APP_SECRET`, `LOGTO_RESOURCE`
+- `LOGTO_URL`, `LOGTO_APP_ID`, `LOGTO_APP_SECRET`, `LOGTO_RESOURCE` (all four or none; none means local password sign-in)
 
 Install project tooling:
 
