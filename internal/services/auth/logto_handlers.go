@@ -30,7 +30,7 @@ func (s *service) HandleLogtoSignin(c fiber.Ctx) error {
 	logtoClient, saveSess := NewLogtoClient(sess, LogtoConfig(s.Env))
 	defer deferLogtoSessionSave("logto signin", saveSess)
 
-	if logtoClient.IsAuthenticated() {
+	if _, err := logtoClient.GetAccessToken(""); err == nil {
 		return c.Redirect().Status(fiber.StatusTemporaryRedirect).To("/")
 	}
 

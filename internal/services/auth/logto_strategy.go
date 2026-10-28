@@ -5,6 +5,7 @@ import (
 	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"errors"
+	"fmt"
 	"net/url"
 	"strings"
 
@@ -30,6 +31,9 @@ func NewLogtoStrategy(runtime Runtime) *LogtoStrategy {
 	}
 }
 
+// Authenticate returns the user of the session's Logto sign-in. Logto checks
+// the session's access token on every request and, once it expires, refreshes
+// it with the refresh token; an expired or revoked sign-in returns an error.
 func (lgs *LogtoStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
 	sess, err := lgs.runtime.Session(c)
 	if err != nil {
@@ -45,6 +49,10 @@ func (lgs *LogtoStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
 			log.Warn("failed to save logto session in auth strategy:", err)
 		}
 	}()
+
+	if _, err := logtoClient.GetAccessToken(""); err != nil {
+		return models.User{}, fmt.Errorf("get logto access token: %w", err)
+	}
 
 	claims, err := logtoClient.GetIdTokenClaims()
 	if err != nil {
