@@ -92,7 +92,10 @@ Quick triage:
 ```bash
 curl -sS -o /dev/null -w "livez:%{http_code}\n" http://localhost:3000/livez
 curl -sS -o /dev/null -w "readyz:%{http_code}\n" http://localhost:3000/readyz
-curl -sS http://localhost:3000/debug/health -H "Authorization: Bearer <ADMIN_JWT>" | jq
+# /debug/health is admin-only. Sign-in is Logto only in production, so there is no
+# API token: sign in as an admin in a browser and copy the session_id cookie from
+# devtools (it is HttpOnly, so scripts can't read it).
+curl -sS http://localhost:3000/debug/health -H "Cookie: session_id=<ADMIN_SESSION_ID>" | jq
 ```
 
 What to check next:
