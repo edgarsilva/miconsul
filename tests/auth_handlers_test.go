@@ -216,22 +216,28 @@ func onlySessionCookie(t *testing.T, resp *http.Response) *http.Cookie {
 	return found[0]
 }
 
-func TestLogtoDebugPageOnlyOutsideProduction(t *testing.T) {
+func TestLogtoRoutes(t *testing.T) {
+	inProduction := func(env *appenv.Env) { env.Environment = appenv.EnvironmentProduction }
 	tests := []struct {
-		name        string
-		environment appenv.Environment
-		wantStatus  int
+		name       string
+		envOpts    []func(*appenv.Env)
+		path       string
+		wantStatus int
 	}{
-		{"served in development", appenv.EnvironmentDevelopment, http.StatusOK},
-		{"not found in production", appenv.EnvironmentProduction, http.StatusNotFound},
+		{"debug page served in development", []func(*appenv.Env){withLogto}, "/logto", http.StatusOK},
+		{"debug page not found in production", []func(*appenv.Env){withLogto, inProduction}, "/logto", http.StatusNotFound},
+		{"debug page not found without logto", nil, "/logto", http.StatusNotFound},
+		{"signin not found without logto", nil, "/logto/signin", http.StatusNotFound},
+		{"callback not found without logto", nil, "/logto/callback", http.StatusNotFound},
+		{"signout not found without logto", nil, "/logto/signout", http.StatusNotFound},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := newTestHarness(t, func(env *appenv.Env) { env.Environment = tt.environment })
+			h := newTestHarness(t, tt.envOpts...)
 
-			resp, _ := h.doRequest(requestOptions{method: http.MethodGet, path: "/logto"})
+			resp, _ := h.doRequest(requestOptions{method: http.MethodGet, path: tt.path})
 			if resp.StatusCode != tt.wantStatus {
-				t.Fatalf("expected %d for /logto, got %d", tt.wantStatus, resp.StatusCode)
+				t.Fatalf("expected %d for %s, got %d", tt.wantStatus, tt.path, resp.StatusCode)
 			}
 		})
 	}
