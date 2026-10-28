@@ -296,7 +296,7 @@ func (s *service) HandlePatientSearch(c fiber.Ctx) error {
 	}
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.PatientSearchResults(patients, vc))
+	return view.Render(c, view.PatientSearchResults(patients, vc, ""))
 }
 
 func normalizeSearchTerm(raw string) (string, error) {

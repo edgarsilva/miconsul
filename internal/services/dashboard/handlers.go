@@ -2,12 +2,15 @@
 package dashboard
 
 import (
+	"errors"
+	"fmt"
 	"strings"
 
 	"miconsul/internal/models"
 	view "miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/log"
 )
 
 // HandleHomePage renders the public landing page.
@@ -55,13 +58,20 @@ func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 		query.Where("status IN ?", statuses)
 	}
 
-	_ = query.Limit(10).Find(&appointments).Error
+	var appointmentsErr error
+	if err := query.Limit(10).Find(&appointments).Error; err != nil {
+		appointmentsErr = fmt.Errorf("find dashboard appointments: %w", err)
+	}
 
-	clinic, _ := s.FavoriteClinic(c, cu.ID)
+	clinic, clinicErr := s.FavoriteClinic(c, cu.ID)
+	stats, statsErr := s.CalcDashboardStats(c.Context(), cu)
+	feedEvents, feedErr := s.FindFeedEventsByUserID(c.Context(), cu.ID, 10)
+
 	vc := view.NewCtx(c)
-	stats := s.CalcDashboardStats(c.Context(), cu)
-
-	feedEvents, _ := s.FindFeedEventsByUserID(c.Context(), cu.ID, 10)
+	if err := errors.Join(appointmentsErr, clinicErr, statsErr, feedErr); err != nil {
+		log.Error("load dashboard:", err)
+		vc = view.NewCtx(c, view.WithToast("Failed to load part of the dashboard, please try again", "", "error"))
+	}
 
 	return view.Render(c, view.DashboardPage(vc, stats, appointments, clinic, feedEvents))
 }

@@ -1,8 +1,10 @@
 package tests
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -243,4 +245,69 @@ func TestAppointmentHandlers(t *testing.T) {
 			t.Fatalf("expected appointment ownership unchanged, got %d", unchanged.UserID)
 		}
 	})
+}
+
+func TestAppointmentEditPageSelectsItsClinicAndPatient(t *testing.T) {
+	tests := []struct {
+		name  string
+		newer int
+	}{
+		{"listed but not first", 1},
+		{"older than the 10 most recent", 10},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newTestHarness(t)
+			u := h.createUser(models.UserRoleUser)
+			clinic := h.createClinic(u.ID, "Booked Clinic")
+			patient := h.createPatient(u.ID, "Booked Patient")
+			appt := h.createAppointment(u.ID, patient.ID, clinic.ID)
+
+			var newestClinic models.Clinic
+			var newestPatient models.Patient
+			for i := range tt.newer {
+				newestClinic = h.createClinic(u.ID, fmt.Sprintf("Clinic %d", i))
+				newestPatient = h.createPatient(u.ID, fmt.Sprintf("Patient %d", i))
+			}
+
+			resp, body := h.doRequest(requestOptions{method: http.MethodGet, path: "/appointments/" + appt.UID, authToken: h.authToken(u)})
+			if resp.StatusCode != http.StatusOK {
+				t.Fatalf("expected 200 for the edit page, got %d", resp.StatusCode)
+			}
+
+			for _, radio := range []struct {
+				name, uid string
+				checked   bool
+			}{
+				{"booked clinic", clinic.UID, true},
+				{"booked patient", patient.UID, true},
+				{"newest clinic", newestClinic.UID, false},
+				{"newest patient", newestPatient.UID, false},
+			} {
+				tag, ok := radioInput(body, radio.uid)
+				if !ok {
+					t.Fatalf("expected a radio for the %s", radio.name)
+				}
+				if got := strings.Contains(tag, " checked"); got != radio.checked {
+					t.Errorf("%s radio checked = %v, want %v: %s", radio.name, got, radio.checked, tag)
+				}
+			}
+		})
+	}
+}
+
+// radioInput returns the <input> tag whose value is uid.
+func radioInput(body, uid string) (string, bool) {
+	i := strings.Index(body, `value="`+uid+`"`)
+	if i < 0 {
+		return "", false
+	}
+
+	start := strings.LastIndex(body[:i], "<input")
+	end := strings.Index(body[i:], ">")
+	if start < 0 || end < 0 {
+		return "", false
+	}
+
+	return body[start : i+end+1], true
 }
