@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/models"
@@ -34,6 +35,8 @@ func NewLogtoStrategy(runtime Runtime) *LogtoStrategy {
 // Authenticate returns the user of the session's Logto sign-in. Logto checks
 // the session's access token on every request and, once it expires, refreshes
 // it with the refresh token; an expired or revoked sign-in returns an error.
+// The user is cached in the session for the current ID token and reloaded
+// from the DB once the cached copy is older than authSessionHydrationTTL.
 func (lts LogtoStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
 	sess, err := lts.runtime.Session(c)
 	if err != nil {
@@ -54,6 +57,13 @@ func (lts LogtoStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
 		return models.User{}, fmt.Errorf("get logto access token: %w", err)
 	}
 
+	now := time.Now()
+	idToken := logtoClient.GetIdToken()
+	cached, _ := sess.Get(authSessionKey).(string)
+	if snapshot, ok := DecodeAuthSnapshotQuery(cached); ok && snapshot.Token == idToken && snapshot.isFresh(now) {
+		return snapshot.toUser(), nil
+	}
+
 	claims, err := logtoClient.GetIdTokenClaims()
 	if err != nil {
 		return models.User{}, err
@@ -63,6 +73,8 @@ func (lts LogtoStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
 	if err != nil {
 		return user, errors.New("authenticate user")
 	}
+
+	sess.Set(authSessionKey, newAuthSnapshot(user, idToken).EncodeQuery())
 
 	return user, nil
 }
