@@ -6,6 +6,7 @@ import (
 	"encoding/json/v2"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
@@ -252,6 +253,37 @@ func logtoDecodeAccessToken(token string) (LogtoUser, error) {
 	}
 
 	return logtoUser, nil
+}
+
+// logtoHealthTimeout bounds the Logto reachability check.
+const logtoHealthTimeout = 2 * time.Second
+
+// CheckLogto reports whether Logto's OIDC discovery document responds.
+func (s *service) CheckLogto(ctx context.Context) error {
+	discoveryURL, err := url.JoinPath(s.Env.LogtoURL, "/oidc/.well-known/openid-configuration")
+	if err != nil {
+		return fmt.Errorf("build logto discovery url: %w", err)
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, logtoHealthTimeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, discoveryURL, nil)
+	if err != nil {
+		return fmt.Errorf("build logto discovery request: %w", err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("fetch logto discovery: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("fetch logto discovery: status %d", resp.StatusCode)
+	}
+
+	return nil
 }
 
 func logtoEnabled(env *appenv.Env) bool {

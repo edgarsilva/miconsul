@@ -79,6 +79,7 @@ Response keys:
 - `checks.livez`
 - `checks.readyz`
 - `checks.startupz`
+- `checks.dependencies`: one entry per external dependency the app registered, each with `ok`, `latency_ms` and, when it fails, `error`. Today that's `logto` when Logto is configured: it fetches Logto's OIDC discovery document with a 2s timeout. A failing dependency makes `status` `degraded` and the response 503; `/readyz` doesn't include dependencies.
 
 ## Troubleshooting: `readyz` Fails While `livez` Passes
 

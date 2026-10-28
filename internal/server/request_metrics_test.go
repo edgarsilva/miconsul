@@ -1,9 +1,13 @@
 package server
 
 import (
+	"context"
 	"encoding/json/v2"
+	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -128,5 +132,78 @@ func TestHandleDebugHealthDetailsDegradedWhenReadinessFails(t *testing.T) {
 	}
 	if payload.Checks.Startupz {
 		t.Fatalf("expected startup false")
+	}
+}
+
+func TestHandleDebugHealthDetailsDependencies(t *testing.T) {
+	tests := []struct {
+		name       string
+		checkErr   error
+		wantStatus int
+		wantOK     bool
+	}{
+		{"passing dependency keeps the server healthy", nil, fiber.StatusOK, true},
+		{"failing dependency degrades the server", errors.New("logto unreachable"), fiber.StatusServiceUnavailable, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := readyServer(t)
+			s.App = fiber.New()
+			s.Env = &appenv.Env{AppVersion: "1.2.3", Environment: appenv.EnvironmentProduction}
+			s.StartedAt = time.Now().Add(-3 * time.Second)
+			s.ReadyAt = time.Now().Add(-2 * time.Second)
+			s.BootstrapDuration = 500 * time.Millisecond
+			s.AddHealthCheck("logto", func(context.Context) error { return tt.checkErr })
+			s.App.Get("/debug/health", s.HandleDebugHealthDetails)
+
+			resp, err := s.App.Test(httptest.NewRequest(http.MethodGet, "/debug/health", nil))
+			if err != nil {
+				t.Fatalf("health details request failed: %v", err)
+			}
+			if resp.StatusCode != tt.wantStatus {
+				t.Fatalf("expected %d, got %d", tt.wantStatus, resp.StatusCode)
+			}
+
+			var payload struct {
+				Checks struct {
+					Dependencies map[string]debugDependencyPayload `json:"dependencies"`
+				} `json:"checks"`
+			}
+			if err := json.UnmarshalRead(resp.Body, &payload); err != nil {
+				t.Fatalf("decode response payload: %v", err)
+			}
+			got, ok := payload.Checks.Dependencies["logto"]
+			if !ok {
+				t.Fatalf("expected a logto dependency in the payload")
+			}
+			if got.OK != tt.wantOK {
+				t.Fatalf("expected logto ok=%v, got %+v", tt.wantOK, got)
+			}
+			if !tt.wantOK && got.Error == "" {
+				t.Fatalf("expected the dependency error in the payload")
+			}
+		})
+	}
+}
+
+func TestHandleDebugHealthDetailsEmptyDependencies(t *testing.T) {
+	s := readyServer(t)
+	s.App = fiber.New()
+	s.Env = &appenv.Env{AppVersion: "1.2.3", Environment: appenv.EnvironmentProduction}
+	s.StartedAt = time.Now().Add(-3 * time.Second)
+	s.ReadyAt = time.Now().Add(-2 * time.Second)
+	s.BootstrapDuration = 500 * time.Millisecond
+	s.App.Get("/debug/health", s.HandleDebugHealthDetails)
+
+	resp, err := s.App.Test(httptest.NewRequest(http.MethodGet, "/debug/health", nil))
+	if err != nil {
+		t.Fatalf("health details request failed: %v", err)
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("read body: %v", err)
+	}
+	if !strings.Contains(string(body), `"dependencies":{}`) {
+		t.Fatalf("expected an empty dependencies object, got %s", body)
 	}
 }
