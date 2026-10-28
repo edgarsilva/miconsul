@@ -365,3 +365,25 @@ func TestDashboardViewAllLinks(t *testing.T) {
 		}
 	})
 }
+
+func TestIsSelected(t *testing.T) {
+	tests := []struct {
+		name        string
+		uid         string
+		selectedUID string
+		i           int
+		want        bool
+	}{
+		{"first item without a selection", "a", "", 0, true},
+		{"other item without a selection", "b", "", 1, false},
+		{"selected item", "b", "b", 1, true},
+		{"first item with another selected", "a", "b", 0, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isSelected(tt.uid, tt.selectedUID, tt.i); got != tt.want {
+				t.Fatalf("isSelected(%q, %q, %d) = %v, want %v", tt.uid, tt.selectedUID, tt.i, got, tt.want)
+			}
+		})
+	}
+}

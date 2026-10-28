@@ -327,14 +327,14 @@ templ AppointmentCont(c *Ctx, appointment models.Appointment, patients []models.
 				<h2 class="text-base font-semibold leading-7">{ c.l("str.apnt_step_1") }</h2>
 				<p class="mt-1 text-sm leading-6 text-base-content/50">{ c.l("str.apnt_step_1_desc") }</p>
 			</div>
-			@ClinicSearch(c, clinics)
+			@ClinicSearch(c, clinics, appointment.Clinic.UID)
 		</div>
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
 				<h2 class="text-base font-semibold leading-7">{ c.l("str.apnt_step_2") }</h2>
 				<p class="mt-1 text-sm leading-6 text-base-content/50">{ c.l("str.apnt_step_2_desc") }</p>
 			</div>
-			@PatientSearch(c, patients)
+			@PatientSearch(c, patients, appointment.Patient.UID)
 		</div>
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
@@ -505,7 +505,9 @@ templ ApptPrice(c *Ctx, appointment models.Appointment, clinic models.Clinic, sw
 	</div>
 }
 
-templ ClinicSearch(c *Ctx, clinics []models.Clinic) {
+// ClinicSearch renders the clinic picker with selectedUID checked, or the
+// first clinic when selectedUID is empty.
+templ ClinicSearch(c *Ctx, clinics []models.Clinic, selectedUID string) {
 	<section class="p-4 md:p-6 bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
 		<span class="absolute top-2 right-2 loading loading-ring text-primary loading-md htmx-indicator"></span>
 		<label class="relative input input-bordered rounded-full flex items-center gap-2 mb-4">
@@ -532,12 +534,12 @@ templ ClinicSearch(c *Ctx, clinics []models.Clinic) {
 			/>
 		</label>
 		<div class="max-h-72 overflow-y-auto pr-2 -mr-2">
-			@ApptSearchClinicsResults(c, clinics)
+			@ApptSearchClinicsResults(c, clinics, selectedUID)
 		</div>
 	</section>
 }
 
-templ ApptSearchClinicsResults(c *Ctx, clinics []models.Clinic) {
+templ ApptSearchClinicsResults(c *Ctx, clinics []models.Clinic, selectedUID string) {
 	<ul
 		id="clinic_search_results"
 		role="list"
@@ -561,7 +563,7 @@ templ ApptSearchClinicsResults(c *Ctx, clinics []models.Clinic) {
 						class="radio"
 						form="new_appointment"
 						value={ clinic.UID }
-						if i == 0 {
+						if isSelected(clinic.UID, selectedUID, i) {
 							checked
 						}
 						hx-get={ "/appointments/new/pricefrg/" + clinic.UID }
@@ -580,13 +582,15 @@ templ ApptSearchClinicsResults(c *Ctx, clinics []models.Clinic) {
 }
 
 templ ApptSearchClinicsFrg(c *Ctx, clinics []models.Clinic) {
-	@ApptSearchClinicsResults(c, clinics)
+	@ApptSearchClinicsResults(c, clinics, "")
 	if len(clinics) > 0 {
 		@ApptPrice(c, models.Appointment{}, clinics[0], true)
 	}
 }
 
-templ PatientSearch(c *Ctx, patients []models.Patient) {
+// PatientSearch renders the patient picker with selectedUID checked, or the
+// first patient when selectedUID is empty.
+templ PatientSearch(c *Ctx, patients []models.Patient, selectedUID string) {
 	<section class="p-4 md:p-6 bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
 		<span class="absolute top-2 right-2 loading loading-ring text-primary loading-md htmx-indicator"></span>
 		<label class="relative input input-bordered rounded-full flex items-center gap-2 mb-4">
@@ -612,12 +616,12 @@ templ PatientSearch(c *Ctx, patients []models.Patient) {
 			/>
 		</label>
 		<div class="max-h-64 overflow-y-auto pr-2 -mr-2">
-			@PatientSearchResults(patients, c)
+			@PatientSearchResults(patients, c, selectedUID)
 		</div>
 	</section>
 }
 
-templ PatientSearchResults(patients []models.Patient, c *Ctx) {
+templ PatientSearchResults(patients []models.Patient, c *Ctx, selectedUID string) {
 	<ul
 		id="patient_search_results"
 		role="list"
@@ -639,7 +643,7 @@ templ PatientSearchResults(patients []models.Patient, c *Ctx) {
 						class="radio"
 						form="new_appointment"
 						value={ patient.UID }
-						if i == 0 {
+						if isSelected(patient.UID, selectedUID, i) {
 							checked
 						}
 					/>
@@ -674,4 +678,14 @@ templ AppointmentForm(appointment models.Appointment, c *Ctx) {
 		<span class="absolute top-2 right-2 loading loading-ring text-primary loading-md htmx-indicator"></span>
 		{ children... }
 	</form>
+}
+
+// isSelected reports whether the picker item uid is checked: the one matching
+// selectedUID, or the first item when nothing is selected.
+func isSelected(uid, selectedUID string, i int) bool {
+	if selectedUID == "" {
+		return i == 0
+	}
+
+	return uid == selectedUID
 }
