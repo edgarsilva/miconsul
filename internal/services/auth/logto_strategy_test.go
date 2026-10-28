@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/base64"
@@ -426,5 +427,41 @@ func editLogtoSession(t *testing.T, svc *service, cookies []*http.Cookie, edit f
 	}
 	if _, err := app.Test(req); err != nil {
 		t.Fatalf("edit logto session: %v", err)
+	}
+}
+
+func TestCheckLogto(t *testing.T) {
+	tests := []struct {
+		name    string
+		status  int
+		closed  bool
+		wantErr bool
+	}{
+		{name: "discovery responds", status: http.StatusOK},
+		{name: "discovery errors", status: http.StatusInternalServerError, wantErr: true},
+		{name: "logto unreachable", closed: true, wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path != "/oidc/.well-known/openid-configuration" {
+					http.NotFound(w, r)
+					return
+				}
+				w.WriteHeader(tt.status)
+			}))
+			if tt.closed {
+				srv.Close()
+			} else {
+				t.Cleanup(srv.Close)
+			}
+
+			svc := newAuthServiceForTests(t)
+			svc.Env.LogtoURL = srv.URL
+
+			if err := svc.CheckLogto(context.Background()); (err != nil) != tt.wantErr {
+				t.Fatalf("CheckLogto() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
 	}
 }

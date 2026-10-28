@@ -88,6 +88,7 @@ func AuthRoutes(s *server.Server) (auth.Runtime, error) {
 
 	// Logto only when configured; the claims debug page only outside production.
 	if a.LogtoEnabled() {
+		a.AddHealthCheck("logto", a.CheckLogto)
 		a.Get("/logto/signin", a.HandleLogtoSignin)
 		a.Get("/logto/callback", a.HandleLogtoCallback)
 		a.Get("/logto/signout", a.HandleLogtoSignout)
