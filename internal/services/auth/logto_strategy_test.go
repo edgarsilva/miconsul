@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
+	"io"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
@@ -292,4 +293,138 @@ func writeTestJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(v)
+}
+
+func TestHandleLogtoPage(t *testing.T) {
+	tests := []struct {
+		name      string
+		expiresAt time.Time
+		wantText  string
+	}{
+		{name: "valid sign-in shows signed in", expiresAt: time.Now().Add(time.Hour), wantText: "You are logged in"},
+		{name: "expired sign-in shows signed out", expiresAt: time.Now().Add(-time.Minute), wantText: "You are not logged in"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc, user, logtoServer := newLogtoTestService(t)
+			logtoServer.revoke = true
+			cookies := seedLogtoSession(t, svc, user, "revoked", tt.expiresAt)
+
+			app := fiber.New()
+			app.Get("/logto", svc.HandleLogtoPage)
+
+			req := httptest.NewRequest(http.MethodGet, "/logto", nil)
+			for _, c := range cookies {
+				req.AddCookie(c)
+			}
+			resp, err := app.Test(req)
+			if err != nil {
+				t.Fatalf("request failed: %v", err)
+			}
+
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("read body: %v", err)
+			}
+			if !strings.Contains(string(body), tt.wantText) {
+				t.Fatalf("expected page to contain %q", tt.wantText)
+			}
+		})
+	}
+}
+
+func TestLogtoStrategyAuthenticateCachesUser(t *testing.T) {
+	t.Run("uses the cached user while fresh, then reloads it", func(t *testing.T) {
+		svc, user, logtoServer := newLogtoTestService(t)
+		cookies := seedLogtoSession(t, svc, user, "refresh_1", time.Now().Add(time.Hour))
+
+		if _, err := authenticateLogto(t, svc, cookies); err != nil {
+			t.Fatalf("expected sign-in, got %v", err)
+		}
+		if err := svc.DB.Delete(&user).Error; err != nil {
+			t.Fatalf("delete user: %v", err)
+		}
+
+		authed, err := authenticateLogto(t, svc, cookies)
+		if err != nil {
+			t.Fatalf("expected the cached user, got %v", err)
+		}
+		if authed.ID != user.ID {
+			t.Fatalf("expected cached user %d, got %d", user.ID, authed.ID)
+		}
+
+		editLogtoSession(t, svc, cookies, func(sess *session.Session) {
+			raw, _ := sess.Get(authSessionKey).(string)
+			snapshot, ok := DecodeAuthSnapshotQuery(raw)
+			if !ok {
+				t.Fatalf("expected a cached user in the session")
+			}
+			snapshot.CachedAtUnix = time.Now().Add(-authSessionHydrationTTL - time.Minute).Unix()
+			sess.Set(authSessionKey, snapshot.EncodeQuery())
+		})
+		if _, err := authenticateLogto(t, svc, cookies); err == nil {
+			t.Fatalf("expected a stale cache to reload the deleted user and fail")
+		}
+		if got := logtoServer.calls.Load(); got != 0 {
+			t.Fatalf("expected no calls to logto, got %d", got)
+		}
+	})
+
+	t.Run("ignores a cached user of another ID token", func(t *testing.T) {
+		svc, user, _ := newLogtoTestService(t)
+		other := seedAuthUserWithOptions(t, svc, authUserSeedOptions{Email: "other@example.com", Password: "Password1!"})
+		cookies := seedLogtoSession(t, svc, user, "refresh_1", time.Now().Add(time.Hour))
+
+		editLogtoSession(t, svc, cookies, func(sess *session.Session) {
+			sess.Set(authSessionKey, newAuthSnapshot(other, "another.id.token").EncodeQuery())
+		})
+
+		authed, err := authenticateLogto(t, svc, cookies)
+		if err != nil {
+			t.Fatalf("expected sign-in, got %v", err)
+		}
+		if authed.ID != user.ID {
+			t.Fatalf("expected the signed-in user %d, got %d", user.ID, authed.ID)
+		}
+	})
+
+	t.Run("a cached user doesn't skip the access token check", func(t *testing.T) {
+		svc, user, logtoServer := newLogtoTestService(t)
+		logtoServer.revoke = true
+		cookies := seedLogtoSession(t, svc, user, "revoked", time.Now().Add(-time.Minute))
+
+		editLogtoSession(t, svc, cookies, func(sess *session.Session) {
+			idToken, _ := sess.Get(logto.StorageKeyIdToken).(string)
+			sess.Set(authSessionKey, newAuthSnapshot(user, idToken).EncodeQuery())
+		})
+
+		if _, err := authenticateLogto(t, svc, cookies); err == nil {
+			t.Fatalf("expected a revoked sign-in to fail despite the cached user")
+		}
+	})
+}
+
+// editLogtoSession runs edit on the session of cookies and saves it.
+func editLogtoSession(t *testing.T, svc *service, cookies []*http.Cookie, edit func(*session.Session)) {
+	t.Helper()
+
+	app := fiber.New()
+	app.Get("/", func(c fiber.Ctx) error {
+		sess, err := svc.Session(c)
+		if err != nil {
+			return err
+		}
+
+		edit(sess)
+		return sess.Save()
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	for _, c := range cookies {
+		req.AddCookie(c)
+	}
+	if _, err := app.Test(req); err != nil {
+		t.Fatalf("edit logto session: %v", err)
+	}
 }

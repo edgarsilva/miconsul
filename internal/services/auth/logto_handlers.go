@@ -8,7 +8,6 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
 	"github.com/gofiber/fiber/v3/middleware/adaptor"
-	logto "github.com/logto-io/go/client"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 )
@@ -127,7 +126,7 @@ func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "session regenerate failed")
 		log.Error("failed to regenerate session in logto callback:", err)
-		sess.Delete(logto.StorageKeyIdToken)
+		logtoClient.SetIdToken("")
 		return s.Redirect(c, "/signin?logto_error=session")
 	}
 
@@ -203,7 +202,8 @@ func (s *service) HandleLogtoSignout(c fiber.Ctx) error {
 	return c.Redirect().Status(fiber.StatusTemporaryRedirect).To(signOutURI)
 }
 
-// HandleLogtoPage renders the Logto page with two links to sign in and sign out
+// HandleLogtoPage renders the Logto claims debug page, with links to sign in
+// and sign out. It is not served in production.
 // GET: /logto
 func (s *service) HandleLogtoPage(c fiber.Ctx) error {
 	sess, err := s.Session(c)
@@ -214,8 +214,7 @@ func (s *service) HandleLogtoPage(c fiber.Ctx) error {
 	logtoClient, saveSess := NewLogtoClient(sess, LogtoConfig(s.Env))
 	defer deferLogtoSessionSave("logto page", saveSess)
 
-	notAuthenticated := !logtoClient.IsAuthenticated()
-	if notAuthenticated {
+	if _, err := logtoClient.GetAccessToken(""); err != nil {
 		vc := view.NewCtx(c)
 		return view.Render(c, view.LogtoPage(
 			vc,

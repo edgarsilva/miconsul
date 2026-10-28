@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/models"
@@ -34,15 +35,17 @@ func NewLogtoStrategy(runtime Runtime) *LogtoStrategy {
 // Authenticate returns the user of the session's Logto sign-in. Logto checks
 // the session's access token on every request and, once it expires, refreshes
 // it with the refresh token; an expired or revoked sign-in returns an error.
-func (lgs *LogtoStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
-	sess, err := lgs.runtime.Session(c)
+// The user is cached in the session for the current ID token and reloaded
+// from the DB once the cached copy is older than authSessionHydrationTTL.
+func (s LogtoStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
+	sess, err := s.runtime.Session(c)
 	if err != nil {
 		return models.User{}, err
 	}
 
-	logtoClient, saveSess := NewLogtoClient(sess, LogtoConfig(lgs.runtime.AppEnv()))
+	logtoClient, saveSess := NewLogtoClient(sess, LogtoConfig(s.runtime.AppEnv()))
 
-	ctx, span := lgs.Trace(c.Context(), "auth/services:logtoStrategy")
+	ctx, span := s.Trace(c.Context(), "auth/services:logtoStrategy")
 	defer span.End()
 	defer func() {
 		if err := saveSess(); err != nil {
@@ -54,26 +57,35 @@ func (lgs *LogtoStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
 		return models.User{}, fmt.Errorf("get logto access token: %w", err)
 	}
 
+	now := time.Now()
+	idToken := logtoClient.GetIdToken()
+	cached, _ := sess.Get(authSessionKey).(string)
+	if snapshot, ok := DecodeAuthSnapshotQuery(cached); ok && snapshot.Token == idToken && snapshot.isFresh(now) {
+		return snapshot.toUser(), nil
+	}
+
 	claims, err := logtoClient.GetIdTokenClaims()
 	if err != nil {
 		return models.User{}, err
 	}
 
-	user, err := TakeUserByExtID(ctx, lgs.runtime, claims.Sub)
+	user, err := TakeUserByExtID(ctx, s.runtime, claims.Sub)
 	if err != nil {
 		return user, errors.New("authenticate user")
 	}
 
+	sess.Set(authSessionKey, newAuthSnapshot(user, idToken).EncodeQuery())
+
 	return user, nil
 }
 
-func (lgs LogtoStrategy) Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
-	return lgs.runtime.Trace(ctx, spanName, opts...)
+func (s LogtoStrategy) Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
+	return s.runtime.Trace(ctx, spanName, opts...)
 }
 
-func (lgs LogtoStrategy) Metadata() AuthenticatorMeta {
+func (s LogtoStrategy) Metadata() AuthenticatorMeta {
 	return AuthenticatorMeta{
-		Enabled:                logtoEnabled(lgs.runtime.AppEnv()),
+		Enabled:                logtoEnabled(s.runtime.AppEnv()),
 		SigninPath:             "/logto/signin",
 		ErrorQueryKey:          "logto_error",
 		LoggedOutQueryKey:      "logged_out",
@@ -243,14 +255,31 @@ func logtoDecodeAccessToken(token string) (LogtoUser, error) {
 }
 
 func logtoEnabled(env *appenv.Env) bool {
+	return len(missingLogtoSettings(env)) == 0
+}
+
+// missingLogtoSettings returns the names of the Logto settings that are unset.
+func missingLogtoSettings(env *appenv.Env) []string {
 	if env == nil {
-		return false
+		env = &appenv.Env{}
 	}
 
-	logtoURL := env.LogtoURL
-	logtoAppID := env.LogtoAppID
-	logtoAppSecret := env.LogtoAppSecret
-	logtoResource := env.LogtoResource
+	settings := []struct {
+		name  string
+		value string
+	}{
+		{"LOGTO_URL", env.LogtoURL},
+		{"LOGTO_APP_ID", env.LogtoAppID},
+		{"LOGTO_APP_SECRET", env.LogtoAppSecret},
+		{"LOGTO_RESOURCE", env.LogtoResource},
+	}
 
-	return logtoURL != "" && logtoAppID != "" && logtoAppSecret != "" && logtoResource != ""
+	missing := []string{}
+	for _, setting := range settings {
+		if setting.value == "" {
+			missing = append(missing, setting.name)
+		}
+	}
+
+	return missing
 }

@@ -56,5 +56,5 @@ Admin access path:
 
 - Provision a Logto tenant/environment for production.
 - Configure app callback/signout URLs for the production domain.
-- Set runtime vars: `LOGTO_URL`, `LOGTO_APP_ID`, `LOGTO_APP_SECRET`, `LOGTO_RESOURCE`.
+- Set runtime vars: `LOGTO_URL`, `LOGTO_APP_ID`, `LOGTO_APP_SECRET`, `LOGTO_RESOURCE`. Set all four together: with only some set, the app refuses to start. With none set, local password sign-in is used instead of Logto.
 - Verify sign-in callback and API token audience after deploy.

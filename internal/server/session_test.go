@@ -59,6 +59,9 @@ func TestSessionCookieAttributes(t *testing.T) {
 	if err := setupSessionStore(s); err != nil {
 		t.Fatalf("setup session store: %v", err)
 	}
+	if got := s.SessionStore.AbsoluteTimeout; got != sessionAbsoluteTimeout {
+		t.Fatalf("expected session AbsoluteTimeout %v, got %v", sessionAbsoluteTimeout, got)
+	}
 
 	app := fiber.New()
 	app.Get("/", func(c fiber.Ctx) error {

@@ -8,9 +8,11 @@ import (
 	"time"
 
 	"miconsul/internal/models"
+	"miconsul/internal/services/auth"
 	view "miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/log"
 	"gorm.io/gorm"
 )
 
@@ -94,6 +96,10 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, "/profile?toast=Failed to update profile&level=error")
 	}
 
+	if err := auth.RefreshSessionUser(c, s, updatedUser); err != nil {
+		log.Warn("refresh signed-in user after profile update:", err)
+	}
+
 	if locale := userUpds.Locale; locale != "" && locale != s.CurrentLocale(c) {
 		c.Cookie(s.NewCookie("locale", locale, localeCookieTTL))
 		if s.IsHTMX(c) {
@@ -170,6 +176,11 @@ func (s *service) HandleRemoveProfilePic(c fiber.Ctx) error {
 	}
 	if err != nil {
 		return s.respondWithRedirect(c, "/profile?toast=Failed to remove profile picture&level=error")
+	}
+
+	cu.ProfilePic = ""
+	if err := auth.RefreshSessionUser(c, s, cu); err != nil {
+		log.Warn("refresh signed-in user after profile picture removal:", err)
 	}
 
 	if s.NotHTMX(c) {
