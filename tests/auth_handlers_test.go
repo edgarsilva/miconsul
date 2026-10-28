@@ -66,7 +66,7 @@ func TestAuthHandlers(t *testing.T) {
 		}
 	})
 
-	t.Run("api signin success sets auth cookie", func(t *testing.T) {
+	t.Run("api signin success starts a session that logout ends", func(t *testing.T) {
 		resp, body := h.doRequest(requestOptions{
 			method: http.MethodPost,
 			path:   "/api/auth/signin",
@@ -82,11 +82,71 @@ func TestAuthHandlers(t *testing.T) {
 		if !strings.Contains(body, "\"ok\":true") {
 			t.Fatalf("expected successful signin body, got %q", body)
 		}
-		if got := resp.Header.Get("Set-Cookie"); !strings.Contains(got, "Auth=") {
-			t.Fatalf("expected Auth cookie to be set, got %q", got)
+		if hasAuthCookie(resp) {
+			t.Fatalf("expected no Auth cookie, got %q", resp.Header.Get("Set-Cookie"))
+		}
+
+		sessionCookie := onlySessionCookie(t, resp)
+		if !sessionCookie.HttpOnly {
+			t.Fatalf("expected an HttpOnly session_id cookie, got %q", resp.Header.Get("Set-Cookie"))
+		}
+		withSession := []*http.Cookie{{Name: sessionCookie.Name, Value: sessionCookie.Value}}
+
+		resp, body = h.doRequest(requestOptions{method: http.MethodGet, path: "/api/auth/protected", accept: "application/json", cookies: withSession})
+		if resp.StatusCode != http.StatusOK || !strings.Contains(body, authUser.UID) {
+			t.Fatalf("expected the session to authenticate, got %d %q", resp.StatusCode, body)
+		}
+
+		h.doRequest(requestOptions{method: http.MethodPost, path: "/logout", cookies: withSession})
+
+		resp, _ = h.doRequest(requestOptions{method: http.MethodGet, path: "/api/auth/protected", accept: "application/json", cookies: withSession})
+		if resp.StatusCode != http.StatusUnauthorized {
+			t.Fatalf("expected the session cookie to be rejected after logout, got %d", resp.StatusCode)
 		}
 	})
 
+	t.Run("web signin starts a session under a new ID", func(t *testing.T) {
+		apiResp, _ := h.doRequest(requestOptions{
+			method: http.MethodPost,
+			path:   "/api/auth/signin",
+			accept: "application/json",
+			body: url.Values{
+				"email":    {authUser.Email},
+				"password": {"Password1!"},
+			},
+		})
+		apiCookie := onlySessionCookie(t, apiResp)
+		before := &http.Cookie{Name: apiCookie.Name, Value: apiCookie.Value}
+
+		resp, _ := h.doRequest(requestOptions{
+			method:  http.MethodPost,
+			path:    "/signin",
+			cookies: []*http.Cookie{before},
+			body: url.Values{
+				"email":    {authUser.Email},
+				"password": {"Password1!"},
+			},
+		})
+		if resp.StatusCode != http.StatusSeeOther {
+			t.Fatalf("expected 303 after signin, got %d", resp.StatusCode)
+		}
+
+		sessionCookie := onlySessionCookie(t, resp)
+		if sessionCookie.Value == before.Value {
+			t.Fatalf("expected a new session_id after signin")
+		}
+
+		withSession := []*http.Cookie{{Name: sessionCookie.Name, Value: sessionCookie.Value}}
+		resp, body := h.doRequest(requestOptions{method: http.MethodGet, path: "/api/auth/protected", accept: "application/json", cookies: withSession})
+		if resp.StatusCode != http.StatusOK || !strings.Contains(body, authUser.UID) {
+			t.Fatalf("expected the session to authenticate, got %d %q", resp.StatusCode, body)
+		}
+
+		resp, _ = h.doRequest(requestOptions{method: http.MethodGet, path: "/api/auth/protected", accept: "application/json", cookies: []*http.Cookie{before}})
+		if resp.StatusCode != http.StatusUnauthorized {
+			t.Fatalf("expected the session_id from before signin to be rejected, got %d", resp.StatusCode)
+		}
+	})
 	t.Run("api protected rejects unauthenticated requests", func(t *testing.T) {
 		resp, _ := h.doRequest(requestOptions{method: http.MethodGet, path: "/api/auth/protected", accept: "application/json"})
 		if resp.StatusCode != http.StatusUnauthorized {
@@ -135,4 +195,22 @@ func TestAuthHandlers(t *testing.T) {
 			t.Fatalf("expected redirect location to signin, got %q", got)
 		}
 	})
+}
+
+// onlySessionCookie returns the response's session_id cookie and fails unless
+// it sets exactly one.
+func onlySessionCookie(t *testing.T, resp *http.Response) *http.Cookie {
+	t.Helper()
+
+	var found []*http.Cookie
+	for _, c := range resp.Cookies() {
+		if c.Name == "session_id" {
+			found = append(found, c)
+		}
+	}
+	if len(found) != 1 {
+		t.Fatalf("expected exactly one session_id cookie, got %d: %q", len(found), resp.Header.Values("Set-Cookie"))
+	}
+
+	return found[0]
 }

@@ -33,6 +33,10 @@ func (rt testAuthRuntime) SessionRead(c fiber.Ctx, key string, defaultVal string
 	return defaultVal
 }
 
+func (rt testAuthRuntime) SessionRotate(c fiber.Ctx, k string, v any) error {
+	return nil
+}
+
 func (rt testAuthRuntime) AppEnv() *appenv.Env { return rt.env }
 func (rt testAuthRuntime) GormDB() *gorm.DB    { return nil }
 

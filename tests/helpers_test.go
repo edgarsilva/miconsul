@@ -40,6 +40,7 @@ type requestOptions struct {
 	htmx       bool
 	authToken  string
 	contentTyp string
+	cookies    []*http.Cookie
 }
 
 func newTestHarness(t *testing.T, envOpts ...func(*appenv.Env)) *testHarness {
@@ -275,6 +276,10 @@ func (h *testHarness) doRequest(opt requestOptions) (*http.Response, string) {
 
 	if opt.authToken != "" {
 		req.Header.Set("Authorization", "Bearer "+opt.authToken)
+	}
+
+	for _, c := range opt.cookies {
+		req.AddCookie(c)
 	}
 
 	resp, err := h.server.Test(req)

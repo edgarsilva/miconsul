@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"errors"
-	"time"
 
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/models"
@@ -19,9 +18,9 @@ type Runtime interface {
 	Session(c fiber.Ctx) (*session.Session, error)
 	SessionWrite(c fiber.Ctx, k string, v any) error
 	SessionRead(c fiber.Ctx, key string, defaultVal string) string
+	SessionRotate(c fiber.Ctx, k string, v any) error
 	AppEnv() *appenv.Env
 	GormDB() *gorm.DB
-	NewCookie(name, value string, validFor time.Duration) *fiber.Cookie
 	Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span)
 }
 
@@ -42,7 +41,7 @@ type AuthenticatorMeta struct {
 	SignedOutMessage       string
 }
 
-// Authenticate resolves request identity (session snapshot/JWT strategy fallback)
+// Authenticate resolves request identity (bearer JWT or session)
 // and returns the current user for this request. The outcome is recorded on
 // the request span as auth.provider, auth.result and, when signed in, user.id.
 func Authenticate(c fiber.Ctx, rt Runtime) (models.User, error) {

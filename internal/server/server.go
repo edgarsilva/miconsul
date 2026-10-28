@@ -168,12 +168,17 @@ func setupSessionStore(s *Server) error {
 
 	cookieSecure := s.Env.IsProduction() || strings.EqualFold(s.Env.AppProtocol, "https")
 	s.SessionStore = session.NewStore(session.Config{
-		Storage:      storage,
-		CookieSecure: cookieSecure,
+		Storage:        storage,
+		IdleTimeout:    sessionIdleTimeout,
+		CookieSecure:   cookieSecure,
+		CookieHTTPOnly: true,
 	})
 
 	return nil
 }
+
+// sessionIdleTimeout is how long a session lasts without requests.
+const sessionIdleTimeout = 7 * 24 * time.Hour
 
 // openSessionStorage opens the session database, returning the sqlite3
 // driver's setup panics as an error.

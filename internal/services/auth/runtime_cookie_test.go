@@ -5,13 +5,9 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
-	"time"
 
 	"miconsul/internal/lib/appenv"
-	"miconsul/internal/models"
-	"miconsul/internal/server"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/session"
@@ -50,87 +46,39 @@ func TestSelectAuthenticator(t *testing.T) {
 	}
 }
 
-func TestIssueAuthCookie(t *testing.T) {
-	t.Run("sets auth cookie when jwt can be created", func(t *testing.T) {
-		svc := &service{Server: &server.Server{Env: &appenv.Env{JWTSecret: strings.Repeat("x", 32)}}}
+func TestBearerToken(t *testing.T) {
+	tests := []struct {
+		name   string
+		header string
+		want   string
+		wantOK bool
+	}{
+		{"bearer header", "Bearer header.jwt", "header.jwt", true},
+		{"no header", "", "", false},
+		{"blank bearer", "Bearer ", "", false},
+		{"no bearer scheme", "header.jwt", "", false},
+	}
 
-		app := fiber.New()
-		app.Get("/", func(c fiber.Ctx) error {
-			if err := svc.issueAuthCookie(c, models.User{UID: "user_1", Email: "u@example.com"}, true); err != nil {
-				return err
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			app := fiber.New()
+			app.Get("/", func(c fiber.Ctx) error {
+				got, ok := bearerToken(c)
+				if got != tt.want || ok != tt.wantOK {
+					t.Fatalf("bearerToken() = %q, %v; want %q, %v", got, ok, tt.want, tt.wantOK)
+				}
+				return c.SendStatus(fiber.StatusNoContent)
+			})
+
+			req := httptest.NewRequest(http.MethodGet, "/", nil)
+			if tt.header != "" {
+				req.Header.Set("Authorization", tt.header)
 			}
-			return c.SendStatus(fiber.StatusNoContent)
+			if _, err := app.Test(req); err != nil {
+				t.Fatalf("request failed: %v", err)
+			}
 		})
-
-		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/", nil))
-		if err != nil {
-			t.Fatalf("request failed: %v", err)
-		}
-		if resp.StatusCode != fiber.StatusNoContent {
-			t.Fatalf("expected status 204, got %d", resp.StatusCode)
-		}
-		if !strings.Contains(resp.Header.Get("Set-Cookie"), "Auth=") {
-			t.Fatalf("expected auth cookie to be set")
-		}
-	})
-
-	t.Run("returns session create error when secret missing", func(t *testing.T) {
-		svc := &service{Server: &server.Server{Env: &appenv.Env{}}}
-
-		app := fiber.New()
-		app.Get("/", func(c fiber.Ctx) error {
-			err := svc.issueAuthCookie(c, models.User{UID: "user_1", Email: "u@example.com"}, false)
-			if !errors.Is(err, errAuthSessionCreate) {
-				t.Fatalf("expected errAuthSessionCreate, got %v", err)
-			}
-			if got, want := err.Error(), "create session: jwt secret not configured"; got != want {
-				t.Fatalf("expected error %q, got %q", want, got)
-			}
-			return c.SendStatus(fiber.StatusNoContent)
-		})
-
-		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/", nil))
-		if err != nil {
-			t.Fatalf("request failed: %v", err)
-		}
-		if cookie := resp.Header.Get("Set-Cookie"); cookie != "" {
-			t.Fatalf("did not expect auth cookie on failure, got %q", cookie)
-		}
-	})
-}
-
-func TestGetToken(t *testing.T) {
-	t.Run("prefers cookie token", func(t *testing.T) {
-		app := fiber.New()
-		app.Get("/", func(c fiber.Ctx) error {
-			if got := getToken(c); got != "cookie.jwt" {
-				t.Fatalf("expected cookie token, got %q", got)
-			}
-			return c.SendStatus(fiber.StatusNoContent)
-		})
-
-		req := httptest.NewRequest(http.MethodGet, "/", nil)
-		req.AddCookie(&http.Cookie{Name: "Auth", Value: "cookie.jwt"})
-		if _, err := app.Test(req); err != nil {
-			t.Fatalf("request failed: %v", err)
-		}
-	})
-
-	t.Run("falls back to authorization header", func(t *testing.T) {
-		app := fiber.New()
-		app.Get("/", func(c fiber.Ctx) error {
-			if got := getToken(c); got != "header.jwt" {
-				t.Fatalf("expected header token, got %q", got)
-			}
-			return c.SendStatus(fiber.StatusNoContent)
-		})
-
-		req := httptest.NewRequest(http.MethodGet, "/", nil)
-		req.Header.Set("Authorization", "Bearer header.jwt")
-		if _, err := app.Test(req); err != nil {
-			t.Fatalf("request failed: %v", err)
-		}
-	})
+	}
 }
 
 type mockRuntime struct {
@@ -149,16 +97,16 @@ func (m mockRuntime) SessionRead(c fiber.Ctx, key string, defaultVal string) str
 	return defaultVal
 }
 
+func (m mockRuntime) SessionRotate(c fiber.Ctx, k string, v any) error {
+	return nil
+}
+
 func (m mockRuntime) AppEnv() *appenv.Env {
 	return m.env
 }
 
 func (m mockRuntime) GormDB() *gorm.DB {
 	return nil
-}
-
-func (m mockRuntime) NewCookie(name, value string, validFor time.Duration) *fiber.Cookie {
-	return &fiber.Cookie{Name: name, Value: value}
 }
 
 func (m mockRuntime) Trace(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {

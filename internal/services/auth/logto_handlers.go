@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
 	"github.com/gofiber/fiber/v3/middleware/adaptor"
+	logto "github.com/logto-io/go/client"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 )
@@ -119,6 +120,15 @@ func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
 			log.Errorf("failed to verify signin in logto callback handler: %v (expected_callback=%s original_callback=%s x_forwarded_proto=%s x_forwarded_host=%s)", err, callbackURI, originalCallbackURL, req.Header.Get("X-Forwarded-Proto"), req.Header.Get("X-Forwarded-Host"))
 		}
 		return s.Redirect(c, "/signin?logto_error=callback")
+	}
+
+	// Move the signed-in session to a new ID, keeping its tokens.
+	if err := sess.Regenerate(); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "session regenerate failed")
+		log.Error("failed to regenerate session in logto callback:", err)
+		sess.Delete(logto.StorageKeyIdToken)
+		return s.Redirect(c, "/signin?logto_error=session")
 	}
 
 	// Identity-critical fields come from ID token claims after callback verification.

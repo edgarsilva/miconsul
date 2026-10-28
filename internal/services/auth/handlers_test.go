@@ -20,6 +20,7 @@ import (
 	"miconsul/internal/server"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/session"
 	"go.opentelemetry.io/otel/trace/noop"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
@@ -150,7 +151,7 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 		}
 	})
 
-	t.Run("HandleSignin sets cookie and redirects on success", func(t *testing.T) {
+	t.Run("HandleSignin starts a session and redirects on success", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		seedAuthUser(t, svc, "ok@example.com", "Password1!", "")
 
@@ -170,15 +171,13 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 		if got := resp.Header.Get("Location"); got != "/?timeframe=day" {
 			t.Fatalf("expected redirect to dashboard, got %q", got)
 		}
-		if !strings.Contains(resp.Header.Get("Set-Cookie"), "Auth=") {
-			t.Fatalf("expected auth cookie to be set")
-		}
+		assertSessionOnlyCookies(t, resp)
 	})
 
-	t.Run("HandleSignin redirects when cookie issuance fails", func(t *testing.T) {
+	t.Run("HandleSignin redirects when the session can't be created", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		seedAuthUser(t, svc, "jwtfail@example.com", "Password1!", "")
-		svc.Env.JWTSecret = ""
+		svc.SessionStore = nil
 
 		app := fiber.New()
 		app.Post("/signin", svc.HandleSignin)
@@ -191,7 +190,7 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 			t.Fatalf("request failed: %v", err)
 		}
 		if resp.StatusCode != fiber.StatusSeeOther {
-			t.Fatalf("expected 303 redirect on cookie failure, got %d", resp.StatusCode)
+			t.Fatalf("expected 303 redirect on session failure, got %d", resp.StatusCode)
 		}
 		if got := resp.Header.Get("Location"); !strings.HasPrefix(got, "/?") {
 			t.Fatalf("expected redirect to root with msg, got %q", got)
@@ -258,7 +257,7 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 		}
 	})
 
-	t.Run("HandleAPISignin returns 200 and cookie for valid credentials", func(t *testing.T) {
+	t.Run("HandleAPISignin returns 200 and a session for valid credentials", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		seedAuthUser(t, svc, "api@example.com", "Password1!", "")
 
@@ -274,15 +273,13 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 		if resp.StatusCode != fiber.StatusOK {
 			t.Fatalf("expected 200, got %d", resp.StatusCode)
 		}
-		if !strings.Contains(resp.Header.Get("Set-Cookie"), "Auth=") {
-			t.Fatalf("expected auth cookie to be set")
-		}
+		assertSessionOnlyCookies(t, resp)
 	})
 
-	t.Run("HandleAPISignin returns 500 when cookie issuance fails", func(t *testing.T) {
+	t.Run("HandleAPISignin returns 500 when the session can't be created", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		seedAuthUser(t, svc, "apijwtfail@example.com", "Password1!", "")
-		svc.Env.JWTSecret = ""
+		svc.SessionStore = nil
 
 		app := fiber.New()
 		app.Post("/api/auth/signin", svc.HandleAPISignin)
@@ -301,6 +298,44 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 }
 
 func TestAuthHandlersLogoutAndSessionEndpoints(t *testing.T) {
+	t.Run("HandleLogout ends the session for every copy of its cookie", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		seedAuthUser(t, svc, "logout@example.com", "Password1!", "")
+
+		app := fiber.New()
+		app.Post("/signin", svc.HandleSignin)
+		app.All("/logout", svc.HandleLogout)
+		app.Get("/me", func(c fiber.Ctx) error {
+			if _, err := NewLocalStrategy(svc).Authenticate(c); err != nil {
+				return c.SendStatus(fiber.StatusUnauthorized)
+			}
+			return c.SendStatus(fiber.StatusOK)
+		})
+
+		form := url.Values{"email": {"logout@example.com"}, "password": {"Password1!"}}
+		signinReq := httptest.NewRequest(http.MethodPost, "/signin", strings.NewReader(form.Encode()))
+		signinReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		copied := cookieValueByName(testRequest(t, app, signinReq), "session_id")
+		if copied == "" {
+			t.Fatalf("expected session_id after sign in")
+		}
+
+		withCookie := func(method, path string) *http.Request {
+			req := httptest.NewRequest(method, path, nil)
+			req.AddCookie(&http.Cookie{Name: "session_id", Value: copied})
+			return req
+		}
+		if resp := testRequest(t, app, withCookie(http.MethodGet, "/me")); resp.StatusCode != fiber.StatusOK {
+			t.Fatalf("expected signed in before logout, got %d", resp.StatusCode)
+		}
+
+		testRequest(t, app, withCookie(http.MethodGet, "/logout"))
+
+		if resp := testRequest(t, app, withCookie(http.MethodGet, "/me")); resp.StatusCode != fiber.StatusUnauthorized {
+			t.Fatalf("expected the copied cookie to be rejected after logout, got %d", resp.StatusCode)
+		}
+	})
+
 	t.Run("HandleLogout redirects for non-htmx", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		app := fiber.New()
@@ -665,7 +700,7 @@ func TestAuthHandlersSignupConfirmEmailPaths(t *testing.T) {
 		}
 	})
 
-	t.Run("valid token sets auth cookie and redirects", func(t *testing.T) {
+	t.Run("valid token redirects to signin without signing in", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		seedAuthUserWithOptions(t, svc, authUserSeedOptions{
 			Email:                 "confirm@example.com",
@@ -684,8 +719,8 @@ func TestAuthHandlersSignupConfirmEmailPaths(t *testing.T) {
 		if resp.StatusCode != fiber.StatusSeeOther {
 			t.Fatalf("expected 303, got %d", resp.StatusCode)
 		}
-		if !strings.Contains(resp.Header.Get("Set-Cookie"), "Auth=") {
-			t.Fatalf("expected auth cookie on successful confirmation")
+		if cookie := resp.Header.Get("Set-Cookie"); cookie != "" {
+			t.Fatalf("expected no cookie on confirmation, got %q", cookie)
 		}
 	})
 
@@ -713,30 +748,6 @@ func TestAuthHandlersSignupConfirmEmailPaths(t *testing.T) {
 		}
 	})
 
-	t.Run("jwt creation error after confirm still redirects", func(t *testing.T) {
-		svc := newAuthServiceForTests(t)
-		svc.Env.JWTSecret = ""
-		seedAuthUserWithOptions(t, svc, authUserSeedOptions{
-			Email:                 "confirm-jwt-err@example.com",
-			Password:              "Password1!",
-			ConfirmToken:          "confirm-jwt-err",
-			ConfirmTokenExpiresAt: time.Now().UTC().Add(time.Hour),
-		})
-
-		app := fiber.New()
-		app.Get("/signup/confirm/:token", svc.HandleSignupConfirmEmail)
-
-		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/signup/confirm/confirm-jwt-err", nil))
-		if err != nil {
-			t.Fatalf("request failed: %v", err)
-		}
-		if resp.StatusCode != fiber.StatusSeeOther {
-			t.Fatalf("expected 303 redirect, got %d", resp.StatusCode)
-		}
-		if cookie := resp.Header.Get("Set-Cookie"); cookie != "" {
-			t.Fatalf("did not expect auth cookie when jwt fails, got %q", cookie)
-		}
-	})
 }
 
 func TestAuthHandlersResetPasswordPaths(t *testing.T) {
@@ -1094,6 +1105,19 @@ func TestRespondWithRedirect(t *testing.T) {
 	})
 }
 
+// assertSessionOnlyCookies fails unless resp sets a session_id cookie and no
+// Auth cookie.
+func assertSessionOnlyCookies(t *testing.T, resp *http.Response) {
+	t.Helper()
+
+	if cookieValueByName(resp, "session_id") == "" {
+		t.Fatalf("expected a session_id cookie")
+	}
+	if cookieValueByName(resp, "Auth") != "" {
+		t.Fatalf("expected no Auth cookie")
+	}
+}
+
 func newAuthServiceForTests(t *testing.T) *service {
 	t.Helper()
 
@@ -1122,6 +1146,7 @@ func newAuthServiceForTests(t *testing.T) *service {
 			JWTSecret: strings.Repeat("x", 32),
 		},
 		DB:             &database.Database{DB: gdb},
+		SessionStore:   session.NewStore(),
 		TracerProvider: noop.NewTracerProvider(),
 	}
 
@@ -1152,6 +1177,7 @@ func newAuthServiceForTestsNoLegacyColumns(t *testing.T) *service {
 			JWTSecret: strings.Repeat("x", 32),
 		},
 		DB:             &database.Database{DB: gdb},
+		SessionStore:   session.NewStore(),
 		TracerProvider: noop.NewTracerProvider(),
 	}
 

@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
@@ -23,6 +24,26 @@ func (s *Server) Session(c fiber.Ctx) (*session.Session, error) {
 	}
 
 	return sess, nil
+}
+
+// SessionRotate moves the current session to a new ID, deleting the old one,
+// and sets k to v.
+func (s *Server) SessionRotate(c fiber.Ctx, k string, v any) error {
+	sess, err := s.Session(c)
+	if err != nil {
+		return err
+	}
+
+	if err := sess.Regenerate(); err != nil {
+		return fmt.Errorf("regenerate session: %w", err)
+	}
+
+	sess.Set(k, v)
+	if err := sess.Save(); err != nil {
+		return fmt.Errorf("save session: %w", err)
+	}
+
+	return nil
 }
 
 // SessionDestroy destroys the current request session if available.

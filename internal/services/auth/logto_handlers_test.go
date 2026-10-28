@@ -13,6 +13,7 @@ import (
 func TestLogtoHandlersSessionFailureRedirects(t *testing.T) {
 	t.Run("signin redirects when session load fails", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
+		svc.SessionStore = nil
 		app := fiber.New()
 		app.Get("/logto/signin", svc.HandleLogtoSignin)
 
@@ -30,6 +31,7 @@ func TestLogtoHandlersSessionFailureRedirects(t *testing.T) {
 
 	t.Run("callback redirects when session load fails", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
+		svc.SessionStore = nil
 		app := fiber.New()
 		app.Get("/logto/callback", svc.HandleLogtoCallback)
 
@@ -47,6 +49,7 @@ func TestLogtoHandlersSessionFailureRedirects(t *testing.T) {
 
 	t.Run("signout redirects to logto signin on session failure", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
+		svc.SessionStore = nil
 		app := fiber.New()
 		app.Get("/logto/signout", svc.HandleLogtoSignout)
 
@@ -64,6 +67,7 @@ func TestLogtoHandlersSessionFailureRedirects(t *testing.T) {
 
 	t.Run("logto page redirects to signout on session failure", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
+		svc.SessionStore = nil
 		app := fiber.New()
 		app.Get("/logto", svc.HandleLogtoPage)
 
