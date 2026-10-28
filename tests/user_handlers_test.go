@@ -147,3 +147,46 @@ func TestUserHandlers(t *testing.T) {
 
 	})
 }
+
+func TestProfileUpdateRefreshesSignedInUser(t *testing.T) {
+	h := newTestHarness(t)
+	user := h.createAuthUser("", "Password1!", models.UserRoleUser)
+	profilePic := "/public/images/before.png"
+	if _, err := gorm.G[models.User](h.db.GormDB()).Where("id = ?", user.ID).Updates(t.Context(), models.User{ProfilePic: profilePic}); err != nil {
+		t.Fatalf("seed profile pic: %v", err)
+	}
+
+	resp, _ := h.doRequest(requestOptions{
+		method: http.MethodPost,
+		path:   "/api/auth/signin",
+		accept: "application/json",
+		body:   url.Values{"email": {user.Email}, "password": {"Password1!"}},
+	})
+	sessionCookie := onlySessionCookie(t, resp)
+	withSession := []*http.Cookie{{Name: sessionCookie.Name, Value: sessionCookie.Value}}
+
+	resp, _ = h.doRequest(requestOptions{
+		method:  http.MethodPost,
+		path:    "/profile",
+		cookies: withSession,
+		body:    url.Values{"name": {"Renamed User"}, "email": {user.Email}},
+	})
+	if resp.StatusCode != http.StatusFound && resp.StatusCode != http.StatusSeeOther {
+		t.Fatalf("expected redirect after profile update, got %d", resp.StatusCode)
+	}
+
+	resp, body := h.doRequest(requestOptions{method: http.MethodGet, path: "/api/auth/protected", accept: "application/json", cookies: withSession})
+	if resp.StatusCode != http.StatusOK || !strings.Contains(body, "Renamed User") {
+		t.Fatalf("expected the next request to show the saved name, got %d %q", resp.StatusCode, body)
+	}
+
+	resp, _ = h.doRequest(requestOptions{method: http.MethodDelete, path: "/profile/avatar", cookies: withSession, htmx: true})
+	if resp.StatusCode >= http.StatusBadRequest {
+		t.Fatalf("expected the profile picture removal to succeed, got %d", resp.StatusCode)
+	}
+
+	resp, body = h.doRequest(requestOptions{method: http.MethodGet, path: "/api/auth/protected", accept: "application/json", cookies: withSession})
+	if resp.StatusCode != http.StatusOK || strings.Contains(body, profilePic) {
+		t.Fatalf("expected the next request to show no profile picture, got %d %q", resp.StatusCode, body)
+	}
+}

@@ -54,6 +54,24 @@ func NewLocalStrategy(resource LocalStrategyResource) *LocalStrategy {
 	}
 }
 
+// SessionUserStore reads and writes request session values.
+type SessionUserStore interface {
+	SessionRead(c fiber.Ctx, key string, defaultVal string) string
+	SessionWrite(c fiber.Ctx, k string, v any) error
+}
+
+// RefreshSessionUser replaces the session's cached user with user, keeping the
+// sign-in it belongs to. It does nothing when the session caches another user
+// or none.
+func RefreshSessionUser(c fiber.Ctx, store SessionUserStore, user models.User) error {
+	snapshot, ok := DecodeAuthSnapshotQuery(store.SessionRead(c, authSessionKey, ""))
+	if !ok || snapshot.UserUID != user.UID {
+		return nil
+	}
+
+	return store.SessionWrite(c, authSessionKey, newAuthSnapshot(user, snapshot.Token).EncodeQuery())
+}
+
 // Authenticate returns the user of a bearer token (API clients) or of the
 // signed-in session.
 func (s LocalStrategy) Authenticate(c fiber.Ctx) (models.User, error) {
