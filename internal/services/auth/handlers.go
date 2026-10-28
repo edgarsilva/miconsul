@@ -11,6 +11,7 @@ import (
 	view "miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/log"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"gorm.io/gorm"
@@ -315,7 +316,11 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
 	}
 
-	s.sendResetPasswordEmailAsync(c.Context(), email, user.ResetToken)
+	if err := s.sendResetPasswordEmailAsync(c.Context(), email, user.ResetToken); err != nil {
+		log.Error("queue reset password email:", err)
+		errView := errors.New("could not send the reset password email, please try again")
+		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
+	}
 
 	return view.Render(c, view.ResetPasswordPage(vc, email, "", "check your email for a reset password link", nil))
 }

@@ -21,6 +21,7 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/session"
+	"github.com/panjf2000/ants/v2"
 	"go.opentelemetry.io/otel/trace/noop"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
@@ -779,6 +780,40 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		}
 		if resp.StatusCode != fiber.StatusOK {
 			t.Fatalf("expected 200 with form error, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("HandleResetPassword reports an email it couldn't queue", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		user := seedAuthUserWithOptions(t, svc, authUserSeedOptions{Email: "reset@example.com", Password: "Password1!"})
+		pool, err := ants.NewPool(1)
+		if err != nil {
+			t.Fatalf("new pool: %v", err)
+		}
+		pool.Release()
+		if err := server.WithWorkPool(pool)(svc.Server); err != nil {
+			t.Fatalf("set work pool: %v", err)
+		}
+
+		app := fiber.New()
+		app.Post("/resetpassword", svc.HandleResetPassword)
+
+		form := url.Values{"email": {user.Email}}
+		req := httptest.NewRequest(http.MethodPost, "/resetpassword", strings.NewReader(form.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		resp, err := app.Test(req, fiber.TestConfig{Timeout: 0})
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			t.Fatalf("read body: %v", err)
+		}
+		if !strings.Contains(string(body), "could not send the reset password email") {
+			t.Fatalf("expected the send error on the page")
+		}
+		if strings.Contains(string(body), "check your email") {
+			t.Fatalf("expected no success message when the email wasn't queued")
 		}
 	})
 

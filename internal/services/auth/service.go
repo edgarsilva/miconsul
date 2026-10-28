@@ -319,8 +319,8 @@ func (s *service) resendPendingConfirmation(ctx context.Context, email string) e
 	})
 }
 
-func (s *service) sendResetPasswordEmailAsync(ctx context.Context, email, token string) {
-	_ = s.SendToWorker(ctx, func() {
+func (s *service) sendResetPasswordEmailAsync(ctx context.Context, email, token string) error {
+	return s.SendToWorker(ctx, func() {
 		asyncCtx, span := s.Trace(ctx, "auth/services:reset_password_email")
 		defer span.End()
 
