@@ -527,6 +527,7 @@ templ ClinicSearch(c *Ctx, clinics []models.Clinic, selectedUID string) {
 				name="searchTerm"
 				placeholder={ c.l("str.search_clinics") }
 				hx-post="/appointments/search/clinics"
+				hx-include="[name='clinicId']:checked"
 				hx-trigger="input changed delay:300ms, search"
 				hx-select="#clinic_search_results"
 				hx-target="#clinic_search_results"
@@ -581,9 +582,11 @@ templ ApptSearchClinicsResults(c *Ctx, clinics []models.Clinic, selectedUID stri
 	</ul>
 }
 
-templ ApptSearchClinicsFrg(c *Ctx, clinics []models.Clinic) {
-	@ApptSearchClinicsResults(c, clinics, "")
-	if len(clinics) > 0 {
+// ApptSearchClinicsFrg renders clinic search results with selectedUID checked.
+// With no selection, the first clinic is checked and its price swapped in.
+templ ApptSearchClinicsFrg(c *Ctx, clinics []models.Clinic, selectedUID string) {
+	@ApptSearchClinicsResults(c, clinics, selectedUID)
+	if selectedUID == "" && len(clinics) > 0 {
 		@ApptPrice(c, models.Appointment{}, clinics[0], true)
 	}
 }
@@ -610,6 +613,7 @@ templ PatientSearch(c *Ctx, patients []models.Patient, selectedUID string) {
 				name="searchTerm"
 				placeholder={ c.l("str.search_patients") }
 				hx-post="/patients/search"
+				hx-include="[name='patientId']:checked"
 				hx-trigger="input changed delay:300ms, search"
 				hx-target="#patient_search_results"
 				hx-indicator=".htmx-indicator"

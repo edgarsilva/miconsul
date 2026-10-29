@@ -15,6 +15,7 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/log"
 	"gorm.io/gorm"
 )
 
@@ -116,8 +117,8 @@ func (s *service) HandleShowPage(c fiber.Ctx) error {
 		return s.Redirect(c, "/appointments?toast=Failed to load patients&level=error")
 	}
 
-	clinics = ensureClinicListed(clinics, appointment)
-	patients = ensurePatientListed(patients, appointment)
+	clinics = ensureClinicListed(clinics, appointment.Clinic)
+	patients = ensurePatientListed(patients, appointment.Patient)
 	vc := view.NewCtx(c)
 
 	return view.Render(c, view.AppointmentPage(vc, appointment, patients, clinics))
@@ -646,7 +647,8 @@ func (s *service) HandlePriceFrg(c fiber.Ctx) error {
 }
 
 // HandleSearchClinics searches clinics and returns an HTML fragment to be
-// replacesd in the HTMX active search
+// replaced in the HTMX active search. The selected clinic stays listed and
+// checked, and its price is left as is.
 // POST: /appointments/search/clinics
 func (s *service) HandleSearchClinics(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
@@ -657,9 +659,16 @@ func (s *service) HandleSearchClinics(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
+	selectedUID := strings.TrimSpace(c.FormValue("clinicId", ""))
+	selected, err := s.selectedClinicFromQuery(c, cu.ID, selectedUID)
+	if err != nil {
+		log.Warn("load selected clinic for search:", err)
+	}
+	clinics = ensureClinicListed(clinics, selected)
+
 	vc := view.NewCtx(c)
 
-	return view.Render(c, view.ApptSearchClinicsFrg(vc, clinics))
+	return view.Render(c, view.ApptSearchClinicsFrg(vc, clinics, selectedUID))
 }
 
 func (s *service) AppointmentForShowPage(ctx context.Context, userID uint, appointmentID string) (models.Appointment, error) {

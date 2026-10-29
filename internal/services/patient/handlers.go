@@ -279,7 +279,8 @@ func (s *service) HandleDeletePatient(c fiber.Ctx) error {
 }
 
 // HandlePatientSearch searches patients and returns an HTML fragment to be
-// replacesd in the HTMX active search
+// replaced in the HTMX active search. The selected patient stays listed and
+// checked.
 // POST: /patients/search
 func (s *service) HandlePatientSearch(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
@@ -295,8 +296,14 @@ func (s *service) HandlePatientSearch(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, redirectPath)
 	}
 
+	selectedUID := strings.TrimSpace(c.FormValue("patientId", ""))
+	patients, err = s.ensureSelectedPatientListed(c.Context(), cu.ID, patients, selectedUID)
+	if err != nil {
+		log.Warn("load selected patient for search:", err)
+	}
+
 	vc := view.NewCtx(c)
-	return view.Render(c, view.PatientSearchResults(patients, vc, ""))
+	return view.Render(c, view.PatientSearchResults(patients, vc, selectedUID))
 }
 
 func normalizeSearchTerm(raw string) (string, error) {

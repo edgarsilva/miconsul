@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"regexp"
+	"slices"
 	"strings"
 
 	"miconsul/internal/models"
@@ -261,4 +262,19 @@ func normalizePatientPhone(value string) string {
 	}
 
 	return original
+}
+
+// ensureSelectedPatientListed returns patients with the selected patient
+// appended when it isn't listed, so the appointment picker keeps it checked.
+func (s service) ensureSelectedPatientListed(ctx context.Context, userID uint, patients []models.Patient, selectedUID string) ([]models.Patient, error) {
+	if selectedUID == "" || slices.ContainsFunc(patients, func(patient models.Patient) bool { return patient.UID == selectedUID }) {
+		return patients, nil
+	}
+
+	selected, err := s.TakePatientByID(ctx, userID, selectedUID)
+	if err != nil {
+		return patients, err
+	}
+
+	return append(patients, selected), nil
 }
