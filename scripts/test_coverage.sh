@@ -41,17 +41,17 @@ rm -f \
   coverage/split_coverage.txt
 
 printf "\033[36m🧪 Running canonical coverage (internal + integration tests)...\033[0m\n"
-run_quiet "canonical coverage" go test ./internal/... ./tests/... -covermode=atomic -coverpkg=./internal/... -coverprofile=coverage/all.out
+run_quiet "canonical coverage" go test -tags fts5 ./internal/... ./tests/... -covermode=atomic -coverpkg=./internal/... -coverprofile=coverage/all.out
 
 printf "\033[36m🧪 Running internal unit coverage...\033[0m\n"
-run_quiet "internal unit coverage" go test ./internal/... -covermode=atomic -coverpkg=./internal/... -coverprofile=coverage/internal_unit.out
+run_quiet "internal unit coverage" go test -tags fts5 ./internal/... -covermode=atomic -coverpkg=./internal/... -coverprofile=coverage/internal_unit.out
 
 printf "\033[36m🧪 Running integration coverage...\033[0m\n"
-run_quiet "integration coverage" go test ./tests/... -covermode=atomic -coverpkg=./internal/... -coverprofile=coverage/integration.out
+run_quiet "integration coverage" go test -tags fts5 ./tests/... -covermode=atomic -coverpkg=./internal/... -coverprofile=coverage/integration.out
 
 printf "\033[36m🧪 Running cmd package-local coverage...\033[0m\n"
-run_quiet "cmd/app coverage" go test ./cmd/app -covermode=atomic -coverprofile=coverage/cmd_app.out
-run_quiet "cmd/seed coverage" go test ./cmd/seed -covermode=atomic -coverprofile=coverage/cmd_seed.out
+run_quiet "cmd/app coverage" go test -tags fts5 ./cmd/app -covermode=atomic -coverprofile=coverage/cmd_app.out
+run_quiet "cmd/seed coverage" go test -tags fts5 ./cmd/seed -covermode=atomic -coverprofile=coverage/cmd_seed.out
 
 awk 'NR==1 || ($0 !~ /internal\/lib\/localize\// && $0 !~ /_templ\.go:/)' coverage/internal_unit.out > coverage/internal_unit.filtered.out
 awk 'NR==1 || ($0 !~ /internal\/lib\/localize\// && $0 !~ /_templ\.go:/)' coverage/integration.out > coverage/integration.filtered.out
