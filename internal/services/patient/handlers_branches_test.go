@@ -1,6 +1,7 @@
 package patient
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -77,5 +78,50 @@ func TestPatientHandlerGuardBranches(t *testing.T) {
 	resp8, err := app.Test(httptest.NewRequest(http.MethodGet, "/patients//profilepic/", nil))
 	if err != nil || resp8.StatusCode != fiber.StatusNotFound {
 		t.Fatalf("profile pic missing params expected 404, got status=%d err=%v", resp8.StatusCode, err)
+	}
+}
+
+func TestIndexSearchToasts(t *testing.T) {
+	tests := []struct {
+		name       string
+		term       string
+		wantStatus int
+		wantToast  string
+	}{
+		{"short term", "ab", fiber.StatusOK, "at least 3 characters"},
+		// The test DB has no FTS table, so any real search term fails.
+		{"search error", "alpha", fiber.StatusInternalServerError, "couldn&#39;t be completed"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc, user := newPatientServiceForTests(t)
+
+			app := fiber.New()
+			app.Get("/patients/search", func(c fiber.Ctx) error {
+				c.Locals("current_user", user)
+				return svc.HandlePatientsIndexSearch(c)
+			})
+
+			req := httptest.NewRequest(http.MethodGet, "/patients/search?searchTerm="+tt.term, nil)
+			req.Header.Set("HX-Request", "true")
+			resp, err := app.Test(req)
+			if err != nil || resp.StatusCode != tt.wantStatus {
+				t.Fatalf("expected %d, got status=%d err=%v", tt.wantStatus, resp.StatusCode, err)
+			}
+			if got := resp.Header.Get("HX-Redirect"); got != "" {
+				t.Errorf("search redirected to %q", got)
+			}
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("read body: %v", err)
+			}
+			if !strings.Contains(string(body), `<hx-partial hx-target="#toast_region"`) || !strings.Contains(string(body), tt.wantToast) {
+				t.Errorf("body = %s, want only a toast partial with %q", body, tt.wantToast)
+			}
+			if strings.Contains(string(body), `id="patients_list"`) {
+				t.Errorf("search replaced the list")
+			}
+		})
 	}
 }

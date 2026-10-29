@@ -1,5 +1,7 @@
 package views
 
+import "fmt"
+
 templ GlobalToastRegion(c *Ctx) {
 	<div
 		aria-live="assertive"
@@ -79,4 +81,15 @@ templ CmpToastPartial(msg, sub, level string) {
 	<hx-partial hx-target="#toast_region" hx-swap="beforeend">
 		@CmpToast(msg, sub, level)
 	</hx-partial>
+}
+
+// CmpSearchTooShortToast tells the user a search term needs at least minLen
+// characters.
+templ CmpSearchTooShortToast(minLen int) {
+	@CmpToastPartial(fmt.Sprintf("Type at least %d characters to search", minLen), "", "warning")
+}
+
+// CmpSearchFailedToast tells the user a search couldn't run.
+templ CmpSearchFailedToast() {
+	@CmpToastPartial("The search couldn't be completed right now, please try again", "", "error")
 }

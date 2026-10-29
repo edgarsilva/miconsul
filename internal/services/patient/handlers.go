@@ -37,14 +37,20 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 func (s *service) HandlePatientsIndexSearch(c fiber.Ctx) error {
 	searchTerm, searchErr := normalizeSearchTerm(c.Query("searchTerm", ""))
 	if searchErr != nil {
-		return s.respondWithRedirect(c, "/patients?toast=Search term must be at least 3 characters&level=warning")
+		if s.NotHTMX(c) {
+			return s.Redirect(c, "/patients?toast=Search term must be at least 3 characters&level=warning")
+		}
+		return view.Render(c, view.CmpSearchTooShortToast(3))
 	}
 
 	cu := s.CurrentUser(c)
 	patients, err := s.SearchPatientsByUser(c.Context(), cu, searchTerm, QUERY_LIMIT)
 	if err != nil {
-		redirectPath := "/patients?toast=Failed to search patients&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		if s.NotHTMX(c) {
+			return s.Redirect(c, "/patients?toast=Failed to search patients&level=error")
+		}
+		c.Status(fiber.StatusInternalServerError)
+		return view.Render(c, view.CmpSearchFailedToast())
 	}
 
 	vc := view.NewCtx(c)

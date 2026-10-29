@@ -62,27 +62,30 @@ func (s *service) HandleIndexSearch(c fiber.Ctx) error {
 
 	searchTerm := strings.TrimSpace(c.Query("searchTerm", ""))
 	if searchTermTooShort(searchTerm) {
-		return c.SendStatus(fiber.StatusBadRequest)
+		return view.Render(c, view.CmpSearchTooShortToast(minSearchTermLen))
 	}
 
 	cu := s.CurrentUser(c)
 	patientID := c.Query("patientId", "")
 	patient, err := s.takePatientOrZero(c.Context(), cu.ID, patientID)
 	if err != nil {
-		return c.SendStatus(fiber.StatusInternalServerError)
+		c.Status(fiber.StatusInternalServerError)
+		return view.Render(c, view.CmpSearchFailedToast())
 	}
 
 	clinicID := c.Query("clinicId", "")
 	clinic, err := s.takeClinicOrZero(c.Context(), cu.ID, clinicID)
 	if err != nil {
-		return c.SendStatus(fiber.StatusInternalServerError)
+		c.Status(fiber.StatusInternalServerError)
+		return view.Render(c, view.CmpSearchFailedToast())
 	}
 
 	timeframe := strings.TrimSpace(c.Query("timeframe", "day"))
 	statusFilter := strings.TrimSpace(c.Query("status", ""))
 	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, patientID, clinicID, timeframe, searchTerm, statusFilter)
 	if err != nil {
-		return c.SendStatus(fiber.StatusInternalServerError)
+		c.Status(fiber.StatusInternalServerError)
+		return view.Render(c, view.CmpSearchFailedToast())
 	}
 
 	vc := view.NewCtx(c)
@@ -656,13 +659,13 @@ func (s *service) HandleSearchClinics(c fiber.Ctx) error {
 
 	searchTerm := strings.TrimSpace(c.FormValue("searchTerm", ""))
 	if searchTermTooShort(searchTerm) {
-		return view.Render(c, view.CmpToastPartial("Type at least 3 characters to search", "", "warning"))
+		return view.Render(c, view.CmpSearchTooShortToast(minSearchTermLen))
 	}
 
 	clinics, err := s.FindClinicsBySearchTerm(c.Context(), cu.ID, searchTerm)
 	if err != nil {
 		c.Status(fiber.StatusInternalServerError)
-		return view.Render(c, view.CmpToastPartial("The search couldn't be completed right now, please try again", "", "error"))
+		return view.Render(c, view.CmpSearchFailedToast())
 	}
 
 	clinicUID := strings.TrimSpace(c.FormValue("clinicId", ""))
@@ -687,13 +690,13 @@ func (s *service) HandleSearchPatients(c fiber.Ctx) error {
 
 	searchTerm := strings.TrimSpace(c.FormValue("searchTerm", ""))
 	if searchTermTooShort(searchTerm) {
-		return view.Render(c, view.CmpToastPartial("Type at least 3 characters to search", "", "warning"))
+		return view.Render(c, view.CmpSearchTooShortToast(minSearchTermLen))
 	}
 
 	patients, err := s.FindPatientsBySearchTerm(c.Context(), cu.ID, searchTerm)
 	if err != nil {
 		c.Status(fiber.StatusInternalServerError)
-		return view.Render(c, view.CmpToastPartial("The search couldn't be completed right now, please try again", "", "error"))
+		return view.Render(c, view.CmpSearchFailedToast())
 	}
 
 	patientUID := strings.TrimSpace(c.FormValue("patientId", ""))
