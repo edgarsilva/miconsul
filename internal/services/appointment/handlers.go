@@ -660,11 +660,11 @@ func (s *service) HandleSearchClinics(c fiber.Ctx) error {
 	}
 
 	clinicUID := strings.TrimSpace(c.FormValue("clinicId", ""))
-	selected, err := s.takeClinicOrZero(c.Context(), cu.ID, clinicUID)
+	clinic, err := s.takeClinicOrZero(c.Context(), cu.ID, clinicUID)
 	if err != nil {
 		log.Warn("load selected clinic for search:", err)
 	}
-	clinics = ensureClinicListed(clinics, selected)
+	clinics = ensureClinicListed(clinics, clinic)
 
 	vc := view.NewCtx(c)
 
