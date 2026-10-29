@@ -296,14 +296,14 @@ func (s *service) HandlePatientSearch(c fiber.Ctx) error {
 		return s.respondWithRedirect(c, redirectPath)
 	}
 
-	selectedUID := strings.TrimSpace(c.FormValue("patientId", ""))
-	patients, err = s.ensureSelectedPatientListed(c.Context(), cu.ID, patients, selectedUID)
+	patientUID := strings.TrimSpace(c.FormValue("patientId", ""))
+	patients, err = s.ensurePatientListed(c.Context(), cu.ID, patients, patientUID)
 	if err != nil {
 		log.Warn("load selected patient for search:", err)
 	}
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.PatientSearchResults(patients, vc, selectedUID))
+	return view.Render(c, view.PatientSearchResults(patients, vc, patientUID))
 }
 
 func normalizeSearchTerm(raw string) (string, error) {

@@ -659,8 +659,8 @@ func (s *service) HandleSearchClinics(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	selectedUID := strings.TrimSpace(c.FormValue("clinicId", ""))
-	selected, err := s.takeClinicOrZero(c.Context(), cu.ID, selectedUID)
+	clinicUID := strings.TrimSpace(c.FormValue("clinicId", ""))
+	selected, err := s.takeClinicOrZero(c.Context(), cu.ID, clinicUID)
 	if err != nil {
 		log.Warn("load selected clinic for search:", err)
 	}
@@ -668,7 +668,7 @@ func (s *service) HandleSearchClinics(c fiber.Ctx) error {
 
 	vc := view.NewCtx(c)
 
-	return view.Render(c, view.ApptSearchClinicsFrg(vc, clinics, selectedUID))
+	return view.Render(c, view.ApptSearchClinicsFrg(vc, clinics, clinicUID))
 }
 
 func (s *service) AppointmentForShowPage(ctx context.Context, userID uint, appointmentID string) (models.Appointment, error) {

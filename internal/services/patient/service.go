@@ -264,14 +264,15 @@ func normalizePatientPhone(value string) string {
 	return original
 }
 
-// ensureSelectedPatientListed returns patients with the selected patient
-// appended when it isn't listed, so the appointment picker keeps it checked.
-func (s service) ensureSelectedPatientListed(ctx context.Context, userID uint, patients []models.Patient, selectedUID string) ([]models.Patient, error) {
-	if selectedUID == "" || slices.ContainsFunc(patients, func(patient models.Patient) bool { return patient.UID == selectedUID }) {
+// ensurePatientListed returns patients with the selected patient appended
+// when it isn't listed, so the appointment picker keeps it checked.
+func (s service) ensurePatientListed(ctx context.Context, userID uint, patients []models.Patient, patientUID string) ([]models.Patient, error) {
+	listed := slices.ContainsFunc(patients, func(patient models.Patient) bool { return patient.UID == patientUID })
+	if patientUID == "" || listed {
 		return patients, nil
 	}
 
-	selected, err := s.TakePatientByID(ctx, userID, selectedUID)
+	selected, err := s.TakePatientByID(ctx, userID, patientUID)
 	if err != nil {
 		return patients, err
 	}
