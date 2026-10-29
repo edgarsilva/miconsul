@@ -4,9 +4,10 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"strings"
 	"testing"
+
+	"miconsul/internal/server/servertest"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -115,9 +116,11 @@ func TestIndexSearchToasts(t *testing.T) {
 				t.Fatalf("expected %d, got status=%d err=%v", tt.wantStatus, resp.StatusCode, err)
 			}
 			if !tt.htmx {
-				location, _ := url.QueryUnescape(resp.Header.Get("Location"))
-				if !strings.HasPrefix(location, "/patients?toast=") || !strings.Contains(location, tt.wantToast) {
-					t.Errorf("redirect = %q, want /patients with the toast", location)
+				if got := resp.Header.Get("Location"); got != "/patients" {
+					t.Errorf("redirect = %q, want /patients", got)
+				}
+				if msg, _ := servertest.FlashToast(t, resp); !strings.Contains(msg, tt.wantToast) {
+					t.Errorf("flash toast = %q, want %q", msg, tt.wantToast)
 				}
 				return
 			}
