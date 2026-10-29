@@ -157,7 +157,7 @@ templ UserProfile(c *Ctx, user models.User) {
 								<input required min="2" type="text" name="name" value={ user.Name } id="name" autocomplete="family-name" class="input block w-full"/>
 								if user.FieldError("name") != "" {
 									<div class="label">
-										<span class="label-text-alt text-error">{ user.FieldError("name") }</span>
+										<span class="text-error">{ user.FieldError("name") }</span>
 									</div>
 								}
 							</div>
@@ -168,7 +168,7 @@ templ UserProfile(c *Ctx, user models.User) {
 								<input required type="tel" name="phone" value={ user.Phone } id="phone" autocomplete="tel" class="input block w-full"/>
 								if user.FieldError("phone") != "" {
 									<div class="label">
-										<span class="label-text-alt text-error">{ user.FieldError("phone") }</span>
+										<span class="text-error">{ user.FieldError("phone") }</span>
 									</div>
 								}
 							</div>
@@ -179,7 +179,7 @@ templ UserProfile(c *Ctx, user models.User) {
 								<input type="email" name="email" value={ user.Email } id="email" autocomplete="email" class="input block w-full"/>
 								if user.FieldError("email") != "" {
 									<div class="label">
-										<span class="label-text-alt text-error">{ user.FieldError("email") }</span>
+										<span class="text-error">{ user.FieldError("email") }</span>
 									</div>
 								}
 							</div>

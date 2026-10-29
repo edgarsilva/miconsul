@@ -226,7 +226,7 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 								<input required min="2" type="text" name="name" value={ patient.Name } id="name" autocomplete="family-name" class="input block w-full"/>
 								if patient.FieldError("name") != "" {
 									<div class="label">
-										<span class="label-text-alt text-error">{ patient.FieldError("name") }</span>
+										<span class="text-error">{ patient.FieldError("name") }</span>
 									</div>
 								}
 							</div>
@@ -237,7 +237,7 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 								<input required type="tel" name="phone" value={ patient.Phone } id="phone" autocomplete="tel" class="input block w-full"/>
 								if patient.FieldError("phone") != "" {
 									<div class="label">
-										<span class="label-text-alt text-error">{ patient.FieldError("phone") }</span>
+										<span class="text-error">{ patient.FieldError("phone") }</span>
 									</div>
 								}
 							</div>
@@ -248,7 +248,7 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 								<input type="email" name="email" value={ patient.Email } id="email" autocomplete="email" class="input block w-full"/>
 								if patient.FieldError("email") != "" {
 									<div class="label">
-										<span class="label-text-alt text-error">{ patient.FieldError("email") }</span>
+										<span class="text-error">{ patient.FieldError("email") }</span>
 									</div>
 								}
 							</div>
