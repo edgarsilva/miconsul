@@ -290,3 +290,44 @@ func TestHandleEditPageFormTarget(t *testing.T) {
 		})
 	}
 }
+
+func TestHandleAdminRemoveProfilePic(t *testing.T) {
+	svc, target := newUserServiceForTests(t)
+
+	admin := models.User{Email: "admin@example.com", Password: "hash", ProfilePic: "admin.png", Role: models.UserRoleAdmin}
+	if err := svc.DB.GormDB().Create(&admin).Error; err != nil {
+		t.Fatalf("seed admin: %v", err)
+	}
+	if err := svc.DB.GormDB().Model(&models.User{}).Where("uid = ?", target.UID).Update("profile_pic", "target.png").Error; err != nil {
+		t.Fatalf("seed target picture: %v", err)
+	}
+
+	app := fiber.New()
+	app.Patch("/admin/users/:id/removepic", func(c fiber.Ctx) error {
+		c.Locals("current_user", admin)
+		return svc.HandleAdminRemoveProfilePic(c)
+	})
+
+	req := httptest.NewRequest(http.MethodPatch, "/admin/users/"+target.UID+"/removepic", nil)
+	req.Header.Set("HX-Request", "true")
+	resp, err := app.Test(req)
+	if err != nil || resp.StatusCode != fiber.StatusOK {
+		t.Fatalf("admin remove picture expected 200, got status=%d err=%v", resp.StatusCode, err)
+	}
+
+	saved, err := svc.TakeUserByUID(context.Background(), target.UID)
+	if err != nil {
+		t.Fatalf("load target: %v", err)
+	}
+	if saved.ProfilePic != "" {
+		t.Errorf("target picture = %q, want removed", saved.ProfilePic)
+	}
+
+	adminAfter, err := svc.TakeUserByUID(context.Background(), admin.UID)
+	if err != nil {
+		t.Fatalf("load admin: %v", err)
+	}
+	if adminAfter.ProfilePic != "admin.png" {
+		t.Errorf("admin picture = %q, want unchanged", adminAfter.ProfilePic)
+	}
+}
