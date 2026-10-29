@@ -469,17 +469,58 @@ func TestHandleSearchPatientsKeepsSelection(t *testing.T) {
 			}
 		})
 	}
+}
 
-	t.Run("short search term keeps the current list", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/appointments/search/patients", strings.NewReader(url.Values{"searchTerm": {"ab"}}.Encode()))
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		req.Header.Set("HX-Request", "true")
-		resp, err := app.Test(req)
-		if err != nil || resp.StatusCode != fiber.StatusNoContent {
-			t.Fatalf("short search term expected 204, got status=%d err=%v", resp.StatusCode, err)
-		}
-		if got := resp.Header.Get("HX-Redirect"); got != "" {
-			t.Errorf("short search term redirected to %q", got)
-		}
+func TestPickerSearchToasts(t *testing.T) {
+	svc, user, _, _ := newAppointmentServiceForTests(t)
+
+	app := fiber.New()
+	app.Post("/appointments/search/clinics", func(c fiber.Ctx) error {
+		c.Locals("current_user", user)
+		return svc.HandleSearchClinics(c)
 	})
+	app.Post("/appointments/search/patients", func(c fiber.Ctx) error {
+		c.Locals("current_user", user)
+		return svc.HandleSearchPatients(c)
+	})
+
+	tests := []struct {
+		name       string
+		path       string
+		radio      string
+		term       string
+		wantStatus int
+		wantToast  string
+	}{
+		{"clinic short term", "/appointments/search/clinics", "clinicId", "ab", fiber.StatusOK, "at least 3 characters"},
+		{"patient short term", "/appointments/search/patients", "patientId", "ab", fiber.StatusOK, "at least 3 characters"},
+		// The test DB has no FTS table, so any real search term fails.
+		{"clinic search error", "/appointments/search/clinics", "clinicId", "alpha", fiber.StatusInternalServerError, "couldn&#39;t be completed"},
+		{"patient search error", "/appointments/search/patients", "patientId", "alpha", fiber.StatusInternalServerError, "couldn&#39;t be completed"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPost, tt.path, strings.NewReader(url.Values{"searchTerm": {tt.term}}.Encode()))
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			req.Header.Set("HX-Request", "true")
+			resp, err := app.Test(req)
+			if err != nil || resp.StatusCode != tt.wantStatus {
+				t.Fatalf("expected %d, got status=%d err=%v", tt.wantStatus, resp.StatusCode, err)
+			}
+			if got := resp.Header.Get("HX-Redirect"); got != "" {
+				t.Errorf("search redirected to %q", got)
+			}
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("read body: %v", err)
+			}
+			if !strings.Contains(string(body), `<hx-partial hx-target="#toast_region"`) || !strings.Contains(string(body), tt.wantToast) {
+				t.Errorf("body = %s, want only a toast partial with %q", body, tt.wantToast)
+			}
+			if strings.Contains(string(body), `name="`+tt.radio+`"`) {
+				t.Errorf("search replaced the %s list", tt.radio)
+			}
+		})
+	}
 }
