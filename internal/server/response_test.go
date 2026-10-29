@@ -19,7 +19,7 @@ func TestRedirectWithToast(t *testing.T) {
 		wantHXRedir  string
 	}{
 		{"regular request gets a 303", false, http.StatusSeeOther, "/clinics", ""},
-		{"htmx request gets HX-Redirect", true, http.StatusNoContent, "", "/clinics"},
+		{"htmx request gets HX-Redirect", true, http.StatusNoContent, "/clinics", "/clinics"},
 	}
 
 	for _, tt := range tests {

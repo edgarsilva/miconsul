@@ -15,17 +15,14 @@ func (s *Server) Redirect(c fiber.Ctx, path string) error {
 // through a flash message, so the URL never carries the message. HTMX requests
 // get HX-Redirect instead of a 303.
 func (s *Server) RedirectWithToast(c fiber.Ctx, path, msg, level string) error {
-	err := c.Redirect().Status(fiber.StatusSeeOther).With("toast", msg).With("level", level).To(path)
-	if err != nil {
-		return err
-	}
-	if s.NotHTMX(c) {
-		return nil
+	status := fiber.StatusSeeOther
+	if s.IsHTMX(c) {
+		status = fiber.StatusNoContent
+		c.Set("HX-Redirect", path)
 	}
 
-	c.Response().Header.Del(fiber.HeaderLocation)
-	c.Set("HX-Redirect", path)
-	return c.SendStatus(fiber.StatusNoContent)
+	// Fiber only writes the flash cookie in Redirect().To(); HTMX navigates via HX-Redirect.
+	return c.Redirect().Status(status).With("toast", msg).With("level", level).To(path)
 }
 
 func (s *Server) SendFile(c fiber.Ctx, path string) error {
