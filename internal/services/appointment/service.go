@@ -607,3 +607,25 @@ func ensurePatientListed(patients []models.Patient, selected models.Patient) []m
 
 	return append(patients, selected)
 }
+
+// takePatientOrZero returns the user's patient with patientUID, or a zero
+// Patient when patientUID is blank.
+func (s *service) takePatientOrZero(ctx context.Context, userID uint, patientUID string) (models.Patient, error) {
+	patientUID = strings.TrimSpace(patientUID)
+	if patientUID == "" {
+		return models.Patient{}, nil
+	}
+
+	return s.TakePatientByUID(ctx, userID, patientUID)
+}
+
+// takeClinicOrZero returns the user's clinic with clinicUID, or a zero
+// Clinic when clinicUID is blank.
+func (s *service) takeClinicOrZero(ctx context.Context, userID uint, clinicUID string) (models.Clinic, error) {
+	clinicUID = strings.TrimSpace(clinicUID)
+	if clinicUID == "" {
+		return models.Clinic{}, nil
+	}
+
+	return s.TakeClinicByUID(ctx, userID, clinicUID)
+}

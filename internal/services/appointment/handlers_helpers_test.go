@@ -34,111 +34,59 @@ func TestAppointmentForShowPage(t *testing.T) {
 	}
 }
 
-func TestPatientAndClinicSelectionHelpers(t *testing.T) {
-	svc := &service{}
+func TestTakePatientAndClinicOrZero(t *testing.T) {
+	svc, user, clinic, patient := newAppointmentServiceForTests(t)
+	ctx := t.Context()
+
+	t.Run("blank uids skip the lookup", func(t *testing.T) {
+		gotPatient, err := svc.takePatientOrZero(ctx, user.ID, "   ")
+		if err != nil || gotPatient.ID != 0 {
+			t.Fatalf("blank patient uid = (%d, %v), want zero patient and no error", gotPatient.ID, err)
+		}
+
+		gotClinic, err := svc.takeClinicOrZero(ctx, user.ID, "")
+		if err != nil || gotClinic.ID != 0 {
+			t.Fatalf("blank clinic uid = (%d, %v), want zero clinic and no error", gotClinic.ID, err)
+		}
+	})
+
+	t.Run("existing uids return the records", func(t *testing.T) {
+		gotPatient, err := svc.takePatientOrZero(ctx, user.ID, patient.UID)
+		if err != nil || gotPatient.ID != patient.ID {
+			t.Fatalf("patient = (%d, %v), want %d", gotPatient.ID, err, patient.ID)
+		}
+
+		gotClinic, err := svc.takeClinicOrZero(ctx, user.ID, " "+clinic.UID+" ")
+		if err != nil || gotClinic.ID != clinic.ID {
+			t.Fatalf("clinic = (%d, %v), want %d", gotClinic.ID, err, clinic.ID)
+		}
+	})
+
+	t.Run("missing uids return not found", func(t *testing.T) {
+		if _, err := svc.takePatientOrZero(ctx, user.ID, "missing"); !errors.Is(err, gorm.ErrRecordNotFound) {
+			t.Fatalf("missing patient err = %v, want record not found", err)
+		}
+		if _, err := svc.takeClinicOrZero(ctx, user.ID, "missing"); !errors.Is(err, gorm.ErrRecordNotFound) {
+			t.Fatalf("missing clinic err = %v, want record not found", err)
+		}
+	})
+}
+
+func TestRenderAppointmentNotFoundPage(t *testing.T) {
+	svc, _, _, _ := newAppointmentServiceForTests(t)
+
 	app := fiber.New()
 	app.Get("/", func(c fiber.Ctx) error {
-		patient, err := svc.selectedPatientFromQuery(c, 1, "   ")
-		if err != nil {
-			t.Fatalf("expected blank patient query to skip lookup, got %v", err)
-		}
-		if patient.ID != 0 {
-			t.Fatalf("expected zero patient when query is blank, got %d", patient.ID)
-		}
-
-		clinic, err := svc.selectedClinicFromQuery(c, 1, "")
-		if err != nil {
-			t.Fatalf("expected blank clinic query to skip lookup, got %v", err)
-		}
-		if clinic.ID != 0 {
-			t.Fatalf("expected zero clinic when query is blank, got %d", clinic.ID)
-		}
-
-		return c.SendStatus(fiber.StatusNoContent)
+		return svc.renderAppointmentNotFoundPage(c, "Missing appointment", "warning")
 	})
 
 	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/", nil))
 	if err != nil {
 		t.Fatalf("request failed: %v", err)
 	}
-	if resp.StatusCode != fiber.StatusNoContent {
-		t.Fatalf("expected status 204, got %d", resp.StatusCode)
+	if resp.StatusCode != fiber.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
 	}
-}
-
-func TestSelectionHelpersBranchesAndNotFoundPage(t *testing.T) {
-	svc, user, clinic, patient := newAppointmentServiceForTests(t)
-
-	t.Run("selected helpers return entities when ids exist", func(t *testing.T) {
-		app := fiber.New()
-		app.Get("/", func(c fiber.Ctx) error {
-			gotPatient, err := svc.selectedPatientFromQuery(c, user.ID, patient.UID)
-			if err != nil {
-				t.Fatalf("expected selected patient success, got %v", err)
-			}
-			if gotPatient.ID != patient.ID {
-				t.Fatalf("expected patient id %d, got %d", patient.ID, gotPatient.ID)
-			}
-
-			gotClinic, err := svc.selectedClinicFromQuery(c, user.ID, clinic.UID)
-			if err != nil {
-				t.Fatalf("expected selected clinic success, got %v", err)
-			}
-			if gotClinic.ID != clinic.ID {
-				t.Fatalf("expected clinic id %d, got %d", clinic.ID, gotClinic.ID)
-			}
-
-			return c.SendStatus(fiber.StatusNoContent)
-		})
-
-		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/", nil))
-		if err != nil {
-			t.Fatalf("request failed: %v", err)
-		}
-		if resp.StatusCode != fiber.StatusNoContent {
-			t.Fatalf("expected 204, got %d", resp.StatusCode)
-		}
-	})
-
-	t.Run("selected helpers bubble not-found errors for missing ids", func(t *testing.T) {
-		app := fiber.New()
-		app.Get("/", func(c fiber.Ctx) error {
-			_, err := svc.selectedPatientFromQuery(c, user.ID, "missing")
-			if !errors.Is(err, gorm.ErrRecordNotFound) {
-				t.Fatalf("expected patient record not found, got %v", err)
-			}
-
-			_, err = svc.selectedClinicFromQuery(c, user.ID, "missing")
-			if !errors.Is(err, gorm.ErrRecordNotFound) {
-				t.Fatalf("expected clinic record not found, got %v", err)
-			}
-
-			return c.SendStatus(fiber.StatusNoContent)
-		})
-
-		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/", nil))
-		if err != nil {
-			t.Fatalf("request failed: %v", err)
-		}
-		if resp.StatusCode != fiber.StatusNoContent {
-			t.Fatalf("expected 204, got %d", resp.StatusCode)
-		}
-	})
-
-	t.Run("renders appointment not found page", func(t *testing.T) {
-		app := fiber.New()
-		app.Get("/", func(c fiber.Ctx) error {
-			return svc.renderAppointmentNotFoundPage(c, "Missing appointment", "warning")
-		})
-
-		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/", nil))
-		if err != nil {
-			t.Fatalf("request failed: %v", err)
-		}
-		if resp.StatusCode != fiber.StatusOK {
-			t.Fatalf("expected 200, got %d", resp.StatusCode)
-		}
-	})
 }
 
 func TestRespondWithRedirect(t *testing.T) {

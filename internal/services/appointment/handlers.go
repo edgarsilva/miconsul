@@ -25,7 +25,7 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
 	patientID := c.Query("patientId", "")
-	patient, err := s.selectedPatientFromQuery(c, cu.ID, patientID)
+	patient, err := s.takePatientOrZero(c.Context(), cu.ID, patientID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.Redirect(c, "/appointments?toast=Selected patient does not exist&level=warning")
 	}
@@ -34,7 +34,7 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	}
 
 	clinicID := c.Query("clinicId", "")
-	clinic, err := s.selectedClinicFromQuery(c, cu.ID, clinicID)
+	clinic, err := s.takeClinicOrZero(c.Context(), cu.ID, clinicID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.Redirect(c, "/appointments?toast=Selected clinic does not exist&level=warning")
 	}
@@ -67,13 +67,13 @@ func (s *service) HandleIndexSearch(c fiber.Ctx) error {
 
 	cu := s.CurrentUser(c)
 	patientID := c.Query("patientId", "")
-	patient, err := s.selectedPatientFromQuery(c, cu.ID, patientID)
+	patient, err := s.takePatientOrZero(c.Context(), cu.ID, patientID)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
 	clinicID := c.Query("clinicId", "")
-	clinic, err := s.selectedClinicFromQuery(c, cu.ID, clinicID)
+	clinic, err := s.takeClinicOrZero(c.Context(), cu.ID, clinicID)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
@@ -660,7 +660,7 @@ func (s *service) HandleSearchClinics(c fiber.Ctx) error {
 	}
 
 	selectedUID := strings.TrimSpace(c.FormValue("clinicId", ""))
-	selected, err := s.selectedClinicFromQuery(c, cu.ID, selectedUID)
+	selected, err := s.takeClinicOrZero(c.Context(), cu.ID, selectedUID)
 	if err != nil {
 		log.Warn("load selected clinic for search:", err)
 	}
@@ -694,34 +694,6 @@ func (s *service) PatientForStartPage(ctx context.Context, userID, patientID uin
 	}
 
 	return patient, nil
-}
-
-func (s *service) selectedPatientFromQuery(c fiber.Ctx, userID uint, patientID string) (models.Patient, error) {
-	patientID = strings.TrimSpace(patientID)
-	if patientID == "" {
-		return models.Patient{}, nil
-	}
-
-	patient, err := s.TakePatientByUID(c.Context(), userID, patientID)
-	if err != nil {
-		return models.Patient{}, err
-	}
-
-	return patient, nil
-}
-
-func (s *service) selectedClinicFromQuery(c fiber.Ctx, userID uint, clinicID string) (models.Clinic, error) {
-	clinicID = strings.TrimSpace(clinicID)
-	if clinicID == "" {
-		return models.Clinic{}, nil
-	}
-
-	clinic, err := s.TakeClinicByUID(c.Context(), userID, clinicID)
-	if err != nil {
-		return models.Clinic{}, err
-	}
-
-	return clinic, nil
 }
 
 // renderPatientLinkError renders the not-found page for a wrong, blank or
