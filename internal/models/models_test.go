@@ -26,11 +26,6 @@ func TestEntityBeforeCreateHooksSetIDs(t *testing.T) {
 		t.Fatalf("logbook before create failed: uid=%q err=%v", logbook.UID, err)
 	}
 
-	session := &Session{}
-	if err := session.BeforeCreate(nil); err != nil || !strings.HasPrefix(session.UID, "sess") {
-		t.Fatalf("session before create failed: uid=%q err=%v", session.UID, err)
-	}
-
 	user := &User{}
 	if err := user.BeforeCreate(nil); err != nil || !strings.HasPrefix(user.UID, "user") {
 		t.Fatalf("user before create failed: uid=%q err=%v", user.UID, err)
@@ -276,7 +271,6 @@ func TestUserJSONOmitsSecrets(t *testing.T) {
 func TestTokenJSONOmitted(t *testing.T) {
 	for name, v := range map[string]any{
 		"Appointment": Appointment{UID: "appt_123", Token: "appt-token-secret"},
-		"Session":     Session{UID: "session_123", Token: "session-token-secret"},
 	} {
 		b, err := json.Marshal(v)
 		if err != nil {
