@@ -2265,7 +2265,7 @@ func PatientSearch(c *Ctx, patients []models.Patient, selectedUID string) templ.
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 173, "\" hx-post=\"/appointments/search/patients\" hx-include=\"[name='patientId']:checked\" hx-trigger=\"input changed delay:300ms, search\" hx-target=\"#patient_search_results\" hx-indicator=\".htmx-indicator\"></label><div class=\"max-h-64 overflow-y-auto pr-2 -mr-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 173, "\" hx-post=\"/appointments/search/patients\" hx-include=\"[name='patientId']:checked\" hx-trigger=\"input[this.value.length === 0 || this.value.length > 2] changed delay:300ms\" hx-target=\"#patient_search_results\" hx-indicator=\".htmx-indicator\"></label><div class=\"max-h-64 overflow-y-auto pr-2 -mr-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

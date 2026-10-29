@@ -673,19 +673,19 @@ func (s *service) HandleSearchClinics(c fiber.Ctx) error {
 
 // HandleSearchPatients searches patients and returns an HTML fragment to be
 // replaced in the HTMX active search. The selected patient stays listed and
-// checked.
+// checked. A 1-2 character term returns 204 so the current list stays.
 // POST: /appointments/search/patients
 func (s *service) HandleSearchPatients(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
 	searchTerm := strings.TrimSpace(c.FormValue("searchTerm", ""))
 	if len(searchTerm) > 0 && len(searchTerm) < 3 {
-		return s.respondWithRedirect(c, "/patients?toast=Search term must be at least 3 characters&level=warning")
+		return c.SendStatus(fiber.StatusNoContent)
 	}
 
 	patients, err := s.FindPatientsBySearchTerm(c.Context(), cu.ID, searchTerm)
 	if err != nil {
-		return s.respondWithRedirect(c, "/patients?toast=Failed to search patients&level=error")
+		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
 	patientUID := strings.TrimSpace(c.FormValue("patientId", ""))

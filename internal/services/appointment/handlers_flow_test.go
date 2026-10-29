@@ -470,12 +470,16 @@ func TestHandleSearchPatientsKeepsSelection(t *testing.T) {
 		})
 	}
 
-	t.Run("short search term redirects", func(t *testing.T) {
+	t.Run("short search term keeps the current list", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/appointments/search/patients", strings.NewReader(url.Values{"searchTerm": {"ab"}}.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		req.Header.Set("HX-Request", "true")
 		resp, err := app.Test(req)
-		if err != nil || resp.StatusCode != fiber.StatusSeeOther {
-			t.Fatalf("short search term expected 303, got status=%d err=%v", resp.StatusCode, err)
+		if err != nil || resp.StatusCode != fiber.StatusNoContent {
+			t.Fatalf("short search term expected 204, got status=%d err=%v", resp.StatusCode, err)
+		}
+		if got := resp.Header.Get("HX-Redirect"); got != "" {
+			t.Errorf("short search term redirected to %q", got)
 		}
 	})
 }
