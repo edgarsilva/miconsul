@@ -47,7 +47,8 @@ func New(s *server.Server) (*service, error) {
 }
 
 func (s *service) TakePatientByUID(ctx context.Context, userID uint, patientUID string) (models.Patient, error) {
-	if strings.TrimSpace(patientUID) == "" {
+	patientUID = strings.TrimSpace(patientUID)
+	if patientUID == "" {
 		return models.Patient{}, ErrIDRequired
 	}
 
@@ -62,7 +63,8 @@ func (s *service) TakePatientByUID(ctx context.Context, userID uint, patientUID 
 }
 
 func (s *service) TakeClinicByUID(ctx context.Context, userID uint, clinicUID string) (models.Clinic, error) {
-	if strings.TrimSpace(clinicUID) == "" {
+	clinicUID = strings.TrimSpace(clinicUID)
+	if clinicUID == "" {
 		return models.Clinic{}, ErrIDRequired
 	}
 

@@ -53,6 +53,15 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 		}
 	})
 
+	t.Run("lookups trim the uid before querying", func(t *testing.T) {
+		if _, err := svc.TakePatientByUID(ctx, user.ID, " "+patient.UID+" "); err != nil {
+			t.Fatalf("take patient by padded uid: %v", err)
+		}
+		if _, err := svc.TakeClinicByUID(ctx, user.ID, " "+clinic.UID+" "); err != nil {
+			t.Fatalf("take clinic by padded uid: %v", err)
+		}
+	})
+
 	t.Run("patient link actions", func(t *testing.T) {
 		apnt := models.Appointment{
 			UserID:    user.ID,
