@@ -3,6 +3,7 @@ package clinic
 import (
 	"cmp"
 	"errors"
+	"net/url"
 	"strings"
 
 	"miconsul/internal/lib/amount"
@@ -167,7 +168,7 @@ func (s *service) HandleClinicsIndexSearch(c fiber.Ctx) error {
 	searchTerm := strings.TrimSpace(c.Query("searchTerm", ""))
 	if len(searchTerm) > 0 && len(searchTerm) < 3 {
 		if s.NotHTMX(c) {
-			return c.SendStatus(fiber.StatusBadRequest)
+			return s.Redirect(c, "/clinics?toast="+url.QueryEscape(view.SearchTooShortMsg(3))+"&level=warning")
 		}
 		return view.Render(c, view.CmpSearchTooShortToast(3))
 	}
@@ -176,7 +177,7 @@ func (s *service) HandleClinicsIndexSearch(c fiber.Ctx) error {
 	clinics, err := s.FindClinicsBySearchTerm(c.Context(), cu, searchTerm)
 	if err != nil {
 		if s.NotHTMX(c) {
-			return c.SendStatus(fiber.StatusInternalServerError)
+			return s.Redirect(c, "/clinics?toast="+url.QueryEscape(view.SearchFailedMsg)+"&level=error")
 		}
 		c.Status(fiber.StatusInternalServerError)
 		return view.Render(c, view.CmpSearchFailedToast())

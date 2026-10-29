@@ -83,13 +83,21 @@ templ CmpToastPartial(msg, sub, level string) {
 	</hx-partial>
 }
 
-// CmpSearchTooShortToast tells the user a search term needs at least minLen
+// SearchFailedMsg tells the user a search couldn't run.
+const SearchFailedMsg = "The search couldn't be completed right now, please try again"
+
+// SearchTooShortMsg tells the user a search term needs at least minLen
 // characters.
-templ CmpSearchTooShortToast(minLen int) {
-	@CmpToastPartial(fmt.Sprintf("Type at least %d characters to search", minLen), "", "warning")
+func SearchTooShortMsg(minLen int) string {
+	return fmt.Sprintf("Type at least %d characters to search", minLen)
 }
 
-// CmpSearchFailedToast tells the user a search couldn't run.
+// CmpSearchTooShortToast shows SearchTooShortMsg as a toast partial.
+templ CmpSearchTooShortToast(minLen int) {
+	@CmpToastPartial(SearchTooShortMsg(minLen), "", "warning")
+}
+
+// CmpSearchFailedToast shows SearchFailedMsg as a toast partial.
 templ CmpSearchFailedToast() {
-	@CmpToastPartial("The search couldn't be completed right now, please try again", "", "error")
+	@CmpToastPartial(SearchFailedMsg, "", "error")
 }

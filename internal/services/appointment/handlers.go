@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -56,13 +57,16 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 // HandleIndexSearch runs the appointments index search.
 // GET: /appointments/search
 func (s *service) HandleIndexSearch(c fiber.Ctx) error {
-	if s.NotHTMX(c) {
-		return s.HandleIndexPage(c)
-	}
-
 	searchTerm := strings.TrimSpace(c.Query("searchTerm", ""))
 	if searchTermTooShort(searchTerm) {
+		if s.NotHTMX(c) {
+			return s.Redirect(c, "/appointments?toast="+url.QueryEscape(view.SearchTooShortMsg(minSearchTermLen))+"&level=warning")
+		}
 		return view.Render(c, view.CmpSearchTooShortToast(minSearchTermLen))
+	}
+
+	if s.NotHTMX(c) {
+		return s.HandleIndexPage(c)
 	}
 
 	cu := s.CurrentUser(c)

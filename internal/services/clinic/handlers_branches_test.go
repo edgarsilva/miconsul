@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -43,8 +44,8 @@ func TestClinicHandlerBranches(t *testing.T) {
 	}
 
 	resp2, err := app.Test(httptest.NewRequest(http.MethodGet, "/clinics/search?searchTerm=ab", nil))
-	if err != nil || resp2.StatusCode != fiber.StatusBadRequest {
-		t.Fatalf("search short term expected 400, got status=%d err=%v", resp2.StatusCode, err)
+	if err != nil || resp2.StatusCode != fiber.StatusSeeOther {
+		t.Fatalf("search short term expected 303 redirect, got status=%d err=%v", resp2.StatusCode, err)
 	}
 
 	badJSON := httptest.NewRequest(http.MethodPost, "/clinics", strings.NewReader("{"))
@@ -90,12 +91,14 @@ func TestIndexSearchToasts(t *testing.T) {
 	tests := []struct {
 		name       string
 		term       string
+		htmx       bool
 		wantStatus int
 		wantToast  string
 	}{
-		{"short term", "ab", fiber.StatusOK, "at least 3 characters"},
+		{"short term", "ab", true, fiber.StatusOK, "at least 3 characters"},
 		// The test DB has no FTS table, so any real search term fails.
-		{"search error", "alpha", fiber.StatusInternalServerError, "couldn&#39;t be completed"},
+		{"search error", "alpha", true, fiber.StatusInternalServerError, "couldn&#39;t be completed"},
+		{"short term without htmx", "ab", false, fiber.StatusSeeOther, "at least 3 characters"},
 	}
 
 	for _, tt := range tests {
@@ -109,10 +112,19 @@ func TestIndexSearchToasts(t *testing.T) {
 			})
 
 			req := httptest.NewRequest(http.MethodGet, "/clinics/search?searchTerm="+tt.term, nil)
-			req.Header.Set("HX-Request", "true")
+			if tt.htmx {
+				req.Header.Set("HX-Request", "true")
+			}
 			resp, err := app.Test(req)
 			if err != nil || resp.StatusCode != tt.wantStatus {
 				t.Fatalf("expected %d, got status=%d err=%v", tt.wantStatus, resp.StatusCode, err)
+			}
+			if !tt.htmx {
+				location, _ := url.QueryUnescape(resp.Header.Get("Location"))
+				if !strings.HasPrefix(location, "/clinics?toast=") || !strings.Contains(location, tt.wantToast) {
+					t.Errorf("redirect = %q, want /clinics with the toast", location)
+				}
+				return
 			}
 			if got := resp.Header.Get("HX-Redirect"); got != "" {
 				t.Errorf("search redirected to %q", got)

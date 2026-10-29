@@ -214,8 +214,16 @@ func CmpToastPartial(msg, sub, level string) templ.Component {
 	})
 }
 
-// CmpSearchTooShortToast tells the user a search term needs at least minLen
+// SearchFailedMsg tells the user a search couldn't run.
+const SearchFailedMsg = "The search couldn't be completed right now, please try again"
+
+// SearchTooShortMsg tells the user a search term needs at least minLen
 // characters.
+func SearchTooShortMsg(minLen int) string {
+	return fmt.Sprintf("Type at least %d characters to search", minLen)
+}
+
+// CmpSearchTooShortToast shows SearchTooShortMsg as a toast partial.
 func CmpSearchTooShortToast(minLen int) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -233,7 +241,7 @@ func CmpSearchTooShortToast(minLen int) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = CmpToastPartial(fmt.Sprintf("Type at least %d characters to search", minLen), "", "warning").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpToastPartial(SearchTooShortMsg(minLen), "", "warning").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -241,7 +249,7 @@ func CmpSearchTooShortToast(minLen int) templ.Component {
 	})
 }
 
-// CmpSearchFailedToast tells the user a search couldn't run.
+// CmpSearchFailedToast shows SearchFailedMsg as a toast partial.
 func CmpSearchFailedToast() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -259,7 +267,7 @@ func CmpSearchFailedToast() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = CmpToastPartial("The search couldn't be completed right now, please try again", "", "error").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpToastPartial(SearchFailedMsg, "", "error").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
