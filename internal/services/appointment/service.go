@@ -103,7 +103,8 @@ func (s *service) CreateAppointment(ctx context.Context, appointment *models.App
 }
 
 func (s *service) TakeAppointmentByUID(ctx context.Context, userID uint, appointmentUID string) (models.Appointment, error) {
-	if strings.TrimSpace(appointmentUID) == "" {
+	appointmentUID = strings.TrimSpace(appointmentUID)
+	if appointmentUID == "" {
 		return models.Appointment{}, ErrIDRequired
 	}
 
@@ -120,7 +121,8 @@ func (s *service) TakeAppointmentByUID(ctx context.Context, userID uint, appoint
 }
 
 func (s *service) UpdateAppointmentByID(ctx context.Context, userID uint, appointmentID string, updates appointmentPatchUpdates) error {
-	if strings.TrimSpace(appointmentID) == "" {
+	appointmentID = strings.TrimSpace(appointmentID)
+	if appointmentID == "" {
 		return ErrIDRequired
 	}
 
@@ -146,7 +148,8 @@ func (s *service) UpdateAppointmentByID(ctx context.Context, userID uint, appoin
 }
 
 func (s *service) CompleteAppointmentByID(ctx context.Context, userID uint, appointmentID string, updates appointmentCompleteUpdates) error {
-	if strings.TrimSpace(appointmentID) == "" {
+	appointmentID = strings.TrimSpace(appointmentID)
+	if appointmentID == "" {
 		return ErrIDRequired
 	}
 
@@ -165,7 +168,8 @@ func (s *service) CompleteAppointmentByID(ctx context.Context, userID uint, appo
 }
 
 func (s *service) SaveAppointmentSessionByID(ctx context.Context, userID uint, appointmentID string, updates appointmentSessionUpdates) error {
-	if strings.TrimSpace(appointmentID) == "" {
+	appointmentID = strings.TrimSpace(appointmentID)
+	if appointmentID == "" {
 		return ErrIDRequired
 	}
 
@@ -180,7 +184,8 @@ func (s *service) SaveAppointmentSessionByID(ctx context.Context, userID uint, a
 }
 
 func (s *service) StartAppointmentSessionByID(ctx context.Context, userID uint, appointmentID string) error {
-	if strings.TrimSpace(appointmentID) == "" {
+	appointmentID = strings.TrimSpace(appointmentID)
+	if appointmentID == "" {
 		return ErrIDRequired
 	}
 
@@ -194,7 +199,8 @@ func (s *service) StartAppointmentSessionByID(ctx context.Context, userID uint, 
 }
 
 func (s *service) PauseAppointmentSessionByID(ctx context.Context, userID uint, appointmentID string) error {
-	if strings.TrimSpace(appointmentID) == "" {
+	appointmentID = strings.TrimSpace(appointmentID)
+	if appointmentID == "" {
 		return ErrIDRequired
 	}
 
@@ -208,7 +214,8 @@ func (s *service) PauseAppointmentSessionByID(ctx context.Context, userID uint, 
 }
 
 func (s *service) CancelAppointmentByID(ctx context.Context, userID uint, appointmentID string, updates appointmentCancelUpdates) error {
-	if strings.TrimSpace(appointmentID) == "" {
+	appointmentID = strings.TrimSpace(appointmentID)
+	if appointmentID == "" {
 		return ErrIDRequired
 	}
 
@@ -248,7 +255,8 @@ func (s *service) updateAppointmentColumnsByID(ctx context.Context, userID uint,
 }
 
 func (s *service) DeleteAppointmentByID(ctx context.Context, userID uint, appointmentID string) error {
-	if strings.TrimSpace(appointmentID) == "" {
+	appointmentID = strings.TrimSpace(appointmentID)
+	if appointmentID == "" {
 		return ErrIDRequired
 	}
 
@@ -268,7 +276,8 @@ func (s *service) DeleteAppointmentByID(ctx context.Context, userID uint, appoin
 }
 
 func (s *service) TakeAppointmentByToken(ctx context.Context, token string) (models.Appointment, error) {
-	if strings.TrimSpace(token) == "" {
+	token = strings.TrimSpace(token)
+	if token == "" {
 		return models.Appointment{}, ErrTokenRequired
 	}
 
@@ -286,7 +295,8 @@ func (s *service) TakeAppointmentByToken(ctx context.Context, token string) (mod
 }
 
 func (s *service) TakePatientByUIDWithLastDoneAppointment(ctx context.Context, userID uint, patientUID string) (models.Patient, error) {
-	if strings.TrimSpace(patientUID) == "" {
+	patientUID = strings.TrimSpace(patientUID)
+	if patientUID == "" {
 		return models.Patient{}, ErrIDRequired
 	}
 
