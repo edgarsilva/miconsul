@@ -154,7 +154,6 @@ func PatientRoutes(s *server.Server, authSvc auth.Runtime) error {
 	g := p.Group("/patients", mw.MustAuthenticate(authSvc))
 	g.Get("/", p.HandleIndexPage)
 	g.Get("/search", p.HandlePatientsIndexSearch)
-	g.Post("/search", p.HandlePatientSearch)
 
 	g.Get("/:id", p.HandlePatientFormPage)
 	g.Get("/:id/profilepic/:filename", p.HandlePatientProfilePicImgSrc)
@@ -201,6 +200,7 @@ func AppointmentRoutes(s *server.Server, authSvc auth.Runtime) error {
 	g.Post("/:id/complete", a.HandleComplete)
 	g.Post("/:id/cancel", a.HandleCancel)
 	g.Post("/search/clinics", a.HandleSearchClinics)
+	g.Post("/search/patients", a.HandleSearchPatients)
 
 	g.Post("/", a.HandleCreate)
 
@@ -251,6 +251,8 @@ func UserRoutes(s *server.Server, authSvc auth.Runtime) error {
 	// Admin only
 	u.Get("/admin/users", mw.MustBeAdmin(authSvc), u.HandleIndexPage)
 	u.Get("/admin/users/:id", mw.MustBeAdmin(authSvc), u.HandleEditPage)
+	u.Post("/admin/users/:id", mw.MustBeAdmin(authSvc), u.HandleAdminUpdateUser)
+	u.Patch("/admin/users/:id", mw.MustBeAdmin(authSvc), u.HandleAdminUpdateUser)
 	u.Patch("/admin/users/:id/removepic", mw.MustBeAdmin(authSvc), u.HandleAdminRemoveProfilePic)
 
 	// API

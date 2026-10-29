@@ -53,10 +53,6 @@ func TestPatientHandlersFlows(t *testing.T) {
 		c.Locals("current_user", user)
 		return svc.HandleDeletePatient(c)
 	})
-	app.Post("/patients/search", func(c fiber.Ctx) error {
-		c.Locals("current_user", user)
-		return svc.HandlePatientSearch(c)
-	})
 
 	resp1, err := app.Test(httptest.NewRequest(http.MethodGet, "/patients", nil))
 	if err != nil || resp1.StatusCode != fiber.StatusOK {
@@ -107,13 +103,6 @@ func TestPatientHandlersFlows(t *testing.T) {
 	resp6, err := app.Test(req6)
 	if err != nil || resp6.StatusCode != fiber.StatusOK {
 		t.Fatalf("delete patient expected 200 for htmx, got status=%d err=%v", resp6.StatusCode, err)
-	}
-
-	postSearch := httptest.NewRequest(http.MethodPost, "/patients/search", strings.NewReader(url.Values{"searchTerm": {""}}.Encode()))
-	postSearch.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	resp7, err := app.Test(postSearch)
-	if err != nil || resp7.StatusCode != fiber.StatusOK {
-		t.Fatalf("patient search expected 200, got status=%d err=%v", resp7.StatusCode, err)
 	}
 
 	resp8, err := app.Test(httptest.NewRequest(http.MethodGet, "/patients/search?searchTerm=", nil))

@@ -3,7 +3,6 @@ package patient
 import (
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"strings"
 	"testing"
 
@@ -37,10 +36,6 @@ func TestPatientHandlerGuardBranches(t *testing.T) {
 	app.Get("/patients/search", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
 		return svc.HandlePatientsIndexSearch(c)
-	})
-	app.Post("/patients/search", func(c fiber.Ctx) error {
-		c.Locals("current_user", user)
-		return svc.HandlePatientSearch(c)
 	})
 	app.Get("/patients/:id/profilepic/:filename", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
@@ -77,14 +72,6 @@ func TestPatientHandlerGuardBranches(t *testing.T) {
 	resp6, err := app.Test(httptest.NewRequest(http.MethodGet, "/patients/search?searchTerm=ab", nil))
 	if err != nil || resp6.StatusCode != fiber.StatusSeeOther {
 		t.Fatalf("index search short term expected 303, got status=%d err=%v", resp6.StatusCode, err)
-	}
-
-	shortForm := url.Values{"searchTerm": {"ab"}}
-	req7 := httptest.NewRequest(http.MethodPost, "/patients/search", strings.NewReader(shortForm.Encode()))
-	req7.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	resp7, err := app.Test(req7)
-	if err != nil || resp7.StatusCode != fiber.StatusSeeOther {
-		t.Fatalf("patient search short term expected 303, got status=%d err=%v", resp7.StatusCode, err)
 	}
 
 	resp8, err := app.Test(httptest.NewRequest(http.MethodGet, "/patients//profilepic/", nil))

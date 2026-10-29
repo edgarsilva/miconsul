@@ -1,9 +1,12 @@
 package appointment
 
 import (
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -338,4 +341,141 @@ func TestHandleStartPagePatientMissingBranch(t *testing.T) {
 	if err != nil || resp.StatusCode != fiber.StatusSeeOther {
 		t.Fatalf("start with missing patient expected 303 redirect, got status=%d err=%v", resp.StatusCode, err)
 	}
+}
+
+func TestHandleSearchClinicsKeepsSelection(t *testing.T) {
+	svc, user, _, _ := newAppointmentServiceForTests(t)
+
+	extra := make([]models.Clinic, 11)
+	for i := range extra {
+		extra[i] = models.Clinic{UserID: user.ID, Name: fmt.Sprintf("Clinic %d", i), Email: "c@example.com", Phone: "123"}
+		if err := svc.DB.GormDB().Create(&extra[i]).Error; err != nil {
+			t.Fatalf("create clinic: %v", err)
+		}
+	}
+	oldest := extra[0]
+
+	app := fiber.New()
+	app.Post("/appointments/search/clinics", func(c fiber.Ctx) error {
+		c.Locals("current_user", user)
+		return svc.HandleSearchClinics(c)
+	})
+
+	tests := []struct {
+		name        string
+		selected    string
+		wantChecked string
+		wantPrice   bool
+	}{
+		{"selected clinic in results stays checked", extra[2].UID, extra[2].UID, false},
+		{"selected clinic past the limit is listed and checked", oldest.UID, oldest.UID, false},
+		{"no selection checks the first clinic and sets its price", "", "", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			form := url.Values{"searchTerm": {""}}
+			if tt.selected != "" {
+				form.Set("clinicId", tt.selected)
+			}
+			req := httptest.NewRequest(http.MethodPost, "/appointments/search/clinics", strings.NewReader(form.Encode()))
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			resp, err := app.Test(req)
+			if err != nil || resp.StatusCode != fiber.StatusOK {
+				t.Fatalf("search clinics expected 200, got status=%d err=%v", resp.StatusCode, err)
+			}
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("read body: %v", err)
+			}
+
+			checked := checkedRadios(string(body), "clinicId")
+			if len(checked) != 1 {
+				t.Fatalf("checked clinics = %v, want exactly one", checked)
+			}
+			if tt.wantChecked != "" && checked[0] != tt.wantChecked {
+				t.Errorf("checked clinic = %q, want %q", checked[0], tt.wantChecked)
+			}
+			if got := strings.Contains(string(body), `id="appt_price"`); got != tt.wantPrice {
+				t.Errorf("price swapped = %v, want %v", got, tt.wantPrice)
+			}
+		})
+	}
+}
+
+// checkedRadios returns the values of the checked radio inputs named name.
+func checkedRadios(html, name string) []string {
+	inputs := regexp.MustCompile(`<input[^>]*name="`+name+`"[^>]*>`).FindAllString(html, -1)
+	value := regexp.MustCompile(`value="([^"]*)"`)
+
+	checked := []string{}
+	for _, input := range inputs {
+		if strings.Contains(input, " checked") {
+			checked = append(checked, value.FindStringSubmatch(input)[1])
+		}
+	}
+
+	return checked
+}
+
+func TestHandleSearchPatientsKeepsSelection(t *testing.T) {
+	svc, user, _, _ := newAppointmentServiceForTests(t)
+
+	extra := make([]models.Patient, 11)
+	for i := range extra {
+		extra[i] = models.Patient{UserID: user.ID, Name: fmt.Sprintf("Patient %d", i), Age: 30, Phone: "555", Email: "p@example.com"}
+		if err := svc.DB.GormDB().Create(&extra[i]).Error; err != nil {
+			t.Fatalf("create patient: %v", err)
+		}
+	}
+	oldest, newest := extra[0], extra[len(extra)-1]
+
+	app := fiber.New()
+	app.Post("/appointments/search/patients", func(c fiber.Ctx) error {
+		c.Locals("current_user", user)
+		return svc.HandleSearchPatients(c)
+	})
+
+	tests := []struct {
+		name        string
+		selected    string
+		wantChecked string
+	}{
+		{"selected patient in results stays checked", extra[5].UID, extra[5].UID},
+		{"selected patient past the limit is listed and checked", oldest.UID, oldest.UID},
+		{"no selection checks the first patient", "", newest.UID},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			form := url.Values{"searchTerm": {""}}
+			if tt.selected != "" {
+				form.Set("patientId", tt.selected)
+			}
+			req := httptest.NewRequest(http.MethodPost, "/appointments/search/patients", strings.NewReader(form.Encode()))
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			resp, err := app.Test(req)
+			if err != nil || resp.StatusCode != fiber.StatusOK {
+				t.Fatalf("search patients expected 200, got status=%d err=%v", resp.StatusCode, err)
+			}
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("read body: %v", err)
+			}
+
+			checked := checkedRadios(string(body), "patientId")
+			if len(checked) != 1 || checked[0] != tt.wantChecked {
+				t.Errorf("checked patients = %v, want [%s]", checked, tt.wantChecked)
+			}
+		})
+	}
+
+	t.Run("short search term redirects", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodPost, "/appointments/search/patients", strings.NewReader(url.Values{"searchTerm": {"ab"}}.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		resp, err := app.Test(req)
+		if err != nil || resp.StatusCode != fiber.StatusSeeOther {
+			t.Fatalf("short search term expected 303, got status=%d err=%v", resp.StatusCode, err)
+		}
+	})
 }

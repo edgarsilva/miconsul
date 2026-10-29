@@ -47,7 +47,8 @@ func New(s *server.Server) (*service, error) {
 }
 
 func (s *service) TakePatientByUID(ctx context.Context, userID uint, patientUID string) (models.Patient, error) {
-	if strings.TrimSpace(patientUID) == "" {
+	patientUID = strings.TrimSpace(patientUID)
+	if patientUID == "" {
 		return models.Patient{}, ErrIDRequired
 	}
 
@@ -62,7 +63,8 @@ func (s *service) TakePatientByUID(ctx context.Context, userID uint, patientUID 
 }
 
 func (s *service) TakeClinicByUID(ctx context.Context, userID uint, clinicUID string) (models.Clinic, error) {
-	if strings.TrimSpace(clinicUID) == "" {
+	clinicUID = strings.TrimSpace(clinicUID)
+	if clinicUID == "" {
 		return models.Clinic{}, ErrIDRequired
 	}
 
@@ -532,6 +534,23 @@ func (s *service) FindRecentClinicsByUserID(ctx context.Context, userID uint, li
 	return clinics, nil
 }
 
+func (s *service) FindPatientsBySearchTerm(ctx context.Context, userID uint, searchTerm string) ([]models.Patient, error) {
+	patients := []models.Patient{}
+	searchTerm = strings.TrimSpace(searchTerm)
+	err := s.DB.WithContext(ctx).
+		Model(&models.Patient{}).
+		Where("user_id = ?", userID).
+		Scopes(models.GlobalFTS(searchTerm)).
+		Limit(10).
+		Find(&patients).
+		Error
+	if err != nil {
+		return []models.Patient{}, err
+	}
+
+	return patients, nil
+}
+
 func (s *service) FindRecentPatientsByUserID(ctx context.Context, userID uint, limit int) ([]models.Patient, error) {
 	patients := []models.Patient{}
 	err := s.DB.WithContext(ctx).
@@ -586,24 +605,46 @@ func (s *service) recordPatientFeedEvent(ctx context.Context, appointment models
 	return nil
 }
 
-// ensureClinicListed returns clinics with the appointment's clinic appended
-// when it isn't listed, so the edit page can show it as selected.
-func ensureClinicListed(clinics []models.Clinic, appointment models.Appointment) []models.Clinic {
-	listed := slices.ContainsFunc(clinics, func(clinic models.Clinic) bool { return clinic.ID == appointment.Clinic.ID })
-	if appointment.Clinic.ID == 0 || listed {
+// ensureClinicListed appends clinic to clinics when it isn't listed, so the
+// picker can show it as selected. A zero clinic is ignored.
+func ensureClinicListed(clinics []models.Clinic, clinic models.Clinic) []models.Clinic {
+	listed := slices.ContainsFunc(clinics, func(cl models.Clinic) bool { return cl.ID == clinic.ID })
+	if clinic.ID == 0 || listed {
 		return clinics
 	}
 
-	return append(clinics, appointment.Clinic)
+	return append(clinics, clinic)
 }
 
-// ensurePatientListed returns patients with the appointment's patient appended
-// when it isn't listed, so the edit page can show it as selected.
-func ensurePatientListed(patients []models.Patient, appointment models.Appointment) []models.Patient {
-	listed := slices.ContainsFunc(patients, func(patient models.Patient) bool { return patient.ID == appointment.Patient.ID })
-	if appointment.Patient.ID == 0 || listed {
+// ensurePatientListed appends patient to patients when it isn't listed, so
+// the picker can show it as selected. A zero patient is ignored.
+func ensurePatientListed(patients []models.Patient, patient models.Patient) []models.Patient {
+	listed := slices.ContainsFunc(patients, func(p models.Patient) bool { return p.ID == patient.ID })
+	if patient.ID == 0 || listed {
 		return patients
 	}
 
-	return append(patients, appointment.Patient)
+	return append(patients, patient)
+}
+
+// takePatientOrZero returns the user's patient with patientUID, or a zero
+// Patient when patientUID is blank.
+func (s *service) takePatientOrZero(ctx context.Context, userID uint, patientUID string) (models.Patient, error) {
+	patientUID = strings.TrimSpace(patientUID)
+	if patientUID == "" {
+		return models.Patient{}, nil
+	}
+
+	return s.TakePatientByUID(ctx, userID, patientUID)
+}
+
+// takeClinicOrZero returns the user's clinic with clinicUID, or a zero
+// Clinic when clinicUID is blank.
+func (s *service) takeClinicOrZero(ctx context.Context, userID uint, clinicUID string) (models.Clinic, error) {
+	clinicUID = strings.TrimSpace(clinicUID)
+	if clinicUID == "" {
+		return models.Clinic{}, nil
+	}
+
+	return s.TakeClinicByUID(ctx, userID, clinicUID)
 }

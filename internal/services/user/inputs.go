@@ -22,3 +22,18 @@ func (in userProfileUpdateInput) toUserProfileUpdates() models.User {
 		Locale: preferences.Locale(in.Locale),
 	}
 }
+
+type adminUserUpdateInput struct {
+	Name  string `form:"name"`
+	Email string `form:"email"`
+	Phone string `form:"phone"`
+}
+
+// toUserUpdates maps the input to the user fields an admin may update.
+func (in adminUserUpdateInput) toUserUpdates() models.User {
+	return models.User{
+		Name:  in.Name,
+		Email: in.Email,
+		Phone: in.Phone,
+	}
+}
