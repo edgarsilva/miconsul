@@ -534,6 +534,23 @@ func (s *service) FindRecentClinicsByUserID(ctx context.Context, userID uint, li
 	return clinics, nil
 }
 
+func (s *service) FindPatientsBySearchTerm(ctx context.Context, userID uint, searchTerm string) ([]models.Patient, error) {
+	patients := []models.Patient{}
+	searchTerm = strings.TrimSpace(searchTerm)
+	err := s.DB.WithContext(ctx).
+		Model(&models.Patient{}).
+		Where("user_id = ?", userID).
+		Scopes(models.GlobalFTS(searchTerm)).
+		Limit(10).
+		Find(&patients).
+		Error
+	if err != nil {
+		return []models.Patient{}, err
+	}
+
+	return patients, nil
+}
+
 func (s *service) FindRecentPatientsByUserID(ctx context.Context, userID uint, limit int) ([]models.Patient, error) {
 	patients := []models.Patient{}
 	err := s.DB.WithContext(ctx).

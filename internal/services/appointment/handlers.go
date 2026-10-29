@@ -671,6 +671,35 @@ func (s *service) HandleSearchClinics(c fiber.Ctx) error {
 	return view.Render(c, view.ApptSearchClinicsFrg(vc, clinics, clinicUID))
 }
 
+// HandleSearchPatients searches patients and returns an HTML fragment to be
+// replaced in the HTMX active search. The selected patient stays listed and
+// checked.
+// POST: /appointments/search/patients
+func (s *service) HandleSearchPatients(c fiber.Ctx) error {
+	cu := s.CurrentUser(c)
+
+	searchTerm := strings.TrimSpace(c.FormValue("searchTerm", ""))
+	if len(searchTerm) > 0 && len(searchTerm) < 3 {
+		return s.respondWithRedirect(c, "/patients?toast=Search term must be at least 3 characters&level=warning")
+	}
+
+	patients, err := s.FindPatientsBySearchTerm(c.Context(), cu.ID, searchTerm)
+	if err != nil {
+		return s.respondWithRedirect(c, "/patients?toast=Failed to search patients&level=error")
+	}
+
+	patientUID := strings.TrimSpace(c.FormValue("patientId", ""))
+	patient, err := s.takePatientOrZero(c.Context(), cu.ID, patientUID)
+	if err != nil {
+		log.Warn("load selected patient for search:", err)
+	}
+	patients = ensurePatientListed(patients, patient)
+
+	vc := view.NewCtx(c)
+
+	return view.Render(c, view.PatientSearchResults(patients, vc, patientUID))
+}
+
 func (s *service) AppointmentForShowPage(ctx context.Context, userID uint, appointmentID string) (models.Appointment, error) {
 	appointment := models.Appointment{UID: appointmentID}
 	if appointmentID == "" || appointmentID == "new" {

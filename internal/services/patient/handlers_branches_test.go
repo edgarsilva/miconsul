@@ -1,16 +1,10 @@
 package patient
 
 import (
-	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
-	"regexp"
 	"strings"
 	"testing"
-
-	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -42,10 +36,6 @@ func TestPatientHandlerGuardBranches(t *testing.T) {
 	app.Get("/patients/search", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
 		return svc.HandlePatientsIndexSearch(c)
-	})
-	app.Post("/patients/search", func(c fiber.Ctx) error {
-		c.Locals("current_user", user)
-		return svc.HandlePatientSearch(c)
 	})
 	app.Get("/patients/:id/profilepic/:filename", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
@@ -84,75 +74,8 @@ func TestPatientHandlerGuardBranches(t *testing.T) {
 		t.Fatalf("index search short term expected 303, got status=%d err=%v", resp6.StatusCode, err)
 	}
 
-	shortForm := url.Values{"searchTerm": {"ab"}}
-	req7 := httptest.NewRequest(http.MethodPost, "/patients/search", strings.NewReader(shortForm.Encode()))
-	req7.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	resp7, err := app.Test(req7)
-	if err != nil || resp7.StatusCode != fiber.StatusSeeOther {
-		t.Fatalf("patient search short term expected 303, got status=%d err=%v", resp7.StatusCode, err)
-	}
-
 	resp8, err := app.Test(httptest.NewRequest(http.MethodGet, "/patients//profilepic/", nil))
 	if err != nil || resp8.StatusCode != fiber.StatusNotFound {
 		t.Fatalf("profile pic missing params expected 404, got status=%d err=%v", resp8.StatusCode, err)
-	}
-}
-
-func TestHandlePatientSearchKeepsSelection(t *testing.T) {
-	svc, user := newPatientServiceForTests(t)
-
-	patients := make([]models.Patient, QUERY_LIMIT+1)
-	for i := range patients {
-		patients[i] = models.Patient{UserID: user.ID, Name: fmt.Sprintf("Patient %d", i), Age: 30, Phone: "555", Email: "p@example.com"}
-		if err := svc.DB.GormDB().Create(&patients[i]).Error; err != nil {
-			t.Fatalf("create patient: %v", err)
-		}
-	}
-	oldest, newest := patients[0], patients[len(patients)-1]
-
-	app := fiber.New()
-	app.Post("/patients/search", func(c fiber.Ctx) error {
-		c.Locals("current_user", user)
-		return svc.HandlePatientSearch(c)
-	})
-
-	tests := []struct {
-		name        string
-		selected    string
-		wantChecked string
-	}{
-		{"selected patient in results stays checked", patients[5].UID, patients[5].UID},
-		{"selected patient past the limit is listed and checked", oldest.UID, oldest.UID},
-		{"no selection checks the first patient", "", newest.UID},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			form := url.Values{"searchTerm": {""}}
-			if tt.selected != "" {
-				form.Set("patientId", tt.selected)
-			}
-			req := httptest.NewRequest(http.MethodPost, "/patients/search", strings.NewReader(form.Encode()))
-			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-			resp, err := app.Test(req)
-			if err != nil || resp.StatusCode != fiber.StatusOK {
-				t.Fatalf("search patients expected 200, got status=%d err=%v", resp.StatusCode, err)
-			}
-			body, err := io.ReadAll(resp.Body)
-			if err != nil {
-				t.Fatalf("read body: %v", err)
-			}
-
-			inputs := regexp.MustCompile(`<input[^>]*name="patientId"[^>]*>`).FindAllString(string(body), -1)
-			checked := []string{}
-			for _, input := range inputs {
-				if strings.Contains(input, " checked") {
-					checked = append(checked, regexp.MustCompile(`value="([^"]*)"`).FindStringSubmatch(input)[1])
-				}
-			}
-			if len(checked) != 1 || checked[0] != tt.wantChecked {
-				t.Errorf("checked patients = %v, want [%s]", checked, tt.wantChecked)
-			}
-		})
 	}
 }

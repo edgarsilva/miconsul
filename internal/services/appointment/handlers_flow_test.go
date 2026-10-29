@@ -417,3 +417,65 @@ func checkedRadios(html, name string) []string {
 
 	return checked
 }
+
+func TestHandleSearchPatientsKeepsSelection(t *testing.T) {
+	svc, user, _, _ := newAppointmentServiceForTests(t)
+
+	extra := make([]models.Patient, 11)
+	for i := range extra {
+		extra[i] = models.Patient{UserID: user.ID, Name: fmt.Sprintf("Patient %d", i), Age: 30, Phone: "555", Email: "p@example.com"}
+		if err := svc.DB.GormDB().Create(&extra[i]).Error; err != nil {
+			t.Fatalf("create patient: %v", err)
+		}
+	}
+	oldest, newest := extra[0], extra[len(extra)-1]
+
+	app := fiber.New()
+	app.Post("/appointments/search/patients", func(c fiber.Ctx) error {
+		c.Locals("current_user", user)
+		return svc.HandleSearchPatients(c)
+	})
+
+	tests := []struct {
+		name        string
+		selected    string
+		wantChecked string
+	}{
+		{"selected patient in results stays checked", extra[5].UID, extra[5].UID},
+		{"selected patient past the limit is listed and checked", oldest.UID, oldest.UID},
+		{"no selection checks the first patient", "", newest.UID},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			form := url.Values{"searchTerm": {""}}
+			if tt.selected != "" {
+				form.Set("patientId", tt.selected)
+			}
+			req := httptest.NewRequest(http.MethodPost, "/appointments/search/patients", strings.NewReader(form.Encode()))
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			resp, err := app.Test(req)
+			if err != nil || resp.StatusCode != fiber.StatusOK {
+				t.Fatalf("search patients expected 200, got status=%d err=%v", resp.StatusCode, err)
+			}
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("read body: %v", err)
+			}
+
+			checked := checkedRadios(string(body), "patientId")
+			if len(checked) != 1 || checked[0] != tt.wantChecked {
+				t.Errorf("checked patients = %v, want [%s]", checked, tt.wantChecked)
+			}
+		})
+	}
+
+	t.Run("short search term redirects", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodPost, "/appointments/search/patients", strings.NewReader(url.Values{"searchTerm": {"ab"}}.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		resp, err := app.Test(req)
+		if err != nil || resp.StatusCode != fiber.StatusSeeOther {
+			t.Fatalf("short search term expected 303, got status=%d err=%v", resp.StatusCode, err)
+		}
+	})
+}

@@ -612,7 +612,7 @@ templ PatientSearch(c *Ctx, patients []models.Patient, selectedUID string) {
 				type="search"
 				name="searchTerm"
 				placeholder={ c.l("str.search_patients") }
-				hx-post="/patients/search"
+				hx-post="/appointments/search/patients"
 				hx-include="[name='patientId']:checked"
 				hx-trigger="input changed delay:300ms, search"
 				hx-target="#patient_search_results"

@@ -278,34 +278,6 @@ func (s *service) HandleDeletePatient(c fiber.Ctx) error {
 	return view.Render(c, view.PatientsList(vc, patients))
 }
 
-// HandlePatientSearch searches patients and returns an HTML fragment to be
-// replaced in the HTMX active search. The selected patient stays listed and
-// checked.
-// POST: /patients/search
-func (s *service) HandlePatientSearch(c fiber.Ctx) error {
-	cu := s.CurrentUser(c)
-
-	searchTerm, searchErr := normalizeSearchTerm(c.FormValue("searchTerm", ""))
-	if searchErr != nil {
-		return s.respondWithRedirect(c, "/patients?toast=Search term must be at least 3 characters&level=warning")
-	}
-
-	patients, err := s.SearchPatientsByUser(c.Context(), cu, searchTerm, QUERY_LIMIT)
-	if err != nil {
-		redirectPath := "/patients?toast=Failed to search patients&level=error"
-		return s.respondWithRedirect(c, redirectPath)
-	}
-
-	patientUID := strings.TrimSpace(c.FormValue("patientId", ""))
-	patients, err = s.ensurePatientListed(c.Context(), cu.ID, patients, patientUID)
-	if err != nil {
-		log.Warn("load selected patient for search:", err)
-	}
-
-	vc := view.NewCtx(c)
-	return view.Render(c, view.PatientSearchResults(patients, vc, patientUID))
-}
-
 func normalizeSearchTerm(raw string) (string, error) {
 	term := strings.TrimSpace(raw)
 	if len(term) > 0 && len(term) < 3 {
