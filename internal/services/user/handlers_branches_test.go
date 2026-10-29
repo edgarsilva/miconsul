@@ -186,3 +186,107 @@ func TestHandleUpdateProfileLocale(t *testing.T) {
 		})
 	}
 }
+
+func TestHandleAdminUpdateUser(t *testing.T) {
+	svc, target := newUserServiceForTests(t)
+
+	admin := models.User{Email: "admin@example.com", Password: "hash", Name: "Admin", Phone: "5550000000", Role: models.UserRoleAdmin}
+	if err := svc.DB.GormDB().Create(&admin).Error; err != nil {
+		t.Fatalf("seed admin: %v", err)
+	}
+
+	app := fiber.New()
+	app.Patch("/admin/users/:id", func(c fiber.Ctx) error {
+		c.Locals("current_user", admin)
+		return svc.HandleAdminUpdateUser(c)
+	})
+
+	form := url.Values{
+		"id":     {admin.UID},
+		"name":   {"Updated Name"},
+		"email":  {"Updated@Example.com"},
+		"phone":  {"5559876543"},
+		"locale": {"en-US"},
+	}
+	req := httptest.NewRequest(http.MethodPatch, "/admin/users/"+target.UID, strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("HX-Request", "true")
+	resp, err := app.Test(req)
+	if err != nil || resp.StatusCode != fiber.StatusOK {
+		t.Fatalf("admin update expected 200, got status=%d err=%v", resp.StatusCode, err)
+	}
+
+	for _, ck := range resp.Cookies() {
+		if ck.Name == "locale" {
+			t.Errorf("admin update set a locale cookie: %q", ck.Value)
+		}
+	}
+
+	saved, err := svc.TakeUserByUID(context.Background(), target.UID)
+	if err != nil {
+		t.Fatalf("load target: %v", err)
+	}
+	if saved.Name != "Updated Name" || saved.Email != "updated@example.com" || saved.Phone != "5559876543" {
+		t.Errorf("target = %q %q %q, want the posted name, email and phone", saved.Name, saved.Email, saved.Phone)
+	}
+	if saved.Locale != target.Locale {
+		t.Errorf("target locale = %q, want unchanged %q", saved.Locale, target.Locale)
+	}
+
+	adminAfter, err := svc.TakeUserByUID(context.Background(), admin.UID)
+	if err != nil {
+		t.Fatalf("load admin: %v", err)
+	}
+	if adminAfter.Name != admin.Name || adminAfter.Email != admin.Email || adminAfter.Phone != admin.Phone {
+		t.Errorf("admin changed to %q %q %q", adminAfter.Name, adminAfter.Email, adminAfter.Phone)
+	}
+}
+
+func TestHandleEditPageFormTarget(t *testing.T) {
+	svc, target := newUserServiceForTests(t)
+
+	admin := models.User{Email: "admin@example.com", Password: "hash", Role: models.UserRoleAdmin}
+	if err := svc.DB.GormDB().Create(&admin).Error; err != nil {
+		t.Fatalf("seed admin: %v", err)
+	}
+
+	tests := []struct {
+		name          string
+		uid           string
+		wantPath      string
+		wantOwnFields bool
+	}{
+		{"admin editing another user saves to the admin route", target.UID, "/admin/users/" + target.UID, false},
+		{"admin editing themselves saves to their profile", admin.UID, "/profile", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			app := fiber.New()
+			app.Get("/admin/users/:id", func(c fiber.Ctx) error {
+				c.Locals("current_user", admin)
+				return svc.HandleEditPage(c)
+			})
+
+			resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/admin/users/"+tt.uid, nil))
+			if err != nil || resp.StatusCode != fiber.StatusOK {
+				t.Fatalf("edit page expected 200, got status=%d err=%v", resp.StatusCode, err)
+			}
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("read body: %v", err)
+			}
+			html := string(body)
+
+			if want := `hx-patch="` + tt.wantPath + `"`; !strings.Contains(html, want) {
+				t.Errorf("form missing %s", want)
+			}
+			if got := strings.Contains(html, `name="locale"`); got != tt.wantOwnFields {
+				t.Errorf("locale select shown = %v, want %v", got, tt.wantOwnFields)
+			}
+			if got := strings.Contains(html, `name="profilePic"`); got != tt.wantOwnFields {
+				t.Errorf("picture upload shown = %v, want %v", got, tt.wantOwnFields)
+			}
+		})
+	}
+}

@@ -251,6 +251,8 @@ func UserRoutes(s *server.Server, authSvc auth.Runtime) error {
 	// Admin only
 	u.Get("/admin/users", mw.MustBeAdmin(authSvc), u.HandleIndexPage)
 	u.Get("/admin/users/:id", mw.MustBeAdmin(authSvc), u.HandleEditPage)
+	u.Post("/admin/users/:id", mw.MustBeAdmin(authSvc), u.HandleAdminUpdateUser)
+	u.Patch("/admin/users/:id", mw.MustBeAdmin(authSvc), u.HandleAdminUpdateUser)
 	u.Patch("/admin/users/:id/removepic", mw.MustBeAdmin(authSvc), u.HandleAdminRemoveProfilePic)
 
 	// API

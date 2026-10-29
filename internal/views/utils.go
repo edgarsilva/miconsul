@@ -83,6 +83,20 @@ func profileLocale(c *Ctx, user models.User) string {
 	return c.Locale
 }
 
+// adminEditsOther reports whether an admin is editing another user's profile.
+func adminEditsOther(c *Ctx, user models.User) bool {
+	return c.CurrentUser.Role == models.UserRoleAdmin && user.UID != c.CurrentUser.UID
+}
+
+// userFormPath returns the path the user form saves to.
+func userFormPath(c *Ctx, user models.User) string {
+	if adminEditsOther(c, user) {
+		return "/admin/users/" + user.UID
+	}
+
+	return "/profile"
+}
+
 // FeedActionLocaleKey returns the localization key for a feed event action.
 func FeedActionLocaleKey(action string) string {
 	return fmt.Sprintf("str.feed_%s", action)

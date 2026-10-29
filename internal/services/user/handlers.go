@@ -211,6 +211,33 @@ func (s *service) HandleAdminRemoveProfilePic(c fiber.Ctx) error {
 	return view.Render(c, view.UserEditPage(vc, updatedUser))
 }
 
+// HandleAdminUpdateUser updates another user's name, email and phone as admin.
+// PATCH: /admin/users/:id
+func (s *service) HandleAdminUpdateUser(c fiber.Ctx) error {
+	userID := c.Params("id", "")
+
+	input := adminUserUpdateInput{}
+	err := c.Bind().Body(&input)
+	if err != nil {
+		return s.respondWithRedirect(c, "/admin/users/"+userID+"?toast=Invalid user input&level=error")
+	}
+
+	updatedUser, err := s.UpdateUserProfileByUID(c.Context(), userID, input.toUserUpdates())
+	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
+		return s.respondWithRedirect(c, "/admin/users?toast=User does not exist&level=warning")
+	}
+	if err != nil {
+		return s.respondWithRedirect(c, "/admin/users/"+userID+"?toast=Failed to update user&level=error")
+	}
+
+	if s.NotHTMX(c) {
+		return s.Redirect(c, "/admin/users/"+updatedUser.UID+"?toast=User updated&level=success")
+	}
+
+	vc := view.NewCtx(c)
+	return view.Render(c, view.UserEditPage(vc, updatedUser))
+}
+
 // HandleAPIUsers returns users as JSON for admin API clients.
 // GET: /api/users
 func (s *service) HandleAPIUsers(c fiber.Ctx) error {
