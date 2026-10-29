@@ -107,7 +107,7 @@ templ AppointmentStart(appointment models.Appointment, c *Ctx) {
 								<div class="mt-2">
 									<textarea
 										name="observations"
-										class="textarea textarea-bordered w-full block"
+										class="textarea w-full block"
 										placeholder={ c.l("str.observations_ph") }
 									>{ appointment.Observations }</textarea>
 								</div>
@@ -117,7 +117,7 @@ templ AppointmentStart(appointment models.Appointment, c *Ctx) {
 								<div class="mt-2">
 									<textarea
 										name="conclusions"
-										class="textarea textarea-bordered w-full block"
+										class="textarea w-full block"
 										placeholder={ c.l("str.conclusions_ph") }
 									>
 										{ appointment.Conclusions }
@@ -129,7 +129,7 @@ templ AppointmentStart(appointment models.Appointment, c *Ctx) {
 								<div class="mt-2">
 									<textarea
 										name="summary"
-										class="textarea textarea-bordered w-full block"
+										class="textarea w-full block"
 										placeholder={ c.l("str.summary_ph") }
 									>
 										{ appointment.Summary }
@@ -141,7 +141,7 @@ templ AppointmentStart(appointment models.Appointment, c *Ctx) {
 								<div class="mt-2">
 									<textarea
 										name="notes"
-										class="textarea textarea-bordered w-full block"
+										class="textarea w-full block"
 										placeholder={ c.l("str.notes_ph") }
 									>{ appointment.Notes }</textarea>
 								</div>

@@ -751,7 +751,7 @@ func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "<input id=\"profile_pic\" name=\"profilePic\" type=\"file\" class=\"file-input file-input-bordered w-full file-input-primary\" accept=\"image/*\"></div></div><div class=\"sm:col-span-3\"><label for=\"name\" class=\"block text-sm font-medium leading-6 text-base-content\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "<input id=\"profile_pic\" name=\"profilePic\" type=\"file\" class=\"file-input w-full file-input-primary\" accept=\"image/*\"></div></div><div class=\"sm:col-span-3\"><label for=\"name\" class=\"block text-sm font-medium leading-6 text-base-content\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -777,19 +777,19 @@ func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "\" id=\"name\" autocomplete=\"family-name\" class=\"input input-bordered block w-full\"> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "\" id=\"name\" autocomplete=\"family-name\" class=\"input block w-full\"> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if patient.FieldError("name") != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "<div class=\"label\"><span class=\"label-text-alt text-error\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "<div class=\"label\"><span class=\"text-error\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var39 string
 				templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(patient.FieldError("name"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/patientspage.templ`, Line: 229, Col: 78}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/patientspage.templ`, Line: 229, Col: 63}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 				if templ_7745c5c3_Err != nil {
@@ -826,19 +826,19 @@ func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "\" id=\"phone\" autocomplete=\"tel\" class=\"input input-bordered block w-full\"> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "\" id=\"phone\" autocomplete=\"tel\" class=\"input block w-full\"> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if patient.FieldError("phone") != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "<div class=\"label\"><span class=\"label-text-alt text-error\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "<div class=\"label\"><span class=\"text-error\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var42 string
 				templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(patient.FieldError("phone"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/patientspage.templ`, Line: 240, Col: 79}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/patientspage.templ`, Line: 240, Col: 64}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 				if templ_7745c5c3_Err != nil {
@@ -875,19 +875,19 @@ func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "\" id=\"email\" autocomplete=\"email\" class=\"input input-bordered block w-full\"> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "\" id=\"email\" autocomplete=\"email\" class=\"input block w-full\"> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if patient.FieldError("email") != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "<div class=\"label\"><span class=\"label-text-alt text-error\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "<div class=\"label\"><span class=\"text-error\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var45 string
 				templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(patient.FieldError("email"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/patientspage.templ`, Line: 251, Col: 79}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/patientspage.templ`, Line: 251, Col: 64}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 				if templ_7745c5c3_Err != nil {
@@ -939,7 +939,7 @@ func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, " autocomplete=\"age\" class=\"input input-bordered block w-full\"></div></div><div class=\"sm:col-span-4\"><label for=\"ocupation\" class=\"block text-sm font-medium leading-6 text-base-content\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, " autocomplete=\"age\" class=\"input block w-full\"></div></div><div class=\"sm:col-span-4\"><label for=\"ocupation\" class=\"block text-sm font-medium leading-6 text-base-content\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -965,7 +965,7 @@ func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "\" id=\"ocupation\" autocomplete=\"ocupation\" class=\"input input-bordered block w-full\"></div></div><div class=\"col-span-full\"><label for=\"cover-photo\" class=\"block text-sm font-medium leading-6\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "\" id=\"ocupation\" autocomplete=\"ocupation\" class=\"input block w-full\"></div></div><div class=\"col-span-full\"><label for=\"cover-photo\" class=\"block text-sm font-medium leading-6\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1121,7 +1121,7 @@ func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 91, "\" id=\"address_line1\" autocomplete=\"street-address\" class=\"input input-bordered block w-full\"></div></div><div class=\"sm:col-span-2 sm:col-start-1\"><label for=\"city\" class=\"block text-sm font-medium leading-6\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 91, "\" id=\"address_line1\" autocomplete=\"street-address\" class=\"input block w-full\"></div></div><div class=\"sm:col-span-2 sm:col-start-1\"><label for=\"city\" class=\"block text-sm font-medium leading-6\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1147,7 +1147,7 @@ func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 93, "\" id=\"address_city\" autocomplete=\"address-level2\" class=\"input input-bordered block w-full\"></div></div><div class=\"sm:col-span-2\"><label for=\"region\" class=\"block text-sm font-medium leading-6\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 93, "\" id=\"address_city\" autocomplete=\"address-level2\" class=\"input block w-full\"></div></div><div class=\"sm:col-span-2\"><label for=\"region\" class=\"block text-sm font-medium leading-6\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1173,7 +1173,7 @@ func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 95, "\" id=\"address_state\" autocomplete=\"address-level1\" class=\"input input-bordered block w-full\"></div></div><div class=\"sm:col-span-2\"><label for=\"postal-code\" class=\"block text-sm font-medium leading-6\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 95, "\" id=\"address_state\" autocomplete=\"address-level1\" class=\"input block w-full\"></div></div><div class=\"sm:col-span-2\"><label for=\"postal-code\" class=\"block text-sm font-medium leading-6\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1199,7 +1199,7 @@ func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 97, "\" id=\"address_zip_code\" autocomplete=\"postal-code\" class=\"input input-bordered block w-full\"></div></div><div class=\"sm:col-span-4\"><label for=\"country\" class=\"block text-sm font-medium leading-6 text-base-content\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 97, "\" id=\"address_zip_code\" autocomplete=\"postal-code\" class=\"input block w-full\"></div></div><div class=\"sm:col-span-4\"><label for=\"country\" class=\"block text-sm font-medium leading-6 text-base-content\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1212,7 +1212,7 @@ func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 98, "</label><div class=\"mt-2\"><select id=\"country\" name=\"addressCountry\" autocomplete=\"country-name\" class=\"select select-bordered block w-full\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 98, "</label><div class=\"mt-2\"><select id=\"country\" name=\"addressCountry\" autocomplete=\"country-name\" class=\"select block w-full\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1323,7 +1323,7 @@ func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 106, "</label><div class=\"mt-2\"><textarea name=\"familyHistory\" class=\"textarea textarea-bordered w-full block\" placeholder=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 106, "</label><div class=\"mt-2\"><textarea name=\"familyHistory\" class=\"textarea w-full block\" placeholder=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1362,7 +1362,7 @@ func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 109, "</label><div class=\"mt-2\"><textarea name=\"medicalBackground\" class=\"textarea textarea-bordered w-full block\" placeholder=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 109, "</label><div class=\"mt-2\"><textarea name=\"medicalBackground\" class=\"textarea w-full block\" placeholder=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1401,7 +1401,7 @@ func PatientProfile(patient models.Patient, c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 112, "</label><div class=\"mt-2\"><textarea name=\"notes\" class=\"textarea textarea-bordered w-full block\" placeholder=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 112, "</label><div class=\"mt-2\"><textarea name=\"notes\" class=\"textarea w-full block\" placeholder=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

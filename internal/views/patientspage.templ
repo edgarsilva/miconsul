@@ -215,7 +215,7 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 									id="profile_pic"
 									name="profilePic"
 									type="file"
-									class="file-input file-input-bordered w-full file-input-primary"
+									class="file-input w-full file-input-primary"
 									accept="image/*"
 								/>
 							</div>
@@ -223,10 +223,10 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 						<div class="sm:col-span-3">
 							<label for="name" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.name") }</label>
 							<div class="mt-2">
-								<input required min="2" type="text" name="name" value={ patient.Name } id="name" autocomplete="family-name" class="input input-bordered block w-full"/>
+								<input required min="2" type="text" name="name" value={ patient.Name } id="name" autocomplete="family-name" class="input block w-full"/>
 								if patient.FieldError("name") != "" {
 									<div class="label">
-										<span class="label-text-alt text-error">{ patient.FieldError("name") }</span>
+										<span class="text-error">{ patient.FieldError("name") }</span>
 									</div>
 								}
 							</div>
@@ -234,10 +234,10 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 						<div class="sm:col-span-4">
 							<label for="phone" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.phone") }</label>
 							<div class="mt-2">
-								<input required type="tel" name="phone" value={ patient.Phone } id="phone" autocomplete="tel" class="input input-bordered block w-full"/>
+								<input required type="tel" name="phone" value={ patient.Phone } id="phone" autocomplete="tel" class="input block w-full"/>
 								if patient.FieldError("phone") != "" {
 									<div class="label">
-										<span class="label-text-alt text-error">{ patient.FieldError("phone") }</span>
+										<span class="text-error">{ patient.FieldError("phone") }</span>
 									</div>
 								}
 							</div>
@@ -245,10 +245,10 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 						<div class="sm:col-span-4">
 							<label for="email" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.email_address") }</label>
 							<div class="mt-2">
-								<input type="email" name="email" value={ patient.Email } id="email" autocomplete="email" class="input input-bordered block w-full"/>
+								<input type="email" name="email" value={ patient.Email } id="email" autocomplete="email" class="input block w-full"/>
 								if patient.FieldError("email") != "" {
 									<div class="label">
-										<span class="label-text-alt text-error">{ patient.FieldError("email") }</span>
+										<span class="text-error">{ patient.FieldError("email") }</span>
 									</div>
 								}
 							</div>
@@ -269,14 +269,14 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 										value={ strconv.Itoa(patient.Age) }
 									}
 									autocomplete="age"
-									class="input input-bordered block w-full"
+									class="input block w-full"
 								/>
 							</div>
 						</div>
 						<div class="sm:col-span-4">
 							<label for="ocupation" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.ocupation") }</label>
 							<div class="mt-2">
-								<input type="text" name="ocupation" value={ patient.Ocupation } id="ocupation" autocomplete="ocupation" class="input input-bordered block w-full"/>
+								<input type="text" name="ocupation" value={ patient.Ocupation } id="ocupation" autocomplete="ocupation" class="input block w-full"/>
 							</div>
 						</div>
 						<div class="col-span-full">
@@ -316,31 +316,31 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 						<div class="col-span-full">
 							<label for="street-address" class="block text-sm font-medium leading-6">{ c.l("str.address_street") }</label>
 							<div class="mt-2">
-								<input type="text" name="addressLine1" value={ patient.Address.Line1 } id="address_line1" autocomplete="street-address" class="input input-bordered block w-full"/>
+								<input type="text" name="addressLine1" value={ patient.Address.Line1 } id="address_line1" autocomplete="street-address" class="input block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-2 sm:col-start-1">
 							<label for="city" class="block text-sm font-medium leading-6">{ c.l("str.address_city") }</label>
 							<div class="mt-2">
-								<input type="text" name="addressCity" value={ patient.Address.City } id="address_city" autocomplete="address-level2" class="input input-bordered block w-full"/>
+								<input type="text" name="addressCity" value={ patient.Address.City } id="address_city" autocomplete="address-level2" class="input block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-2">
 							<label for="region" class="block text-sm font-medium leading-6">{ c.l("str.address_state") }</label>
 							<div class="mt-2">
-								<input type="text" name="addressState" value={ patient.Address.State } id="address_state" autocomplete="address-level1" class="input input-bordered block w-full"/>
+								<input type="text" name="addressState" value={ patient.Address.State } id="address_state" autocomplete="address-level1" class="input block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-2">
 							<label for="postal-code" class="block text-sm font-medium leading-6">{ c.l("str.address_zip_code") }</label>
 							<div class="mt-2">
-								<input type="text" name="addressZipCode" value={ patient.Address.Zip } id="address_zip_code" autocomplete="postal-code" class="input input-bordered block w-full"/>
+								<input type="text" name="addressZipCode" value={ patient.Address.Zip } id="address_zip_code" autocomplete="postal-code" class="input block w-full"/>
 							</div>
 						</div>
 						<div class="sm:col-span-4">
 							<label for="country" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.address_country") }</label>
 							<div class="mt-2">
-								<select id="country" name="addressCountry" autocomplete="country-name" class="select select-bordered block w-full">
+								<select id="country" name="addressCountry" autocomplete="country-name" class="select block w-full">
 									@CountryOption("none", "none", patient.Country)
 									@CountryOption("Mexico", "Mexico", patient.Country)
 									@CountryOption("United States", "United States", patient.Country)
@@ -369,7 +369,7 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 							<div class="mt-2">
 								<textarea
 									name="familyHistory"
-									class="textarea textarea-bordered w-full block"
+									class="textarea w-full block"
 									placeholder={ c.l("str.family_history_ph") }
 								>{ patient.FamilyHistory }</textarea>
 							</div>
@@ -379,7 +379,7 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 							<div class="mt-2">
 								<textarea
 									name="medicalBackground"
-									class="textarea textarea-bordered w-full block"
+									class="textarea w-full block"
 									placeholder={ c.l("str.background_ph") }
 								>{ patient.MedicalBackground }</textarea>
 							</div>
@@ -389,7 +389,7 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 							<div class="mt-2">
 								<textarea
 									name="notes"
-									class="textarea textarea-bordered w-full block"
+									class="textarea w-full block"
 									placeholder={ c.l("str.notes_ph") }
 								>
 									{ patient.Notes }
