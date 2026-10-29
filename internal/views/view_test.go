@@ -432,3 +432,42 @@ func TestToastAndPasswordToggleMarkup(t *testing.T) {
 		}
 	})
 }
+
+func TestGlobalToastRegionDelivery(t *testing.T) {
+	tests := []struct {
+		name        string
+		htmx        bool
+		wantPartial bool
+	}{
+		{"full page load renders the toast inline only", false, false},
+		{"htmx request also sends it as a toast partial", true, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var html strings.Builder
+			app := fiber.New()
+			app.Get("/", func(fc fiber.Ctx) error {
+				c := NewCtx(fc, WithToast("Saved", "", "success"))
+				return GlobalToastRegion(c).Render(fc.Context(), &html)
+			})
+
+			req := httptest.NewRequest(http.MethodGet, "/", nil)
+			if tt.htmx {
+				req.Header.Set("HX-Request", "true")
+			}
+			if _, err := app.Test(req); err != nil {
+				t.Fatalf("request failed: %v", err)
+			}
+
+			got := html.String()
+			inline, partial, gotPartial := strings.Cut(got, `<hx-partial hx-target="#toast_region"`)
+			if !strings.Contains(inline, "Saved") {
+				t.Errorf("toast region has no inline toast: %s", got)
+			}
+			if gotPartial != tt.wantPartial || (gotPartial && !strings.Contains(partial, "Saved")) {
+				t.Errorf("toast partial sent = %v, want %v: %s", gotPartial, tt.wantPartial, got)
+			}
+		})
+	}
+}
