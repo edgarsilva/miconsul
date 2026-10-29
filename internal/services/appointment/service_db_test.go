@@ -60,6 +60,20 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 		if _, err := svc.TakeClinicByUID(ctx, user.ID, " "+clinic.UID+" "); err != nil {
 			t.Fatalf("take clinic by padded uid: %v", err)
 		}
+		if _, err := svc.TakePatientByUIDWithLastDoneAppointment(ctx, user.ID, " "+patient.UID+" "); err != nil {
+			t.Fatalf("take patient with last appointment by padded uid: %v", err)
+		}
+
+		apnt := models.Appointment{UserID: user.ID, ClinicID: clinic.ID, PatientID: patient.ID, BookedAt: time.Now().Add(time.Hour), Token: "tok_padded"}
+		if err := svc.CreateAppointment(ctx, &apnt); err != nil {
+			t.Fatalf("create appointment: %v", err)
+		}
+		if _, err := svc.TakeAppointmentByUID(ctx, user.ID, " "+apnt.UID+" "); err != nil {
+			t.Fatalf("take appointment by padded uid: %v", err)
+		}
+		if _, err := svc.TakeAppointmentByToken(ctx, " "+apnt.Token+" "); err != nil {
+			t.Fatalf("take appointment by padded token: %v", err)
+		}
 	})
 
 	t.Run("patient link actions", func(t *testing.T) {

@@ -1,5 +1,7 @@
 package views
 
+import "fmt"
+
 templ GlobalToastRegion(c *Ctx) {
 	<div
 		aria-live="assertive"
@@ -70,4 +72,32 @@ templ CmpToast(msg, sub, level string) {
 			</div>
 		</div>
 	</div>
+}
+
+// CmpToastPartial shows a toast from an HTMX response without replacing the
+// request's target: HTMX 4 appends it to the toast region and skips the main
+// swap.
+templ CmpToastPartial(msg, sub, level string) {
+	<hx-partial hx-target="#toast_region" hx-swap="beforeend">
+		@CmpToast(msg, sub, level)
+	</hx-partial>
+}
+
+// SearchFailedMsg tells the user a search couldn't run.
+const SearchFailedMsg = "The search couldn't be completed right now, please try again"
+
+// SearchTooShortMsg tells the user a search term needs at least minLen
+// characters.
+func SearchTooShortMsg(minLen int) string {
+	return fmt.Sprintf("Type at least %d characters to search", minLen)
+}
+
+// CmpSearchTooShortToast shows SearchTooShortMsg as a toast partial.
+templ CmpSearchTooShortToast(minLen int) {
+	@CmpToastPartial(SearchTooShortMsg(minLen), "", "warning")
+}
+
+// CmpSearchFailedToast shows SearchFailedMsg as a toast partial.
+templ CmpSearchFailedToast() {
+	@CmpToastPartial(SearchFailedMsg, "", "error")
 }

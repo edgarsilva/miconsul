@@ -98,11 +98,11 @@ dev: docker/up ## Start infra, then tailwind/watch, templ/watch, and air/watch
 ##@ Tests
 test: ## Run all tests
 	@echo "Testing all"
-	go test ./cmd/... ./internal/... ./tests/...
+	go test -tags fts5 ./cmd/... ./internal/... ./tests/...
 
 test/race: ## Run all tests with race detector
 	@echo "Testing all with race detector"
-	go test -race ./cmd/... ./internal/... ./tests/...
+	go test -race -tags fts5 ./cmd/... ./internal/... ./tests/...
 
 test/coverage: ## Coverage
 	@bash scripts/test_coverage.sh

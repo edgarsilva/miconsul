@@ -83,6 +83,27 @@ func (s service) UpdateUserProfileByUID(ctx context.Context, userUID string, upd
 	return user, nil
 }
 
+// RemoveProfilePicByUID clears the user's profile picture and returns the
+// updated user.
+func (s service) RemoveProfilePicByUID(ctx context.Context, userUID string) (models.User, error) {
+	userUID = strings.TrimSpace(userUID)
+	if userUID == "" {
+		return models.User{}, ErrIDRequired
+	}
+
+	rowsAffected, err := gorm.G[models.User](s.DB.GormDB()).
+		Where("uid = ?", userUID).
+		Update(ctx, "profile_pic", "")
+	if err != nil {
+		return models.User{}, err
+	}
+	if rowsAffected != 1 {
+		return models.User{}, gorm.ErrRecordNotFound
+	}
+
+	return s.TakeUserByUID(ctx, userUID)
+}
+
 func normalizeUserWriteInput(user *models.User) error {
 	if user == nil {
 		return errors.New("user is required")

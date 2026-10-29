@@ -174,16 +174,19 @@ func TestClinicHandlers(t *testing.T) {
 		}
 	})
 
-	t.Run("search term shorter than 3 returns bad request", func(t *testing.T) {
-		resp, _ := h.doRequest(requestOptions{
+	t.Run("search term shorter than 3 shows a toast", func(t *testing.T) {
+		resp, body := h.doRequest(requestOptions{
 			method:    http.MethodGet,
 			path:      "/clinics/search?searchTerm=ab",
 			authToken: token,
 			htmx:      true,
 		})
 
-		if resp.StatusCode != http.StatusBadRequest {
-			t.Fatalf("expected 400 for short clinic search term, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("expected 200 for short clinic search term, got %d", resp.StatusCode)
+		}
+		if !strings.Contains(body, "at least 3 characters") || strings.Contains(body, `id="clinics_list"`) {
+			t.Fatalf("expected only a short-term toast, got %s", body)
 		}
 	})
 

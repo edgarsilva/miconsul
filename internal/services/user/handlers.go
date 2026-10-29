@@ -195,7 +195,7 @@ func (s *service) HandleRemoveProfilePic(c fiber.Ctx) error {
 func (s *service) HandleAdminRemoveProfilePic(c fiber.Ctx) error {
 	userID := c.Params("id", "")
 
-	updatedUser, err := s.UpdateUserProfileByUID(c.Context(), userID, models.User{ProfilePic: ""})
+	updatedUser, err := s.RemoveProfilePicByUID(c.Context(), userID)
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.respondWithRedirect(c, "/admin/users?toast=User does not exist&level=warning")
 	}

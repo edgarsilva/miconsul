@@ -209,13 +209,13 @@ func TestBootstrapServer(t *testing.T) {
 		t.Fatal("bootstrapServer() expected non-nil session store")
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/metrics", nil)
+	req := httptest.NewRequest(http.MethodGet, "/readyz", nil)
 	resp, err := result.server.App.Test(req)
 	if err != nil {
-		t.Fatalf("bootstrapServer() metrics request failed: %v", err)
+		t.Fatalf("bootstrapServer() readyz request failed: %v", err)
 	}
-	if resp.StatusCode == http.StatusNotFound {
-		t.Fatalf("bootstrapServer() expected /metrics to be registered, got status %d", resp.StatusCode)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("bootstrapServer() expected /readyz to report ready, got status %d", resp.StatusCode)
 	}
 }
 

@@ -57,7 +57,7 @@ This file provides repo-specific guidance for coding assistants working on this 
   - `make templ/build` (preferred; also rebuilds Tailwind)
   - or `templ generate` if using the CLI directly
 - Validate with:
-  - `go test ./...`
+  - `make test` (or `go test -tags fts5 ./...`). Production builds with `fts5`; without the tag, FTS-dependent tests skip silently.
 
 ## Change Scope Discipline
 
