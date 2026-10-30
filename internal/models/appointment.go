@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"strconv"
+	"strings"
 	"time"
 
 	"miconsul/internal/lib/libtime"
@@ -156,16 +157,37 @@ func (a Appointment) AlertableType() string {
 
 // Scopes
 
-func AppointmentBookedToday(db *gorm.DB) *gorm.DB {
-	return appointmentBookedWithin(db, time.Now(), "day")
+// AppointmentBookedIn scopes appointments to the current day, week or month
+// in the default timezone; any other timeframe means day.
+func AppointmentBookedIn(timeframe string) func(*gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return appointmentBookedWithin(db, time.Now(), timeframe)
+	}
 }
 
-func AppointmentBookedThisWeek(db *gorm.DB) *gorm.DB {
-	return appointmentBookedWithin(db, time.Now(), "week")
+// AppointmentWithStatus scopes appointments to statuses; with none it adds no
+// condition.
+func AppointmentWithStatus(statuses ...AppointmentStatus) func(*gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if len(statuses) == 0 {
+			return db
+		}
+
+		return db.Where("appointments.status IN ?", statuses)
+	}
 }
 
-func AppointmentBookedThisMonth(db *gorm.DB) *gorm.DB {
-	return appointmentBookedWithin(db, time.Now(), "month")
+// ParseAppointmentStatuses splits a comma-separated status list, trimming
+// spaces and dropping empty entries.
+func ParseAppointmentStatuses(list string) []AppointmentStatus {
+	statuses := []AppointmentStatus{}
+	for token := range strings.SplitSeq(list, ",") {
+		if token = strings.TrimSpace(token); token != "" {
+			statuses = append(statuses, AppointmentStatus(token))
+		}
+	}
+
+	return statuses
 }
 
 func (a *Appointment) LocalTimezone() string {

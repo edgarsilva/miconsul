@@ -6,7 +6,6 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"miconsul/internal/lib/libtime"
@@ -55,32 +54,17 @@ func (s service) FavoriteClinic(c fiber.Ctx, userID uint) (models.Clinic, error)
 // comma-separated statusFilter when it is not empty.
 func (s service) FindAppointmentsBy(ctx context.Context, userID uint, timeframe, statusFilter string, limit int) ([]models.Appointment, error) {
 	appointments := []models.Appointment{}
-	query := s.DB.WithContext(ctx).
+	statuses := models.ParseAppointmentStatuses(statusFilter)
+	err := s.DB.WithContext(ctx).
 		Model(models.Appointment{}).
 		Preload("Patient").
 		Preload("Clinic").
-		Where("user_id = ?", userID)
-
-	switch timeframe {
-	case "day":
-		query.Scopes(models.AppointmentBookedToday)
-	case "week":
-		query.Scopes(models.AppointmentBookedThisWeek)
-	case "month":
-		query.Scopes(models.AppointmentBookedThisMonth)
-	default:
-		query.Scopes(models.AppointmentBookedToday)
-	}
-
-	if statusFilter != "" {
-		statuses := strings.Split(statusFilter, ",")
-		for i := range statuses {
-			statuses[i] = strings.TrimSpace(statuses[i])
-		}
-		query.Where("status IN ?", statuses)
-	}
-
-	if err := query.Limit(limit).Find(&appointments).Error; err != nil {
+		Where("user_id = ?", userID).
+		Scopes(models.AppointmentBookedIn(timeframe), models.AppointmentWithStatus(statuses...)).
+		Limit(limit).
+		Find(&appointments).
+		Error
+	if err != nil {
 		return appointments, fmt.Errorf("find dashboard appointments: %w", err)
 	}
 

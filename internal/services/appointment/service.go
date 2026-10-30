@@ -441,27 +441,9 @@ func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, patientID
 		dbquery = dbquery.Where("appointments.patient_id IN ? OR appointments.clinic_id IN ?", patientIDs, clinicIDs)
 	}
 
-	switch timeframe {
-	case "day":
-		dbquery = dbquery.Scopes(models.AppointmentBookedToday)
-	case "week":
-		dbquery = dbquery.Scopes(models.AppointmentBookedThisWeek)
-	case "month":
-		dbquery = dbquery.Scopes(models.AppointmentBookedThisMonth)
-	default:
-		dbquery = dbquery.Scopes(models.AppointmentBookedToday)
-	}
-
-	statusFilter = strings.TrimSpace(statusFilter)
-	if statusFilter != "" {
-		statuses := strings.Split(statusFilter, ",")
-		for i := range statuses {
-			statuses[i] = strings.TrimSpace(statuses[i])
-		}
-		dbquery = dbquery.Where("status IN ?", statuses)
-	}
-
-	err := dbquery.Preload("Clinic").
+	statuses := models.ParseAppointmentStatuses(statusFilter)
+	err := dbquery.Scopes(models.AppointmentBookedIn(timeframe), models.AppointmentWithStatus(statuses...)).
+		Preload("Clinic").
 		Preload("Patient").
 		Order("booked_at desc").
 		Limit(20).
