@@ -3,12 +3,12 @@ package dashboard
 
 import (
 	"errors"
-	"fmt"
-	"strings"
 
+	"miconsul/internal/lib/libtime"
 	"miconsul/internal/models"
 	view "miconsul/internal/views"
 
+	"github.com/a-h/templ"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
 )
@@ -29,40 +29,10 @@ func (s *service) HandleHomePage(c fiber.Ctx) error {
 // GET: /dashboard
 func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
-	timeframe := c.Query("timeframe", "day")
-	statusFilter := strings.TrimSpace(c.Query("status", ""))
+	timeframe := libtime.ParseTimeframe(c.Query("timeframe", ""))
+	statuses := models.ParseAppointmentStatuses(c.Query("status", ""))
 
-	appointments := []models.Appointment{}
-	query := s.DB.WithContext(c.Context()).
-		Model(models.Appointment{}).
-		Preload("Patient").
-		Preload("Clinic").
-		Where("user_id = ?", cu.ID)
-
-	switch timeframe {
-	case "day":
-		query.Scopes(models.AppointmentBookedToday)
-	case "week":
-		query.Scopes(models.AppointmentBookedThisWeek)
-	case "month":
-		query.Scopes(models.AppointmentBookedThisMonth)
-	default:
-		query.Scopes(models.AppointmentBookedToday)
-	}
-
-	if statusFilter != "" {
-		statuses := strings.Split(statusFilter, ",")
-		for i := range statuses {
-			statuses[i] = strings.TrimSpace(statuses[i])
-		}
-		query.Where("status IN ?", statuses)
-	}
-
-	var appointmentsErr error
-	if err := query.Limit(10).Find(&appointments).Error; err != nil {
-		appointmentsErr = fmt.Errorf("find dashboard appointments: %w", err)
-	}
-
+	appointments, appointmentsErr := s.FindAppointmentsBy(c.Context(), cu.ID, timeframe, statuses, 10)
 	clinic, clinicErr := s.FavoriteClinic(c, cu.ID)
 	stats, statsErr := s.CalcDashboardStats(c.Context(), cu)
 	feedEvents, feedErr := s.FindFeedEventsByUserID(c.Context(), cu.ID, 10)
@@ -74,4 +44,26 @@ func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 	}
 
 	return view.Render(c, view.DashboardPage(vc, stats, appointments, clinic, feedEvents))
+}
+
+// HandleAppointmentsSection renders the dashboard appointments section for
+// its timeframe and status filter links.
+// GET: /dashboard/appointments
+func (s *service) HandleAppointmentsSection(c fiber.Ctx) error {
+	cu := s.CurrentUser(c)
+	timeframe := libtime.ParseTimeframe(c.Query("timeframe", ""))
+	statuses := models.ParseAppointmentStatuses(c.Query("status", ""))
+
+	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, timeframe, statuses, 10)
+	vc := view.NewCtx(c)
+	section := view.AppointmentsSection(vc, appointments, true, models.Patient{}, models.Clinic{}, "/dashboard", "/dashboard/appointments")
+	if err != nil {
+		log.Error("load dashboard appointments:", err)
+		return view.Render(c, templ.Join(
+			section,
+			view.CmpToastPartial("Failed to load appointments, please try again", "", "error"),
+		))
+	}
+
+	return view.Render(c, section)
 }

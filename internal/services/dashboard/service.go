@@ -49,6 +49,26 @@ func (s service) FavoriteClinic(c fiber.Ctx, userID uint) (models.Clinic, error)
 	return clinics[0], nil
 }
 
+// FindAppointmentsBy returns up to limit of the user's appointments booked
+// in timeframe, filtered by statuses when there are any.
+func (s service) FindAppointmentsBy(ctx context.Context, userID uint, timeframe libtime.Timeframe, statuses []models.AppointmentStatus, limit int) ([]models.Appointment, error) {
+	appointments := []models.Appointment{}
+	err := s.DB.WithContext(ctx).
+		Model(models.Appointment{}).
+		Preload("Patient").
+		Preload("Clinic").
+		Where("user_id = ?", userID).
+		Scopes(models.AppointmentBookedIn(timeframe), models.AppointmentWithStatus(statuses...)).
+		Limit(limit).
+		Find(&appointments).
+		Error
+	if err != nil {
+		return appointments, fmt.Errorf("find dashboard appointments: %w", err)
+	}
+
+	return appointments, nil
+}
+
 func (s service) FindFeedEventsByUserID(ctx context.Context, userID uint, limit int) ([]models.FeedEvent, error) {
 	var events []models.FeedEvent
 	since := time.Now().UTC().AddDate(0, 0, -3)

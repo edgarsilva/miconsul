@@ -72,7 +72,7 @@ templ AppointmentsPage(c *Ctx, appointments []models.Appointment, selectedPatien
 						{ c.l("btn.new") }
 					</a>
 				</hgroup>
-				@AppointmentsSection(c, appointments, false, selectedPatient, selectedClinic)
+				@AppointmentsSection(c, appointments, false, selectedPatient, selectedClinic, "/appointments", "/appointments/search")
 			</div>
 		</section>
 	}
@@ -91,13 +91,14 @@ templ AppointmentPage(c *Ctx, appointment models.Appointment, patients []models.
 	}
 }
 
-templ AppointmentsSection(c *Ctx, appointments []models.Appointment, showTitle bool, selectedPatient models.Patient, selectedClinic models.Clinic) {
+// AppointmentsSection renders the filterable appointments list. Filter links
+// fetch the section from sectionPath and push pagePath into the history.
+templ AppointmentsSection(c *Ctx, appointments []models.Appointment, showTitle bool, selectedPatient models.Patient, selectedClinic models.Clinic, pagePath, sectionPath string) {
 	<section id="appointments_section" class="app-card col-span-2 flex flex-col pt-4">
 		<div
 			class="relative items-center flex justify-between border-b border-base-content/10 pb-2"
 			hx-swap:inherited="outerHTML"
 			hx-target:inherited="closest section"
-			hx-select:inherited="#appointments_section"
 		>
 			<div class="flex items-center gap-4">
 				<h3 class="font-semibold text-xl flex items-center gap-4">
@@ -106,7 +107,7 @@ templ AppointmentsSection(c *Ctx, appointments []models.Appointment, showTitle b
 					}
 					if c.Query("patientId", "") != "" {
 						<a
-							href={ templ.URL(c.Path() + QueryParams(c, "patientId=")) }
+							href={ templ.URL(pagePath + QueryParams(c, "patientId=")) }
 							class="badge badge-secondary badge-outline gap-2 hover:bg-secondary hover:text-secondary-content"
 						>
 							{ selectedPatient.Email }
@@ -115,7 +116,7 @@ templ AppointmentsSection(c *Ctx, appointments []models.Appointment, showTitle b
 					}
 					if c.Query("clinicId", "") != "" {
 						<a
-							href={ templ.URL(c.Path() + QueryParams(c, "clinicId=")) }
+							href={ templ.URL(pagePath + QueryParams(c, "clinicId=")) }
 							class="badge badge-secondary badge-outline gap-2 hover:bg-secondary hover:text-secondary-content"
 						>
 							{ selectedClinic.Name }
@@ -126,22 +127,22 @@ templ AppointmentsSection(c *Ctx, appointments []models.Appointment, showTitle b
 				<div class="hidden md:flex items-center gap-1">
 					<a
 						class={ "btn btn-xs btn-soft opacity-45 hover:opacity-100", templ.KV("btn-success opacity-90 ring-1 ring-success/50", strings.Contains(c.Query("status", ""), "confirmed")) }
-						href={ templ.URL(c.Path() + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "confirmed"))) }
-						hx-get={ c.Path() + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "confirmed")) }
-						hx-push-url={ c.Path() + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "confirmed")) }
+						href={ templ.URL(pagePath + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "confirmed"))) }
+						hx-get={ sectionPath + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "confirmed")) }
+						hx-push-url={ pagePath + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "confirmed")) }
 					>{ c.l("str.confirmed") }</a>
 					<a
 						class={ "btn btn-xs btn-soft opacity-45 hover:opacity-100", templ.KV("btn-neutral opacity-90 ring-1 ring-neutral/50", strings.Contains(c.Query("status", ""), "pending")) }
-						href={ templ.URL(c.Path() + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "pending"))) }
-						hx-get={ c.Path() + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "pending")) }
-						hx-push-url={ c.Path() + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "pending")) }
+						href={ templ.URL(pagePath + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "pending"))) }
+						hx-get={ sectionPath + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "pending")) }
+						hx-push-url={ pagePath + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "pending")) }
 					>{ c.l("str.pending") }</a>
 					if c.Query("status", "") != "" {
 						<a
 							class="btn btn-xs btn-square btn-ghost opacity-75 hover:opacity-90"
-							href={ templ.URL(c.Path() + QueryParams(c, "status=")) }
-							hx-get={ c.Path() + QueryParams(c, "status=") }
-							hx-push-url={ c.Path() + QueryParams(c, "status=") }
+							href={ templ.URL(pagePath + QueryParams(c, "status=")) }
+							hx-get={ sectionPath + QueryParams(c, "status=") }
+							hx-push-url={ pagePath + QueryParams(c, "status=") }
 						>
 							@IconClose("size-4")
 						</a>
@@ -168,27 +169,27 @@ templ AppointmentsSection(c *Ctx, appointments []models.Appointment, showTitle b
 						<a
 							class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium",
               templ.KV("bg-secondary/35 text-secondary-content", c.Query("timeframe", "day") == "day") }
-							href={ templ.URL(c.Path() + QueryParams(c, "timeframe=day")) }
-							hx-get={ c.Path() + QueryParams(c, "timeframe=day") }
-							hx-push-url={ c.Path() + QueryParams(c, "timeframe=day") }
+							href={ templ.URL(pagePath + QueryParams(c, "timeframe=day")) }
+							hx-get={ sectionPath + QueryParams(c, "timeframe=day") }
+							hx-push-url={ pagePath + QueryParams(c, "timeframe=day") }
 						>{ c.l("nav.my_day") }</a>
 					</li>
 					<li>
 						<a
 							class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium",
               templ.KV("bg-secondary/15 text-secondary-content", c.Query("timeframe") == "week") }
-							href={ templ.URL(c.Path() + QueryParams(c, "timeframe=week")) }
-							hx-get={ c.Path() + QueryParams(c, "timeframe=week") }
-							hx-push-url={ c.Path() + QueryParams(c, "timeframe=week") }
+							href={ templ.URL(pagePath + QueryParams(c, "timeframe=week")) }
+							hx-get={ sectionPath + QueryParams(c, "timeframe=week") }
+							hx-push-url={ pagePath + QueryParams(c, "timeframe=week") }
 						>{ c.l("nav.my_week") }</a>
 					</li>
 					<li>
 						<a
 							class={ "text-base-content/50 hover:text-base-content/70 rounded-md px-3 py-2 text-sm font-medium",
               templ.KV("bg-secondary/15 text-secondary-content",c.Query("timeframe") == "month") }
-							href={ templ.URL(c.Path() + QueryParams(c, "timeframe=month")) }
-							hx-get={ c.Path() + QueryParams(c, "timeframe=month") }
-							hx-push-url={ c.Path() + QueryParams(c, "timeframe=month") }
+							href={ templ.URL(pagePath + QueryParams(c, "timeframe=month")) }
+							hx-get={ sectionPath + QueryParams(c, "timeframe=month") }
+							hx-push-url={ pagePath + QueryParams(c, "timeframe=month") }
 						>{ c.l("nav.my_month") }</a>
 					</li>
 				</ul>
@@ -200,21 +201,21 @@ templ AppointmentsSection(c *Ctx, appointments []models.Appointment, showTitle b
 				>
 					<a
 						class={ "btn btn-sm btn-secondary", templ.KV("opacity-45", c.Query("timeframe", "day") != "day") }
-						href={ templ.URL(c.Path() + QueryParams(c, "timeframe=day")) }
-						hx-get={ c.Path() + QueryParams(c, "timeframe=day") }
-						hx-push-url={ c.Path() + QueryParams(c, "timeframe=day") }
+						href={ templ.URL(pagePath + QueryParams(c, "timeframe=day")) }
+						hx-get={ sectionPath + QueryParams(c, "timeframe=day") }
+						hx-push-url={ pagePath + QueryParams(c, "timeframe=day") }
 					>{ c.l("nav.my_day") }</a>
 					<a
 						class={ "btn btn-sm btn-secondary", templ.KV("opacity-45", c.Query("timeframe", "day") != "week") }
-						href={ templ.URL(c.Path() + QueryParams(c, "timeframe=week")) }
-						hx-get={ c.Path() + QueryParams(c, "timeframe=week") }
-						hx-push-url={ c.Path() + QueryParams(c, "timeframe=week") }
+						href={ templ.URL(pagePath + QueryParams(c, "timeframe=week")) }
+						hx-get={ sectionPath + QueryParams(c, "timeframe=week") }
+						hx-push-url={ pagePath + QueryParams(c, "timeframe=week") }
 					>{ c.l("nav.my_week") }</a>
 					<a
 						class={ "btn btn-sm btn-secondary", templ.KV("opacity-45", c.Query("timeframe", "day") != "month") }
-						href={ templ.URL(c.Path() + QueryParams(c, "timeframe=month")) }
-						hx-get={ c.Path() + QueryParams(c, "timeframe=month") }
-						hx-push-url={ c.Path() + QueryParams(c, "timeframe=month") }
+						href={ templ.URL(pagePath + QueryParams(c, "timeframe=month")) }
+						hx-get={ sectionPath + QueryParams(c, "timeframe=month") }
+						hx-push-url={ pagePath + QueryParams(c, "timeframe=month") }
 					>{ c.l("nav.my_month") }</a>
 				</nav>
 			</div>

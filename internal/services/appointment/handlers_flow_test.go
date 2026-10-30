@@ -583,3 +583,56 @@ func TestIndexSearchToasts(t *testing.T) {
 		})
 	}
 }
+
+func TestIndexSectionFilterLinks(t *testing.T) {
+	tests := []struct {
+		name string
+		path string
+		htmx bool
+	}{
+		{"index page", "/appointments?timeframe=day", false},
+		{"search fragment", "/appointments/search?timeframe=day", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc, user, _, _ := newAppointmentServiceForTests(t)
+
+			app := fiber.New()
+			app.Get("/appointments", func(c fiber.Ctx) error {
+				c.Locals("current_user", user)
+				return svc.HandleIndexPage(c)
+			})
+			app.Get("/appointments/search", func(c fiber.Ctx) error {
+				c.Locals("current_user", user)
+				return svc.HandleIndexSearch(c)
+			})
+
+			req := httptest.NewRequest(http.MethodGet, tt.path, nil)
+			if tt.htmx {
+				req.Header.Set("HX-Request", "true")
+			}
+			resp, err := app.Test(req)
+			if err != nil || resp.StatusCode != fiber.StatusOK {
+				t.Fatalf("expected 200, got status=%d err=%v", resp.StatusCode, err)
+			}
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("read body: %v", err)
+			}
+
+			for _, want := range []string{
+				`href="/appointments?timeframe=week"`,
+				`hx-get="/appointments/search?timeframe=week"`,
+				`hx-push-url="/appointments?timeframe=week"`,
+			} {
+				if !strings.Contains(string(body), want) {
+					t.Errorf("body missing %s", want)
+				}
+			}
+			if strings.Contains(string(body), "hx-select") {
+				t.Errorf("section narrows its response with hx-select")
+			}
+		})
+	}
+}

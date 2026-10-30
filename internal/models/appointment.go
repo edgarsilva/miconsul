@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"strconv"
+	"strings"
 	"time"
 
 	"miconsul/internal/lib/libtime"
@@ -157,15 +158,53 @@ func (a Appointment) AlertableType() string {
 // Scopes
 
 func AppointmentBookedToday(db *gorm.DB) *gorm.DB {
-	return appointmentBookedWithin(db, time.Now(), "day")
+	return appointmentBookedWithin(db, time.Now(), libtime.TimeframeDay)
 }
 
 func AppointmentBookedThisWeek(db *gorm.DB) *gorm.DB {
-	return appointmentBookedWithin(db, time.Now(), "week")
+	return appointmentBookedWithin(db, time.Now(), libtime.TimeframeWeek)
 }
 
 func AppointmentBookedThisMonth(db *gorm.DB) *gorm.DB {
-	return appointmentBookedWithin(db, time.Now(), "month")
+	return appointmentBookedWithin(db, time.Now(), libtime.TimeframeMonth)
+}
+
+// AppointmentBookedIn returns the booked-in scope for timeframe; any other
+// timeframe means today.
+func AppointmentBookedIn(timeframe libtime.Timeframe) func(*gorm.DB) *gorm.DB {
+	switch timeframe {
+	case libtime.TimeframeWeek:
+		return AppointmentBookedThisWeek
+	case libtime.TimeframeMonth:
+		return AppointmentBookedThisMonth
+	default:
+		return AppointmentBookedToday
+	}
+}
+
+// AppointmentWithStatus scopes appointments to statuses; with none it adds no
+// condition.
+func AppointmentWithStatus(statuses ...AppointmentStatus) func(*gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if len(statuses) == 0 {
+			return db
+		}
+
+		return db.Where("appointments.status IN ?", statuses)
+	}
+}
+
+// ParseAppointmentStatuses splits a comma-separated status list, trimming
+// spaces and dropping empty entries.
+func ParseAppointmentStatuses(list string) []AppointmentStatus {
+	statuses := []AppointmentStatus{}
+	for token := range strings.SplitSeq(list, ",") {
+		if token = strings.TrimSpace(token); token != "" {
+			statuses = append(statuses, AppointmentStatus(token))
+		}
+	}
+
+	return statuses
 }
 
 func (a *Appointment) LocalTimezone() string {
@@ -200,8 +239,8 @@ func (a Appointment) FeedEventTarget() (name, id, typ, url string) {
 	return a.Patient.Name, a.Patient.UID, "patients", "/patients/" + a.Patient.UID
 }
 
-func appointmentBookedWithin(db *gorm.DB, now time.Time, timeframe string) *gorm.DB {
-	start, end := libtime.TimeframeBounds(now, DefaultTimezone, libtime.Timeframe(timeframe))
+func appointmentBookedWithin(db *gorm.DB, now time.Time, timeframe libtime.Timeframe) *gorm.DB {
+	start, end := libtime.TimeframeBounds(now, DefaultTimezone, timeframe)
 
 	return db.Where("booked_at >= ?", start.UTC()).Where("booked_at < ?", end.UTC())
 }

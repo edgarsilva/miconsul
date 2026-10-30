@@ -2,6 +2,8 @@ package models
 
 import (
 	"encoding/json/v2"
+	"miconsul/internal/lib/libtime"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -98,6 +100,32 @@ func TestScopesAndBaseHelpers(t *testing.T) {
 	month := db.Model(&Appointment{}).Scopes(AppointmentBookedThisMonth).Find(&[]Appointment{}).Statement.SQL.String()
 	if !strings.Contains(strings.ToLower(month), "booked_at") {
 		t.Fatalf("expected booked month scope to query booked_at")
+	}
+
+	bookedIn := func(timeframe libtime.Timeframe) *gorm.Statement {
+		return db.Model(&Appointment{}).Scopes(AppointmentBookedIn(timeframe)).Find(&[]Appointment{}).Statement
+	}
+	day := bookedIn(libtime.TimeframeDay)
+	for _, timeframe := range []libtime.Timeframe{libtime.TimeframeDay, libtime.TimeframeWeek, libtime.TimeframeMonth} {
+		if sql := bookedIn(timeframe).SQL.String(); !strings.Contains(strings.ToLower(sql), "booked_at") {
+			t.Fatalf("expected booked %s scope to query booked_at, got %s", timeframe, sql)
+		}
+	}
+	if week := bookedIn(libtime.TimeframeWeek); reflect.DeepEqual(week.Vars, day.Vars) {
+		t.Fatalf("expected week bounds to differ from day bounds")
+	}
+	if unknown := bookedIn("fortnight"); !reflect.DeepEqual(unknown.Vars, day.Vars) {
+		t.Fatalf("expected an unknown timeframe to use day bounds, got %v want %v", unknown.Vars, day.Vars)
+	}
+
+	withStatus := func(statuses ...AppointmentStatus) string {
+		return db.Model(&Appointment{}).Scopes(AppointmentWithStatus(statuses...)).Find(&[]Appointment{}).Statement.SQL.String()
+	}
+	if sql := withStatus(); strings.Contains(sql, "status") {
+		t.Fatalf("expected no status condition without statuses, got %s", sql)
+	}
+	if sql := withStatus(AppointmentConfirmed, AppointmentPending); !strings.Contains(sql, "appointments.status IN") {
+		t.Fatalf("expected a status IN condition, got %s", sql)
 	}
 
 	addr := Address{Line1: "L1", Line2: "L2", City: "City", State: "State", Country: "Country", Zip: "123"}
@@ -330,10 +358,29 @@ func TestAppointmentBookedWithinMatchesUTCStorage(t *testing.T) {
 	}
 
 	var count int64
-	if err := appointmentBookedWithin(db.Table("appointments"), now, "day").Count(&count).Error; err != nil {
+	if err := appointmentBookedWithin(db.Table("appointments"), now, libtime.TimeframeDay).Count(&count).Error; err != nil {
 		t.Fatalf("count: %v", err)
 	}
 	if count != 3 {
 		t.Fatalf("booked today = %d, want 3 (start of the day, tonight, last minute)", count)
+	}
+}
+
+func TestParseAppointmentStatuses(t *testing.T) {
+	tests := []struct {
+		list string
+		want []AppointmentStatus
+	}{
+		{"", []AppointmentStatus{}},
+		{" , ", []AppointmentStatus{}},
+		{"confirmed", []AppointmentStatus{AppointmentConfirmed}},
+		{" confirmed, pending ,", []AppointmentStatus{AppointmentConfirmed, AppointmentPending}},
+		{"junk", []AppointmentStatus{"junk"}},
+	}
+
+	for _, tt := range tests {
+		if got := ParseAppointmentStatuses(tt.list); !reflect.DeepEqual(got, tt.want) {
+			t.Errorf("ParseAppointmentStatuses(%q) = %v, want %v", tt.list, got, tt.want)
+		}
 	}
 }

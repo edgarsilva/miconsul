@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"miconsul/internal/lib/libtime"
 	"miconsul/internal/models"
 	"miconsul/internal/server"
 
@@ -403,25 +404,37 @@ func (s *service) recordFeedEvent(ctx context.Context, userID uint, appointmentU
 	}
 }
 
-func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, patientID, clinicID, timeframe, searchTerm, statusFilter string) ([]models.Appointment, error) {
+// appointmentFilter narrows FindAppointmentsBy; zero fields add no condition,
+// except an empty Timeframe, which means day.
+type appointmentFilter struct {
+	PatientUID string
+	ClinicUID  string
+	Timeframe  libtime.Timeframe
+	SearchTerm string
+	Statuses   []models.AppointmentStatus
+}
+
+// FindAppointmentsBy returns up to 20 of the user's appointments matching f,
+// newest first.
+func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, f appointmentFilter) ([]models.Appointment, error) {
 	appointments := []models.Appointment{}
 	dbquery := s.DB.Model(&models.Appointment{}).Where("appointments.user_id = ?", userID)
 
-	if patientID != "" {
+	if f.PatientUID != "" {
 		dbquery = dbquery.Joins("INNER JOIN patients ON patients.id = appointments.patient_id")
 	}
-	if patientID != "" {
-		dbquery = dbquery.Where("patients.uid = ?", patientID)
+	if f.PatientUID != "" {
+		dbquery = dbquery.Where("patients.uid = ?", f.PatientUID)
 	}
 
-	if clinicID != "" {
+	if f.ClinicUID != "" {
 		dbquery = dbquery.Joins("INNER JOIN clinics ON clinics.id = appointments.clinic_id")
 	}
-	if clinicID != "" {
-		dbquery = dbquery.Where("clinics.uid = ?", clinicID)
+	if f.ClinicUID != "" {
+		dbquery = dbquery.Where("clinics.uid = ?", f.ClinicUID)
 	}
 
-	searchTerm = strings.TrimSpace(searchTerm)
+	searchTerm := strings.TrimSpace(f.SearchTerm)
 	applySearch := searchTerm != ""
 	if applySearch {
 		patientIDs, err := s.findPatientIDsBySearchTerm(ctx, userID, searchTerm)
@@ -441,27 +454,8 @@ func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, patientID
 		dbquery = dbquery.Where("appointments.patient_id IN ? OR appointments.clinic_id IN ?", patientIDs, clinicIDs)
 	}
 
-	switch timeframe {
-	case "day":
-		dbquery = dbquery.Scopes(models.AppointmentBookedToday)
-	case "week":
-		dbquery = dbquery.Scopes(models.AppointmentBookedThisWeek)
-	case "month":
-		dbquery = dbquery.Scopes(models.AppointmentBookedThisMonth)
-	default:
-		dbquery = dbquery.Scopes(models.AppointmentBookedToday)
-	}
-
-	statusFilter = strings.TrimSpace(statusFilter)
-	if statusFilter != "" {
-		statuses := strings.Split(statusFilter, ",")
-		for i := range statuses {
-			statuses[i] = strings.TrimSpace(statuses[i])
-		}
-		dbquery = dbquery.Where("status IN ?", statuses)
-	}
-
-	err := dbquery.Preload("Clinic").
+	err := dbquery.Scopes(models.AppointmentBookedIn(f.Timeframe), models.AppointmentWithStatus(f.Statuses...)).
+		Preload("Clinic").
 		Preload("Patient").
 		Order("booked_at desc").
 		Limit(20).

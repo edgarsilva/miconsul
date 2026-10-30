@@ -117,6 +117,7 @@ func DashboardRoutes(s *server.Server, authSvc auth.Runtime) error {
 
 	g := s.Group("/dashboard", mw.MustAuthenticate(authSvc))
 	g.Get("", d.HandleDashboardPage)
+	g.Get("/appointments", d.HandleAppointmentsSection)
 
 	return nil
 }

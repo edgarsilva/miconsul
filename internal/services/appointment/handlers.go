@@ -23,9 +23,9 @@ import (
 // GET: /appointments
 func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
+	filter := appointmentFilterFromQuery(c)
 
-	patientID := c.Query("patientId", "")
-	patient, err := s.takePatientOrZero(c.Context(), cu.ID, patientID)
+	patient, err := s.takePatientOrZero(c.Context(), cu.ID, filter.PatientUID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.RedirectWithToast(c, "/appointments", "Selected patient does not exist", "warning")
 	}
@@ -33,18 +33,14 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/appointments", "Failed to load selected patient", "error")
 	}
 
-	clinicID := c.Query("clinicId", "")
-	clinic, err := s.takeClinicOrZero(c.Context(), cu.ID, clinicID)
+	clinic, err := s.takeClinicOrZero(c.Context(), cu.ID, filter.ClinicUID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.RedirectWithToast(c, "/appointments", "Selected clinic does not exist", "warning")
 	}
 	if err != nil {
 		return s.RedirectWithToast(c, "/appointments", "Failed to load selected clinic", "error")
 	}
-	timeframe := strings.TrimSpace(c.Query("timeframe", "day"))
-	searchTerm := strings.TrimSpace(c.Query("searchTerm", ""))
-	statusFilter := strings.TrimSpace(c.Query("status", ""))
-	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, patientID, clinicID, timeframe, searchTerm, statusFilter)
+	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, filter)
 	if err != nil {
 		return s.RedirectWithToast(c, "/appointments", "Failed to load appointments", "error")
 	}
@@ -56,8 +52,8 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 // HandleIndexSearch runs the appointments index search.
 // GET: /appointments/search
 func (s *service) HandleIndexSearch(c fiber.Ctx) error {
-	searchTerm := strings.TrimSpace(c.Query("searchTerm", ""))
-	if searchTermTooShort(searchTerm) {
+	filter := appointmentFilterFromQuery(c)
+	if searchTermTooShort(filter.SearchTerm) {
 		if s.NotHTMX(c) {
 			return s.RedirectWithToast(c, "/appointments", view.SearchTooShortMsg(minSearchTermLen), "warning")
 		}
@@ -69,30 +65,26 @@ func (s *service) HandleIndexSearch(c fiber.Ctx) error {
 	}
 
 	cu := s.CurrentUser(c)
-	patientID := c.Query("patientId", "")
-	patient, err := s.takePatientOrZero(c.Context(), cu.ID, patientID)
+	patient, err := s.takePatientOrZero(c.Context(), cu.ID, filter.PatientUID)
 	if err != nil {
 		c.Status(fiber.StatusInternalServerError)
 		return view.Render(c, view.CmpSearchFailedToast())
 	}
 
-	clinicID := c.Query("clinicId", "")
-	clinic, err := s.takeClinicOrZero(c.Context(), cu.ID, clinicID)
+	clinic, err := s.takeClinicOrZero(c.Context(), cu.ID, filter.ClinicUID)
 	if err != nil {
 		c.Status(fiber.StatusInternalServerError)
 		return view.Render(c, view.CmpSearchFailedToast())
 	}
 
-	timeframe := strings.TrimSpace(c.Query("timeframe", "day"))
-	statusFilter := strings.TrimSpace(c.Query("status", ""))
-	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, patientID, clinicID, timeframe, searchTerm, statusFilter)
+	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, filter)
 	if err != nil {
 		c.Status(fiber.StatusInternalServerError)
 		return view.Render(c, view.CmpSearchFailedToast())
 	}
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.AppointmentsSection(vc, appointments, false, patient, clinic))
+	return view.Render(c, view.AppointmentsSection(vc, appointments, false, patient, clinic, "/appointments", "/appointments/search"))
 }
 
 // HandleShowPage renders the appointment create/edit page.
@@ -742,6 +734,18 @@ func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string) error {
 
 	c.Set("HX-Redirect", redirectPath)
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+// appointmentFilterFromQuery reads the appointments index filters from the
+// query string.
+func appointmentFilterFromQuery(c fiber.Ctx) appointmentFilter {
+	return appointmentFilter{
+		PatientUID: c.Query("patientId", ""),
+		ClinicUID:  c.Query("clinicId", ""),
+		Timeframe:  libtime.ParseTimeframe(c.Query("timeframe", "")),
+		SearchTerm: strings.TrimSpace(c.Query("searchTerm", "")),
+		Statuses:   models.ParseAppointmentStatuses(c.Query("status", "")),
+	}
 }
 
 // searchTermTooShort reports whether a non-blank search term has fewer than
