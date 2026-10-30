@@ -530,6 +530,7 @@ templ ClinicSearch(c *Ctx, clinics []models.Clinic, selectedUID string) {
 				hx-include="[name='clinicId']:checked"
 				hx-trigger="input changed delay:300ms, search"
 				hx-target="#clinic_search_results"
+				hx-swap="outerHTML"
 				hx-indicator=".htmx-indicator"
 			/>
 		</label>
@@ -615,6 +616,7 @@ templ PatientSearch(c *Ctx, patients []models.Patient, selectedUID string) {
 				hx-include="[name='patientId']:checked"
 				hx-trigger="input changed delay:300ms, search"
 				hx-target="#patient_search_results"
+				hx-swap="outerHTML"
 				hx-indicator=".htmx-indicator"
 			/>
 		</label>
