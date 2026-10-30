@@ -2,6 +2,7 @@ package patient
 
 import (
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -180,5 +181,59 @@ func TestTakePatientByIDNotFound(t *testing.T) {
 	_, err := svc.TakePatientByID(t.Context(), user.ID, "missing")
 	if err == nil || !errors.Is(err, gorm.ErrRecordNotFound) {
 		t.Fatalf("expected gorm not found for missing patient, got %v", err)
+	}
+}
+
+func TestPatientHTMXResponsesAreFragments(t *testing.T) {
+	svc, user := newPatientServiceForTests(t)
+	seed := models.Patient{UserID: user.ID, Name: "Seed", Age: 30, Phone: "555", Email: "seed@example.com", ProfilePic: "seed.png"}
+	if err := svc.CreatePatient(t.Context(), &seed); err != nil {
+		t.Fatalf("create patient: %v", err)
+	}
+
+	app := fiber.New()
+	app.Post("/patients", func(c fiber.Ctx) error {
+		c.Locals("current_user", user)
+		return svc.HandleCreatePatient(c)
+	})
+	app.Patch("/patients/:id/removepic", func(c fiber.Ctx) error {
+		c.Locals("current_user", user)
+		return svc.HandleRemovePic(c)
+	})
+
+	form := url.Values{"name": {"Created Patient"}, "email": {"created@example.com"}, "phone": {"999"}, "age": {"22"}}
+	tests := []struct {
+		name      string
+		req       *http.Request
+		wantID    string
+		wantToast string
+	}{
+		{"create returns the profile section and a toast", httptest.NewRequest(http.MethodPost, "/patients", strings.NewReader(form.Encode())), `id="patient_profile_cont"`, "New patient created"},
+		{"remove picture returns the avatar", httptest.NewRequest(http.MethodPatch, "/patients/"+seed.UID+"/removepic", nil), `id="avatar_pic"`, ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			tt.req.Header.Set("HX-Request", "true")
+			resp, err := app.Test(tt.req)
+			if err != nil || resp.StatusCode != fiber.StatusOK {
+				t.Fatalf("expected 200, got status=%d err=%v", resp.StatusCode, err)
+			}
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("read body: %v", err)
+			}
+			html := string(body)
+			if strings.Contains(html, "<html") || strings.Contains(html, `id="toast_region"`) {
+				t.Errorf("response is a full page, want a fragment")
+			}
+			if !strings.Contains(html, tt.wantID) {
+				t.Errorf("response missing %s", tt.wantID)
+			}
+			if tt.wantToast != "" && (!strings.Contains(html, `<hx-partial hx-target="#toast_region"`) || !strings.Contains(html, tt.wantToast)) {
+				t.Errorf("response missing the %q toast partial", tt.wantToast)
+			}
+		})
 	}
 }

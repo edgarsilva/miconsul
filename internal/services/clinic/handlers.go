@@ -202,7 +202,7 @@ func (s *service) respondWithClinicPage(c fiber.Ctx, clinic models.Clinic) error
 
 	c.Set("HX-Push-Url", "/clinics/"+clinic.UID)
 	vc := view.NewCtx(c)
-	return view.Render(c, view.ClinicPage(vc, clinic))
+	return view.Render(c, view.ClinicProfileSection(vc, clinic))
 }
 
 func (s *service) attachClinicProfilePicBestEffort(c fiber.Ctx, userID uint, clinic *models.Clinic) {

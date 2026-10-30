@@ -222,6 +222,14 @@ func TestHandleAdminUpdateUser(t *testing.T) {
 		}
 	}
 
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("read body: %v", err)
+	}
+	if html := string(body); strings.Contains(html, "<html") || !strings.Contains(html, `id="user_profile_cont"`) || !strings.Contains(html, "User updated") {
+		t.Errorf("admin update body = full page or missing section/toast")
+	}
+
 	saved, err := svc.TakeUserByUID(context.Background(), target.UID)
 	if err != nil {
 		t.Fatalf("load target: %v", err)

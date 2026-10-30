@@ -3,9 +3,6 @@ package views
 import "fmt"
 
 // GlobalToastRegion renders the page's toast region with the request's toast.
-// HTMX requests also get it as a toast partial: hx-select drops the inline
-// copy and keeps the partial, a boosted body swap keeps the inline copy and
-// detaches the region the partial targets, so it shows once either way.
 templ GlobalToastRegion(c *Ctx) {
 	<div
 		aria-live="assertive"
@@ -17,9 +14,6 @@ templ GlobalToastRegion(c *Ctx) {
 			}
 		</div>
 	</div>
-	if c.Toast.Msg != "" && c.IsHTMX() {
-		@CmpToastPartial(c.Toast.Msg, c.Toast.Sub, c.Toast.Level)
-	}
 }
 
 func LevelClasses(level string) string {

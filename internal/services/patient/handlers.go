@@ -8,6 +8,7 @@ import (
 	"miconsul/internal/models"
 	view "miconsul/internal/views"
 
+	"github.com/a-h/templ"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
 	"gorm.io/gorm"
@@ -122,11 +123,11 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 	}
 
 	c.Set("HX-Push-Url", "/patients/"+patient.UID)
-	vc := view.NewCtx(
-		c,
-		view.WithToast("New patient created", "", ""),
-	)
-	return view.Render(c, view.PatientFormPage(patient, vc))
+	vc := view.NewCtx(c)
+	return view.Render(c, templ.Join(
+		view.PatientProfileSection(vc, patient),
+		view.CmpToastPartial("New patient created", "", ""),
+	))
 }
 
 // HandleUpdatePatient updates a patient record for the CurrentUser
@@ -231,7 +232,7 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 	}
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.PatientFormPage(patient, vc))
+	return view.Render(c, view.PatientAvatarPic(vc, patient))
 }
 
 // HandleDeletePatient deletes a patient record from the DB.

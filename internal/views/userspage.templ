@@ -116,26 +116,7 @@ templ UsersEmptyList(c *Ctx) {
 
 templ UserEditPage(c *Ctx, user models.User) {
 	@LayoutWithBackBtn(c, "/") {
-		<section id="user_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
-			<hgroup
-				class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
-				hx-boost:inherited="true"
-			>
-				if user.UID == "" || user.UID == "new" {
-					<h1 class="font-bold text-2xl">{ c.l("str.new_user") }</h1>
-				} else {
-					<h1 class="font-bold text-2xl">{ c.l("str.my_profile") }</h1>
-				}
-				<a
-					href={ templ.URL("/appointments?userId=" + user.UID) }
-					class="btn btn-primary btn-sm"
-				>
-					@IconCalendar("")
-					{ c.l("btn.appointments") }
-				</a>
-			</hgroup>
-			@UserProfile(c, user)
-		</section>
+		@UserProfileSection(c, user)
 	}
 }
 
@@ -259,7 +240,6 @@ templ ProfileAvatarPic(c *Ctx, user models.User) {
 				} else {
 					hx-delete="/profile/avatar"
 				}
-				hx-select="#avatar_pic"
 				hx-swap="outerHTML"
 				hx-target="closest figure"
 				class="link text-xs link-secondary"
@@ -283,7 +263,6 @@ templ UserForm(c *Ctx, user models.User) {
 		hx-patch={ userFormPath(c, user) }
 		hx-target="closest #user_profile_cont"
 		hx-encoding="multipart/form-data"
-		hx-select="#user_profile_cont"
 		hx-swap="outerHTML"
 	>
 		<span class="absolute badge badge-success badge-sm p-2 top-2 right-2 htmx-indicator">
@@ -291,4 +270,28 @@ templ UserForm(c *Ctx, user models.User) {
 		</span>
 		{ children... }
 	</form>
+}
+
+// UserProfileSection renders the user page's profile form section.
+templ UserProfileSection(c *Ctx, user models.User) {
+	<section id="user_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
+		<hgroup
+			class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
+			hx-boost:inherited="true"
+		>
+			if user.UID == "" || user.UID == "new" {
+				<h1 class="font-bold text-2xl">{ c.l("str.new_user") }</h1>
+			} else {
+				<h1 class="font-bold text-2xl">{ c.l("str.my_profile") }</h1>
+			}
+			<a
+				href={ templ.URL("/appointments?userId=" + user.UID) }
+				class="btn btn-primary btn-sm"
+			>
+				@IconCalendar("")
+				{ c.l("btn.appointments") }
+			</a>
+		</hgroup>
+		@UserProfile(c, user)
+	</section>
 }
