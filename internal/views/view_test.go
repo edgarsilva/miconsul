@@ -318,7 +318,7 @@ func TestAuthPagesUseThemeColors(t *testing.T) {
 		pages := map[string]interface {
 			Render(context.Context, io.Writer) error
 		}{
-			"LoginPage":  LoginPage("", "", nil, c),
+			"LoginPage":  LoginPage(c, "", nil),
 			"SignupPage": SignupPage(c, "", nil),
 		}
 		for name, page := range pages {
@@ -332,7 +332,7 @@ func TestAuthPagesUseThemeColors(t *testing.T) {
 		}
 
 		var login strings.Builder
-		if err := LoginPage("", "", nil, c).Render(fc.Context(), &login); err != nil {
+		if err := LoginPage(c, "", nil).Render(fc.Context(), &login); err != nil {
 			t.Fatalf("render LoginPage: %v", err)
 		}
 		if !strings.Contains(login.String(), `<a href="/resetpassword" class="link font-semibold`) {
@@ -344,7 +344,7 @@ func TestAuthPagesUseThemeColors(t *testing.T) {
 func TestDashboardViewAllLinks(t *testing.T) {
 	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
 		var html strings.Builder
-		if err := MonthTrends(DashboardStats{}, NewCtx(fc)).Render(fc.Context(), &html); err != nil {
+		if err := MonthTrends(NewCtx(fc), DashboardStats{}).Render(fc.Context(), &html); err != nil {
 			t.Fatalf("render: %v", err)
 		}
 
@@ -456,4 +456,61 @@ func TestNewCtxToastComesFromTheFlash(t *testing.T) {
 	if got.Msg != "Saved" || got.Level != "success" {
 		t.Errorf("toast = %+v, want the flash toast, not the query string", got)
 	}
+}
+
+func TestCmpFlashAlert(t *testing.T) {
+	render := func(t *testing.T, flash *http.Cookie) string {
+		t.Helper()
+
+		app := fiber.New()
+		app.Get("/", func(fc fiber.Ctx) error {
+			return Render(fc, CmpFlashAlert(NewCtx(fc)))
+		})
+
+		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		if flash != nil {
+			req.AddCookie(flash)
+		}
+		resp, err := app.Test(req)
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			t.Fatalf("read body: %v", err)
+		}
+
+		return string(body)
+	}
+
+	t.Run("renders the flash alert with its level", func(t *testing.T) {
+		app := fiber.New()
+		app.Get("/", func(fc fiber.Ctx) error {
+			return fc.Redirect().With("alert", "Email confirmed").With("alert_level", "success").To("/signin")
+		})
+		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/", nil))
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		var flash *http.Cookie
+		for _, cookie := range resp.Cookies() {
+			if cookie.Name == fiber.FlashCookieName {
+				flash = cookie
+			}
+		}
+		if flash == nil {
+			t.Fatalf("expected a flash cookie")
+		}
+
+		body := render(t, flash)
+		if !strings.Contains(body, `role="alert"`) || !strings.Contains(body, "alert-success") || !strings.Contains(body, "Email confirmed") {
+			t.Fatalf("expected a success alert, got %s", body)
+		}
+	})
+
+	t.Run("renders nothing without a flash alert", func(t *testing.T) {
+		if body := render(t, nil); strings.TrimSpace(body) != "" {
+			t.Fatalf("expected no alert, got %s", body)
+		}
+	})
 }

@@ -154,7 +154,7 @@ func (s *service) HandleOpenPage(c fiber.Ctx) error {
 	appointment.Patient = patient
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.AppointmentStartPage(appointment, vc))
+	return view.Render(c, view.AppointmentStartPage(vc, appointment))
 }
 
 // HandleStartSession handles starting an appointment session.
@@ -185,7 +185,7 @@ func (s *service) HandleStartSession(c fiber.Ctx) error {
 
 	vc := view.NewCtx(c)
 	appointment := models.Appointment{UID: appointmentID, Status: models.AppointmentInProgress}
-	return view.Render(c, view.AppointmentSessionToggleFrg(appointment, vc))
+	return view.Render(c, view.AppointmentSessionToggleFrg(vc, appointment))
 }
 
 // HandlePauseSession handles pausing an appointment session.
@@ -216,7 +216,7 @@ func (s *service) HandlePauseSession(c fiber.Ctx) error {
 
 	vc := view.NewCtx(c)
 	appointment := models.Appointment{UID: appointmentID, Status: models.AppointmentPending}
-	return view.Render(c, view.AppointmentSessionToggleFrg(appointment, vc))
+	return view.Render(c, view.AppointmentSessionToggleFrg(vc, appointment))
 }
 
 // HandleSaveSession handles saving in-progress session notes.
@@ -374,7 +374,7 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	}
 
 	if appointmentID == "" {
-		return s.Redirect(c, "/appointments?msg=can't update without an id")
+		return s.RedirectWithToast(c, "/appointments", "can't update without an id", "error")
 	}
 
 	_, err := s.TakeAppointmentByUID(c.Context(), cu.ID, appointmentID)
@@ -472,15 +472,15 @@ func (s *service) HandleDelete(c fiber.Ctx) error {
 
 	appointmentID := c.Params("id", "")
 	if appointmentID == "" {
-		return s.Redirect(c, "/appointments?msg=can't delete without an id")
+		return s.RedirectWithToast(c, "/appointments", "can't delete without an id", "error")
 	}
 
 	err := s.DeleteAppointmentByID(c.Context(), cu.ID, appointmentID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.Redirect(c, "/appointments?msg=can't find that appointment")
+		return s.RedirectWithToast(c, "/appointments", "can't find that appointment", "error")
 	}
 	if err != nil {
-		return s.Redirect(c, "/appointments?msg=failed to delete that appointment")
+		return s.RedirectWithToast(c, "/appointments", "failed to delete that appointment", "error")
 	}
 
 	return s.respondWithRedirect(c, "/appointments")
@@ -666,7 +666,7 @@ func (s *service) HandleSearchPatients(c fiber.Ctx) error {
 
 	vc := view.NewCtx(c)
 
-	return view.Render(c, view.PatientSearchResults(patients, vc, patientUID))
+	return view.Render(c, view.PatientSearchResults(vc, patients, patientUID))
 }
 
 func (s *service) AppointmentForShowPage(ctx context.Context, userID uint, appointmentID string) (models.Appointment, error) {

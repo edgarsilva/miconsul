@@ -212,7 +212,7 @@ func ClinicsList(c *Ctx, clinics []models.Clinic) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		for _, clinic := range clinics {
-			templ_7745c5c3_Err = ClinicLi(clinic, c).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ClinicLi(c, clinic).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -225,7 +225,7 @@ func ClinicsList(c *Ctx, clinics []models.Clinic) templ.Component {
 	})
 }
 
-func ClinicLi(clinic models.Clinic, c *Ctx) templ.Component {
+func ClinicLi(c *Ctx, clinic models.Clinic) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -505,7 +505,7 @@ func ClinicsEmptyList(c *Ctx) templ.Component {
 	})
 }
 
-func ClinicProfile(clinic models.Clinic, c *Ctx) templ.Component {
+func ClinicProfile(c *Ctx, clinic models.Clinic) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -883,7 +883,7 @@ func ClinicProfile(clinic models.Clinic, c *Ctx) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ClinicForm(clinic, c).Render(templ.WithChildren(ctx, templ_7745c5c3_Var27), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ClinicForm(c, clinic).Render(templ.WithChildren(ctx, templ_7745c5c3_Var27), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1111,7 +1111,7 @@ func ClinicProfile(clinic models.Clinic, c *Ctx) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ClinicForm(clinic, c).Render(templ.WithChildren(ctx, templ_7745c5c3_Var51), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ClinicForm(c, clinic).Render(templ.WithChildren(ctx, templ_7745c5c3_Var51), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1306,7 +1306,7 @@ func ClinicProfile(clinic models.Clinic, c *Ctx) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ClinicForm(clinic, c).Render(templ.WithChildren(ctx, templ_7745c5c3_Var66), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ClinicForm(c, clinic).Render(templ.WithChildren(ctx, templ_7745c5c3_Var66), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1318,7 +1318,7 @@ func ClinicProfile(clinic models.Clinic, c *Ctx) templ.Component {
 	})
 }
 
-func ClinicForm(clinic models.Clinic, c *Ctx) templ.Component {
+func ClinicForm(c *Ctx, clinic models.Clinic) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1456,7 +1456,7 @@ func ClinicProfileSection(c *Ctx, clinic models.Clinic) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = ClinicProfile(clinic, c).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ClinicProfile(c, clinic).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -55,12 +55,12 @@ templ ClinicPage(c *Ctx, clinic models.Clinic) {
 templ ClinicsList(c *Ctx, clinics []models.Clinic) {
 	<ul id="clinics_list" role="list" class="app-card divide-y divide-base-content/10 overflow-hidden2">
 		for _, clinic := range clinics {
-			@ClinicLi(clinic, c)
+			@ClinicLi(c, clinic)
 		}
 	</ul>
 }
 
-templ ClinicLi(clinic models.Clinic, c *Ctx) {
+templ ClinicLi(c *Ctx, clinic models.Clinic) {
 	<li class="relative flex justify-between items-center gap-x-6 px-2 py-2 hover:bg-base-200/75">
 		<div class="flex items-center min-w-0 gap-x-4">
 			if clinic.ProfilePic != "" {
@@ -148,14 +148,14 @@ templ ClinicsEmptyList(c *Ctx) {
 	</div>
 }
 
-templ ClinicProfile(clinic models.Clinic, c *Ctx) {
+templ ClinicProfile(c *Ctx, clinic models.Clinic) {
 	<div id="clinic_profile" class="space-y-10 divide-y divide-base-content/10">
 		<div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
 			<div class="px-4 sm:px-0">
 				<h2 class="text-base font-semibold leading-7">{ c.l("str.clinic_info") }</h2>
 				<p class="mt-1 text-sm leading-6 text-base-content/60">{ c.l("str.clinic_info_desc") }</p>
 			</div>
-			@ClinicForm(clinic, c) {
+			@ClinicForm(c, clinic) {
 				<input type="hidden" name="id" value={ clinic.UID } id="pi_clinic_id"/>
 				<div class="px-4 py-6 sm:p-8">
 					<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -264,7 +264,7 @@ templ ClinicProfile(clinic models.Clinic, c *Ctx) {
 				<h2 class="text-base font-semibold leading-7">{ c.l("str.address") }</h2>
 				<p class="mt-1 text-sm leading-6 text-base-content/60">{ c.l("str.address_desc") }</p>
 			</div>
-			@ClinicForm(clinic, c) {
+			@ClinicForm(c, clinic) {
 				<input type="hidden" name="id" value={ clinic.UID } id="address_clinic_id"/>
 				<div class="px-4 py-6 sm:p-8">
 					<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -316,7 +316,7 @@ templ ClinicProfile(clinic models.Clinic, c *Ctx) {
 				<h2 class="text-base font-semibold leading-7">{ c.l("str.social_media") }</h2>
 				<p class="mt-1 text-sm leading-6 text-base-content/60">{ c.l("str.social_media_desc") }</p>
 			</div>
-			@ClinicForm(clinic, c) {
+			@ClinicForm(c, clinic) {
 				<input type="hidden" name="id" value={ clinic.UID } id="mb_clinic_id"/>
 				<div class="px-4 py-6 sm:p-8">
 					<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -355,7 +355,7 @@ templ ClinicProfile(clinic models.Clinic, c *Ctx) {
 	</div>
 }
 
-templ ClinicForm(clinic models.Clinic, c *Ctx) {
+templ ClinicForm(c *Ctx, clinic models.Clinic) {
 	<form
 		class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2"
 		method="POST"
@@ -386,6 +386,6 @@ templ ClinicProfileSection(c *Ctx, clinic models.Clinic) {
 				@ClinicDeleteForm(c, clinic)
 			</h1>
 		}
-		@ClinicProfile(clinic, c)
+		@ClinicProfile(c, clinic)
 	</section>
 }

@@ -172,7 +172,7 @@ func TestProviderSigninRedirectBranches(t *testing.T) {
 	svc.Env.LogtoResource = "https://api.example.com"
 
 	runWithCtx(t, http.MethodGet, "/signin", "/signin?logto_error=denied", nil, func(c fiber.Ctx) {
-		redirectURL, msg := svc.providerSigninRedirect(c, "")
+		redirectURL, msg := svc.providerSigninRedirect(c)
 		if redirectURL != "/logto/signin" || msg != "" {
 			t.Fatalf("expected retry redirect branch on first logto_error")
 		}
@@ -186,7 +186,7 @@ func TestProviderSigninRedirectBranches(t *testing.T) {
 			t.Fatalf("set redirect failure count: %v", err)
 		}
 
-		redirectURL, msg := svc.providerSigninRedirect(c, "")
+		redirectURL, msg := svc.providerSigninRedirect(c)
 		if redirectURL != "" || msg == "" {
 			t.Fatalf("expected message-only branch after max logto errors")
 		}
@@ -200,7 +200,7 @@ func TestProviderSigninRedirectBranches(t *testing.T) {
 			t.Fatalf("set redirect failure count: %v", err)
 		}
 
-		redirectURL, msg := svc.providerSigninRedirect(c, "")
+		redirectURL, msg := svc.providerSigninRedirect(c)
 		if redirectURL != "" || msg == "" {
 			t.Fatalf("expected signed-out message branch")
 		}
@@ -214,7 +214,7 @@ func TestProviderSigninRedirectBranches(t *testing.T) {
 			t.Fatalf("set skip redirect session key: %v", err)
 		}
 
-		redirectURL, msg := svc.providerSigninRedirect(c, "")
+		redirectURL, msg := svc.providerSigninRedirect(c)
 		if redirectURL != "" || msg == "" {
 			t.Fatalf("expected skip-redirect signed-out message branch")
 		}

@@ -200,8 +200,11 @@ func TestAppointmentHandlers(t *testing.T) {
 			htmx:      true,
 		})
 
-		if resp.StatusCode != http.StatusFound && resp.StatusCode != http.StatusSeeOther {
-			t.Fatalf("expected redirect for unknown appointment delete, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for htmx unknown appointment delete, got %d", resp.StatusCode)
+		}
+		if got := resp.Header.Get("HX-Redirect"); got != "/appointments" {
+			t.Fatalf("HX-Redirect = %q, want /appointments", got)
 		}
 	})
 
@@ -233,8 +236,11 @@ func TestAppointmentHandlers(t *testing.T) {
 			authToken: token,
 			htmx:      true,
 		})
-		if resp.StatusCode != http.StatusFound && resp.StatusCode != http.StatusSeeOther {
-			t.Fatalf("expected redirect for cross-user appointment delete, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for htmx cross-user appointment delete, got %d", resp.StatusCode)
+		}
+		if got := resp.Header.Get("HX-Redirect"); got != "/appointments" {
+			t.Fatalf("HX-Redirect = %q, want /appointments", got)
 		}
 
 		unchanged, err := gorm.G[models.Appointment](h.db.GormDB()).Where("id = ?", ownerAppt.ID).Take(t.Context())

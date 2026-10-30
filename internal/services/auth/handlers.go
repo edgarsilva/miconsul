@@ -2,7 +2,6 @@ package auth
 
 import (
 	"errors"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -29,21 +28,18 @@ func (s *service) HandleSigninPage(c fiber.Ctx) error {
 	}
 
 	email := c.Query("email", "")
-	msg := c.Query("msg", "")
 
-	redirectURL, nextMsg := s.providerSigninRedirect(c, msg)
+	redirectURL, msg := s.providerSigninRedirect(c)
 	if redirectURL != "" {
 		return s.Redirect(c, redirectURL)
 	}
-
-	msg = nextMsg
 
 	vc := view.NewCtx(c)
 	if meta := selectAuthenticator(s).Metadata(); meta.Enabled {
 		return view.Render(c, view.ProviderSigninPage(vc, msg, meta.SigninPath))
 	}
 
-	return view.Render(c, view.LoginPage(email, msg, nil, vc))
+	return view.Render(c, view.LoginPage(vc, email, nil))
 }
 
 // HandleProviderSignin redirects to the sign-in provider, which also handles
@@ -64,29 +60,34 @@ func (s *service) HandleSignin(c fiber.Ctx) error {
 
 	vc := view.NewCtx(c)
 	respErr := errors.New("incorrect email and password combination")
+	loginErr := errors.New("Failed to login, please try again")
 
 	email, password, err := credentialsFromRequest(c)
 	if err != nil {
-		return view.Render(c, view.LoginPage(email, "", respErr, vc))
+		return view.Render(c, view.LoginPage(vc, email, respErr))
 	}
 
 	user, err := s.authenticateCredentials(ctx, email, password)
 	if errors.Is(err, errAuthInvalidCredentials) {
-		return view.Render(c, view.LoginPage(email, "", respErr, vc))
+		return view.Render(c, view.LoginPage(vc, email, respErr))
 	}
 	if errors.Is(err, errAuthPendingConfirmation) {
 		err := errors.New("email pending confirmation, check your inbox")
-		return view.Render(c, view.LoginPage(email, "", err, vc))
+		return view.Render(c, view.LoginPage(vc, email, err))
 	}
 	if err != nil {
-		return s.respondWithRedirect(c, "/", "Failed to login, please try again")
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "authenticate credentials failed")
+		log.Error("authenticate credentials:", err)
+		return view.Render(c, view.LoginPage(vc, email, loginErr))
 	}
 
 	rememberMe := c.FormValue("remember_me", "") != ""
 	if err := NewLocalStrategy(s).SignIn(c, user, rememberMe); err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "create session failed")
-		return s.respondWithRedirect(c, "/", "Failed to login, please try again")
+		log.Error("create session:", err)
+		return view.Render(c, view.LoginPage(vc, email, loginErr))
 	}
 
 	return s.Redirect(c, "/?timeframe=day")
@@ -138,14 +139,9 @@ func (s *service) HandleSignupPage(c fiber.Ctx) error {
 		return s.Redirect(c, "/todos")
 	}
 
-	msg := c.Query("msg", "")
-	err := errors.New(msg)
-	if msg == "" {
-		err = nil
-	}
 	vc := view.NewCtx(c)
 
-	return view.Render(c, view.SignupPage(vc, "", err))
+	return view.Render(c, view.SignupPage(vc, "", nil))
 }
 
 // HandleSignup creates a new user if email and password are valid
@@ -181,7 +177,7 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 			return view.Render(c, view.SignupPage(vc, email, errors.New("failed to resend confirmation email, please try again")))
 		}
 		span.SetStatus(codes.Ok, "pending confirmation resent")
-		return s.respondWithRedirect(c, "/signin", "check your inbox, we'll re-send a confirmation link")
+		return s.RedirectWithAlert(c, "/signin", "check your inbox, we'll re-send a confirmation link", "info")
 	}
 
 	if err := s.signup(ctx, email, password); err != nil {
@@ -194,7 +190,7 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 	}
 	span.SetStatus(codes.Ok, "signup confirmation email sent")
 
-	return s.respondWithRedirect(c, "/signin", "check your inbox to confirm your email")
+	return s.RedirectWithAlert(c, "/signin", "check your inbox to confirm your email", "info")
 }
 
 // HandleSignupConfirmEmail validates an email confirmation token.
@@ -207,7 +203,7 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 	token := c.Params("token", "")
 	if token == "" {
 		span.SetStatus(codes.Error, "missing confirmation token")
-		return s.respondWithRedirect(c, "/signin", "unable to confirm email, try signin instead")
+		return s.RedirectWithAlert(c, "/signin", "unable to confirm email, try signin instead", "error")
 	}
 
 	user, err := gorm.G[models.User](s.DB.GormDB()).
@@ -217,7 +213,7 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "invalid or expired confirmation token")
-		return s.respondWithRedirect(c, "/signin", "we couldn't verify your account, pls try again")
+		return s.RedirectWithAlert(c, "/signin", "we couldn't verify your account, pls try again", "error")
 	}
 	span.SetAttributes(attribute.String("auth.signup.confirm_email", strings.ToLower(strings.TrimSpace(user.Email))))
 
@@ -228,11 +224,11 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "confirmation token clear failed")
-		return s.respondWithRedirect(c, "/signin", "Email confirmed, you should be able to signin now")
+		return s.RedirectWithAlert(c, "/signin", "Email confirmed, you should be able to signin now", "success")
 	}
 
 	span.SetStatus(codes.Ok, "email confirmed")
-	return s.respondWithRedirect(c, "/signin", "Email confirmed, you should be able to signin now")
+	return s.RedirectWithAlert(c, "/signin", "Email confirmed, you should be able to signin now", "success")
 }
 
 func apiError(c fiber.Ctx, status int, message string) error {
@@ -241,19 +237,6 @@ func apiError(c fiber.Ctx, status int, message string) error {
 
 func apiOK(c fiber.Ctx, payload fiber.Map) error {
 	return c.Status(fiber.StatusOK).JSON(payload)
-}
-
-func (s *service) respondWithRedirect(c fiber.Ctx, path, message string) error {
-	if strings.TrimSpace(message) == "" {
-		return s.Redirect(c, path)
-	}
-
-	sep := "?"
-	if strings.Contains(path, "?") {
-		sep = "&"
-	}
-
-	return s.Redirect(c, path+sep+"msg="+url.QueryEscape(message))
 }
 
 // HandleLogout destroys session state and redirects to login.
@@ -280,12 +263,7 @@ func (s *service) HandleLogout(c fiber.Ctx) error {
 func (s *service) HandleResetPasswordPage(c fiber.Ctx) error {
 	vc := view.NewCtx(c)
 
-	msg := s.SessionRead(c, "msg", "")
-	if msg == "" {
-		msg = c.Query("msg", "")
-	}
-
-	return view.Render(c, view.ResetPasswordPage(vc, "", msg, "", nil))
+	return view.Render(c, view.ResetPasswordPage(vc, "", "", nil))
 }
 
 // HandleResetPassword sends a reset password link to the provided email.
@@ -296,13 +274,13 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 	email, err := resetPasswordEmailFromRequest(c)
 	if err != nil {
 		errView := errors.New("email can't be blank")
-		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
+		return view.Render(c, view.ResetPasswordPage(vc, email, "", errView))
 	}
 
 	user, err := gorm.G[models.User](s.DB.GormDB()).Select("id", "name").Where("email = ?", email).Take(c.Context())
 	if err != nil {
 		errView := errors.New("user not found with that email")
-		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
+		return view.Render(c, view.ResetPasswordPage(vc, email, "", errView))
 	}
 
 	user.ResetToken = newResetPasswordToken()
@@ -313,16 +291,16 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 		Updates(c.Context(), user)
 	if err != nil || rowsAffected != 1 {
 		errView := errors.New("failed to create reset password token")
-		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
+		return view.Render(c, view.ResetPasswordPage(vc, email, "", errView))
 	}
 
 	if err := s.sendResetPasswordEmailAsync(c.Context(), email, user.ResetToken); err != nil {
 		log.Error("queue reset password email:", err)
 		errView := errors.New("could not send the reset password email, please try again")
-		return view.Render(c, view.ResetPasswordPage(vc, email, "", "", errView))
+		return view.Render(c, view.ResetPasswordPage(vc, email, "", errView))
 	}
 
-	return view.Render(c, view.ResetPasswordPage(vc, email, "", "check your email for a reset password link", nil))
+	return view.Render(c, view.ResetPasswordPage(vc, email, "check your email for a reset password link", nil))
 }
 
 // HandleResetPasswordChange renders the password change page for a valid token.
@@ -330,16 +308,16 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 func (s *service) HandleResetPasswordChange(c fiber.Ctx) error {
 	token := c.Params("token", "")
 	if token == "" {
-		return s.Redirect(c, "/resetpassword?msg=token can't be blank")
+		return s.RedirectWithAlert(c, "/resetpassword", "token can't be blank", "error")
 	}
 
 	email, err := s.resetPasswordVerifyToken(c.Context(), token)
 	if err != nil {
-		return s.Redirect(c, "/resetpassword?msg=invalid email or token")
+		return s.RedirectWithAlert(c, "/resetpassword", "invalid email or token", "error")
 	}
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.ResetPasswordChangePage(email, token, nil, vc))
+	return view.Render(c, view.ResetPasswordChangePage(vc, email, token, nil))
 }
 
 // HandleResetPasswordUpdate updates the user password in the DB
@@ -347,35 +325,35 @@ func (s *service) HandleResetPasswordChange(c fiber.Ctx) error {
 func (s *service) HandleResetPasswordUpdate(c fiber.Ctx) error {
 	email, err := resetPasswordEmailFromRequest(c)
 	if err != nil {
-		return s.Redirect(c, "/resetpassword?msg=something went wrong with the email, try again!")
+		return s.RedirectWithAlert(c, "/resetpassword", "something went wrong with the email, try again!", "error")
 	}
 
 	token := c.FormValue("token", "")
 	if token == "" {
-		return s.Redirect(c, "/resetpassword?msg=something went wrong with the token, try again!")
+		return s.RedirectWithAlert(c, "/resetpassword", "something went wrong with the token, try again!", "error")
 	}
 
 	_, err = s.resetPasswordVerifyToken(c.Context(), token)
 	if err != nil {
-		return s.Redirect(c, "/resetpassword?msg=seems like your token has expired, try again!")
+		return s.RedirectWithAlert(c, "/resetpassword", "seems like your token has expired, try again!", "error")
 	}
 
 	vc := view.NewCtx(c)
 	password := c.FormValue("password", "")
 	if password == "" {
 		err := errors.New("password can't be blank")
-		return view.Render(c, view.ResetPasswordChangePage(email, token, err, vc))
+		return view.Render(c, view.ResetPasswordChangePage(vc, email, token, err))
 	}
 
 	confirm := c.FormValue("confirm", "")
 	if confirm == "" || password != confirm {
 		err := errors.New("passwords don't match")
-		return view.Render(c, view.ResetPasswordChangePage(email, token, err, vc))
+		return view.Render(c, view.ResetPasswordChangePage(vc, email, token, err))
 	}
 
 	_, err = s.userUpdatePassword(c.Context(), email, password, token)
 	if err != nil {
-		return s.Redirect(c, "/resetpassword?msg=something went wrong, try again!")
+		return s.RedirectWithAlert(c, "/resetpassword", "something went wrong, try again!", "error")
 	}
 
 	return s.Redirect(c, "/signin")
@@ -397,10 +375,10 @@ func (s *service) HandleShowUser(c fiber.Ctx) error {
 	return c.JSON(out)
 }
 
-func (s *service) providerSigninRedirect(c fiber.Ctx, msg string) (redirectURL string, nextMsg string) {
+func (s *service) providerSigninRedirect(c fiber.Ctx) (redirectURL string, msg string) {
 	meta := selectAuthenticator(s).Metadata()
 	if !meta.Enabled {
-		return "", msg
+		return "", ""
 	}
 
 	providerError := c.Query(meta.ErrorQueryKey, "")
@@ -438,7 +416,7 @@ func (s *service) providerSigninRedirect(c fiber.Ctx, msg string) (redirectURL s
 			}
 		}
 		if errorCount < maxErrorRedirects {
-			return meta.SigninPath, msg
+			return meta.SigninPath, ""
 		}
 	} else if meta.ErrorCountSessionKey != "" {
 		if err := s.SessionWrite(c, meta.ErrorCountSessionKey, "0"); err != nil {
@@ -447,11 +425,7 @@ func (s *service) providerSigninRedirect(c fiber.Ctx, msg string) (redirectURL s
 	}
 
 	if providerError == "" && loggedOut == "" && !skipAutoRedirect {
-		return meta.SigninPath, msg
-	}
-
-	if msg != "" {
-		return "", msg
+		return meta.SigninPath, ""
 	}
 
 	switch {
@@ -460,6 +434,6 @@ func (s *service) providerSigninRedirect(c fiber.Ctx, msg string) (redirectURL s
 	case loggedOut == "1" || skipAutoRedirect:
 		return "", meta.SignedOutMessage
 	default:
-		return "", msg
+		return "", ""
 	}
 }

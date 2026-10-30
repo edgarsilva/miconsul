@@ -5,18 +5,18 @@ import (
 	"strconv"
 )
 
-templ AppointmentStartPage(appointment models.Appointment, c *Ctx) {
+templ AppointmentStartPage(c *Ctx, appointment models.Appointment) {
 	@Layout(c) {
 		<div class="px-4 lg:px-8">
 			@CmpBtnBack(c.l("btn.back"), "/appointments")
 		</div>
 		<section id="appointment_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
-			@AppointmentStart(appointment, c)
+			@AppointmentStart(c, appointment)
 		</section>
 	}
 }
 
-templ PatientCard(patient models.Patient, c *Ctx) {
+templ PatientCard(c *Ctx, patient models.Patient) {
 	<div>
 		<hgroup
 			class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
@@ -77,21 +77,21 @@ templ PatientCard(patient models.Patient, c *Ctx) {
 	</div>
 }
 
-templ AppointmentStart(appointment models.Appointment, c *Ctx) {
+templ AppointmentStart(c *Ctx, appointment models.Appointment) {
 	<span class="absolute top-2 right-2 loading loading-ring text-primary loading-md htmx-indicator"></span>
 	<div class="space-y-10 ">
-		@PatientCard(appointment.Patient, c)
+		@PatientCard(c, appointment.Patient)
 		<div class="pt-8 gap-x-8 gap-y-8">
 			<hgroup
 				class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
 			>
 				<h1 class="font-bold text-2xl">{ c.l("str.current_session") }</h1>
-				@AppointmentSessionToggle(appointment, c)
+				@AppointmentSessionToggle(c, appointment)
 			</hgroup>
 			<section class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
 				<input type="hidden" name="id" value={ appointment.UID } id="mb_appointment_id"/>
 				<div class="flex items-start justify-between p-4 pb-0 text-base-content/50">
-					@AppointmentSessionStatusBadge(appointment, c)
+					@AppointmentSessionStatusBadge(c, appointment)
 					@CmpTime(appointment.BookedAt)
 				</div>
 				<form
@@ -163,15 +163,15 @@ templ AppointmentStart(appointment models.Appointment, c *Ctx) {
 	</div>
 }
 
-templ AppointmentSessionStatusBadge(appointment models.Appointment, c *Ctx) {
+templ AppointmentSessionStatusBadge(c *Ctx, appointment models.Appointment) {
 	<div id="session_status_badge">
 		if appointment.Status == models.AppointmentInProgress {
-			@CmpBadgeStatus(models.AppointmentInProgress, c)
+			@CmpBadgeStatus(c, models.AppointmentInProgress)
 		}
 	</div>
 }
 
-templ AppointmentSessionToggle(appointment models.Appointment, c *Ctx) {
+templ AppointmentSessionToggle(c *Ctx, appointment models.Appointment) {
 	<div id="session_toggle">
 		if appointment.Status == models.AppointmentInProgress {
 			<a
@@ -197,11 +197,11 @@ templ AppointmentSessionToggle(appointment models.Appointment, c *Ctx) {
 	</div>
 }
 
-templ AppointmentSessionToggleFrg(appointment models.Appointment, c *Ctx) {
-	@AppointmentSessionToggle(appointment, c)
+templ AppointmentSessionToggleFrg(c *Ctx, appointment models.Appointment) {
+	@AppointmentSessionToggle(c, appointment)
 	<div id="session_status_badge" hx-swap-oob="outerHTML">
 		if appointment.Status == models.AppointmentInProgress {
-			@CmpBadgeStatus(models.AppointmentInProgress, c)
+			@CmpBadgeStatus(c, models.AppointmentInProgress)
 		}
 	</div>
 }

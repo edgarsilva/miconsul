@@ -15,12 +15,20 @@ type Toast struct {
 	Level string
 }
 
+// Alert describes the inline alert a redirect carried to the page through a
+// flash message.
+type Alert struct {
+	Msg   string
+	Level string
+}
+
 type Ctx struct {
 	fiber.Ctx
 	Locale      string
 	Theme       string
 	Timeframe   string
 	Toast       Toast
+	Alert       Alert
 	CurrentUser models.User
 }
 
@@ -63,8 +71,8 @@ func CU(fc fiber.Ctx) models.User {
 	return currentUserFromLocals(fc)
 }
 
-// NewCtx builds the view context from request locals and the flash toast,
-// then applies the options.
+// NewCtx builds the view context from request locals and the flash toast and
+// alert, then applies the options.
 func NewCtx(fc fiber.Ctx, ctxOpts ...ContextOption) *Ctx {
 	c := Ctx{
 		Ctx:         fc,
@@ -74,6 +82,10 @@ func NewCtx(fc fiber.Ctx, ctxOpts ...ContextOption) *Ctx {
 		Toast: Toast{
 			Msg:   fc.Redirect().Message("toast").Value,
 			Level: fc.Redirect().Message("level").Value,
+		},
+		Alert: Alert{
+			Msg:   fc.Redirect().Message("alert").Value,
+			Level: fc.Redirect().Message("alert_level").Value,
 		},
 	}
 
@@ -110,8 +122,6 @@ func WithLocale(lang string) ContextOption {
 
 // WithToast sets up a notification toast to be rendered by the base layout
 // views
-//
-// # Note: you can also pass thist 3 params as querpyParams in redirects
 //
 //   - toast: main text,
 //   - sub: optional subtitle,
