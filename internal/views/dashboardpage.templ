@@ -24,7 +24,12 @@ templ DashboardPage(c *Ctx, stats DashboardStats, appointments []models.Appointm
 				<section
 					class="col-span-3 lg:col-span-2 order-1 lg:order-1"
 				>
-					@AppointmentsSection(c, appointments, true, models.Patient{}, models.Clinic{}, "/dashboard", "/dashboard/appointments")
+					@AppointmentsSection(c, AppointmentsSectionProps{
+						Appointments: appointments,
+						ShowTitle:    true,
+						PagePath:     "/dashboard",
+						SectionPath:  "/dashboard/appointments",
+					})
 				</section>
 				<section
 					class="col-span-3 lg:col-span-1 order-2 lg:order-2 flex flex-col gap-8"
