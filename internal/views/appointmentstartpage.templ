@@ -153,8 +153,8 @@ templ AppointmentStart(c *Ctx, appointment models.Appointment) {
 					<button form="save_appointment_session" type="submit" class="btn btn-secondary">{ c.l("btn.save") }</button>
 					<button
 						form="save_appointment_session"
-						type="submit"
-						formaction={ "/appointments/" + appointment.UID + "/complete" }
+						type="button"
+						hx-post={ "/appointments/" + appointment.UID + "/complete" }
 						class="btn btn-primary"
 					>{ c.l("btn.end_session") }</button>
 				</div>

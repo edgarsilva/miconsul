@@ -514,3 +514,22 @@ func TestCmpFlashAlert(t *testing.T) {
 		}
 	})
 }
+
+func TestAppointmentStartEndSessionPostsComplete(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		appointment := models.Appointment{UID: "apnt_1"}
+
+		var html strings.Builder
+		if err := AppointmentStart(NewCtx(fc), appointment).Render(fc.Context(), &html); err != nil {
+			t.Fatalf("render: %v", err)
+		}
+
+		got := html.String()
+		if !strings.Contains(got, `type="button" hx-post="/appointments/apnt_1/complete"`) {
+			t.Errorf("expected End session to hx-post /complete without submitting the save-session form")
+		}
+		if strings.Contains(got, "formaction") {
+			t.Errorf("expected no formaction: htmx 4 ignores it on a form with hx-post")
+		}
+	})
+}
