@@ -418,7 +418,7 @@ type appointmentFilter struct {
 // newest first.
 func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, f appointmentFilter) ([]models.Appointment, error) {
 	appointments := []models.Appointment{}
-	dbquery := s.DB.Model(&models.Appointment{}).Where("appointments.user_id = ?", userID)
+	dbquery := s.DB.WithContext(ctx).Model(&models.Appointment{}).Where("appointments.user_id = ?", userID)
 
 	if f.PatientUID != "" {
 		dbquery = dbquery.Joins("INNER JOIN patients ON patients.id = appointments.patient_id")
@@ -462,7 +462,7 @@ func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, f appoint
 		Find(&appointments).
 		Error
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("find appointments: %w", err)
 	}
 
 	return appointments, nil
@@ -482,7 +482,7 @@ func (s *service) findPatientIDsBySearchTerm(ctx context.Context, userID uint, s
 		Pluck("patients.id", &ids).
 		Error
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("find patient ids by search: %w", err)
 	}
 
 	return ids, nil
@@ -502,7 +502,7 @@ func (s *service) findClinicIDsBySearchTerm(ctx context.Context, userID uint, se
 		Pluck("clinics.id", &ids).
 		Error
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("find clinic ids by search: %w", err)
 	}
 
 	return ids, nil
