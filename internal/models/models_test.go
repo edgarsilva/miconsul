@@ -105,13 +105,13 @@ func TestScopesAndBaseHelpers(t *testing.T) {
 	bookedIn := func(timeframe libtime.Timeframe) *gorm.Statement {
 		return db.Model(&Appointment{}).Scopes(AppointmentBookedIn(timeframe)).Find(&[]Appointment{}).Statement
 	}
-	day := bookedIn("day")
+	day := bookedIn(libtime.TimeframeDay)
 	for _, timeframe := range []libtime.Timeframe{libtime.TimeframeDay, libtime.TimeframeWeek, libtime.TimeframeMonth} {
 		if sql := bookedIn(timeframe).SQL.String(); !strings.Contains(strings.ToLower(sql), "booked_at") {
 			t.Fatalf("expected booked %s scope to query booked_at, got %s", timeframe, sql)
 		}
 	}
-	if week := bookedIn("week"); reflect.DeepEqual(week.Vars, day.Vars) {
+	if week := bookedIn(libtime.TimeframeWeek); reflect.DeepEqual(week.Vars, day.Vars) {
 		t.Fatalf("expected week bounds to differ from day bounds")
 	}
 	if unknown := bookedIn("fortnight"); !reflect.DeepEqual(unknown.Vars, day.Vars) {
@@ -358,7 +358,7 @@ func TestAppointmentBookedWithinMatchesUTCStorage(t *testing.T) {
 	}
 
 	var count int64
-	if err := appointmentBookedWithin(db.Table("appointments"), now, "day").Count(&count).Error; err != nil {
+	if err := appointmentBookedWithin(db.Table("appointments"), now, libtime.TimeframeDay).Count(&count).Error; err != nil {
 		t.Fatalf("count: %v", err)
 	}
 	if count != 3 {

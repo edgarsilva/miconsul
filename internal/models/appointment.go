@@ -158,15 +158,15 @@ func (a Appointment) AlertableType() string {
 // Scopes
 
 func AppointmentBookedToday(db *gorm.DB) *gorm.DB {
-	return appointmentBookedWithin(db, time.Now(), "day")
+	return appointmentBookedWithin(db, time.Now(), libtime.TimeframeDay)
 }
 
 func AppointmentBookedThisWeek(db *gorm.DB) *gorm.DB {
-	return appointmentBookedWithin(db, time.Now(), "week")
+	return appointmentBookedWithin(db, time.Now(), libtime.TimeframeWeek)
 }
 
 func AppointmentBookedThisMonth(db *gorm.DB) *gorm.DB {
-	return appointmentBookedWithin(db, time.Now(), "month")
+	return appointmentBookedWithin(db, time.Now(), libtime.TimeframeMonth)
 }
 
 // AppointmentBookedIn returns the booked-in scope for timeframe; any other

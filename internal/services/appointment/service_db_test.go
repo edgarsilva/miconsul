@@ -9,6 +9,7 @@ import (
 
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
+	"miconsul/internal/lib/libtime"
 	"miconsul/internal/models"
 	"miconsul/internal/server"
 
@@ -117,7 +118,7 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 	})
 
 	t.Run("listing helpers return data", func(t *testing.T) {
-		appointments, err := svc.FindAppointmentsBy(ctx, user.ID, appointmentFilter{Timeframe: "week"})
+		appointments, err := svc.FindAppointmentsBy(ctx, user.ID, appointmentFilter{Timeframe: libtime.TimeframeWeek})
 		if err != nil {
 			t.Fatalf("find appointments: %v", err)
 		}
@@ -149,7 +150,7 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 			t.Fatalf("expected clinics from empty search fallback")
 		}
 
-		_, err = svc.FindAppointmentsBy(ctx, user.ID, appointmentFilter{Timeframe: "week", SearchTerm: "patient"})
+		_, err = svc.FindAppointmentsBy(ctx, user.ID, appointmentFilter{Timeframe: libtime.TimeframeWeek, SearchTerm: "patient"})
 		if err == nil {
 			t.Fatalf("expected FTS-backed appointment search error without global_fts table")
 		}
@@ -379,7 +380,7 @@ func TestFindAppointmentsByStatus(t *testing.T) {
 	filter := appointmentFilter{
 		PatientUID: patient.UID,
 		ClinicUID:  clinic.UID,
-		Timeframe:  "day",
+		Timeframe:  libtime.TimeframeDay,
 		Statuses:   []models.AppointmentStatus{models.AppointmentConfirmed},
 	}
 	appointments, err := svc.FindAppointmentsBy(ctx, user.ID, filter)
