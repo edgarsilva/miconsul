@@ -310,6 +310,12 @@ func TestAppointmentHandlerGuardBranches(t *testing.T) {
 	if err != nil || resp5.StatusCode != fiber.StatusSeeOther {
 		t.Fatalf("delete blank id expected 303 redirect, got status=%d err=%v", resp5.StatusCode, err)
 	}
+	if got := resp5.Header.Get("Location"); got != "/appointments" {
+		t.Fatalf("delete blank id Location = %q, want /appointments", got)
+	}
+	if msg, level := servertest.FlashToast(t, resp5); msg != "can't find that appointment" || level != "error" {
+		t.Fatalf("delete blank id flash toast = %q %q, want can't find that appointment error", msg, level)
+	}
 
 	searchReq := httptest.NewRequest(http.MethodPost, "/appointments/search/clinics", strings.NewReader(url.Values{"searchTerm": {"alpha"}}.Encode()))
 	searchReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")

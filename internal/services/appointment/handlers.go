@@ -374,7 +374,7 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	}
 
 	if appointmentID == "" {
-		return s.Redirect(c, "/appointments?msg=can't update without an id")
+		return s.RedirectWithToast(c, "/appointments", "can't update without an id", "error")
 	}
 
 	_, err := s.TakeAppointmentByUID(c.Context(), cu.ID, appointmentID)
@@ -472,15 +472,15 @@ func (s *service) HandleDelete(c fiber.Ctx) error {
 
 	appointmentID := c.Params("id", "")
 	if appointmentID == "" {
-		return s.Redirect(c, "/appointments?msg=can't delete without an id")
+		return s.RedirectWithToast(c, "/appointments", "can't delete without an id", "error")
 	}
 
 	err := s.DeleteAppointmentByID(c.Context(), cu.ID, appointmentID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.Redirect(c, "/appointments?msg=can't find that appointment")
+		return s.RedirectWithToast(c, "/appointments", "can't find that appointment", "error")
 	}
 	if err != nil {
-		return s.Redirect(c, "/appointments?msg=failed to delete that appointment")
+		return s.RedirectWithToast(c, "/appointments", "failed to delete that appointment", "error")
 	}
 
 	return s.respondWithRedirect(c, "/appointments")
