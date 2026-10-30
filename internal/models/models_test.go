@@ -103,7 +103,7 @@ func TestScopesAndBaseHelpers(t *testing.T) {
 	}
 
 	bookedIn := func(timeframe libtime.Timeframe) *gorm.Statement {
-		return db.Model(&Appointment{}).Scopes(AppointmentBookedIn(timeframe, time.Now())).Find(&[]Appointment{}).Statement
+		return db.Model(&Appointment{}).Scopes(AppointmentBookedIn(timeframe)).Find(&[]Appointment{}).Statement
 	}
 	day := bookedIn(libtime.TimeframeDay)
 	for _, timeframe := range []libtime.Timeframe{libtime.TimeframeDay, libtime.TimeframeWeek, libtime.TimeframeMonth} {
@@ -358,7 +358,7 @@ func TestAppointmentBookedInMatchesUTCStorage(t *testing.T) {
 	}
 
 	var count int64
-	if err := db.Table("appointments").Scopes(AppointmentBookedIn(libtime.TimeframeDay, now)).Count(&count).Error; err != nil {
+	if err := db.Table("appointments").Scopes(appointmentBookedInAt(libtime.TimeframeDay, now)).Count(&count).Error; err != nil {
 		t.Fatalf("count: %v", err)
 	}
 	if count != 3 {

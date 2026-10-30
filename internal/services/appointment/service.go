@@ -454,7 +454,7 @@ func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, f appoint
 		dbquery = dbquery.Where("appointments.patient_id IN ? OR appointments.clinic_id IN ?", patientIDs, clinicIDs)
 	}
 
-	err := dbquery.Scopes(models.AppointmentBookedIn(f.Timeframe, time.Now()), models.AppointmentWithStatus(f.Statuses...)).
+	err := dbquery.Scopes(models.AppointmentBookedIn(f.Timeframe), models.AppointmentWithStatus(f.Statuses...)).
 		Preload("Clinic").
 		Preload("Patient").
 		Order("booked_at desc").

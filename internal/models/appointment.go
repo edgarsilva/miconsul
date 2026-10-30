@@ -158,22 +158,28 @@ func (a Appointment) AlertableType() string {
 // Scopes
 
 func AppointmentBookedToday(db *gorm.DB) *gorm.DB {
-	return db.Scopes(AppointmentBookedIn(libtime.TimeframeDay, time.Now()))
+	return db.Scopes(AppointmentBookedIn(libtime.TimeframeDay))
 }
 
 func AppointmentBookedThisWeek(db *gorm.DB) *gorm.DB {
-	return db.Scopes(AppointmentBookedIn(libtime.TimeframeWeek, time.Now()))
+	return db.Scopes(AppointmentBookedIn(libtime.TimeframeWeek))
 }
 
 func AppointmentBookedThisMonth(db *gorm.DB) *gorm.DB {
-	return db.Scopes(AppointmentBookedIn(libtime.TimeframeMonth, time.Now()))
+	return db.Scopes(AppointmentBookedIn(libtime.TimeframeMonth))
 }
 
-// AppointmentBookedIn scopes appointments to those booked in the timeframe
-// around now; any other timeframe means the day.
-func AppointmentBookedIn(timeframe libtime.Timeframe, now time.Time) func(*gorm.DB) *gorm.DB {
+// AppointmentBookedIn scopes appointments to those booked in the current
+// timeframe; any other timeframe means today.
+func AppointmentBookedIn(timeframe libtime.Timeframe) func(*gorm.DB) *gorm.DB {
+	return appointmentBookedInAt(timeframe, time.Now())
+}
+
+// appointmentBookedInAt scopes appointments to those booked in the timeframe
+// that contains t.
+func appointmentBookedInAt(timeframe libtime.Timeframe, t time.Time) func(*gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		start, end := libtime.TimeframeBounds(now, DefaultTimezone, timeframe)
+		start, end := libtime.TimeframeBounds(t, DefaultTimezone, timeframe)
 
 		return db.Where("booked_at >= ?", start.UTC()).Where("booked_at < ?", end.UTC())
 	}
