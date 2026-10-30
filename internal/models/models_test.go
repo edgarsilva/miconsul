@@ -328,7 +328,7 @@ func TestUserPublic(t *testing.T) {
 	}
 }
 
-func TestAppointmentBookedWithinMatchesUTCStorage(t *testing.T) {
+func TestAppointmentBookedInMatchesUTCStorage(t *testing.T) {
 	db, err := gorm.Open(sqlite.Open("file:"+t.Name()+"?mode=memory"), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
@@ -358,7 +358,7 @@ func TestAppointmentBookedWithinMatchesUTCStorage(t *testing.T) {
 	}
 
 	var count int64
-	if err := appointmentBookedWithin(db.Table("appointments"), now, libtime.TimeframeDay).Count(&count).Error; err != nil {
+	if err := db.Table("appointments").Scopes(appointmentBookedInAt(libtime.TimeframeDay, now)).Count(&count).Error; err != nil {
 		t.Fatalf("count: %v", err)
 	}
 	if count != 3 {

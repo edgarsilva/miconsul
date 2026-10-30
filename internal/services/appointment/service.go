@@ -298,26 +298,6 @@ func (s *service) TakeAppointmentByToken(ctx context.Context, token string) (mod
 	return appointment, nil
 }
 
-func (s *service) TakePatientByUIDWithLastDoneAppointment(ctx context.Context, userID uint, patientUID string) (models.Patient, error) {
-	patientUID = strings.TrimSpace(patientUID)
-	if patientUID == "" {
-		return models.Patient{}, ErrIDRequired
-	}
-
-	patient := models.Patient{}
-	err := s.DB.Model(&models.Patient{}).
-		Where("uid = ? AND user_id = ?", patientUID, userID).
-		Preload("Appointments", func(tx *gorm.DB) *gorm.DB {
-			return tx.Limit(1).Where("status = ?", models.AppointmentDone).Order("booked_at desc")
-		}).
-		Take(&patient).Error
-	if err != nil {
-		return models.Patient{}, err
-	}
-
-	return patient, nil
-}
-
 // ConfirmAppointment marks a loaded appointment as confirmed by its patient
 // and records a feed event. Confirming an already confirmed appointment is a
 // no-op. It returns ErrAppointmentChanged when the status changed since the
@@ -418,7 +398,7 @@ type appointmentFilter struct {
 // newest first.
 func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, f appointmentFilter) ([]models.Appointment, error) {
 	appointments := []models.Appointment{}
-	dbquery := s.DB.Model(&models.Appointment{}).Where("appointments.user_id = ?", userID)
+	dbquery := s.DB.WithContext(ctx).Model(&models.Appointment{}).Where("appointments.user_id = ?", userID)
 
 	if f.PatientUID != "" {
 		dbquery = dbquery.Joins("INNER JOIN patients ON patients.id = appointments.patient_id")
@@ -462,7 +442,7 @@ func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, f appoint
 		Find(&appointments).
 		Error
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("find appointments: %w", err)
 	}
 
 	return appointments, nil
@@ -482,7 +462,7 @@ func (s *service) findPatientIDsBySearchTerm(ctx context.Context, userID uint, s
 		Pluck("patients.id", &ids).
 		Error
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("find patient ids by search: %w", err)
 	}
 
 	return ids, nil
@@ -502,7 +482,7 @@ func (s *service) findClinicIDsBySearchTerm(ctx context.Context, userID uint, se
 		Pluck("clinics.id", &ids).
 		Error
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("find clinic ids by search: %w", err)
 	}
 
 	return ids, nil

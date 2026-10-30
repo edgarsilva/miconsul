@@ -158,27 +158,30 @@ func (a Appointment) AlertableType() string {
 // Scopes
 
 func AppointmentBookedToday(db *gorm.DB) *gorm.DB {
-	return appointmentBookedWithin(db, time.Now(), libtime.TimeframeDay)
+	return db.Scopes(AppointmentBookedIn(libtime.TimeframeDay))
 }
 
 func AppointmentBookedThisWeek(db *gorm.DB) *gorm.DB {
-	return appointmentBookedWithin(db, time.Now(), libtime.TimeframeWeek)
+	return db.Scopes(AppointmentBookedIn(libtime.TimeframeWeek))
 }
 
 func AppointmentBookedThisMonth(db *gorm.DB) *gorm.DB {
-	return appointmentBookedWithin(db, time.Now(), libtime.TimeframeMonth)
+	return db.Scopes(AppointmentBookedIn(libtime.TimeframeMonth))
 }
 
-// AppointmentBookedIn returns the booked-in scope for timeframe; any other
-// timeframe means today.
+// AppointmentBookedIn scopes appointments to those booked in the current
+// timeframe; any other timeframe means today.
 func AppointmentBookedIn(timeframe libtime.Timeframe) func(*gorm.DB) *gorm.DB {
-	switch timeframe {
-	case libtime.TimeframeWeek:
-		return AppointmentBookedThisWeek
-	case libtime.TimeframeMonth:
-		return AppointmentBookedThisMonth
-	default:
-		return AppointmentBookedToday
+	return appointmentBookedInAt(timeframe, time.Now())
+}
+
+// appointmentBookedInAt scopes appointments to those booked in the timeframe
+// that contains t.
+func appointmentBookedInAt(timeframe libtime.Timeframe, t time.Time) func(*gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		start, end := libtime.TimeframeBounds(t, DefaultTimezone, timeframe)
+
+		return db.Where("booked_at >= ?", start.UTC()).Where("booked_at < ?", end.UTC())
 	}
 }
 
@@ -237,10 +240,4 @@ func (a Appointment) FeedEventSubject() (name, id, typ, url string) {
 // FeedEventTarget returns the patient as the target of the event.
 func (a Appointment) FeedEventTarget() (name, id, typ, url string) {
 	return a.Patient.Name, a.Patient.UID, "patients", "/patients/" + a.Patient.UID
-}
-
-func appointmentBookedWithin(db *gorm.DB, now time.Time, timeframe libtime.Timeframe) *gorm.DB {
-	start, end := libtime.TimeframeBounds(now, DefaultTimezone, timeframe)
-
-	return db.Where("booked_at >= ?", start.UTC()).Where("booked_at < ?", end.UTC())
 }

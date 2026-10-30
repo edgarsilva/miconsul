@@ -33,9 +33,6 @@ func TestServiceInputValidation(t *testing.T) {
 		if _, err := svc.TakeAppointmentByUID(ctx, 1, ""); !errors.Is(err, ErrIDRequired) {
 			t.Fatalf("expected ErrIDRequired for appointment id, got %v", err)
 		}
-		if _, err := svc.TakePatientByUIDWithLastDoneAppointment(ctx, 1, ""); !errors.Is(err, ErrIDRequired) {
-			t.Fatalf("expected ErrIDRequired for patient id with preload, got %v", err)
-		}
 	})
 
 	t.Run("id-guarded mutations fail fast on blank id", func(t *testing.T) {

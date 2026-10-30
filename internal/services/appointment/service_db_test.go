@@ -61,9 +61,6 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 		if _, err := svc.TakeClinicByUID(ctx, user.ID, " "+clinic.UID+" "); err != nil {
 			t.Fatalf("take clinic by padded uid: %v", err)
 		}
-		if _, err := svc.TakePatientByUIDWithLastDoneAppointment(ctx, user.ID, " "+patient.UID+" "); err != nil {
-			t.Fatalf("take patient with last appointment by padded uid: %v", err)
-		}
 
 		apnt := models.Appointment{UserID: user.ID, ClinicID: clinic.ID, PatientID: patient.ID, BookedAt: time.Now().Add(time.Hour), Token: "tok_padded"}
 		if err := svc.CreateAppointment(ctx, &apnt); err != nil {
@@ -158,28 +155,6 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 		_, err = svc.FindClinicsBySearchTerm(ctx, user.ID, "clinic")
 		if err == nil {
 			t.Fatalf("expected FTS-backed clinic search error without global_fts table")
-		}
-	})
-
-	t.Run("patient with last done appointment preloads done appointment", func(t *testing.T) {
-		doneApnt := models.Appointment{
-			UserID:    user.ID,
-			ClinicID:  clinic.ID,
-			PatientID: patient.ID,
-			BookedAt:  time.Now().Add(-time.Hour),
-			Status:    models.AppointmentDone,
-			Token:     "tok_done",
-		}
-		if err := svc.CreateAppointment(ctx, &doneApnt); err != nil {
-			t.Fatalf("create done appointment: %v", err)
-		}
-
-		got, err := svc.TakePatientByUIDWithLastDoneAppointment(ctx, user.ID, patient.UID)
-		if err != nil {
-			t.Fatalf("take patient with done appointment: %v", err)
-		}
-		if len(got.Appointments) == 0 || got.Appointments[0].Status != models.AppointmentDone {
-			t.Fatalf("expected preloaded done appointment")
 		}
 	})
 
