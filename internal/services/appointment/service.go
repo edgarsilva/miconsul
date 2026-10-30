@@ -298,26 +298,6 @@ func (s *service) TakeAppointmentByToken(ctx context.Context, token string) (mod
 	return appointment, nil
 }
 
-func (s *service) TakePatientByUIDWithLastDoneAppointment(ctx context.Context, userID uint, patientUID string) (models.Patient, error) {
-	patientUID = strings.TrimSpace(patientUID)
-	if patientUID == "" {
-		return models.Patient{}, ErrIDRequired
-	}
-
-	patient := models.Patient{}
-	err := s.DB.Model(&models.Patient{}).
-		Where("uid = ? AND user_id = ?", patientUID, userID).
-		Preload("Appointments", func(tx *gorm.DB) *gorm.DB {
-			return tx.Limit(1).Where("status = ?", models.AppointmentDone).Order("booked_at desc")
-		}).
-		Take(&patient).Error
-	if err != nil {
-		return models.Patient{}, err
-	}
-
-	return patient, nil
-}
-
 // ConfirmAppointment marks a loaded appointment as confirmed by its patient
 // and records a feed event. Confirming an already confirmed appointment is a
 // no-op. It returns ErrAppointmentChanged when the status changed since the
