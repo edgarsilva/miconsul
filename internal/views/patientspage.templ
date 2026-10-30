@@ -49,26 +49,7 @@ templ PatientFormPage(patient models.Patient, c *Ctx) {
 		<div class="px-4 lg:px-8">
 			@CmpBtnBack(c.l("btn.back"), "/patients")
 		</div>
-		<section id="patient_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
-			<hgroup
-				class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
-				hx-boost:inherited="true"
-			>
-				if patient.UID == "" || patient.UID == "new" {
-					<h1 class="font-bold text-2xl">{ c.l("str.new_patient") }</h1>
-				} else {
-					<h1 class="font-bold text-2xl">{ c.l("str.edit_patient") }</h1>
-				}
-				<a
-					href={ templ.URL("/appointments?patientId=" + patient.UID) }
-					class="btn btn-primary btn-sm"
-				>
-					@IconCalendar("")
-					{ c.l("btn.appointments") }
-				</a>
-			</hgroup>
-			@PatientProfile(patient, c)
-		</section>
+		@PatientProfileSection(c, patient)
 	}
 }
 
@@ -194,23 +175,7 @@ templ PatientProfile(patient models.Patient, c *Ctx) {
 						<div class="col-span-full">
 							<label for="profile_pic" class="block text-sm font-medium leading-6">{ c.l("str.profile_pic") }</label>
 							<div class="mt-2 flex items-center gap-x-3">
-								if patient.ProfilePic != "" {
-									<figure class="flex flex-col gap-1 items-center" id="avatar_pic">
-										@CmpAvatar(patient)
-										<a
-											href={ templ.URL("/patients/" + patient.UID + "/removepic") }
-											hx-patch={ "/patients/" + patient.UID + "/removepic" }
-											hx-select="#avatar_pic"
-											hx-swap="outerHTML"
-											hx-target="closest figure"
-											class="link text-xs link-secondary"
-										>{ c.l("btn.remove") }</a>
-									</figure>
-								} else {
-									<figure class="flex flex-col gap-2" id="avatar_pic">
-										@CmpAvatar(patient)
-									</figure>
-								}
+								@PatientAvatarPic(c, patient)
 								<input
 									id="profile_pic"
 									name="profilePic"
@@ -535,7 +500,6 @@ templ PatientForm(c *Ctx, patient models.Patient) {
 			action="/patients"
 		}
 		hx-target="closest #patient_profile_cont"
-		hx-select="#patient_profile_cont"
 		hx-swap="outerHTML"
 	>
 		<span class="absolute badge badge-success badge-sm p-2 top-2 right-2 htmx-indicator">
@@ -552,4 +516,48 @@ templ CountryOption(label, value, country string) {
 			selected
 		}
 	>{ label }</option>
+}
+
+// PatientProfileSection renders the patient page's form section.
+templ PatientProfileSection(c *Ctx, patient models.Patient) {
+	<section id="patient_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
+		<hgroup
+			class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
+			hx-boost:inherited="true"
+		>
+			if patient.UID == "" || patient.UID == "new" {
+				<h1 class="font-bold text-2xl">{ c.l("str.new_patient") }</h1>
+			} else {
+				<h1 class="font-bold text-2xl">{ c.l("str.edit_patient") }</h1>
+			}
+			<a
+				href={ templ.URL("/appointments?patientId=" + patient.UID) }
+				class="btn btn-primary btn-sm"
+			>
+				@IconCalendar("")
+				{ c.l("btn.appointments") }
+			</a>
+		</hgroup>
+		@PatientProfile(patient, c)
+	</section>
+}
+
+// PatientAvatarPic renders the patient's avatar with its remove link.
+templ PatientAvatarPic(c *Ctx, patient models.Patient) {
+	if patient.ProfilePic != "" {
+		<figure class="flex flex-col gap-1 items-center" id="avatar_pic">
+			@CmpAvatar(patient)
+			<a
+				href={ templ.URL("/patients/" + patient.UID + "/removepic") }
+				hx-patch={ "/patients/" + patient.UID + "/removepic" }
+				hx-swap="outerHTML"
+				hx-target="closest figure"
+				class="link text-xs link-secondary"
+			>{ c.l("btn.remove") }</a>
+		</figure>
+	} else {
+		<figure class="flex flex-col gap-2" id="avatar_pic">
+			@CmpAvatar(patient)
+		</figure>
+	}
 }

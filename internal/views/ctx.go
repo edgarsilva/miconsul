@@ -35,11 +35,6 @@ func (c *Ctx) l(key string) string {
 	return locales.GetWithLocale(c.Locale, key)
 }
 
-// IsHTMX reports whether the request was made by HTMX.
-func (c *Ctx) IsHTMX() bool {
-	return c.Get("HX-Request") == "true"
-}
-
 func localeFromLocals(fc fiber.Ctx) string {
 	locale, _ := fc.Locals("locale").(string)
 	if locale = preferences.Locale(locale); locale == "" {

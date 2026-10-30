@@ -11,6 +11,7 @@ import (
 	"miconsul/internal/services/auth"
 	view "miconsul/internal/views"
 
+	"github.com/a-h/templ"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
 	"gorm.io/gorm"
@@ -112,7 +113,10 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 	}
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.UserEditPage(vc, updatedUser))
+	return view.Render(c, templ.Join(
+		view.UserProfileSection(vc, updatedUser),
+		view.CmpToastPartial("Profile updated", "", "success"),
+	))
 }
 
 // HandleProfilePicPreview stores and renders a temporary profile picture preview.
@@ -208,7 +212,10 @@ func (s *service) HandleAdminRemoveProfilePic(c fiber.Ctx) error {
 	}
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.UserEditPage(vc, updatedUser))
+	return view.Render(c, templ.Join(
+		view.ProfileAvatarPic(vc, updatedUser),
+		view.CmpToastPartial("Profile picture removed", "", "success"),
+	))
 }
 
 // HandleAdminUpdateUser updates another user's name, email and phone as admin.
@@ -235,7 +242,10 @@ func (s *service) HandleAdminUpdateUser(c fiber.Ctx) error {
 	}
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.UserEditPage(vc, updatedUser))
+	return view.Render(c, templ.Join(
+		view.UserProfileSection(vc, updatedUser),
+		view.CmpToastPartial("User updated", "", "success"),
+	))
 }
 
 // HandleAPIUsers returns users as JSON for admin API clients.
