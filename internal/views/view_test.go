@@ -318,7 +318,7 @@ func TestAuthPagesUseThemeColors(t *testing.T) {
 		pages := map[string]interface {
 			Render(context.Context, io.Writer) error
 		}{
-			"LoginPage":  LoginPage("", "", nil, c),
+			"LoginPage":  LoginPage("", nil, c),
 			"SignupPage": SignupPage(c, "", nil),
 		}
 		for name, page := range pages {
@@ -332,7 +332,7 @@ func TestAuthPagesUseThemeColors(t *testing.T) {
 		}
 
 		var login strings.Builder
-		if err := LoginPage("", "", nil, c).Render(fc.Context(), &login); err != nil {
+		if err := LoginPage("", nil, c).Render(fc.Context(), &login); err != nil {
 			t.Fatalf("render LoginPage: %v", err)
 		}
 		if !strings.Contains(login.String(), `<a href="/resetpassword" class="link font-semibold`) {

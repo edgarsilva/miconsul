@@ -123,8 +123,6 @@ func WithLocale(lang string) ContextOption {
 // WithToast sets up a notification toast to be rendered by the base layout
 // views
 //
-// # Note: you can also pass thist 3 params as querpyParams in redirects
-//
 //   - toast: main text,
 //   - sub: optional subtitle,
 //   - level: alert level, one of success, error, warning or info (defaults to info)

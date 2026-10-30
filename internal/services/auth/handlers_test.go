@@ -18,6 +18,7 @@ import (
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/models"
 	"miconsul/internal/server"
+	"miconsul/internal/server/servertest"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/session"
@@ -497,9 +498,7 @@ func TestAuthHandlersResetPasswordShortCircuits(t *testing.T) {
 		if resp.StatusCode != fiber.StatusSeeOther {
 			t.Fatalf("expected 303, got %d", resp.StatusCode)
 		}
-		if !strings.Contains(resp.Header.Get("Location"), "something went wrong with the email") {
-			t.Fatalf("expected error redirect message, got %q", resp.Header.Get("Location"))
-		}
+		assertAlertRedirect(t, resp, "/resetpassword", "something went wrong with the email", "error")
 	})
 }
 
@@ -530,20 +529,6 @@ func TestAuthHandlersSignupPaths(t *testing.T) {
 		app.Get("/signup", svc.HandleSignupPage)
 
 		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/signup", nil))
-		if err != nil {
-			t.Fatalf("request failed: %v", err)
-		}
-		if resp.StatusCode != fiber.StatusOK {
-			t.Fatalf("expected 200, got %d", resp.StatusCode)
-		}
-	})
-
-	t.Run("HandleSignupPage renders message query", func(t *testing.T) {
-		svc := newAuthServiceForTests(t)
-		app := fiber.New()
-		app.Get("/signup", svc.HandleSignupPage)
-
-		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/signup?msg=hello", nil))
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
@@ -653,9 +638,7 @@ func TestAuthHandlersSignupPaths(t *testing.T) {
 		if resp.StatusCode != fiber.StatusSeeOther {
 			t.Fatalf("expected 303, got %d", resp.StatusCode)
 		}
-		if !strings.HasPrefix(resp.Header.Get("Location"), "/signin?") {
-			t.Fatalf("expected redirect to signin, got %q", resp.Header.Get("Location"))
-		}
+		assertAlertRedirect(t, resp, "/signin", "re-send a confirmation link", "info")
 	})
 
 	t.Run("HandleSignup creates user and redirects to signin", func(t *testing.T) {
@@ -673,9 +656,7 @@ func TestAuthHandlersSignupPaths(t *testing.T) {
 		if resp.StatusCode != fiber.StatusSeeOther {
 			t.Fatalf("expected 303, got %d", resp.StatusCode)
 		}
-		if !strings.HasPrefix(resp.Header.Get("Location"), "/signin?") {
-			t.Fatalf("expected redirect to signin, got %q", resp.Header.Get("Location"))
-		}
+		assertAlertRedirect(t, resp, "/signin", "check your inbox to confirm your email", "info")
 	})
 }
 
@@ -727,9 +708,8 @@ func TestAuthHandlersSignupConfirmEmailPaths(t *testing.T) {
 		if resp.StatusCode != fiber.StatusSeeOther {
 			t.Fatalf("expected 303, got %d", resp.StatusCode)
 		}
-		if cookie := resp.Header.Get("Set-Cookie"); cookie != "" {
-			t.Fatalf("expected no cookie on confirmation, got %q", cookie)
-		}
+		assertAlertRedirect(t, resp, "/signin", "Email confirmed", "success")
+		assertFlashOnlyCookies(t, resp)
 	})
 
 	t.Run("confirm token update error still redirects to signin", func(t *testing.T) {
@@ -751,9 +731,8 @@ func TestAuthHandlersSignupConfirmEmailPaths(t *testing.T) {
 		if resp.StatusCode != fiber.StatusSeeOther {
 			t.Fatalf("expected 303 redirect, got %d", resp.StatusCode)
 		}
-		if cookie := resp.Header.Get("Set-Cookie"); cookie != "" {
-			t.Fatalf("did not expect auth cookie when update fails, got %q", cookie)
-		}
+		assertAlertRedirect(t, resp, "/signin", "Email confirmed", "success")
+		assertFlashOnlyCookies(t, resp)
 	})
 
 }
@@ -919,9 +898,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		if resp1.StatusCode != fiber.StatusSeeOther {
 			t.Fatalf("expected 303 for missing token, got %d", resp1.StatusCode)
 		}
-		if loc := resp1.Header.Get("Location"); !strings.Contains(loc, "something went wrong with the token") {
-			t.Fatalf("expected missing token redirect, got %q", loc)
-		}
+		assertAlertRedirect(t, resp1, "/resetpassword", "something went wrong with the token", "error")
 	})
 
 	t.Run("reset password change page and update round trip", func(t *testing.T) {
@@ -1020,9 +997,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		if resp.StatusCode != fiber.StatusSeeOther {
 			t.Fatalf("expected 303 for expired token path, got %d", resp.StatusCode)
 		}
-		if loc := resp.Header.Get("Location"); !strings.Contains(loc, "token has expired") {
-			t.Fatalf("expected expired token redirect, got %q", loc)
-		}
+		assertAlertRedirect(t, resp, "/resetpassword", "token has expired", "error")
 	})
 
 	t.Run("HandleResetPasswordUpdate redirects when update fails", func(t *testing.T) {
@@ -1052,9 +1027,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		if resp.StatusCode != fiber.StatusSeeOther {
 			t.Fatalf("expected 303 on update failure, got %d", resp.StatusCode)
 		}
-		if loc := resp.Header.Get("Location"); !strings.Contains(loc, "something went wrong, try again") {
-			t.Fatalf("expected update failure redirect, got %q", loc)
-		}
+		assertAlertRedirect(t, resp, "/resetpassword", "something went wrong, try again", "error")
 	})
 
 	t.Run("HandleResetPasswordUpdate redirects to signin on success", func(t *testing.T) {
@@ -1108,41 +1081,6 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		}
 		if resp.StatusCode != fiber.StatusOK {
 			t.Fatalf("expected 200 with update error message, got %d", resp.StatusCode)
-		}
-	})
-}
-
-func TestRespondWithRedirect(t *testing.T) {
-	svc := newAuthServiceForTests(t)
-
-	t.Run("redirect without message keeps path", func(t *testing.T) {
-		app := fiber.New()
-		app.Get("/x", func(c fiber.Ctx) error {
-			return svc.respondWithRedirect(c, "/signin", "")
-		})
-
-		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/x", nil))
-		if err != nil {
-			t.Fatalf("request failed: %v", err)
-		}
-		if got := resp.Header.Get("Location"); got != "/signin" {
-			t.Fatalf("expected /signin location, got %q", got)
-		}
-	})
-
-	t.Run("redirect appends encoded message", func(t *testing.T) {
-		app := fiber.New()
-		app.Get("/x", func(c fiber.Ctx) error {
-			return svc.respondWithRedirect(c, "/signin?from=test", "email pending confirmation")
-		})
-
-		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/x", nil))
-		if err != nil {
-			t.Fatalf("request failed: %v", err)
-		}
-		loc := resp.Header.Get("Location")
-		if !strings.Contains(loc, "from=test") || !strings.Contains(loc, "msg=email+pending+confirmation") {
-			t.Fatalf("expected encoded msg query in location, got %q", loc)
 		}
 	})
 }
@@ -1294,4 +1232,97 @@ func seedAuthUserWithOptions(t *testing.T, svc *service, opts authUserSeedOption
 	}
 
 	return u
+}
+
+// assertAlertRedirect fails unless resp redirects to exactly path, with no
+// query, and carries a flash alert containing msg at level.
+func assertAlertRedirect(t *testing.T, resp *http.Response, path, msg, level string) {
+	t.Helper()
+
+	if got := resp.Header.Get("Location"); got != path {
+		t.Fatalf("Location = %q, want %q", got, path)
+	}
+	gotMsg, gotLevel := servertest.FlashAlert(t, resp)
+	if !strings.Contains(gotMsg, msg) || gotLevel != level {
+		t.Fatalf("flash alert = %q %q, want %q %q", gotMsg, gotLevel, msg, level)
+	}
+}
+
+// assertFlashOnlyCookies fails if resp sets any cookie besides the flash
+// cookie, such as a session.
+func assertFlashOnlyCookies(t *testing.T, resp *http.Response) {
+	t.Helper()
+
+	for _, cookie := range resp.Cookies() {
+		if cookie.Name != fiber.FlashCookieName {
+			t.Fatalf("unexpected cookie %q", cookie.Name)
+		}
+	}
+}
+
+func TestAuthPagesIgnoreMsgQuery(t *testing.T) {
+	svc := newAuthServiceForTests(t)
+	app := fiber.New()
+	app.Get("/signin", svc.HandleSigninPage)
+	app.Get("/signup", svc.HandleSignupPage)
+	app.Get("/resetpassword", svc.HandleResetPasswordPage)
+
+	for _, path := range []string{"/signin", "/signup", "/resetpassword"} {
+		t.Run(path, func(t *testing.T) {
+			resp, err := app.Test(httptest.NewRequest(http.MethodGet, path+"?msg=spoofed+message", nil))
+			if err != nil {
+				t.Fatalf("request failed: %v", err)
+			}
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("read body: %v", err)
+			}
+			if resp.StatusCode != fiber.StatusOK {
+				t.Fatalf("expected 200, got %d", resp.StatusCode)
+			}
+			if strings.Contains(string(body), "spoofed message") {
+				t.Fatalf("expected the msg query not to be rendered")
+			}
+		})
+	}
+}
+
+func TestAuthPagesRenderFlashAlertInline(t *testing.T) {
+	svc := newAuthServiceForTests(t)
+	app := fiber.New()
+	app.Get("/signin", svc.HandleSigninPage)
+	app.Get("/resetpassword", svc.HandleResetPasswordPage)
+	app.Get("/flash/*", func(c fiber.Ctx) error {
+		return svc.RedirectWithAlert(c, "/"+c.Params("*"), "Email confirmed", "success")
+	})
+
+	for _, path := range []string{"/signin", "/resetpassword"} {
+		t.Run(path, func(t *testing.T) {
+			redirect, err := app.Test(httptest.NewRequest(http.MethodGet, "/flash"+path, nil))
+			if err != nil {
+				t.Fatalf("flash request failed: %v", err)
+			}
+
+			req := httptest.NewRequest(http.MethodGet, path, nil)
+			for _, cookie := range redirect.Cookies() {
+				req.AddCookie(cookie)
+			}
+			resp, err := app.Test(req)
+			if err != nil {
+				t.Fatalf("request failed: %v", err)
+			}
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("read body: %v", err)
+			}
+
+			html := string(body)
+			if !strings.Contains(html, "alert-success") || !strings.Contains(html, "Email confirmed") {
+				t.Fatalf("expected the flash alert inline on the page")
+			}
+			if strings.Contains(html, "toast-card") {
+				t.Fatalf("expected no toast for a flash alert")
+			}
+		})
+	}
 }
