@@ -158,6 +158,12 @@ templ AppointmentsSection(c *Ctx, props AppointmentsSectionProps) {
 						hx-get={ props.SectionPath + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "pending")) }
 						hx-push-url={ props.PagePath + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "pending")) }
 					>{ c.l("str.pending") }</a>
+					<a
+						class={ "btn btn-xs btn-soft opacity-45 hover:opacity-100", templ.KV("btn-primary opacity-90 ring-1 ring-primary/50", strings.Contains(c.Query("status", ""), "done")) }
+						href={ templ.URL(props.PagePath + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "done"))) }
+						hx-get={ props.SectionPath + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "done")) }
+						hx-push-url={ props.PagePath + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "done")) }
+					>{ c.l("str.done") }</a>
 					if c.Query("status", "") != "" {
 						<a
 							class="btn btn-xs btn-square btn-ghost opacity-75 hover:opacity-90"

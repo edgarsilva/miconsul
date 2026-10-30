@@ -631,6 +631,7 @@ func TestIndexSectionFilterLinks(t *testing.T) {
 				`href="/appointments?timeframe=week"`,
 				`hx-get="/appointments/search?timeframe=week"`,
 				`hx-push-url="/appointments?timeframe=week"`,
+				`hx-get="/appointments/search?status=done&amp;timeframe=day"`,
 			} {
 				if !strings.Contains(string(body), want) {
 					t.Errorf("body missing %s", want)
