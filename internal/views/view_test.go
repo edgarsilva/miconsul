@@ -457,3 +457,60 @@ func TestNewCtxToastComesFromTheFlash(t *testing.T) {
 		t.Errorf("toast = %+v, want the flash toast, not the query string", got)
 	}
 }
+
+func TestCmpFlashAlert(t *testing.T) {
+	render := func(t *testing.T, flash *http.Cookie) string {
+		t.Helper()
+
+		app := fiber.New()
+		app.Get("/", func(fc fiber.Ctx) error {
+			return Render(fc, CmpFlashAlert(NewCtx(fc)))
+		})
+
+		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		if flash != nil {
+			req.AddCookie(flash)
+		}
+		resp, err := app.Test(req)
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			t.Fatalf("read body: %v", err)
+		}
+
+		return string(body)
+	}
+
+	t.Run("renders the flash alert with its level", func(t *testing.T) {
+		app := fiber.New()
+		app.Get("/", func(fc fiber.Ctx) error {
+			return fc.Redirect().With("alert", "Email confirmed").With("alert_level", "success").To("/signin")
+		})
+		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/", nil))
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		var flash *http.Cookie
+		for _, cookie := range resp.Cookies() {
+			if cookie.Name == fiber.FlashCookieName {
+				flash = cookie
+			}
+		}
+		if flash == nil {
+			t.Fatalf("expected a flash cookie")
+		}
+
+		body := render(t, flash)
+		if !strings.Contains(body, `role="alert"`) || !strings.Contains(body, "alert-success") || !strings.Contains(body, "Email confirmed") {
+			t.Fatalf("expected a success alert, got %s", body)
+		}
+	})
+
+	t.Run("renders nothing without a flash alert", func(t *testing.T) {
+		if body := render(t, nil); strings.TrimSpace(body) != "" {
+			t.Fatalf("expected no alert, got %s", body)
+		}
+	})
+}

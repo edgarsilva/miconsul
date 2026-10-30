@@ -54,3 +54,29 @@ func TestRedirectWithToast(t *testing.T) {
 		})
 	}
 }
+
+func TestRedirectWithAlert(t *testing.T) {
+	s := &Server{}
+	app := fiber.New()
+	app.Get("/", func(c fiber.Ctx) error {
+		return s.RedirectWithAlert(c, "/signin", "Email confirmed", "success")
+	})
+
+	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/", nil))
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+
+	if resp.StatusCode != http.StatusSeeOther {
+		t.Errorf("status = %d, want %d", resp.StatusCode, http.StatusSeeOther)
+	}
+	if got := resp.Header.Get("Location"); got != "/signin" {
+		t.Errorf("Location = %q, want /signin", got)
+	}
+	if msg, level := servertest.FlashAlert(t, resp); msg != "Email confirmed" || level != "success" {
+		t.Errorf("flash alert = %q %q, want Email confirmed success", msg, level)
+	}
+	if msg, _ := servertest.FlashToast(t, resp); msg != "" {
+		t.Errorf("flash toast = %q, want none", msg)
+	}
+}
