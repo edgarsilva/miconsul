@@ -72,13 +72,7 @@ templ AppointmentsPage(c *Ctx, appointments []models.Appointment, selectedPatien
 						{ c.l("btn.new") }
 					</a>
 				</hgroup>
-				@AppointmentsSection(c, AppointmentsSectionProps{
-					Appointments:    appointments,
-					SelectedPatient: selectedPatient,
-					SelectedClinic:  selectedClinic,
-					PagePath:        "/appointments",
-					SectionPath:     "/appointments/search",
-				})
+				@AppointmentIndexSection(c, appointments, selectedPatient, selectedClinic)
 			</div>
 		</section>
 	}
@@ -95,6 +89,17 @@ templ AppointmentPage(c *Ctx, appointment models.Appointment, patients []models.
 			@AppointmentCont(c, appointment, patients, clinics)
 		</section>
 	}
+}
+
+// AppointmentIndexSection renders the appointments index's filterable list.
+templ AppointmentIndexSection(c *Ctx, appointments []models.Appointment, selectedPatient models.Patient, selectedClinic models.Clinic) {
+	@AppointmentsSection(c, AppointmentsSectionProps{
+		Appointments:    appointments,
+		SelectedPatient: selectedPatient,
+		SelectedClinic:  selectedClinic,
+		PagePath:        "/appointments",
+		SectionPath:     "/appointments/search",
+	})
 }
 
 // AppointmentsSectionProps configures AppointmentsSection. Filter links fetch

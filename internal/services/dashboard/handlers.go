@@ -56,13 +56,7 @@ func (s *service) HandleAppointmentsSection(c fiber.Ctx) error {
 
 	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, timeframe, statuses)
 	vc := view.NewCtx(c)
-	props := view.AppointmentsSectionProps{
-		Appointments: appointments,
-		ShowTitle:    true,
-		PagePath:     "/dashboard",
-		SectionPath:  "/dashboard/appointments",
-	}
-	section := view.AppointmentsSection(vc, props)
+	section := view.DashboardAppointmentsSection(vc, appointments)
 	if err != nil {
 		log.Error("load dashboard appointments:", err)
 		return view.Render(c, templ.Join(

@@ -84,14 +84,7 @@ func (s *service) HandleIndexSearch(c fiber.Ctx) error {
 	}
 
 	vc := view.NewCtx(c)
-	props := view.AppointmentsSectionProps{
-		Appointments:    appointments,
-		SelectedPatient: patient,
-		SelectedClinic:  clinic,
-		PagePath:        "/appointments",
-		SectionPath:     "/appointments/search",
-	}
-	return view.Render(c, view.AppointmentsSection(vc, props))
+	return view.Render(c, view.AppointmentIndexSection(vc, appointments, patient, clinic))
 }
 
 // HandleShowPage renders the appointment create/edit page.
