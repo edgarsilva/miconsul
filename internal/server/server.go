@@ -243,7 +243,8 @@ func setupSecurityMiddleware(s *Server) {
 
 	app.Use(helmet.New(helmetConfig()))
 	app.Use(csrf.NewCrossOriginProtection())
-	app.Use(encryptcookie.New(encryptcookie.Config{Key: cookieSecret}))
+	// Fiber reads the flash cookie before middleware runs, so it stays unencrypted.
+	app.Use(encryptcookie.New(encryptcookie.Config{Key: cookieSecret, Except: []string{fiber.FlashCookieName}}))
 	app.Use(favicon.New(favicon.Config{File: "./public/favicon.ico", URL: "/favicon.ico"}))
 
 	rateLimiterEnabled := s.Env.RateLimiterEnabled && !s.Env.IsDevelopment()

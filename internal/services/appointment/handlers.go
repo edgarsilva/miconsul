@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"errors"
-	"fmt"
 	"net/url"
 	"strings"
 	"time"
@@ -28,26 +27,26 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	patientID := c.Query("patientId", "")
 	patient, err := s.takePatientOrZero(c.Context(), cu.ID, patientID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.Redirect(c, "/appointments?toast=Selected patient does not exist&level=warning")
+		return s.RedirectWithToast(c, "/appointments", "Selected patient does not exist", "warning")
 	}
 	if err != nil {
-		return s.Redirect(c, "/appointments?toast=Failed to load selected patient&level=error")
+		return s.RedirectWithToast(c, "/appointments", "Failed to load selected patient", "error")
 	}
 
 	clinicID := c.Query("clinicId", "")
 	clinic, err := s.takeClinicOrZero(c.Context(), cu.ID, clinicID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.Redirect(c, "/appointments?toast=Selected clinic does not exist&level=warning")
+		return s.RedirectWithToast(c, "/appointments", "Selected clinic does not exist", "warning")
 	}
 	if err != nil {
-		return s.Redirect(c, "/appointments?toast=Failed to load selected clinic&level=error")
+		return s.RedirectWithToast(c, "/appointments", "Failed to load selected clinic", "error")
 	}
 	timeframe := strings.TrimSpace(c.Query("timeframe", "day"))
 	searchTerm := strings.TrimSpace(c.Query("searchTerm", ""))
 	statusFilter := strings.TrimSpace(c.Query("status", ""))
 	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, patientID, clinicID, timeframe, searchTerm, statusFilter)
 	if err != nil {
-		return s.Redirect(c, "/appointments?toast=Failed to load appointments&level=error")
+		return s.RedirectWithToast(c, "/appointments", "Failed to load appointments", "error")
 	}
 
 	vc := view.NewCtx(c)
@@ -60,7 +59,7 @@ func (s *service) HandleIndexSearch(c fiber.Ctx) error {
 	searchTerm := strings.TrimSpace(c.Query("searchTerm", ""))
 	if searchTermTooShort(searchTerm) {
 		if s.NotHTMX(c) {
-			return s.Redirect(c, "/appointments?toast="+url.QueryEscape(view.SearchTooShortMsg(minSearchTermLen))+"&level=warning")
+			return s.RedirectWithToast(c, "/appointments", view.SearchTooShortMsg(minSearchTermLen), "warning")
 		}
 		return view.Render(c, view.CmpSearchTooShortToast(minSearchTermLen))
 	}
@@ -105,23 +104,23 @@ func (s *service) HandleShowPage(c fiber.Ctx) error {
 	appointmentID := c.Params("id", "")
 	appointment, err := s.AppointmentForShowPage(c.Context(), cu.ID, appointmentID)
 	if errors.Is(err, ErrIDRequired) {
-		return s.Redirect(c, "/appointments?toast=Invalid appointment id&level=error")
+		return s.RedirectWithToast(c, "/appointments", "Invalid appointment id", "error")
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.Redirect(c, "/appointments?toast=The appointment does not exist&level=warning")
+		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", "warning")
 	}
 	if err != nil {
-		return s.Redirect(c, "/appointments?toast=Failed to load appointment&level=error")
+		return s.RedirectWithToast(c, "/appointments", "Failed to load appointment", "error")
 	}
 
 	clinics, err := s.FindRecentClinicsByUserID(c.Context(), cu.ID, 10)
 	if err != nil {
-		return s.Redirect(c, "/appointments?toast=Failed to load clinics&level=error")
+		return s.RedirectWithToast(c, "/appointments", "Failed to load clinics", "error")
 	}
 
 	patients, err := s.FindRecentPatientsByUserID(c.Context(), cu.ID, 10)
 	if err != nil {
-		return s.Redirect(c, "/appointments?toast=Failed to load patients&level=error")
+		return s.RedirectWithToast(c, "/appointments", "Failed to load patients", "error")
 	}
 
 	clinics = ensureClinicListed(clinics, appointment.Clinic)
@@ -138,32 +137,26 @@ func (s *service) HandleOpenPage(c fiber.Ctx) error {
 
 	appointmentID := c.Params("id", "")
 	if appointmentID == "" {
-		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", "warning")
 	}
 
 	appointment, err := s.TakeAppointmentByUID(c.Context(), cu.ID, appointmentID)
 	if errors.Is(err, ErrIDRequired) {
-		redirectPath := "/appointments?toast=Invalid appointment id&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "Invalid appointment id", "error")
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) || appointment.ID == 0 {
-		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", "warning")
 	}
 	if err != nil {
-		redirectPath := "/appointments?toast=Failed to load appointment&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "Failed to load appointment", "error")
 	}
 
 	patient, err := s.PatientForStartPage(c.Context(), cu.ID, appointment.PatientID)
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
-		redirectPath := "/appointments?toast=The appointment patient does not exist&level=warning"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "The appointment patient does not exist", "warning")
 	}
 	if err != nil {
-		redirectPath := "/appointments?toast=Failed to load appointment patient&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "Failed to load appointment patient", "error")
 	}
 
 	appointment.Patient = patient
@@ -183,18 +176,15 @@ func (s *service) HandleStartSession(c fiber.Ctx) error {
 	}
 
 	if appointmentID == "" {
-		redirectPath := "/appointments?toast=Can't find that appointment&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "Can't find that appointment", "error")
 	}
 
 	err := s.StartAppointmentSessionByID(c.Context(), cu.ID, appointmentID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", "warning")
 	}
 	if err != nil {
-		redirectPath := "/appointments?toast=Failed to start appointment session&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "Failed to start appointment session", "error")
 	}
 
 	if s.NotHTMX(c) {
@@ -217,18 +207,15 @@ func (s *service) HandlePauseSession(c fiber.Ctx) error {
 	}
 
 	if appointmentID == "" {
-		redirectPath := "/appointments?toast=Can't find that appointment&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "Can't find that appointment", "error")
 	}
 
 	err := s.PauseAppointmentSessionByID(c.Context(), cu.ID, appointmentID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", "warning")
 	}
 	if err != nil {
-		redirectPath := "/appointments?toast=Failed to pause appointment session&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "Failed to pause appointment session", "error")
 	}
 
 	if s.NotHTMX(c) {
@@ -251,15 +238,13 @@ func (s *service) HandleSaveSession(c fiber.Ctx) error {
 	}
 
 	if appointmentID == "" {
-		redirectPath := "/appointments?toast=Can't find that appointment&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "Can't find that appointment", "error")
 	}
 
 	input := appointmentCompleteInput{}
 	err := c.Bind().Body(&input)
 	if err != nil {
-		redirectPath := "/appointments/" + appointmentID + "/open?toast=Invalid appointment input&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments/"+appointmentID+"/open", "Invalid appointment input", "error")
 	}
 
 	updates := appointmentSessionUpdates{
@@ -271,15 +256,13 @@ func (s *service) HandleSaveSession(c fiber.Ctx) error {
 
 	err = s.SaveAppointmentSessionByID(c.Context(), cu.ID, appointmentID, updates)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", "warning")
 	}
 	if err != nil {
-		redirectPath := "/appointments/" + appointmentID + "/open?toast=Failed to save appointment session&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments/"+appointmentID+"/open", "Failed to save appointment session", "error")
 	}
 
-	return s.respondWithRedirect(c, "/appointments/"+appointmentID+"/open?toast=Session saved&level=success")
+	return s.RedirectWithToast(c, "/appointments/"+appointmentID+"/open", "Session saved", "success")
 }
 
 // HandleComplete handles the request to mark an appointment as completed/done.
@@ -293,15 +276,13 @@ func (s *service) HandleComplete(c fiber.Ctx) error {
 	}
 
 	if appointmentID == "" {
-		redirectPath := "/appointments?toast=Can't find that appointment&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "Can't find that appointment", "error")
 	}
 
 	input := appointmentCompleteInput{}
 	err := c.Bind().Body(&input)
 	if err != nil {
-		redirectPath := "/appointments/" + appointmentID + "?toast=Invalid appointment input&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "Invalid appointment input", "error")
 	}
 
 	appointment := appointmentCompleteUpdates{
@@ -314,12 +295,10 @@ func (s *service) HandleComplete(c fiber.Ctx) error {
 
 	err = s.CompleteAppointmentByID(c.Context(), cu.ID, appointmentID, appointment)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", "warning")
 	}
 	if err != nil {
-		redirectPath := "/appointments?toast=Failed to update appointment&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "Failed to update appointment", "error")
 	}
 
 	return s.respondWithRedirect(c, "/appointments")
@@ -343,8 +322,7 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 	input := appointmentUpsertInput{}
 	err = c.Bind().Body(&input)
 	if err != nil {
-		redirectPath := "/appointments/new?toast=Invalid appointment input&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments/new", "Invalid appointment input", "error")
 	}
 
 	appointment := models.Appointment{
@@ -365,37 +343,31 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 
 	clinic, err := s.TakeClinicByUID(c.Context(), cu.ID, input.ClinicUID)
 	if err != nil {
-		redirectPath := "/appointments/new?toast=Invalid clinic selected&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments/new", "Invalid clinic selected", "error")
 	}
 	patient, err := s.TakePatientByUID(c.Context(), cu.ID, input.PatientUID)
 	if err != nil {
-		redirectPath := "/appointments/new?toast=Invalid patient selected&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments/new", "Invalid patient selected", "error")
 	}
 	appointment.ClinicID = clinic.ID
 	appointment.PatientID = patient.ID
 
 	err = s.CreateAppointment(c.Context(), &appointment)
 	if err != nil {
-		redirectPath := "/appointments?toast=failed to create appointment&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "failed to create appointment", "error")
 	}
 
 	appointment, err = s.TakeAppointmentByUID(c.Context(), cu.ID, appointment.UID)
 	if err != nil {
-		redirectPath := "/appointments?toast=Appointment created, but failed to load related records"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "Appointment created, but failed to load related records", "")
 	}
 
 	err = s.DispatchBookedAlert(appointment)
 	if err != nil {
-		redirectPath := "/appointments?toast=Appointment created, but failed to queue alert"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "Appointment created, but failed to queue alert", "")
 	}
 
-	redirectPath := appointmentsIndexRedirectPath(patient.UID, "New appointment created")
-	return s.respondWithRedirect(c, redirectPath)
+	return s.RedirectWithToast(c, "/appointments?patientId="+url.QueryEscape(patient.UID), "New appointment created", "")
 }
 
 // HandleUpdate updates an appointment record for the current user.
@@ -415,12 +387,10 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 
 	_, err := s.TakeAppointmentByUID(c.Context(), cu.ID, appointmentID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", "warning")
 	}
 	if err != nil {
-		redirectPath := "/appointments/" + appointmentID + "?toast=Failed to load appointment&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "Failed to load appointment", "error")
 	}
 
 	bookedAtStr := c.FormValue("bookedAt", "")
@@ -434,8 +404,7 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	input := appointmentUpsertInput{}
 	err = c.Bind().Body(&input)
 	if err != nil {
-		redirectPath := "/appointments/" + appointmentID + "?toast=Invalid appointment input&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "Invalid appointment input", "error")
 	}
 
 	appointment := appointmentPatchUpdates{
@@ -453,29 +422,25 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 
 	clinic, err := s.TakeClinicByUID(c.Context(), cu.ID, input.ClinicUID)
 	if err != nil {
-		redirectPath := "/appointments/" + appointmentID + "?toast=Invalid clinic selected&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "Invalid clinic selected", "error")
 	}
 	patient, err := s.TakePatientByUID(c.Context(), cu.ID, input.PatientUID)
 	if err != nil {
-		redirectPath := "/appointments/" + appointmentID + "?toast=Invalid patient selected&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "Invalid patient selected", "error")
 	}
 	appointment.ClinicID = clinic.ID
 	appointment.PatientID = patient.ID
 
 	err = s.UpdateAppointmentByID(c.Context(), cu.ID, appointmentID, appointment)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", "warning")
 	}
 
 	if err != nil {
-		redirectPath := "/appointments/" + appointmentID + "?toast=failed to update appointment&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "failed to update appointment", "error")
 	}
 
-	return s.respondWithRedirect(c, appointmentsIndexRedirectPath(patient.UID, "Appointment saved"))
+	return s.RedirectWithToast(c, "/appointments?patientId="+url.QueryEscape(patient.UID), "Appointment saved", "")
 }
 
 // HandleCancel cancels an appointment
@@ -489,8 +454,7 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 	}
 
 	if appointmentID == "" {
-		redirectPath := "/appointments?toast=Can't find that appointment&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "Can't find that appointment", "error")
 	}
 
 	appointment := appointmentCancelUpdates{
@@ -499,12 +463,10 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 	}
 	err := s.CancelAppointmentByID(c.Context(), cu.ID, appointmentID, appointment)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		redirectPath := "/appointments?toast=The appointment does not exist&level=warning"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", "warning")
 	}
 	if err != nil {
-		redirectPath := "/appointments?toast=Failed to update appointment&level=error"
-		return s.respondWithRedirect(c, redirectPath)
+		return s.RedirectWithToast(c, "/appointments", "Failed to update appointment", "error")
 	}
 
 	return s.respondWithRedirect(c, "/appointments")
@@ -780,11 +742,6 @@ func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string) error {
 
 	c.Set("HX-Redirect", redirectPath)
 	return c.SendStatus(fiber.StatusNoContent)
-}
-
-func appointmentsIndexRedirectPath(patientUID, toast string) string {
-	query := fmt.Sprintf("?patientId=%s&toast=%s", patientUID, toast)
-	return "/appointments" + query
 }
 
 // searchTermTooShort reports whether a non-blank search term has fewer than

@@ -42,10 +42,10 @@ func (s *service) HandleEditPage(c fiber.Ctx) error {
 	}
 	user, err := s.TakeUserByUID(c.Context(), userID)
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.Redirect(c, "/admin/users?toast=User does not exist&level=warning")
+		return s.RedirectWithToast(c, "/admin/users", "User does not exist", "warning")
 	}
 	if err != nil {
-		return s.Redirect(c, "/admin/users?toast=Failed to load user&level=error")
+		return s.RedirectWithToast(c, "/admin/users", "Failed to load user", "error")
 	}
 
 	vc := view.NewCtx(c)
@@ -58,7 +58,7 @@ func (s *service) HandleProfilePage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 	user, err := s.TakeUserByUID(c.Context(), cu.UID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.Redirect(c, "/profile?toast=User does not exist&level=warning")
+		return s.RedirectWithToast(c, "/profile", "User does not exist", "warning")
 	}
 
 	vc := view.NewCtx(c)
@@ -75,14 +75,14 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 	input := userProfileUpdateInput{}
 	err := c.Bind().Body(&input)
 	if err != nil {
-		return s.respondWithRedirect(c, "/profile?toast=Invalid profile input&level=error")
+		return s.RedirectWithToast(c, "/profile", "Invalid profile input", "error")
 	}
 
 	userUpds := input.toUserProfileUpdates()
 	path, picErr := SaveProfilePicToDisk(c, cu, s.Env.AssetsDir)
 	if picErr != nil {
 		if !errors.Is(picErr, ErrProfilePicNotProvided) {
-			return s.respondWithRedirect(c, "/profile?toast=Failed to upload profile picture&level=error")
+			return s.RedirectWithToast(c, "/profile", "Failed to upload profile picture", "error")
 		}
 	} else {
 		userUpds.ProfilePic = path
@@ -90,10 +90,10 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 
 	updatedUser, err := s.UpdateUserProfileByUID(c.Context(), cu.UID, userUpds)
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.respondWithRedirect(c, "/profile?toast=User does not exist&level=warning")
+		return s.RedirectWithToast(c, "/profile", "User does not exist", "warning")
 	}
 	if err != nil {
-		return s.respondWithRedirect(c, "/profile?toast=Failed to update profile&level=error")
+		return s.RedirectWithToast(c, "/profile", "Failed to update profile", "error")
 	}
 
 	if err := auth.RefreshSessionUser(c, s, updatedUser); err != nil {
@@ -108,7 +108,7 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 	}
 
 	if s.NotHTMX(c) {
-		return s.Redirect(c, "/profile?toast=Profile updated&level=success")
+		return s.RedirectWithToast(c, "/profile", "Profile updated", "success")
 	}
 
 	vc := view.NewCtx(c)
@@ -122,12 +122,12 @@ func (s *service) HandleProfilePicPreview(c fiber.Ctx) error {
 
 	user, err := s.TakeUserByUID(c.Context(), cu.UID)
 	if err != nil {
-		return s.respondWithRedirect(c, "/profile?toast=User does not exist&level=error")
+		return s.RedirectWithToast(c, "/profile", "User does not exist", "error")
 	}
 
 	previewPath, err := SaveProfilePicPreviewToTmp(c, user, s.Env.AssetsDir)
 	if err != nil {
-		return s.respondWithRedirect(c, "/profile?toast=Failed to display profile picture&level=error")
+		return s.RedirectWithToast(c, "/profile", "Failed to display profile picture", "error")
 	}
 
 	user.ProfilePic = previewPath
@@ -172,10 +172,10 @@ func (s *service) HandleRemoveProfilePic(c fiber.Ctx) error {
 
 	_, err := gorm.G[models.User](s.GormDB()).Where("uid = ?", cu.UID).Update(c.Context(), "profile_pic", "")
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.respondWithRedirect(c, "/profile?toast=User does not exist&level=warning")
+		return s.RedirectWithToast(c, "/profile", "User does not exist", "warning")
 	}
 	if err != nil {
-		return s.respondWithRedirect(c, "/profile?toast=Failed to remove profile picture&level=error")
+		return s.RedirectWithToast(c, "/profile", "Failed to remove profile picture", "error")
 	}
 
 	cu.ProfilePic = ""
@@ -184,10 +184,10 @@ func (s *service) HandleRemoveProfilePic(c fiber.Ctx) error {
 	}
 
 	if s.NotHTMX(c) {
-		return s.Redirect(c, "/profile?toast=Profile picture removed&level=success")
+		return s.RedirectWithToast(c, "/profile", "Profile picture removed", "success")
 	}
 
-	return s.respondWithRedirect(c, "/profile?toast=Profile picture removed&level=success")
+	return s.RedirectWithToast(c, "/profile", "Profile picture removed", "success")
 }
 
 // HandleAdminRemoveProfilePic removes a user's profile picture as admin.
@@ -197,14 +197,14 @@ func (s *service) HandleAdminRemoveProfilePic(c fiber.Ctx) error {
 
 	updatedUser, err := s.RemoveProfilePicByUID(c.Context(), userID)
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.respondWithRedirect(c, "/admin/users?toast=User does not exist&level=warning")
+		return s.RedirectWithToast(c, "/admin/users", "User does not exist", "warning")
 	}
 	if err != nil {
-		return s.respondWithRedirect(c, "/admin/users?toast=Failed to remove profile picture&level=error")
+		return s.RedirectWithToast(c, "/admin/users", "Failed to remove profile picture", "error")
 	}
 
 	if s.NotHTMX(c) {
-		return s.Redirect(c, "/admin/users/"+updatedUser.UID+"?toast=Profile picture removed&level=success")
+		return s.RedirectWithToast(c, "/admin/users/"+updatedUser.UID, "Profile picture removed", "success")
 	}
 
 	vc := view.NewCtx(c)
@@ -219,19 +219,19 @@ func (s *service) HandleAdminUpdateUser(c fiber.Ctx) error {
 	input := adminUserUpdateInput{}
 	err := c.Bind().Body(&input)
 	if err != nil {
-		return s.respondWithRedirect(c, "/admin/users/"+userID+"?toast=Invalid user input&level=error")
+		return s.RedirectWithToast(c, "/admin/users/"+userID, "Invalid user input", "error")
 	}
 
 	updatedUser, err := s.UpdateUserProfileByUID(c.Context(), userID, input.toUserUpdates())
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.respondWithRedirect(c, "/admin/users?toast=User does not exist&level=warning")
+		return s.RedirectWithToast(c, "/admin/users", "User does not exist", "warning")
 	}
 	if err != nil {
-		return s.respondWithRedirect(c, "/admin/users/"+userID+"?toast=Failed to update user&level=error")
+		return s.RedirectWithToast(c, "/admin/users/"+userID, "Failed to update user", "error")
 	}
 
 	if s.NotHTMX(c) {
-		return s.Redirect(c, "/admin/users/"+updatedUser.UID+"?toast=User updated&level=success")
+		return s.RedirectWithToast(c, "/admin/users/"+updatedUser.UID, "User updated", "success")
 	}
 
 	vc := view.NewCtx(c)

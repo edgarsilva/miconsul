@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"miconsul/internal/models"
+	"miconsul/internal/server/servertest"
 	usersvc "miconsul/internal/services/user"
 
 	"gorm.io/gorm"
@@ -62,8 +63,11 @@ func TestUserHandlers(t *testing.T) {
 		if resp.StatusCode != http.StatusNoContent {
 			t.Fatalf("expected 204 for htmx removepic, got %d", resp.StatusCode)
 		}
-		if got := resp.Header.Get("HX-Redirect"); got != "/profile?toast=Profile picture removed&level=success" {
+		if got := resp.Header.Get("HX-Redirect"); got != "/profile" {
 			t.Fatalf("expected HX-Redirect profile redirect, got %q", got)
+		}
+		if msg, level := servertest.FlashToast(t, resp); msg != "Profile picture removed" || level != "success" {
+			t.Fatalf("flash toast = %q %q, want the removed message", msg, level)
 		}
 
 		updated, err := gorm.G[models.User](h.db.GormDB()).Where("id = ?", regular.ID).Take(t.Context())

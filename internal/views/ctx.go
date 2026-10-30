@@ -35,6 +35,11 @@ func (c *Ctx) l(key string) string {
 	return locales.GetWithLocale(c.Locale, key)
 }
 
+// IsHTMX reports whether the request was made by HTMX.
+func (c *Ctx) IsHTMX() bool {
+	return c.Get("HX-Request") == "true"
+}
+
 func localeFromLocals(fc fiber.Ctx) string {
 	locale, _ := fc.Locals("locale").(string)
 	if locale = preferences.Locale(locale); locale == "" {
@@ -63,8 +68,8 @@ func CU(fc fiber.Ctx) models.User {
 	return currentUserFromLocals(fc)
 }
 
-// NewCtx builds the view context from request locals and the query, then
-// applies the options.
+// NewCtx builds the view context from request locals and the flash toast,
+// then applies the options.
 func NewCtx(fc fiber.Ctx, ctxOpts ...ContextOption) *Ctx {
 	c := Ctx{
 		Ctx:         fc,
@@ -72,9 +77,8 @@ func NewCtx(fc fiber.Ctx, ctxOpts ...ContextOption) *Ctx {
 		Locale:      localeFromLocals(fc),
 		Theme:       themeFromLocals(fc),
 		Toast: Toast{
-			Msg:   fc.Query("toast", ""),
-			Sub:   fc.Query("sub", ""),
-			Level: fc.Query("level", ""),
+			Msg:   fc.Redirect().Message("toast").Value,
+			Level: fc.Redirect().Message("level").Value,
 		},
 	}
 

@@ -41,7 +41,7 @@ func TestRender(t *testing.T) {
 }
 
 func TestNewCtxAndOptions(t *testing.T) {
-	runViewCtx(t, "/ctx?toast=Saved&sub=Done&level=success", func(fc fiber.Ctx) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
 		fc.Locals("locale", "en-US")
 		fc.Locals("theme", "dark")
 		expectedCU := models.User{UID: "usr_1", Email: "u@example.com"}
@@ -53,9 +53,6 @@ func TestNewCtxAndOptions(t *testing.T) {
 		}
 		if c.CurrentUser.UID != expectedCU.UID {
 			t.Fatalf("unexpected current user: %+v", c.CurrentUser)
-		}
-		if c.Toast.Msg != "Saved" || c.Toast.Level != "success" {
-			t.Fatalf("unexpected toast: %+v", c.Toast)
 		}
 	})
 
@@ -431,4 +428,71 @@ func TestToastAndPasswordToggleMarkup(t *testing.T) {
 			t.Errorf("password: expected an hx-on:click toggle")
 		}
 	})
+}
+
+func TestGlobalToastRegionDelivery(t *testing.T) {
+	tests := []struct {
+		name        string
+		htmx        bool
+		wantPartial bool
+	}{
+		{"full page load renders the toast inline only", false, false},
+		{"htmx request also sends it as a toast partial", true, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var html strings.Builder
+			app := fiber.New()
+			app.Get("/", func(fc fiber.Ctx) error {
+				c := NewCtx(fc, WithToast("Saved", "", "success"))
+				return GlobalToastRegion(c).Render(fc.Context(), &html)
+			})
+
+			req := httptest.NewRequest(http.MethodGet, "/", nil)
+			if tt.htmx {
+				req.Header.Set("HX-Request", "true")
+			}
+			if _, err := app.Test(req); err != nil {
+				t.Fatalf("request failed: %v", err)
+			}
+
+			got := html.String()
+			inline, partial, gotPartial := strings.Cut(got, `<hx-partial hx-target="#toast_region"`)
+			if !strings.Contains(inline, "Saved") {
+				t.Errorf("toast region has no inline toast: %s", got)
+			}
+			if gotPartial != tt.wantPartial || (gotPartial && !strings.Contains(partial, "Saved")) {
+				t.Errorf("toast partial sent = %v, want %v: %s", gotPartial, tt.wantPartial, got)
+			}
+		})
+	}
+}
+
+func TestNewCtxToastComesFromTheFlash(t *testing.T) {
+	app := fiber.New()
+	app.Get("/redirect", func(fc fiber.Ctx) error {
+		return fc.Redirect().With("toast", "Saved").With("level", "success").To("/ctx")
+	})
+	var got Toast
+	app.Get("/ctx", func(fc fiber.Ctx) error {
+		got = NewCtx(fc).Toast
+		return nil
+	})
+
+	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/redirect", nil))
+	if err != nil {
+		t.Fatalf("redirect request: %v", err)
+	}
+	req := httptest.NewRequest(http.MethodGet, "/ctx?toast=Spoofed&level=error", nil)
+	for _, cookie := range resp.Cookies() {
+		req.AddCookie(cookie)
+	}
+	if _, err := app.Test(req); err != nil {
+		t.Fatalf("ctx request: %v", err)
+	}
+
+	if got.Msg != "Saved" || got.Level != "success" {
+		t.Errorf("toast = %+v, want the flash toast, not the query string", got)
+	}
 }

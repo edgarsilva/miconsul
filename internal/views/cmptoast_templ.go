@@ -11,6 +11,10 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "fmt"
 
+// GlobalToastRegion renders the page's toast region with the request's toast.
+// HTMX requests also get it as a toast partial: hx-select drops the inline
+// copy and keeps the partial, a boosted body swap keeps the inline copy and
+// detaches the region the partial targets, so it shows once either way.
 func GlobalToastRegion(c *Ctx) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -41,6 +45,12 @@ func GlobalToastRegion(c *Ctx) templ.Component {
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
+		}
+		if c.Toast.Msg != "" && c.IsHTMX() {
+			templ_7745c5c3_Err = CmpToastPartial(c.Toast.Msg, c.Toast.Sub, c.Toast.Level).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
 		return nil
 	})
@@ -151,7 +161,7 @@ func CmpToast(msg, sub, level string) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(msg)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmptoast.templ`, Line: 58, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmptoast.templ`, Line: 65, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -164,7 +174,7 @@ func CmpToast(msg, sub, level string) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(sub)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmptoast.templ`, Line: 60, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmptoast.templ`, Line: 67, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
