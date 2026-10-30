@@ -87,6 +87,21 @@ func TestScopesAndBaseHelpers(t *testing.T) {
 		t.Fatalf("open sqlite dry-run: %v", err)
 	}
 
+	today := db.Model(&Appointment{}).Scopes(AppointmentBookedToday).Find(&[]Appointment{}).Statement.SQL.String()
+	if !strings.Contains(strings.ToLower(today), "booked_at") {
+		t.Fatalf("expected booked today scope to query booked_at")
+	}
+
+	week := db.Model(&Appointment{}).Scopes(AppointmentBookedThisWeek).Find(&[]Appointment{}).Statement.SQL.String()
+	if !strings.Contains(strings.ToLower(week), "booked_at") {
+		t.Fatalf("expected booked week scope to query booked_at")
+	}
+
+	month := db.Model(&Appointment{}).Scopes(AppointmentBookedThisMonth).Find(&[]Appointment{}).Statement.SQL.String()
+	if !strings.Contains(strings.ToLower(month), "booked_at") {
+		t.Fatalf("expected booked month scope to query booked_at")
+	}
+
 	bookedIn := func(timeframe libtime.Timeframe) *gorm.Statement {
 		return db.Model(&Appointment{}).Scopes(AppointmentBookedIn(timeframe)).Find(&[]Appointment{}).Statement
 	}

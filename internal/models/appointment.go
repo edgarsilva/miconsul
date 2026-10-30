@@ -157,11 +157,28 @@ func (a Appointment) AlertableType() string {
 
 // Scopes
 
-// AppointmentBookedIn scopes appointments to the current timeframe in the
-// default timezone.
+func AppointmentBookedToday(db *gorm.DB) *gorm.DB {
+	return appointmentBookedWithin(db, time.Now(), "day")
+}
+
+func AppointmentBookedThisWeek(db *gorm.DB) *gorm.DB {
+	return appointmentBookedWithin(db, time.Now(), "week")
+}
+
+func AppointmentBookedThisMonth(db *gorm.DB) *gorm.DB {
+	return appointmentBookedWithin(db, time.Now(), "month")
+}
+
+// AppointmentBookedIn returns the booked-in scope for timeframe; any other
+// timeframe means today.
 func AppointmentBookedIn(timeframe libtime.Timeframe) func(*gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		return appointmentBookedWithin(db, time.Now(), timeframe)
+	switch timeframe {
+	case libtime.TimeframeWeek:
+		return AppointmentBookedThisWeek
+	case libtime.TimeframeMonth:
+		return AppointmentBookedThisMonth
+	default:
+		return AppointmentBookedToday
 	}
 }
 
