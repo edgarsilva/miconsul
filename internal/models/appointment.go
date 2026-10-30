@@ -158,27 +158,24 @@ func (a Appointment) AlertableType() string {
 // Scopes
 
 func AppointmentBookedToday(db *gorm.DB) *gorm.DB {
-	return appointmentBookedWithin(db, time.Now(), libtime.TimeframeDay)
+	return AppointmentBookedIn(libtime.TimeframeDay, time.Now())(db)
 }
 
 func AppointmentBookedThisWeek(db *gorm.DB) *gorm.DB {
-	return appointmentBookedWithin(db, time.Now(), libtime.TimeframeWeek)
+	return AppointmentBookedIn(libtime.TimeframeWeek, time.Now())(db)
 }
 
 func AppointmentBookedThisMonth(db *gorm.DB) *gorm.DB {
-	return appointmentBookedWithin(db, time.Now(), libtime.TimeframeMonth)
+	return AppointmentBookedIn(libtime.TimeframeMonth, time.Now())(db)
 }
 
-// AppointmentBookedIn returns the booked-in scope for timeframe; any other
-// timeframe means today.
-func AppointmentBookedIn(timeframe libtime.Timeframe) func(*gorm.DB) *gorm.DB {
-	switch timeframe {
-	case libtime.TimeframeWeek:
-		return AppointmentBookedThisWeek
-	case libtime.TimeframeMonth:
-		return AppointmentBookedThisMonth
-	default:
-		return AppointmentBookedToday
+// AppointmentBookedIn scopes appointments to those booked in the timeframe
+// around now; any other timeframe means the day.
+func AppointmentBookedIn(timeframe libtime.Timeframe, now time.Time) func(*gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		start, end := libtime.TimeframeBounds(now, DefaultTimezone, timeframe)
+
+		return db.Where("booked_at >= ?", start.UTC()).Where("booked_at < ?", end.UTC())
 	}
 }
 
@@ -237,10 +234,4 @@ func (a Appointment) FeedEventSubject() (name, id, typ, url string) {
 // FeedEventTarget returns the patient as the target of the event.
 func (a Appointment) FeedEventTarget() (name, id, typ, url string) {
 	return a.Patient.Name, a.Patient.UID, "patients", "/patients/" + a.Patient.UID
-}
-
-func appointmentBookedWithin(db *gorm.DB, now time.Time, timeframe libtime.Timeframe) *gorm.DB {
-	start, end := libtime.TimeframeBounds(now, DefaultTimezone, timeframe)
-
-	return db.Where("booked_at >= ?", start.UTC()).Where("booked_at < ?", end.UTC())
 }

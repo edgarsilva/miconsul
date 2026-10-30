@@ -58,7 +58,7 @@ func (s service) FindAppointmentsBy(ctx context.Context, userID uint, timeframe 
 		Preload("Patient").
 		Preload("Clinic").
 		Where("user_id = ?", userID).
-		Scopes(models.AppointmentBookedIn(timeframe), models.AppointmentWithStatus(statuses...)).
+		Scopes(models.AppointmentBookedIn(timeframe, time.Now()), models.AppointmentWithStatus(statuses...)).
 		Limit(limit).
 		Find(&appointments).
 		Error
