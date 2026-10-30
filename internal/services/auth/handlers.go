@@ -64,6 +64,7 @@ func (s *service) HandleSignin(c fiber.Ctx) error {
 
 	vc := view.NewCtx(c)
 	respErr := errors.New("incorrect email and password combination")
+	loginErr := errors.New("Failed to login, please try again")
 
 	email, password, err := credentialsFromRequest(c)
 	if err != nil {
@@ -79,14 +80,18 @@ func (s *service) HandleSignin(c fiber.Ctx) error {
 		return view.Render(c, view.LoginPage(email, "", err, vc))
 	}
 	if err != nil {
-		return s.respondWithRedirect(c, "/", "Failed to login, please try again")
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "authenticate credentials failed")
+		log.Error("authenticate credentials:", err)
+		return view.Render(c, view.LoginPage(email, "", loginErr, vc))
 	}
 
 	rememberMe := c.FormValue("remember_me", "") != ""
 	if err := NewLocalStrategy(s).SignIn(c, user, rememberMe); err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "create session failed")
-		return s.respondWithRedirect(c, "/", "Failed to login, please try again")
+		log.Error("create session:", err)
+		return view.Render(c, view.LoginPage(email, "", loginErr, vc))
 	}
 
 	return s.Redirect(c, "/?timeframe=day")

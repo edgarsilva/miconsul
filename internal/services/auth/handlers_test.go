@@ -175,7 +175,7 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 		assertSessionOnlyCookies(t, resp)
 	})
 
-	t.Run("HandleSignin redirects when the session can't be created", func(t *testing.T) {
+	t.Run("HandleSignin shows the error on the login page when the session can't be created", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		seedAuthUser(t, svc, "jwtfail@example.com", "Password1!", "")
 		svc.SessionStore = nil
@@ -190,11 +190,18 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 		if err != nil {
 			t.Fatalf("request failed: %v", err)
 		}
-		if resp.StatusCode != fiber.StatusSeeOther {
-			t.Fatalf("expected 303 redirect on session failure, got %d", resp.StatusCode)
+		if resp.StatusCode != fiber.StatusOK {
+			t.Fatalf("expected 200 login re-render, got %d", resp.StatusCode)
 		}
-		if got := resp.Header.Get("Location"); !strings.HasPrefix(got, "/?") {
-			t.Fatalf("expected redirect to root with msg, got %q", got)
+		if got := resp.Header.Get("Location"); got != "" {
+			t.Fatalf("expected no redirect, got Location %q", got)
+		}
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			t.Fatalf("read body: %v", err)
+		}
+		if !strings.Contains(string(body), "Failed to login, please try again") {
+			t.Fatalf("expected the login error on the page")
 		}
 	})
 
