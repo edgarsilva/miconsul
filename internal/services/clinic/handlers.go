@@ -86,7 +86,6 @@ func (s *service) HandleClinicsCreate(c fiber.Ctx) error {
 
 // HandleClinicsUpdate updates a clinic record for the CurrentUser
 // PATCH: /clinics/:id
-// POST: /clinics/:id/patch
 func (s *service) HandleClinicsUpdate(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 	clinicID := cmp.Or(c.Params("id", ""), c.FormValue("id", ""))
@@ -128,7 +127,6 @@ func (s *service) HandleClinicsUpdate(c fiber.Ctx) error {
 
 // HandleClinicsDelete deletes a clinic record from the DB
 // DELETE: /clinics/:id
-// POST: /clinics/:id/delete
 func (s *service) HandleClinicsDelete(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 	clinicID := strings.TrimSpace(c.Params("id", ""))

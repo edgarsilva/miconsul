@@ -96,8 +96,6 @@ templ AppointmentStart(c *Ctx, appointment models.Appointment) {
 				</div>
 				<form
 					id="save_appointment_session"
-					method="POST"
-					action={ templ.URL("/appointments/" + appointment.UID + "/save-session") }
 					hx-post={ "/appointments/" + appointment.UID + "/save-session" }
 				>
 					<div class="px-4 py-6 sm:p-8">
@@ -174,25 +172,25 @@ templ AppointmentSessionStatusBadge(c *Ctx, appointment models.Appointment) {
 templ AppointmentSessionToggle(c *Ctx, appointment models.Appointment) {
 	<div id="session_toggle">
 		if appointment.Status == models.AppointmentInProgress {
-			<a
+			<button
+				type="button"
 				class="btn btn-secondary btn-sm"
-				href={ templ.URL("/appointments/" + appointment.UID + "/pause-session") }
 				hx-post={ "/appointments/" + appointment.UID + "/pause-session" }
 				hx-target="#session_toggle"
 				hx-swap="outerHTML"
 			>
 				{ c.l("btn.pause_session") }
-			</a>
+			</button>
 		} else {
-			<a
+			<button
+				type="button"
 				class="btn btn-primary btn-sm"
-				href={ templ.URL("/appointments/" + appointment.UID + "/start-session") }
 				hx-post={ "/appointments/" + appointment.UID + "/start-session" }
 				hx-target="#session_toggle"
 				hx-swap="outerHTML"
 			>
 				{ c.l("btn.start_session") }
-			</a>
+			</button>
 		}
 	</div>
 }

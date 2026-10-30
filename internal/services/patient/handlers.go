@@ -132,7 +132,6 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 
 // HandleUpdatePatient updates a patient record for the CurrentUser
 // PATCH: /patients/:id
-// POST: /patients/:id/patch
 func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
@@ -192,7 +191,6 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 
 // HandleRemovePic removes the ProfilePic from the patient
 // PATCH: /patients/:id/removepic
-// POST: /patients/:id/removepic
 func (s *service) HandleRemovePic(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
@@ -237,7 +235,6 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 
 // HandleDeletePatient deletes a patient record from the DB.
 // DELETE: /patients/:id
-// POST: /patients/:id/delete
 func (s *service) HandleDeletePatient(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 

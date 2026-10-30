@@ -137,8 +137,6 @@ templ PatientLi(c *Ctx, patient models.Patient) {
 
 templ PatientDeleteForm(c *Ctx, patient models.Patient) {
 	<form
-		method="POST"
-		action={ templ.URL("/patients/"+patient.UID) + "/delete" }
 		hx-delete={ "/patients/" + patient.UID }
 		hx-confirm={ c.l("str.are_you_sure") }
 		hx-target="#patients_list"
@@ -490,14 +488,11 @@ templ PatientProfile(c *Ctx, patient models.Patient) {
 templ PatientForm(c *Ctx, patient models.Patient) {
 	<form
 		class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2"
-		method="POST"
 		enctype="multipart/form-data"
 		if patient.UID != "" && patient.UID != "new" {
 			hx-patch={ "/patients/" + patient.UID }
-			action={ templ.URL("/patients/" + patient.UID + "/patch") }
 		} else {
 			hx-post="/patients"
-			action="/patients"
 		}
 		hx-target="closest #patient_profile_cont"
 		hx-swap="outerHTML"
@@ -547,13 +542,13 @@ templ PatientAvatarPic(c *Ctx, patient models.Patient) {
 	if patient.ProfilePic != "" {
 		<figure class="flex flex-col gap-1 items-center" id="avatar_pic">
 			@CmpAvatar(patient)
-			<a
-				href={ templ.URL("/patients/" + patient.UID + "/removepic") }
+			<button
+				type="button"
 				hx-patch={ "/patients/" + patient.UID + "/removepic" }
 				hx-swap="outerHTML"
 				hx-target="closest figure"
 				class="link text-xs link-secondary"
-			>{ c.l("btn.remove") }</a>
+			>{ c.l("btn.remove") }</button>
 		</figure>
 	} else {
 		<figure class="flex flex-col gap-2" id="avatar_pic">

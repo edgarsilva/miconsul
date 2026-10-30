@@ -695,14 +695,11 @@ templ PatientSearchResults(c *Ctx, patients []models.Patient, selectedUID string
 templ AppointmentForm(c *Ctx, appointment models.Appointment) {
 	<form
 		id="new_appointment"
-		method="POST"
 		enctype="multipart/form-data"
 		if appointment.UID != "" && appointment.UID != "new" {
 			hx-patch={ "/appointments/" + appointment.UID }
-			action={ templ.URL("/appointments/" + appointment.UID + "/patch") }
 		} else {
 			hx-post="/appointments"
-			action="/appointments"
 		}
 		hx-target="closest #appointment_profile_cont"
 		hx-swap="outerHTML"

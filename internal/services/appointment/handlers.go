@@ -364,7 +364,6 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 
 // HandleUpdate updates an appointment record for the current user.
 // PATCH: /appointments/:id
-// POST: /appointments/:id/patch
 func (s *service) HandleUpdate(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
@@ -466,7 +465,6 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 
 // HandleDelete deletes an appointment record from the DB.
 // DELETE: /appointments/:id
-// POST: /appointments/:id/delete
 func (s *service) HandleDelete(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 

@@ -65,8 +65,8 @@ func TestPatchAndDeleteRoutesForPatientAndAppointment(t *testing.T) {
 		appt := h.createAppointment(u.ID, patient.ID, clinic.ID)
 
 		patchResp, _ := h.doRequest(requestOptions{
-			method:    http.MethodPost,
-			path:      "/appointments/" + appt.UID + "/patch",
+			method:    http.MethodPatch,
+			path:      "/appointments/" + appt.UID,
 			authToken: token,
 			htmx:      true,
 			body: url.Values{

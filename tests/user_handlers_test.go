@@ -23,11 +23,12 @@ func TestUserHandlers(t *testing.T) {
 	admin := h.createUser(models.UserRoleAdmin)
 	regular := h.createUser(models.UserRoleUser)
 
-	t.Run("profile update persists and redirects", func(t *testing.T) {
+	t.Run("profile update persists and renders the profile section", func(t *testing.T) {
 		resp, _ := h.doRequest(requestOptions{
-			method:    http.MethodPost,
+			method:    http.MethodPatch,
 			path:      "/profile",
 			authToken: h.authToken(regular),
+			htmx:      true,
 			body: url.Values{
 				"name":  {"Updated Name"},
 				"email": {"updated@example.com"},
@@ -35,8 +36,8 @@ func TestUserHandlers(t *testing.T) {
 			},
 		})
 
-		if resp.StatusCode != http.StatusFound && resp.StatusCode != http.StatusSeeOther {
-			t.Fatalf("expected redirect status, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("expected 200 for htmx profile update, got %d", resp.StatusCode)
 		}
 
 		updated, err := gorm.G[models.User](h.db.GormDB()).Where("id = ?", regular.ID).Take(t.Context())
@@ -170,13 +171,14 @@ func TestProfileUpdateRefreshesSignedInUser(t *testing.T) {
 	withSession := []*http.Cookie{{Name: sessionCookie.Name, Value: sessionCookie.Value}}
 
 	resp, _ = h.doRequest(requestOptions{
-		method:  http.MethodPost,
+		method:  http.MethodPatch,
 		path:    "/profile",
 		cookies: withSession,
+		htmx:    true,
 		body:    url.Values{"name": {"Renamed User"}, "email": {user.Email}},
 	})
-	if resp.StatusCode != http.StatusFound && resp.StatusCode != http.StatusSeeOther {
-		t.Fatalf("expected redirect after profile update, got %d", resp.StatusCode)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200 for htmx profile update, got %d", resp.StatusCode)
 	}
 
 	resp, body := h.doRequest(requestOptions{method: http.MethodGet, path: "/api/auth/protected", accept: "application/json", cookies: withSession})

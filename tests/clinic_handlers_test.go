@@ -16,17 +16,26 @@ func TestClinicHandlers(t *testing.T) {
 	u := h.createUser(models.UserRoleUser)
 	token := h.authToken(u)
 
-	t.Run("update missing id returns bad request", func(t *testing.T) {
-		resp, _ := h.doRequest(requestOptions{method: http.MethodPost, path: "/clinics//patch", authToken: token, htmx: true})
+	t.Run("form fallback update route is gone", func(t *testing.T) {
+		clinic := h.createClinic(u.ID, "Clinic Fallback")
+
+		resp, _ := h.doRequest(requestOptions{method: http.MethodPost, path: "/clinics/" + clinic.UID + "/patch", authToken: token, htmx: true})
 		if resp.StatusCode != http.StatusNotFound {
-			t.Fatalf("expected 404 for unmatched missing-id route, got %d", resp.StatusCode)
+			t.Fatalf("expected 404 for removed POST /clinics/:id/patch, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("update missing id route is method not allowed", func(t *testing.T) {
+		resp, _ := h.doRequest(requestOptions{method: http.MethodPatch, path: "/clinics/", authToken: token, htmx: true})
+		if resp.StatusCode != http.StatusMethodNotAllowed {
+			t.Fatalf("expected 405 for missing-id update route, got %d", resp.StatusCode)
 		}
 	})
 
 	t.Run("update unknown id returns not found", func(t *testing.T) {
 		resp, _ := h.doRequest(requestOptions{
-			method:    http.MethodPost,
-			path:      "/clinics/clnc_missing/patch",
+			method:    http.MethodPatch,
+			path:      "/clinics/clnc_missing",
 			authToken: token,
 			htmx:      true,
 			body: url.Values{
@@ -43,8 +52,8 @@ func TestClinicHandlers(t *testing.T) {
 		clinic := h.createClinic(u.ID, "Clinic Auth")
 
 		resp, _ := h.doRequest(requestOptions{
-			method: http.MethodPost,
-			path:   "/clinics/" + clinic.UID + "/patch",
+			method: http.MethodPatch,
+			path:   "/clinics/" + clinic.UID,
 			accept: "application/json",
 			body: url.Values{
 				"name": {"Blocked"},
@@ -60,8 +69,8 @@ func TestClinicHandlers(t *testing.T) {
 		clinic := h.createClinic(u.ID, "Clinic One")
 
 		resp, body := h.doRequest(requestOptions{
-			method:    http.MethodPost,
-			path:      "/clinics/" + clinic.UID + "/patch",
+			method:    http.MethodPatch,
+			path:      "/clinics/" + clinic.UID,
 			authToken: token,
 			htmx:      true,
 			body: url.Values{
@@ -94,8 +103,8 @@ func TestClinicHandlers(t *testing.T) {
 		clinic := h.createClinic(u.ID, "Clinic Stable")
 
 		resp, _ := h.doRequest(requestOptions{
-			method:    http.MethodPost,
-			path:      "/clinics/" + clinic.UID + "/patch",
+			method:    http.MethodPatch,
+			path:      "/clinics/" + clinic.UID,
 			authToken: token,
 			htmx:      true,
 			body: url.Values{
@@ -117,8 +126,8 @@ func TestClinicHandlers(t *testing.T) {
 		clinic := h.createClinic(u.ID, "Clinic Invalid")
 
 		resp, _ := h.doRequest(requestOptions{
-			method:    http.MethodPost,
-			path:      "/clinics/" + clinic.UID + "/patch",
+			method:    http.MethodPatch,
+			path:      "/clinics/" + clinic.UID,
 			authToken: token,
 			htmx:      true,
 			body: url.Values{
@@ -214,8 +223,8 @@ func TestClinicHandlers(t *testing.T) {
 		ownerClinic := h.createClinic(owner.ID, "Owner Clinic")
 
 		resp, _ := h.doRequest(requestOptions{
-			method:    http.MethodPost,
-			path:      "/clinics/" + ownerClinic.UID + "/patch",
+			method:    http.MethodPatch,
+			path:      "/clinics/" + ownerClinic.UID,
 			authToken: token,
 			htmx:      true,
 			body: url.Values{

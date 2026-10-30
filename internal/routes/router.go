@@ -136,11 +136,7 @@ func ClinicsRoutes(s *server.Server, authSvc auth.Runtime) error {
 	g.Get("/:id", c.HandleClinicsShowPage)
 
 	g.Post("/", c.HandleClinicsCreate)
-
-	g.Post("/:id/patch", c.HandleClinicsUpdate)
 	g.Patch("/:id", c.HandleClinicsUpdate)
-
-	g.Post("/:id/delete", c.HandleClinicsDelete)
 	g.Delete("/:id", c.HandleClinicsDelete)
 
 	return nil
@@ -160,12 +156,8 @@ func PatientRoutes(s *server.Server, authSvc auth.Runtime) error {
 	g.Get("/:id/profilepic/:filename", p.HandlePatientProfilePicImgSrc)
 
 	g.Post("/", p.HandleCreatePatient)
-
-	g.Post("/:id/patch", p.HandleUpdatePatient)
 	g.Patch("/:id", p.HandleUpdatePatient)
 	g.Patch("/:id/removepic", p.HandleRemovePic)
-
-	g.Post("/:id/delete", p.HandleDeletePatient)
 	g.Delete("/:id", p.HandleDeletePatient)
 
 	// g.Get("/:id", p.HandleIndexPage)
@@ -204,11 +196,7 @@ func AppointmentRoutes(s *server.Server, authSvc auth.Runtime) error {
 	g.Post("/search/patients", a.HandleSearchPatients)
 
 	g.Post("/", a.HandleCreate)
-
-	g.Post("/:id/patch", a.HandleUpdate)
 	g.Patch("/:id", a.HandleUpdate)
-
-	g.Post("/:id/delete", a.HandleDelete)
 	g.Delete("/:id", a.HandleDelete)
 
 	// Patient links are public: the token in the link is the credential.
@@ -242,7 +230,6 @@ func UserRoutes(s *server.Server, authSvc auth.Runtime) error {
 
 	// Pages
 	u.Get("/profile", mw.MustAuthenticate(authSvc), u.HandleProfilePage)
-	u.Post("/profile", mw.MustAuthenticate(authSvc), u.HandleUpdateProfile)
 	u.Patch("/profile", mw.MustAuthenticate(authSvc), u.HandleUpdateProfile)
 	u.Post("/profile/avatar/preview", mw.MustAuthenticate(authSvc), u.HandleProfilePicPreview)
 	u.Delete("/profile/avatar", mw.MustAuthenticate(authSvc), u.HandleRemoveProfilePic)
@@ -252,7 +239,6 @@ func UserRoutes(s *server.Server, authSvc auth.Runtime) error {
 	// Admin only
 	u.Get("/admin/users", mw.MustBeAdmin(authSvc), u.HandleIndexPage)
 	u.Get("/admin/users/:id", mw.MustBeAdmin(authSvc), u.HandleEditPage)
-	u.Post("/admin/users/:id", mw.MustBeAdmin(authSvc), u.HandleAdminUpdateUser)
 	u.Patch("/admin/users/:id", mw.MustBeAdmin(authSvc), u.HandleAdminUpdateUser)
 	u.Patch("/admin/users/:id/removepic", mw.MustBeAdmin(authSvc), u.HandleAdminRemoveProfilePic)
 

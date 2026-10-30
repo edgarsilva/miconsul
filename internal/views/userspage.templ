@@ -257,9 +257,7 @@ templ ProfileAvatarPic(c *Ctx, user models.User) {
 templ UserForm(c *Ctx, user models.User) {
 	<form
 		class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2"
-		method="POST"
 		enctype="multipart/form-data"
-		action={ templ.URL(userFormPath(c, user)) }
 		hx-patch={ userFormPath(c, user) }
 		hx-target="closest #user_profile_cont"
 		hx-encoding="multipart/form-data"

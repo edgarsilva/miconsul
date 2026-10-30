@@ -69,7 +69,6 @@ func (s *service) HandleProfilePage(c fiber.Ctx) error {
 // HandleUpdateProfile updates the current user's profile data. A new locale
 // is also saved to the locale cookie, and HTMX requests reload the page so
 // the whole layout switches language.
-// POST: /profile
 func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
