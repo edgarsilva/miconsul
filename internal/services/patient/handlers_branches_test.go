@@ -7,8 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"miconsul/internal/server/servertest"
-
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -94,7 +92,7 @@ func TestIndexSearchToasts(t *testing.T) {
 		{"short term", "ab", true, fiber.StatusOK, "at least 3 characters"},
 		// The test DB has no FTS table, so any real search term fails.
 		{"search error", "alpha", true, fiber.StatusInternalServerError, "couldn&#39;t be completed"},
-		{"short term without htmx", "ab", false, fiber.StatusSeeOther, "at least 3 characters"},
+		{"short term without htmx", "ab", false, fiber.StatusOK, "at least 3 characters"},
 	}
 
 	for _, tt := range tests {
@@ -114,15 +112,6 @@ func TestIndexSearchToasts(t *testing.T) {
 			resp, err := app.Test(req)
 			if err != nil || resp.StatusCode != tt.wantStatus {
 				t.Fatalf("expected %d, got status=%d err=%v", tt.wantStatus, resp.StatusCode, err)
-			}
-			if !tt.htmx {
-				if got := resp.Header.Get("Location"); got != "/patients" {
-					t.Errorf("redirect = %q, want /patients", got)
-				}
-				if msg, _ := servertest.FlashToast(t, resp); !strings.Contains(msg, tt.wantToast) {
-					t.Errorf("flash toast = %q, want %q", msg, tt.wantToast)
-				}
-				return
 			}
 			if got := resp.Header.Get("HX-Redirect"); got != "" {
 				t.Errorf("search redirected to %q", got)

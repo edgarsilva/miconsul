@@ -2,15 +2,11 @@ package user
 
 import (
 	"context"
-	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"miconsul/internal/models"
 	"miconsul/internal/server"
-
-	"github.com/gofiber/fiber/v3"
 )
 
 func TestNormalizeUserWriteInput(t *testing.T) {
@@ -70,49 +66,6 @@ func TestUserProfileUpdateInputToUserProfileUpdates(t *testing.T) {
 	if out := in.toUserProfileUpdates(); out.Locale != "" {
 		t.Fatalf("expected an unknown locale to be dropped, got %q", out.Locale)
 	}
-}
-
-func TestRespondWithRedirect(t *testing.T) {
-	svc := service{Server: &server.Server{}}
-
-	t.Run("non-htmx returns redirect", func(t *testing.T) {
-		app := fiber.New()
-		app.Get("/profile", func(c fiber.Ctx) error {
-			return svc.respondWithRedirect(c, "/profile?toast=ok")
-		})
-
-		req := httptest.NewRequest(http.MethodGet, "/profile", nil)
-		resp, err := app.Test(req)
-		if err != nil {
-			t.Fatalf("request failed: %v", err)
-		}
-		if resp.StatusCode != fiber.StatusSeeOther {
-			t.Fatalf("expected 303, got %d", resp.StatusCode)
-		}
-		if got := resp.Header.Get("Location"); got != "/profile?toast=ok" {
-			t.Fatalf("expected redirect location, got %q", got)
-		}
-	})
-
-	t.Run("htmx sets HX-Redirect and status", func(t *testing.T) {
-		app := fiber.New()
-		app.Get("/profile", func(c fiber.Ctx) error {
-			return svc.respondWithRedirect(c, "/profile?toast=ok")
-		})
-
-		req := httptest.NewRequest(http.MethodGet, "/profile", nil)
-		req.Header.Set("HX-Request", "true")
-		resp, err := app.Test(req)
-		if err != nil {
-			t.Fatalf("request failed: %v", err)
-		}
-		if resp.StatusCode != fiber.StatusNoContent {
-			t.Fatalf("expected %d, got %d", fiber.StatusNoContent, resp.StatusCode)
-		}
-		if got := resp.Header.Get("HX-Redirect"); got != "/profile?toast=ok" {
-			t.Fatalf("expected HX-Redirect header, got %q", got)
-		}
-	})
 }
 
 func TestServiceValidationGuards(t *testing.T) {

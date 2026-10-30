@@ -150,10 +150,6 @@ func (s *service) HandleClinicsDelete(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/clinics", "Failed to delete clinic", "error")
 	}
 
-	if s.NotHTMX(c) {
-		return s.Redirect(c, "/clinics")
-	}
-
 	c.Set("HX-Redirect", "/clinics")
 	return c.SendStatus(fiber.StatusOK)
 }
@@ -164,18 +160,12 @@ func (s *service) HandleClinicsDelete(c fiber.Ctx) error {
 func (s *service) HandleClinicsIndexSearch(c fiber.Ctx) error {
 	searchTerm := strings.TrimSpace(c.Query("searchTerm", ""))
 	if len(searchTerm) > 0 && len(searchTerm) < 3 {
-		if s.NotHTMX(c) {
-			return s.RedirectWithToast(c, "/clinics", view.SearchTooShortMsg(3), "warning")
-		}
 		return view.Render(c, view.CmpSearchTooShortToast(3))
 	}
 
 	cu := s.CurrentUser(c)
 	clinics, err := s.FindClinicsBySearchTerm(c.Context(), cu, searchTerm)
 	if err != nil {
-		if s.NotHTMX(c) {
-			return s.RedirectWithToast(c, "/clinics", view.SearchFailedMsg, "error")
-		}
 		c.Status(fiber.StatusInternalServerError)
 		return view.Render(c, view.CmpSearchFailedToast())
 	}
@@ -184,20 +174,7 @@ func (s *service) HandleClinicsIndexSearch(c fiber.Ctx) error {
 	return view.Render(c, view.ClinicsList(vc, clinics))
 }
 
-func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string) error {
-	if s.NotHTMX(c) {
-		return s.Redirect(c, redirectPath)
-	}
-
-	c.Set("HX-Redirect", redirectPath)
-	return c.SendStatus(fiber.StatusNoContent)
-}
-
 func (s *service) respondWithClinicPage(c fiber.Ctx, clinic models.Clinic) error {
-	if s.NotHTMX(c) {
-		return s.Redirect(c, "/clinics/"+clinic.UID)
-	}
-
 	c.Set("HX-Push-Url", "/clinics/"+clinic.UID)
 	vc := view.NewCtx(c)
 	return view.Render(c, view.ClinicProfileSection(vc, clinic))

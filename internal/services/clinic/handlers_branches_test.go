@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"miconsul/internal/models"
-	"miconsul/internal/server/servertest"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -44,8 +43,8 @@ func TestClinicHandlerBranches(t *testing.T) {
 	}
 
 	resp2, err := app.Test(httptest.NewRequest(http.MethodGet, "/clinics/search?searchTerm=ab", nil))
-	if err != nil || resp2.StatusCode != fiber.StatusSeeOther {
-		t.Fatalf("search short term expected 303 redirect, got status=%d err=%v", resp2.StatusCode, err)
+	if err != nil || resp2.StatusCode != fiber.StatusOK {
+		t.Fatalf("search short term expected 200 toast, got status=%d err=%v", resp2.StatusCode, err)
 	}
 
 	badJSON := httptest.NewRequest(http.MethodPost, "/clinics", strings.NewReader("{"))
@@ -98,7 +97,7 @@ func TestIndexSearchToasts(t *testing.T) {
 		{"short term", "ab", true, fiber.StatusOK, "at least 3 characters"},
 		// The test DB has no FTS table, so any real search term fails.
 		{"search error", "alpha", true, fiber.StatusInternalServerError, "couldn&#39;t be completed"},
-		{"short term without htmx", "ab", false, fiber.StatusSeeOther, "at least 3 characters"},
+		{"short term without htmx", "ab", false, fiber.StatusOK, "at least 3 characters"},
 	}
 
 	for _, tt := range tests {
@@ -118,15 +117,6 @@ func TestIndexSearchToasts(t *testing.T) {
 			resp, err := app.Test(req)
 			if err != nil || resp.StatusCode != tt.wantStatus {
 				t.Fatalf("expected %d, got status=%d err=%v", tt.wantStatus, resp.StatusCode, err)
-			}
-			if !tt.htmx {
-				if got := resp.Header.Get("Location"); got != "/clinics" {
-					t.Errorf("redirect = %q, want /clinics", got)
-				}
-				if msg, _ := servertest.FlashToast(t, resp); !strings.Contains(msg, tt.wantToast) {
-					t.Errorf("flash toast = %q, want %q", msg, tt.wantToast)
-				}
-				return
 			}
 			if got := resp.Header.Get("HX-Redirect"); got != "" {
 				t.Errorf("search redirected to %q", got)

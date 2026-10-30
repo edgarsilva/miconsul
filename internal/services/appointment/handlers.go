@@ -54,14 +54,7 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 func (s *service) HandleIndexSearch(c fiber.Ctx) error {
 	filter := appointmentFilterFromQuery(c)
 	if searchTermTooShort(filter.SearchTerm) {
-		if s.NotHTMX(c) {
-			return s.RedirectWithToast(c, "/appointments", view.SearchTooShortMsg(minSearchTermLen), "warning")
-		}
 		return view.Render(c, view.CmpSearchTooShortToast(minSearchTermLen))
-	}
-
-	if s.NotHTMX(c) {
-		return s.HandleIndexPage(c)
 	}
 
 	cu := s.CurrentUser(c)
@@ -179,10 +172,6 @@ func (s *service) HandleStartSession(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/appointments", "Failed to start appointment session", "error")
 	}
 
-	if s.NotHTMX(c) {
-		return s.respondWithRedirect(c, "/appointments/"+appointmentID+"/open")
-	}
-
 	vc := view.NewCtx(c)
 	appointment := models.Appointment{UID: appointmentID, Status: models.AppointmentInProgress}
 	return view.Render(c, view.AppointmentSessionToggleFrg(vc, appointment))
@@ -208,10 +197,6 @@ func (s *service) HandlePauseSession(c fiber.Ctx) error {
 	}
 	if err != nil {
 		return s.RedirectWithToast(c, "/appointments", "Failed to pause appointment session", "error")
-	}
-
-	if s.NotHTMX(c) {
-		return s.respondWithRedirect(c, "/appointments/"+appointmentID+"/open")
 	}
 
 	vc := view.NewCtx(c)
@@ -293,7 +278,7 @@ func (s *service) HandleComplete(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/appointments", "Failed to update appointment", "error")
 	}
 
-	return s.respondWithRedirect(c, "/appointments")
+	return s.HXRedirect(c, "/appointments")
 }
 
 // HandleCreate inserts a new appointment record for the CurrentUser
@@ -460,7 +445,7 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/appointments", "Failed to update appointment", "error")
 	}
 
-	return s.respondWithRedirect(c, "/appointments")
+	return s.HXRedirect(c, "/appointments")
 }
 
 // HandleDelete deletes an appointment record from the DB.
@@ -481,7 +466,7 @@ func (s *service) HandleDelete(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/appointments", "failed to delete that appointment", "error")
 	}
 
-	return s.respondWithRedirect(c, "/appointments")
+	return s.HXRedirect(c, "/appointments")
 }
 
 // HandlePatientConfirmPage shows a patient the appointment to confirm
@@ -723,15 +708,6 @@ func (s *service) renderReloadedPatientWarning(c fiber.Ctx, token string, page f
 func (s *service) renderAppointmentNotFoundPage(c fiber.Ctx, toast, level string) error {
 	vc := view.NewCtx(c, view.WithToast(toast, "", level))
 	return view.Render(c, view.AppointmentNotFoundPage(vc))
-}
-
-func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string) error {
-	if s.NotHTMX(c) {
-		return s.Redirect(c, redirectPath)
-	}
-
-	c.Set("HX-Redirect", redirectPath)
-	return c.SendStatus(fiber.StatusNoContent)
 }
 
 // appointmentFilterFromQuery reads the appointments index filters from the

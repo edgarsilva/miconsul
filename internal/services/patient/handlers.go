@@ -38,18 +38,12 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 func (s *service) HandlePatientsIndexSearch(c fiber.Ctx) error {
 	searchTerm, searchErr := normalizeSearchTerm(c.Query("searchTerm", ""))
 	if searchErr != nil {
-		if s.NotHTMX(c) {
-			return s.RedirectWithToast(c, "/patients", view.SearchTooShortMsg(3), "warning")
-		}
 		return view.Render(c, view.CmpSearchTooShortToast(3))
 	}
 
 	cu := s.CurrentUser(c)
 	patients, err := s.SearchPatientsByUser(c.Context(), cu, searchTerm, QUERY_LIMIT)
 	if err != nil {
-		if s.NotHTMX(c) {
-			return s.RedirectWithToast(c, "/patients", view.SearchFailedMsg, "error")
-		}
 		c.Status(fiber.StatusInternalServerError)
 		return view.Render(c, view.CmpSearchFailedToast())
 	}
@@ -118,10 +112,6 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 		}
 	}
 
-	if s.NotHTMX(c) {
-		return s.Redirect(c, "/patients/"+patient.UID)
-	}
-
 	c.Set("HX-Push-Url", "/patients/"+patient.UID)
 	vc := view.NewCtx(c)
 	return view.Render(c, templ.Join(
@@ -182,10 +172,6 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/patients", "Failed to update patient", "error")
 	}
 
-	if s.NotHTMX(c) {
-		return s.Redirect(c, "/patients/"+patientID)
-	}
-
 	return s.RedirectWithToast(c, "/patients/"+patientID, "Patient changes saved", "success")
 }
 
@@ -225,10 +211,6 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/patients", "Failed to load patient", "error")
 	}
 
-	if s.NotHTMX(c) {
-		return s.Redirect(c, "/patients/"+patient.UID)
-	}
-
 	vc := view.NewCtx(c)
 	return view.Render(c, view.PatientAvatarPic(vc, patient))
 }
@@ -252,10 +234,6 @@ func (s *service) HandleDeletePatient(c fiber.Ctx) error {
 	}
 	if err != nil {
 		return s.RedirectWithToast(c, "/patients", "Failed to delete patient", "error")
-	}
-
-	if s.NotHTMX(c) {
-		return s.Redirect(c, "/patients")
 	}
 
 	searchTerm := strings.TrimSpace(c.Query("searchTerm", ""))
@@ -318,13 +296,4 @@ func (s *service) HandlePatientProfilePicImgSrc(c fiber.Ctx) error {
 	}
 
 	return c.SendFile(path)
-}
-
-func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string) error {
-	if s.NotHTMX(c) {
-		return s.Redirect(c, redirectPath)
-	}
-
-	c.Set("HX-Redirect", redirectPath)
-	return c.SendStatus(fiber.StatusNoContent)
 }

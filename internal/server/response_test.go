@@ -80,3 +80,23 @@ func TestRedirectWithAlert(t *testing.T) {
 		t.Errorf("flash toast = %q, want none", msg)
 	}
 }
+
+func TestHXRedirect(t *testing.T) {
+	s := &Server{}
+	app := fiber.New()
+	app.Post("/", func(c fiber.Ctx) error {
+		return s.HXRedirect(c, "/appointments")
+	})
+
+	resp, err := app.Test(httptest.NewRequest(http.MethodPost, "/", nil))
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+
+	if resp.StatusCode != http.StatusNoContent {
+		t.Errorf("status = %d, want %d", resp.StatusCode, http.StatusNoContent)
+	}
+	if got := resp.Header.Get("HX-Redirect"); got != "/appointments" {
+		t.Errorf("HX-Redirect = %q, want /appointments", got)
+	}
+}

@@ -36,17 +36,11 @@ func TestHTMXHelpers(t *testing.T) {
 		if s.IsHTMX(c) {
 			t.Fatalf("expected request without HX-Request to be false")
 		}
-		if !s.NotHTMX(c) {
-			t.Fatalf("expected request without HX-Request to be NotHTMX")
-		}
 	})
 
 	runWithCtx(t, http.MethodGet, "/", map[string]string{"HX-Request": "true"}, func(c fiber.Ctx) {
 		if !s.IsHTMX(c) {
 			t.Fatalf("expected request with HX-Request=true to be HTMX")
-		}
-		if s.NotHTMX(c) {
-			t.Fatalf("expected request with HX-Request=true to not be NotHTMX")
 		}
 	})
 }

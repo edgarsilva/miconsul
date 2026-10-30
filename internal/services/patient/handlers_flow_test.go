@@ -74,8 +74,11 @@ func TestPatientHandlersFlows(t *testing.T) {
 	req3 := httptest.NewRequest(http.MethodPost, "/patients", strings.NewReader(createForm.Encode()))
 	req3.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	resp3, err := app.Test(req3)
-	if err != nil || resp3.StatusCode != fiber.StatusSeeOther {
-		t.Fatalf("create patient expected 303, got status=%d err=%v", resp3.StatusCode, err)
+	if err != nil || resp3.StatusCode != fiber.StatusOK {
+		t.Fatalf("create patient expected 200, got status=%d err=%v", resp3.StatusCode, err)
+	}
+	if got := resp3.Header.Get("HX-Push-Url"); !strings.HasPrefix(got, "/patients/") {
+		t.Fatalf("create patient HX-Push-Url = %q, want /patients/<uid>", got)
 	}
 
 	updateForm := url.Values{
