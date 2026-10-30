@@ -403,25 +403,37 @@ func (s *service) recordFeedEvent(ctx context.Context, userID uint, appointmentU
 	}
 }
 
-func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, patientID, clinicID, timeframe, searchTerm, statusFilter string) ([]models.Appointment, error) {
+// appointmentFilter narrows FindAppointmentsBy; zero fields add no condition,
+// except an empty Timeframe, which means day.
+type appointmentFilter struct {
+	PatientUID string
+	ClinicUID  string
+	Timeframe  string
+	SearchTerm string
+	Statuses   []models.AppointmentStatus
+}
+
+// FindAppointmentsBy returns up to 20 of the user's appointments matching f,
+// newest first.
+func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, f appointmentFilter) ([]models.Appointment, error) {
 	appointments := []models.Appointment{}
 	dbquery := s.DB.Model(&models.Appointment{}).Where("appointments.user_id = ?", userID)
 
-	if patientID != "" {
+	if f.PatientUID != "" {
 		dbquery = dbquery.Joins("INNER JOIN patients ON patients.id = appointments.patient_id")
 	}
-	if patientID != "" {
-		dbquery = dbquery.Where("patients.uid = ?", patientID)
+	if f.PatientUID != "" {
+		dbquery = dbquery.Where("patients.uid = ?", f.PatientUID)
 	}
 
-	if clinicID != "" {
+	if f.ClinicUID != "" {
 		dbquery = dbquery.Joins("INNER JOIN clinics ON clinics.id = appointments.clinic_id")
 	}
-	if clinicID != "" {
-		dbquery = dbquery.Where("clinics.uid = ?", clinicID)
+	if f.ClinicUID != "" {
+		dbquery = dbquery.Where("clinics.uid = ?", f.ClinicUID)
 	}
 
-	searchTerm = strings.TrimSpace(searchTerm)
+	searchTerm := strings.TrimSpace(f.SearchTerm)
 	applySearch := searchTerm != ""
 	if applySearch {
 		patientIDs, err := s.findPatientIDsBySearchTerm(ctx, userID, searchTerm)
@@ -441,8 +453,7 @@ func (s *service) FindAppointmentsBy(ctx context.Context, userID uint, patientID
 		dbquery = dbquery.Where("appointments.patient_id IN ? OR appointments.clinic_id IN ?", patientIDs, clinicIDs)
 	}
 
-	statuses := models.ParseAppointmentStatuses(statusFilter)
-	err := dbquery.Scopes(models.AppointmentBookedIn(timeframe), models.AppointmentWithStatus(statuses...)).
+	err := dbquery.Scopes(models.AppointmentBookedIn(f.Timeframe), models.AppointmentWithStatus(f.Statuses...)).
 		Preload("Clinic").
 		Preload("Patient").
 		Order("booked_at desc").

@@ -117,7 +117,7 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 	})
 
 	t.Run("listing helpers return data", func(t *testing.T) {
-		appointments, err := svc.FindAppointmentsBy(ctx, user.ID, "", "", "week", "", "")
+		appointments, err := svc.FindAppointmentsBy(ctx, user.ID, appointmentFilter{Timeframe: "week"})
 		if err != nil {
 			t.Fatalf("find appointments: %v", err)
 		}
@@ -149,7 +149,7 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 			t.Fatalf("expected clinics from empty search fallback")
 		}
 
-		_, err = svc.FindAppointmentsBy(ctx, user.ID, "", "", "week", "patient", "")
+		_, err = svc.FindAppointmentsBy(ctx, user.ID, appointmentFilter{Timeframe: "week", SearchTerm: "patient"})
 		if err == nil {
 			t.Fatalf("expected FTS-backed appointment search error without global_fts table")
 		}
@@ -355,5 +355,47 @@ func TestPatientActionRefusedAfterConcurrentChange(t *testing.T) {
 	}
 	if got.Status != models.AppointmentCanceled {
 		t.Fatalf("status = %q, want still canceled", got.Status)
+	}
+}
+
+func TestFindAppointmentsByStatus(t *testing.T) {
+	svc, user, clinic, patient := newAppointmentServiceForTests(t)
+	ctx := context.Background()
+
+	for i, status := range []models.AppointmentStatus{models.AppointmentConfirmed, models.AppointmentPending} {
+		apnt := models.Appointment{
+			UserID:    user.ID,
+			ClinicID:  clinic.ID,
+			PatientID: patient.ID,
+			BookedAt:  time.Now(),
+			Status:    status,
+			Token:     fmt.Sprintf("tok_status_%d", i),
+		}
+		if err := svc.CreateAppointment(ctx, &apnt); err != nil {
+			t.Fatalf("create %s appointment: %v", status, err)
+		}
+	}
+
+	filter := appointmentFilter{
+		PatientUID: patient.UID,
+		ClinicUID:  clinic.UID,
+		Timeframe:  "day",
+		Statuses:   []models.AppointmentStatus{models.AppointmentConfirmed},
+	}
+	appointments, err := svc.FindAppointmentsBy(ctx, user.ID, filter)
+	if err != nil {
+		t.Fatalf("find appointments: %v", err)
+	}
+	if len(appointments) != 1 || appointments[0].Status != models.AppointmentConfirmed {
+		t.Fatalf("expected only the confirmed appointment, got %+v", appointments)
+	}
+
+	filter.Statuses = nil
+	appointments, err = svc.FindAppointmentsBy(ctx, user.ID, filter)
+	if err != nil {
+		t.Fatalf("find appointments: %v", err)
+	}
+	if len(appointments) != 2 {
+		t.Fatalf("expected both appointments without a status filter, got %d", len(appointments))
 	}
 }

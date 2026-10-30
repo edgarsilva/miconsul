@@ -3,7 +3,6 @@ package dashboard
 
 import (
 	"errors"
-	"strings"
 
 	"miconsul/internal/models"
 	view "miconsul/internal/views"
@@ -30,9 +29,9 @@ func (s *service) HandleHomePage(c fiber.Ctx) error {
 func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 	timeframe := c.Query("timeframe", "day")
-	statusFilter := strings.TrimSpace(c.Query("status", ""))
+	statuses := models.ParseAppointmentStatuses(c.Query("status", ""))
 
-	appointments, appointmentsErr := s.FindAppointmentsBy(c.Context(), cu.ID, timeframe, statusFilter, 10)
+	appointments, appointmentsErr := s.FindAppointmentsBy(c.Context(), cu.ID, timeframe, statuses, 10)
 	clinic, clinicErr := s.FavoriteClinic(c, cu.ID)
 	stats, statsErr := s.CalcDashboardStats(c.Context(), cu)
 	feedEvents, feedErr := s.FindFeedEventsByUserID(c.Context(), cu.ID, 10)
@@ -52,9 +51,9 @@ func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 func (s *service) HandleAppointmentsSection(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 	timeframe := c.Query("timeframe", "day")
-	statusFilter := strings.TrimSpace(c.Query("status", ""))
+	statuses := models.ParseAppointmentStatuses(c.Query("status", ""))
 
-	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, timeframe, statusFilter, 10)
+	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, timeframe, statuses, 10)
 	vc := view.NewCtx(c)
 	section := view.AppointmentsSection(vc, appointments, true, models.Patient{}, models.Clinic{}, "/dashboard", "/dashboard/appointments")
 	if err != nil {
