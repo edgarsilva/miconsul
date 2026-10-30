@@ -3,10 +3,8 @@ package dashboard
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
-	"miconsul/internal/models"
 	view "miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"
@@ -32,37 +30,7 @@ func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 	timeframe := c.Query("timeframe", "day")
 	statusFilter := strings.TrimSpace(c.Query("status", ""))
 
-	appointments := []models.Appointment{}
-	query := s.DB.WithContext(c.Context()).
-		Model(models.Appointment{}).
-		Preload("Patient").
-		Preload("Clinic").
-		Where("user_id = ?", cu.ID)
-
-	switch timeframe {
-	case "day":
-		query.Scopes(models.AppointmentBookedToday)
-	case "week":
-		query.Scopes(models.AppointmentBookedThisWeek)
-	case "month":
-		query.Scopes(models.AppointmentBookedThisMonth)
-	default:
-		query.Scopes(models.AppointmentBookedToday)
-	}
-
-	if statusFilter != "" {
-		statuses := strings.Split(statusFilter, ",")
-		for i := range statuses {
-			statuses[i] = strings.TrimSpace(statuses[i])
-		}
-		query.Where("status IN ?", statuses)
-	}
-
-	var appointmentsErr error
-	if err := query.Limit(10).Find(&appointments).Error; err != nil {
-		appointmentsErr = fmt.Errorf("find dashboard appointments: %w", err)
-	}
-
+	appointments, appointmentsErr := s.FindAppointmentsBy(c.Context(), cu.ID, timeframe, statusFilter, 10)
 	clinic, clinicErr := s.FavoriteClinic(c, cu.ID)
 	stats, statsErr := s.CalcDashboardStats(c.Context(), cu)
 	feedEvents, feedErr := s.FindFeedEventsByUserID(c.Context(), cu.ID, 10)
