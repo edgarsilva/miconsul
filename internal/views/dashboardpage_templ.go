@@ -66,7 +66,7 @@ func DashboardPage(c *Ctx, stats DashboardStats, appointments []models.Appointme
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = AppointmentsSection(c, appointments, true, models.Patient{}, models.Clinic{}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = AppointmentsSection(c, appointments, true, models.Patient{}, models.Clinic{}, "/dashboard", "/dashboard/appointments").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

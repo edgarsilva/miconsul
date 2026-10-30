@@ -5,8 +5,10 @@ import (
 	"errors"
 	"strings"
 
+	"miconsul/internal/models"
 	view "miconsul/internal/views"
 
+	"github.com/a-h/templ"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
 )
@@ -42,4 +44,26 @@ func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 	}
 
 	return view.Render(c, view.DashboardPage(vc, stats, appointments, clinic, feedEvents))
+}
+
+// HandleAppointmentsSection renders the dashboard appointments section for
+// its timeframe and status filter links.
+// GET: /dashboard/appointments
+func (s *service) HandleAppointmentsSection(c fiber.Ctx) error {
+	cu := s.CurrentUser(c)
+	timeframe := c.Query("timeframe", "day")
+	statusFilter := strings.TrimSpace(c.Query("status", ""))
+
+	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, timeframe, statusFilter, 10)
+	vc := view.NewCtx(c)
+	section := view.AppointmentsSection(vc, appointments, true, models.Patient{}, models.Clinic{}, "/dashboard", "/dashboard/appointments")
+	if err != nil {
+		log.Error("load dashboard appointments:", err)
+		return view.Render(c, templ.Join(
+			section,
+			view.CmpToastPartial("Failed to load appointments, please try again", "", "error"),
+		))
+	}
+
+	return view.Render(c, section)
 }
