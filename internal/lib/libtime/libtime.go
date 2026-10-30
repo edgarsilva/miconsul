@@ -21,6 +21,17 @@ const (
 	TimeframeMonth Timeframe = "month"
 )
 
+// ParseTimeframe returns the timeframe named s (day, week or month); any
+// other value means a day.
+func ParseTimeframe(s string) Timeframe {
+	switch tf := Timeframe(strings.TrimSpace(s)); tf {
+	case TimeframeDay, TimeframeWeek, TimeframeMonth:
+		return tf
+	default:
+		return TimeframeDay
+	}
+}
+
 const (
 	AmericaNewYork      Timezone = "America/New_York"
 	AmericaChicago      Timezone = "America/Chicago"

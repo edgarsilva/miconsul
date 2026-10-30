@@ -50,9 +50,8 @@ func (s service) FavoriteClinic(c fiber.Ctx, userID uint) (models.Clinic, error)
 }
 
 // FindAppointmentsBy returns up to limit of the user's appointments booked
-// in timeframe (day, week or month; day by default), filtered by statuses
-// when there are any.
-func (s service) FindAppointmentsBy(ctx context.Context, userID uint, timeframe string, statuses []models.AppointmentStatus, limit int) ([]models.Appointment, error) {
+// in timeframe, filtered by statuses when there are any.
+func (s service) FindAppointmentsBy(ctx context.Context, userID uint, timeframe libtime.Timeframe, statuses []models.AppointmentStatus, limit int) ([]models.Appointment, error) {
 	appointments := []models.Appointment{}
 	err := s.DB.WithContext(ctx).
 		Model(models.Appointment{}).

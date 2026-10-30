@@ -182,3 +182,23 @@ func TestTimeframeBounds(t *testing.T) {
 		}
 	}
 }
+
+func TestParseTimeframe(t *testing.T) {
+	tests := []struct {
+		in   string
+		want Timeframe
+	}{
+		{"day", TimeframeDay},
+		{"week", TimeframeWeek},
+		{" month ", TimeframeMonth},
+		{"", TimeframeDay},
+		{"fortnight", TimeframeDay},
+		{"Week", TimeframeDay},
+	}
+
+	for _, tt := range tests {
+		if got := ParseTimeframe(tt.in); got != tt.want {
+			t.Errorf("ParseTimeframe(%q) = %q, want %q", tt.in, got, tt.want)
+		}
+	}
+}

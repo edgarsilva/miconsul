@@ -4,6 +4,7 @@ package dashboard
 import (
 	"errors"
 
+	"miconsul/internal/lib/libtime"
 	"miconsul/internal/models"
 	view "miconsul/internal/views"
 
@@ -28,7 +29,7 @@ func (s *service) HandleHomePage(c fiber.Ctx) error {
 // GET: /dashboard
 func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
-	timeframe := c.Query("timeframe", "day")
+	timeframe := libtime.ParseTimeframe(c.Query("timeframe", ""))
 	statuses := models.ParseAppointmentStatuses(c.Query("status", ""))
 
 	appointments, appointmentsErr := s.FindAppointmentsBy(c.Context(), cu.ID, timeframe, statuses, 10)
@@ -50,7 +51,7 @@ func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 // GET: /dashboard/appointments
 func (s *service) HandleAppointmentsSection(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
-	timeframe := c.Query("timeframe", "day")
+	timeframe := libtime.ParseTimeframe(c.Query("timeframe", ""))
 	statuses := models.ParseAppointmentStatuses(c.Query("status", ""))
 
 	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, timeframe, statuses, 10)

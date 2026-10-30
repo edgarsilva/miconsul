@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json/v2"
+	"miconsul/internal/lib/libtime"
 	"reflect"
 	"strings"
 	"testing"
@@ -86,11 +87,11 @@ func TestScopesAndBaseHelpers(t *testing.T) {
 		t.Fatalf("open sqlite dry-run: %v", err)
 	}
 
-	bookedIn := func(timeframe string) *gorm.Statement {
+	bookedIn := func(timeframe libtime.Timeframe) *gorm.Statement {
 		return db.Model(&Appointment{}).Scopes(AppointmentBookedIn(timeframe)).Find(&[]Appointment{}).Statement
 	}
 	day := bookedIn("day")
-	for _, timeframe := range []string{"day", "week", "month"} {
+	for _, timeframe := range []libtime.Timeframe{libtime.TimeframeDay, libtime.TimeframeWeek, libtime.TimeframeMonth} {
 		if sql := bookedIn(timeframe).SQL.String(); !strings.Contains(strings.ToLower(sql), "booked_at") {
 			t.Fatalf("expected booked %s scope to query booked_at, got %s", timeframe, sql)
 		}

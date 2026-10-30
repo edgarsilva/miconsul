@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"miconsul/internal/lib/libtime"
 	"miconsul/internal/models"
 	"miconsul/internal/server"
 
@@ -408,7 +409,7 @@ func (s *service) recordFeedEvent(ctx context.Context, userID uint, appointmentU
 type appointmentFilter struct {
 	PatientUID string
 	ClinicUID  string
-	Timeframe  string
+	Timeframe  libtime.Timeframe
 	SearchTerm string
 	Statuses   []models.AppointmentStatus
 }

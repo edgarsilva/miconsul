@@ -157,9 +157,9 @@ func (a Appointment) AlertableType() string {
 
 // Scopes
 
-// AppointmentBookedIn scopes appointments to the current day, week or month
-// in the default timezone; any other timeframe means day.
-func AppointmentBookedIn(timeframe string) func(*gorm.DB) *gorm.DB {
+// AppointmentBookedIn scopes appointments to the current timeframe in the
+// default timezone.
+func AppointmentBookedIn(timeframe libtime.Timeframe) func(*gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		return appointmentBookedWithin(db, time.Now(), timeframe)
 	}
@@ -222,8 +222,8 @@ func (a Appointment) FeedEventTarget() (name, id, typ, url string) {
 	return a.Patient.Name, a.Patient.UID, "patients", "/patients/" + a.Patient.UID
 }
 
-func appointmentBookedWithin(db *gorm.DB, now time.Time, timeframe string) *gorm.DB {
-	start, end := libtime.TimeframeBounds(now, DefaultTimezone, libtime.Timeframe(timeframe))
+func appointmentBookedWithin(db *gorm.DB, now time.Time, timeframe libtime.Timeframe) *gorm.DB {
+	start, end := libtime.TimeframeBounds(now, DefaultTimezone, timeframe)
 
 	return db.Where("booked_at >= ?", start.UTC()).Where("booked_at < ?", end.UTC())
 }

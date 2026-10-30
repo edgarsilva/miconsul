@@ -742,7 +742,7 @@ func appointmentFilterFromQuery(c fiber.Ctx) appointmentFilter {
 	return appointmentFilter{
 		PatientUID: c.Query("patientId", ""),
 		ClinicUID:  c.Query("clinicId", ""),
-		Timeframe:  strings.TrimSpace(c.Query("timeframe", "day")),
+		Timeframe:  libtime.ParseTimeframe(c.Query("timeframe", "")),
 		SearchTerm: strings.TrimSpace(c.Query("searchTerm", "")),
 		Statuses:   models.ParseAppointmentStatuses(c.Query("status", "")),
 	}
