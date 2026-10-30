@@ -81,7 +81,7 @@ func (s *service) HandlePatientFormPage(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/patients", "Failed to load patient", "error")
 	}
 
-	return view.Render(c, view.PatientFormPage(patient, vc))
+	return view.Render(c, view.PatientFormPage(vc, patient))
 }
 
 // HandleCreatePatient inserts a new patient record for the CurrentUser

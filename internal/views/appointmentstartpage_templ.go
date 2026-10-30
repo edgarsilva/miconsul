@@ -14,7 +14,7 @@ import (
 	"strconv"
 )
 
-func AppointmentStartPage(appointment models.Appointment, c *Ctx) templ.Component {
+func AppointmentStartPage(c *Ctx, appointment models.Appointment) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -55,7 +55,7 @@ func AppointmentStartPage(appointment models.Appointment, c *Ctx) templ.Componen
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = AppointmentStart(appointment, c).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = AppointmentStart(c, appointment).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -73,7 +73,7 @@ func AppointmentStartPage(appointment models.Appointment, c *Ctx) templ.Componen
 	})
 }
 
-func PatientCard(patient models.Patient, c *Ctx) templ.Component {
+func PatientCard(c *Ctx, patient models.Patient) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -269,7 +269,7 @@ func PatientCard(patient models.Patient, c *Ctx) templ.Component {
 	})
 }
 
-func AppointmentStart(appointment models.Appointment, c *Ctx) templ.Component {
+func AppointmentStart(c *Ctx, appointment models.Appointment) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -290,7 +290,7 @@ func AppointmentStart(appointment models.Appointment, c *Ctx) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = PatientCard(appointment.Patient, c).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = PatientCard(c, appointment.Patient).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -311,7 +311,7 @@ func AppointmentStart(appointment models.Appointment, c *Ctx) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = AppointmentSessionToggle(appointment, c).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = AppointmentSessionToggle(c, appointment).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -332,7 +332,7 @@ func AppointmentStart(appointment models.Appointment, c *Ctx) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = AppointmentSessionStatusBadge(appointment, c).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = AppointmentSessionStatusBadge(c, appointment).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -569,7 +569,7 @@ func AppointmentStart(appointment models.Appointment, c *Ctx) templ.Component {
 	})
 }
 
-func AppointmentSessionStatusBadge(appointment models.Appointment, c *Ctx) templ.Component {
+func AppointmentSessionStatusBadge(c *Ctx, appointment models.Appointment) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -591,7 +591,7 @@ func AppointmentSessionStatusBadge(appointment models.Appointment, c *Ctx) templ
 			return templ_7745c5c3_Err
 		}
 		if appointment.Status == models.AppointmentInProgress {
-			templ_7745c5c3_Err = CmpBadgeStatus(models.AppointmentInProgress, c).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpBadgeStatus(c, models.AppointmentInProgress).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -604,7 +604,7 @@ func AppointmentSessionStatusBadge(appointment models.Appointment, c *Ctx) templ
 	})
 }
 
-func AppointmentSessionToggle(appointment models.Appointment, c *Ctx) templ.Component {
+func AppointmentSessionToggle(c *Ctx, appointment models.Appointment) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -722,7 +722,7 @@ func AppointmentSessionToggle(appointment models.Appointment, c *Ctx) templ.Comp
 	})
 }
 
-func AppointmentSessionToggleFrg(appointment models.Appointment, c *Ctx) templ.Component {
+func AppointmentSessionToggleFrg(c *Ctx, appointment models.Appointment) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -739,7 +739,7 @@ func AppointmentSessionToggleFrg(appointment models.Appointment, c *Ctx) templ.C
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = AppointmentSessionToggle(appointment, c).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = AppointmentSessionToggle(c, appointment).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -748,7 +748,7 @@ func AppointmentSessionToggleFrg(appointment models.Appointment, c *Ctx) templ.C
 			return templ_7745c5c3_Err
 		}
 		if appointment.Status == models.AppointmentInProgress {
-			templ_7745c5c3_Err = CmpBadgeStatus(models.AppointmentInProgress, c).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpBadgeStatus(c, models.AppointmentInProgress).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

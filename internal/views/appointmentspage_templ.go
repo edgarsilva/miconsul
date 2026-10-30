@@ -1414,7 +1414,7 @@ func AppointmentLi(c *Ctx, appointment models.Appointment) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = CmpBadgeStatus(appointment.Status, c).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpBadgeStatus(c, appointment.Status).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1422,7 +1422,7 @@ func AppointmentLi(c *Ctx, appointment models.Appointment) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = AppointmentActions(appointment, c).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = AppointmentActions(c, appointment).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1434,7 +1434,7 @@ func AppointmentLi(c *Ctx, appointment models.Appointment) templ.Component {
 	})
 }
 
-func AppointmentActions(appointment models.Appointment, c *Ctx) templ.Component {
+func AppointmentActions(c *Ctx, appointment models.Appointment) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1822,7 +1822,7 @@ func AppointmentCont(c *Ctx, appointment models.Appointment, patients []models.P
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = AppointmentForm(appointment, c).Render(templ.WithChildren(ctx, templ_7745c5c3_Var94), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = AppointmentForm(c, appointment).Render(templ.WithChildren(ctx, templ_7745c5c3_Var94), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2313,7 +2313,7 @@ func PatientSearch(c *Ctx, patients []models.Patient, selectedUID string) templ.
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = PatientSearchResults(patients, c, selectedUID).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = PatientSearchResults(c, patients, selectedUID).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2325,7 +2325,7 @@ func PatientSearch(c *Ctx, patients []models.Patient, selectedUID string) templ.
 	})
 }
 
-func PatientSearchResults(patients []models.Patient, c *Ctx, selectedUID string) templ.Component {
+func PatientSearchResults(c *Ctx, patients []models.Patient, selectedUID string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -2462,7 +2462,7 @@ func PatientSearchResults(patients []models.Patient, c *Ctx, selectedUID string)
 	})
 }
 
-func AppointmentForm(appointment models.Appointment, c *Ctx) templ.Component {
+func AppointmentForm(c *Ctx, appointment models.Appointment) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

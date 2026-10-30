@@ -309,17 +309,17 @@ templ AppointmentLi(c *Ctx, appointment models.Appointment) {
 							{ appointment.Clinic.Name }
 						</span>
 						<span class="ml-2">
-							@CmpBadgeStatus(appointment.Status, c)
+							@CmpBadgeStatus(c, appointment.Status)
 						</span>
 					</dd>
 				</div>
 			</dl>
 		</div>
-		@AppointmentActions(appointment, c)
+		@AppointmentActions(c, appointment)
 	</li>
 }
 
-templ AppointmentActions(appointment models.Appointment, c *Ctx) {
+templ AppointmentActions(c *Ctx, appointment models.Appointment) {
 	<div class="hidden md:flex gap-1">
 		<a href={ templ.URL("/appointments/" + appointment.UID + "/open") } class="btn btn-sm">
 			@IconBookOpen("size-4")
@@ -364,7 +364,7 @@ templ AppointmentCont(c *Ctx, appointment models.Appointment, patients []models.
 				<p class="mt-1 text-sm leading-6 text-base-content/50">{ c.l("str.apnt_step_3_desc") }</p>
 			</div>
 			<section class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
-				@AppointmentForm(appointment, c) {
+				@AppointmentForm(c, appointment) {
 					<input type="hidden" name="id" value={ appointment.UID } id="apnt_datetime_id"/>
 					<div class="px-4 py-6 sm:p-8">
 						<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -643,12 +643,12 @@ templ PatientSearch(c *Ctx, patients []models.Patient, selectedUID string) {
 			/>
 		</label>
 		<div class="max-h-64 overflow-y-auto pr-2 -mr-2">
-			@PatientSearchResults(patients, c, selectedUID)
+			@PatientSearchResults(c, patients, selectedUID)
 		</div>
 	</section>
 }
 
-templ PatientSearchResults(patients []models.Patient, c *Ctx, selectedUID string) {
+templ PatientSearchResults(c *Ctx, patients []models.Patient, selectedUID string) {
 	<ul
 		id="patient_search_results"
 		role="list"
@@ -686,7 +686,7 @@ templ PatientSearchResults(patients []models.Patient, c *Ctx, selectedUID string
 	</ul>
 }
 
-templ AppointmentForm(appointment models.Appointment, c *Ctx) {
+templ AppointmentForm(c *Ctx, appointment models.Appointment) {
 	<form
 		id="new_appointment"
 		method="POST"

@@ -1,6 +1,6 @@
 package views
 
-templ LoginPage(email string, err error, c *Ctx) {
+templ LoginPage(c *Ctx, email string, err error) {
 	@LayoutAuth(c) {
 		<div class="absolute top-4 right-4">
 			@CmpBtnTheme(c.Theme)
