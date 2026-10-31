@@ -229,8 +229,11 @@ func TestGlobalFTSScopeSQL(t *testing.T) {
 
 	stmtTerm := db.Model(&Patient{}).Scopes(GlobalFTS("alma")).Find(&[]Patient{}).Statement
 	sqlTerm := stmtTerm.SQL.String()
-	if !strings.Contains(sqlTerm, "INNER JOIN global_fts ON gid = id") {
-		t.Fatalf("expected FTS join for non-empty term, got %q", sqlTerm)
+	if !strings.Contains(sqlTerm, "INNER JOIN global_search_docs ON global_search_docs.gid = `patients`.`uid`") {
+		t.Fatalf("expected search docs join on uid for non-empty term, got %q", sqlTerm)
+	}
+	if !strings.Contains(sqlTerm, "INNER JOIN global_fts ON global_fts.rowid = global_search_docs.id") {
+		t.Fatalf("expected FTS join on rowid for non-empty term, got %q", sqlTerm)
 	}
 	if !strings.Contains(sqlTerm, "global_fts MATCH ?") {
 		t.Fatalf("expected FTS match clause, got %q", sqlTerm)
