@@ -93,6 +93,12 @@ func TestGlobalFTSKeepsPatientsAndClinicsApart(t *testing.T) {
 		}
 	})
 
+	t.Run("quotes in the term are literal", func(t *testing.T) {
+		if got := searchPatientUIDs(t, db, `alma"`); !slices.Equal(got, []string{patient.UID}) {
+			t.Fatalf("expected patient %q, got %v", patient.UID, got)
+		}
+	})
+
 	t.Run("editing and deleting a clinic keeps the patient searchable", func(t *testing.T) {
 		if err := db.Model(&clinic).Update("name", "Clinica Sur").Error; err != nil {
 			t.Fatalf("update clinic: %v", err)

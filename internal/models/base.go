@@ -1,6 +1,7 @@
 package models
 
 import (
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -112,7 +113,8 @@ func Countries() []Country {
 
 // GlobalFTS ranks the rows of table by a full-text search for term. Rows are
 // matched by uid through global_search_docs, which the DB keeps in sync with
-// triggers. An empty term orders by recency instead.
+// triggers. term is matched as a literal prefix phrase, so FTS5 query syntax
+// in it has no effect. An empty term orders by recency instead.
 //
 //	s.DB.
 //		Model(&models.Patient{}).
@@ -124,10 +126,12 @@ func GlobalFTS(table, term string) func(db *gorm.DB) *gorm.DB {
 			return db.Order("created_at desc")
 		}
 
+		phrase := "\"" + strings.ReplaceAll(term, "\"", "\"\"") + "\" *"
+
 		return db.
 			Joins("INNER JOIN global_search_docs ON global_search_docs.gid = ?", clause.Column{Table: table, Name: "uid"}).
 			Joins("INNER JOIN global_fts ON global_fts.rowid = global_search_docs.id").
-			Where("global_fts MATCH ?", "\""+term+"\" * ").
+			Where("global_fts MATCH ?", phrase).
 			Order("bm25(global_fts, 5, 3, 2)")
 	}
 }
