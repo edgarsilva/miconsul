@@ -542,13 +542,13 @@ templ PatientAvatarPic(c *Ctx, patient models.Patient) {
 	if patient.ProfilePic != "" {
 		<figure class="flex flex-col gap-1 items-center" id="avatar_pic">
 			@CmpAvatar(patient)
-			<button
-				type="button"
+			<a
+				href={ templ.URL("/patients/" + patient.UID + "/removepic") }
 				hx-patch={ "/patients/" + patient.UID + "/removepic" }
 				hx-swap="outerHTML"
 				hx-target="closest figure"
 				class="link text-xs link-secondary"
-			>{ c.l("btn.remove") }</button>
+			>{ c.l("btn.remove") }</a>
 		</figure>
 	} else {
 		<figure class="flex flex-col gap-2" id="avatar_pic">
