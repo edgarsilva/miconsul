@@ -77,7 +77,7 @@ func (s service) SearchPatientsByUser(ctx context.Context, cu models.User, query
 
 	dbquery := s.DB.WithContext(ctx).Model(&cu)
 	if query != "" {
-		dbquery.Scopes(models.GlobalFTS(query))
+		dbquery.Scopes(models.GlobalFTS("patients", query))
 	} else {
 		dbquery.Order("created_at desc")
 	}

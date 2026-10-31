@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type ModelBase struct {
@@ -109,32 +110,24 @@ func Countries() []Country {
 	return c
 }
 
-// GlobalFTS adds the necessary joins to do a Global full text search on the
-// global_fts table, as well as the order clause to rank the results.
+// GlobalFTS ranks the rows of table by a full-text search for term. Rows are
+// matched by uid through global_search_docs, which the DB keeps in sync with
+// triggers. An empty term orders by recency instead.
 //
-// You can use it with any model that saves to the global_fts table (usually
-// handle by the DB with triggers).
-//
-//	// you can use it with your model like so:
 //	s.DB.
-//		Model(model.Patient{}).
-//		Scopes(model.GlobalFTS(queryStr)).
-//		.Find(&patients)
-//
-//	// the scope adds this snippet:
-//	db.
-//		 Joins("INNER JOIN global_fts ON gid = id").
-//		 Where("global_fts MATCH ?", "\""+term+"\" * ").
-//		 Order("bm25(global_fts, 0, 1, 2, 3)")
-func GlobalFTS(term string) func(db *gorm.DB) *gorm.DB {
+//		Model(&models.Patient{}).
+//		Scopes(models.GlobalFTS("patients", term)).
+//		Find(&patients)
+func GlobalFTS(table, term string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if term == "" {
 			return db.Order("created_at desc")
 		}
 
 		return db.
-			Joins("INNER JOIN global_fts ON gid = id").
+			Joins("INNER JOIN global_search_docs ON global_search_docs.gid = ?", clause.Column{Table: table, Name: "uid"}).
+			Joins("INNER JOIN global_fts ON global_fts.rowid = global_search_docs.id").
 			Where("global_fts MATCH ?", "\""+term+"\" * ").
-			Order("bm25(global_fts, 0, 5, 3, 2)")
+			Order("bm25(global_fts, 5, 3, 2)")
 	}
 }
