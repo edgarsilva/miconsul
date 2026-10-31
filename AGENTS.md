@@ -33,6 +33,12 @@ This file provides repo-specific guidance for coding assistants working on this 
 - Keep structural refactors separate from behavior changes.
 - Avoid introducing runtime `os.Getenv` reads in application/service code; route configuration access through `internal/lib/appenv` instead. If you encounter new `os.Getenv` usage outside mailer or env-loading boundaries, warn and offer to move it into `appenv.Env`.
 - HTMX endpoints return only the fragment they swap, plus `CmpToastPartial` for a toast; never a full page narrowed with `hx-select`. `WithToast` only reaches full page renders.
+- htmx markup and handlers (JS is required; no no-JS fallbacks):
+  - Strive for hypermedia completeness: prefer anchors over buttons. Navigation, filters, timeframes and actions without form data (start/pause, remove a picture) are `<a href="<route>">` links, with htmx setting the method (`hx-get`/`hx-post`/`hx-patch`/`hx-delete`). Use a `<button>` only where an anchor can't work, like submitting a `<form>` (inside it, or linked with `form=`). Don't turn an existing link into a button without asking.
+  - Put `hx-*` straight on another element only when wrapping it in a form would add needless DOM (search inputs, toggles, pickers). Never put `hx-*` on a `div`/`span` to fake a button or link.
+  - Include the hypermedia attributes even though htmx makes the request: links keep their `href`; forms keep `method="POST"` and an `action` pointing at the resource the `hx-*` verb targets (`action="/clinics/<uid>"` next to `hx-patch="/clinics/<uid>"`). Don't add no-JS fallback routes (`POST /:id/patch`-style) to back them.
+  - Handlers have one htmx-shaped path for every client. They return the fragment they swap, `s.HXRedirect(c, path)` to navigate after a mutation, or `RedirectWithToast`/`RedirectWithAlert` when the next page should show a message. Only `redirectWithFlash`, the auth middleware and logout check `HX-Request`.
+  - URLs pushed to the address bar (`hx-push-url`, `HX-Push-Url`) are page routes, so a shared link with filters, a search or an id loads the full page.
 - Request locals boundary:
   - `c.Locals(...)` writes are allowed in middleware auth/session identity binding.
   - `c.Locals(...)` reads are allowed only in `internal/views/ctx.go` and `internal/server/request.go`.

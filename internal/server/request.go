@@ -42,8 +42,3 @@ func (s *Server) IsHTMX(c fiber.Ctx) bool {
 	isHTMX := c.Get("HX-Request", "")
 	return isHTMX == "true"
 }
-
-// NotHTMX returns true if the request was not initiated by HTMX.
-func (s *Server) NotHTMX(c fiber.Ctx) bool {
-	return !s.IsHTMX(c)
-}

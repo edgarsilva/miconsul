@@ -69,7 +69,6 @@ func (s *service) HandleProfilePage(c fiber.Ctx) error {
 // HandleUpdateProfile updates the current user's profile data. A new locale
 // is also saved to the locale cookie, and HTMX requests reload the page so
 // the whole layout switches language.
-// POST: /profile
 func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
@@ -103,13 +102,7 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 
 	if locale := userUpds.Locale; locale != "" && locale != s.CurrentLocale(c) {
 		c.Cookie(s.NewCookie("locale", locale, localeCookieTTL))
-		if s.IsHTMX(c) {
-			c.Set("HX-Refresh", "true")
-		}
-	}
-
-	if s.NotHTMX(c) {
-		return s.RedirectWithToast(c, "/profile", "Profile updated", "success")
+		c.Set("HX-Refresh", "true")
 	}
 
 	vc := view.NewCtx(c)
@@ -187,10 +180,6 @@ func (s *service) HandleRemoveProfilePic(c fiber.Ctx) error {
 		log.Warn("refresh signed-in user after profile picture removal:", err)
 	}
 
-	if s.NotHTMX(c) {
-		return s.RedirectWithToast(c, "/profile", "Profile picture removed", "success")
-	}
-
 	return s.RedirectWithToast(c, "/profile", "Profile picture removed", "success")
 }
 
@@ -205,10 +194,6 @@ func (s *service) HandleAdminRemoveProfilePic(c fiber.Ctx) error {
 	}
 	if err != nil {
 		return s.RedirectWithToast(c, "/admin/users", "Failed to remove profile picture", "error")
-	}
-
-	if s.NotHTMX(c) {
-		return s.RedirectWithToast(c, "/admin/users/"+updatedUser.UID, "Profile picture removed", "success")
 	}
 
 	vc := view.NewCtx(c)
@@ -237,10 +222,6 @@ func (s *service) HandleAdminUpdateUser(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/admin/users/"+userID, "Failed to update user", "error")
 	}
 
-	if s.NotHTMX(c) {
-		return s.RedirectWithToast(c, "/admin/users/"+updatedUser.UID, "User updated", "success")
-	}
-
 	vc := view.NewCtx(c)
 	return view.Render(c, templ.Join(
 		view.UserProfileSection(vc, updatedUser),
@@ -258,13 +239,4 @@ func (s *service) HandleAPIUsers(c fiber.Ctx) error {
 
 	out := newAPIUsersOutput(users)
 	return c.Status(fiber.StatusOK).JSON(out)
-}
-
-func (s *service) respondWithRedirect(c fiber.Ctx, redirectPath string) error {
-	if s.NotHTMX(c) {
-		return s.Redirect(c, redirectPath)
-	}
-
-	c.Set("HX-Redirect", redirectPath)
-	return c.SendStatus(fiber.StatusNoContent)
 }

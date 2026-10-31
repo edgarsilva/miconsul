@@ -11,6 +11,12 @@ func (s *Server) Redirect(c fiber.Ctx, path string) error {
 	return c.Redirect().Status(fiber.StatusSeeOther).To(path)
 }
 
+// HXRedirect tells htmx to load path as a full page navigation.
+func (s *Server) HXRedirect(c fiber.Ctx, path string) error {
+	c.Set("HX-Redirect", path)
+	return c.SendStatus(fiber.StatusNoContent)
+}
+
 // RedirectWithToast redirects to path and shows a toast on the next page load
 // through a flash message, so the URL never carries the message. HTMX requests
 // get HX-Redirect instead of a 303.

@@ -699,7 +699,7 @@ templ AppointmentForm(c *Ctx, appointment models.Appointment) {
 		enctype="multipart/form-data"
 		if appointment.UID != "" && appointment.UID != "new" {
 			hx-patch={ "/appointments/" + appointment.UID }
-			action={ templ.URL("/appointments/" + appointment.UID + "/patch") }
+			action={ templ.URL("/appointments/" + appointment.UID) }
 		} else {
 			hx-post="/appointments"
 			action="/appointments"

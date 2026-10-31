@@ -149,13 +149,16 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 		req4 := httptest.NewRequest(http.MethodPost, "/appointments/"+apnt.UID+"/complete", strings.NewReader(completeForm.Encode()))
 		req4.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		resp4, err := app.Test(req4)
-		if err != nil || resp4.StatusCode != fiber.StatusSeeOther {
-			t.Fatalf("complete expected 303, got status=%d err=%v", resp4.StatusCode, err)
+		if err != nil || resp4.StatusCode != fiber.StatusNoContent {
+			t.Fatalf("complete expected 204, got status=%d err=%v", resp4.StatusCode, err)
+		}
+		if got := resp4.Header.Get("HX-Redirect"); got != "/appointments" {
+			t.Fatalf("complete HX-Redirect = %q, want /appointments", got)
 		}
 
 		resp5, err := app.Test(httptest.NewRequest(http.MethodPost, "/appointments/"+apnt.UID+"/cancel", nil))
-		if err != nil || resp5.StatusCode != fiber.StatusSeeOther {
-			t.Fatalf("cancel expected 303, got status=%d err=%v", resp5.StatusCode, err)
+		if err != nil || resp5.StatusCode != fiber.StatusNoContent {
+			t.Fatalf("cancel expected 204, got status=%d err=%v", resp5.StatusCode, err)
 		}
 
 		resp6, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/new/pricefrg/"+clinic.UID, nil))
@@ -171,8 +174,8 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 		}
 
 		resp8, err := app.Test(httptest.NewRequest(http.MethodPost, "/appointments/"+apnt.UID+"/delete", nil))
-		if err != nil || resp8.StatusCode != fiber.StatusSeeOther {
-			t.Fatalf("delete expected 303, got status=%d err=%v", resp8.StatusCode, err)
+		if err != nil || resp8.StatusCode != fiber.StatusNoContent {
+			t.Fatalf("delete expected 204, got status=%d err=%v", resp8.StatusCode, err)
 		}
 	})
 
@@ -543,7 +546,7 @@ func TestIndexSearchToasts(t *testing.T) {
 		{"short term", "ab", true, fiber.StatusOK, "at least 3 characters"},
 		// The test DB has no FTS table, so any real search term fails.
 		{"search error", "alpha", true, fiber.StatusInternalServerError, "couldn&#39;t be completed"},
-		{"short term without htmx", "ab", false, fiber.StatusSeeOther, "at least 3 characters"},
+		{"short term without htmx", "ab", false, fiber.StatusOK, "at least 3 characters"},
 	}
 
 	for _, tt := range tests {
@@ -563,15 +566,6 @@ func TestIndexSearchToasts(t *testing.T) {
 			resp, err := app.Test(req)
 			if err != nil || resp.StatusCode != tt.wantStatus {
 				t.Fatalf("expected %d, got status=%d err=%v", tt.wantStatus, resp.StatusCode, err)
-			}
-			if !tt.htmx {
-				if got := resp.Header.Get("Location"); got != "/appointments" {
-					t.Errorf("redirect = %q, want /appointments", got)
-				}
-				if msg, _ := servertest.FlashToast(t, resp); !strings.Contains(msg, tt.wantToast) {
-					t.Errorf("flash toast = %q, want %q", msg, tt.wantToast)
-				}
-				return
 			}
 			if got := resp.Header.Get("HX-Redirect"); got != "" {
 				t.Errorf("search redirected to %q", got)

@@ -7,8 +7,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"miconsul/internal/server"
-
 	"github.com/gofiber/fiber/v3"
 	"gorm.io/gorm"
 )
@@ -87,43 +85,4 @@ func TestRenderAppointmentNotFoundPage(t *testing.T) {
 	if resp.StatusCode != fiber.StatusOK {
 		t.Fatalf("expected 200, got %d", resp.StatusCode)
 	}
-}
-
-func TestRespondWithRedirect(t *testing.T) {
-	svc := &service{Server: &server.Server{}}
-
-	t.Run("non-htmx redirects", func(t *testing.T) {
-		app := fiber.New()
-		app.Get("/appointments", func(c fiber.Ctx) error {
-			return svc.respondWithRedirect(c, "/appointments?toast=ok")
-		})
-
-		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments", nil))
-		if err != nil {
-			t.Fatalf("request failed: %v", err)
-		}
-		if resp.StatusCode != fiber.StatusSeeOther {
-			t.Fatalf("expected 303, got %d", resp.StatusCode)
-		}
-	})
-
-	t.Run("htmx sets HX-Redirect and status", func(t *testing.T) {
-		app := fiber.New()
-		app.Get("/appointments", func(c fiber.Ctx) error {
-			return svc.respondWithRedirect(c, "/appointments?toast=ok")
-		})
-
-		req := httptest.NewRequest(http.MethodGet, "/appointments", nil)
-		req.Header.Set("HX-Request", "true")
-		resp, err := app.Test(req)
-		if err != nil {
-			t.Fatalf("request failed: %v", err)
-		}
-		if resp.StatusCode != fiber.StatusNoContent {
-			t.Fatalf("expected 204, got %d", resp.StatusCode)
-		}
-		if got := resp.Header.Get("HX-Redirect"); got != "/appointments?toast=ok" {
-			t.Fatalf("expected HX-Redirect header, got %q", got)
-		}
-	})
 }

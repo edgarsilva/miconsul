@@ -124,7 +124,7 @@ templ ClinicDeleteForm(c *Ctx, clinic models.Clinic) {
 	<form
 		class="ml-auto"
 		method="POST"
-		action={ templ.URL("/clinics/"+clinic.UID) + "/delete" }
+		action={ templ.URL("/clinics/" + clinic.UID) }
 		hx-delete={ "/clinics/" + clinic.UID }
 		hx-confirm={ c.l("str.are_you_sure") }
 		hx-target="this"
@@ -365,7 +365,7 @@ templ ClinicForm(c *Ctx, clinic models.Clinic) {
 			action="/clinics"
 		} else {
 			hx-patch={ "/clinics/" + clinic.UID }
-			action={ templ.URL("/clinics/" + clinic.UID + "/patch") }
+			action={ templ.URL("/clinics/" + clinic.UID) }
 		}
 		hx-target="closest #clinic_profile_cont"
 		hx-swap="outerHTML"

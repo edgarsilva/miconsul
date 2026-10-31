@@ -20,8 +20,8 @@ func TestPatientHandlers(t *testing.T) {
 		patient := h.createPatient(u.ID, "Patient One")
 
 		resp, _ := h.doRequest(requestOptions{
-			method:    http.MethodPost,
-			path:      "/patients/" + patient.UID + "/patch",
+			method:    http.MethodPatch,
+			path:      "/patients/" + patient.UID,
 			authToken: token,
 			htmx:      true,
 			body: url.Values{
@@ -51,8 +51,8 @@ func TestPatientHandlers(t *testing.T) {
 		patient := h.createPatient(u.ID, "Patient Stable")
 
 		resp, _ := h.doRequest(requestOptions{
-			method:    http.MethodPost,
-			path:      "/patients/" + patient.UID + "/patch",
+			method:    http.MethodPatch,
+			path:      "/patients/" + patient.UID,
 			authToken: token,
 			htmx:      true,
 			body: url.Values{
@@ -72,8 +72,8 @@ func TestPatientHandlers(t *testing.T) {
 
 	t.Run("update returns not found for unknown patient", func(t *testing.T) {
 		resp, _ := h.doRequest(requestOptions{
-			method:    http.MethodPost,
-			path:      "/patients/ptnt_missing/patch",
+			method:    http.MethodPatch,
+			path:      "/patients/ptnt_missing",
 			authToken: token,
 			htmx:      true,
 			body: url.Values{
@@ -95,8 +95,8 @@ func TestPatientHandlers(t *testing.T) {
 		patient := h.createPatient(u.ID, "Patient Malformed")
 
 		resp, _ := h.doRequest(requestOptions{
-			method:     http.MethodPost,
-			path:       "/patients/" + patient.UID + "/patch",
+			method:     http.MethodPatch,
+			path:       "/patients/" + patient.UID,
 			authToken:  token,
 			htmx:       true,
 			contentTyp: "application/json",
@@ -114,8 +114,8 @@ func TestPatientHandlers(t *testing.T) {
 		patient := h.createPatient(u.ID, "Patient Invalid")
 
 		resp, _ := h.doRequest(requestOptions{
-			method:    http.MethodPost,
-			path:      "/patients/" + patient.UID + "/patch",
+			method:    http.MethodPatch,
+			path:      "/patients/" + patient.UID,
 			authToken: token,
 			htmx:      true,
 			body: url.Values{
@@ -135,8 +135,8 @@ func TestPatientHandlers(t *testing.T) {
 		ownerPatient := h.createPatient(owner.ID, "Owner Patient")
 
 		resp, _ := h.doRequest(requestOptions{
-			method:    http.MethodPost,
-			path:      "/patients/" + ownerPatient.UID + "/patch",
+			method:    http.MethodPatch,
+			path:      "/patients/" + ownerPatient.UID,
 			authToken: token,
 			htmx:      true,
 			body: url.Values{

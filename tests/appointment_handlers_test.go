@@ -20,8 +20,8 @@ func TestAppointmentHandlers(t *testing.T) {
 
 	t.Run("update returns not found for unknown appointment", func(t *testing.T) {
 		resp, _ := h.doRequest(requestOptions{
-			method:    http.MethodPost,
-			path:      "/appointments/apnt_missing/patch",
+			method:    http.MethodPatch,
+			path:      "/appointments/apnt_missing",
 			authToken: token,
 			htmx:      true,
 			body: url.Values{
@@ -44,8 +44,8 @@ func TestAppointmentHandlers(t *testing.T) {
 		appt := h.createAppointment(u.ID, patient.ID, clinic.ID)
 
 		resp, _ := h.doRequest(requestOptions{
-			method: http.MethodPost,
-			path:   "/appointments/" + appt.UID + "/patch",
+			method: http.MethodPatch,
+			path:   "/appointments/" + appt.UID,
 			accept: "application/json",
 			body: url.Values{
 				"duration": {"30"},
@@ -64,8 +64,8 @@ func TestAppointmentHandlers(t *testing.T) {
 		appt := h.createAppointment(u.ID, patient.ID, clinic.ID)
 
 		resp, _ := h.doRequest(requestOptions{
-			method:     http.MethodPost,
-			path:       "/appointments/" + appt.UID + "/patch",
+			method:     http.MethodPatch,
+			path:       "/appointments/" + appt.UID,
 			authToken:  token,
 			htmx:       true,
 			contentTyp: "application/json",
@@ -215,8 +215,8 @@ func TestAppointmentHandlers(t *testing.T) {
 		ownerAppt := h.createAppointment(owner.ID, ownerPatient.ID, ownerClinic.ID)
 
 		resp, _ := h.doRequest(requestOptions{
-			method:    http.MethodPost,
-			path:      "/appointments/" + ownerAppt.UID + "/patch",
+			method:    http.MethodPatch,
+			path:      "/appointments/" + ownerAppt.UID,
 			authToken: token,
 			htmx:      true,
 			body: url.Values{

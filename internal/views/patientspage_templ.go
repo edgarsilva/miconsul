@@ -429,9 +429,9 @@ func PatientDeleteForm(c *Ctx, patient models.Patient) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var19 string
-		templ_7745c5c3_Var19, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.URL("/patients/"+patient.UID) + "/delete").ResolveURL(ctx)
+		templ_7745c5c3_Var19, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.URL("/patients/" + patient.UID)).ResolveURL(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/patientspage.templ`, Line: 141, Col: 58}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/patientspage.templ`, Line: 141, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 		if templ_7745c5c3_Err != nil {
@@ -1588,9 +1588,9 @@ func PatientForm(c *Ctx, patient models.Patient) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var87 string
-			templ_7745c5c3_Var87, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.URL("/patients/" + patient.UID + "/patch")).ResolveURL(ctx)
+			templ_7745c5c3_Var87, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.URL("/patients/" + patient.UID)).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/patientspage.templ`, Line: 497, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/patientspage.templ`, Line: 497, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var87)
 			if templ_7745c5c3_Err != nil {
