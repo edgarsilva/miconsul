@@ -218,7 +218,7 @@ func TestGlobalFTSScopeSQL(t *testing.T) {
 		t.Fatalf("open sqlite dry-run: %v", err)
 	}
 
-	stmtNoTerm := db.Model(&Patient{}).Scopes(GlobalFTS("patients", "")).Find(&[]Patient{}).Statement
+	stmtNoTerm := db.Model(&Patient{}).Scopes(GlobalFTS("")).Find(&[]Patient{}).Statement
 	sqlNoTerm := stmtNoTerm.SQL.String()
 	if strings.Contains(sqlNoTerm, "global_fts") {
 		t.Fatalf("expected empty term scope to skip global_fts join, got %q", sqlNoTerm)
@@ -227,7 +227,7 @@ func TestGlobalFTSScopeSQL(t *testing.T) {
 		t.Fatalf("expected empty term scope to order by recency, got %q", sqlNoTerm)
 	}
 
-	stmtTerm := db.Model(&Patient{}).Scopes(GlobalFTS("patients", "alma")).Find(&[]Patient{}).Statement
+	stmtTerm := db.Model(&Patient{}).Scopes(GlobalFTS("alma")).Find(&[]Patient{}).Statement
 	sqlTerm := stmtTerm.SQL.String()
 	if !strings.Contains(sqlTerm, "INNER JOIN global_search_docs ON global_search_docs.gid = `patients`.`uid`") {
 		t.Fatalf("expected search docs join on uid for non-empty term, got %q", sqlTerm)

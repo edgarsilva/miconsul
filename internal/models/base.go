@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -111,20 +112,27 @@ func Countries() []Country {
 	return c
 }
 
-// GlobalFTS ranks the rows of table by a full-text search for term. Rows are
-// matched by uid through global_search_docs, which the DB keeps in sync with
-// triggers. term is matched as a literal prefix phrase, so FTS5 query syntax
-// in it has no effect. An empty term orders by recency instead.
+// GlobalFTS ranks the rows of the query's model by a full-text search for
+// term. Rows are matched by uid through global_search_docs, which the DB keeps
+// in sync with triggers. term is matched as a literal prefix phrase, so FTS5
+// query syntax in it has no effect. An empty term orders by recency instead.
 //
 //	s.DB.
 //		Model(&models.Patient{}).
-//		Scopes(models.GlobalFTS("patients", term)).
+//		Scopes(models.GlobalFTS(term)).
 //		Find(&patients)
-func GlobalFTS(table, term string) func(db *gorm.DB) *gorm.DB {
+func GlobalFTS(term string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if term == "" {
 			return db.Order("created_at desc")
 		}
+
+		stmt := &gorm.Statement{DB: db}
+		if err := stmt.Parse(db.Statement.Model); err != nil {
+			db.AddError(fmt.Errorf("resolve global fts table: %w", err))
+			return db
+		}
+		table := stmt.Schema.Table
 
 		phrase := "\"" + strings.ReplaceAll(term, "\"", "\"\"") + "\" *"
 

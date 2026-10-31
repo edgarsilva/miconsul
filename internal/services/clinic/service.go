@@ -48,7 +48,7 @@ func (s service) FindClinicsBySearchTerm(ctx context.Context, cu models.User, se
 
 	err := s.DB.WithContext(ctx).
 		Model(&cu).
-		Scopes(models.GlobalFTS("clinics", searchTerm)).
+		Scopes(models.GlobalFTS(searchTerm)).
 		Limit(QUERY_LIMIT).
 		Association("Clinics").
 		Find(&clinics)

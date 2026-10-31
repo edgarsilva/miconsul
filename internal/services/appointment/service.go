@@ -457,7 +457,7 @@ func (s *service) findPatientIDsBySearchTerm(ctx context.Context, userID uint, s
 	err := s.DB.WithContext(ctx).
 		Model(&models.Patient{}).
 		Where("user_id = ?", userID).
-		Scopes(models.GlobalFTS("patients", searchTerm)).
+		Scopes(models.GlobalFTS(searchTerm)).
 		Limit(50).
 		Pluck("patients.id", &ids).
 		Error
@@ -477,7 +477,7 @@ func (s *service) findClinicIDsBySearchTerm(ctx context.Context, userID uint, se
 	err := s.DB.WithContext(ctx).
 		Model(&models.Clinic{}).
 		Where("user_id = ?", userID).
-		Scopes(models.GlobalFTS("clinics", searchTerm)).
+		Scopes(models.GlobalFTS(searchTerm)).
 		Limit(50).
 		Pluck("clinics.id", &ids).
 		Error
@@ -494,7 +494,7 @@ func (s *service) FindClinicsBySearchTerm(ctx context.Context, userID uint, sear
 	err := s.DB.WithContext(ctx).
 		Model(&models.Clinic{}).
 		Where("user_id = ?", userID).
-		Scopes(models.GlobalFTS("clinics", searchTerm)).
+		Scopes(models.GlobalFTS(searchTerm)).
 		Limit(10).
 		Find(&clinics).
 		Error
@@ -527,7 +527,7 @@ func (s *service) FindPatientsBySearchTerm(ctx context.Context, userID uint, sea
 	err := s.DB.WithContext(ctx).
 		Model(&models.Patient{}).
 		Where("user_id = ?", userID).
-		Scopes(models.GlobalFTS("patients", searchTerm)).
+		Scopes(models.GlobalFTS(searchTerm)).
 		Limit(10).
 		Find(&patients).
 		Error

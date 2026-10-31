@@ -49,7 +49,7 @@ func TestGlobalFTSKeepsPatientsAndClinicsApart(t *testing.T) {
 	t.Run("user association search keeps kinds apart", func(t *testing.T) {
 		var clinics []models.Clinic
 		err := db.Model(&user).
-			Scopes(models.GlobalFTS("clinics", "alma")).
+			Scopes(models.GlobalFTS("alma")).
 			Association("Clinics").
 			Find(&clinics)
 		if err != nil {
@@ -61,7 +61,7 @@ func TestGlobalFTSKeepsPatientsAndClinicsApart(t *testing.T) {
 
 		var patients []models.Patient
 		err = db.Model(&user).
-			Scopes(models.GlobalFTS("patients", "alma")).
+			Scopes(models.GlobalFTS("alma")).
 			Association("Patients").
 			Find(&patients)
 		if err != nil {
@@ -185,7 +185,7 @@ func searchPatientUIDs(t *testing.T, db *gorm.DB, term string) []string {
 
 	var uids []string
 	err := db.Model(&models.Patient{}).
-		Scopes(models.GlobalFTS("patients", term)).
+		Scopes(models.GlobalFTS(term)).
 		Pluck("patients.uid", &uids).
 		Error
 	if err != nil {
@@ -200,7 +200,7 @@ func searchClinicUIDs(t *testing.T, db *gorm.DB, term string) []string {
 
 	var uids []string
 	err := db.Model(&models.Clinic{}).
-		Scopes(models.GlobalFTS("clinics", term)).
+		Scopes(models.GlobalFTS(term)).
 		Pluck("clinics.uid", &uids).
 		Error
 	if err != nil {
