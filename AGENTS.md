@@ -33,6 +33,12 @@ This file provides repo-specific guidance for coding assistants working on this 
 - Keep structural refactors separate from behavior changes.
 - Avoid introducing runtime `os.Getenv` reads in application/service code; route configuration access through `internal/lib/appenv` instead. If you encounter new `os.Getenv` usage outside mailer or env-loading boundaries, warn and offer to move it into `appenv.Env`.
 - HTMX endpoints return only the fragment they swap, plus `CmpToastPartial` for a toast; never a full page narrowed with `hx-select`. `WithToast` only reaches full page renders.
+- htmx markup and handlers (JS is required; no no-JS fallbacks):
+  - Build on semantic elements: mutations go through a `<form>` (a `<button>` inside it, or linked with `form=`), navigation through `<a href>`. htmx enhances them with `hx-post`/`hx-patch`/`hx-delete`/`hx-get`.
+  - Put `hx-*` straight on another element only when wrapping it in a form would add needless DOM (search inputs, toggles, pickers). Never put `hx-*` on a `div`/`span` to fake a button or link.
+  - Don't add fallbacks for requests without htmx: no `action`/`method` next to `hx-post`/`hx-patch`/`hx-put`/`hx-delete`, no `POST /:id/patch`-style routes. `hx-boost` forms keep their `action`/`method`, since boost submits through them.
+  - Handlers have one htmx-shaped path for every client. They return the fragment they swap, `s.HXRedirect(c, path)` to navigate after a mutation, or `RedirectWithToast`/`RedirectWithAlert` when the next page should show a message. Only `redirectWithFlash`, the auth middleware and logout check `HX-Request`.
+  - URLs pushed to the address bar (`hx-push-url`, `HX-Push-Url`) are page routes, so a shared link with filters, a search or an id loads the full page.
 - Request locals boundary:
   - `c.Locals(...)` writes are allowed in middleware auth/session identity binding.
   - `c.Locals(...)` reads are allowed only in `internal/views/ctx.go` and `internal/server/request.go`.
