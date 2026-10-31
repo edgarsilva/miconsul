@@ -123,6 +123,8 @@ templ ClinicLi(c *Ctx, clinic models.Clinic) {
 templ ClinicDeleteForm(c *Ctx, clinic models.Clinic) {
 	<form
 		class="ml-auto"
+		method="POST"
+		action={ templ.URL("/clinics/" + clinic.UID) }
 		hx-delete={ "/clinics/" + clinic.UID }
 		hx-confirm={ c.l("str.are_you_sure") }
 		hx-target="this"
@@ -356,11 +358,14 @@ templ ClinicProfile(c *Ctx, clinic models.Clinic) {
 templ ClinicForm(c *Ctx, clinic models.Clinic) {
 	<form
 		class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2"
+		method="POST"
 		enctype="multipart/form-data"
 		if clinic.UID == "" || clinic.UID == "new" {
 			hx-post="/clinics"
+			action="/clinics"
 		} else {
 			hx-patch={ "/clinics/" + clinic.UID }
+			action={ templ.URL("/clinics/" + clinic.UID) }
 		}
 		hx-target="closest #clinic_profile_cont"
 		hx-swap="outerHTML"

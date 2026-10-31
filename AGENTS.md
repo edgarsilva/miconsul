@@ -36,7 +36,7 @@ This file provides repo-specific guidance for coding assistants working on this 
 - htmx markup and handlers (JS is required; no no-JS fallbacks):
   - Build on semantic elements: actions that send form data go through a `<form>` (a `<button>` inside it, or linked with `form=`). Actions without form data (start/pause, remove a picture, navigation) are `<a href="<route>">` links, so the route stays visible; htmx sets the method with `hx-post`/`hx-patch`/`hx-delete`/`hx-get`. Don't turn an existing link into a button without asking.
   - Put `hx-*` straight on another element only when wrapping it in a form would add needless DOM (search inputs, toggles, pickers). Never put `hx-*` on a `div`/`span` to fake a button or link.
-  - Don't add fallbacks for requests without htmx: no `action`/`method` next to `hx-post`/`hx-patch`/`hx-put`/`hx-delete`, no `POST /:id/patch`-style routes. `hx-boost` forms keep their `action`/`method`, since boost submits through them.
+  - Keep hypermedia attributes as context: forms keep `method="POST"` and an `action` pointing at the resource the `hx-*` verb targets (`action="/clinics/<uid>"` next to `hx-patch="/clinics/<uid>"`), and links keep their `href`. Don't add no-JS fallback routes (`POST /:id/patch`-style) to back them.
   - Handlers have one htmx-shaped path for every client. They return the fragment they swap, `s.HXRedirect(c, path)` to navigate after a mutation, or `RedirectWithToast`/`RedirectWithAlert` when the next page should show a message. Only `redirectWithFlash`, the auth middleware and logout check `HX-Request`.
   - URLs pushed to the address bar (`hx-push-url`, `HX-Push-Url`) are page routes, so a shared link with filters, a search or an id loads the full page.
 - Request locals boundary:

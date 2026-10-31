@@ -96,6 +96,8 @@ templ AppointmentStart(c *Ctx, appointment models.Appointment) {
 				</div>
 				<form
 					id="save_appointment_session"
+					method="POST"
+					action={ templ.URL("/appointments/" + appointment.UID + "/save-session") }
 					hx-post={ "/appointments/" + appointment.UID + "/save-session" }
 				>
 					<div class="px-4 py-6 sm:p-8">

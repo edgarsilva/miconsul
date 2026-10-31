@@ -137,6 +137,8 @@ templ PatientLi(c *Ctx, patient models.Patient) {
 
 templ PatientDeleteForm(c *Ctx, patient models.Patient) {
 	<form
+		method="POST"
+		action={ templ.URL("/patients/" + patient.UID) }
 		hx-delete={ "/patients/" + patient.UID }
 		hx-confirm={ c.l("str.are_you_sure") }
 		hx-target="#patients_list"
@@ -488,11 +490,14 @@ templ PatientProfile(c *Ctx, patient models.Patient) {
 templ PatientForm(c *Ctx, patient models.Patient) {
 	<form
 		class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2"
+		method="POST"
 		enctype="multipart/form-data"
 		if patient.UID != "" && patient.UID != "new" {
 			hx-patch={ "/patients/" + patient.UID }
+			action={ templ.URL("/patients/" + patient.UID) }
 		} else {
 			hx-post="/patients"
+			action="/patients"
 		}
 		hx-target="closest #patient_profile_cont"
 		hx-swap="outerHTML"
