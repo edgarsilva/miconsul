@@ -170,8 +170,8 @@ func TestClinicHandlers(t *testing.T) {
 			htmx:      true,
 		})
 
-		if resp.StatusCode != http.StatusOK {
-			t.Fatalf("expected 200 for clinic delete, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for clinic delete, got %d", resp.StatusCode)
 		}
 		if got := resp.Header.Get("HX-Redirect"); got != "/clinics" {
 			t.Fatalf("expected HX-Redirect /clinics, got %q", got)

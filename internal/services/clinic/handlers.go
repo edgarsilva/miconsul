@@ -150,8 +150,7 @@ func (s *service) HandleClinicsDelete(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/clinics", "Failed to delete clinic", "error")
 	}
 
-	c.Set("HX-Redirect", "/clinics")
-	return c.SendStatus(fiber.StatusOK)
+	return s.HXRedirect(c, "/clinics")
 }
 
 // HandleClinicsIndexSearch searches clinics and returns an HTML fragment to be
