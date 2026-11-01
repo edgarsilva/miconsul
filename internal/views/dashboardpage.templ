@@ -19,7 +19,7 @@ type DashboardStats struct {
 templ DashboardPage(c *Ctx, stats DashboardStats, appointments []models.Appointment, favClinic models.Clinic, feedEvents []models.FeedEvent) {
 	@DefaultLayout(c) {
 		<div id="content" class="container md:mx-auto md:px-4">
-			@MonthTrends(c, stats)
+			@DashboardMonthTrends(c, stats)
 			<div class="flex-1 grid grid-cols-3 gap-5 mt-8">
 				<section
 					class="col-span-3 lg:col-span-2 order-1 lg:order-1"
@@ -29,8 +29,8 @@ templ DashboardPage(c *Ctx, stats DashboardStats, appointments []models.Appointm
 				<section
 					class="col-span-3 lg:col-span-1 order-2 lg:order-2 flex flex-col gap-8"
 				>
-					@Clinic(c, favClinic)
-					@Feed(c, feedEvents)
+					@DashboardFavoriteClinic(c, favClinic)
+					@DashboardFeed(c, feedEvents)
 				</section>
 			</div>
 		</div>
@@ -48,7 +48,7 @@ templ DashboardAppointmentsSection(c *Ctx, appointments []models.Appointment) {
 	})
 }
 
-templ MonthTrends(c *Ctx, stats DashboardStats) {
+templ DashboardMonthTrends(c *Ctx, stats DashboardStats) {
 	<div>
 		<h3 class="sr-only">{ c.l("str.stats") }</h3>
 		<dl class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -132,7 +132,7 @@ templ MonthTrends(c *Ctx, stats DashboardStats) {
 	</div>
 }
 
-templ Clinic(c *Ctx, clinic models.Clinic) {
+templ DashboardFavoriteClinic(c *Ctx, clinic models.Clinic) {
 	if clinic.UID != "" {
 		<div class="app-card">
 			<div class="relative flex flex-wrap">
@@ -387,7 +387,7 @@ templ feedEventIcon(action string) {
 	}
 }
 
-templ Feed(c *Ctx, events []models.FeedEvent) {
+templ DashboardFeed(c *Ctx, events []models.FeedEvent) {
 	<div class="app-card">
 		<h3 class="font-semibold text-xl mb-6">My feed</h3>
 		if len(events) == 0 {
