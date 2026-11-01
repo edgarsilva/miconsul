@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"miconsul/internal/server/servertest"
+	view "miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -27,7 +28,7 @@ func TestRedirectWithToast(t *testing.T) {
 			s := &Server{}
 			app := fiber.New()
 			app.Post("/", func(c fiber.Ctx) error {
-				return s.RedirectWithToast(c, "/clinics", "Clinic saved", "success")
+				return s.RedirectWithToast(c, "/clinics", "Clinic saved", view.LevelSuccess)
 			})
 
 			req := httptest.NewRequest(http.MethodPost, "/", nil)
@@ -59,7 +60,7 @@ func TestRedirectWithAlert(t *testing.T) {
 	s := &Server{}
 	app := fiber.New()
 	app.Get("/", func(c fiber.Ctx) error {
-		return s.RedirectWithAlert(c, "/signin", "Email confirmed", "success")
+		return s.RedirectWithAlert(c, "/signin", "Email confirmed", view.LevelSuccess)
 	})
 
 	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/", nil))

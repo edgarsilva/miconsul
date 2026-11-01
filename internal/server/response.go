@@ -3,6 +3,8 @@ package server
 import (
 	"os"
 
+	view "miconsul/internal/views"
+
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -20,15 +22,15 @@ func (s *Server) HXRedirect(c fiber.Ctx, path string) error {
 // RedirectWithToast redirects to path and shows a toast on the next page load
 // through a flash message, so the URL never carries the message. HTMX requests
 // get HX-Redirect instead of a 303.
-func (s *Server) RedirectWithToast(c fiber.Ctx, path, msg, level string) error {
-	return s.redirectWithFlash(c, path, "toast", msg, "level", level)
+func (s *Server) RedirectWithToast(c fiber.Ctx, path, msg string, level view.Level) error {
+	return s.redirectWithFlash(c, path, "toast", msg, "level", level.String())
 }
 
 // RedirectWithAlert redirects to path and shows an inline alert on the next
 // page load through a flash message; the page renders it with CmpFlashAlert.
 // HTMX requests get HX-Redirect instead of a 303.
-func (s *Server) RedirectWithAlert(c fiber.Ctx, path, msg, level string) error {
-	return s.redirectWithFlash(c, path, "alert", msg, "alert_level", level)
+func (s *Server) RedirectWithAlert(c fiber.Ctx, path, msg string, level view.Level) error {
+	return s.redirectWithFlash(c, path, "alert", msg, "alert_level", level.String())
 }
 
 func (s *Server) SendFile(c fiber.Ctx, path string) error {

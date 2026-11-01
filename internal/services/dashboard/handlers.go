@@ -40,7 +40,7 @@ func (s *service) HandleDashboardPage(c fiber.Ctx) error {
 	vc := view.NewCtx(c)
 	if err := errors.Join(appointmentsErr, clinicErr, statsErr, feedErr); err != nil {
 		log.Error("load dashboard:", err)
-		vc = view.NewCtx(c, view.WithToast("Failed to load part of the dashboard, please try again", "", "error"))
+		vc = view.NewCtx(c, view.WithToast("Failed to load part of the dashboard, please try again", "", view.LevelError))
 	}
 
 	return view.Render(c, view.DashboardPage(vc, stats, appointments, clinic, feedEvents))
@@ -61,7 +61,7 @@ func (s *service) HandleAppointmentsSection(c fiber.Ctx) error {
 		log.Error("load dashboard appointments:", err)
 		return view.Render(c, templ.Join(
 			section,
-			view.CmpToastPartial("Failed to load appointments, please try again", "", "error"),
+			view.CmpToastPartial("Failed to load appointments, please try again", "", view.LevelError),
 		))
 	}
 

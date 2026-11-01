@@ -27,7 +27,7 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 
 	patients, err := s.FindRecentPatientsByUser(c.Context(), cu, QUERY_LIMIT)
 	if err != nil {
-		return s.RedirectWithToast(c, "/patients", "Failed to load patients", "error")
+		return s.RedirectWithToast(c, "/patients", "Failed to load patients", view.LevelError)
 	}
 
 	return view.Render(c, view.PatientIndexPage(vc, patients))
@@ -61,18 +61,18 @@ func (s *service) HandlePatientFormPage(c fiber.Ctx) error {
 
 	id := strings.TrimSpace(c.Params("id", ""))
 	if id == "" {
-		return s.RedirectWithToast(c, "/patients", "That user does not exist", "")
+		return s.RedirectWithToast(c, "/patients", "That user does not exist", view.LevelInfo)
 	}
 
 	patient, err := s.PatientForShowPage(c.Context(), cu.ID, id)
 	if errors.Is(err, ErrIDRequired) {
-		return s.RedirectWithToast(c, "/patients", "That user does not exist", "warning")
+		return s.RedirectWithToast(c, "/patients", "That user does not exist", view.LevelWarning)
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.RedirectWithToast(c, "/patients", "Patient does not exist", "warning")
+		return s.RedirectWithToast(c, "/patients", "Patient does not exist", view.LevelWarning)
 	}
 	if err != nil {
-		return s.RedirectWithToast(c, "/patients", "Failed to load patient", "error")
+		return s.RedirectWithToast(c, "/patients", "Failed to load patient", view.LevelError)
 	}
 
 	return view.Render(c, view.PatientFormPage(vc, patient))
@@ -86,7 +86,7 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 	input := patientUpsertInput{}
 	err := c.Bind().Body(&input)
 	if err != nil {
-		return s.RedirectWithToast(c, "/patients/new", "Invalid patient input", "error")
+		return s.RedirectWithToast(c, "/patients/new", "Invalid patient input", view.LevelError)
 	}
 
 	patient := input.toPatient(0, "", cu.ID)
@@ -95,7 +95,7 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 
 	err = s.CreatePatient(c.Context(), &patient)
 	if err != nil {
-		return s.RedirectWithToast(c, "/patients/new", "Failed to create new patient", "error")
+		return s.RedirectWithToast(c, "/patients/new", "Failed to create new patient", view.LevelError)
 	}
 
 	path, picErr := SaveProfilePicToDisk(c, patient, s.Env.AssetsDir)
@@ -116,7 +116,7 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 	vc := view.NewCtx(c)
 	return view.Render(c, templ.Join(
 		view.PatientProfileSection(vc, patient),
-		view.CmpToastPartial("New patient created", "", ""),
+		view.CmpToastPartial("New patient created", "", view.LevelInfo),
 	))
 }
 
@@ -131,21 +131,21 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 	}
 
 	if patientID == "" {
-		return s.RedirectWithToast(c, "/patients", "Can't update without an id", "error")
+		return s.RedirectWithToast(c, "/patients", "Can't update without an id", view.LevelError)
 	}
 
 	input := patientUpsertInput{}
 	err := c.Bind().Body(&input)
 	if err != nil {
-		return s.RedirectWithToast(c, "/patients/"+patientID, "Invalid patient input", "error")
+		return s.RedirectWithToast(c, "/patients/"+patientID, "Invalid patient input", view.LevelError)
 	}
 
 	existingPatient, findErr := s.TakePatientByID(c.Context(), cu.ID, patientID)
 	if errors.Is(findErr, gorm.ErrRecordNotFound) {
-		return s.RedirectWithToast(c, "/patients", "Patient does not exist", "warning")
+		return s.RedirectWithToast(c, "/patients", "Patient does not exist", view.LevelWarning)
 	}
 	if findErr != nil {
-		return s.RedirectWithToast(c, "/patients", "Failed to load patient", "error")
+		return s.RedirectWithToast(c, "/patients", "Failed to load patient", view.LevelError)
 	}
 
 	patient := input.toPatient(existingPatient.ID, existingPatient.UID, cu.ID)
@@ -163,16 +163,16 @@ func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
 
 	err = s.UpdatePatientByID(c.Context(), cu.ID, patientID, patient)
 	if errors.Is(err, ErrIDRequired) {
-		return s.RedirectWithToast(c, "/patients", "Can't update without an id", "error")
+		return s.RedirectWithToast(c, "/patients", "Can't update without an id", view.LevelError)
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.RedirectWithToast(c, "/patients", "Patient does not exist", "warning")
+		return s.RedirectWithToast(c, "/patients", "Patient does not exist", view.LevelWarning)
 	}
 	if err != nil {
-		return s.RedirectWithToast(c, "/patients", "Failed to update patient", "error")
+		return s.RedirectWithToast(c, "/patients", "Failed to update patient", view.LevelError)
 	}
 
-	return s.RedirectWithToast(c, "/patients/"+patientID, "Patient changes saved", "success")
+	return s.RedirectWithToast(c, "/patients/"+patientID, "Patient changes saved", view.LevelSuccess)
 }
 
 // HandleRemovePic removes the ProfilePic from the patient
@@ -186,7 +186,7 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 	}
 
 	if patientID == "" {
-		return s.RedirectWithToast(c, "/patients", "Can't remove profile picture without an id", "error")
+		return s.RedirectWithToast(c, "/patients", "Can't remove profile picture without an id", view.LevelError)
 	}
 
 	patient := models.Patient{
@@ -194,21 +194,21 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 	}
 	err := s.ClearPatientProfilePic(c.Context(), cu.ID, patientID)
 	if errors.Is(err, ErrIDRequired) {
-		return s.RedirectWithToast(c, "/patients", "Can't remove profile picture without an id", "error")
+		return s.RedirectWithToast(c, "/patients", "Can't remove profile picture without an id", view.LevelError)
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.RedirectWithToast(c, "/patients", "Patient does not exist", "warning")
+		return s.RedirectWithToast(c, "/patients", "Patient does not exist", view.LevelWarning)
 	}
 	if err != nil {
-		return s.RedirectWithToast(c, "/patients", "Failed to remove profile picture", "error")
+		return s.RedirectWithToast(c, "/patients", "Failed to remove profile picture", view.LevelError)
 	}
 
 	patient, err = s.TakePatientByID(c.Context(), cu.ID, patientID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.RedirectWithToast(c, "/patients", "Patient does not exist", "warning")
+		return s.RedirectWithToast(c, "/patients", "Patient does not exist", view.LevelWarning)
 	}
 	if err != nil {
-		return s.RedirectWithToast(c, "/patients", "Failed to load patient", "error")
+		return s.RedirectWithToast(c, "/patients", "Failed to load patient", view.LevelError)
 	}
 
 	vc := view.NewCtx(c)
@@ -222,24 +222,24 @@ func (s *service) HandleDeletePatient(c fiber.Ctx) error {
 
 	patientID := strings.TrimSpace(c.Params("id", ""))
 	if patientID == "" {
-		return s.RedirectWithToast(c, "/patients", "Can't delete without an id", "error")
+		return s.RedirectWithToast(c, "/patients", "Can't delete without an id", view.LevelError)
 	}
 
 	err := s.DeletePatientByID(c.Context(), cu.ID, patientID)
 	if errors.Is(err, ErrIDRequired) {
-		return s.RedirectWithToast(c, "/patients", "Can't delete without an id", "error")
+		return s.RedirectWithToast(c, "/patients", "Can't delete without an id", view.LevelError)
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.RedirectWithToast(c, "/patients", "Patient does not exist", "warning")
+		return s.RedirectWithToast(c, "/patients", "Patient does not exist", view.LevelWarning)
 	}
 	if err != nil {
-		return s.RedirectWithToast(c, "/patients", "Failed to delete patient", "error")
+		return s.RedirectWithToast(c, "/patients", "Failed to delete patient", view.LevelError)
 	}
 
 	searchTerm := strings.TrimSpace(c.Query("searchTerm", ""))
 	patients, err := s.SearchPatientsByUser(c.Context(), cu, searchTerm, QUERY_LIMIT)
 	if err != nil {
-		return s.RedirectWithToast(c, "/patients", "Failed to load patients", "error")
+		return s.RedirectWithToast(c, "/patients", "Failed to load patients", view.LevelError)
 	}
 
 	vc := view.NewCtx(c)

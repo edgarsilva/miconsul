@@ -9,6 +9,8 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"gorm.io/gorm"
+
+	view "miconsul/internal/views"
 )
 
 func TestAppointmentForShowPage(t *testing.T) {
@@ -75,7 +77,7 @@ func TestRenderAppointmentNotFoundPage(t *testing.T) {
 
 	app := fiber.New()
 	app.Get("/", func(c fiber.Ctx) error {
-		return svc.renderAppointmentNotFoundPage(c, "Missing appointment", "warning")
+		return svc.renderAppointmentNotFoundPage(c, "Missing appointment", view.LevelWarning)
 	})
 
 	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/", nil))

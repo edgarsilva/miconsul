@@ -27,22 +27,22 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 
 	patient, err := s.takePatientOrZero(c.Context(), cu.ID, filter.PatientUID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.RedirectWithToast(c, "/appointments", "Selected patient does not exist", "warning")
+		return s.RedirectWithToast(c, "/appointments", "Selected patient does not exist", view.LevelWarning)
 	}
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments", "Failed to load selected patient", "error")
+		return s.RedirectWithToast(c, "/appointments", "Failed to load selected patient", view.LevelError)
 	}
 
 	clinic, err := s.takeClinicOrZero(c.Context(), cu.ID, filter.ClinicUID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.RedirectWithToast(c, "/appointments", "Selected clinic does not exist", "warning")
+		return s.RedirectWithToast(c, "/appointments", "Selected clinic does not exist", view.LevelWarning)
 	}
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments", "Failed to load selected clinic", "error")
+		return s.RedirectWithToast(c, "/appointments", "Failed to load selected clinic", view.LevelError)
 	}
 	appointments, err := s.FindAppointmentsBy(c.Context(), cu.ID, filter)
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments", "Failed to load appointments", "error")
+		return s.RedirectWithToast(c, "/appointments", "Failed to load appointments", view.LevelError)
 	}
 
 	vc := view.NewCtx(c)
@@ -89,23 +89,23 @@ func (s *service) HandleShowPage(c fiber.Ctx) error {
 	appointmentID := c.Params("id", "")
 	appointment, err := s.AppointmentForShowPage(c.Context(), cu.ID, appointmentID)
 	if errors.Is(err, ErrIDRequired) {
-		return s.RedirectWithToast(c, "/appointments", "Invalid appointment id", "error")
+		return s.RedirectWithToast(c, "/appointments", "Invalid appointment id", view.LevelError)
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", "warning")
+		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", view.LevelWarning)
 	}
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments", "Failed to load appointment", "error")
+		return s.RedirectWithToast(c, "/appointments", "Failed to load appointment", view.LevelError)
 	}
 
 	clinics, err := s.FindRecentClinicsByUserID(c.Context(), cu.ID, 10)
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments", "Failed to load clinics", "error")
+		return s.RedirectWithToast(c, "/appointments", "Failed to load clinics", view.LevelError)
 	}
 
 	patients, err := s.FindRecentPatientsByUserID(c.Context(), cu.ID, 10)
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments", "Failed to load patients", "error")
+		return s.RedirectWithToast(c, "/appointments", "Failed to load patients", view.LevelError)
 	}
 
 	clinics = ensureClinicListed(clinics, appointment.Clinic)
@@ -122,26 +122,26 @@ func (s *service) HandleOpenPage(c fiber.Ctx) error {
 
 	appointmentID := c.Params("id", "")
 	if appointmentID == "" {
-		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", "warning")
+		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", view.LevelWarning)
 	}
 
 	appointment, err := s.TakeAppointmentByUID(c.Context(), cu.ID, appointmentID)
 	if errors.Is(err, ErrIDRequired) {
-		return s.RedirectWithToast(c, "/appointments", "Invalid appointment id", "error")
+		return s.RedirectWithToast(c, "/appointments", "Invalid appointment id", view.LevelError)
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) || appointment.ID == 0 {
-		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", "warning")
+		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", view.LevelWarning)
 	}
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments", "Failed to load appointment", "error")
+		return s.RedirectWithToast(c, "/appointments", "Failed to load appointment", view.LevelError)
 	}
 
 	patient, err := s.PatientForStartPage(c.Context(), cu.ID, appointment.PatientID)
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.RedirectWithToast(c, "/appointments", "The appointment patient does not exist", "warning")
+		return s.RedirectWithToast(c, "/appointments", "The appointment patient does not exist", view.LevelWarning)
 	}
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments", "Failed to load appointment patient", "error")
+		return s.RedirectWithToast(c, "/appointments", "Failed to load appointment patient", view.LevelError)
 	}
 
 	appointment.Patient = patient
@@ -161,15 +161,15 @@ func (s *service) HandleStartSession(c fiber.Ctx) error {
 	}
 
 	if appointmentID == "" {
-		return s.RedirectWithToast(c, "/appointments", "Can't find that appointment", "error")
+		return s.RedirectWithToast(c, "/appointments", "Can't find that appointment", view.LevelError)
 	}
 
 	err := s.StartAppointmentSessionByID(c.Context(), cu.ID, appointmentID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", "warning")
+		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", view.LevelWarning)
 	}
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments", "Failed to start appointment session", "error")
+		return s.RedirectWithToast(c, "/appointments", "Failed to start appointment session", view.LevelError)
 	}
 
 	vc := view.NewCtx(c)
@@ -188,15 +188,15 @@ func (s *service) HandlePauseSession(c fiber.Ctx) error {
 	}
 
 	if appointmentID == "" {
-		return s.RedirectWithToast(c, "/appointments", "Can't find that appointment", "error")
+		return s.RedirectWithToast(c, "/appointments", "Can't find that appointment", view.LevelError)
 	}
 
 	err := s.PauseAppointmentSessionByID(c.Context(), cu.ID, appointmentID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", "warning")
+		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", view.LevelWarning)
 	}
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments", "Failed to pause appointment session", "error")
+		return s.RedirectWithToast(c, "/appointments", "Failed to pause appointment session", view.LevelError)
 	}
 
 	vc := view.NewCtx(c)
@@ -215,13 +215,13 @@ func (s *service) HandleSaveSession(c fiber.Ctx) error {
 	}
 
 	if appointmentID == "" {
-		return s.RedirectWithToast(c, "/appointments", "Can't find that appointment", "error")
+		return s.RedirectWithToast(c, "/appointments", "Can't find that appointment", view.LevelError)
 	}
 
 	input := appointmentCompleteInput{}
 	err := c.Bind().Body(&input)
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments/"+appointmentID+"/open", "Invalid appointment input", "error")
+		return s.RedirectWithToast(c, "/appointments/"+appointmentID+"/open", "Invalid appointment input", view.LevelError)
 	}
 
 	updates := appointmentSessionUpdates{
@@ -233,13 +233,13 @@ func (s *service) HandleSaveSession(c fiber.Ctx) error {
 
 	err = s.SaveAppointmentSessionByID(c.Context(), cu.ID, appointmentID, updates)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", "warning")
+		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", view.LevelWarning)
 	}
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments/"+appointmentID+"/open", "Failed to save appointment session", "error")
+		return s.RedirectWithToast(c, "/appointments/"+appointmentID+"/open", "Failed to save appointment session", view.LevelError)
 	}
 
-	return s.RedirectWithToast(c, "/appointments/"+appointmentID+"/open", "Session saved", "success")
+	return s.RedirectWithToast(c, "/appointments/"+appointmentID+"/open", "Session saved", view.LevelSuccess)
 }
 
 // HandleComplete handles the request to mark an appointment as completed/done.
@@ -253,13 +253,13 @@ func (s *service) HandleComplete(c fiber.Ctx) error {
 	}
 
 	if appointmentID == "" {
-		return s.RedirectWithToast(c, "/appointments", "Can't find that appointment", "error")
+		return s.RedirectWithToast(c, "/appointments", "Can't find that appointment", view.LevelError)
 	}
 
 	input := appointmentCompleteInput{}
 	err := c.Bind().Body(&input)
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "Invalid appointment input", "error")
+		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "Invalid appointment input", view.LevelError)
 	}
 
 	appointment := appointmentCompleteUpdates{
@@ -272,10 +272,10 @@ func (s *service) HandleComplete(c fiber.Ctx) error {
 
 	err = s.CompleteAppointmentByID(c.Context(), cu.ID, appointmentID, appointment)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", "warning")
+		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", view.LevelWarning)
 	}
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments", "Failed to update appointment", "error")
+		return s.RedirectWithToast(c, "/appointments", "Failed to update appointment", view.LevelError)
 	}
 
 	return s.HXRedirect(c, "/appointments")
@@ -299,7 +299,7 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 	input := appointmentUpsertInput{}
 	err = c.Bind().Body(&input)
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments/new", "Invalid appointment input", "error")
+		return s.RedirectWithToast(c, "/appointments/new", "Invalid appointment input", view.LevelError)
 	}
 
 	appointment := models.Appointment{
@@ -320,31 +320,31 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 
 	clinic, err := s.TakeClinicByUID(c.Context(), cu.ID, input.ClinicUID)
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments/new", "Invalid clinic selected", "error")
+		return s.RedirectWithToast(c, "/appointments/new", "Invalid clinic selected", view.LevelError)
 	}
 	patient, err := s.TakePatientByUID(c.Context(), cu.ID, input.PatientUID)
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments/new", "Invalid patient selected", "error")
+		return s.RedirectWithToast(c, "/appointments/new", "Invalid patient selected", view.LevelError)
 	}
 	appointment.ClinicID = clinic.ID
 	appointment.PatientID = patient.ID
 
 	err = s.CreateAppointment(c.Context(), &appointment)
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments", "failed to create appointment", "error")
+		return s.RedirectWithToast(c, "/appointments", "failed to create appointment", view.LevelError)
 	}
 
 	appointment, err = s.TakeAppointmentByUID(c.Context(), cu.ID, appointment.UID)
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments", "Appointment created, but failed to load related records", "")
+		return s.RedirectWithToast(c, "/appointments", "Appointment created, but failed to load related records", view.LevelInfo)
 	}
 
 	err = s.DispatchBookedAlert(appointment)
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments", "Appointment created, but failed to queue alert", "")
+		return s.RedirectWithToast(c, "/appointments", "Appointment created, but failed to queue alert", view.LevelInfo)
 	}
 
-	return s.RedirectWithToast(c, "/appointments?patientId="+url.QueryEscape(patient.UID), "New appointment created", "")
+	return s.RedirectWithToast(c, "/appointments?patientId="+url.QueryEscape(patient.UID), "New appointment created", view.LevelInfo)
 }
 
 // HandleUpdate updates an appointment record for the current user.
@@ -358,15 +358,15 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	}
 
 	if appointmentID == "" {
-		return s.RedirectWithToast(c, "/appointments", "can't update without an id", "error")
+		return s.RedirectWithToast(c, "/appointments", "can't update without an id", view.LevelError)
 	}
 
 	_, err := s.TakeAppointmentByUID(c.Context(), cu.ID, appointmentID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", "warning")
+		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", view.LevelWarning)
 	}
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "Failed to load appointment", "error")
+		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "Failed to load appointment", view.LevelError)
 	}
 
 	bookedAtStr := c.FormValue("bookedAt", "")
@@ -380,7 +380,7 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	input := appointmentUpsertInput{}
 	err = c.Bind().Body(&input)
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "Invalid appointment input", "error")
+		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "Invalid appointment input", view.LevelError)
 	}
 
 	appointment := appointmentPatchUpdates{
@@ -398,25 +398,25 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 
 	clinic, err := s.TakeClinicByUID(c.Context(), cu.ID, input.ClinicUID)
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "Invalid clinic selected", "error")
+		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "Invalid clinic selected", view.LevelError)
 	}
 	patient, err := s.TakePatientByUID(c.Context(), cu.ID, input.PatientUID)
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "Invalid patient selected", "error")
+		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "Invalid patient selected", view.LevelError)
 	}
 	appointment.ClinicID = clinic.ID
 	appointment.PatientID = patient.ID
 
 	err = s.UpdateAppointmentByID(c.Context(), cu.ID, appointmentID, appointment)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", "warning")
+		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", view.LevelWarning)
 	}
 
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "failed to update appointment", "error")
+		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "failed to update appointment", view.LevelError)
 	}
 
-	return s.RedirectWithToast(c, "/appointments?patientId="+url.QueryEscape(patient.UID), "Appointment saved", "")
+	return s.RedirectWithToast(c, "/appointments?patientId="+url.QueryEscape(patient.UID), "Appointment saved", view.LevelInfo)
 }
 
 // HandleCancel cancels an appointment
@@ -430,7 +430,7 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 	}
 
 	if appointmentID == "" {
-		return s.RedirectWithToast(c, "/appointments", "Can't find that appointment", "error")
+		return s.RedirectWithToast(c, "/appointments", "Can't find that appointment", view.LevelError)
 	}
 
 	appointment := appointmentCancelUpdates{
@@ -439,10 +439,10 @@ func (s *service) HandleCancel(c fiber.Ctx) error {
 	}
 	err := s.CancelAppointmentByID(c.Context(), cu.ID, appointmentID, appointment)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", "warning")
+		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", view.LevelWarning)
 	}
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments", "Failed to update appointment", "error")
+		return s.RedirectWithToast(c, "/appointments", "Failed to update appointment", view.LevelError)
 	}
 
 	return s.HXRedirect(c, "/appointments")
@@ -455,15 +455,15 @@ func (s *service) HandleDelete(c fiber.Ctx) error {
 
 	appointmentID := c.Params("id", "")
 	if appointmentID == "" {
-		return s.RedirectWithToast(c, "/appointments", "can't delete without an id", "error")
+		return s.RedirectWithToast(c, "/appointments", "can't delete without an id", view.LevelError)
 	}
 
 	err := s.DeleteAppointmentByID(c.Context(), cu.ID, appointmentID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.RedirectWithToast(c, "/appointments", "can't find that appointment", "error")
+		return s.RedirectWithToast(c, "/appointments", "can't find that appointment", view.LevelError)
 	}
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments", "failed to delete that appointment", "error")
+		return s.RedirectWithToast(c, "/appointments", "failed to delete that appointment", view.LevelError)
 	}
 
 	return s.HXRedirect(c, "/appointments")
@@ -498,7 +498,7 @@ func (s *service) HandlePatientConfirm(c fiber.Ctx) error {
 		return s.renderReloadedPatientWarning(c, token, view.AppointmentConfirmPage)
 	}
 	if err != nil {
-		return s.renderAppointmentNotFoundPage(c, "Failed to confirm appointment", "error")
+		return s.renderAppointmentNotFoundPage(c, "Failed to confirm appointment", view.LevelError)
 	}
 
 	vc := view.NewCtx(c)
@@ -534,10 +534,10 @@ func (s *service) HandlePatientCancel(c fiber.Ctx) error {
 		return s.renderReloadedPatientWarning(c, token, view.AppointmentCancelPage)
 	}
 	if err != nil {
-		return s.renderAppointmentNotFoundPage(c, "Failed to cancel appointment", "error")
+		return s.renderAppointmentNotFoundPage(c, "Failed to cancel appointment", view.LevelError)
 	}
 
-	vc := view.NewCtx(c, view.WithToast("Success!", "", "success"))
+	vc := view.NewCtx(c, view.WithToast("Success!", "", view.LevelSuccess))
 	return view.Render(c, view.AppointmentCancelPage(vc, appointment))
 }
 
@@ -558,7 +558,7 @@ func (s *service) HandlePatientChangeDate(c fiber.Ctx) error {
 		return c.Status(fiber.StatusConflict).SendString("This appointment can no longer be changed.")
 	}
 	if err != nil {
-		return s.renderAppointmentNotFoundPage(c, "Failed to request appointment date change", "error")
+		return s.renderAppointmentNotFoundPage(c, "Failed to request appointment date change", view.LevelError)
 	}
 
 	return c.SendString("A new date for your appointment has been requested.")
@@ -681,16 +681,16 @@ func (s *service) PatientForStartPage(ctx context.Context, userID, patientID uin
 // expired patient link token, or a load error.
 func (s *service) renderPatientLinkError(c fiber.Ctx, err error) error {
 	if errors.Is(err, gorm.ErrRecordNotFound) || errors.Is(err, ErrTokenRequired) {
-		return s.renderAppointmentNotFoundPage(c, "", "")
+		return s.renderAppointmentNotFoundPage(c, "", view.LevelInfo)
 	}
 
-	return s.renderAppointmentNotFoundPage(c, "Failed to load appointment", "error")
+	return s.renderAppointmentNotFoundPage(c, "Failed to load appointment", view.LevelError)
 }
 
 // renderPatientWarning renders a patient link page for an appointment that can
 // no longer be changed.
 func (s *service) renderPatientWarning(c fiber.Ctx, appointment models.Appointment, page func(*view.Ctx, models.Appointment) templ.Component) error {
-	vc := view.NewCtx(c, view.WithToast("This appointment can no longer be changed", "", "warning"))
+	vc := view.NewCtx(c, view.WithToast("This appointment can no longer be changed", "", view.LevelWarning))
 	return view.Render(c, page(vc, appointment))
 }
 
@@ -705,7 +705,7 @@ func (s *service) renderReloadedPatientWarning(c fiber.Ctx, token string, page f
 	return s.renderPatientWarning(c, appointment, page)
 }
 
-func (s *service) renderAppointmentNotFoundPage(c fiber.Ctx, toast, level string) error {
+func (s *service) renderAppointmentNotFoundPage(c fiber.Ctx, toast string, level view.Level) error {
 	vc := view.NewCtx(c, view.WithToast(toast, "", level))
 	return view.Render(c, view.AppointmentNotFoundPage(vc))
 }

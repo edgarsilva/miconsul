@@ -8,18 +8,38 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
+// Level is how a toast or alert is styled. Its only values are LevelInfo,
+// LevelSuccess, LevelWarning and LevelError; the zero value is LevelInfo.
+type Level struct{ name string }
+
+var (
+	LevelInfo    = Level{"info"}
+	LevelSuccess = Level{"success"}
+	LevelWarning = Level{"warning"}
+	LevelError   = Level{"error"}
+)
+
+// String returns the level's name, as stored in flash messages.
+func (l Level) String() string {
+	if l.name == "" {
+		return LevelInfo.name
+	}
+
+	return l.name
+}
+
 // Toast describes the notification shown in the FE
 type Toast struct {
 	Msg   string
 	Sub   string
-	Level string
+	Level Level
 }
 
 // Alert describes the inline alert a redirect carried to the page through a
 // flash message.
 type Alert struct {
 	Msg   string
-	Level string
+	Level Level
 }
 
 type Ctx struct {
@@ -81,11 +101,11 @@ func NewCtx(fc fiber.Ctx, ctxOpts ...ContextOption) *Ctx {
 		Theme:       themeFromLocals(fc),
 		Toast: Toast{
 			Msg:   fc.Redirect().Message("toast").Value,
-			Level: fc.Redirect().Message("level").Value,
+			Level: parseLevel(fc.Redirect().Message("level").Value),
 		},
 		Alert: Alert{
 			Msg:   fc.Redirect().Message("alert").Value,
-			Level: fc.Redirect().Message("alert_level").Value,
+			Level: parseLevel(fc.Redirect().Message("alert_level").Value),
 		},
 	}
 
@@ -125,13 +145,27 @@ func WithLocale(lang string) ContextOption {
 //
 //   - toast: main text,
 //   - sub: optional subtitle,
-//   - level: alert level, one of success, error, warning or info (defaults to info)
-func WithToast(toast, sub, level string) ContextOption {
+//   - level: how the toast is styled
+func WithToast(toast, sub string, level Level) ContextOption {
 	return func(c *Ctx) {
 		c.Toast = Toast{
 			Msg:   toast,
 			Sub:   sub,
 			Level: level,
 		}
+	}
+}
+
+// parseLevel returns the level named s, or LevelInfo when s names none.
+func parseLevel(s string) Level {
+	switch s {
+	case LevelSuccess.name:
+		return LevelSuccess
+	case LevelWarning.name:
+		return LevelWarning
+	case LevelError.name:
+		return LevelError
+	default:
+		return LevelInfo
 	}
 }
