@@ -200,7 +200,7 @@ func AppointmentFormPage(c *Ctx, appointment models.Appointment, patients []mode
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if appointment.UID == "" || appointment.UID == "new" {
+			if appointment.UID == "" {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<h1 class=\"px-4 sm:px-0 font-bold text-2xl pb-0 w-full\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -2576,7 +2576,7 @@ func AppointmentForm(c *Ctx, appointment models.Appointment) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if appointment.UID != "" && appointment.UID != "new" {
+		if appointment.UID != "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 196, " hx-patch=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

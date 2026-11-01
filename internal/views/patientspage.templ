@@ -492,7 +492,7 @@ templ PatientForm(c *Ctx, patient models.Patient) {
 		class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2"
 		method="POST"
 		enctype="multipart/form-data"
-		if patient.UID != "" && patient.UID != "new" {
+		if patient.UID != "" {
 			hx-patch={ "/patients/" + patient.UID }
 			action={ templ.URL("/patients/" + patient.UID) }
 		} else {
@@ -525,7 +525,7 @@ templ PatientProfileSection(c *Ctx, patient models.Patient) {
 			class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
 			hx-boost:inherited="true"
 		>
-			if patient.UID == "" || patient.UID == "new" {
+			if patient.UID == "" {
 				<h1 class="font-bold text-2xl">{ c.l("str.new_patient") }</h1>
 			} else {
 				<h1 class="font-bold text-2xl">{ c.l("str.edit_patient") }</h1>
