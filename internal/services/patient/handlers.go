@@ -69,7 +69,7 @@ func (s *service) HandleEditPage(c fiber.Ctx) error {
 
 	patient, err := s.TakePatientByID(c.Context(), cu.ID, c.Params("id", ""))
 	if errors.Is(err, ErrIDRequired) {
-		return s.RedirectWithToast(c, "/patients", "That user does not exist", view.LevelWarning)
+		return s.RedirectWithToast(c, "/patients", "That patient does not exist", view.LevelWarning)
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.RedirectWithToast(c, "/patients", "Patient does not exist", view.LevelWarning)
