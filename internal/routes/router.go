@@ -116,7 +116,7 @@ func DashboardRoutes(s *server.Server, authSvc auth.Runtime) error {
 	d.Get("/", mw.MaybeAuthenticate(authSvc), d.HandleHomePage)
 
 	g := s.Group("/dashboard", mw.MustAuthenticate(authSvc))
-	g.Get("", d.HandleDashboardPage)
+	g.Get("", d.HandleIndexPage)
 	g.Get("/appointments", d.HandleAppointmentsSection)
 
 	return nil
@@ -154,7 +154,7 @@ func PatientRoutes(s *server.Server, authSvc auth.Runtime) error {
 
 	g.Get("/new", p.HandleNewPage)
 	g.Get("/:id", p.HandleEditPage)
-	g.Get("/:id/profilepic/:filename", p.HandleProfilePicImgSrc)
+	g.Get("/:id/profilepic/:filename", p.HandleProfilePic)
 
 	g.Post("/", p.HandleCreate)
 	g.Patch("/:id", p.HandleUpdate)
@@ -218,7 +218,7 @@ func ThemeRoutes(s *server.Server, authSvc auth.Runtime) error {
 	}
 
 	g := s.Group("/theme", mw.MaybeAuthenticate(authSvc))
-	g.Post("/toggle", t.HandleToggleTheme)
+	g.Post("/toggle", t.HandleToggle)
 
 	return nil
 }
@@ -234,8 +234,8 @@ func UserRoutes(s *server.Server, authSvc auth.Runtime) error {
 	u.Patch("/profile", mw.MustAuthenticate(authSvc), u.HandleUpdateProfile)
 	u.Post("/profile/avatar/preview", mw.MustAuthenticate(authSvc), u.HandleProfilePicPreview)
 	u.Delete("/profile/avatar", mw.MustAuthenticate(authSvc), u.HandleRemoveProfilePic)
-	u.Get("/profile/avatar", mw.MustAuthenticate(authSvc), u.HandleUserProfilePicImgSrc)
-	u.Get("/profile/avatar/preview", mw.MustAuthenticate(authSvc), u.HandleUserProfilePicImgSrc)
+	u.Get("/profile/avatar", mw.MustAuthenticate(authSvc), u.HandleProfilePic)
+	u.Get("/profile/avatar/preview", mw.MustAuthenticate(authSvc), u.HandleProfilePic)
 
 	// Admin only
 	u.Get("/admin/users", mw.MustBeAdmin(authSvc), u.HandleIndexPage)

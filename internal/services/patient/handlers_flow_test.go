@@ -142,7 +142,7 @@ func TestPatientProfilePicImageSourceHandler(t *testing.T) {
 	app := fiber.New()
 	app.Get("/patients/:id/profilepic/:filename", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandleProfilePicImgSrc(c)
+		return svc.HandleProfilePic(c)
 	})
 
 	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/patients/"+patient.UID+"/profilepic/"+filename, nil))

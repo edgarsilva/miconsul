@@ -71,7 +71,7 @@ func TestHandleEditPageSuccess(t *testing.T) {
 	}
 }
 
-func TestHandleUserProfilePicImgSrc(t *testing.T) {
+func TestHandleProfilePic(t *testing.T) {
 	svc, currentUser := newUserServiceForTests(t)
 
 	filename := currentUser.UID + "_preview"
@@ -86,7 +86,7 @@ func TestHandleUserProfilePicImgSrc(t *testing.T) {
 	app := fiber.New()
 	app.Get("/profile/avatar/preview", func(c fiber.Ctx) error {
 		c.Locals("current_user", currentUser)
-		return svc.HandleUserProfilePicImgSrc(c)
+		return svc.HandleProfilePic(c)
 	})
 
 	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/profile/avatar/preview", nil))

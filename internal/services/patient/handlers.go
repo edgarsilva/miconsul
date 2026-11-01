@@ -258,9 +258,9 @@ func normalizeSearchTerm(raw string) (string, error) {
 	return term, nil
 }
 
-// HandleProfilePicImgSrc serves a patient's profile picture file.
+// HandleProfilePic serves a patient's profile picture file.
 // GET: /patients/:id/profilepic/:filename
-func (s *service) HandleProfilePicImgSrc(c fiber.Ctx) error {
+func (s *service) HandleProfilePic(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
 	id := strings.TrimSpace(c.Params("id", ""))

@@ -40,7 +40,7 @@ func TestPatientHandlerGuardBranches(t *testing.T) {
 	})
 	app.Get("/patients/:id/profilepic/:filename", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandleProfilePicImgSrc(c)
+		return svc.HandleProfilePic(c)
 	})
 
 	resp1, err := app.Test(httptest.NewRequest(http.MethodGet, "/patients/%20", nil))
