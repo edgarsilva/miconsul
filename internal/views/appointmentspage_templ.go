@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-func toggleStatusFilter(currentStatus, status string) string {
+func appointmentToggleStatusFilter(currentStatus, status string) string {
 	statuses := []string{}
 	if currentStatus != "" {
 		for _, token := range strings.Split(currentStatus, ",") {
@@ -53,7 +53,7 @@ func toggleStatusFilter(currentStatus, status string) string {
 	return strings.Join(append(statuses, status), ",")
 }
 
-func AppointmentsPage(c *Ctx, appointments []models.Appointment, selectedPatient models.Patient, selectedClinic models.Clinic) templ.Component {
+func AppointmentIndexPage(c *Ctx, appointments []models.Appointment, selectedPatient models.Patient, selectedClinic models.Clinic) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -237,7 +237,7 @@ func AppointmentPage(c *Ctx, appointment models.Appointment, patients []models.P
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = AppointmentCont(c, appointment, patients, clinics).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = AppointmentProfile(c, appointment, patients, clinics).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -273,7 +273,7 @@ func AppointmentIndexSection(c *Ctx, appointments []models.Appointment, selected
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = AppointmentsSection(c, AppointmentsSectionProps{
+		templ_7745c5c3_Err = AppointmentListSection(c, AppointmentListSectionProps{
 			Appointments:    appointments,
 			SelectedPatient: selectedPatient,
 			SelectedClinic:  selectedClinic,
@@ -287,9 +287,9 @@ func AppointmentIndexSection(c *Ctx, appointments []models.Appointment, selected
 	})
 }
 
-// AppointmentsSectionProps configures AppointmentsSection. Filter links fetch
+// AppointmentListSectionProps configures AppointmentListSection. Filter links fetch
 // the section from SectionPath and push PagePath into the history.
-type AppointmentsSectionProps struct {
+type AppointmentListSectionProps struct {
 	Appointments    []models.Appointment
 	ShowTitle       bool
 	SelectedPatient models.Patient
@@ -298,8 +298,8 @@ type AppointmentsSectionProps struct {
 	SectionPath     string
 }
 
-// AppointmentsSection renders the filterable appointments list.
-func AppointmentsSection(c *Ctx, props AppointmentsSectionProps) templ.Component {
+// AppointmentListSection renders the filterable appointments list.
+func AppointmentListSection(c *Ctx, props AppointmentListSectionProps) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -430,9 +430,9 @@ func AppointmentsSection(c *Ctx, props AppointmentsSectionProps) templ.Component
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var19 string
-			templ_7745c5c3_Var19, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.URL(props.PagePath + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "confirmed")))).ResolveURL(ctx)
+			templ_7745c5c3_Var19, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.URL(props.PagePath + QueryParams(c, "status="+appointmentToggleStatusFilter(c.Query("status", ""), "confirmed")))).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentspage.templ`, Line: 151, Col: 121}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentspage.templ`, Line: 151, Col: 132}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 			if templ_7745c5c3_Err != nil {
@@ -443,9 +443,9 @@ func AppointmentsSection(c *Ctx, props AppointmentsSectionProps) templ.Component
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var20 string
-			templ_7745c5c3_Var20, templ_7745c5c3_Err = templruntime.NewAttributeExpression(props.SectionPath + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "confirmed"))).Resolve(ctx)
+			templ_7745c5c3_Var20, templ_7745c5c3_Err = templruntime.NewAttributeExpression(props.SectionPath + QueryParams(c, "status="+appointmentToggleStatusFilter(c.Query("status", ""), "confirmed"))).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentspage.templ`, Line: 152, Col: 115}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentspage.templ`, Line: 152, Col: 126}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
 			if templ_7745c5c3_Err != nil {
@@ -456,9 +456,9 @@ func AppointmentsSection(c *Ctx, props AppointmentsSectionProps) templ.Component
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var21 string
-			templ_7745c5c3_Var21, templ_7745c5c3_Err = templruntime.NewAttributeExpression(props.PagePath + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "confirmed"))).ResolveURL(ctx)
+			templ_7745c5c3_Var21, templ_7745c5c3_Err = templruntime.NewAttributeExpression(props.PagePath + QueryParams(c, "status="+appointmentToggleStatusFilter(c.Query("status", ""), "confirmed"))).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentspage.templ`, Line: 153, Col: 117}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentspage.templ`, Line: 153, Col: 128}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 			if templ_7745c5c3_Err != nil {
@@ -522,9 +522,9 @@ func AppointmentsSection(c *Ctx, props AppointmentsSectionProps) templ.Component
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var25 string
-			templ_7745c5c3_Var25, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.URL(props.PagePath + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "pending")))).ResolveURL(ctx)
+			templ_7745c5c3_Var25, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.URL(props.PagePath + QueryParams(c, "status="+appointmentToggleStatusFilter(c.Query("status", ""), "pending")))).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentspage.templ`, Line: 157, Col: 119}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentspage.templ`, Line: 157, Col: 130}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 			if templ_7745c5c3_Err != nil {
@@ -535,9 +535,9 @@ func AppointmentsSection(c *Ctx, props AppointmentsSectionProps) templ.Component
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var26 string
-			templ_7745c5c3_Var26, templ_7745c5c3_Err = templruntime.NewAttributeExpression(props.SectionPath + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "pending"))).Resolve(ctx)
+			templ_7745c5c3_Var26, templ_7745c5c3_Err = templruntime.NewAttributeExpression(props.SectionPath + QueryParams(c, "status="+appointmentToggleStatusFilter(c.Query("status", ""), "pending"))).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentspage.templ`, Line: 158, Col: 113}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentspage.templ`, Line: 158, Col: 124}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var26)
 			if templ_7745c5c3_Err != nil {
@@ -548,9 +548,9 @@ func AppointmentsSection(c *Ctx, props AppointmentsSectionProps) templ.Component
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var27 string
-			templ_7745c5c3_Var27, templ_7745c5c3_Err = templruntime.NewAttributeExpression(props.PagePath + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "pending"))).ResolveURL(ctx)
+			templ_7745c5c3_Var27, templ_7745c5c3_Err = templruntime.NewAttributeExpression(props.PagePath + QueryParams(c, "status="+appointmentToggleStatusFilter(c.Query("status", ""), "pending"))).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentspage.templ`, Line: 159, Col: 115}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentspage.templ`, Line: 159, Col: 126}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 			if templ_7745c5c3_Err != nil {
@@ -614,9 +614,9 @@ func AppointmentsSection(c *Ctx, props AppointmentsSectionProps) templ.Component
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var31 string
-			templ_7745c5c3_Var31, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.URL(props.PagePath + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "done")))).ResolveURL(ctx)
+			templ_7745c5c3_Var31, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.URL(props.PagePath + QueryParams(c, "status="+appointmentToggleStatusFilter(c.Query("status", ""), "done")))).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentspage.templ`, Line: 163, Col: 116}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentspage.templ`, Line: 163, Col: 127}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var31)
 			if templ_7745c5c3_Err != nil {
@@ -627,9 +627,9 @@ func AppointmentsSection(c *Ctx, props AppointmentsSectionProps) templ.Component
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var32 string
-			templ_7745c5c3_Var32, templ_7745c5c3_Err = templruntime.NewAttributeExpression(props.SectionPath + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "done"))).Resolve(ctx)
+			templ_7745c5c3_Var32, templ_7745c5c3_Err = templruntime.NewAttributeExpression(props.SectionPath + QueryParams(c, "status="+appointmentToggleStatusFilter(c.Query("status", ""), "done"))).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentspage.templ`, Line: 164, Col: 110}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentspage.templ`, Line: 164, Col: 121}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var32)
 			if templ_7745c5c3_Err != nil {
@@ -640,9 +640,9 @@ func AppointmentsSection(c *Ctx, props AppointmentsSectionProps) templ.Component
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var33 string
-			templ_7745c5c3_Var33, templ_7745c5c3_Err = templruntime.NewAttributeExpression(props.PagePath + QueryParams(c, "status="+toggleStatusFilter(c.Query("status", ""), "done"))).ResolveURL(ctx)
+			templ_7745c5c3_Var33, templ_7745c5c3_Err = templruntime.NewAttributeExpression(props.PagePath + QueryParams(c, "status="+appointmentToggleStatusFilter(c.Query("status", ""), "done"))).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentspage.templ`, Line: 165, Col: 112}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentspage.templ`, Line: 165, Col: 123}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 			if templ_7745c5c3_Err != nil {
@@ -1338,12 +1338,12 @@ func AppointmentsSection(c *Ctx, props AppointmentsSectionProps) templ.Component
 			return templ_7745c5c3_Err
 		}
 		if len(props.Appointments) > 0 {
-			templ_7745c5c3_Err = AppointmentsList(c, props.Appointments).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = AppointmentList(c, props.Appointments).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = AppointmentsEmptyList(c).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = AppointmentEmptyList(c).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1356,7 +1356,7 @@ func AppointmentsSection(c *Ctx, props AppointmentsSectionProps) templ.Component
 	})
 }
 
-func AppointmentsList(c *Ctx, appointments []models.Appointment) templ.Component {
+func AppointmentList(c *Ctx, appointments []models.Appointment) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1619,7 +1619,7 @@ func AppointmentActions(c *Ctx, appointment models.Appointment) templ.Component 
 	})
 }
 
-func AppointmentsEmptyList(c *Ctx) templ.Component {
+func AppointmentEmptyList(c *Ctx) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1665,7 +1665,7 @@ func AppointmentsEmptyList(c *Ctx) templ.Component {
 	})
 }
 
-func AppointmentCont(c *Ctx, appointment models.Appointment, patients []models.Patient, clinics []models.Clinic) templ.Component {
+func AppointmentProfile(c *Ctx, appointment models.Appointment, patients []models.Patient, clinics []models.Clinic) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1712,7 +1712,7 @@ func AppointmentCont(c *Ctx, appointment models.Appointment, patients []models.P
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = ClinicSearch(c, clinics, appointment.Clinic.UID).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = AppointmentClinicPicker(c, clinics, appointment.Clinic.UID).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1746,7 +1746,7 @@ func AppointmentCont(c *Ctx, appointment models.Appointment, patients []models.P
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = PatientSearch(c, patients, appointment.Patient.UID).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = AppointmentPatientPicker(c, patients, appointment.Patient.UID).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1904,7 +1904,7 @@ func AppointmentCont(c *Ctx, appointment models.Appointment, patients []models.P
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = ApptPrice(c, appointment, models.Clinic{}, false).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = AppointmentPrice(c, appointment, models.Clinic{}, false).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -2049,7 +2049,7 @@ func AppointmentCont(c *Ctx, appointment models.Appointment, patients []models.P
 	})
 }
 
-func ApptPrice(c *Ctx, appointment models.Appointment, clinic models.Clinic, swapOOB bool) templ.Component {
+func AppointmentPrice(c *Ctx, appointment models.Appointment, clinic models.Clinic, swapOOB bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -2138,9 +2138,9 @@ func ApptPrice(c *Ctx, appointment models.Appointment, clinic models.Clinic, swa
 	})
 }
 
-// ClinicSearch renders the clinic picker with selectedUID checked, or the
+// AppointmentClinicPicker renders the clinic picker with selectedUID checked, or the
 // first clinic when selectedUID is empty.
-func ClinicSearch(c *Ctx, clinics []models.Clinic, selectedUID string) templ.Component {
+func AppointmentClinicPicker(c *Ctx, clinics []models.Clinic, selectedUID string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -2174,7 +2174,7 @@ func ClinicSearch(c *Ctx, clinics []models.Clinic, selectedUID string) templ.Com
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = ApptSearchClinicsResults(c, clinics, selectedUID).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = AppointmentClinicPickerList(c, clinics, selectedUID).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2186,7 +2186,7 @@ func ClinicSearch(c *Ctx, clinics []models.Clinic, selectedUID string) templ.Com
 	})
 }
 
-func ApptSearchClinicsResults(c *Ctx, clinics []models.Clinic, selectedUID string) templ.Component {
+func AppointmentClinicPickerList(c *Ctx, clinics []models.Clinic, selectedUID string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -2272,7 +2272,7 @@ func ApptSearchClinicsResults(c *Ctx, clinics []models.Clinic, selectedUID strin
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if isSelected(clinic.UID, selectedUID, i) {
+			if pickerIsSelected(clinic.UID, selectedUID, i) {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 172, " checked")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -2336,9 +2336,9 @@ func ApptSearchClinicsResults(c *Ctx, clinics []models.Clinic, selectedUID strin
 	})
 }
 
-// ApptSearchClinicsFrg renders clinic search results with selectedUID checked.
+// AppointmentClinicSearchResults renders clinic search results with selectedUID checked.
 // With no selection, the first clinic is checked and its price swapped in.
-func ApptSearchClinicsFrg(c *Ctx, clinics []models.Clinic, selectedUID string) templ.Component {
+func AppointmentClinicSearchResults(c *Ctx, clinics []models.Clinic, selectedUID string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -2355,12 +2355,12 @@ func ApptSearchClinicsFrg(c *Ctx, clinics []models.Clinic, selectedUID string) t
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = ApptSearchClinicsResults(c, clinics, selectedUID).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = AppointmentClinicPickerList(c, clinics, selectedUID).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if selectedUID == "" && len(clinics) > 0 {
-			templ_7745c5c3_Err = ApptPrice(c, models.Appointment{}, clinics[0], true).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = AppointmentPrice(c, models.Appointment{}, clinics[0], true).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -2369,9 +2369,9 @@ func ApptSearchClinicsFrg(c *Ctx, clinics []models.Clinic, selectedUID string) t
 	})
 }
 
-// PatientSearch renders the patient picker with selectedUID checked, or the
+// AppointmentPatientPicker renders the patient picker with selectedUID checked, or the
 // first patient when selectedUID is empty.
-func PatientSearch(c *Ctx, patients []models.Patient, selectedUID string) templ.Component {
+func AppointmentPatientPicker(c *Ctx, patients []models.Patient, selectedUID string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -2405,7 +2405,7 @@ func PatientSearch(c *Ctx, patients []models.Patient, selectedUID string) templ.
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = PatientSearchResults(c, patients, selectedUID).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = AppointmentPatientPickerList(c, patients, selectedUID).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2417,7 +2417,7 @@ func PatientSearch(c *Ctx, patients []models.Patient, selectedUID string) templ.
 	})
 }
 
-func PatientSearchResults(c *Ctx, patients []models.Patient, selectedUID string) templ.Component {
+func AppointmentPatientPickerList(c *Ctx, patients []models.Patient, selectedUID string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -2503,7 +2503,7 @@ func PatientSearchResults(c *Ctx, patients []models.Patient, selectedUID string)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if isSelected(patient.UID, selectedUID, i) {
+			if pickerIsSelected(patient.UID, selectedUID, i) {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 189, " checked")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -2629,9 +2629,9 @@ func AppointmentForm(c *Ctx, appointment models.Appointment) templ.Component {
 	})
 }
 
-// isSelected reports whether the picker item uid is checked: the one matching
+// pickerIsSelected reports whether the picker item uid is checked: the one matching
 // selectedUID, or the first item when nothing is selected.
-func isSelected(uid, selectedUID string, i int) bool {
+func pickerIsSelected(uid, selectedUID string, i int) bool {
 	if selectedUID == "" {
 		return i == 0
 	}

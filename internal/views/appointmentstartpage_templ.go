@@ -55,7 +55,7 @@ func AppointmentStartPage(c *Ctx, appointment models.Appointment) templ.Componen
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = AppointmentStart(c, appointment).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = AppointmentStartSection(c, appointment).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -73,7 +73,7 @@ func AppointmentStartPage(c *Ctx, appointment models.Appointment) templ.Componen
 	})
 }
 
-func PatientCard(c *Ctx, patient models.Patient) templ.Component {
+func AppointmentPatientCard(c *Ctx, patient models.Patient) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -269,7 +269,7 @@ func PatientCard(c *Ctx, patient models.Patient) templ.Component {
 	})
 }
 
-func AppointmentStart(c *Ctx, appointment models.Appointment) templ.Component {
+func AppointmentStartSection(c *Ctx, appointment models.Appointment) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -290,7 +290,7 @@ func AppointmentStart(c *Ctx, appointment models.Appointment) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = PatientCard(c, appointment.Patient).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = AppointmentPatientCard(c, appointment.Patient).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -311,7 +311,7 @@ func AppointmentStart(c *Ctx, appointment models.Appointment) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = AppointmentSessionToggle(c, appointment).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = AppointmentSessionToggleBtn(c, appointment).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -604,7 +604,8 @@ func AppointmentSessionStatusBadge(c *Ctx, appointment models.Appointment) templ
 	})
 }
 
-func AppointmentSessionToggle(c *Ctx, appointment models.Appointment) templ.Component {
+// AppointmentSessionToggleBtn renders the start or pause session link.
+func AppointmentSessionToggleBtn(c *Ctx, appointment models.Appointment) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -633,7 +634,7 @@ func AppointmentSessionToggle(c *Ctx, appointment models.Appointment) templ.Comp
 			var templ_7745c5c3_Var36 string
 			templ_7745c5c3_Var36, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.URL("/appointments/" + appointment.UID + "/pause-session")).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentstartpage.templ`, Line: 179, Col: 75}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentstartpage.templ`, Line: 180, Col: 75}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 			if templ_7745c5c3_Err != nil {
@@ -646,7 +647,7 @@ func AppointmentSessionToggle(c *Ctx, appointment models.Appointment) templ.Comp
 			var templ_7745c5c3_Var37 string
 			templ_7745c5c3_Var37, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/appointments/" + appointment.UID + "/pause-session").Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentstartpage.templ`, Line: 180, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentstartpage.templ`, Line: 181, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var37)
 			if templ_7745c5c3_Err != nil {
@@ -659,7 +660,7 @@ func AppointmentSessionToggle(c *Ctx, appointment models.Appointment) templ.Comp
 			var templ_7745c5c3_Var38 string
 			templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("btn.pause_session"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentstartpage.templ`, Line: 184, Col: 30}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentstartpage.templ`, Line: 185, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 			if templ_7745c5c3_Err != nil {
@@ -677,7 +678,7 @@ func AppointmentSessionToggle(c *Ctx, appointment models.Appointment) templ.Comp
 			var templ_7745c5c3_Var39 string
 			templ_7745c5c3_Var39, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.URL("/appointments/" + appointment.UID + "/start-session")).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentstartpage.templ`, Line: 189, Col: 75}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentstartpage.templ`, Line: 190, Col: 75}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var39)
 			if templ_7745c5c3_Err != nil {
@@ -690,7 +691,7 @@ func AppointmentSessionToggle(c *Ctx, appointment models.Appointment) templ.Comp
 			var templ_7745c5c3_Var40 string
 			templ_7745c5c3_Var40, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/appointments/" + appointment.UID + "/start-session").Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentstartpage.templ`, Line: 190, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentstartpage.templ`, Line: 191, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var40)
 			if templ_7745c5c3_Err != nil {
@@ -703,7 +704,7 @@ func AppointmentSessionToggle(c *Ctx, appointment models.Appointment) templ.Comp
 			var templ_7745c5c3_Var41 string
 			templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("btn.start_session"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentstartpage.templ`, Line: 194, Col: 30}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/appointmentstartpage.templ`, Line: 195, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 			if templ_7745c5c3_Err != nil {
@@ -722,7 +723,9 @@ func AppointmentSessionToggle(c *Ctx, appointment models.Appointment) templ.Comp
 	})
 }
 
-func AppointmentSessionToggleFrg(c *Ctx, appointment models.Appointment) templ.Component {
+// AppointmentSessionToggle renders AppointmentSessionToggleBtn and swaps the
+// session status badge (#session_status_badge) out of band.
+func AppointmentSessionToggle(c *Ctx, appointment models.Appointment) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -739,7 +742,7 @@ func AppointmentSessionToggleFrg(c *Ctx, appointment models.Appointment) templ.C
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = AppointmentSessionToggle(c, appointment).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = AppointmentSessionToggleBtn(c, appointment).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -11,12 +11,12 @@ templ AppointmentStartPage(c *Ctx, appointment models.Appointment) {
 			@CmpBackBtn(c.l("btn.back"), "/appointments")
 		</div>
 		<section id="appointment_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
-			@AppointmentStart(c, appointment)
+			@AppointmentStartSection(c, appointment)
 		</section>
 	}
 }
 
-templ PatientCard(c *Ctx, patient models.Patient) {
+templ AppointmentPatientCard(c *Ctx, patient models.Patient) {
 	<div>
 		<hgroup
 			class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
@@ -77,16 +77,16 @@ templ PatientCard(c *Ctx, patient models.Patient) {
 	</div>
 }
 
-templ AppointmentStart(c *Ctx, appointment models.Appointment) {
+templ AppointmentStartSection(c *Ctx, appointment models.Appointment) {
 	<span class="absolute top-2 right-2 loading loading-ring text-primary loading-md htmx-indicator"></span>
 	<div class="space-y-10 ">
-		@PatientCard(c, appointment.Patient)
+		@AppointmentPatientCard(c, appointment.Patient)
 		<div class="pt-8 gap-x-8 gap-y-8">
 			<hgroup
 				class="flex justify-between items-center pb-4 pl-4 sm:pl-0"
 			>
 				<h1 class="font-bold text-2xl">{ c.l("str.current_session") }</h1>
-				@AppointmentSessionToggle(c, appointment)
+				@AppointmentSessionToggleBtn(c, appointment)
 			</hgroup>
 			<section class="relative bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
 				<input type="hidden" name="id" value={ appointment.UID } id="mb_appointment_id"/>
@@ -171,7 +171,8 @@ templ AppointmentSessionStatusBadge(c *Ctx, appointment models.Appointment) {
 	</div>
 }
 
-templ AppointmentSessionToggle(c *Ctx, appointment models.Appointment) {
+// AppointmentSessionToggleBtn renders the start or pause session link.
+templ AppointmentSessionToggleBtn(c *Ctx, appointment models.Appointment) {
 	<div id="session_toggle">
 		if appointment.Status == models.AppointmentInProgress {
 			<a
@@ -197,8 +198,10 @@ templ AppointmentSessionToggle(c *Ctx, appointment models.Appointment) {
 	</div>
 }
 
-templ AppointmentSessionToggleFrg(c *Ctx, appointment models.Appointment) {
-	@AppointmentSessionToggle(c, appointment)
+// AppointmentSessionToggle renders AppointmentSessionToggleBtn and swaps the
+// session status badge (#session_status_badge) out of band.
+templ AppointmentSessionToggle(c *Ctx, appointment models.Appointment) {
+	@AppointmentSessionToggleBtn(c, appointment)
 	<div id="session_status_badge" hx-swap-oob="outerHTML">
 		if appointment.Status == models.AppointmentInProgress {
 			@CmpStatusBadge(c, models.AppointmentInProgress)

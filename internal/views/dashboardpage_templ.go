@@ -115,7 +115,7 @@ func DashboardAppointmentsSection(c *Ctx, appointments []models.Appointment) tem
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = AppointmentsSection(c, AppointmentsSectionProps{
+		templ_7745c5c3_Err = AppointmentListSection(c, AppointmentListSectionProps{
 			Appointments: appointments,
 			ShowTitle:    true,
 			PagePath:     "/dashboard",

@@ -379,7 +379,7 @@ func TestIsSelected(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := isSelected(tt.uid, tt.selectedUID, tt.i); got != tt.want {
+			if got := pickerIsSelected(tt.uid, tt.selectedUID, tt.i); got != tt.want {
 				t.Fatalf("isSelected(%q, %q, %d) = %v, want %v", tt.uid, tt.selectedUID, tt.i, got, tt.want)
 			}
 		})
@@ -520,7 +520,7 @@ func TestAppointmentStartEndSessionPostsComplete(t *testing.T) {
 		appointment := models.Appointment{UID: "apnt_1"}
 
 		var html strings.Builder
-		if err := AppointmentStart(NewCtx(fc), appointment).Render(fc.Context(), &html); err != nil {
+		if err := AppointmentStartSection(NewCtx(fc), appointment).Render(fc.Context(), &html); err != nil {
 			t.Fatalf("render: %v", err)
 		}
 

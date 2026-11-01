@@ -40,7 +40,7 @@ templ DashboardPage(c *Ctx, stats DashboardStats, appointments []models.Appointm
 // DashboardAppointmentsSection renders the dashboard's filterable appointments
 // list.
 templ DashboardAppointmentsSection(c *Ctx, appointments []models.Appointment) {
-	@AppointmentsSection(c, AppointmentsSectionProps{
+	@AppointmentListSection(c, AppointmentListSectionProps{
 		Appointments: appointments,
 		ShowTitle:    true,
 		PagePath:     "/dashboard",
