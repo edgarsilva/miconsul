@@ -336,12 +336,12 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 
 	appointment, err = s.TakeAppointmentByUID(c.Context(), cu.ID, appointment.UID)
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments", "Appointment created, but failed to load related records", view.LevelInfo)
+		return s.RedirectWithToast(c, "/appointments", "Appointment created, but failed to load related records", view.LevelWarning)
 	}
 
 	err = s.DispatchBookedAlert(appointment)
 	if err != nil {
-		return s.RedirectWithToast(c, "/appointments", "Appointment created, but failed to queue alert", view.LevelInfo)
+		return s.RedirectWithToast(c, "/appointments", "Appointment created, but failed to queue alert", view.LevelWarning)
 	}
 
 	return s.RedirectWithToast(c, "/appointments?patientId="+url.QueryEscape(patient.UID), "New appointment created", view.LevelInfo)
