@@ -344,7 +344,7 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/appointments", "Appointment created, but failed to queue alert", view.LevelWarning)
 	}
 
-	return s.RedirectWithToast(c, "/appointments?patientId="+url.QueryEscape(patient.UID), "New appointment created", view.LevelInfo)
+	return s.RedirectWithToast(c, "/appointments?patientId="+url.QueryEscape(patient.UID), "New appointment created", view.LevelSuccess)
 }
 
 // HandleUpdate updates an appointment record for the current user.
@@ -416,7 +416,7 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "failed to update appointment", view.LevelError)
 	}
 
-	return s.RedirectWithToast(c, "/appointments?patientId="+url.QueryEscape(patient.UID), "Appointment saved", view.LevelInfo)
+	return s.RedirectWithToast(c, "/appointments?patientId="+url.QueryEscape(patient.UID), "Appointment saved", view.LevelSuccess)
 }
 
 // HandleCancel cancels an appointment

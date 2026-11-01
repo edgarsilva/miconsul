@@ -62,7 +62,7 @@ func (s *service) HandlePatientFormPage(c fiber.Ctx) error {
 
 	id := strings.TrimSpace(c.Params("id", ""))
 	if id == "" {
-		return s.RedirectWithToast(c, "/patients", "That user does not exist", view.LevelInfo)
+		return s.RedirectWithToast(c, "/patients", "That user does not exist", view.LevelWarning)
 	}
 
 	patient, err := s.PatientForShowPage(c.Context(), cu.ID, id)
@@ -117,7 +117,7 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 	vc := view.NewCtx(c)
 	return view.Render(c, templ.Join(
 		view.PatientProfileSection(vc, patient),
-		view.CmpToastPartial("New patient created", "", view.LevelInfo),
+		view.CmpToastPartial("New patient created", "", view.LevelSuccess),
 	))
 }
 
