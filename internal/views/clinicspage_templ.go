@@ -14,7 +14,7 @@ import (
 	"strconv"
 )
 
-func ClinicsPage(c *Ctx, clinics []models.Clinic) templ.Component {
+func ClinicIndexPage(c *Ctx, clinics []models.Clinic) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -111,12 +111,12 @@ func ClinicsPage(c *Ctx, clinics []models.Clinic) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if len(clinics) > 0 {
-				templ_7745c5c3_Err = ClinicsList(c, clinics).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ClinicList(c, clinics).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = ClinicsEmptyList(c).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ClinicEmptyList(c).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -190,7 +190,7 @@ func ClinicPage(c *Ctx, clinic models.Clinic) templ.Component {
 	})
 }
 
-func ClinicsList(c *Ctx, clinics []models.Clinic) templ.Component {
+func ClinicList(c *Ctx, clinics []models.Clinic) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -459,7 +459,7 @@ func ClinicDeleteForm(c *Ctx, clinic models.Clinic) templ.Component {
 	})
 }
 
-func ClinicsEmptyList(c *Ctx) templ.Component {
+func ClinicEmptyList(c *Ctx) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

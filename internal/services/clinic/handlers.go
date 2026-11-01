@@ -28,7 +28,7 @@ func (s *service) HandleClinicsIndexPage(c fiber.Ctx) error {
 	}
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.ClinicsPage(vc, clinics))
+	return view.Render(c, view.ClinicIndexPage(vc, clinics))
 }
 
 // HandleClinicsNewPage renders the new clinic HTML page
@@ -170,7 +170,7 @@ func (s *service) HandleClinicsIndexSearch(c fiber.Ctx) error {
 	}
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.ClinicsList(vc, clinics))
+	return view.Render(c, view.ClinicList(vc, clinics))
 }
 
 func (s *service) respondWithClinicPage(c fiber.Ctx, clinic models.Clinic) error {

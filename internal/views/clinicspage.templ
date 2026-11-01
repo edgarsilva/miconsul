@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-templ ClinicsPage(c *Ctx, clinics []models.Clinic) {
+templ ClinicIndexPage(c *Ctx, clinics []models.Clinic) {
 	@BackBtnLayout(c, "/") {
 		<section class="grow flex flex-col px-0 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<div
@@ -34,9 +34,9 @@ templ ClinicsPage(c *Ctx, clinics []models.Clinic) {
 					</a>
 				</hgroup>
 				if (len(clinics) > 0) {
-					@ClinicsList(c, clinics)
+					@ClinicList(c, clinics)
 				} else {
-					@ClinicsEmptyList(c)
+					@ClinicEmptyList(c)
 				}
 			</div>
 		</section>
@@ -52,7 +52,7 @@ templ ClinicPage(c *Ctx, clinic models.Clinic) {
 	}
 }
 
-templ ClinicsList(c *Ctx, clinics []models.Clinic) {
+templ ClinicList(c *Ctx, clinics []models.Clinic) {
 	<ul id="clinics_list" role="list" class="app-card divide-y divide-base-content/10 overflow-hidden2">
 		for _, clinic := range clinics {
 			@ClinicLi(c, clinic)
@@ -139,7 +139,7 @@ templ ClinicDeleteForm(c *Ctx, clinic models.Clinic) {
 	</form>
 }
 
-templ ClinicsEmptyList(c *Ctx) {
+templ ClinicEmptyList(c *Ctx) {
 	<div class="app-card flex">
 		<a href="/clinics/new" class="relative block w-full rounded-lg border-2 border-dashed border-base-content/30 p-12 text-center hover:border-base-content/40 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
 			@CmpUserAddIcon("mx-auto w-12 h-12 text-base-content/60")
