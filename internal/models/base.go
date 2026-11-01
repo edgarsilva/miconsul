@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -118,7 +119,7 @@ const MinSearchTermLen = 3
 // SearchTermTooShort reports whether a non-blank search term has fewer than
 // MinSearchTermLen characters.
 func SearchTermTooShort(term string) bool {
-	return term != "" && len(term) < MinSearchTermLen
+	return term != "" && utf8.RuneCountInString(term) < MinSearchTermLen
 }
 
 // GlobalFTS ranks the rows of the query's model by a full-text search for
