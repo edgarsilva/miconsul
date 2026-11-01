@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"miconsul/internal/server/servertest"
-	view "miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -28,7 +27,7 @@ func TestRedirectWithToast(t *testing.T) {
 			s := &Server{}
 			app := fiber.New()
 			app.Post("/", func(c fiber.Ctx) error {
-				return s.RedirectWithToast(c, "/clinics", "Clinic saved", view.LevelSuccess)
+				return s.RedirectWithToast(c, "/clinics", "Clinic saved", testLevel("success"))
 			})
 
 			req := httptest.NewRequest(http.MethodPost, "/", nil)
@@ -60,7 +59,7 @@ func TestRedirectWithAlert(t *testing.T) {
 	s := &Server{}
 	app := fiber.New()
 	app.Get("/", func(c fiber.Ctx) error {
-		return s.RedirectWithAlert(c, "/signin", "Email confirmed", view.LevelSuccess)
+		return s.RedirectWithAlert(c, "/signin", "Email confirmed", testLevel("success"))
 	})
 
 	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/", nil))
@@ -101,3 +100,8 @@ func TestHXRedirect(t *testing.T) {
 		t.Errorf("HX-Redirect = %q, want /appointments", got)
 	}
 }
+
+// testLevel stands in for views.Level, which server doesn't import.
+type testLevel string
+
+func (l testLevel) String() string { return string(l) }
