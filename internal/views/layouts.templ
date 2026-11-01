@@ -29,7 +29,7 @@ templ RootLayout(c *Ctx) {
 		</head>
 		<body class="grow">
 			{ children... }
-			@GlobalToastRegion(c)
+			@CmpToastRegion(c)
 		</body>
 	</html>
 }
@@ -49,7 +49,7 @@ templ DefaultLayout(c *Ctx) {
 templ BackBtnLayout(c *Ctx, backpath string) {
 	@DefaultLayout(c) {
 		<div class="hidden md:block px-4 lg:px-8">
-			@CmpBtnBack(c.l("btn.back"), backpath)
+			@CmpBackBtn(c.l("btn.back"), backpath)
 		</div>
 		{ children... }
 	}

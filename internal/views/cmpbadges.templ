@@ -2,7 +2,7 @@ package views
 
 import "miconsul/internal/models"
 
-templ CmpBadgeStatus(c *Ctx, status models.AppointmentStatus) {
+templ CmpStatusBadge(c *Ctx, status models.AppointmentStatus) {
 	switch status {
 		case "viewed":
 			<div class="badge badge-secondary bagce-sm">

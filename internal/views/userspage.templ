@@ -26,7 +26,7 @@ templ UsersIndexPage(c *Ctx, users []models.User) {
 							</a>
 						</h1>
 						<label class="input flex items-center gap-2 rounded-full focus:outline">
-							@IconSearch("size-5")
+							@CmpSearchIcon("size-5")
 							<input
 								type="search"
 								name="searchTerm"
@@ -96,7 +96,7 @@ templ UserLi(c *Ctx, user models.User) {
 						href={ templ.URL("/admin/users/" + user.UID) }
 						hx-boost="true"
 					>
-						@IconEdit("size-6")
+						@CmpEditIcon("size-6")
 						{ c.l("btn.edit") }
 					</a>
 				</div>
@@ -108,7 +108,7 @@ templ UserLi(c *Ctx, user models.User) {
 templ UsersEmptyList(c *Ctx) {
 	<div class="app-card flex">
 		<a href="/users/new" class="relative block w-full rounded-lg border-2 border-dashed border-base-content/30 p-12 text-center hover:border-base-content/40 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-			@IconUserAdd("mx-auto w-8 h-8 text-base-content/60")
+			@CmpUserAddIcon("mx-auto w-8 h-8 text-base-content/60")
 			<span class="mt-2 block text-sm font-semibold">{ c.l("str.create_new_user") }</span>
 		</a>
 	</div>
@@ -288,7 +288,7 @@ templ UserProfileSection(c *Ctx, user models.User) {
 				href={ templ.URL("/appointments?userId=" + user.UID) }
 				class="btn btn-primary btn-sm"
 			>
-				@IconCalendar("")
+				@CmpCalendarIcon("")
 				{ c.l("btn.appointments") }
 			</a>
 		</hgroup>

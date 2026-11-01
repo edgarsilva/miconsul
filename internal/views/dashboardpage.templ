@@ -151,7 +151,7 @@ templ Clinic(c *Ctx, clinic models.Clinic) {
 					<div class="mt-4 flex w-full flex-none gap-x-4">
 						<dt class="flex-none">
 							<span class="sr-only">Address</span>
-							@IconBuilding()
+							@CmpBuildingIcon()
 						</dt>
 						<dd class="text-sm leading-6">
 							{ clinic.Address.Line1 }
@@ -162,7 +162,7 @@ templ Clinic(c *Ctx, clinic models.Clinic) {
 					<div class="mt-4 flex w-full flex-none gap-x-4">
 						<dt class="flex-none">
 							<span class="sr-only">Phone</span>
-							@IconPhone("size-6")
+							@CmpPhoneIcon("size-6")
 						</dt>
 						<dd class="text-sm leading-6 ">
 							{ clinic.Phone }
@@ -173,7 +173,7 @@ templ Clinic(c *Ctx, clinic models.Clinic) {
 					<div class="mt-4 flex w-full flex-none gap-x-4">
 						<dt class="flex-none">
 							<span class="sr-only">Email</span>
-							@IconEmail("size-6")
+							@CmpEmailIcon("size-6")
 						</dt>
 						<dd class="text-sm leading-6 ">
 							{ clinic.Email }
@@ -186,22 +186,22 @@ templ Clinic(c *Ctx, clinic models.Clinic) {
 				<ul class="ml-auto flex gap-2">
 					<li>
 						<a class="rounded-full bg-base-100" hx-boost="true">
-							@IconFacebook()
+							@CmpFacebookIcon()
 						</a>
 					</li>
 					<li>
 						<a class="rounded-full bg-base-100">
-							@IconMessenger()
+							@CmpMessengerIcon()
 						</a>
 					</li>
 					<li>
 						<a class="rounded-full bg-base-100">
-							@IconTelegram()
+							@CmpTelegramIcon()
 						</a>
 					</li>
 					<li>
 						<a class="rounded-full bg-base-100">
-							@IconWhatsapp()
+							@CmpWhatsappIcon()
 						</a>
 					</li>
 				</ul>
@@ -373,17 +373,17 @@ func feedEventTitle(c *Ctx, event models.FeedEvent) string {
 templ feedEventIcon(action string) {
 	switch action {
 		case "created":
-			@IconPlusCircleFilled("size-5")
+			@CmpPlusCircleFilledIcon("size-5")
 		case "updated":
-			@IconPencilFilled("size-5")
+			@CmpPencilFilledIcon("size-5")
 		case "confirmed", "completed":
-			@IconCheck("size-5")
+			@CmpCheckIcon("size-5")
 		case "canceled":
-			@IconCloseCircleFilled("size-5")
+			@CmpCloseCircleFilledIcon("size-5")
 		case "deleted":
-			@IconTrash("size-5")
+			@CmpTrashIcon("size-5")
 		default:
-			@IconCalendar("size-5")
+			@CmpCalendarIcon("size-5")
 	}
 }
 

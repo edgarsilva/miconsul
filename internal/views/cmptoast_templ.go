@@ -11,8 +11,8 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "fmt"
 
-// GlobalToastRegion renders the page's toast region with the request's toast.
-func GlobalToastRegion(c *Ctx) templ.Component {
+// CmpToastRegion renders the page's toast region with the request's toast.
+func CmpToastRegion(c *Ctx) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -47,7 +47,7 @@ func GlobalToastRegion(c *Ctx) templ.Component {
 	})
 }
 
-func LevelClasses(level string) string {
+func toastLevelClass(level string) string {
 	switch level {
 	case "success":
 		return "text-success-content bg-success"
@@ -91,7 +91,7 @@ func CmpToast(msg, sub, level string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var3 = []any{"p-4 ", LevelClasses(level)}
+			var templ_7745c5c3_Var3 = []any{"p-4 ", toastLevelClass(level)}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_ElementWriter, templ_7745c5c3_Var3...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

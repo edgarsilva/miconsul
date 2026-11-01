@@ -101,7 +101,7 @@ func RootLayout(c *Ctx) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = GlobalToastRegion(c).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpToastRegion(c).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -215,7 +215,7 @@ func BackBtnLayout(c *Ctx, backpath string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = CmpBtnBack(c.l("btn.back"), backpath).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpBackBtn(c.l("btn.back"), backpath).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

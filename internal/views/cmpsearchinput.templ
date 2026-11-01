@@ -2,7 +2,7 @@ package views
 
 templ CmpSearchInput(c *Ctx, placeholder, path, target string) {
 	<label class="input flex items-center gap-2 rounded-full focus:outline">
-		@IconSearch("size-5")
+		@CmpSearchIcon("size-5")
 		<input
 			name="searchTerm"
 			value={ c.Query("searchTerm", "") }

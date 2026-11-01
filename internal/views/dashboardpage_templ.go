@@ -427,7 +427,7 @@ func Clinic(c *Ctx, clinic models.Clinic) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = IconBuilding().Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = CmpBuildingIcon().Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -454,7 +454,7 @@ func Clinic(c *Ctx, clinic models.Clinic) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = IconPhone("size-6").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = CmpPhoneIcon("size-6").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -481,7 +481,7 @@ func Clinic(c *Ctx, clinic models.Clinic) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = IconEmail("size-6").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = CmpEmailIcon("size-6").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -520,7 +520,7 @@ func Clinic(c *Ctx, clinic models.Clinic) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = IconFacebook().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpFacebookIcon().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -528,7 +528,7 @@ func Clinic(c *Ctx, clinic models.Clinic) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = IconMessenger().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpMessengerIcon().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -536,7 +536,7 @@ func Clinic(c *Ctx, clinic models.Clinic) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = IconTelegram().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpTelegramIcon().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -544,7 +544,7 @@ func Clinic(c *Ctx, clinic models.Clinic) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = IconWhatsapp().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpWhatsappIcon().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -640,32 +640,32 @@ func feedEventIcon(action string) templ.Component {
 		ctx = templ.ClearChildren(ctx)
 		switch action {
 		case "created":
-			templ_7745c5c3_Err = IconPlusCircleFilled("size-5").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpPlusCircleFilledIcon("size-5").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		case "updated":
-			templ_7745c5c3_Err = IconPencilFilled("size-5").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpPencilFilledIcon("size-5").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		case "confirmed", "completed":
-			templ_7745c5c3_Err = IconCheck("size-5").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpCheckIcon("size-5").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		case "canceled":
-			templ_7745c5c3_Err = IconCloseCircleFilled("size-5").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpCloseCircleFilledIcon("size-5").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		case "deleted":
-			templ_7745c5c3_Err = IconTrash("size-5").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpTrashIcon("size-5").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		default:
-			templ_7745c5c3_Err = IconCalendar("size-5").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpCalendarIcon("size-5").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

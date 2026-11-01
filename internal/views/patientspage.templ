@@ -20,7 +20,7 @@ templ PatientsPage(c *Ctx, patients []models.Patient) {
 								href="/patients/new"
 								class="md:hidden ml-auto btn btn-primary btn-sm"
 							>
-								@IconUserAdd("size-4")
+								@CmpUserAddIcon("size-4")
 								{ c.l("btn.new_patient") }
 							</a>
 						</h1>
@@ -30,7 +30,7 @@ templ PatientsPage(c *Ctx, patients []models.Patient) {
 						href="/patients/new"
 						class="hidden md:flex btn btn-primary btn-sm"
 					>
-						@IconUserAdd("size-4")
+						@CmpUserAddIcon("size-4")
 						{ c.l("btn.new_patient") }
 					</a>
 				</hgroup>
@@ -47,7 +47,7 @@ templ PatientsPage(c *Ctx, patients []models.Patient) {
 templ PatientFormPage(c *Ctx, patient models.Patient) {
 	@DefaultLayout(c) {
 		<div class="px-4 lg:px-8">
-			@CmpBtnBack(c.l("btn.back"), "/patients")
+			@CmpBackBtn(c.l("btn.back"), "/patients")
 		</div>
 		@PatientProfileSection(c, patient)
 	}
@@ -70,7 +70,7 @@ templ PatientsList(c *Ctx, patients []models.Patient) {
 								<span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
 							</span>
 							Michael Foster
-							@CmpBadgeStatus(c, models.AppointmentInProgress)
+							@CmpStatusBadge(c, models.AppointmentInProgress)
 						</a>
 					</p>
 					<p class="flex text-xs text-base-content/60">
@@ -82,11 +82,11 @@ templ PatientsList(c *Ctx, patients []models.Patient) {
 				<div class="hidden sm:flex sm:flex-col sm:items-end">
 					<div class="flex gap-1 z-10 mb-2">
 						<button class="btn btn-primary">
-							@IconCalendar("w-5 h-5")
+							@CmpCalendarIcon("w-5 h-5")
 							{ c.l("btn.appointments") }
 						</button>
 						<button class="btn btn-secondary">
-							@IconEdit("w-5 h-5")
+							@CmpEditIcon("w-5 h-5")
 							{ c.l("btn.edit") }
 						</button>
 					</div>
@@ -120,7 +120,7 @@ templ PatientLi(c *Ctx, patient models.Patient) {
 				class="btn btn-sm"
 				href={ templ.URL("/appointments?patientId=" + patient.UID) }
 			>
-				@IconCalendar("size-4")
+				@CmpCalendarIcon("size-4")
 				{ c.l("btn.appointments") }
 			</a>
 			<a
@@ -128,7 +128,7 @@ templ PatientLi(c *Ctx, patient models.Patient) {
 				href={ templ.URL("/patients/" + patient.UID) }
 				hx-boost="true"
 			>
-				@IconEdit("size-4")
+				@CmpEditIcon("size-4")
 				{ c.l("btn.edit") }
 			</a>
 		</div>
@@ -155,7 +155,7 @@ templ PatientDeleteForm(c *Ctx, patient models.Patient) {
 templ PatientsEmptyList(c *Ctx) {
 	<div class="app-card flex">
 		<a href="/patients/new" class="relative block w-full rounded-lg border-2 border-dashed border-base-content/30 p-12 text-center hover:border-base-content/40 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-			@IconUserAdd("mx-auto w-12 h-12 text-base-content/60")
+			@CmpUserAddIcon("mx-auto w-12 h-12 text-base-content/60")
 			<span class="mt-2 block text-sm font-semibold">{ c.l("str.create_new_patient") }</span>
 		</a>
 	</div>
@@ -411,7 +411,7 @@ templ PatientProfile(c *Ctx, patient models.Patient) {
 										}
 									/>
 									<span class="inline-flex items-center gap-2">
-										@IconGmail("size-5")
+										@CmpGmailIcon("size-5")
 										<span>Email</span>
 									</span>
 								</label>
@@ -426,7 +426,7 @@ templ PatientProfile(c *Ctx, patient models.Patient) {
 										}
 									/>
 									<span class="inline-flex items-center gap-2">
-										@IconPhone("size-5")
+										@CmpPhoneIcon("size-5")
 										<span>SMS</span>
 									</span>
 								</label>
@@ -441,7 +441,7 @@ templ PatientProfile(c *Ctx, patient models.Patient) {
 										}
 									/>
 									<span class="flex items-center gap-2">
-										@IconWhatsapp("size-5")
+										@CmpWhatsappIcon("size-5")
 										<span>Whatsapp</span>
 									</span>
 								</label>
@@ -456,7 +456,7 @@ templ PatientProfile(c *Ctx, patient models.Patient) {
 										}
 									/>
 									<span class="flex items-center gap-2">
-										@IconTelegram("size-5")
+										@CmpTelegramIcon("size-5")
 										<span>Telegram</span>
 									</span>
 								</label>
@@ -471,7 +471,7 @@ templ PatientProfile(c *Ctx, patient models.Patient) {
 										}
 									/>
 									<span class="inline-flex items-center gap-2">
-										@IconMessenger("size-5")
+										@CmpMessengerIcon("size-5")
 										<span>Messenger</span>
 									</span>
 								</label>
@@ -534,7 +534,7 @@ templ PatientProfileSection(c *Ctx, patient models.Patient) {
 				href={ templ.URL("/appointments?patientId=" + patient.UID) }
 				class="btn btn-primary btn-sm"
 			>
-				@IconCalendar("")
+				@CmpCalendarIcon("")
 				{ c.l("btn.appointments") }
 			</a>
 		</hgroup>

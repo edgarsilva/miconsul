@@ -221,7 +221,7 @@ func TestRootLayoutDataTheme(t *testing.T) {
 	}
 }
 
-func TestCmpBtnTheme(t *testing.T) {
+func TestCmpThemeBtn(t *testing.T) {
 	tests := []struct {
 		theme       string
 		wantSwaps   int
@@ -236,7 +236,7 @@ func TestCmpBtnTheme(t *testing.T) {
 
 	for _, tt := range tests {
 		var html strings.Builder
-		if err := CmpBtnTheme(tt.theme).Render(context.Background(), &html); err != nil {
+		if err := CmpThemeBtn(tt.theme).Render(context.Background(), &html); err != nil {
 			t.Fatalf("render: %v", err)
 		}
 		got := html.String()
@@ -392,8 +392,8 @@ func TestNoAlpine(t *testing.T) {
 		for name, component := range map[string]templ.Component{
 			"page":             RootLayout(c),
 			"toast":            CmpToast("Saved", "", "success"),
-			"password":         CmpInputPassword(""),
-			"confirm password": CmpInputConfirmPassword(""),
+			"password":         CmpPasswordInput(""),
+			"confirm password": CmpConfirmPasswordInput(""),
 		} {
 			var html strings.Builder
 			if err := component.Render(fc.Context(), &html); err != nil {
@@ -415,7 +415,7 @@ func TestToastAndPasswordToggleMarkup(t *testing.T) {
 		if err := CmpToast("Saved", "", "success").Render(fc.Context(), &toast); err != nil {
 			t.Fatalf("render toast: %v", err)
 		}
-		if err := CmpInputPassword("").Render(fc.Context(), &password); err != nil {
+		if err := CmpPasswordInput("").Render(fc.Context(), &password); err != nil {
 			t.Fatalf("render password: %v", err)
 		}
 

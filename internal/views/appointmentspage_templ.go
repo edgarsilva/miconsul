@@ -99,7 +99,7 @@ func AppointmentsPage(c *Ctx, appointments []models.Appointment, selectedPatient
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = IconBuilding("size-5").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpBuildingIcon("size-5").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -128,7 +128,7 @@ func AppointmentsPage(c *Ctx, appointments []models.Appointment, selectedPatient
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = IconCalendar("size-5").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpCalendarIcon("size-5").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -723,7 +723,7 @@ func AppointmentsSection(c *Ctx, props AppointmentsSectionProps) templ.Component
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = IconClose("size-4").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpCloseIcon("size-4").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1506,7 +1506,7 @@ func AppointmentLi(c *Ctx, appointment models.Appointment) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = CmpBadgeStatus(c, appointment.Status).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpStatusBadge(c, appointment.Status).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1560,7 +1560,7 @@ func AppointmentActions(c *Ctx, appointment models.Appointment) templ.Component 
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = IconBookOpen("size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpBookOpenIcon("size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1594,7 +1594,7 @@ func AppointmentActions(c *Ctx, appointment models.Appointment) templ.Component 
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = IconCalendar("size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpCalendarIcon("size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1640,7 +1640,7 @@ func AppointmentsEmptyList(c *Ctx) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = IconCalendar("mx-auto w-12 h-12 text-base-content/30").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpCalendarIcon("mx-auto w-12 h-12 text-base-content/30").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2013,7 +2013,7 @@ func AppointmentCont(c *Ctx, appointment models.Appointment, patients []models.P
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = IconGmail("size-5").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpGmailIcon("size-5").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2021,7 +2021,7 @@ func AppointmentCont(c *Ctx, appointment models.Appointment, patients []models.P
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = IconPhone("size-5").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpPhoneIcon("size-5").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2029,7 +2029,7 @@ func AppointmentCont(c *Ctx, appointment models.Appointment, patients []models.P
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = IconWhatsapp("size-5").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpWhatsappIcon("size-5").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -2037,7 +2037,7 @@ func AppointmentCont(c *Ctx, appointment models.Appointment, patients []models.P
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = IconTelegram("size-5").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpTelegramIcon("size-5").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

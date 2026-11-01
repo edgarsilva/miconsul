@@ -11,12 +11,12 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "miconsul/internal/lib/preferences"
 
-// CmpBtnTheme renders the swap theme toggle; a click only saves the
+// CmpThemeBtn renders the swap theme toggle; a click only saves the
 // choice. With a saved theme the page is light (data-theme on <html>) and the
 // checked box applies dark. With none the page follows the OS, so one of two
 // toggles shows, matching the OS, and a click always flips what is on screen;
 // that first save reloads the page once so <html> gets its data-theme.
-func CmpBtnTheme(theme string) templ.Component {
+func CmpThemeBtn(theme string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

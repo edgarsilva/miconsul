@@ -19,7 +19,7 @@ templ ClinicsPage(c *Ctx, clinics []models.Clinic) {
 								href="/clinics/new"
 								class="ml-auto btn btn-primary btn-sm md:hidden"
 							>
-								@IconBuilding("size-5")
+								@CmpBuildingIcon("size-5")
 								{ c.l("btn.new") }
 							</a>
 						</h1>
@@ -29,7 +29,7 @@ templ ClinicsPage(c *Ctx, clinics []models.Clinic) {
 						href="/clinics/new"
 						class="hidden md:flex btn btn-primary btn-sm"
 					>
-						@IconBuilding("size-5")
+						@CmpBuildingIcon("size-5")
 						{ c.l("btn.new") }
 					</a>
 				</hgroup>
@@ -46,7 +46,7 @@ templ ClinicsPage(c *Ctx, clinics []models.Clinic) {
 templ ClinicPage(c *Ctx, clinic models.Clinic) {
 	@DefaultLayout(c) {
 		<div class="px-4 lg:px-8">
-			@CmpBtnBack(c.l("btn.back"), "/clinics")
+			@CmpBackBtn(c.l("btn.back"), "/clinics")
 		</div>
 		@ClinicProfileSection(c, clinic)
 	}
@@ -105,7 +105,7 @@ templ ClinicLi(c *Ctx, clinic models.Clinic) {
 				class="btn btn-sm"
 				hx-boost="true"
 			>
-				@IconCalendar("size-4")
+				@CmpCalendarIcon("size-4")
 				{ c.l("btn.appointments") }
 			</a>
 			<a
@@ -113,7 +113,7 @@ templ ClinicLi(c *Ctx, clinic models.Clinic) {
 				class="btn btn-sm"
 				hx-boost="true"
 			>
-				@IconEdit("size-4")
+				@CmpEditIcon("size-4")
 				{ c.l("btn.edit") }
 			</a>
 		</div>
@@ -142,7 +142,7 @@ templ ClinicDeleteForm(c *Ctx, clinic models.Clinic) {
 templ ClinicsEmptyList(c *Ctx) {
 	<div class="app-card flex">
 		<a href="/clinics/new" class="relative block w-full rounded-lg border-2 border-dashed border-base-content/30 p-12 text-center hover:border-base-content/40 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-			@IconUserAdd("mx-auto w-12 h-12 text-base-content/60")
+			@CmpUserAddIcon("mx-auto w-12 h-12 text-base-content/60")
 			<span class="mt-2 block text-sm font-semibold">{ c.l("str.new_clinic") }</span>
 		</a>
 	</div>

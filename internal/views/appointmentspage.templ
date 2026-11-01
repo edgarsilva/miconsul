@@ -58,7 +58,7 @@ templ AppointmentsPage(c *Ctx, appointments []models.Appointment, selectedPatien
 								href="/appointments/new"
 								class="md:hidden ml-auto btn btn-primary btn-sm"
 							>
-								@IconBuilding("size-5")
+								@CmpBuildingIcon("size-5")
 								{ c.l("btn.new") }
 							</a>
 						</h1>
@@ -68,7 +68,7 @@ templ AppointmentsPage(c *Ctx, appointments []models.Appointment, selectedPatien
 						href="/appointments/new"
 						class="hidden md:flex btn btn-primary btn-sm"
 					>
-						@IconCalendar("size-5")
+						@CmpCalendarIcon("size-5")
 						{ c.l("btn.new") }
 					</a>
 				</hgroup>
@@ -171,7 +171,7 @@ templ AppointmentsSection(c *Ctx, props AppointmentsSectionProps) {
 							hx-get={ props.SectionPath + QueryParams(c, "status=") }
 							hx-push-url={ props.PagePath + QueryParams(c, "status=") }
 						>
-							@IconClose("size-4")
+							@CmpCloseIcon("size-4")
 						</a>
 					}
 				</div>
@@ -315,7 +315,7 @@ templ AppointmentLi(c *Ctx, appointment models.Appointment) {
 							{ appointment.Clinic.Name }
 						</span>
 						<span class="ml-2">
-							@CmpBadgeStatus(c, appointment.Status)
+							@CmpStatusBadge(c, appointment.Status)
 						</span>
 					</dd>
 				</div>
@@ -328,11 +328,11 @@ templ AppointmentLi(c *Ctx, appointment models.Appointment) {
 templ AppointmentActions(c *Ctx, appointment models.Appointment) {
 	<div class="hidden md:flex gap-1">
 		<a href={ templ.URL("/appointments/" + appointment.UID + "/open") } class="btn btn-sm">
-			@IconBookOpen("size-4")
+			@CmpBookOpenIcon("size-4")
 			{ c.l("btn.open") }
 		</a>
 		<a href={ templ.URL("/appointments/" + appointment.UID) } class="btn btn-sm">
-			@IconCalendar("size-4")
+			@CmpCalendarIcon("size-4")
 			{ c.l("btn.change") }
 		</a>
 	</div>
@@ -341,7 +341,7 @@ templ AppointmentActions(c *Ctx, appointment models.Appointment) {
 templ AppointmentsEmptyList(c *Ctx) {
 	<div id="appointments_list" class="flex mt-4">
 		<a href="/appointments/new" class="relative block w-full rounded-lg border-2 border-dashed border-base-content/10 p-12 text-center hover:border-base-content/30 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-			@IconCalendar("mx-auto w-12 h-12 text-base-content/30")
+			@CmpCalendarIcon("mx-auto w-12 h-12 text-base-content/30")
 			<span class="mt-2 block text-sm font-semibold">{ c.l("str.create_new_appointment") }</span>
 			<p class="mt-1 text-sm text-base-content/40">No se encontraron citas.</p>
 		</a>
@@ -457,7 +457,7 @@ templ AppointmentCont(c *Ctx, appointment models.Appointment, patients []models.
 										disabled
 									/>
 									<span class="inline-flex items-center gap-2">
-										@IconGmail("size-5")
+										@CmpGmailIcon("size-5")
 										<span>Email</span>
 									</span>
 								</label>
@@ -468,7 +468,7 @@ templ AppointmentCont(c *Ctx, appointment models.Appointment, patients []models.
 										disabled
 									/>
 									<span class="inline-flex items-center gap-2">
-										@IconPhone("size-5")
+										@CmpPhoneIcon("size-5")
 										<span>SMS</span>
 									</span>
 								</label>
@@ -479,7 +479,7 @@ templ AppointmentCont(c *Ctx, appointment models.Appointment, patients []models.
 										disabled
 									/>
 									<span class="inline-flex items-center gap-2">
-										@IconWhatsapp("size-5")
+										@CmpWhatsappIcon("size-5")
 										<span>Whatsapp</span>
 									</span>
 								</label>
@@ -490,7 +490,7 @@ templ AppointmentCont(c *Ctx, appointment models.Appointment, patients []models.
 										disabled
 									/>
 									<span class="inline-flex items-center gap-2">
-										@IconTelegram("size-5")
+										@CmpTelegramIcon("size-5")
 										<span>Telegram</span>
 									</span>
 								</label>

@@ -8,7 +8,7 @@ import (
 templ AppointmentStartPage(c *Ctx, appointment models.Appointment) {
 	@DefaultLayout(c) {
 		<div class="px-4 lg:px-8">
-			@CmpBtnBack(c.l("btn.back"), "/appointments")
+			@CmpBackBtn(c.l("btn.back"), "/appointments")
 		</div>
 		<section id="appointment_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			@AppointmentStart(c, appointment)
@@ -36,7 +36,7 @@ templ PatientCard(c *Ctx, patient models.Patient) {
 		<section class="grid grid-cols-6 app-card ">
 			<div class="col-span-full flex flex-col gap-10 sm:flex-row">
 				<figure class="aspect-4/5 w-64 flex-none rounded-2xl overflow-hidden">
-					@CmpProfilePic(patient)
+					@CmpAvatarPic(patient)
 				</figure>
 				<div class="flex flex-col max-w-xl grow">
 					<div class="pt-2 flex flex-wrap items-center gap-2">
@@ -166,7 +166,7 @@ templ AppointmentStart(c *Ctx, appointment models.Appointment) {
 templ AppointmentSessionStatusBadge(c *Ctx, appointment models.Appointment) {
 	<div id="session_status_badge">
 		if appointment.Status == models.AppointmentInProgress {
-			@CmpBadgeStatus(c, models.AppointmentInProgress)
+			@CmpStatusBadge(c, models.AppointmentInProgress)
 		}
 	</div>
 }
@@ -201,7 +201,7 @@ templ AppointmentSessionToggleFrg(c *Ctx, appointment models.Appointment) {
 	@AppointmentSessionToggle(c, appointment)
 	<div id="session_status_badge" hx-swap-oob="outerHTML">
 		if appointment.Status == models.AppointmentInProgress {
-			@CmpBadgeStatus(c, models.AppointmentInProgress)
+			@CmpStatusBadge(c, models.AppointmentInProgress)
 		}
 	</div>
 }

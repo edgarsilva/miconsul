@@ -42,7 +42,7 @@ func ResetPasswordChangePage(c *Ctx, email, token string, err error) templ.Compo
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = CmpBtnTheme(c.Theme).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpThemeBtn(c.Theme).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -84,7 +84,7 @@ func ResetPasswordChangePage(c *Ctx, email, token string, err error) templ.Compo
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = IconEmail().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpEmailIcon().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -105,11 +105,11 @@ func ResetPasswordChangePage(c *Ctx, email, token string, err error) templ.Compo
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = CmpInputPassword("").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpPasswordInput("").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = CmpInputConfirmPassword("").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpConfirmPasswordInput("").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

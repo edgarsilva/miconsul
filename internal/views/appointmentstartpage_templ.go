@@ -47,7 +47,7 @@ func AppointmentStartPage(c *Ctx, appointment models.Appointment) templ.Componen
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = CmpBtnBack(c.l("btn.back"), "/appointments").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpBackBtn(c.l("btn.back"), "/appointments").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -120,7 +120,7 @@ func PatientCard(c *Ctx, patient models.Patient) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = CmpProfilePic(patient).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpAvatarPic(patient).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -591,7 +591,7 @@ func AppointmentSessionStatusBadge(c *Ctx, appointment models.Appointment) templ
 			return templ_7745c5c3_Err
 		}
 		if appointment.Status == models.AppointmentInProgress {
-			templ_7745c5c3_Err = CmpBadgeStatus(c, models.AppointmentInProgress).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpStatusBadge(c, models.AppointmentInProgress).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -748,7 +748,7 @@ func AppointmentSessionToggleFrg(c *Ctx, appointment models.Appointment) templ.C
 			return templ_7745c5c3_Err
 		}
 		if appointment.Status == models.AppointmentInProgress {
-			templ_7745c5c3_Err = CmpBadgeStatus(c, models.AppointmentInProgress).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpStatusBadge(c, models.AppointmentInProgress).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

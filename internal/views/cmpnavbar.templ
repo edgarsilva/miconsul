@@ -38,7 +38,7 @@ func navbarHomePath(c *Ctx) string {
 
 templ UIThemeBtn(c *Ctx) {
 	<div class="flex items-center mr-2">
-		@CmpBtnTheme(c.Theme)
+		@CmpThemeBtn(c.Theme)
 	</div>
 }
 
@@ -51,7 +51,7 @@ templ UserAvatar(c *Ctx) {
 templ Search() {
 	<div class="flex gap-2 mr-2 items-center">
 		<button class="p-1 hover:outline rounded-xl" aria-label="Global Search">
-			@IconSearch("")
+			@CmpSearchIcon("")
 		</button>
 		<kbd class="hidden md:kbd md:kbd-sm">ctrl</kbd>
 		<kbd class="hidden md:kbd md:kbd-sm">/</kbd>
@@ -75,12 +75,12 @@ templ DesktopNav(c *Ctx) {
 		if c.CurrentUser.IsLoggedIn() {
 			<a class="btn btn-ghost" href="/logout">
 				{ c.l("btn.logout") }
-				@IconSignout("")
+				@CmpSignoutIcon("")
 			</a>
 		} else {
 			<a class="btn btn-ghost" href="/signin">
 				{ c.l("btn.login") }
-				@IconSignin("")
+				@CmpSigninIcon("")
 			</a>
 		}
 	</div>
@@ -89,7 +89,7 @@ templ DesktopNav(c *Ctx) {
 templ MobileNav(c *Ctx) {
 	<div class="md:hidden flex-none dropdown dropdown-end">
 		<button tabindex="0" role="button" class="btn btn-square btn-ghost">
-			@IconMenu()
+			@CmpMenuIcon()
 		</button>
 		<ul
 			tabindex="0"
@@ -102,14 +102,14 @@ templ MobileNav(c *Ctx) {
 				<li>
 					<a href="/logout" class="btn btn-ghost justify-start">
 						{ c.l("btn.logout") }
-						@IconSignout("")
+						@CmpSignoutIcon("")
 					</a>
 				</li>
 			} else {
 				<li>
 					<a href="/signin" class="btn btn-ghost justify-start">
 						{ c.l("btn.login") }
-						@IconSignin("")
+						@CmpSigninIcon("")
 					</a>
 				</li>
 			}
