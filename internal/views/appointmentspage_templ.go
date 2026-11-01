@@ -159,7 +159,7 @@ func AppointmentsPage(c *Ctx, appointments []models.Appointment, selectedPatient
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = LayoutWithBackBtn(c, "/").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = BackBtnLayout(c, "/").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -247,7 +247,7 @@ func AppointmentPage(c *Ctx, appointment models.Appointment, patients []models.P
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = LayoutWithBackBtn(c, "/appointments").Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = BackBtnLayout(c, "/appointments").Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

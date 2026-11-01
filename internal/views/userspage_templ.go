@@ -124,7 +124,7 @@ func UsersIndexPage(c *Ctx, users []models.User) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = LayoutWithBackBtn(c, "/").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = BackBtnLayout(c, "/").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -345,7 +345,7 @@ func UserEditPage(c *Ctx, user models.User) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = LayoutWithBackBtn(c, "/").Render(templ.WithChildren(ctx, templ_7745c5c3_Var16), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = BackBtnLayout(c, "/").Render(templ.WithChildren(ctx, templ_7745c5c3_Var16), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

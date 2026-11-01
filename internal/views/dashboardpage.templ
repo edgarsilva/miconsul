@@ -17,7 +17,7 @@ type DashboardStats struct {
 }
 
 templ DashboardPage(c *Ctx, stats DashboardStats, appointments []models.Appointment, favClinic models.Clinic, feedEvents []models.FeedEvent) {
-	@Layout(c) {
+	@DefaultLayout(c) {
 		<div id="content" class="container md:mx-auto md:px-4">
 			@MonthTrends(c, stats)
 			<div class="flex-1 grid grid-cols-3 gap-5 mt-8">

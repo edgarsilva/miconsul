@@ -6,7 +6,7 @@ import (
 )
 
 templ AppointmentStartPage(c *Ctx, appointment models.Appointment) {
-	@Layout(c) {
+	@DefaultLayout(c) {
 		<div class="px-4 lg:px-8">
 			@CmpBtnBack(c.l("btn.back"), "/appointments")
 		</div>

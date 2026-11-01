@@ -1,7 +1,7 @@
 package views
 
 templ AdminModelsPage(c *Ctx, models []string) {
-	@Layout(c) {
+	@DefaultLayout(c) {
 		<section id="patients_section" class="grow flex flex-col px-0 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			@CmpCardHeader(c, "Models", "", "", "", "", "")
 			<div class="app-card">

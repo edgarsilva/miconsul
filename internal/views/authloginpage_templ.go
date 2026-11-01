@@ -172,7 +172,7 @@ func LoginPage(c *Ctx, email string, err error) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = LayoutAuth(c).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = AuthLayout(c).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -254,7 +254,7 @@ func LogtoPage(c *Ctx, authState string, idTokenClaimsJSON string, customClaimsJ
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = Layout(c).Render(templ.WithChildren(ctx, templ_7745c5c3_Var10), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = DefaultLayout(c).Render(templ.WithChildren(ctx, templ_7745c5c3_Var10), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -365,7 +365,7 @@ func ProviderSigninPage(c *Ctx, msg, signinPath string) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = LayoutAuth(c).Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = AuthLayout(c).Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

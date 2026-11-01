@@ -9,7 +9,7 @@ import (
 // assetVersion busts browser caches of static assets once per process start.
 var assetVersion = strconv.FormatInt(time.Now().Unix(), 36)
 
-templ HTMLPage(c *Ctx) {
+templ RootLayout(c *Ctx) {
 	<!DOCTYPE html>
 	<html
 		lang={ c.Locale }
@@ -22,7 +22,7 @@ templ HTMLPage(c *Ctx) {
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
 			<meta name="color-scheme" content="light dark"/>
 			<meta name="htmx-config" content='{"includeIndicatorCSS":false}'/>
-			@Favicons(c)
+			@favicons(c)
 			<title>Miconsul</title>
 			<link href={ "/public/global.css?v=" + assetVersion } rel="stylesheet"/>
 			<script src="https://cdn.jsdelivr.net/npm/htmx.org@4.0.0/dist/htmx.min.js" integrity="sha384-BvJpBiO8Kh31EqtJe5DRIeWrHWnCGkwytKs9NKFi86Hhw96dEqdEMzZDeK9iEGTc" crossorigin="anonymous"></script>
@@ -34,8 +34,8 @@ templ HTMLPage(c *Ctx) {
 	</html>
 }
 
-templ Layout(c *Ctx) {
-	@HTMLPage(c) {
+templ DefaultLayout(c *Ctx) {
+	@RootLayout(c) {
 		<div id="root" class="bg-base-200">
 			@CmpNavbar(c)
 			<main id="main" class="grow flex flex-col">
@@ -46,8 +46,8 @@ templ Layout(c *Ctx) {
 	}
 }
 
-templ LayoutWithBackBtn(c *Ctx, backpath string) {
-	@Layout(c) {
+templ BackBtnLayout(c *Ctx, backpath string) {
+	@DefaultLayout(c) {
 		<div class="hidden md:block px-4 lg:px-8">
 			@CmpBtnBack(c.l("btn.back"), backpath)
 		</div>
@@ -55,23 +55,23 @@ templ LayoutWithBackBtn(c *Ctx, backpath string) {
 	}
 }
 
-templ LayoutAuth(c *Ctx) {
-	@HTMLPage(c) {
+templ AuthLayout(c *Ctx) {
+	@RootLayout(c) {
 		<div id="root" class="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-base-200">
 			{ children... }
 		</div>
 	}
 }
 
-templ LayoutCentered(c *Ctx) {
-	@HTMLPage(c) {
+templ CenteredLayout(c *Ctx) {
+	@RootLayout(c) {
 		<div id="root" class="flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-base-200">
 			{ children... }
 		</div>
 	}
 }
 
-templ Favicons(c *Ctx) {
+templ favicons(c *Ctx) {
 	<!-- Standard favicon -->
 	<link rel="icon" href="/favicon.ico" sizes="any"/>
 	<!-- PNG favicons -->

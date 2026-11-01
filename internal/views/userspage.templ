@@ -6,7 +6,7 @@ import (
 )
 
 templ UsersIndexPage(c *Ctx, users []models.User) {
-	@LayoutWithBackBtn(c, "/") {
+	@BackBtnLayout(c, "/") {
 		<section id="users_section" class="grow flex flex-col px-0 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<div
 				class="relative"
@@ -115,7 +115,7 @@ templ UsersEmptyList(c *Ctx) {
 }
 
 templ UserEditPage(c *Ctx, user models.User) {
-	@LayoutWithBackBtn(c, "/") {
+	@BackBtnLayout(c, "/") {
 		@UserProfileSection(c, user)
 	}
 }

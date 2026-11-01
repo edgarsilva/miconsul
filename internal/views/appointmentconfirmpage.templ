@@ -3,7 +3,7 @@ package views
 import "miconsul/internal/models"
 
 templ AppointmentNotFoundPage(c *Ctx) {
-	@LayoutCentered(c) {
+	@CenteredLayout(c) {
 		<div class="absolute top-4 right-4">
 			@CmpBtnTheme(c.Theme)
 		</div>
@@ -23,7 +23,7 @@ templ AppointmentNotFoundPage(c *Ctx) {
 }
 
 templ AppointmentConfirmPage(c *Ctx, appointment models.Appointment) {
-	@LayoutCentered(c) {
+	@CenteredLayout(c) {
 		<div class="absolute top-4 right-4">
 			@CmpBtnTheme(c.Theme)
 		</div>
@@ -62,7 +62,7 @@ templ AppointmentConfirmPage(c *Ctx, appointment models.Appointment) {
 }
 
 templ AppointmentCancelPage(c *Ctx, appointment models.Appointment) {
-	@LayoutCentered(c) {
+	@CenteredLayout(c) {
 		<div class="absolute top-4 right-4">
 			@CmpBtnTheme(c.Theme)
 		</div>

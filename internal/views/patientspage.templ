@@ -7,7 +7,7 @@ import (
 )
 
 templ PatientsPage(c *Ctx, patients []models.Patient) {
-	@LayoutWithBackBtn(c, "/") {
+	@BackBtnLayout(c, "/") {
 		<section id="patients_section" class="grow flex flex-col px-0 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<div
 				class="relative"
@@ -45,7 +45,7 @@ templ PatientsPage(c *Ctx, patients []models.Patient) {
 }
 
 templ PatientFormPage(c *Ctx, patient models.Patient) {
-	@Layout(c) {
+	@DefaultLayout(c) {
 		<div class="px-4 lg:px-8">
 			@CmpBtnBack(c.l("btn.back"), "/patients")
 		</div>

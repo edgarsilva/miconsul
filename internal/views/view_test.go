@@ -175,15 +175,15 @@ func TestUserViewsOmitSecrets(t *testing.T) {
 	})
 }
 
-func TestHTMLPageCSSURLStableAcrossRenders(t *testing.T) {
+func TestRootLayoutCSSURLStableAcrossRenders(t *testing.T) {
 	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
 		c := NewCtx(fc)
 
 		var first, second strings.Builder
-		if err := HTMLPage(c).Render(fc.Context(), &first); err != nil {
+		if err := RootLayout(c).Render(fc.Context(), &first); err != nil {
 			t.Fatalf("render first page: %v", err)
 		}
-		if err := HTMLPage(c).Render(fc.Context(), &second); err != nil {
+		if err := RootLayout(c).Render(fc.Context(), &second); err != nil {
 			t.Fatalf("render second page: %v", err)
 		}
 
@@ -196,7 +196,7 @@ func TestHTMLPageCSSURLStableAcrossRenders(t *testing.T) {
 	})
 }
 
-func TestHTMLPageDataTheme(t *testing.T) {
+func TestRootLayoutDataTheme(t *testing.T) {
 	tests := []struct {
 		theme string
 		want  string
@@ -211,7 +211,7 @@ func TestHTMLPageDataTheme(t *testing.T) {
 			c := NewCtx(fc, WithTheme(tt.theme))
 
 			var html strings.Builder
-			if err := HTMLPage(c).Render(fc.Context(), &html); err != nil {
+			if err := RootLayout(c).Render(fc.Context(), &html); err != nil {
 				t.Fatalf("render: %v", err)
 			}
 			if !strings.Contains(html.String(), tt.want) {
@@ -260,11 +260,11 @@ func TestCmpBtnTheme(t *testing.T) {
 	}
 }
 
-func TestHTMLPageLang(t *testing.T) {
+func TestRootLayoutLang(t *testing.T) {
 	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
 		for _, locale := range []string{"es-MX", "en-US"} {
 			var html strings.Builder
-			if err := HTMLPage(NewCtx(fc, WithLocale(locale))).Render(fc.Context(), &html); err != nil {
+			if err := RootLayout(NewCtx(fc, WithLocale(locale))).Render(fc.Context(), &html); err != nil {
 				t.Fatalf("render page: %v", err)
 			}
 			if want := `<html lang="` + locale + `"`; !strings.Contains(html.String(), want) {
@@ -390,7 +390,7 @@ func TestNoAlpine(t *testing.T) {
 	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
 		c := NewCtx(fc, WithToast("Saved", "", "success"))
 		for name, component := range map[string]templ.Component{
-			"page":             HTMLPage(c),
+			"page":             RootLayout(c),
 			"toast":            CmpToast("Saved", "", "success"),
 			"password":         CmpInputPassword(""),
 			"confirm password": CmpInputConfirmPassword(""),

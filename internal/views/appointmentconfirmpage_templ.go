@@ -80,7 +80,7 @@ func AppointmentNotFoundPage(c *Ctx) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = LayoutCentered(c).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CenteredLayout(c).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -274,7 +274,7 @@ func AppointmentConfirmPage(c *Ctx, appointment models.Appointment) templ.Compon
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = LayoutCentered(c).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CenteredLayout(c).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -421,7 +421,7 @@ func AppointmentCancelPage(c *Ctx, appointment models.Appointment) templ.Compone
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = LayoutCentered(c).Render(templ.WithChildren(ctx, templ_7745c5c3_Var16), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CenteredLayout(c).Render(templ.WithChildren(ctx, templ_7745c5c3_Var16), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
