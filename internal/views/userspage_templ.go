@@ -14,7 +14,7 @@ import (
 	"miconsul/internal/models"
 )
 
-func UsersIndexPage(c *Ctx, users []models.User) templ.Component {
+func UserIndexPage(c *Ctx, users []models.User) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -108,12 +108,12 @@ func UsersIndexPage(c *Ctx, users []models.User) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if len(users) > 0 {
-				templ_7745c5c3_Err = UsersList(c, users).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = UserList(c, users).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = UsersEmptyList(c).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = UserEmptyList(c).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -132,7 +132,7 @@ func UsersIndexPage(c *Ctx, users []models.User) templ.Component {
 	})
 }
 
-func UsersList(c *Ctx, users []models.User) templ.Component {
+func UserList(c *Ctx, users []models.User) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -264,7 +264,7 @@ func UserLi(c *Ctx, user models.User) templ.Component {
 	})
 }
 
-func UsersEmptyList(c *Ctx) templ.Component {
+func UserEmptyList(c *Ctx) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -429,7 +429,7 @@ func UserProfile(c *Ctx, user models.User) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = ProfilePic(c, user).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = UserProfilePic(c, user).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -745,7 +745,7 @@ func UserProfile(c *Ctx, user models.User) templ.Component {
 	})
 }
 
-func ProfilePic(c *Ctx, user models.User) templ.Component {
+func UserProfilePic(c *Ctx, user models.User) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -779,7 +779,7 @@ func ProfilePic(c *Ctx, user models.User) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = ProfileAvatarPic(c, user).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = UserAvatarPic(c, user).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -797,7 +797,7 @@ func ProfilePic(c *Ctx, user models.User) templ.Component {
 	})
 }
 
-func ProfileAvatarPic(c *Ctx, user models.User) templ.Component {
+func UserAvatarPic(c *Ctx, user models.User) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
