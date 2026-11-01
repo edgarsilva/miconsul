@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-func PatientsPage(c *Ctx, patients []models.Patient) templ.Component {
+func PatientIndexPage(c *Ctx, patients []models.Patient) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -112,12 +112,12 @@ func PatientsPage(c *Ctx, patients []models.Patient) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if len(patients) > 0 {
-				templ_7745c5c3_Err = PatientsList(c, patients).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = PatientList(c, patients).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = PatientsEmptyList(c).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = PatientEmptyList(c).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -191,7 +191,7 @@ func PatientFormPage(c *Ctx, patient models.Patient) templ.Component {
 	})
 }
 
-func PatientsList(c *Ctx, patients []models.Patient) templ.Component {
+func PatientList(c *Ctx, patients []models.Patient) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -471,7 +471,7 @@ func PatientDeleteForm(c *Ctx, patient models.Patient) templ.Component {
 	})
 }
 
-func PatientsEmptyList(c *Ctx) templ.Component {
+func PatientEmptyList(c *Ctx) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1075,19 +1075,19 @@ func PatientProfile(c *Ctx, patient models.Patient) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = CountryOption("none", "none", patient.Country).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = patientCountryOption("none", "none", patient.Country).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = CountryOption("Mexico", "Mexico", patient.Country).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = patientCountryOption("Mexico", "Mexico", patient.Country).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = CountryOption("United States", "United States", patient.Country).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = patientCountryOption("United States", "United States", patient.Country).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = CountryOption("Canada", "Canada", patient.Country).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = patientCountryOption("Canada", "Canada", patient.Country).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1622,7 +1622,7 @@ func PatientForm(c *Ctx, patient models.Patient) templ.Component {
 	})
 }
 
-func CountryOption(label, value, country string) templ.Component {
+func patientCountryOption(label, value, country string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

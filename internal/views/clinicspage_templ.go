@@ -1063,19 +1063,19 @@ func ClinicProfile(c *Ctx, clinic models.Clinic) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = CountryOption("none", "none", clinic.Country).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = patientCountryOption("none", "none", clinic.Country).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = CountryOption("Mexico", "Mexico", clinic.Country).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = patientCountryOption("Mexico", "Mexico", clinic.Country).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = CountryOption("United States", "United States", clinic.Country).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = patientCountryOption("United States", "United States", clinic.Country).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = CountryOption("Canada", "Canada", clinic.Country).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = patientCountryOption("Canada", "Canada", clinic.Country).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

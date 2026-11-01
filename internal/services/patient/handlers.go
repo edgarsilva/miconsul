@@ -30,7 +30,7 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/patients", "Failed to load patients", "error")
 	}
 
-	return view.Render(c, view.PatientsPage(vc, patients))
+	return view.Render(c, view.PatientIndexPage(vc, patients))
 }
 
 // HandlePatientsIndexSearch runs the index search on patients.
@@ -49,7 +49,7 @@ func (s *service) HandlePatientsIndexSearch(c fiber.Ctx) error {
 	}
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.PatientsList(vc, patients))
+	return view.Render(c, view.PatientList(vc, patients))
 }
 
 // HandlePatientFormPage renders the patient create/edit page.
@@ -243,7 +243,7 @@ func (s *service) HandleDeletePatient(c fiber.Ctx) error {
 	}
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.PatientsList(vc, patients))
+	return view.Render(c, view.PatientList(vc, patients))
 }
 
 func normalizeSearchTerm(raw string) (string, error) {

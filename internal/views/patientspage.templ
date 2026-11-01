@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-templ PatientsPage(c *Ctx, patients []models.Patient) {
+templ PatientIndexPage(c *Ctx, patients []models.Patient) {
 	@BackBtnLayout(c, "/") {
 		<section id="patients_section" class="grow flex flex-col px-0 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<div
@@ -35,9 +35,9 @@ templ PatientsPage(c *Ctx, patients []models.Patient) {
 					</a>
 				</hgroup>
 				if (len(patients) > 0) {
-					@PatientsList(c, patients)
+					@PatientList(c, patients)
 				} else {
-					@PatientsEmptyList(c)
+					@PatientEmptyList(c)
 				}
 			</div>
 		</section>
@@ -53,7 +53,7 @@ templ PatientFormPage(c *Ctx, patient models.Patient) {
 	}
 }
 
-templ PatientsList(c *Ctx, patients []models.Patient) {
+templ PatientList(c *Ctx, patients []models.Patient) {
 	<ul id="patients_list" role="list" class="app-card divide-y divide-base-content/10 overflow-hidden">
 		for _, patient := range patients {
 			@PatientLi(c, patient)
@@ -152,7 +152,7 @@ templ PatientDeleteForm(c *Ctx, patient models.Patient) {
 	</form>
 }
 
-templ PatientsEmptyList(c *Ctx) {
+templ PatientEmptyList(c *Ctx) {
 	<div class="app-card flex">
 		<a href="/patients/new" class="relative block w-full rounded-lg border-2 border-dashed border-base-content/30 p-12 text-center hover:border-base-content/40 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
 			@CmpUserAddIcon("mx-auto w-12 h-12 text-base-content/60")
@@ -306,10 +306,10 @@ templ PatientProfile(c *Ctx, patient models.Patient) {
 							<label for="country" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.address_country") }</label>
 							<div class="mt-2">
 								<select id="country" name="addressCountry" autocomplete="country-name" class="select block w-full">
-									@CountryOption("none", "none", patient.Country)
-									@CountryOption("Mexico", "Mexico", patient.Country)
-									@CountryOption("United States", "United States", patient.Country)
-									@CountryOption("Canada", "Canada", patient.Country)
+									@patientCountryOption("none", "none", patient.Country)
+									@patientCountryOption("Mexico", "Mexico", patient.Country)
+									@patientCountryOption("United States", "United States", patient.Country)
+									@patientCountryOption("Canada", "Canada", patient.Country)
 								</select>
 							</div>
 						</div>
@@ -509,7 +509,7 @@ templ PatientForm(c *Ctx, patient models.Patient) {
 	</form>
 }
 
-templ CountryOption(label, value, country string) {
+templ patientCountryOption(label, value, country string) {
 	<option
 		value={ value }
 		if value == country {
