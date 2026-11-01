@@ -22,7 +22,7 @@ func TestClinicHandlerBranches(t *testing.T) {
 	})
 	app.Get("/clinics/:id", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandleShowPage(c)
+		return svc.HandleEditPage(c)
 	})
 	app.Post("/clinics", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
@@ -77,7 +77,7 @@ func TestClinicHandlersHappyPaths(t *testing.T) {
 	app := fiber.New()
 	app.Get("/clinics/:id", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandleShowPage(c)
+		return svc.HandleEditPage(c)
 	})
 
 	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/clinics/"+clinic.UID, nil))

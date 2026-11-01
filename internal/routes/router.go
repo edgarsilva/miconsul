@@ -133,7 +133,7 @@ func ClinicsRoutes(s *server.Server, authSvc auth.Runtime) error {
 	g.Get("/", c.HandleIndexPage)
 	g.Get("/search", c.HandleIndexSearch)
 	g.Get("/new", c.HandleNewPage)
-	g.Get("/:id", c.HandleShowPage)
+	g.Get("/:id", c.HandleEditPage)
 
 	g.Post("/", c.HandleCreate)
 	g.Patch("/:id", c.HandleUpdate)
@@ -152,7 +152,8 @@ func PatientRoutes(s *server.Server, authSvc auth.Runtime) error {
 	g.Get("/", p.HandleIndexPage)
 	g.Get("/search", p.HandleIndexSearch)
 
-	g.Get("/:id", p.HandlePatientFormPage)
+	g.Get("/new", p.HandleNewPage)
+	g.Get("/:id", p.HandleEditPage)
 	g.Get("/:id/profilepic/:filename", p.HandleProfilePicImgSrc)
 
 	g.Post("/", p.HandleCreate)
@@ -183,9 +184,9 @@ func AppointmentRoutes(s *server.Server, authSvc auth.Runtime) error {
 	g := a.Group("/appointments", mw.MustAuthenticate(authSvc))
 	g.Get("/", a.HandleIndexPage)
 	g.Get("/search", a.HandleIndexSearch)
-	g.Get("/new", a.HandleShowPage)
+	g.Get("/new", a.HandleNewPage)
 	g.Get("/new/pricefrg/:id", a.HandlePriceFrg)
-	g.Get("/:id", a.HandleShowPage)
+	g.Get("/:id", a.HandleEditPage)
 	g.Get("/:id/open", a.HandleOpenPage)
 	g.Post("/:id/start-session", a.HandleStartSession)
 	g.Post("/:id/pause-session", a.HandlePauseSession)

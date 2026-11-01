@@ -39,9 +39,9 @@ func (s *service) HandleNewPage(c fiber.Ctx) error {
 	return view.Render(c, view.ClinicPage(vc, clinic))
 }
 
-// HandleShowPage renders the clinics page HTML
+// HandleEditPage renders the clinic edit page.
 // GET: /clinics/:id
-func (s *service) HandleShowPage(c fiber.Ctx) error {
+func (s *service) HandleEditPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 	id := strings.TrimSpace(c.Params("id", ""))
 	if id == "" {

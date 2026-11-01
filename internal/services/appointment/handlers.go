@@ -80,14 +80,18 @@ func (s *service) HandleIndexSearch(c fiber.Ctx) error {
 	return view.Render(c, view.AppointmentIndexSection(vc, appointments, patient, clinic))
 }
 
-// HandleShowPage renders the appointment create/edit page.
+// HandleNewPage renders the new appointment page.
 // GET: /appointments/new
+func (s *service) HandleNewPage(c fiber.Ctx) error {
+	return s.renderFormPage(c, models.Appointment{})
+}
+
+// HandleEditPage renders the appointment edit page.
 // GET: /appointments/:id
-func (s *service) HandleShowPage(c fiber.Ctx) error {
+func (s *service) HandleEditPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
-	appointmentID := c.Params("id", "")
-	appointment, err := s.AppointmentForShowPage(c.Context(), cu.ID, appointmentID)
+	appointment, err := s.TakeAppointmentByUID(c.Context(), cu.ID, c.Params("id", ""))
 	if errors.Is(err, ErrIDRequired) {
 		return s.RedirectWithToast(c, "/appointments", "Invalid appointment id", view.LevelError)
 	}
@@ -98,21 +102,7 @@ func (s *service) HandleShowPage(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/appointments", "Failed to load appointment", view.LevelError)
 	}
 
-	clinics, err := s.FindRecentClinicsByUserID(c.Context(), cu.ID, 10)
-	if err != nil {
-		return s.RedirectWithToast(c, "/appointments", "Failed to load clinics", view.LevelError)
-	}
-
-	patients, err := s.FindRecentPatientsByUserID(c.Context(), cu.ID, 10)
-	if err != nil {
-		return s.RedirectWithToast(c, "/appointments", "Failed to load patients", view.LevelError)
-	}
-
-	clinics = ensureClinicListed(clinics, appointment.Clinic)
-	patients = ensurePatientListed(patients, appointment.Patient)
-	vc := view.NewCtx(c)
-
-	return view.Render(c, view.AppointmentPage(vc, appointment, patients, clinics))
+	return s.renderFormPage(c, appointment)
 }
 
 // HandleOpenPage renders the appointment start page HTML
@@ -652,15 +642,6 @@ func (s *service) HandleSearchPatients(c fiber.Ctx) error {
 	return view.Render(c, view.AppointmentPatientPickerList(vc, patients, patientUID))
 }
 
-func (s *service) AppointmentForShowPage(ctx context.Context, userID uint, appointmentID string) (models.Appointment, error) {
-	appointment := models.Appointment{UID: appointmentID}
-	if appointmentID == "" || appointmentID == "new" {
-		return appointment, nil
-	}
-
-	return s.TakeAppointmentByUID(ctx, userID, appointmentID)
-}
-
 func (s *service) PatientForStartPage(ctx context.Context, userID, patientID uint) (models.Patient, error) {
 	patient := models.Patient{}
 	err := s.DB.WithContext(ctx).
@@ -720,4 +701,26 @@ func appointmentFilterFromQuery(c fiber.Ctx) appointmentFilter {
 		SearchTerm: strings.TrimSpace(c.Query("searchTerm", "")),
 		Statuses:   models.ParseAppointmentStatuses(c.Query("status", "")),
 	}
+}
+
+// renderFormPage renders the appointment form page for appointment, with the
+// user's recent clinics and patients (and the appointment's own) to pick from.
+func (s *service) renderFormPage(c fiber.Ctx, appointment models.Appointment) error {
+	cu := s.CurrentUser(c)
+
+	clinics, err := s.FindRecentClinicsByUserID(c.Context(), cu.ID, 10)
+	if err != nil {
+		return s.RedirectWithToast(c, "/appointments", "Failed to load clinics", view.LevelError)
+	}
+
+	patients, err := s.FindRecentPatientsByUserID(c.Context(), cu.ID, 10)
+	if err != nil {
+		return s.RedirectWithToast(c, "/appointments", "Failed to load patients", view.LevelError)
+	}
+
+	clinics = ensureClinicListed(clinics, appointment.Clinic)
+	patients = ensurePatientListed(patients, appointment.Patient)
+	vc := view.NewCtx(c)
+
+	return view.Render(c, view.AppointmentPage(vc, appointment, patients, clinics))
 }

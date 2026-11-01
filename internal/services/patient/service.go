@@ -45,16 +45,6 @@ func (s service) TakePatientByID(ctx context.Context, userID uint, patientID str
 		Take(ctx)
 }
 
-func (s service) PatientForShowPage(ctx context.Context, userID uint, patientID string) (models.Patient, error) {
-	patientID = strings.TrimSpace(patientID)
-	patient := models.Patient{}
-	if patientID == "" || patientID == "new" {
-		return patient, nil
-	}
-
-	return s.TakePatientByID(ctx, userID, patientID)
-}
-
 func (s service) FindRecentPatientsByUser(ctx context.Context, cu models.User, limit int) ([]models.Patient, error) {
 	patients := []models.Patient{}
 	err := s.DB.WithContext(ctx).

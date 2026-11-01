@@ -53,19 +53,21 @@ func (s *service) HandleIndexSearch(c fiber.Ctx) error {
 	return view.Render(c, view.PatientList(vc, patients))
 }
 
-// HandlePatientFormPage renders the patient create/edit page.
+// HandleNewPage renders the new patient page.
+// GET: /patients/new
+func (s *service) HandleNewPage(c fiber.Ctx) error {
+	vc := view.NewCtx(c)
+	return view.Render(c, view.PatientFormPage(vc, models.Patient{}))
+}
+
+// HandleEditPage renders the patient edit page.
 // GET: /patients/:id
-func (s *service) HandlePatientFormPage(c fiber.Ctx) error {
+func (s *service) HandleEditPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
 	vc := view.NewCtx(c)
 
-	id := strings.TrimSpace(c.Params("id", ""))
-	if id == "" {
-		return s.RedirectWithToast(c, "/patients", "That user does not exist", view.LevelWarning)
-	}
-
-	patient, err := s.PatientForShowPage(c.Context(), cu.ID, id)
+	patient, err := s.TakePatientByID(c.Context(), cu.ID, c.Params("id", ""))
 	if errors.Is(err, ErrIDRequired) {
 		return s.RedirectWithToast(c, "/patients", "That user does not exist", view.LevelWarning)
 	}

@@ -16,6 +16,17 @@ func TestPatientHandlers(t *testing.T) {
 	u := h.createUser(models.UserRoleUser)
 	token := h.authToken(u)
 
+	t.Run("new patient page has its own route", func(t *testing.T) {
+		resp, body := h.doRequest(requestOptions{path: "/patients/new", authToken: token})
+
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("expected 200 for the new patient page, got %d", resp.StatusCode)
+		}
+		if !strings.Contains(body, `hx-post="/patients"`) {
+			t.Fatalf("expected the new patient form to post to /patients")
+		}
+	})
+
 	t.Run("update patient htmx returns success redirect header", func(t *testing.T) {
 		patient := h.createPatient(u.ID, "Patient One")
 

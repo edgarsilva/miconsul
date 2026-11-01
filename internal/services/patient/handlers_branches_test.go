@@ -16,7 +16,7 @@ func TestPatientHandlerGuardBranches(t *testing.T) {
 	app := fiber.New()
 	app.Get("/patients/:id", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandlePatientFormPage(c)
+		return svc.HandleEditPage(c)
 	})
 	app.Post("/patients", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
