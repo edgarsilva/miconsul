@@ -46,7 +46,7 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	}
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.AppointmentsPage(vc, appointments, patient, clinic))
+	return view.Render(c, view.AppointmentIndexPage(vc, appointments, patient, clinic))
 }
 
 // HandleIndexSearch runs the appointments index search.
@@ -174,7 +174,7 @@ func (s *service) HandleStartSession(c fiber.Ctx) error {
 
 	vc := view.NewCtx(c)
 	appointment := models.Appointment{UID: appointmentID, Status: models.AppointmentInProgress}
-	return view.Render(c, view.AppointmentSessionToggleFrg(vc, appointment))
+	return view.Render(c, view.AppointmentSessionToggle(vc, appointment))
 }
 
 // HandlePauseSession handles pausing an appointment session.
@@ -201,7 +201,7 @@ func (s *service) HandlePauseSession(c fiber.Ctx) error {
 
 	vc := view.NewCtx(c)
 	appointment := models.Appointment{UID: appointmentID, Status: models.AppointmentPending}
-	return view.Render(c, view.AppointmentSessionToggleFrg(vc, appointment))
+	return view.Render(c, view.AppointmentSessionToggle(vc, appointment))
 }
 
 // HandleSaveSession handles saving in-progress session notes.
@@ -587,7 +587,7 @@ func (s *service) HandlePriceFrg(c fiber.Ctx) error {
 
 	vc := view.NewCtx(c)
 
-	return view.Render(c, view.ApptPrice(vc, models.Appointment{}, clinic, false))
+	return view.Render(c, view.AppointmentPrice(vc, models.Appointment{}, clinic, false))
 }
 
 // HandleSearchClinics searches clinics and returns an HTML fragment to be
@@ -618,7 +618,7 @@ func (s *service) HandleSearchClinics(c fiber.Ctx) error {
 
 	vc := view.NewCtx(c)
 
-	return view.Render(c, view.ApptSearchClinicsFrg(vc, clinics, clinicUID))
+	return view.Render(c, view.AppointmentClinicSearchResults(vc, clinics, clinicUID))
 }
 
 // HandleSearchPatients searches patients and returns an HTML fragment to be
@@ -649,7 +649,7 @@ func (s *service) HandleSearchPatients(c fiber.Ctx) error {
 
 	vc := view.NewCtx(c)
 
-	return view.Render(c, view.PatientSearchResults(vc, patients, patientUID))
+	return view.Render(c, view.AppointmentPatientPickerList(vc, patients, patientUID))
 }
 
 func (s *service) AppointmentForShowPage(ctx context.Context, userID uint, appointmentID string) (models.Appointment, error) {

@@ -31,7 +31,7 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	}
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.UsersIndexPage(vc, users))
+	return view.Render(c, view.UserIndexPage(vc, users))
 }
 
 // HandleEditPage renders the user edit page for admins.
@@ -129,7 +129,7 @@ func (s *service) HandleProfilePicPreview(c fiber.Ctx) error {
 
 	user.ProfilePic = previewPath
 	vc := view.NewCtx(c)
-	return view.Render(c, view.ProfileAvatarPic(vc, user))
+	return view.Render(c, view.UserAvatar(vc, user))
 }
 
 // HandleUserProfilePicImgSrc serves a user's profile picture file.
@@ -198,7 +198,7 @@ func (s *service) HandleAdminRemoveProfilePic(c fiber.Ctx) error {
 
 	vc := view.NewCtx(c)
 	return view.Render(c, templ.Join(
-		view.ProfileAvatarPic(vc, updatedUser),
+		view.UserAvatar(vc, updatedUser),
 		view.CmpToastPartial("Profile picture removed", "", "success"),
 	))
 }

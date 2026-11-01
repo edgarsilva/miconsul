@@ -1,7 +1,7 @@
 package views
 
 templ LandingPage(c *Ctx) {
-	@HTMLPage(c) {
+	@RootLayout(c) {
 		<div id="root" class="min-h-screen flex flex-col bg-base-200">
 			<header class="border-y border-base-content/10 bg-base-100">
 				<nav class="navbar px-4 lg:px-8">
@@ -16,13 +16,12 @@ templ LandingPage(c *Ctx) {
 						</a>
 					</div>
 					<div class="navbar-end gap-2">
-						@CmpBtnTheme(c.Theme)
+						@CmpThemeBtn(c.Theme)
 						<a href="/signup" class="btn btn-ghost">{ c.l("btn.signup") }</a>
 						<a href="/signin" class="btn btn-primary">{ c.l("btn.sign_in") }</a>
 					</div>
 				</nav>
 			</header>
-
 			<main class="grow flex items-center justify-center px-4 py-10 lg:py-16">
 				<div class="card bg-base-100 shadow-xl border border-base-content/10 w-full max-w-2xl mx-auto">
 					<div class="card-body items-center text-center gap-4 py-12">
@@ -37,7 +36,6 @@ templ LandingPage(c *Ctx) {
 					</div>
 				</div>
 			</main>
-
 			@CmpFooter(c)
 		</div>
 	}

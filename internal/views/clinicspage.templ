@@ -5,8 +5,8 @@ import (
 	"strconv"
 )
 
-templ ClinicsPage(c *Ctx, clinics []models.Clinic) {
-	@LayoutWithBackBtn(c, "/") {
+templ ClinicIndexPage(c *Ctx, clinics []models.Clinic) {
+	@BackBtnLayout(c, "/") {
 		<section class="grow flex flex-col px-0 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<div
 				class="relative"
@@ -19,7 +19,7 @@ templ ClinicsPage(c *Ctx, clinics []models.Clinic) {
 								href="/clinics/new"
 								class="ml-auto btn btn-primary btn-sm md:hidden"
 							>
-								@IconBuilding("size-5")
+								@CmpBuildingIcon("size-5")
 								{ c.l("btn.new") }
 							</a>
 						</h1>
@@ -29,14 +29,14 @@ templ ClinicsPage(c *Ctx, clinics []models.Clinic) {
 						href="/clinics/new"
 						class="hidden md:flex btn btn-primary btn-sm"
 					>
-						@IconBuilding("size-5")
+						@CmpBuildingIcon("size-5")
 						{ c.l("btn.new") }
 					</a>
 				</hgroup>
 				if (len(clinics) > 0) {
-					@ClinicsList(c, clinics)
+					@ClinicList(c, clinics)
 				} else {
-					@ClinicsEmptyList(c)
+					@ClinicEmptyList(c)
 				}
 			</div>
 		</section>
@@ -44,15 +44,15 @@ templ ClinicsPage(c *Ctx, clinics []models.Clinic) {
 }
 
 templ ClinicPage(c *Ctx, clinic models.Clinic) {
-	@Layout(c) {
+	@DefaultLayout(c) {
 		<div class="px-4 lg:px-8">
-			@CmpBtnBack(c.l("btn.back"), "/clinics")
+			@CmpBackBtn(c.l("btn.back"), "/clinics")
 		</div>
 		@ClinicProfileSection(c, clinic)
 	}
 }
 
-templ ClinicsList(c *Ctx, clinics []models.Clinic) {
+templ ClinicList(c *Ctx, clinics []models.Clinic) {
 	<ul id="clinics_list" role="list" class="app-card divide-y divide-base-content/10 overflow-hidden2">
 		for _, clinic := range clinics {
 			@ClinicLi(c, clinic)
@@ -105,7 +105,7 @@ templ ClinicLi(c *Ctx, clinic models.Clinic) {
 				class="btn btn-sm"
 				hx-boost="true"
 			>
-				@IconCalendar("size-4")
+				@CmpCalendarIcon("size-4")
 				{ c.l("btn.appointments") }
 			</a>
 			<a
@@ -113,7 +113,7 @@ templ ClinicLi(c *Ctx, clinic models.Clinic) {
 				class="btn btn-sm"
 				hx-boost="true"
 			>
-				@IconEdit("size-4")
+				@CmpEditIcon("size-4")
 				{ c.l("btn.edit") }
 			</a>
 		</div>
@@ -139,10 +139,10 @@ templ ClinicDeleteForm(c *Ctx, clinic models.Clinic) {
 	</form>
 }
 
-templ ClinicsEmptyList(c *Ctx) {
+templ ClinicEmptyList(c *Ctx) {
 	<div class="app-card flex">
 		<a href="/clinics/new" class="relative block w-full rounded-lg border-2 border-dashed border-base-content/30 p-12 text-center hover:border-base-content/40 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-			@IconUserAdd("mx-auto w-12 h-12 text-base-content/60")
+			@CmpUserAddIcon("mx-auto w-12 h-12 text-base-content/60")
 			<span class="mt-2 block text-sm font-semibold">{ c.l("str.new_clinic") }</span>
 		</a>
 	</div>
@@ -297,10 +297,10 @@ templ ClinicProfile(c *Ctx, clinic models.Clinic) {
 						<label for="address_country" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.address_country") }</label>
 						<div class="mt-2">
 							<select id="address_country" name="addressCountry" autocomplete="country-name" class="select block w-full">
-								@CountryOption("none", "none", clinic.Country)
-								@CountryOption("Mexico", "Mexico", clinic.Country)
-								@CountryOption("United States", "United States", clinic.Country)
-								@CountryOption("Canada", "Canada", clinic.Country)
+								@patientCountryOption("none", "none", clinic.Country)
+								@patientCountryOption("Mexico", "Mexico", clinic.Country)
+								@patientCountryOption("United States", "United States", clinic.Country)
+								@patientCountryOption("Canada", "Canada", clinic.Country)
 							</select>
 						</div>
 					</div>

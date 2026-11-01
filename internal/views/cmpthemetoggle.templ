@@ -2,12 +2,12 @@ package views
 
 import "miconsul/internal/lib/preferences"
 
-// CmpBtnTheme renders the swap theme toggle; a click only saves the
+// CmpThemeBtn renders the swap theme toggle; a click only saves the
 // choice. With a saved theme the page is light (data-theme on <html>) and the
 // checked box applies dark. With none the page follows the OS, so one of two
 // toggles shows, matching the OS, and a click always flips what is on screen;
 // that first save reloads the page once so <html> gets its data-theme.
-templ CmpBtnTheme(theme string) {
+templ CmpThemeBtn(theme string) {
 	switch theme {
 		case preferences.ThemeLight, preferences.ThemeDark:
 			@themeSwap(preferences.ThemeDark, preferences.ThemeLight, theme == preferences.ThemeDark, false)

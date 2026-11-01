@@ -30,7 +30,7 @@ func CmpSearchInput(c *Ctx, placeholder, path, target string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = IconSearch("size-5").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpSearchIcon("size-5").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

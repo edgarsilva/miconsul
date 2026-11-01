@@ -1,7 +1,7 @@
 package mailer
 
-templ ConfirmEmailTpl(locale, username, confirmURL string) {
-	@EmailWrapper() {
+templ AuthAddressConfirmationEmail(locale, username, confirmURL string) {
+	@EmailLayout() {
 		<p>
 			{ l(locale, "email.greeting") }
 			<b>{ username }</b>

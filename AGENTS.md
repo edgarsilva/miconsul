@@ -59,6 +59,23 @@ This file provides repo-specific guidance for coding assistants working on this 
 - Only load that document when the task touches templ/view/email templates.
 - If task is not templ-related, skip it to keep context focused.
 
+## templ Naming
+
+One rule: namespace + what + kind. The namespace is the domain, singular and named like its `services/<pkg>`, whenever there is one; `Cmp` only for truly generic components. Spell words out (allowed: `Btn`, `Li`, `Nav`, `Img`, `Oob`, and other daisyUI/Tailwind/htmx vocabulary), and drop words the kind or types already imply.
+
+| What | Rule | Examples |
+|---|---|---|
+| Page | Domain + action + `Page` | `AppointmentIndexPage`, `AppointmentStartPage`, `AuthLoginPage`, `DashboardPage` |
+| Layout | Domain + `Layout`; generic ones are just what + `Layout` | `AuthLayout`, `RootLayout`, `DefaultLayout`, `BackBtnLayout` |
+| Part (rendered inside a page or by a handler) | Domain + what (+ kind: `List`, `Li`, `Form`, `Btn`, `Section`…); no `Partial`/`Frg` suffix. A response that swaps several targets is named for what it shows, and its doc comment lists every target | `AppointmentList`, `AppointmentLi`, `AppointmentClinicPicker`, `AppointmentSessionToggle`, `DashboardFeed` |
+| Generic component | `Cmp` + what + kind | `CmpBackBtn`, `CmpStatusBadge`, `CmpEmailInput`, `CmpToastRegion`, `CmpLargeAvatar` |
+| Icon | `Cmp` + name + `Icon` | `CmpCalendarIcon` |
+| Piece made for one owner | unexported, owner + what | `navbarThemeBtn`, `navbarSearch`, `patientCountryOption` |
+| Helper | next to its component, owner + what | `pickerIsSelected`, `toastLevelClass`, `feedEventTitle` |
+| Email (mailer) | Domain + what + `Email` | `AppointmentBookedEmail`, `AuthPasswordResetEmail` |
+
+`Partial` stays only where the component renders an htmx `<hx-partial>` element (`CmpToastPartial`).
+
 ## Build/Test Workflow
 
 - Regenerate templ output after templ changes:

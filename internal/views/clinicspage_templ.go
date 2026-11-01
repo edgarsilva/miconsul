@@ -14,7 +14,7 @@ import (
 	"strconv"
 )
 
-func ClinicsPage(c *Ctx, clinics []models.Clinic) templ.Component {
+func ClinicIndexPage(c *Ctx, clinics []models.Clinic) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -60,7 +60,7 @@ func ClinicsPage(c *Ctx, clinics []models.Clinic) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = IconBuilding("size-5").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpBuildingIcon("size-5").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -89,7 +89,7 @@ func ClinicsPage(c *Ctx, clinics []models.Clinic) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = IconBuilding("size-5").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpBuildingIcon("size-5").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -111,12 +111,12 @@ func ClinicsPage(c *Ctx, clinics []models.Clinic) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if len(clinics) > 0 {
-				templ_7745c5c3_Err = ClinicsList(c, clinics).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ClinicList(c, clinics).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = ClinicsEmptyList(c).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ClinicEmptyList(c).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -127,7 +127,7 @@ func ClinicsPage(c *Ctx, clinics []models.Clinic) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = LayoutWithBackBtn(c, "/").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = BackBtnLayout(c, "/").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -168,7 +168,7 @@ func ClinicPage(c *Ctx, clinic models.Clinic) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = CmpBtnBack(c.l("btn.back"), "/clinics").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpBackBtn(c.l("btn.back"), "/clinics").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -182,7 +182,7 @@ func ClinicPage(c *Ctx, clinic models.Clinic) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = Layout(c).Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = DefaultLayout(c).Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -190,7 +190,7 @@ func ClinicPage(c *Ctx, clinic models.Clinic) templ.Component {
 	})
 }
 
-func ClinicsList(c *Ctx, clinics []models.Clinic) templ.Component {
+func ClinicList(c *Ctx, clinics []models.Clinic) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -336,7 +336,7 @@ func ClinicLi(c *Ctx, clinic models.Clinic) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = IconCalendar("size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpCalendarIcon("size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -370,7 +370,7 @@ func ClinicLi(c *Ctx, clinic models.Clinic) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = IconEdit("size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpEditIcon("size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -459,7 +459,7 @@ func ClinicDeleteForm(c *Ctx, clinic models.Clinic) templ.Component {
 	})
 }
 
-func ClinicsEmptyList(c *Ctx) templ.Component {
+func ClinicEmptyList(c *Ctx) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -480,7 +480,7 @@ func ClinicsEmptyList(c *Ctx) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = IconUserAdd("mx-auto w-12 h-12 text-base-content/60").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpUserAddIcon("mx-auto w-12 h-12 text-base-content/60").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1063,19 +1063,19 @@ func ClinicProfile(c *Ctx, clinic models.Clinic) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = CountryOption("none", "none", clinic.Country).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = patientCountryOption("none", "none", clinic.Country).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = CountryOption("Mexico", "Mexico", clinic.Country).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = patientCountryOption("Mexico", "Mexico", clinic.Country).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = CountryOption("United States", "United States", clinic.Country).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = patientCountryOption("United States", "United States", clinic.Country).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = CountryOption("Canada", "Canada", clinic.Country).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = patientCountryOption("Canada", "Canada", clinic.Country).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

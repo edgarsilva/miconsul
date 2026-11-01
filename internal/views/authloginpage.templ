@@ -1,9 +1,9 @@
 package views
 
-templ LoginPage(c *Ctx, email string, err error) {
-	@LayoutAuth(c) {
+templ AuthLoginPage(c *Ctx, email string, err error) {
+	@AuthLayout(c) {
 		<div class="absolute top-4 right-4">
-			@CmpBtnTheme(c.Theme)
+			@CmpThemeBtn(c.Theme)
 		</div>
 		<div class="pt-10 card glass bg-base-100 shadow w-full sm:max-w-[480px] sm:mx-auto">
 			<div class="flex justify-center overflow-visible">
@@ -19,8 +19,8 @@ templ LoginPage(c *Ctx, email string, err error) {
 					<div class="badge badge-secondary">INC</div>
 				</h2>
 				<form class="space-y-6" action="/signin" method="POST">
-					@CmpInputEmail(email)
-					@CmpInputPassword("")
+					@CmpEmailInput(email)
+					@CmpPasswordInput("")
 					<div class="flex items-center justify-between">
 						@CmpCheckbox(c.l("str.keep_me_signed_in"), "remember_me", "true", false)
 						<div class="text-sm leading-6">
@@ -69,8 +69,8 @@ templ LoginPage(c *Ctx, email string, err error) {
 	}
 }
 
-templ LogtoPage(c *Ctx, authState string, idTokenClaimsJSON string, customClaimsJSON string) {
-	@Layout(c) {
+templ AuthLogtoPage(c *Ctx, authState string, idTokenClaimsJSON string, customClaimsJSON string) {
+	@DefaultLayout(c) {
 		<div id="content" class="container md:mx-auto md:px-4">
 			<section class="app-card p-4 md:p-6 space-y-4">
 				<div class="flex items-center justify-between gap-4">
@@ -81,14 +81,12 @@ templ LogtoPage(c *Ctx, authState string, idTokenClaimsJSON string, customClaims
 					</div>
 				</div>
 				<div class="badge badge-info badge-outline">{ authState }</div>
-
 				<div>
 					<h2 class="font-medium mb-2">ID Token Claims</h2>
 					<div class="mockup-code text-sm">
 						<pre><code>{ idTokenClaimsJSON }</code></pre>
 					</div>
 				</div>
-
 				<div>
 					<h2 class="font-medium mb-2">Access Token Custom Claims</h2>
 					<div class="mockup-code text-sm">
@@ -100,13 +98,13 @@ templ LogtoPage(c *Ctx, authState string, idTokenClaimsJSON string, customClaims
 	}
 }
 
-// ProviderSigninPage is the sign-in page while a sign-in provider such as
+// AuthProviderSigninPage is the sign-in page while a sign-in provider such as
 // Logto handles authentication; it links to the provider instead of showing
 // a password form.
-templ ProviderSigninPage(c *Ctx, msg, signinPath string) {
-	@LayoutAuth(c) {
+templ AuthProviderSigninPage(c *Ctx, msg, signinPath string) {
+	@AuthLayout(c) {
 		<div class="absolute top-4 right-4">
-			@CmpBtnTheme(c.Theme)
+			@CmpThemeBtn(c.Theme)
 		</div>
 		<div class="pt-10 card glass bg-base-100 shadow w-full sm:max-w-[480px] sm:mx-auto">
 			<div class="flex justify-center overflow-visible">

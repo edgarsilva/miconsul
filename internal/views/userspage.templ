@@ -5,8 +5,8 @@ import (
 	"miconsul/internal/models"
 )
 
-templ UsersIndexPage(c *Ctx, users []models.User) {
-	@LayoutWithBackBtn(c, "/") {
+templ UserIndexPage(c *Ctx, users []models.User) {
+	@BackBtnLayout(c, "/") {
 		<section id="users_section" class="grow flex flex-col px-0 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<div
 				class="relative"
@@ -26,7 +26,7 @@ templ UsersIndexPage(c *Ctx, users []models.User) {
 							</a>
 						</h1>
 						<label class="input flex items-center gap-2 rounded-full focus:outline">
-							@IconSearch("size-5")
+							@CmpSearchIcon("size-5")
 							<input
 								type="search"
 								name="searchTerm"
@@ -55,16 +55,16 @@ templ UsersIndexPage(c *Ctx, users []models.User) {
 					</a>
 				</hgroup>
 				if (len(users) > 0) {
-					@UsersList(c, users)
+					@UserList(c, users)
 				} else {
-					@UsersEmptyList(c)
+					@UserEmptyList(c)
 				}
 			</div>
 		</section>
 	}
 }
 
-templ UsersList(c *Ctx, users []models.User) {
+templ UserList(c *Ctx, users []models.User) {
 	<ul id="users_list" role="list" class="app-card divide-y divide-base-content/10 overflow-hidden px-4 py-2">
 		for _, user := range users {
 			@UserLi(c, user)
@@ -82,10 +82,10 @@ templ UserLi(c *Ctx, user models.User) {
 						{ user.Name }
 					</span>
 				</p>
-			<p class="text-xs leading-5 text-base-content/50">
-				{ c.l("str.updated") }
-				@CmpRelativeTime(user.UpdatedAt)
-			</p>
+				<p class="text-xs leading-5 text-base-content/50">
+					{ c.l("str.updated") }
+					@CmpRelativeTime(user.UpdatedAt)
+				</p>
 			</div>
 		</div>
 		<div class="flex shrink-0 items-center gap-x-4">
@@ -96,7 +96,7 @@ templ UserLi(c *Ctx, user models.User) {
 						href={ templ.URL("/admin/users/" + user.UID) }
 						hx-boost="true"
 					>
-						@IconEdit("size-6")
+						@CmpEditIcon("size-6")
 						{ c.l("btn.edit") }
 					</a>
 				</div>
@@ -105,17 +105,17 @@ templ UserLi(c *Ctx, user models.User) {
 	</li>
 }
 
-templ UsersEmptyList(c *Ctx) {
+templ UserEmptyList(c *Ctx) {
 	<div class="app-card flex">
 		<a href="/users/new" class="relative block w-full rounded-lg border-2 border-dashed border-base-content/30 p-12 text-center hover:border-base-content/40 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-			@IconUserAdd("mx-auto w-8 h-8 text-base-content/60")
+			@CmpUserAddIcon("mx-auto w-8 h-8 text-base-content/60")
 			<span class="mt-2 block text-sm font-semibold">{ c.l("str.create_new_user") }</span>
 		</a>
 	</div>
 }
 
 templ UserEditPage(c *Ctx, user models.User) {
-	@LayoutWithBackBtn(c, "/") {
+	@BackBtnLayout(c, "/") {
 		@UserProfileSection(c, user)
 	}
 }
@@ -131,7 +131,7 @@ templ UserProfile(c *Ctx, user models.User) {
 				<input type="hidden" name="id" value={ user.UID } id="user_id"/>
 				<div class="px-4 py-6 sm:p-8">
 					<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-						@ProfilePic(c, user)
+						@UserAvatarField(c, user)
 						<div class="sm:col-span-3">
 							<label for="name" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.name") }</label>
 							<div class="mt-2">
@@ -205,11 +205,11 @@ templ UserProfile(c *Ctx, user models.User) {
 	</div>
 }
 
-templ ProfilePic(c *Ctx, user models.User) {
+templ UserAvatarField(c *Ctx, user models.User) {
 	<div id="profile_pic" class="col-span-full">
 		<label for="profile_pic_input" class="block text-sm font-medium leading-6">{ c.l("str.profile_pic") }</label>
 		<div class="mt-2 flex items-center gap-x-3">
-			@ProfileAvatarPic(c, user)
+			@UserAvatar(c, user)
 			if !adminEditsOther(c, user) {
 				<input
 					id="profile_pic_input"
@@ -229,7 +229,7 @@ templ ProfilePic(c *Ctx, user models.User) {
 	</div>
 }
 
-templ ProfileAvatarPic(c *Ctx, user models.User) {
+templ UserAvatar(c *Ctx, user models.User) {
 	<figure id="avatar_pic" class="flex flex-col gap-2 items-center">
 		if user.ProfilePic != "" {
 			@CmpAvatar(user)
@@ -288,7 +288,7 @@ templ UserProfileSection(c *Ctx, user models.User) {
 				href={ templ.URL("/appointments?userId=" + user.UID) }
 				class="btn btn-primary btn-sm"
 			>
-				@IconCalendar("")
+				@CmpCalendarIcon("")
 				{ c.l("btn.appointments") }
 			</a>
 		</hgroup>

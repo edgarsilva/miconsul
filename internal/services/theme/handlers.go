@@ -41,5 +41,5 @@ func (s *service) HandleToggleTheme(c fiber.Ctx) error {
 		c.Set("HX-Refresh", "true")
 	}
 
-	return view.Render(c, view.CmpBtnTheme(theme))
+	return view.Render(c, view.CmpThemeBtn(theme))
 }

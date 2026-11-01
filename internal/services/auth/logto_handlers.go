@@ -216,7 +216,7 @@ func (s *service) HandleLogtoPage(c fiber.Ctx) error {
 
 	if _, err := logtoClient.GetAccessToken(""); err != nil {
 		vc := view.NewCtx(c)
-		return view.Render(c, view.LogtoPage(
+		return view.Render(c, view.AuthLogtoPage(
 			vc,
 			"You are not logged in to this website. :(",
 			"{}",
@@ -229,7 +229,7 @@ func (s *service) HandleLogtoPage(c fiber.Ctx) error {
 	customClaimsJSON := logtoCustomClaimsJSON(logtoClient, s.Env.LogtoResource)
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.LogtoPage(vc, authState, idTokenClaimsJSON, customClaimsJSON))
+	return view.Render(c, view.AuthLogtoPage(vc, authState, idTokenClaimsJSON, customClaimsJSON))
 }
 
 func deferLogtoSessionSave(route string, saveSess func() error) {

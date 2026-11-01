@@ -155,8 +155,8 @@ func TestUserViewsOmitSecrets(t *testing.T) {
 		pages := map[string]interface {
 			Render(context.Context, io.Writer) error
 		}{
-			"UsersIndexPage": UsersIndexPage(c, []models.User{user}),
-			"UserEditPage":   UserEditPage(c, user),
+			"UserIndexPage": UserIndexPage(c, []models.User{user}),
+			"UserEditPage":  UserEditPage(c, user),
 		}
 		for name, page := range pages {
 			var html strings.Builder
@@ -175,15 +175,15 @@ func TestUserViewsOmitSecrets(t *testing.T) {
 	})
 }
 
-func TestHTMLPageCSSURLStableAcrossRenders(t *testing.T) {
+func TestRootLayoutCSSURLStableAcrossRenders(t *testing.T) {
 	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
 		c := NewCtx(fc)
 
 		var first, second strings.Builder
-		if err := HTMLPage(c).Render(fc.Context(), &first); err != nil {
+		if err := RootLayout(c).Render(fc.Context(), &first); err != nil {
 			t.Fatalf("render first page: %v", err)
 		}
-		if err := HTMLPage(c).Render(fc.Context(), &second); err != nil {
+		if err := RootLayout(c).Render(fc.Context(), &second); err != nil {
 			t.Fatalf("render second page: %v", err)
 		}
 
@@ -196,7 +196,7 @@ func TestHTMLPageCSSURLStableAcrossRenders(t *testing.T) {
 	})
 }
 
-func TestHTMLPageDataTheme(t *testing.T) {
+func TestRootLayoutDataTheme(t *testing.T) {
 	tests := []struct {
 		theme string
 		want  string
@@ -211,7 +211,7 @@ func TestHTMLPageDataTheme(t *testing.T) {
 			c := NewCtx(fc, WithTheme(tt.theme))
 
 			var html strings.Builder
-			if err := HTMLPage(c).Render(fc.Context(), &html); err != nil {
+			if err := RootLayout(c).Render(fc.Context(), &html); err != nil {
 				t.Fatalf("render: %v", err)
 			}
 			if !strings.Contains(html.String(), tt.want) {
@@ -221,7 +221,7 @@ func TestHTMLPageDataTheme(t *testing.T) {
 	}
 }
 
-func TestCmpBtnTheme(t *testing.T) {
+func TestCmpThemeBtn(t *testing.T) {
 	tests := []struct {
 		theme       string
 		wantSwaps   int
@@ -236,7 +236,7 @@ func TestCmpBtnTheme(t *testing.T) {
 
 	for _, tt := range tests {
 		var html strings.Builder
-		if err := CmpBtnTheme(tt.theme).Render(context.Background(), &html); err != nil {
+		if err := CmpThemeBtn(tt.theme).Render(context.Background(), &html); err != nil {
 			t.Fatalf("render: %v", err)
 		}
 		got := html.String()
@@ -260,11 +260,11 @@ func TestCmpBtnTheme(t *testing.T) {
 	}
 }
 
-func TestHTMLPageLang(t *testing.T) {
+func TestRootLayoutLang(t *testing.T) {
 	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
 		for _, locale := range []string{"es-MX", "en-US"} {
 			var html strings.Builder
-			if err := HTMLPage(NewCtx(fc, WithLocale(locale))).Render(fc.Context(), &html); err != nil {
+			if err := RootLayout(NewCtx(fc, WithLocale(locale))).Render(fc.Context(), &html); err != nil {
 				t.Fatalf("render page: %v", err)
 			}
 			if want := `<html lang="` + locale + `"`; !strings.Contains(html.String(), want) {
@@ -318,8 +318,8 @@ func TestAuthPagesUseThemeColors(t *testing.T) {
 		pages := map[string]interface {
 			Render(context.Context, io.Writer) error
 		}{
-			"LoginPage":  LoginPage(c, "", nil),
-			"SignupPage": SignupPage(c, "", nil),
+			"AuthLoginPage":  AuthLoginPage(c, "", nil),
+			"AuthSignupPage": AuthSignupPage(c, "", nil),
 		}
 		for name, page := range pages {
 			var html strings.Builder
@@ -332,11 +332,11 @@ func TestAuthPagesUseThemeColors(t *testing.T) {
 		}
 
 		var login strings.Builder
-		if err := LoginPage(c, "", nil).Render(fc.Context(), &login); err != nil {
-			t.Fatalf("render LoginPage: %v", err)
+		if err := AuthLoginPage(c, "", nil).Render(fc.Context(), &login); err != nil {
+			t.Fatalf("render AuthLoginPage: %v", err)
 		}
 		if !strings.Contains(login.String(), `<a href="/resetpassword" class="link font-semibold`) {
-			t.Errorf("LoginPage: expected the forgot password link in the base text color")
+			t.Errorf("AuthLoginPage: expected the forgot password link in the base text color")
 		}
 	})
 }
@@ -344,7 +344,7 @@ func TestAuthPagesUseThemeColors(t *testing.T) {
 func TestDashboardViewAllLinks(t *testing.T) {
 	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
 		var html strings.Builder
-		if err := MonthTrends(NewCtx(fc), DashboardStats{}).Render(fc.Context(), &html); err != nil {
+		if err := DashboardMonthTrends(NewCtx(fc), DashboardStats{}).Render(fc.Context(), &html); err != nil {
 			t.Fatalf("render: %v", err)
 		}
 
@@ -379,7 +379,7 @@ func TestIsSelected(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := isSelected(tt.uid, tt.selectedUID, tt.i); got != tt.want {
+			if got := pickerIsSelected(tt.uid, tt.selectedUID, tt.i); got != tt.want {
 				t.Fatalf("isSelected(%q, %q, %d) = %v, want %v", tt.uid, tt.selectedUID, tt.i, got, tt.want)
 			}
 		})
@@ -390,10 +390,10 @@ func TestNoAlpine(t *testing.T) {
 	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
 		c := NewCtx(fc, WithToast("Saved", "", "success"))
 		for name, component := range map[string]templ.Component{
-			"page":             HTMLPage(c),
+			"page":             RootLayout(c),
 			"toast":            CmpToast("Saved", "", "success"),
-			"password":         CmpInputPassword(""),
-			"confirm password": CmpInputConfirmPassword(""),
+			"password":         CmpPasswordInput(""),
+			"confirm password": CmpConfirmPasswordInput(""),
 		} {
 			var html strings.Builder
 			if err := component.Render(fc.Context(), &html); err != nil {
@@ -415,7 +415,7 @@ func TestToastAndPasswordToggleMarkup(t *testing.T) {
 		if err := CmpToast("Saved", "", "success").Render(fc.Context(), &toast); err != nil {
 			t.Fatalf("render toast: %v", err)
 		}
-		if err := CmpInputPassword("").Render(fc.Context(), &password); err != nil {
+		if err := CmpPasswordInput("").Render(fc.Context(), &password); err != nil {
 			t.Fatalf("render password: %v", err)
 		}
 
@@ -520,7 +520,7 @@ func TestAppointmentStartEndSessionPostsComplete(t *testing.T) {
 		appointment := models.Appointment{UID: "apnt_1"}
 
 		var html strings.Builder
-		if err := AppointmentStart(NewCtx(fc), appointment).Render(fc.Context(), &html); err != nil {
+		if err := AppointmentStartSection(NewCtx(fc), appointment).Render(fc.Context(), &html); err != nil {
 			t.Fatalf("render: %v", err)
 		}
 

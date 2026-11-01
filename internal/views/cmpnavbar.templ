@@ -19,10 +19,10 @@ templ CmpNavbar(c *Ctx) {
 				</a>
 			</div>
 			<div class="navbar-end flex items-center">
-				@Search()
-				@DesktopNav(c)
-				@UserAvatar(c)
-				@MobileNav(c)
+				@navbarSearch()
+				@navbarDesktop(c)
+				@navbarUserAvatar(c)
+				@navbarMobile(c)
 			</div>
 		</nav>
 	</header>
@@ -36,60 +36,60 @@ func navbarHomePath(c *Ctx) string {
 	return "/"
 }
 
-templ UIThemeBtn(c *Ctx) {
+templ navbarThemeBtn(c *Ctx) {
 	<div class="flex items-center mr-2">
-		@CmpBtnTheme(c.Theme)
+		@CmpThemeBtn(c.Theme)
 	</div>
 }
 
-templ UserAvatar(c *Ctx) {
+templ navbarUserAvatar(c *Ctx) {
 	<a href="/profile" class="px-2">
 		@CmpAvatar(c.CurrentUser)
 	</a>
 }
 
-templ Search() {
+templ navbarSearch() {
 	<div class="flex gap-2 mr-2 items-center">
 		<button class="p-1 hover:outline rounded-xl" aria-label="Global Search">
-			@IconSearch("")
+			@CmpSearchIcon("")
 		</button>
 		<kbd class="hidden md:kbd md:kbd-sm">ctrl</kbd>
 		<kbd class="hidden md:kbd md:kbd-sm">/</kbd>
 	</div>
 }
 
-func ActiveLink(c *Ctx, p string) templ.KeyValue[string, bool] {
+func navbarActiveLink(c *Ctx, p string) templ.KeyValue[string, bool] {
 	return templ.KV("underline underline-offset-4", strings.Contains(c.Path(), p))
 }
 
-templ DesktopNav(c *Ctx) {
+templ navbarDesktop(c *Ctx) {
 	<div class="hidden md:flex justify-center">
-		<a href="/appointments?timeframe=day" class={ "btn btn-ghost text-sm", ActiveLink(c, "/appointments") }>{ c.l("nav.appointments") }</a>
-		<a href="/clinics" class={ "btn btn-ghost text-sm", ActiveLink(c, "/clinics") }>{ c.l("nav.clinics") }</a>
-		<a href="/patients" class={ "btn btn-ghost text-sm", ActiveLink(c, "/patients") }>{ c.l("nav.patients") }</a>
+		<a href="/appointments?timeframe=day" class={ "btn btn-ghost text-sm", navbarActiveLink(c, "/appointments") }>{ c.l("nav.appointments") }</a>
+		<a href="/clinics" class={ "btn btn-ghost text-sm", navbarActiveLink(c, "/clinics") }>{ c.l("nav.clinics") }</a>
+		<a href="/patients" class={ "btn btn-ghost text-sm", navbarActiveLink(c, "/patients") }>{ c.l("nav.patients") }</a>
 		<div class="tooltip tooltip-bottom hidden" data-tip={ c.l("str.coming_soon") }>
 			<a href="#" class="btn btn-ghost text-sm text-base-content/35">{ c.l("nav.exp_rev") }</a>
 		</div>
 		<div class="divider divider-horizontal"></div>
-		@UIThemeBtn(c)
+		@navbarThemeBtn(c)
 		if c.CurrentUser.IsLoggedIn() {
 			<a class="btn btn-ghost" href="/logout">
 				{ c.l("btn.logout") }
-				@IconSignout("")
+				@CmpSignoutIcon("")
 			</a>
 		} else {
 			<a class="btn btn-ghost" href="/signin">
 				{ c.l("btn.login") }
-				@IconSignin("")
+				@CmpSigninIcon("")
 			</a>
 		}
 	</div>
 }
 
-templ MobileNav(c *Ctx) {
+templ navbarMobile(c *Ctx) {
 	<div class="md:hidden flex-none dropdown dropdown-end">
 		<button tabindex="0" role="button" class="btn btn-square btn-ghost">
-			@IconMenu()
+			@CmpMenuIcon()
 		</button>
 		<ul
 			tabindex="0"
@@ -102,14 +102,14 @@ templ MobileNav(c *Ctx) {
 				<li>
 					<a href="/logout" class="btn btn-ghost justify-start">
 						{ c.l("btn.logout") }
-						@IconSignout("")
+						@CmpSignoutIcon("")
 					</a>
 				</li>
 			} else {
 				<li>
 					<a href="/signin" class="btn btn-ghost justify-start">
 						{ c.l("btn.login") }
-						@IconSignin("")
+						@CmpSigninIcon("")
 					</a>
 				</li>
 			}

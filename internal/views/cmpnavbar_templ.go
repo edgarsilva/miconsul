@@ -45,19 +45,19 @@ func CmpNavbar(c *Ctx) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = Search().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = navbarSearch().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = DesktopNav(c).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = navbarDesktop(c).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = UserAvatar(c).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = navbarUserAvatar(c).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = MobileNav(c).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = navbarMobile(c).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -77,7 +77,7 @@ func navbarHomePath(c *Ctx) string {
 	return "/"
 }
 
-func UIThemeBtn(c *Ctx) templ.Component {
+func navbarThemeBtn(c *Ctx) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -98,7 +98,7 @@ func UIThemeBtn(c *Ctx) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = CmpBtnTheme(c.Theme).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpThemeBtn(c.Theme).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -110,7 +110,7 @@ func UIThemeBtn(c *Ctx) templ.Component {
 	})
 }
 
-func UserAvatar(c *Ctx) templ.Component {
+func navbarUserAvatar(c *Ctx) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -143,7 +143,7 @@ func UserAvatar(c *Ctx) templ.Component {
 	})
 }
 
-func Search() templ.Component {
+func navbarSearch() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -164,7 +164,7 @@ func Search() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = IconSearch("").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpSearchIcon("").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -176,11 +176,11 @@ func Search() templ.Component {
 	})
 }
 
-func ActiveLink(c *Ctx, p string) templ.KeyValue[string, bool] {
+func navbarActiveLink(c *Ctx, p string) templ.KeyValue[string, bool] {
 	return templ.KV("underline underline-offset-4", strings.Contains(c.Path(), p))
 }
 
-func DesktopNav(c *Ctx) templ.Component {
+func navbarDesktop(c *Ctx) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -209,7 +209,7 @@ func DesktopNav(c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var7 = []any{"btn btn-ghost text-sm", ActiveLink(c, "/appointments")}
+			var templ_7745c5c3_Var7 = []any{"btn btn-ghost text-sm", navbarActiveLink(c, "/appointments")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_ElementWriter, templ_7745c5c3_Var7...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -244,7 +244,7 @@ func DesktopNav(c *Ctx) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("nav.appointments"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmpnavbar.templ`, Line: 67, Col: 131}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmpnavbar.templ`, Line: 67, Col: 137}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -262,7 +262,7 @@ func DesktopNav(c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var10 = []any{"btn btn-ghost text-sm", ActiveLink(c, "/clinics")}
+			var templ_7745c5c3_Var10 = []any{"btn btn-ghost text-sm", navbarActiveLink(c, "/clinics")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_ElementWriter, templ_7745c5c3_Var10...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -297,7 +297,7 @@ func DesktopNav(c *Ctx) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("nav.clinics"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmpnavbar.templ`, Line: 68, Col: 102}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmpnavbar.templ`, Line: 68, Col: 108}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -315,7 +315,7 @@ func DesktopNav(c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var13 = []any{"btn btn-ghost text-sm", ActiveLink(c, "/patients")}
+			var templ_7745c5c3_Var13 = []any{"btn btn-ghost text-sm", navbarActiveLink(c, "/patients")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_ElementWriter, templ_7745c5c3_Var13...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -350,7 +350,7 @@ func DesktopNav(c *Ctx) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("nav.patients"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmpnavbar.templ`, Line: 69, Col: 105}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmpnavbar.templ`, Line: 69, Col: 111}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -386,7 +386,7 @@ func DesktopNav(c *Ctx) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = UIThemeBtn(c).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = navbarThemeBtn(c).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -404,7 +404,7 @@ func DesktopNav(c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = IconSignout("").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpSignoutIcon("").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -426,7 +426,7 @@ func DesktopNav(c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = IconSignin("").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpSigninIcon("").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -443,7 +443,7 @@ func DesktopNav(c *Ctx) templ.Component {
 	})
 }
 
-func MobileNav(c *Ctx) templ.Component {
+func navbarMobile(c *Ctx) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -464,7 +464,7 @@ func MobileNav(c *Ctx) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = IconMenu().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpMenuIcon().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -525,7 +525,7 @@ func MobileNav(c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = IconSignout("").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpSignoutIcon("").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -547,7 +547,7 @@ func MobileNav(c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = IconSignin("").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpSigninIcon("").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
