@@ -2,6 +2,7 @@ package views
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -549,4 +550,18 @@ func TestLevelRoundTripsThroughItsName(t *testing.T) {
 			t.Errorf("parseLevel(%q) = %v, want LevelInfo", name, got)
 		}
 	}
+}
+
+func TestCmpSearchInputTriggersAtMinSearchTermLen(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		var html strings.Builder
+		if err := CmpSearchInput(NewCtx(fc), "Search", "/patients/search", "#patients").Render(fc.Context(), &html); err != nil {
+			t.Fatalf("render search input: %v", err)
+		}
+
+		want := fmt.Sprintf("this.value.length &gt;= %d", models.MinSearchTermLen)
+		if !strings.Contains(html.String(), want) {
+			t.Errorf("hx-trigger should search at %d characters, got %s", models.MinSearchTermLen, html.String())
+		}
+	})
 }
