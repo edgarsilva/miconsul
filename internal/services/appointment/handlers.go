@@ -53,8 +53,8 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 // GET: /appointments/search
 func (s *service) HandleIndexSearch(c fiber.Ctx) error {
 	filter := appointmentFilterFromQuery(c)
-	if searchTermTooShort(filter.SearchTerm) {
-		return view.Render(c, view.CmpSearchTooShortToast(minSearchTermLen))
+	if models.SearchTermTooShort(filter.SearchTerm) {
+		return view.Render(c, view.CmpSearchTooShortToast())
 	}
 
 	cu := s.CurrentUser(c)
@@ -599,8 +599,8 @@ func (s *service) HandleSearchClinics(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
 	searchTerm := strings.TrimSpace(c.FormValue("searchTerm", ""))
-	if searchTermTooShort(searchTerm) {
-		return view.Render(c, view.CmpSearchTooShortToast(minSearchTermLen))
+	if models.SearchTermTooShort(searchTerm) {
+		return view.Render(c, view.CmpSearchTooShortToast())
 	}
 
 	clinics, err := s.FindClinicsBySearchTerm(c.Context(), cu.ID, searchTerm)
@@ -630,8 +630,8 @@ func (s *service) HandleSearchPatients(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
 	searchTerm := strings.TrimSpace(c.FormValue("searchTerm", ""))
-	if searchTermTooShort(searchTerm) {
-		return view.Render(c, view.CmpSearchTooShortToast(minSearchTermLen))
+	if models.SearchTermTooShort(searchTerm) {
+		return view.Render(c, view.CmpSearchTooShortToast())
 	}
 
 	patients, err := s.FindPatientsBySearchTerm(c.Context(), cu.ID, searchTerm)
@@ -720,10 +720,4 @@ func appointmentFilterFromQuery(c fiber.Ctx) appointmentFilter {
 		SearchTerm: strings.TrimSpace(c.Query("searchTerm", "")),
 		Statuses:   models.ParseAppointmentStatuses(c.Query("status", "")),
 	}
-}
-
-// searchTermTooShort reports whether a non-blank search term has fewer than
-// minSearchTermLen characters.
-func searchTermTooShort(term string) bool {
-	return term != "" && len(term) < minSearchTermLen
 }

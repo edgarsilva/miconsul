@@ -2,6 +2,7 @@ package patient
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 
@@ -38,7 +39,7 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 func (s *service) HandlePatientsIndexSearch(c fiber.Ctx) error {
 	searchTerm, searchErr := normalizeSearchTerm(c.Query("searchTerm", ""))
 	if searchErr != nil {
-		return view.Render(c, view.CmpSearchTooShortToast(3))
+		return view.Render(c, view.CmpSearchTooShortToast())
 	}
 
 	cu := s.CurrentUser(c)
@@ -248,8 +249,8 @@ func (s *service) HandleDeletePatient(c fiber.Ctx) error {
 
 func normalizeSearchTerm(raw string) (string, error) {
 	term := strings.TrimSpace(raw)
-	if len(term) > 0 && len(term) < 3 {
-		return "", errors.New("search term must be at least 3 chars")
+	if models.SearchTermTooShort(term) {
+		return "", fmt.Errorf("search term must be at least %d chars", models.MinSearchTermLen)
 	}
 
 	return term, nil

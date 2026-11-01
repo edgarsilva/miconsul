@@ -1,6 +1,10 @@
 package views
 
-import "fmt"
+import (
+	"fmt"
+
+	"miconsul/internal/models"
+)
 
 // CmpToastRegion renders the page's toast region with the request's toast.
 templ CmpToastRegion(c *Ctx) {
@@ -87,15 +91,15 @@ templ CmpToastPartial(msg, sub string, level Level) {
 // SearchFailedMsg tells the user a search couldn't run.
 const SearchFailedMsg = "The search couldn't be completed right now, please try again"
 
-// SearchTooShortMsg tells the user a search term needs at least minLen
-// characters.
-func SearchTooShortMsg(minLen int) string {
-	return fmt.Sprintf("Type at least %d characters to search", minLen)
+// SearchTooShortMsg tells the user a search term needs at least
+// models.MinSearchTermLen characters.
+func SearchTooShortMsg() string {
+	return fmt.Sprintf("Type at least %d characters to search", models.MinSearchTermLen)
 }
 
 // CmpSearchTooShortToast shows SearchTooShortMsg as a toast partial.
-templ CmpSearchTooShortToast(minLen int) {
-	@CmpToastPartial(SearchTooShortMsg(minLen), "", LevelWarning)
+templ CmpSearchTooShortToast() {
+	@CmpToastPartial(SearchTooShortMsg(), "", LevelWarning)
 }
 
 // CmpSearchFailedToast shows SearchFailedMsg as a toast partial.

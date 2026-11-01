@@ -112,6 +112,15 @@ func Countries() []Country {
 	return c
 }
 
+// MinSearchTermLen is the shortest non-blank search term a search runs.
+const MinSearchTermLen = 3
+
+// SearchTermTooShort reports whether a non-blank search term has fewer than
+// MinSearchTermLen characters.
+func SearchTermTooShort(term string) bool {
+	return term != "" && len(term) < MinSearchTermLen
+}
+
 // GlobalFTS ranks the rows of the query's model by a full-text search for
 // term. Rows are matched by uid through global_search_docs, which the DB keeps
 // in sync with triggers. term is matched as a literal prefix phrase, so FTS5

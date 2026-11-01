@@ -9,7 +9,11 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "fmt"
+import (
+	"fmt"
+
+	"miconsul/internal/models"
+)
 
 // CmpToastRegion renders the page's toast region with the request's toast.
 func CmpToastRegion(c *Ctx) templ.Component {
@@ -152,7 +156,7 @@ func CmpToast(msg, sub string, level Level) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(msg)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmptoast.templ`, Line: 59, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmptoast.templ`, Line: 63, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -165,7 +169,7 @@ func CmpToast(msg, sub string, level Level) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(sub)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmptoast.templ`, Line: 61, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmptoast.templ`, Line: 65, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -218,14 +222,14 @@ func CmpToastPartial(msg, sub string, level Level) templ.Component {
 // SearchFailedMsg tells the user a search couldn't run.
 const SearchFailedMsg = "The search couldn't be completed right now, please try again"
 
-// SearchTooShortMsg tells the user a search term needs at least minLen
-// characters.
-func SearchTooShortMsg(minLen int) string {
-	return fmt.Sprintf("Type at least %d characters to search", minLen)
+// SearchTooShortMsg tells the user a search term needs at least
+// models.MinSearchTermLen characters.
+func SearchTooShortMsg() string {
+	return fmt.Sprintf("Type at least %d characters to search", models.MinSearchTermLen)
 }
 
 // CmpSearchTooShortToast shows SearchTooShortMsg as a toast partial.
-func CmpSearchTooShortToast(minLen int) templ.Component {
+func CmpSearchTooShortToast() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -242,7 +246,7 @@ func CmpSearchTooShortToast(minLen int) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = CmpToastPartial(SearchTooShortMsg(minLen), "", LevelWarning).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpToastPartial(SearchTooShortMsg(), "", LevelWarning).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

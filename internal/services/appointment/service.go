@@ -32,9 +32,6 @@ var (
 const (
 	defaultWorkerContextTimeout  = 10 * time.Second
 	defaultCronJobContextTimeout = 45 * time.Second
-
-	// minSearchTermLen is the shortest non-blank search term the searches run.
-	minSearchTermLen = 3
 )
 
 func New(s *server.Server) (*service, error) {

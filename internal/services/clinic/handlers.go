@@ -158,8 +158,8 @@ func (s *service) HandleClinicsDelete(c fiber.Ctx) error {
 // GET: /clinics/search
 func (s *service) HandleClinicsIndexSearch(c fiber.Ctx) error {
 	searchTerm := strings.TrimSpace(c.Query("searchTerm", ""))
-	if len(searchTerm) > 0 && len(searchTerm) < 3 {
-		return view.Render(c, view.CmpSearchTooShortToast(3))
+	if models.SearchTermTooShort(searchTerm) {
+		return view.Render(c, view.CmpSearchTooShortToast())
 	}
 
 	cu := s.CurrentUser(c)
