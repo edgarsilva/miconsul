@@ -129,7 +129,7 @@ func (s *service) HandleProfilePicPreview(c fiber.Ctx) error {
 
 	user.ProfilePic = previewPath
 	vc := view.NewCtx(c)
-	return view.Render(c, view.UserAvatarPic(vc, user))
+	return view.Render(c, view.UserAvatar(vc, user))
 }
 
 // HandleUserProfilePicImgSrc serves a user's profile picture file.
@@ -198,7 +198,7 @@ func (s *service) HandleAdminRemoveProfilePic(c fiber.Ctx) error {
 
 	vc := view.NewCtx(c)
 	return view.Render(c, templ.Join(
-		view.UserAvatarPic(vc, updatedUser),
+		view.UserAvatar(vc, updatedUser),
 		view.CmpToastPartial("Profile picture removed", "", "success"),
 	))
 }

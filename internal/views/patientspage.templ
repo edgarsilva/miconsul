@@ -175,7 +175,7 @@ templ PatientProfile(c *Ctx, patient models.Patient) {
 						<div class="col-span-full">
 							<label for="profile_pic" class="block text-sm font-medium leading-6">{ c.l("str.profile_pic") }</label>
 							<div class="mt-2 flex items-center gap-x-3">
-								@PatientAvatarPic(c, patient)
+								@PatientAvatar(c, patient)
 								<input
 									id="profile_pic"
 									name="profilePic"
@@ -542,8 +542,8 @@ templ PatientProfileSection(c *Ctx, patient models.Patient) {
 	</section>
 }
 
-// PatientAvatarPic renders the patient's avatar with its remove link.
-templ PatientAvatarPic(c *Ctx, patient models.Patient) {
+// PatientAvatar renders the patient's avatar with its remove link.
+templ PatientAvatar(c *Ctx, patient models.Patient) {
 	if patient.ProfilePic != "" {
 		<figure class="flex flex-col gap-1 items-center" id="avatar_pic">
 			@CmpAvatar(patient)

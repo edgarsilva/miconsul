@@ -68,7 +68,7 @@ One rule: namespace + what + kind. The namespace is the domain, singular and nam
 | Page | Domain + action + `Page` | `AppointmentIndexPage`, `AppointmentStartPage`, `AuthLoginPage`, `DashboardPage` |
 | Layout | Domain + `Layout`; generic ones are just what + `Layout` | `AuthLayout`, `RootLayout`, `DefaultLayout`, `BackBtnLayout` |
 | Part (rendered inside a page or by a handler) | Domain + what (+ kind: `List`, `Li`, `Form`, `Btn`, `Section`…); no `Partial`/`Frg` suffix. A response that swaps several targets is named for what it shows, and its doc comment lists every target | `AppointmentList`, `AppointmentLi`, `AppointmentClinicPicker`, `AppointmentSessionToggle`, `DashboardFeed` |
-| Generic component | `Cmp` + what + kind | `CmpBackBtn`, `CmpStatusBadge`, `CmpEmailInput`, `CmpToastRegion`, `CmpAvatarPic` |
+| Generic component | `Cmp` + what + kind | `CmpBackBtn`, `CmpStatusBadge`, `CmpEmailInput`, `CmpToastRegion`, `CmpLargeAvatar` |
 | Icon | `Cmp` + name + `Icon` | `CmpCalendarIcon` |
 | Piece made for one owner | unexported, owner + what | `navbarThemeBtn`, `navbarSearch`, `patientCountryOption` |
 | Helper | next to its component, owner + what | `pickerIsSelected`, `toastLevelClass`, `feedEventTitle` |

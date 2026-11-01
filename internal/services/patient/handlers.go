@@ -212,7 +212,7 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 	}
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.PatientAvatarPic(vc, patient))
+	return view.Render(c, view.PatientAvatar(vc, patient))
 }
 
 // HandleDeletePatient deletes a patient record from the DB.

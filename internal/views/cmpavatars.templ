@@ -23,7 +23,7 @@ templ CmpAvatar(avatar Avatarable, classname ...string) {
 	}
 }
 
-templ CmpAvatarPic(avatar Avatarable) {
+templ CmpLargeAvatar(avatar Avatarable) {
 	if avatar.AvatarPic() != "" {
 		<div class="avatar w-full h-full rounded-xl overflow-clip">
 			<img class="h-full w-full object-cover object-center" src={ string(templ.URL(avatar.AvatarPic())) }/>

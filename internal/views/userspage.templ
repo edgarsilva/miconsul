@@ -131,7 +131,7 @@ templ UserProfile(c *Ctx, user models.User) {
 				<input type="hidden" name="id" value={ user.UID } id="user_id"/>
 				<div class="px-4 py-6 sm:p-8">
 					<div class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-						@UserProfilePic(c, user)
+						@UserAvatarField(c, user)
 						<div class="sm:col-span-3">
 							<label for="name" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.name") }</label>
 							<div class="mt-2">
@@ -205,11 +205,11 @@ templ UserProfile(c *Ctx, user models.User) {
 	</div>
 }
 
-templ UserProfilePic(c *Ctx, user models.User) {
+templ UserAvatarField(c *Ctx, user models.User) {
 	<div id="profile_pic" class="col-span-full">
 		<label for="profile_pic_input" class="block text-sm font-medium leading-6">{ c.l("str.profile_pic") }</label>
 		<div class="mt-2 flex items-center gap-x-3">
-			@UserAvatarPic(c, user)
+			@UserAvatar(c, user)
 			if !adminEditsOther(c, user) {
 				<input
 					id="profile_pic_input"
@@ -229,7 +229,7 @@ templ UserProfilePic(c *Ctx, user models.User) {
 	</div>
 }
 
-templ UserAvatarPic(c *Ctx, user models.User) {
+templ UserAvatar(c *Ctx, user models.User) {
 	<figure id="avatar_pic" class="flex flex-col gap-2 items-center">
 		if user.ProfilePic != "" {
 			@CmpAvatar(user)

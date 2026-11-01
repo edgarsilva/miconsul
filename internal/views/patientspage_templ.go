@@ -606,7 +606,7 @@ func PatientProfile(c *Ctx, patient models.Patient) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = PatientAvatarPic(c, patient).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = PatientAvatar(c, patient).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1792,8 +1792,8 @@ func PatientProfileSection(c *Ctx, patient models.Patient) templ.Component {
 	})
 }
 
-// PatientAvatarPic renders the patient's avatar with its remove link.
-func PatientAvatarPic(c *Ctx, patient models.Patient) templ.Component {
+// PatientAvatar renders the patient's avatar with its remove link.
+func PatientAvatar(c *Ctx, patient models.Patient) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
