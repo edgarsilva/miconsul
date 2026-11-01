@@ -387,3 +387,21 @@ func TestParseAppointmentStatuses(t *testing.T) {
 		}
 	}
 }
+
+func TestSearchTermTooShortCountsCharacters(t *testing.T) {
+	tests := []struct {
+		term string
+		want bool
+	}{
+		{"", false},
+		{"ab", true},
+		{"ñá", true},
+		{"año", false},
+		{"Ana", false},
+	}
+	for _, tt := range tests {
+		if got := SearchTermTooShort(tt.term); got != tt.want {
+			t.Errorf("SearchTermTooShort(%q) = %v, want %v", tt.term, got, tt.want)
+		}
+	}
+}

@@ -2,6 +2,7 @@ package views
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -57,7 +58,7 @@ func TestNewCtxAndOptions(t *testing.T) {
 	})
 
 	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
-		c := NewCtx(fc, WithTheme("dark"), WithLocale("en-US"), WithToast("ok", "sub", "info"), WithCurrentUser(models.User{UID: "usr_2"}))
+		c := NewCtx(fc, WithTheme("dark"), WithLocale("en-US"), WithToast("ok", "sub", LevelInfo), WithCurrentUser(models.User{UID: "usr_2"}))
 		if c.Theme != "dark" || c.Locale != "en-US" {
 			t.Fatalf("unexpected option values: %+v", c)
 		}
@@ -71,11 +72,11 @@ func TestNewCtxOptionsFallBackAndAllApply(t *testing.T) {
 	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
 		fc.Locals("theme", "dark")
 
-		c := NewCtx(fc, WithTheme("blue"), WithLocale("en-US"), WithToast("Saved", "", "success"))
+		c := NewCtx(fc, WithTheme("blue"), WithLocale("en-US"), WithToast("Saved", "", LevelSuccess))
 		if c.Theme != "" {
 			t.Fatalf("invalid theme must follow the OS, got %q", c.Theme)
 		}
-		if c.Locale != "en-US" || c.Toast.Msg != "Saved" || c.Toast.Level != "success" {
+		if c.Locale != "en-US" || c.Toast.Msg != "Saved" || c.Toast.Level != LevelSuccess {
 			t.Fatalf("options after an invalid one must still apply, got locale=%q toast=%+v", c.Locale, c.Toast)
 		}
 	})
@@ -388,10 +389,10 @@ func TestIsSelected(t *testing.T) {
 
 func TestNoAlpine(t *testing.T) {
 	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
-		c := NewCtx(fc, WithToast("Saved", "", "success"))
+		c := NewCtx(fc, WithToast("Saved", "", LevelSuccess))
 		for name, component := range map[string]templ.Component{
 			"page":             RootLayout(c),
-			"toast":            CmpToast("Saved", "", "success"),
+			"toast":            CmpToast("Saved", "", LevelSuccess),
 			"password":         CmpPasswordInput(""),
 			"confirm password": CmpConfirmPasswordInput(""),
 		} {
@@ -412,7 +413,7 @@ func TestNoAlpine(t *testing.T) {
 func TestToastAndPasswordToggleMarkup(t *testing.T) {
 	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
 		var toast, password strings.Builder
-		if err := CmpToast("Saved", "", "success").Render(fc.Context(), &toast); err != nil {
+		if err := CmpToast("Saved", "", LevelSuccess).Render(fc.Context(), &toast); err != nil {
 			t.Fatalf("render toast: %v", err)
 		}
 		if err := CmpPasswordInput("").Render(fc.Context(), &password); err != nil {
@@ -453,7 +454,7 @@ func TestNewCtxToastComesFromTheFlash(t *testing.T) {
 		t.Fatalf("ctx request: %v", err)
 	}
 
-	if got.Msg != "Saved" || got.Level != "success" {
+	if got.Msg != "Saved" || got.Level != LevelSuccess {
 		t.Errorf("toast = %+v, want the flash toast, not the query string", got)
 	}
 }
@@ -530,6 +531,37 @@ func TestAppointmentStartEndSessionPostsComplete(t *testing.T) {
 		}
 		if strings.Contains(got, "formaction") {
 			t.Errorf("expected no formaction: htmx 4 ignores it on a form with hx-post")
+		}
+	})
+}
+
+func TestLevelRoundTripsThroughItsName(t *testing.T) {
+	for _, level := range []Level{LevelInfo, LevelSuccess, LevelWarning, LevelError} {
+		if got := parseLevel(level.String()); got != level {
+			t.Errorf("parseLevel(%q) = %v, want %v", level.String(), got, level)
+		}
+	}
+
+	if got := (Level{}).String(); got != "info" {
+		t.Errorf("zero Level = %q, want info", got)
+	}
+	for _, name := range []string{"", "warn", "danger"} {
+		if got := parseLevel(name); got != LevelInfo {
+			t.Errorf("parseLevel(%q) = %v, want LevelInfo", name, got)
+		}
+	}
+}
+
+func TestCmpSearchInputTriggersAtMinSearchTermLen(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		var html strings.Builder
+		if err := CmpSearchInput(NewCtx(fc), "Search", "/patients/search", "#patients").Render(fc.Context(), &html); err != nil {
+			t.Fatalf("render search input: %v", err)
+		}
+
+		want := fmt.Sprintf("this.value.length &gt;= %d", models.MinSearchTermLen)
+		if !strings.Contains(html.String(), want) {
+			t.Errorf("hx-trigger should search at %d characters, got %s", models.MinSearchTermLen, html.String())
 		}
 	})
 }

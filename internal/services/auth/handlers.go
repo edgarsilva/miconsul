@@ -177,7 +177,7 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 			return view.Render(c, view.AuthSignupPage(vc, email, errors.New("failed to resend confirmation email, please try again")))
 		}
 		span.SetStatus(codes.Ok, "pending confirmation resent")
-		return s.RedirectWithAlert(c, "/signin", "check your inbox, we'll re-send a confirmation link", "info")
+		return s.RedirectWithAlert(c, "/signin", "check your inbox, we'll re-send a confirmation link", view.LevelInfo)
 	}
 
 	if err := s.signup(ctx, email, password); err != nil {
@@ -190,7 +190,7 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 	}
 	span.SetStatus(codes.Ok, "signup confirmation email sent")
 
-	return s.RedirectWithAlert(c, "/signin", "check your inbox to confirm your email", "info")
+	return s.RedirectWithAlert(c, "/signin", "check your inbox to confirm your email", view.LevelInfo)
 }
 
 // HandleSignupConfirmEmail validates an email confirmation token.
@@ -203,7 +203,7 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 	token := c.Params("token", "")
 	if token == "" {
 		span.SetStatus(codes.Error, "missing confirmation token")
-		return s.RedirectWithAlert(c, "/signin", "unable to confirm email, try signin instead", "error")
+		return s.RedirectWithAlert(c, "/signin", "unable to confirm email, try signin instead", view.LevelError)
 	}
 
 	user, err := gorm.G[models.User](s.DB.GormDB()).
@@ -213,7 +213,7 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "invalid or expired confirmation token")
-		return s.RedirectWithAlert(c, "/signin", "we couldn't verify your account, pls try again", "error")
+		return s.RedirectWithAlert(c, "/signin", "we couldn't verify your account, pls try again", view.LevelError)
 	}
 	span.SetAttributes(attribute.String("auth.signup.confirm_email", strings.ToLower(strings.TrimSpace(user.Email))))
 
@@ -224,11 +224,11 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "confirmation token clear failed")
-		return s.RedirectWithAlert(c, "/signin", "Email confirmed, you should be able to signin now", "success")
+		return s.RedirectWithAlert(c, "/signin", "Email confirmed, you should be able to signin now", view.LevelSuccess)
 	}
 
 	span.SetStatus(codes.Ok, "email confirmed")
-	return s.RedirectWithAlert(c, "/signin", "Email confirmed, you should be able to signin now", "success")
+	return s.RedirectWithAlert(c, "/signin", "Email confirmed, you should be able to signin now", view.LevelSuccess)
 }
 
 func apiError(c fiber.Ctx, status int, message string) error {
@@ -308,12 +308,12 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 func (s *service) HandleResetPasswordChange(c fiber.Ctx) error {
 	token := c.Params("token", "")
 	if token == "" {
-		return s.RedirectWithAlert(c, "/resetpassword", "token can't be blank", "error")
+		return s.RedirectWithAlert(c, "/resetpassword", "token can't be blank", view.LevelError)
 	}
 
 	email, err := s.resetPasswordVerifyToken(c.Context(), token)
 	if err != nil {
-		return s.RedirectWithAlert(c, "/resetpassword", "invalid email or token", "error")
+		return s.RedirectWithAlert(c, "/resetpassword", "invalid email or token", view.LevelError)
 	}
 
 	vc := view.NewCtx(c)
@@ -325,17 +325,17 @@ func (s *service) HandleResetPasswordChange(c fiber.Ctx) error {
 func (s *service) HandleResetPasswordUpdate(c fiber.Ctx) error {
 	email, err := resetPasswordEmailFromRequest(c)
 	if err != nil {
-		return s.RedirectWithAlert(c, "/resetpassword", "something went wrong with the email, try again!", "error")
+		return s.RedirectWithAlert(c, "/resetpassword", "something went wrong with the email, try again!", view.LevelError)
 	}
 
 	token := c.FormValue("token", "")
 	if token == "" {
-		return s.RedirectWithAlert(c, "/resetpassword", "something went wrong with the token, try again!", "error")
+		return s.RedirectWithAlert(c, "/resetpassword", "something went wrong with the token, try again!", view.LevelError)
 	}
 
 	_, err = s.resetPasswordVerifyToken(c.Context(), token)
 	if err != nil {
-		return s.RedirectWithAlert(c, "/resetpassword", "seems like your token has expired, try again!", "error")
+		return s.RedirectWithAlert(c, "/resetpassword", "seems like your token has expired, try again!", view.LevelError)
 	}
 
 	vc := view.NewCtx(c)
@@ -353,7 +353,7 @@ func (s *service) HandleResetPasswordUpdate(c fiber.Ctx) error {
 
 	_, err = s.userUpdatePassword(c.Context(), email, password, token)
 	if err != nil {
-		return s.RedirectWithAlert(c, "/resetpassword", "something went wrong, try again!", "error")
+		return s.RedirectWithAlert(c, "/resetpassword", "something went wrong, try again!", view.LevelError)
 	}
 
 	return s.Redirect(c, "/signin")

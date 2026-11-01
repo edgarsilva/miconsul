@@ -19,6 +19,7 @@ import (
 	"miconsul/internal/models"
 	"miconsul/internal/server"
 	"miconsul/internal/server/servertest"
+	view "miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/session"
@@ -1293,7 +1294,7 @@ func TestAuthPagesRenderFlashAlertInline(t *testing.T) {
 	app.Get("/signin", svc.HandleSigninPage)
 	app.Get("/resetpassword", svc.HandleResetPasswordPage)
 	app.Get("/flash/*", func(c fiber.Ctx) error {
-		return svc.RedirectWithAlert(c, "/"+c.Params("*"), "Email confirmed", "success")
+		return svc.RedirectWithAlert(c, "/"+c.Params("*"), "Email confirmed", view.LevelSuccess)
 	})
 
 	for _, path := range []string{"/signin", "/resetpassword"} {

@@ -9,7 +9,11 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "fmt"
+import (
+	"fmt"
+
+	"miconsul/internal/models"
+)
 
 // CmpToastRegion renders the page's toast region with the request's toast.
 func CmpToastRegion(c *Ctx) templ.Component {
@@ -47,13 +51,13 @@ func CmpToastRegion(c *Ctx) templ.Component {
 	})
 }
 
-func toastLevelClass(level string) string {
+func toastLevelClass(level Level) string {
 	switch level {
-	case "success":
+	case LevelSuccess:
 		return "text-success-content bg-success"
-	case "warning":
+	case LevelWarning:
 		return "text-warning-content bg-warning"
-	case "error":
+	case LevelError:
 		return "text-error-content bg-error"
 	default:
 		return "text-info-content bg-info"
@@ -62,7 +66,7 @@ func toastLevelClass(level string) string {
 
 // CmpToast renders a notification that slides in, fades out after 3s (the
 // toast CSS animation) and hides when its close checkbox is checked.
-func CmpToast(msg, sub, level string) templ.Component {
+func CmpToast(msg, sub string, level Level) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -124,17 +128,17 @@ func CmpToast(msg, sub, level string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		switch level {
-		case "success":
+		case LevelSuccess:
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<svg class=\"h-6 w-6 text-success-content\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\" aria-hidden=\"true\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-		case "warning":
+		case LevelWarning:
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<svg class=\"h-6 w-6 text-warning-content\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\" aria-hidden=\"true\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z\"></path></svg>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-		case "error":
+		case LevelError:
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<svg class=\"h-6 w-6 text-error-content\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\" aria-hidden=\"true\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z\"></path></svg>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -152,7 +156,7 @@ func CmpToast(msg, sub, level string) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(msg)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmptoast.templ`, Line: 59, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmptoast.templ`, Line: 63, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -165,7 +169,7 @@ func CmpToast(msg, sub, level string) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(sub)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmptoast.templ`, Line: 61, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmptoast.templ`, Line: 65, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -182,7 +186,7 @@ func CmpToast(msg, sub, level string) templ.Component {
 // CmpToastPartial shows a toast from an HTMX response without replacing the
 // request's target: HTMX 4 appends it to the toast region and skips the main
 // swap.
-func CmpToastPartial(msg, sub, level string) templ.Component {
+func CmpToastPartial(msg, sub string, level Level) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -218,14 +222,14 @@ func CmpToastPartial(msg, sub, level string) templ.Component {
 // SearchFailedMsg tells the user a search couldn't run.
 const SearchFailedMsg = "The search couldn't be completed right now, please try again"
 
-// SearchTooShortMsg tells the user a search term needs at least minLen
-// characters.
-func SearchTooShortMsg(minLen int) string {
-	return fmt.Sprintf("Type at least %d characters to search", minLen)
+// SearchTooShortMsg tells the user a search term needs at least
+// models.MinSearchTermLen characters.
+func SearchTooShortMsg() string {
+	return fmt.Sprintf("Type at least %d characters to search", models.MinSearchTermLen)
 }
 
 // CmpSearchTooShortToast shows SearchTooShortMsg as a toast partial.
-func CmpSearchTooShortToast(minLen int) templ.Component {
+func CmpSearchTooShortToast() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -242,7 +246,7 @@ func CmpSearchTooShortToast(minLen int) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = CmpToastPartial(SearchTooShortMsg(minLen), "", "warning").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpToastPartial(SearchTooShortMsg(), "", LevelWarning).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -268,7 +272,7 @@ func CmpSearchFailedToast() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = CmpToastPartial(SearchFailedMsg, "", "error").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpToastPartial(SearchFailedMsg, "", LevelError).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
