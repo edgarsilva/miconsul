@@ -82,7 +82,7 @@ func AuthRoutes(s *server.Server) (auth.Runtime, error) {
 		a.Get("/signup/confirm/:token", a.HandleSignupConfirmEmail)
 		a.Get("/resetpassword", a.HandleResetPasswordPage)
 		a.Post("/resetpassword", a.HandleResetPassword)
-		a.Get("/resetpassword/change/:token", a.HandleResetPasswordChange)
+		a.Get("/resetpassword/change/:token", a.HandleChangePasswordPage)
 		a.Post("/resetpassword/change", a.HandleResetPasswordUpdate)
 	}
 
@@ -116,7 +116,7 @@ func DashboardRoutes(s *server.Server, authSvc auth.Runtime) error {
 	d.Get("/", mw.MaybeAuthenticate(authSvc), d.HandleHomePage)
 
 	g := s.Group("/dashboard", mw.MustAuthenticate(authSvc))
-	g.Get("", d.HandleDashboardPage)
+	g.Get("", d.HandleIndexPage)
 	g.Get("/appointments", d.HandleAppointmentsSection)
 
 	return nil
@@ -130,14 +130,14 @@ func ClinicsRoutes(s *server.Server, authSvc auth.Runtime) error {
 
 	// Pages
 	g := c.Group("/clinics", mw.MustAuthenticate(authSvc))
-	g.Get("/", c.HandleClinicsIndexPage)
-	g.Get("/search", c.HandleClinicsIndexSearch)
-	g.Get("/new", c.HandleClinicsNewPage)
-	g.Get("/:id", c.HandleClinicsShowPage)
+	g.Get("/", c.HandleIndexPage)
+	g.Get("/search", c.HandleIndexSearch)
+	g.Get("/new", c.HandleNewPage)
+	g.Get("/:id", c.HandleEditPage)
 
-	g.Post("/", c.HandleClinicsCreate)
-	g.Patch("/:id", c.HandleClinicsUpdate)
-	g.Delete("/:id", c.HandleClinicsDelete)
+	g.Post("/", c.HandleCreate)
+	g.Patch("/:id", c.HandleUpdate)
+	g.Delete("/:id", c.HandleDelete)
 
 	return nil
 }
@@ -150,15 +150,16 @@ func PatientRoutes(s *server.Server, authSvc auth.Runtime) error {
 
 	g := p.Group("/patients", mw.MustAuthenticate(authSvc))
 	g.Get("/", p.HandleIndexPage)
-	g.Get("/search", p.HandlePatientsIndexSearch)
+	g.Get("/search", p.HandleIndexSearch)
 
-	g.Get("/:id", p.HandlePatientFormPage)
-	g.Get("/:id/profilepic/:filename", p.HandlePatientProfilePicImgSrc)
+	g.Get("/new", p.HandleNewPage)
+	g.Get("/:id", p.HandleEditPage)
+	g.Get("/:id/profilepic/:filename", p.HandleProfilePic)
 
-	g.Post("/", p.HandleCreatePatient)
-	g.Patch("/:id", p.HandleUpdatePatient)
+	g.Post("/", p.HandleCreate)
+	g.Patch("/:id", p.HandleUpdate)
 	g.Patch("/:id/removepic", p.HandleRemovePic)
-	g.Delete("/:id", p.HandleDeletePatient)
+	g.Delete("/:id", p.HandleDelete)
 
 	// g.Get("/:id", p.HandleIndexPage)
 
@@ -183,9 +184,9 @@ func AppointmentRoutes(s *server.Server, authSvc auth.Runtime) error {
 	g := a.Group("/appointments", mw.MustAuthenticate(authSvc))
 	g.Get("/", a.HandleIndexPage)
 	g.Get("/search", a.HandleIndexSearch)
-	g.Get("/new", a.HandleShowPage)
+	g.Get("/new", a.HandleNewPage)
 	g.Get("/new/pricefrg/:id", a.HandlePriceFrg)
-	g.Get("/:id", a.HandleShowPage)
+	g.Get("/:id", a.HandleEditPage)
 	g.Get("/:id/open", a.HandleOpenPage)
 	g.Post("/:id/start-session", a.HandleStartSession)
 	g.Post("/:id/pause-session", a.HandlePauseSession)
@@ -217,7 +218,7 @@ func ThemeRoutes(s *server.Server, authSvc auth.Runtime) error {
 	}
 
 	g := s.Group("/theme", mw.MaybeAuthenticate(authSvc))
-	g.Post("/toggle", t.HandleToggleTheme)
+	g.Post("/toggle", t.HandleToggle)
 
 	return nil
 }
@@ -233,8 +234,8 @@ func UserRoutes(s *server.Server, authSvc auth.Runtime) error {
 	u.Patch("/profile", mw.MustAuthenticate(authSvc), u.HandleUpdateProfile)
 	u.Post("/profile/avatar/preview", mw.MustAuthenticate(authSvc), u.HandleProfilePicPreview)
 	u.Delete("/profile/avatar", mw.MustAuthenticate(authSvc), u.HandleRemoveProfilePic)
-	u.Get("/profile/avatar", mw.MustAuthenticate(authSvc), u.HandleUserProfilePicImgSrc)
-	u.Get("/profile/avatar/preview", mw.MustAuthenticate(authSvc), u.HandleUserProfilePicImgSrc)
+	u.Get("/profile/avatar", mw.MustAuthenticate(authSvc), u.HandleProfilePic)
+	u.Get("/profile/avatar/preview", mw.MustAuthenticate(authSvc), u.HandleProfilePic)
 
 	// Admin only
 	u.Get("/admin/users", mw.MustBeAdmin(authSvc), u.HandleIndexPage)

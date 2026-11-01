@@ -19,25 +19,9 @@ func TestPatientServiceDBFlows(t *testing.T) {
 	svc, user := newPatientServiceForTests(t)
 	ctx := context.Background()
 
-	t.Run("id guards and show page helper", func(t *testing.T) {
+	t.Run("id guards", func(t *testing.T) {
 		if _, err := svc.TakePatientByID(ctx, user.ID, " "); err != ErrIDRequired {
 			t.Fatalf("expected ErrIDRequired from TakePatientByID, got %v", err)
-		}
-
-		showPatient, err := svc.PatientForShowPage(ctx, user.ID, "")
-		if err != nil {
-			t.Fatalf("expected empty show page patient without error, got %v", err)
-		}
-		if showPatient.UID != "" {
-			t.Fatalf("expected zero patient uid for empty show page id, got %q", showPatient.UID)
-		}
-
-		showPatient, err = svc.PatientForShowPage(ctx, user.ID, "new")
-		if err != nil {
-			t.Fatalf("expected new show page patient without error, got %v", err)
-		}
-		if showPatient.UID != "" {
-			t.Fatalf("expected zero patient uid for new show page id, got %q", showPatient.UID)
 		}
 	})
 

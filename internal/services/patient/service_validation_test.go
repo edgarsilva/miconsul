@@ -29,16 +29,6 @@ func TestServiceValidationGuards(t *testing.T) {
 			t.Fatalf("expected ErrIDRequired for patientExistsByID, got %v", err)
 		}
 	})
-
-	t.Run("PatientForShowPage short-circuits for create flow", func(t *testing.T) {
-		patient, err := svc.PatientForShowPage(ctx, 1, "new")
-		if err != nil {
-			t.Fatalf("expected nil error for new patient page, got %v", err)
-		}
-		if patient.ID != 0 {
-			t.Fatalf("expected zero patient for new page, got %+v", patient)
-		}
-	})
 }
 
 func TestNormalizeSearchTerm(t *testing.T) {

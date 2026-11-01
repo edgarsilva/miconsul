@@ -43,7 +43,7 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 		})
 		app.Get("/appointments/:id", func(c fiber.Ctx) error {
 			c.Locals("current_user", user)
-			return svc.HandleShowPage(c)
+			return svc.HandleEditPage(c)
 		})
 
 		resp1, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments", nil))

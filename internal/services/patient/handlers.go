@@ -34,9 +34,9 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	return view.Render(c, view.PatientIndexPage(vc, patients))
 }
 
-// HandlePatientsIndexSearch runs the index search on patients.
+// HandleIndexSearch runs the index search on patients.
 // GET: /patients/search
-func (s *service) HandlePatientsIndexSearch(c fiber.Ctx) error {
+func (s *service) HandleIndexSearch(c fiber.Ctx) error {
 	searchTerm, searchErr := normalizeSearchTerm(c.Query("searchTerm", ""))
 	if searchErr != nil {
 		return view.Render(c, view.CmpSearchTooShortToast())
@@ -53,21 +53,23 @@ func (s *service) HandlePatientsIndexSearch(c fiber.Ctx) error {
 	return view.Render(c, view.PatientList(vc, patients))
 }
 
-// HandlePatientFormPage renders the patient create/edit page.
+// HandleNewPage renders the new patient page.
+// GET: /patients/new
+func (s *service) HandleNewPage(c fiber.Ctx) error {
+	vc := view.NewCtx(c)
+	return view.Render(c, view.PatientFormPage(vc, models.Patient{}))
+}
+
+// HandleEditPage renders the patient edit page.
 // GET: /patients/:id
-func (s *service) HandlePatientFormPage(c fiber.Ctx) error {
+func (s *service) HandleEditPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
 	vc := view.NewCtx(c)
 
-	id := strings.TrimSpace(c.Params("id", ""))
-	if id == "" {
-		return s.RedirectWithToast(c, "/patients", "That user does not exist", view.LevelInfo)
-	}
-
-	patient, err := s.PatientForShowPage(c.Context(), cu.ID, id)
+	patient, err := s.TakePatientByID(c.Context(), cu.ID, c.Params("id", ""))
 	if errors.Is(err, ErrIDRequired) {
-		return s.RedirectWithToast(c, "/patients", "That user does not exist", view.LevelWarning)
+		return s.RedirectWithToast(c, "/patients", "That patient does not exist", view.LevelWarning)
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.RedirectWithToast(c, "/patients", "Patient does not exist", view.LevelWarning)
@@ -79,9 +81,9 @@ func (s *service) HandlePatientFormPage(c fiber.Ctx) error {
 	return view.Render(c, view.PatientFormPage(vc, patient))
 }
 
-// HandleCreatePatient inserts a new patient record for the CurrentUser
+// HandleCreate inserts a new patient record for the CurrentUser
 // POST: /patients
-func (s *service) HandleCreatePatient(c fiber.Ctx) error {
+func (s *service) HandleCreate(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
 	input := patientUpsertInput{}
@@ -117,13 +119,13 @@ func (s *service) HandleCreatePatient(c fiber.Ctx) error {
 	vc := view.NewCtx(c)
 	return view.Render(c, templ.Join(
 		view.PatientProfileSection(vc, patient),
-		view.CmpToastPartial("New patient created", "", view.LevelInfo),
+		view.CmpToastPartial("New patient created", "", view.LevelSuccess),
 	))
 }
 
-// HandleUpdatePatient updates a patient record for the CurrentUser
+// HandleUpdate updates a patient record for the CurrentUser
 // PATCH: /patients/:id
-func (s *service) HandleUpdatePatient(c fiber.Ctx) error {
+func (s *service) HandleUpdate(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
 	patientID := strings.TrimSpace(c.Params("id", ""))
@@ -216,9 +218,9 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 	return view.Render(c, view.PatientAvatar(vc, patient))
 }
 
-// HandleDeletePatient deletes a patient record from the DB.
+// HandleDelete deletes a patient record from the DB.
 // DELETE: /patients/:id
-func (s *service) HandleDeletePatient(c fiber.Ctx) error {
+func (s *service) HandleDelete(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
 	patientID := strings.TrimSpace(c.Params("id", ""))
@@ -256,9 +258,9 @@ func normalizeSearchTerm(raw string) (string, error) {
 	return term, nil
 }
 
-// HandlePatientProfilePicImgSrc serves a patient's profile picture file.
+// HandleProfilePic serves a patient's profile picture file.
 // GET: /patients/:id/profilepic/:filename
-func (s *service) HandlePatientProfilePicImgSrc(c fiber.Ctx) error {
+func (s *service) HandleProfilePic(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
 	id := strings.TrimSpace(c.Params("id", ""))

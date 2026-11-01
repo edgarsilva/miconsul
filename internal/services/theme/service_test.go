@@ -35,11 +35,11 @@ func TestNewService(t *testing.T) {
 	})
 }
 
-func TestHandleToggleTheme(t *testing.T) {
+func TestHandleToggle(t *testing.T) {
 	t.Run("sets dark when checkbox checked", func(t *testing.T) {
 		app := fiber.New()
 		svc := service{Server: &server.Server{}}
-		app.Post("/theme/toggle", svc.HandleToggleTheme)
+		app.Post("/theme/toggle", svc.HandleToggle)
 
 		req := httptest.NewRequest(http.MethodPost, "/theme/toggle", strings.NewReader("theme=on&checked=dark&unchecked=light"))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -64,7 +64,7 @@ func TestHandleToggleTheme(t *testing.T) {
 	t.Run("defaults to light when checkbox unchecked", func(t *testing.T) {
 		app := fiber.New()
 		svc := service{Server: &server.Server{}}
-		app.Post("/theme/toggle", svc.HandleToggleTheme)
+		app.Post("/theme/toggle", svc.HandleToggle)
 
 		req := httptest.NewRequest(http.MethodPost, "/theme/toggle", strings.NewReader(""))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -87,7 +87,7 @@ func TestHandleToggleTheme(t *testing.T) {
 	})
 }
 
-func TestHandleToggleThemeSavesSignedInUserTheme(t *testing.T) {
+func TestHandleToggleSavesSignedInUserTheme(t *testing.T) {
 	db, err := gorm.Open(sqlite.Open("file:theme_toggle_user?mode=memory&cache=shared"), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("open db: %v", err)
@@ -104,7 +104,7 @@ func TestHandleToggleThemeSavesSignedInUserTheme(t *testing.T) {
 	app := fiber.New()
 	app.Post("/theme/toggle", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandleToggleTheme(c)
+		return svc.HandleToggle(c)
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/theme/toggle", strings.NewReader("theme=on&checked=dark&unchecked=light"))
@@ -133,7 +133,7 @@ func TestHandleToggleThemeSavesSignedInUserTheme(t *testing.T) {
 	}
 }
 
-func TestHandleToggleThemeReadsTheToggleThatWasClicked(t *testing.T) {
+func TestHandleToggleReadsTheToggleThatWasClicked(t *testing.T) {
 	tests := []struct {
 		body string
 		want string
@@ -149,7 +149,7 @@ func TestHandleToggleThemeReadsTheToggleThatWasClicked(t *testing.T) {
 	for _, tt := range tests {
 		app := fiber.New()
 		svc := service{Server: &server.Server{}}
-		app.Post("/theme/toggle", svc.HandleToggleTheme)
+		app.Post("/theme/toggle", svc.HandleToggle)
 
 		req := httptest.NewRequest(http.MethodPost, "/theme/toggle", strings.NewReader(tt.body))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -163,7 +163,7 @@ func TestHandleToggleThemeReadsTheToggleThatWasClicked(t *testing.T) {
 	}
 }
 
-func TestHandleToggleThemeRefreshesOnlyWhenTheChoiceComesFromTheOS(t *testing.T) {
+func TestHandleToggleRefreshesOnlyWhenTheChoiceComesFromTheOS(t *testing.T) {
 	tests := map[string]string{
 		"theme=on&checked=light&unchecked=dark&from=os": "true",
 		"theme=on&checked=dark&unchecked=light":         "",
@@ -172,7 +172,7 @@ func TestHandleToggleThemeRefreshesOnlyWhenTheChoiceComesFromTheOS(t *testing.T)
 	for body, want := range tests {
 		app := fiber.New()
 		svc := service{Server: &server.Server{}}
-		app.Post("/theme/toggle", svc.HandleToggleTheme)
+		app.Post("/theme/toggle", svc.HandleToggle)
 
 		req := httptest.NewRequest(http.MethodPost, "/theme/toggle", strings.NewReader(body))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")

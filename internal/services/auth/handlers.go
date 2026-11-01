@@ -303,9 +303,9 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 	return view.Render(c, view.AuthResetPasswordPage(vc, email, "check your email for a reset password link", nil))
 }
 
-// HandleResetPasswordChange renders the password change page for a valid token.
+// HandleChangePasswordPage renders the password change page for a valid token.
 // GET: /resetpassword/change/:token
-func (s *service) HandleResetPasswordChange(c fiber.Ctx) error {
+func (s *service) HandleChangePasswordPage(c fiber.Ctx) error {
 	token := c.Params("token", "")
 	if token == "" {
 		return s.RedirectWithAlert(c, "/resetpassword", "token can't be blank", view.LevelError)

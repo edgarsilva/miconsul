@@ -16,15 +16,15 @@ func TestPatientHandlerGuardBranches(t *testing.T) {
 	app := fiber.New()
 	app.Get("/patients/:id", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandlePatientFormPage(c)
+		return svc.HandleEditPage(c)
 	})
 	app.Post("/patients", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandleCreatePatient(c)
+		return svc.HandleCreate(c)
 	})
 	app.Post("/patients/:id/patch", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandleUpdatePatient(c)
+		return svc.HandleUpdate(c)
 	})
 	app.Post("/patients/:id/removepic", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
@@ -32,15 +32,15 @@ func TestPatientHandlerGuardBranches(t *testing.T) {
 	})
 	app.Post("/patients/:id/delete", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandleDeletePatient(c)
+		return svc.HandleDelete(c)
 	})
 	app.Get("/patients/search", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandlePatientsIndexSearch(c)
+		return svc.HandleIndexSearch(c)
 	})
 	app.Get("/patients/:id/profilepic/:filename", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandlePatientProfilePicImgSrc(c)
+		return svc.HandleProfilePic(c)
 	})
 
 	resp1, err := app.Test(httptest.NewRequest(http.MethodGet, "/patients/%20", nil))
@@ -102,7 +102,7 @@ func TestIndexSearchToasts(t *testing.T) {
 			app := fiber.New()
 			app.Get("/patients/search", func(c fiber.Ctx) error {
 				c.Locals("current_user", user)
-				return svc.HandlePatientsIndexSearch(c)
+				return svc.HandleIndexSearch(c)
 			})
 
 			req := httptest.NewRequest(http.MethodGet, "/patients/search?searchTerm="+tt.term, nil)

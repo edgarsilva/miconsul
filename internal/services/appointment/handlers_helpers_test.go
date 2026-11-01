@@ -1,7 +1,6 @@
 package appointment
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -12,27 +11,6 @@ import (
 
 	view "miconsul/internal/views"
 )
-
-func TestAppointmentForShowPage(t *testing.T) {
-	svc := &service{}
-	ctx := context.Background()
-
-	appointment, err := svc.AppointmentForShowPage(ctx, 1, "")
-	if err != nil {
-		t.Fatalf("expected empty-id shortcut without error, got %v", err)
-	}
-	if appointment.UID != "" {
-		t.Fatalf("expected zero-value appointment uid, got %q", appointment.UID)
-	}
-
-	appointment, err = svc.AppointmentForShowPage(ctx, 1, "new")
-	if err != nil {
-		t.Fatalf("expected new-id shortcut without error, got %v", err)
-	}
-	if appointment.UID != "new" {
-		t.Fatalf("expected passthrough appointment uid, got %q", appointment.UID)
-	}
-}
 
 func TestTakePatientAndClinicOrZero(t *testing.T) {
 	svc, user, clinic, patient := newAppointmentServiceForTests(t)

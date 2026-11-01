@@ -50,7 +50,7 @@ func (s *service) HandleEditPage(c fiber.Ctx) error {
 	}
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.UserEditPage(vc, user))
+	return view.Render(c, view.UserFormPage(vc, user))
 }
 
 // HandleProfilePage renders the current user's profile page.
@@ -63,7 +63,7 @@ func (s *service) HandleProfilePage(c fiber.Ctx) error {
 	}
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.UserEditPage(vc, user))
+	return view.Render(c, view.UserFormPage(vc, user))
 }
 
 // HandleUpdateProfile updates the current user's profile data. A new locale
@@ -132,9 +132,9 @@ func (s *service) HandleProfilePicPreview(c fiber.Ctx) error {
 	return view.Render(c, view.UserAvatar(vc, user))
 }
 
-// HandleUserProfilePicImgSrc serves a user's profile picture file.
+// HandleProfilePic serves a user's profile picture file.
 // GET: /users/:id/profilepic/:filename
-func (s *service) HandleUserProfilePicImgSrc(c fiber.Ctx) error {
+func (s *service) HandleProfilePic(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 	isPreview := strings.HasSuffix(c.Path(), "preview")
 	sufix := "avatar"

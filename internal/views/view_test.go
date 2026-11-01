@@ -157,7 +157,7 @@ func TestUserViewsOmitSecrets(t *testing.T) {
 			Render(context.Context, io.Writer) error
 		}{
 			"UserIndexPage": UserIndexPage(c, []models.User{user}),
-			"UserEditPage":  UserEditPage(c, user),
+			"UserFormPage":  UserFormPage(c, user),
 		}
 		for name, page := range pages {
 			var html strings.Builder

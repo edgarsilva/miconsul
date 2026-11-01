@@ -135,7 +135,7 @@ func ClinicIndexPage(c *Ctx, clinics []models.Clinic) templ.Component {
 	})
 }
 
-func ClinicPage(c *Ctx, clinic models.Clinic) templ.Component {
+func ClinicFormPage(c *Ctx, clinic models.Clinic) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1340,7 +1340,7 @@ func ClinicForm(c *Ctx, clinic models.Clinic) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if clinic.UID == "" || clinic.UID == "new" {
+		if clinic.UID == "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 103, " hx-post=\"/clinics\" action=\"/clinics\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1415,7 +1415,7 @@ func ClinicProfileSection(c *Ctx, clinic models.Clinic) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if clinic.UID == "" || clinic.UID == "new" {
+		if clinic.UID == "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 110, "<h1 class=\"px-4 sm:px-0 font-bold text-2xl pb-0 w-full\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

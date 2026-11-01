@@ -25,9 +25,9 @@ func (s *service) HandleHomePage(c fiber.Ctx) error {
 	return view.Render(c, view.LandingPage(vc))
 }
 
-// HandleDashboardPage renders the home dashboard
+// HandleIndexPage renders the home dashboard
 // GET: /dashboard
-func (s *service) HandleDashboardPage(c fiber.Ctx) error {
+func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 	timeframe := libtime.ParseTimeframe(c.Query("timeframe", ""))
 	statuses := models.ParseAppointmentStatuses(c.Query("status", ""))

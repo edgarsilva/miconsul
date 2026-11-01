@@ -468,10 +468,10 @@ func TestAuthHandlersLogoutAndSessionEndpoints(t *testing.T) {
 }
 
 func TestAuthHandlersResetPasswordShortCircuits(t *testing.T) {
-	t.Run("HandleResetPasswordChange redirects when token is blank", func(t *testing.T) {
+	t.Run("HandleChangePasswordPage redirects when token is blank", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		app := fiber.New()
-		app.Get("/resetpassword/change", svc.HandleResetPasswordChange)
+		app.Get("/resetpassword/change", svc.HandleChangePasswordPage)
 
 		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/resetpassword/change", nil))
 		if err != nil {
@@ -842,10 +842,10 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		}
 	})
 
-	t.Run("HandleResetPasswordChange redirects on invalid token", func(t *testing.T) {
+	t.Run("HandleChangePasswordPage redirects on invalid token", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		app := fiber.New()
-		app.Get("/resetpassword/change/:token", svc.HandleResetPasswordChange)
+		app.Get("/resetpassword/change/:token", svc.HandleChangePasswordPage)
 
 		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/resetpassword/change/invalid", nil))
 		if err != nil {
@@ -856,7 +856,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		}
 	})
 
-	t.Run("HandleResetPasswordChange renders page for valid token", func(t *testing.T) {
+	t.Run("HandleChangePasswordPage renders page for valid token", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		seedAuthUserWithOptions(t, svc, authUserSeedOptions{
 			Email:               "change@example.com",
@@ -866,7 +866,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		})
 
 		app := fiber.New()
-		app.Get("/resetpassword/change/:token", svc.HandleResetPasswordChange)
+		app.Get("/resetpassword/change/:token", svc.HandleChangePasswordPage)
 
 		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/resetpassword/change/change-ok-token", nil))
 		if err != nil {
@@ -912,7 +912,7 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		})
 
 		app := fiber.New()
-		app.Get("/resetpassword/change/:token", svc.HandleResetPasswordChange)
+		app.Get("/resetpassword/change/:token", svc.HandleChangePasswordPage)
 		app.Post("/resetpassword/change", svc.HandleResetPasswordUpdate)
 
 		pageResp, err := app.Test(httptest.NewRequest(http.MethodGet, "/resetpassword/change/roundtrip-token", nil))

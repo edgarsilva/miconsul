@@ -97,6 +97,16 @@ func userFormPath(c *Ctx, user models.User) string {
 	return "/profile"
 }
 
+// userFormBackPath returns where the user form's back button leads: the user
+// list for an admin editing someone else, home otherwise.
+func userFormBackPath(c *Ctx, user models.User) string {
+	if adminEditsOther(c, user) {
+		return "/admin/users"
+	}
+
+	return "/"
+}
+
 // FeedActionLocaleKey returns the localization key for a feed event action.
 func FeedActionLocaleKey(action string) string {
 	return fmt.Sprintf("str.feed_%s", action)
