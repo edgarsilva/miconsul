@@ -115,7 +115,7 @@ templ UserEmptyList(c *Ctx) {
 }
 
 templ UserFormPage(c *Ctx, user models.User) {
-	@BackBtnLayout(c, "/") {
+	@BackBtnLayout(c, userFormBackPath(c, user)) {
 		@UserProfileSection(c, user)
 	}
 }

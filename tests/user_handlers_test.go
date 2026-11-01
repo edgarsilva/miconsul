@@ -23,6 +23,24 @@ func TestUserHandlers(t *testing.T) {
 	admin := h.createUser(models.UserRoleAdmin)
 	regular := h.createUser(models.UserRoleUser)
 
+	t.Run("user form back link fits who is editing", func(t *testing.T) {
+		tests := []struct {
+			name, path, token, wantHref string
+		}{
+			{"own profile", "/profile", h.authToken(regular), `href="/"`},
+			{"admin editing another user", "/admin/users/" + regular.UID, h.authToken(admin), `href="/admin/users"`},
+		}
+		for _, tt := range tests {
+			resp, body := h.doRequest(requestOptions{path: tt.path, authToken: tt.token})
+			if resp.StatusCode != http.StatusOK {
+				t.Fatalf("%s: expected 200, got %d", tt.name, resp.StatusCode)
+			}
+			if !strings.Contains(body, `class="btn btn-secondary btn-sm" `+tt.wantHref) {
+				t.Errorf("%s: expected the back button to link %s", tt.name, tt.wantHref)
+			}
+		}
+	})
+
 	t.Run("profile update persists and renders the profile section", func(t *testing.T) {
 		resp, _ := h.doRequest(requestOptions{
 			method:    http.MethodPatch,
