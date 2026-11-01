@@ -36,10 +36,10 @@ func (s *service) HandleSigninPage(c fiber.Ctx) error {
 
 	vc := view.NewCtx(c)
 	if meta := selectAuthenticator(s).Metadata(); meta.Enabled {
-		return view.Render(c, view.ProviderSigninPage(vc, msg, meta.SigninPath))
+		return view.Render(c, view.AuthProviderSigninPage(vc, msg, meta.SigninPath))
 	}
 
-	return view.Render(c, view.LoginPage(vc, email, nil))
+	return view.Render(c, view.AuthLoginPage(vc, email, nil))
 }
 
 // HandleProviderSignin redirects to the sign-in provider, which also handles
@@ -64,22 +64,22 @@ func (s *service) HandleSignin(c fiber.Ctx) error {
 
 	email, password, err := credentialsFromRequest(c)
 	if err != nil {
-		return view.Render(c, view.LoginPage(vc, email, respErr))
+		return view.Render(c, view.AuthLoginPage(vc, email, respErr))
 	}
 
 	user, err := s.authenticateCredentials(ctx, email, password)
 	if errors.Is(err, errAuthInvalidCredentials) {
-		return view.Render(c, view.LoginPage(vc, email, respErr))
+		return view.Render(c, view.AuthLoginPage(vc, email, respErr))
 	}
 	if errors.Is(err, errAuthPendingConfirmation) {
 		err := errors.New("email pending confirmation, check your inbox")
-		return view.Render(c, view.LoginPage(vc, email, err))
+		return view.Render(c, view.AuthLoginPage(vc, email, err))
 	}
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "authenticate credentials failed")
 		log.Error("authenticate credentials:", err)
-		return view.Render(c, view.LoginPage(vc, email, loginErr))
+		return view.Render(c, view.AuthLoginPage(vc, email, loginErr))
 	}
 
 	rememberMe := c.FormValue("remember_me", "") != ""
@@ -87,7 +87,7 @@ func (s *service) HandleSignin(c fiber.Ctx) error {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "create session failed")
 		log.Error("create session:", err)
-		return view.Render(c, view.LoginPage(vc, email, loginErr))
+		return view.Render(c, view.AuthLoginPage(vc, email, loginErr))
 	}
 
 	return s.Redirect(c, "/?timeframe=day")
@@ -141,7 +141,7 @@ func (s *service) HandleSignupPage(c fiber.Ctx) error {
 
 	vc := view.NewCtx(c)
 
-	return view.Render(c, view.SignupPage(vc, "", nil))
+	return view.Render(c, view.AuthSignupPage(vc, "", nil))
 }
 
 // HandleSignup creates a new user if email and password are valid
@@ -157,7 +157,7 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "invalid signup credentials input")
-		return view.Render(c, view.SignupPage(vc, email, err))
+		return view.Render(c, view.AuthSignupPage(vc, email, err))
 	}
 	span.SetAttributes(attribute.String("auth.signup.email", strings.ToLower(strings.TrimSpace(email))))
 
@@ -166,7 +166,7 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 		err := errors.New("passwords don't match")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "signup password confirmation mismatch")
-		return view.Render(c, view.SignupPage(vc, email, err))
+		return view.Render(c, view.AuthSignupPage(vc, email, err))
 	}
 
 	err = s.userPendingConfirmation(ctx, email)
@@ -174,7 +174,7 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 		if resendErr := s.resendPendingConfirmation(ctx, email); resendErr != nil {
 			span.RecordError(resendErr)
 			span.SetStatus(codes.Error, "resend confirmation failed")
-			return view.Render(c, view.SignupPage(vc, email, errors.New("failed to resend confirmation email, please try again")))
+			return view.Render(c, view.AuthSignupPage(vc, email, errors.New("failed to resend confirmation email, please try again")))
 		}
 		span.SetStatus(codes.Ok, "pending confirmation resent")
 		return s.RedirectWithAlert(c, "/signin", "check your inbox, we'll re-send a confirmation link", "info")
@@ -186,7 +186,7 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 		if errors.Is(err, errAuthConfirmEmailSend) {
 			err = errors.New("failed to send confirmation email, please try again")
 		}
-		return view.Render(c, view.SignupPage(vc, email, err))
+		return view.Render(c, view.AuthSignupPage(vc, email, err))
 	}
 	span.SetStatus(codes.Ok, "signup confirmation email sent")
 
@@ -263,7 +263,7 @@ func (s *service) HandleLogout(c fiber.Ctx) error {
 func (s *service) HandleResetPasswordPage(c fiber.Ctx) error {
 	vc := view.NewCtx(c)
 
-	return view.Render(c, view.ResetPasswordPage(vc, "", "", nil))
+	return view.Render(c, view.AuthResetPasswordPage(vc, "", "", nil))
 }
 
 // HandleResetPassword sends a reset password link to the provided email.
@@ -274,13 +274,13 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 	email, err := resetPasswordEmailFromRequest(c)
 	if err != nil {
 		errView := errors.New("email can't be blank")
-		return view.Render(c, view.ResetPasswordPage(vc, email, "", errView))
+		return view.Render(c, view.AuthResetPasswordPage(vc, email, "", errView))
 	}
 
 	user, err := gorm.G[models.User](s.DB.GormDB()).Select("id", "name").Where("email = ?", email).Take(c.Context())
 	if err != nil {
 		errView := errors.New("user not found with that email")
-		return view.Render(c, view.ResetPasswordPage(vc, email, "", errView))
+		return view.Render(c, view.AuthResetPasswordPage(vc, email, "", errView))
 	}
 
 	user.ResetToken = newResetPasswordToken()
@@ -291,16 +291,16 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 		Updates(c.Context(), user)
 	if err != nil || rowsAffected != 1 {
 		errView := errors.New("failed to create reset password token")
-		return view.Render(c, view.ResetPasswordPage(vc, email, "", errView))
+		return view.Render(c, view.AuthResetPasswordPage(vc, email, "", errView))
 	}
 
 	if err := s.sendResetPasswordEmailAsync(c.Context(), email, user.ResetToken); err != nil {
 		log.Error("queue reset password email:", err)
 		errView := errors.New("could not send the reset password email, please try again")
-		return view.Render(c, view.ResetPasswordPage(vc, email, "", errView))
+		return view.Render(c, view.AuthResetPasswordPage(vc, email, "", errView))
 	}
 
-	return view.Render(c, view.ResetPasswordPage(vc, email, "check your email for a reset password link", nil))
+	return view.Render(c, view.AuthResetPasswordPage(vc, email, "check your email for a reset password link", nil))
 }
 
 // HandleResetPasswordChange renders the password change page for a valid token.
@@ -317,7 +317,7 @@ func (s *service) HandleResetPasswordChange(c fiber.Ctx) error {
 	}
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.ResetPasswordChangePage(vc, email, token, nil))
+	return view.Render(c, view.AuthChangePasswordPage(vc, email, token, nil))
 }
 
 // HandleResetPasswordUpdate updates the user password in the DB
@@ -342,13 +342,13 @@ func (s *service) HandleResetPasswordUpdate(c fiber.Ctx) error {
 	password := c.FormValue("password", "")
 	if password == "" {
 		err := errors.New("password can't be blank")
-		return view.Render(c, view.ResetPasswordChangePage(vc, email, token, err))
+		return view.Render(c, view.AuthChangePasswordPage(vc, email, token, err))
 	}
 
 	confirm := c.FormValue("confirm", "")
 	if confirm == "" || password != confirm {
 		err := errors.New("passwords don't match")
-		return view.Render(c, view.ResetPasswordChangePage(vc, email, token, err))
+		return view.Render(c, view.AuthChangePasswordPage(vc, email, token, err))
 	}
 
 	_, err = s.userUpdatePassword(c.Context(), email, password, token)

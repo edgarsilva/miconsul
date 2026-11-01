@@ -318,8 +318,8 @@ func TestAuthPagesUseThemeColors(t *testing.T) {
 		pages := map[string]interface {
 			Render(context.Context, io.Writer) error
 		}{
-			"LoginPage":  LoginPage(c, "", nil),
-			"SignupPage": SignupPage(c, "", nil),
+			"AuthLoginPage":  AuthLoginPage(c, "", nil),
+			"AuthSignupPage": AuthSignupPage(c, "", nil),
 		}
 		for name, page := range pages {
 			var html strings.Builder
@@ -332,11 +332,11 @@ func TestAuthPagesUseThemeColors(t *testing.T) {
 		}
 
 		var login strings.Builder
-		if err := LoginPage(c, "", nil).Render(fc.Context(), &login); err != nil {
-			t.Fatalf("render LoginPage: %v", err)
+		if err := AuthLoginPage(c, "", nil).Render(fc.Context(), &login); err != nil {
+			t.Fatalf("render AuthLoginPage: %v", err)
 		}
 		if !strings.Contains(login.String(), `<a href="/resetpassword" class="link font-semibold`) {
-			t.Errorf("LoginPage: expected the forgot password link in the base text color")
+			t.Errorf("AuthLoginPage: expected the forgot password link in the base text color")
 		}
 	})
 }

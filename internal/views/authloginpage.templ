@@ -1,6 +1,6 @@
 package views
 
-templ LoginPage(c *Ctx, email string, err error) {
+templ AuthLoginPage(c *Ctx, email string, err error) {
 	@AuthLayout(c) {
 		<div class="absolute top-4 right-4">
 			@CmpThemeBtn(c.Theme)
@@ -69,7 +69,7 @@ templ LoginPage(c *Ctx, email string, err error) {
 	}
 }
 
-templ LogtoPage(c *Ctx, authState string, idTokenClaimsJSON string, customClaimsJSON string) {
+templ AuthLogtoPage(c *Ctx, authState string, idTokenClaimsJSON string, customClaimsJSON string) {
 	@DefaultLayout(c) {
 		<div id="content" class="container md:mx-auto md:px-4">
 			<section class="app-card p-4 md:p-6 space-y-4">
@@ -98,10 +98,10 @@ templ LogtoPage(c *Ctx, authState string, idTokenClaimsJSON string, customClaims
 	}
 }
 
-// ProviderSigninPage is the sign-in page while a sign-in provider such as
+// AuthProviderSigninPage is the sign-in page while a sign-in provider such as
 // Logto handles authentication; it links to the provider instead of showing
 // a password form.
-templ ProviderSigninPage(c *Ctx, msg, signinPath string) {
+templ AuthProviderSigninPage(c *Ctx, msg, signinPath string) {
 	@AuthLayout(c) {
 		<div class="absolute top-4 right-4">
 			@CmpThemeBtn(c.Theme)

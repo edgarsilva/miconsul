@@ -9,7 +9,7 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-func LoginPage(c *Ctx, email string, err error) templ.Component {
+func AuthLoginPage(c *Ctx, email string, err error) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -180,7 +180,7 @@ func LoginPage(c *Ctx, email string, err error) templ.Component {
 	})
 }
 
-func LogtoPage(c *Ctx, authState string, idTokenClaimsJSON string, customClaimsJSON string) templ.Component {
+func AuthLogtoPage(c *Ctx, authState string, idTokenClaimsJSON string, customClaimsJSON string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -229,7 +229,7 @@ func LogtoPage(c *Ctx, authState string, idTokenClaimsJSON string, customClaimsJ
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(idTokenClaimsJSON)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/authloginpage.templ`, Line: 88, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/authloginpage.templ`, Line: 87, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -242,7 +242,7 @@ func LogtoPage(c *Ctx, authState string, idTokenClaimsJSON string, customClaimsJ
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(customClaimsJSON)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/authloginpage.templ`, Line: 95, Col: 35}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/authloginpage.templ`, Line: 93, Col: 35}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -262,10 +262,10 @@ func LogtoPage(c *Ctx, authState string, idTokenClaimsJSON string, customClaimsJ
 	})
 }
 
-// ProviderSigninPage is the sign-in page while a sign-in provider such as
+// AuthProviderSigninPage is the sign-in page while a sign-in provider such as
 // Logto handles authentication; it links to the provider instead of showing
 // a password form.
-func ProviderSigninPage(c *Ctx, msg, signinPath string) templ.Component {
+func AuthProviderSigninPage(c *Ctx, msg, signinPath string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -322,7 +322,7 @@ func ProviderSigninPage(c *Ctx, msg, signinPath string) templ.Component {
 				var templ_7745c5c3_Var16 string
 				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(msg)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/authloginpage.templ`, Line: 125, Col: 17}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/authloginpage.templ`, Line: 123, Col: 17}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
@@ -340,7 +340,7 @@ func ProviderSigninPage(c *Ctx, msg, signinPath string) templ.Component {
 			var templ_7745c5c3_Var17 string
 			templ_7745c5c3_Var17, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.SafeURL(signinPath)).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/authloginpage.templ`, Line: 128, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/authloginpage.templ`, Line: 126, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 			if templ_7745c5c3_Err != nil {
@@ -353,7 +353,7 @@ func ProviderSigninPage(c *Ctx, msg, signinPath string) templ.Component {
 			var templ_7745c5c3_Var18 string
 			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("btn.sign_in"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/authloginpage.templ`, Line: 128, Col: 96}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/authloginpage.templ`, Line: 126, Col: 96}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
