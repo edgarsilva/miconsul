@@ -722,5 +722,5 @@ func (s *service) renderFormPage(c fiber.Ctx, appointment models.Appointment) er
 	patients = ensurePatientListed(patients, appointment.Patient)
 	vc := view.NewCtx(c)
 
-	return view.Render(c, view.AppointmentPage(vc, appointment, patients, clinics))
+	return view.Render(c, view.AppointmentFormPage(vc, appointment, patients, clinics))
 }

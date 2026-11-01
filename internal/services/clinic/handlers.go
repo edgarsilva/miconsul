@@ -36,7 +36,7 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 func (s *service) HandleNewPage(c fiber.Ctx) error {
 	clinic := models.Clinic{}
 	vc := view.NewCtx(c)
-	return view.Render(c, view.ClinicPage(vc, clinic))
+	return view.Render(c, view.ClinicFormPage(vc, clinic))
 }
 
 // HandleEditPage renders the clinic edit page.
@@ -60,7 +60,7 @@ func (s *service) HandleEditPage(c fiber.Ctx) error {
 	}
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.ClinicPage(vc, clinic))
+	return view.Render(c, view.ClinicFormPage(vc, clinic))
 }
 
 // HandleCreate inserts a new clinic record for the given user

@@ -114,7 +114,7 @@ templ UserEmptyList(c *Ctx) {
 	</div>
 }
 
-templ UserEditPage(c *Ctx, user models.User) {
+templ UserFormPage(c *Ctx, user models.User) {
 	@BackBtnLayout(c, "/") {
 		@UserProfileSection(c, user)
 	}

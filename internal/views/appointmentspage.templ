@@ -78,7 +78,7 @@ templ AppointmentIndexPage(c *Ctx, appointments []models.Appointment, selectedPa
 	}
 }
 
-templ AppointmentPage(c *Ctx, appointment models.Appointment, patients []models.Patient, clinics []models.Clinic) {
+templ AppointmentFormPage(c *Ctx, appointment models.Appointment, patients []models.Patient, clinics []models.Clinic) {
 	@BackBtnLayout(c, "/appointments") {
 		<section id="appointment_profile_cont" class="grow flex flex-col px-0 sm:px-4 md:px-8 md:py-8 lg:justify-center lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			if appointment.UID == "" || appointment.UID == "new" {

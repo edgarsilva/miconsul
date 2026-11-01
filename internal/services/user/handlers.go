@@ -50,7 +50,7 @@ func (s *service) HandleEditPage(c fiber.Ctx) error {
 	}
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.UserEditPage(vc, user))
+	return view.Render(c, view.UserFormPage(vc, user))
 }
 
 // HandleProfilePage renders the current user's profile page.
@@ -63,7 +63,7 @@ func (s *service) HandleProfilePage(c fiber.Ctx) error {
 	}
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.UserEditPage(vc, user))
+	return view.Render(c, view.UserFormPage(vc, user))
 }
 
 // HandleUpdateProfile updates the current user's profile data. A new locale
