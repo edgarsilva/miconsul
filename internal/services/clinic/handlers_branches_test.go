@@ -18,23 +18,23 @@ func TestClinicHandlerBranches(t *testing.T) {
 	app := fiber.New()
 	app.Get("/clinics/search", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandleClinicsIndexSearch(c)
+		return svc.HandleIndexSearch(c)
 	})
 	app.Get("/clinics/:id", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandleClinicsShowPage(c)
+		return svc.HandleShowPage(c)
 	})
 	app.Post("/clinics", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandleClinicsCreate(c)
+		return svc.HandleCreate(c)
 	})
 	app.Post("/clinics/:id/patch", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandleClinicsUpdate(c)
+		return svc.HandleUpdate(c)
 	})
 	app.Post("/clinics/:id/delete", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandleClinicsDelete(c)
+		return svc.HandleDelete(c)
 	})
 
 	resp1, err := app.Test(httptest.NewRequest(http.MethodGet, "/clinics/%20", nil))
@@ -77,7 +77,7 @@ func TestClinicHandlersHappyPaths(t *testing.T) {
 	app := fiber.New()
 	app.Get("/clinics/:id", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandleClinicsShowPage(c)
+		return svc.HandleShowPage(c)
 	})
 
 	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/clinics/"+clinic.UID, nil))
@@ -107,7 +107,7 @@ func TestIndexSearchToasts(t *testing.T) {
 			app := fiber.New()
 			app.Get("/clinics/search", func(c fiber.Ctx) error {
 				c.Locals("current_user", user)
-				return svc.HandleClinicsIndexSearch(c)
+				return svc.HandleIndexSearch(c)
 			})
 
 			req := httptest.NewRequest(http.MethodGet, "/clinics/search?searchTerm="+tt.term, nil)

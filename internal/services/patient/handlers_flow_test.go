@@ -28,7 +28,7 @@ func TestPatientHandlersFlows(t *testing.T) {
 	app := fiber.New()
 	app.Get("/patients/search", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandlePatientsIndexSearch(c)
+		return svc.HandleIndexSearch(c)
 	})
 	app.Get("/patients", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
@@ -40,11 +40,11 @@ func TestPatientHandlersFlows(t *testing.T) {
 	})
 	app.Post("/patients", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandleCreatePatient(c)
+		return svc.HandleCreate(c)
 	})
 	app.Post("/patients/:id/patch", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandleUpdatePatient(c)
+		return svc.HandleUpdate(c)
 	})
 	app.Post("/patients/:id/removepic", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
@@ -52,7 +52,7 @@ func TestPatientHandlersFlows(t *testing.T) {
 	})
 	app.Post("/patients/:id/delete", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandleDeletePatient(c)
+		return svc.HandleDelete(c)
 	})
 
 	resp1, err := app.Test(httptest.NewRequest(http.MethodGet, "/patients", nil))
@@ -142,7 +142,7 @@ func TestPatientProfilePicImageSourceHandler(t *testing.T) {
 	app := fiber.New()
 	app.Get("/patients/:id/profilepic/:filename", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandlePatientProfilePicImgSrc(c)
+		return svc.HandleProfilePicImgSrc(c)
 	})
 
 	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/patients/"+patient.UID+"/profilepic/"+filename, nil))
@@ -169,7 +169,7 @@ func TestDeletePatientMissingIDGuardRoute(t *testing.T) {
 	app := fiber.New()
 	app.Post("/patients/delete", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandleDeletePatient(c)
+		return svc.HandleDelete(c)
 	})
 
 	resp, err := app.Test(httptest.NewRequest(http.MethodPost, "/patients/delete", nil))
@@ -197,7 +197,7 @@ func TestPatientHTMXResponsesAreFragments(t *testing.T) {
 	app := fiber.New()
 	app.Post("/patients", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)
-		return svc.HandleCreatePatient(c)
+		return svc.HandleCreate(c)
 	})
 	app.Patch("/patients/:id/removepic", func(c fiber.Ctx) error {
 		c.Locals("current_user", user)

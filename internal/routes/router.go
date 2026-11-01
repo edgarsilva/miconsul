@@ -130,14 +130,14 @@ func ClinicsRoutes(s *server.Server, authSvc auth.Runtime) error {
 
 	// Pages
 	g := c.Group("/clinics", mw.MustAuthenticate(authSvc))
-	g.Get("/", c.HandleClinicsIndexPage)
-	g.Get("/search", c.HandleClinicsIndexSearch)
-	g.Get("/new", c.HandleClinicsNewPage)
-	g.Get("/:id", c.HandleClinicsShowPage)
+	g.Get("/", c.HandleIndexPage)
+	g.Get("/search", c.HandleIndexSearch)
+	g.Get("/new", c.HandleNewPage)
+	g.Get("/:id", c.HandleShowPage)
 
-	g.Post("/", c.HandleClinicsCreate)
-	g.Patch("/:id", c.HandleClinicsUpdate)
-	g.Delete("/:id", c.HandleClinicsDelete)
+	g.Post("/", c.HandleCreate)
+	g.Patch("/:id", c.HandleUpdate)
+	g.Delete("/:id", c.HandleDelete)
 
 	return nil
 }
@@ -150,15 +150,15 @@ func PatientRoutes(s *server.Server, authSvc auth.Runtime) error {
 
 	g := p.Group("/patients", mw.MustAuthenticate(authSvc))
 	g.Get("/", p.HandleIndexPage)
-	g.Get("/search", p.HandlePatientsIndexSearch)
+	g.Get("/search", p.HandleIndexSearch)
 
 	g.Get("/:id", p.HandlePatientFormPage)
-	g.Get("/:id/profilepic/:filename", p.HandlePatientProfilePicImgSrc)
+	g.Get("/:id/profilepic/:filename", p.HandleProfilePicImgSrc)
 
-	g.Post("/", p.HandleCreatePatient)
-	g.Patch("/:id", p.HandleUpdatePatient)
+	g.Post("/", p.HandleCreate)
+	g.Patch("/:id", p.HandleUpdate)
 	g.Patch("/:id/removepic", p.HandleRemovePic)
-	g.Delete("/:id", p.HandleDeletePatient)
+	g.Delete("/:id", p.HandleDelete)
 
 	// g.Get("/:id", p.HandleIndexPage)
 

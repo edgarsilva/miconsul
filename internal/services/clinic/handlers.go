@@ -18,9 +18,9 @@ const (
 	QUERY_LIMIT int = 10
 )
 
-// HandleClinicsIndexPage renders the clinics index page.
+// HandleIndexPage renders the clinics index page.
 // GET: /clinics
-func (s *service) HandleClinicsIndexPage(c fiber.Ctx) error {
+func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 	clinics, err := s.FindClinicsBySearchTerm(c.Context(), cu, "")
 	if err != nil {
@@ -31,17 +31,17 @@ func (s *service) HandleClinicsIndexPage(c fiber.Ctx) error {
 	return view.Render(c, view.ClinicIndexPage(vc, clinics))
 }
 
-// HandleClinicsNewPage renders the new clinic HTML page
+// HandleNewPage renders the new clinic HTML page
 // GET: /clinics/new
-func (s *service) HandleClinicsNewPage(c fiber.Ctx) error {
+func (s *service) HandleNewPage(c fiber.Ctx) error {
 	clinic := models.Clinic{}
 	vc := view.NewCtx(c)
 	return view.Render(c, view.ClinicPage(vc, clinic))
 }
 
-// HandleClinicsShowPage renders the clinics page HTML
+// HandleShowPage renders the clinics page HTML
 // GET: /clinics/:id
-func (s *service) HandleClinicsShowPage(c fiber.Ctx) error {
+func (s *service) HandleShowPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 	id := strings.TrimSpace(c.Params("id", ""))
 	if id == "" {
@@ -63,9 +63,9 @@ func (s *service) HandleClinicsShowPage(c fiber.Ctx) error {
 	return view.Render(c, view.ClinicPage(vc, clinic))
 }
 
-// HandleClinicsCreate inserts a new clinic record for the given user
+// HandleCreate inserts a new clinic record for the given user
 // POST: /clinics
-func (s *service) HandleClinicsCreate(c fiber.Ctx) error {
+func (s *service) HandleCreate(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 	price := amount.StrToAmount(c.FormValue("price", ""))
 	input := clinicUpsertInput{}
@@ -84,9 +84,9 @@ func (s *service) HandleClinicsCreate(c fiber.Ctx) error {
 	return s.respondWithClinicPage(c, clinic)
 }
 
-// HandleClinicsUpdate updates a clinic record for the CurrentUser
+// HandleUpdate updates a clinic record for the CurrentUser
 // PATCH: /clinics/:id
-func (s *service) HandleClinicsUpdate(c fiber.Ctx) error {
+func (s *service) HandleUpdate(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 	clinicID := cmp.Or(c.Params("id", ""), c.FormValue("id", ""))
 	if clinicID == "" {
@@ -125,9 +125,9 @@ func (s *service) HandleClinicsUpdate(c fiber.Ctx) error {
 	return s.respondWithClinicPage(c, clinic)
 }
 
-// HandleClinicsDelete deletes a clinic record from the DB
+// HandleDelete deletes a clinic record from the DB
 // DELETE: /clinics/:id
-func (s *service) HandleClinicsDelete(c fiber.Ctx) error {
+func (s *service) HandleDelete(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 	clinicID := strings.TrimSpace(c.Params("id", ""))
 	if clinicID == "" {
@@ -153,10 +153,10 @@ func (s *service) HandleClinicsDelete(c fiber.Ctx) error {
 	return s.HXRedirect(c, "/clinics")
 }
 
-// HandleClinicsIndexSearch searches clinics and returns an HTML fragment to be
+// HandleIndexSearch searches clinics and returns an HTML fragment to be
 // replacesd in the HTMX active search
 // GET: /clinics/search
-func (s *service) HandleClinicsIndexSearch(c fiber.Ctx) error {
+func (s *service) HandleIndexSearch(c fiber.Ctx) error {
 	searchTerm := strings.TrimSpace(c.Query("searchTerm", ""))
 	if models.SearchTermTooShort(searchTerm) {
 		return view.Render(c, view.CmpSearchTooShortToast())
