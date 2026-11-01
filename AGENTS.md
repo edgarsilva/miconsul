@@ -78,6 +78,8 @@ One rule: namespace + what + kind. The namespace is the domain, singular and nam
 
 Routes and handlers split by action (`GET /clinics/new` → `HandleNewPage`, `GET /clinics/:id` → `HandleEditPage`); both render the resource's Form page, and its section decides which state to show, since it re-renders itself after an htmx save. No `"new"` id sentinel.
 
+Handler names don't repeat their package's name (`clinic.HandleCreate`, not `HandleClinicsCreate`); keep words that name another actor or resource (`HandlePatientConfirm`, `HandleAdminUpdateUser`). `Page` marks a GET that returns a full page; fragments, files, redirects and JSON don't take it.
+
 ## Build/Test Workflow
 
 - Regenerate templ output after templ changes:
