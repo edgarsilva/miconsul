@@ -82,7 +82,7 @@ func AuthRoutes(s *server.Server) (auth.Runtime, error) {
 		a.Get("/signup/confirm/:token", a.HandleSignupConfirmEmail)
 		a.Get("/resetpassword", a.HandleResetPasswordPage)
 		a.Post("/resetpassword", a.HandleResetPassword)
-		a.Get("/resetpassword/change/:token", a.HandleResetPasswordChange)
+		a.Get("/resetpassword/change/:token", a.HandleChangePasswordPage)
 		a.Post("/resetpassword/change", a.HandleResetPasswordUpdate)
 	}
 
