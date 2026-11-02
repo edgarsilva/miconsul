@@ -256,6 +256,8 @@ func AdminRoutes(s *server.Server, authSvc auth.Runtime) error {
 		return err
 	}
 
+	a.Get("/admin/components", mw.MustBeAdmin(authSvc), a.HandleComponentsPage)
+
 	if s.AppEnv().JobsUIEnabled {
 		jobsHandler := jobs.NewMonitorHandler("/admin/jobs", s.AppEnv())
 		a.All("/admin/jobs/*", mw.MustBeAdmin(authSvc), mw.JobsUICSPMiddleware(), jobsHandler)

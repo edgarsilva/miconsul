@@ -1,5 +1,11 @@
 package views
 
+import (
+	"time"
+
+	"miconsul/internal/models"
+)
+
 templ AdminModelsPage(c *Ctx, models []string) {
 	@DefaultLayout(c) {
 		<section id="patients_section" class="grow flex flex-col px-0 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
@@ -30,4 +36,375 @@ templ AdminModelsPage(c *Ctx, models []string) {
 			</div>
 		</section>
 	}
+}
+
+// AdminComponentsPage renders an example of every component, as a style
+// reference for admins.
+templ AdminComponentsPage(c *Ctx) {
+	{{ now := time.Now() }}
+	{{ patient := models.Patient{Name: "Alma Rivera"} }}
+	{{ withPic := adminComponentsAvatar{pic: "https://i.pravatar.cc/300?img=47", initials: "AR"} }}
+	@DefaultLayout(c) {
+		<section class="grow flex flex-col gap-10 px-4 py-8 lg:w-2/3 lg:max-w-5xl lg:mx-auto">
+			<hgroup>
+				<h1 class="text-2xl font-bold">Components</h1>
+				<p class="text-sm text-base-content/60">An example of every component, with sample data.</p>
+			</hgroup>
+			@adminComponentsGroup("Buttons and badges") {
+				@adminComponentsExample("CmpBackBtn") {
+					@CmpBackBtn("Back", "/admin/components")
+				}
+				@adminComponentsExample("CmpThemeBtn") {
+					@CmpThemeBtn(c.Theme)
+				}
+				@adminComponentsExample("CmpCardHeaderNewBtn") {
+					@CmpCardHeaderNewBtn("/admin/components", "New")
+				}
+				@adminComponentsExample("CmpStatusBadge") {
+					for _, status := range adminComponentsStatuses() {
+						@CmpStatusBadge(c, status)
+					}
+				}
+			}
+			@adminComponentsGroup("Inputs") {
+				@adminComponentsExample("CmpEmailInput") {
+					@CmpEmailInput("alma@example.com")
+				}
+				@adminComponentsExample("CmpPasswordInput, CmpConfirmPasswordInput") {
+					@CmpPasswordInput("")
+					@CmpConfirmPasswordInput("")
+				}
+				@adminComponentsExample("CmpCheckbox") {
+					@CmpCheckbox("Keep me signed in", "components_checkbox", "true", false)
+				}
+				@adminComponentsExample("CmpStatusRadio") {
+					@CmpStatusRadio(models.AppointmentConfirmed)
+				}
+				@adminComponentsExample("CmpSearchInput") {
+					<div class="flex w-full flex-col gap-2">
+						@CmpSearchInput(c, "Search patients", "/patients/search", "#patients_list")
+						<ul id="patients_list"></ul>
+					</div>
+				}
+				@adminComponentsExample("CmpCardHeader") {
+					<div class="w-full">
+						@CmpCardHeader(c, "Patients", "New patient", "/patients/new", "", "", "")
+					</div>
+				}
+			}
+			@adminComponentsGroup("Avatars") {
+				@adminComponentsExample("CmpAvatar") {
+					@CmpAvatar(patient)
+					@CmpAvatar(withPic)
+				}
+				@adminComponentsExample("CmpLargeAvatar") {
+					<figure class="aspect-4/5 w-28 rounded-2xl overflow-hidden">
+						@CmpLargeAvatar(patient)
+					</figure>
+					<figure class="aspect-4/5 w-28 rounded-2xl overflow-hidden">
+						@CmpLargeAvatar(withPic)
+					</figure>
+				}
+			}
+			@adminComponentsGroup("Time") {
+				@adminComponentsExample("CmpTime") {
+					@CmpTime(now)
+				}
+				@adminComponentsExample("CmpTimeInTimezone") {
+					@CmpTimeInTimezone(now, "America/Mexico_City")
+				}
+				@adminComponentsExample("CmpRelativeTime") {
+					@CmpRelativeTime(now.Add(-3 * time.Hour))
+				}
+				@adminComponentsExample("CmpContextualTime") {
+					@CmpContextualTime(now, "America/Mexico_City")
+				}
+			}
+			@adminComponentsGroup("Alerts and toasts") {
+				@adminComponentsExample("CmpFlashAlert") {
+					<div class="flex w-full flex-col gap-2">
+						for _, level := range adminComponentsLevels() {
+							@CmpFlashAlert(adminComponentsAlertCtx(c, level))
+						}
+					</div>
+				}
+				@adminComponentsExample("CmpToast (fades out after 3s; reload to see it again)") {
+					<div class="flex w-full flex-col gap-2">
+						for _, level := range adminComponentsLevels() {
+							@CmpToast("Patient saved", level.String(), level)
+						}
+					</div>
+				}
+				@adminComponentsExample("Rendered elsewhere") {
+					<p class="text-sm text-base-content/60">
+						CmpToastPartial, CmpSearchTooShortToast and CmpSearchFailedToast wrap CmpToast in an htmx
+						&lt;hx-partial&gt; for responses. CmpNavbar, CmpFooter and CmpToastRegion are part of every layout.
+					</p>
+				}
+			}
+			@adminComponentsGroup("Brand") {
+				@adminComponentsExample("CmpLogo") {
+					<div class="w-16">
+						@CmpLogo()
+					</div>
+				}
+			}
+			<section class="flex flex-col gap-4">
+				<h2 class="text-lg font-semibold">Icons</h2>
+				<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+					for _, icon := range adminComponentsIcons() {
+						<div class="card card-border bg-base-100">
+							<div class="card-body items-center gap-2 p-4">
+								<div class="flex size-10 items-center justify-center [&_svg]:max-h-full [&_svg]:max-w-full">
+									@icon.component
+								</div>
+								<code class="text-xs">{ icon.name }</code>
+							</div>
+						</div>
+					}
+				</div>
+			</section>
+			@adminComponentsGroup("Not used yet") {
+				@adminComponentsWideExample("LatestTransactions (payments and revenue placeholder)") {
+					<div class="w-full">
+						@LatestTransactions()
+					</div>
+				}
+				@adminComponentsWideExample("Patient row (design reference)") {
+					<ul role="list" class="app-card w-full divide-y divide-base-content/10 overflow-hidden">
+						@adminComponentsPatientRows(c)
+					</ul>
+				}
+			}
+		</section>
+	}
+}
+
+// adminComponentsGroup renders a titled group of examples.
+templ adminComponentsGroup(title string) {
+	<section class="flex flex-col gap-4">
+		<h2 class="text-lg font-semibold">{ title }</h2>
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+			{ children... }
+		</div>
+	</section>
+}
+
+// adminComponentsExample renders one component example under its name.
+templ adminComponentsExample(name string) {
+	<div class="card card-border bg-base-100">
+		<div class="card-body gap-4">
+			<h3 class="card-title text-sm font-mono">{ name }</h3>
+			<div class="flex flex-wrap items-center gap-3">
+				{ children... }
+			</div>
+		</div>
+	</div>
+}
+
+// adminComponentsWideExample renders an example that needs the full width.
+templ adminComponentsWideExample(name string) {
+	<div class="md:col-span-2">
+		@adminComponentsExample(name) {
+			{ children... }
+		}
+	</div>
+}
+
+// adminComponentsPatientRows is the design reference for the patient list
+// row: the next appointment badge next to the name, contact below it, and the
+// last appointment under the buttons.
+templ adminComponentsPatientRows(c *Ctx) {
+	for _, props := range adminComponentsPatientRowSamples() {
+		@adminComponentsPatientRow(c, props)
+	}
+}
+
+templ adminComponentsPatientRow(c *Ctx, props adminComponentsPatientRowProps) {
+	<li class="relative flex justify-between items-center gap-x-6 px-2 py-2 hover:bg-base-200/75">
+		<div class="flex items-center min-w-0 gap-x-4">
+			@CmpAvatar(props.avatar)
+			<div class="min-w-0">
+				<div class="flex items-center gap-2">
+					if props.inSession {
+						<span class="inline-grid *:[grid-area:1/1]">
+							<span class="status status-success animate-ping"></span>
+							<span class="status status-success"></span>
+						</span>
+					}
+					<span class="font-semibold text-base-content truncate">{ props.name }</span>
+					if props.inSession {
+						@CmpStatusBadge(c, models.AppointmentInProgress)
+					} else if props.next != "" {
+						<span class={ "badge badge-sm gap-1", props.nextClass }>
+							if props.nextDot {
+								<span class="inline-block h-1.5 w-1.5 rounded-full bg-current"></span>
+							}
+							{ props.next }
+						</span>
+					}
+				</div>
+				<p class="text-xs leading-5 text-base-content/60 truncate">{ props.contact }</p>
+			</div>
+		</div>
+		<div class="hidden md:flex md:flex-col md:items-end gap-1">
+			<div class="flex gap-2 items-center">
+				<a class="btn btn-sm" href="/admin/components">
+					@CmpCalendarIcon("size-4")
+					{ c.l("btn.appointments") }
+				</a>
+				<a class="btn btn-sm" href="/admin/components">
+					@CmpEditIcon("size-4")
+					{ c.l("btn.edit") }
+				</a>
+			</div>
+			<p class="text-xs leading-5 text-base-content/50">
+				{ c.l("str.last_appointment") }
+				@CmpTime(props.lastAppointment)
+			</p>
+		</div>
+	</li>
+}
+
+// adminComponentsPatientRowProps is one sample patient row.
+type adminComponentsPatientRowProps struct {
+	avatar          Avatarable
+	name            string
+	contact         string
+	next            string
+	nextClass       string
+	nextDot         bool
+	inSession       bool
+	lastAppointment time.Time
+}
+
+// adminComponentsPatientRowSamples returns a row for each state: in session
+// now, today, next week, next month, a later date, and no upcoming
+// appointment.
+func adminComponentsPatientRowSamples() []adminComponentsPatientRowProps {
+	now := time.Now()
+	later := now.AddDate(0, 2, 0)
+
+	return []adminComponentsPatientRowProps{
+		{
+			avatar:          adminComponentsAvatar{pic: "https://i.pravatar.cc/300?img=12", initials: "MF"},
+			name:            "Michael Foster",
+			contact:         "+52 55 1234 5678",
+			inSession:       true,
+			lastAppointment: now.AddDate(0, 0, -14),
+		},
+		{
+			avatar:          adminComponentsAvatar{initials: "AR"},
+			name:            "Alma Rivera",
+			contact:         "alma@example.com",
+			next:            "Today",
+			nextClass:       "badge-accent",
+			nextDot:         true,
+			lastAppointment: now.AddDate(0, -1, 0),
+		},
+		{
+			avatar:          adminComponentsAvatar{pic: "https://i.pravatar.cc/300?img=32", initials: "LG"},
+			name:            "Lucía Gómez",
+			contact:         "+52 33 8765 4321",
+			next:            "Next week",
+			nextClass:       "badge-soft",
+			lastAppointment: now.AddDate(0, 0, -3),
+		},
+		{
+			avatar:          adminComponentsAvatar{pic: "https://i.pravatar.cc/300?img=5", initials: "DT"},
+			name:            "Daniela Torres",
+			contact:         "daniela@example.com",
+			next:            "Next month",
+			nextClass:       "badge-soft",
+			lastAppointment: now.AddDate(0, -2, 0),
+		},
+		{
+			avatar:          adminComponentsAvatar{initials: "JP"},
+			name:            "Jorge Peña",
+			contact:         "jorge@example.com",
+			next:            later.Format("Jan 2"),
+			nextClass:       "badge-soft",
+			lastAppointment: now.AddDate(0, -3, 0),
+		},
+		{
+			avatar:          adminComponentsAvatar{initials: "SM"},
+			name:            "Sofía Medina",
+			contact:         "+52 81 2468 1357",
+			lastAppointment: now.AddDate(-1, 0, 0),
+		},
+	}
+}
+
+// adminComponentsAvatar is a sample Avatarable with a picture.
+type adminComponentsAvatar struct {
+	pic      string
+	initials string
+}
+
+func (a adminComponentsAvatar) AvatarPic() string { return a.pic }
+func (a adminComponentsAvatar) Initials() string  { return a.initials }
+
+// adminComponentsIcon pairs an icon with its component name.
+type adminComponentsIcon struct {
+	name      string
+	component templ.Component
+}
+
+// adminComponentsIcons returns every icon component with its name.
+func adminComponentsIcons() []adminComponentsIcon {
+	return []adminComponentsIcon{
+		{"CmpEmailIcon", CmpEmailIcon()},
+		{"CmpCalendarIcon", CmpCalendarIcon()},
+		{"CmpBookOpenIcon", CmpBookOpenIcon()},
+		{"CmpSignoutIcon", CmpSignoutIcon()},
+		{"CmpSigninIcon", CmpSigninIcon()},
+		{"CmpFacebookIcon", CmpFacebookIcon()},
+		{"CmpWhatsappIcon", CmpWhatsappIcon()},
+		{"CmpTelegramIcon", CmpTelegramIcon()},
+		{"CmpMessengerIcon", CmpMessengerIcon()},
+		{"CmpGmailIcon", CmpGmailIcon()},
+		{"CmpSunIcon", CmpSunIcon()},
+		{"CmpSunSmIcon", CmpSunSmIcon()},
+		{"CmpSearchIcon", CmpSearchIcon()},
+		{"CmpMarkerIcon", CmpMarkerIcon()},
+		{"CmpUserIcon", CmpUserIcon()},
+		{"CmpStethoscopeIcon", CmpStethoscopeIcon()},
+		{"CmpUserAddIcon", CmpUserAddIcon()},
+		{"CmpMenuIcon", CmpMenuIcon()},
+		{"CmpBuildingIcon", CmpBuildingIcon()},
+		{"CmpPhoneIcon", CmpPhoneIcon()},
+		{"CmpPlusCircledIcon", CmpPlusCircledIcon()},
+		{"CmpEditIcon", CmpEditIcon()},
+		{"CmpPencilIcon", CmpPencilIcon()},
+		{"CmpCloseIcon", CmpCloseIcon()},
+		{"CmpCheckIcon", CmpCheckIcon()},
+		{"CmpTrashIcon", CmpTrashIcon()},
+		{"CmpPlusCircleFilledIcon", CmpPlusCircleFilledIcon()},
+		{"CmpPencilFilledIcon", CmpPencilFilledIcon()},
+		{"CmpCloseCircleFilledIcon", CmpCloseCircleFilledIcon()},
+	}
+}
+
+// adminComponentsStatuses returns every appointment status CmpStatusBadge renders.
+func adminComponentsStatuses() []models.AppointmentStatus {
+	return []models.AppointmentStatus{
+		models.AppointmentPending,
+		"viewed",
+		models.AppointmentConfirmed,
+		models.AppointmentInProgress,
+		models.AppointmentDone,
+		models.AppointmentCanceled,
+	}
+}
+
+// adminComponentsLevels returns every toast and alert level.
+func adminComponentsLevels() []Level {
+	return []Level{LevelInfo, LevelSuccess, LevelWarning, LevelError}
+}
+
+// adminComponentsAlertCtx returns a copy of c carrying a sample alert at level.
+func adminComponentsAlertCtx(c *Ctx, level Level) *Ctx {
+	alertCtx := *c
+	alertCtx.Alert = Alert{Msg: "Your changes were saved", Level: level}
+	return &alertCtx
 }

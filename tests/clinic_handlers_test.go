@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"miconsul/internal/models"
+	"miconsul/internal/server/servertest"
 
 	"gorm.io/gorm"
 )
@@ -175,6 +176,9 @@ func TestClinicHandlers(t *testing.T) {
 		}
 		if got := resp.Header.Get("HX-Redirect"); got != "/clinics" {
 			t.Fatalf("expected HX-Redirect /clinics, got %q", got)
+		}
+		if msg, level := servertest.FlashToast(t, resp); msg != "Clinic deleted" || level != "success" {
+			t.Fatalf("expected success toast after clinic delete, got %q (%s)", msg, level)
 		}
 
 		_, err := gorm.G[models.Clinic](h.db.GormDB()).Where("id = ?", clinic.ID).Take(t.Context())

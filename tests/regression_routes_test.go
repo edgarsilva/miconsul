@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"miconsul/internal/models"
+	"miconsul/internal/server/servertest"
 
 	"gorm.io/gorm"
 )
@@ -49,8 +50,14 @@ func TestPatchAndDeleteRoutesForPatientAndAppointment(t *testing.T) {
 			authToken: token,
 			htmx:      true,
 		})
-		if delResp.StatusCode != http.StatusOK {
-			t.Fatalf("expected 200 for patient delete, got %d", delResp.StatusCode)
+		if delResp.StatusCode != http.StatusNoContent {
+			t.Fatalf("expected 204 for patient delete, got %d", delResp.StatusCode)
+		}
+		if got := delResp.Header.Get("HX-Redirect"); got != "/patients" {
+			t.Fatalf("expected HX-Redirect /patients after patient delete, got %q", got)
+		}
+		if msg, level := servertest.FlashToast(t, delResp); msg != "Patient deleted" || level != "success" {
+			t.Fatalf("expected success toast after patient delete, got %q (%s)", msg, level)
 		}
 
 		_, err = gorm.G[models.Patient](h.db.GormDB()).Where("id = ?", patient.ID).Take(t.Context())
