@@ -1,6 +1,8 @@
 package views
 
 import (
+	"fmt"
+	"math"
 	"miconsul/internal/models"
 	"strconv"
 	"time"
@@ -14,6 +16,29 @@ type DashboardStat struct {
 type DashboardStats struct {
 	Patients     DashboardStat
 	Appointments DashboardStat
+	Revenue      DashboardRevenue
+}
+
+// DashboardRevenue is the price of done appointments booked this month so far,
+// and over the same days last month, in cents.
+type DashboardRevenue struct {
+	Total    int
+	Previous int
+}
+
+// Change returns the percent change from last month; ok is false when last
+// month had no revenue or the change rounds to 0.0%.
+func (r DashboardRevenue) Change() (pct float64, ok bool) {
+	if r.Previous == 0 {
+		return 0, false
+	}
+
+	pct = float64(r.Total-r.Previous) / float64(r.Previous) * 100
+	if math.Abs(pct) < 0.05 {
+		return 0, false
+	}
+
+	return pct, true
 }
 
 templ DashboardPage(c *Ctx, stats DashboardStats, appointments []models.Appointment, favClinic models.Clinic, feedEvents []models.FeedEvent) {
@@ -115,14 +140,26 @@ templ DashboardMonthTrends(c *Ctx, stats DashboardStats) {
 					<p class="ml-16 truncate text-sm font-medium text-base-content">{ c.l("str.revenue_month") }</p>
 				</dt>
 				<dd class="ml-16 flex items-baseline">
-					<p class="text-2xl font-semibold text-base-content">24500</p>
-					<p class="ml-2 flex items-baseline text-sm font-semibold text-error">
-						<svg class="h-5 w-5 flex-shrink-0 self-center text-error" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-							<path fill-rule="evenodd" d="M10 3a.75.75 0 01.75.75v10.638l3.96-4.158a.75.75 0 111.08 1.04l-5.25 5.5a.75.75 0 01-1.08 0l-5.25-5.5a.75.75 0 111.08-1.04l3.96 4.158V3.75A.75.75 0 0110 3z" clip-rule="evenodd"></path>
-						</svg>
-						<span class="sr-only">{ c.l("str.decreased_by") }</span>
-						3.2%
-					</p>
+					<p class="text-2xl font-semibold text-base-content">{ dashboardRevenueAmount(stats.Revenue.Total) }</p>
+					if pct, ok := stats.Revenue.Change(); ok {
+						if pct >= 0 {
+							<p class="ml-2 flex items-baseline text-sm font-semibold text-success">
+								<svg class="h-5 w-5 flex-shrink-0 self-center text-success" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+									<path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clip-rule="evenodd"></path>
+								</svg>
+								<span class="sr-only">{ c.l("str.increased_by") }</span>
+								{ dashboardRevenueChange(pct) }
+							</p>
+						} else {
+							<p class="ml-2 flex items-baseline text-sm font-semibold text-error">
+								<svg class="h-5 w-5 flex-shrink-0 self-center text-error" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+									<path fill-rule="evenodd" d="M10 3a.75.75 0 01.75.75v10.638l3.96-4.158a.75.75 0 111.08 1.04l-5.25 5.5a.75.75 0 01-1.08 0l-5.25-5.5a.75.75 0 111.08-1.04l3.96 4.158V3.75A.75.75 0 0110 3z" clip-rule="evenodd"></path>
+								</svg>
+								<span class="sr-only">{ c.l("str.decreased_by") }</span>
+								{ dashboardRevenueChange(pct) }
+							</p>
+						}
+					}
 					<div class="ml-auto">
 						<a href="/appointments?timeframe=month&amp;status=done" class="font-medium link link-hover">{ c.l("btn.view_all") }<span class="sr-only">{ c.l("str.all_revenue") }</span></a>
 					</div>
@@ -130,6 +167,27 @@ templ DashboardMonthTrends(c *Ctx, stats DashboardStats) {
 			</div>
 		</dl>
 	</div>
+}
+
+// dashboardRevenueAmount formats cents as whole pesos with thousands
+// separators, e.g. $24,500.
+func dashboardRevenueAmount(cents int) string {
+	pesos := strconv.Itoa(int(math.Round(float64(cents) / 100)))
+
+	grouped := make([]byte, 0, len(pesos)+len(pesos)/3)
+	for i := range len(pesos) {
+		if i > 0 && (len(pesos)-i)%3 == 0 {
+			grouped = append(grouped, ',')
+		}
+		grouped = append(grouped, pesos[i])
+	}
+
+	return "$" + string(grouped)
+}
+
+// dashboardRevenueChange formats a percent change without its sign, e.g. 3.2%.
+func dashboardRevenueChange(pct float64) string {
+	return fmt.Sprintf("%.1f%%", math.Abs(pct))
 }
 
 templ DashboardFavoriteClinic(c *Ctx, clinic models.Clinic) {

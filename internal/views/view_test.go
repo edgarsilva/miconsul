@@ -565,3 +565,81 @@ func TestCmpSearchInputTriggersAtMinSearchTermLen(t *testing.T) {
 		}
 	})
 }
+
+func TestDashboardRevenueCard(t *testing.T) {
+	cases := []struct {
+		name    string
+		revenue DashboardRevenue
+		want    []string
+		notWant []string
+	}{
+		{
+			name:    "up from last month",
+			revenue: DashboardRevenue{Total: 2450000, Previous: 2000000},
+			want:    []string{"$24,500", "22.5%", "text-success"},
+			notWant: []string{"text-error"},
+		},
+		{
+			name:    "down from last month",
+			revenue: DashboardRevenue{Total: 96800, Previous: 100000},
+			want:    []string{"$968", "3.2%", "text-error"},
+		},
+		{
+			name:    "same as last month shows no change",
+			revenue: DashboardRevenue{Total: 100000, Previous: 100000},
+			want:    []string{"$1,000"},
+			notWant: []string{"%"},
+		},
+		{
+			name:    "no revenue last month shows no change",
+			revenue: DashboardRevenue{Total: 150050},
+			want:    []string{"$1,501"},
+			notWant: []string{"%"},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+				var html strings.Builder
+				stats := DashboardStats{Revenue: tc.revenue}
+				if err := DashboardMonthTrends(NewCtx(fc), stats).Render(fc.Context(), &html); err != nil {
+					t.Fatalf("render: %v", err)
+				}
+
+				got := html.String()
+				card := got[strings.Index(got, "/public/images/funds.png"):]
+				for _, want := range tc.want {
+					if !strings.Contains(card, want) {
+						t.Errorf("expected the revenue card to show %q", want)
+					}
+				}
+				for _, notWant := range tc.notWant {
+					if strings.Contains(card, notWant) {
+						t.Errorf("expected the revenue card not to show %q", notWant)
+					}
+				}
+				if strings.Contains(got, "24500<") {
+					t.Errorf("expected no hard-coded revenue")
+				}
+			})
+		})
+	}
+}
+
+func TestDashboardRevenueAmount(t *testing.T) {
+	cases := map[int]string{
+		0:          "$0",
+		49:         "$0",
+		50:         "$1",
+		99900:      "$999",
+		100000:     "$1,000",
+		123456789:  "$1,234,568",
+		1000000000: "$10,000,000",
+	}
+	for cents, want := range cases {
+		if got := dashboardRevenueAmount(cents); got != want {
+			t.Errorf("dashboardRevenueAmount(%d) = %q, want %q", cents, got, want)
+		}
+	}
+}

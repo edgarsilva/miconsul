@@ -108,9 +108,15 @@ func (s service) CalcDashboardStats(ctx context.Context, cu models.User) (view.D
 		return view.DashboardStats{}, fmt.Errorf("count appointments: %w", err)
 	}
 
+	revenue, err := s.CalcMonthRevenue(ctx, cu, time.Now())
+	if err != nil {
+		return view.DashboardStats{}, fmt.Errorf("sum revenue: %w", err)
+	}
+
 	stats := view.DashboardStats{
 		Patients:     patStats,
 		Appointments: apptStats,
+		Revenue:      revenue,
 	}
 
 	if err := s.WriteStatsCache(cacheKey, stats); err != nil {
@@ -173,6 +179,34 @@ func (s service) CalcMonthlyStats(ctx context.Context, cu models.User, imodel an
 	}, nil
 }
 
+// CalcMonthRevenue sums the price of the user's done appointments booked this
+// month up to now, and over the same span of last month, in the clinic
+// timezone. Last month's span stops at its end when it is shorter.
+func (s service) CalcMonthRevenue(ctx context.Context, cu models.User, now time.Time) (view.DashboardRevenue, error) {
+	ctx, span := s.Trace(ctx, "dashboard/services:CalcMonthRevenue")
+	defer span.End()
+
+	monthStart, _ := libtime.TimeframeBounds(now, models.DefaultTimezone, libtime.TimeframeMonth)
+	elapsed := now.Sub(monthStart)
+	prevStart := monthStart.AddDate(0, -1, 0)
+	prevEnd := prevStart.Add(elapsed)
+	if prevEnd.After(monthStart) {
+		prevEnd = monthStart
+	}
+
+	total, err := s.sumDoneRevenue(ctx, cu.ID, monthStart, now)
+	if err != nil {
+		return view.DashboardRevenue{}, fmt.Errorf("sum this month: %w", err)
+	}
+
+	previous, err := s.sumDoneRevenue(ctx, cu.ID, prevStart, prevEnd)
+	if err != nil {
+		return view.DashboardRevenue{}, fmt.Errorf("sum last month: %w", err)
+	}
+
+	return view.DashboardRevenue{Total: total, Previous: previous}, nil
+}
+
 func Serialize(stats view.DashboardStats) ([]byte, error) {
 	var buffer bytes.Buffer
 	encoder := gob.NewEncoder(&buffer)
@@ -197,4 +231,20 @@ func Deserialize(statsB []byte) (view.DashboardStats, error) {
 	}
 
 	return stats, err
+}
+
+// sumDoneRevenue sums the price of the user's done appointments booked in
+// [start, end), in cents.
+func (s service) sumDoneRevenue(ctx context.Context, userID uint, start, end time.Time) (int, error) {
+	var total int
+	err := gorm.G[models.Appointment](s.DB.GormDB()).
+		Select("COALESCE(SUM(price), 0)").
+		Where("user_id = ? AND status = ?", userID, models.AppointmentDone).
+		Where("booked_at >= ? AND booked_at < ?", start.UTC(), end.UTC()).
+		Scan(ctx, &total)
+	if err != nil {
+		return 0, err
+	}
+
+	return total, nil
 }
