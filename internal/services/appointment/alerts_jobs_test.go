@@ -3,6 +3,7 @@ package appointment
 import (
 	"context"
 	"encoding/json/v2"
+	"slices"
 	"strconv"
 	"testing"
 	"time"
@@ -186,4 +187,92 @@ func dueTokens(appointments []models.Appointment) []string {
 		tokens = append(tokens, a.Token)
 	}
 	return tokens
+}
+
+func TestFindAppointmentsDueForReminderSkipsVisitsNoLongerAwaited(t *testing.T) {
+	svc, user, clinic, patient := newAppointmentServiceForTests(t)
+
+	statuses := []models.AppointmentStatus{
+		models.AppointmentPending,
+		models.AppointmentConfirmed,
+		models.AppointmentInProgress,
+		models.AppointmentDone,
+		models.AppointmentCanceled,
+	}
+	for _, status := range statuses {
+		apnt := models.Appointment{
+			UserID:    user.ID,
+			ClinicID:  clinic.ID,
+			PatientID: patient.ID,
+			BookedAt:  time.Now().Add(time.Hour),
+			Token:     "tok_" + string(status),
+			Status:    status,
+		}
+		if err := svc.CreateAppointment(t.Context(), &apnt); err != nil {
+			t.Fatalf("create %s appointment: %v", status, err)
+		}
+	}
+
+	due, err := svc.findAppointmentsDueForReminder(t.Context(), time.Now())
+	if err != nil {
+		t.Fatalf("find due appointments: %v", err)
+	}
+	got := dueTokens(due)
+	if len(got) != 2 || !slices.Contains(got, "tok_pending") || !slices.Contains(got, "tok_confirmed") {
+		t.Fatalf("due = %v, want only tok_pending and tok_confirmed", got)
+	}
+}
+
+func TestAlertJobsSendNothingForCanceledAppointments(t *testing.T) {
+	svc, user, clinic, patient := newAppointmentServiceForTests(t)
+
+	patient.EnableNotifications = true
+	patient.ViaEmail = true
+	if err := svc.DB.GormDB().Save(&patient).Error; err != nil {
+		t.Fatalf("enable patient notifications: %v", err)
+	}
+
+	runJobs := func(t *testing.T, status models.AppointmentStatus) int64 {
+		t.Helper()
+
+		apnt := models.Appointment{
+			UserID:    user.ID,
+			ClinicID:  clinic.ID,
+			PatientID: patient.ID,
+			BookedAt:  time.Now().Add(time.Hour),
+			Token:     "tok_jobs_" + string(status),
+			Status:    status,
+		}
+		if err := svc.CreateAppointment(t.Context(), &apnt); err != nil {
+			t.Fatalf("create appointment: %v", err)
+		}
+
+		payload, err := json.Marshal(JobPayload{AppointmentID: apnt.UID})
+		if err != nil {
+			t.Fatalf("marshal payload: %v", err)
+		}
+		job := jobs.Job{Payload: payload}
+		if err := svc.handleReminderJob(t.Context(), job); err != nil {
+			t.Fatalf("reminder job: %v", err)
+		}
+		if err := svc.handleBookedAlertJob(t.Context(), job); err != nil {
+			t.Fatalf("booked alert job: %v", err)
+		}
+
+		var attempts int64
+		err = svc.DB.GormDB().Model(&models.Notification{}).
+			Where("notificationable_type = ? AND notificationable_id = ?", apnt.AlertableType(), apnt.AlertableID()).
+			Count(&attempts).Error
+		if err != nil {
+			t.Fatalf("count notifications: %v", err)
+		}
+		return attempts
+	}
+
+	if attempts := runJobs(t, models.AppointmentConfirmed); attempts == 0 {
+		t.Fatalf("expected the jobs to try sending for a confirmed appointment")
+	}
+	if attempts := runJobs(t, models.AppointmentCanceled); attempts != 0 {
+		t.Fatalf("expected no send attempts for a canceled appointment, got %d", attempts)
+	}
 }
