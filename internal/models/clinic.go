@@ -2,8 +2,8 @@ package models
 
 import (
 	"errors"
+	"miconsul/internal/lib/amount"
 	"miconsul/internal/lib/xid"
-	"strconv"
 
 	"gorm.io/gorm"
 )
@@ -66,7 +66,5 @@ func (c Clinic) Initials() string {
 }
 
 func (c *Clinic) PriceInputValue() string {
-	v := strconv.FormatFloat(float64(c.Price/100), 'f', 1, 32)
-
-	return v
+	return amount.InputValue(c.Price)
 }

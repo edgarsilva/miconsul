@@ -62,7 +62,7 @@ func TestAppointmentBeforeSaveAndHelpers(t *testing.T) {
 	}
 
 	apnt.Price = 12345
-	if got := apnt.PriceInputValue(); got != "123.0" {
+	if got := apnt.PriceInputValue(); got != "123.45" {
 		t.Fatalf("unexpected price input value %q", got)
 	}
 
@@ -160,7 +160,7 @@ func TestClinicAndPatientValidationAndHelpers(t *testing.T) {
 	if clinic.AvatarPic() != "clinic.png" {
 		t.Fatalf("unexpected clinic avatar")
 	}
-	if clinic.PriceInputValue() != "25.0" {
+	if clinic.PriceInputValue() != "25.00" {
 		t.Fatalf("unexpected clinic price input value %q", clinic.PriceInputValue())
 	}
 

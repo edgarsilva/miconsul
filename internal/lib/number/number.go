@@ -7,7 +7,8 @@ import (
 	textnumber "golang.org/x/text/number"
 )
 
-// Format formats n with the locale's digit grouping, e.g. 1,234 for es-MX.
+// Format formats n with the locale's digit grouping, e.g. 1234 -> 1,234 for
+// es-MX.
 func Format(n int, locale string) string {
 	tag, _ := language.Parse(locale)
 	printer := message.NewPrinter(tag)
@@ -16,8 +17,9 @@ func Format(n int, locale string) string {
 }
 
 // Compact formats n with at most one decimal and a k (thousands) or M
-// (millions) suffix, e.g. 999, 20k, 20.1k, 1.2M. The decimal mark follows the
-// locale; an unknown locale formats like the root locale.
+// (millions) suffix, e.g. 999 -> 999, 20000 -> 20k, 20100 -> 20.1k,
+// 1250000 -> 1.3M. The decimal mark follows the locale; an unknown locale
+// formats like the root locale.
 func Compact(n int, locale string) string {
 	tag, _ := language.Parse(locale)
 	printer := message.NewPrinter(tag)

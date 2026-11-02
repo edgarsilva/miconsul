@@ -67,9 +67,7 @@ templ navbarDesktop(c *Ctx) {
 		<a href="/appointments?timeframe=day" class={ "btn btn-ghost text-sm", navbarActiveLink(c, "/appointments") }>{ c.l("nav.appointments") }</a>
 		<a href="/clinics" class={ "btn btn-ghost text-sm", navbarActiveLink(c, "/clinics") }>{ c.l("nav.clinics") }</a>
 		<a href="/patients" class={ "btn btn-ghost text-sm", navbarActiveLink(c, "/patients") }>{ c.l("nav.patients") }</a>
-		<div class="tooltip tooltip-bottom hidden" data-tip={ c.l("str.coming_soon") }>
-			<a href="#" class="btn btn-ghost text-sm text-base-content/35">{ c.l("nav.exp_rev") }</a>
-		</div>
+		<a href="/revenue" class={ "btn btn-ghost text-sm", navbarActiveLink(c, "/revenue") }>{ c.l("nav.revenue") }</a>
 		<div class="divider divider-horizontal"></div>
 		@navbarThemeBtn(c)
 		if c.CurrentUser.IsLoggedIn() {
@@ -98,6 +96,7 @@ templ navbarMobile(c *Ctx) {
 			<li><a href="/appointments?timeframe=day" class="btn btn-ghost justify-start">{ c.l("nav.appointments") }</a></li>
 			<li><a href="/clinics" class="btn btn-ghost justify-start">{ c.l("nav.clinics") }</a></li>
 			<li><a href="/patients" class="btn btn-ghost justify-start">{ c.l("nav.patients") }</a></li>
+			<li><a href="/revenue" class="btn btn-ghost justify-start">{ c.l("nav.revenue") }</a></li>
 			if c.CurrentUser.IsLoggedIn() {
 				<li>
 					<a href="/logout" class="btn btn-ghost justify-start">
