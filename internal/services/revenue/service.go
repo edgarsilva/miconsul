@@ -11,13 +11,16 @@ import (
 	"miconsul/internal/lib/libtime"
 	"miconsul/internal/models"
 	"miconsul/internal/server"
-	view "miconsul/internal/views"
 
 	"gorm.io/gorm"
 )
 
 // reportMonths is how many months the revenue page covers, current included.
 const reportMonths = 12
+
+// averageMonths is how many complete months before the current one the
+// monthly average covers.
+const averageMonths = 12
 
 type service struct {
 	*server.Server
@@ -32,28 +35,29 @@ func NewService(s *server.Server) (*service, error) {
 }
 
 // Report returns the user's revenue for the last 12 months up to now, newest
-// first, and the selected month's revenue by clinic. Months follow the clinic
+// first, the selected month's revenue by clinic, and the monthly average of
+// the 12 complete months before the current one. Months follow the clinic
 // timezone; a selected month outside the report means the current month.
-func (s *service) Report(ctx context.Context, userID uint, now time.Time, selected time.Time) (view.RevenueReport, error) {
+func (s *service) Report(ctx context.Context, userID uint, now time.Time, selected time.Time) (models.RevenueReport, error) {
 	ctx, span := s.Trace(ctx, "revenue/service:Report")
 	defer span.End()
 
-	monthStarts := lastMonthStarts(now, reportMonths)
-	if !slices.ContainsFunc(monthStarts, selected.Equal) {
+	monthStarts := lastMonthStarts(now, max(reportMonths, averageMonths+1))
+	if !slices.ContainsFunc(monthStarts[:reportMonths], selected.Equal) {
 		selected = monthStarts[0]
 	}
 
 	done, err := s.doneAppointments(ctx, userID, monthStarts[len(monthStarts)-1], now)
 	if err != nil {
-		return view.RevenueReport{}, fmt.Errorf("load done appointments: %w", err)
+		return models.RevenueReport{}, fmt.Errorf("load done appointments: %w", err)
 	}
 
-	months := make([]view.RevenueMonth, len(monthStarts))
+	months := make([]models.RevenueMonth, len(monthStarts))
 	for i, start := range monthStarts {
 		months[i].Start = start
 	}
 
-	byClinic := map[uint]*view.RevenueClinic{}
+	byClinic := map[uint]*models.RevenueClinic{}
 	clinicIDs := []uint{}
 	for _, a := range done {
 		start := libtime.BoM(libtime.InTimezone(a.BookedAt, models.DefaultTimezone))
@@ -69,7 +73,7 @@ func (s *service) Report(ctx context.Context, userID uint, now time.Time, select
 		}
 		clinic, ok := byClinic[a.ClinicID]
 		if !ok {
-			clinic = &view.RevenueClinic{}
+			clinic = &models.RevenueClinic{}
 			byClinic[a.ClinicID] = clinic
 			clinicIDs = append(clinicIDs, a.ClinicID)
 		}
@@ -78,21 +82,27 @@ func (s *service) Report(ctx context.Context, userID uint, now time.Time, select
 	}
 
 	if err := s.nameClinics(ctx, userID, byClinic, clinicIDs); err != nil {
-		return view.RevenueReport{}, fmt.Errorf("load clinic names: %w", err)
+		return models.RevenueReport{}, fmt.Errorf("load clinic names: %w", err)
 	}
 
-	clinics := make([]view.RevenueClinic, 0, len(byClinic))
+	clinics := make([]models.RevenueClinic, 0, len(byClinic))
 	for _, id := range clinicIDs {
 		clinics = append(clinics, *byClinic[id])
 	}
-	slices.SortStableFunc(clinics, func(a, b view.RevenueClinic) int {
+	slices.SortStableFunc(clinics, func(a, b models.RevenueClinic) int {
 		return cmp.Compare(b.Total, a.Total)
 	})
 
-	report := view.RevenueReport{
-		Months:   months,
-		Selected: months[slices.IndexFunc(monthStarts, selected.Equal)],
-		Clinics:  clinics,
+	completed := 0
+	for _, m := range months[1 : averageMonths+1] {
+		completed += m.Total
+	}
+
+	report := models.RevenueReport{
+		Months:         months[:reportMonths],
+		Selected:       months[slices.IndexFunc(monthStarts, selected.Equal)],
+		Clinics:        clinics,
+		MonthlyAverage: completed / averageMonths,
 	}
 
 	return report, nil
@@ -125,7 +135,7 @@ func (s *service) doneAppointments(ctx context.Context, userID uint, start, end 
 }
 
 // nameClinics fills in the names of the user's clinics, deleted ones included.
-func (s *service) nameClinics(ctx context.Context, userID uint, byClinic map[uint]*view.RevenueClinic, ids []uint) error {
+func (s *service) nameClinics(ctx context.Context, userID uint, byClinic map[uint]*models.RevenueClinic, ids []uint) error {
 	if len(ids) == 0 {
 		return nil
 	}

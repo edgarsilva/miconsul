@@ -652,16 +652,17 @@ func TestRevenueIndexPage(t *testing.T) {
 	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
 		october := time.Date(2026, time.October, 1, 0, 0, 0, 0, time.UTC)
 		november := time.Date(2026, time.November, 1, 0, 0, 0, 0, time.UTC)
-		report := RevenueReport{
-			Months: []RevenueMonth{
+		report := models.RevenueReport{
+			Months: []models.RevenueMonth{
 				{Start: november, Total: 185000, Appointments: 1},
 				{Start: october, Total: 1850000, Appointments: 15},
 			},
-			Selected: RevenueMonth{Start: october, Total: 1850000, Appointments: 15},
-			Clinics: []RevenueClinic{
+			Selected: models.RevenueMonth{Start: october, Total: 1850000, Appointments: 15},
+			Clinics: []models.RevenueClinic{
 				{Name: "North", Total: 1200000, Appointments: 10},
 				{Name: "South", Deleted: true, Total: 650000, Appointments: 5},
 			},
+			MonthlyAverage: 2425000,
 		}
 
 		var html strings.Builder
@@ -677,6 +678,8 @@ func TestRevenueIndexPage(t *testing.T) {
 			`href="/revenue?month=2026-10"`,
 			"$18,500",
 			"65%",
+			"$24,250",
+			"Promedio mensual",
 		} {
 			if !strings.Contains(got, want) {
 				t.Errorf("expected %s", want)
