@@ -10,14 +10,15 @@ import (
 	"golang.org/x/text/message"
 )
 
-// StrToAmount converts decimal strings to integer cents.
+// StrToAmount converts decimal strings to integer cents, rounded to the
+// nearest cent.
 func StrToAmount(v string) int {
 	if v == "" {
 		return 0
 	}
 
 	pricef, _ := strconv.ParseFloat(v, 64)
-	return int(pricef * 100)
+	return int(math.Round(pricef * 100))
 }
 
 // FloatToAmount converts decimal float values to integer cents.
@@ -26,7 +27,7 @@ func FloatToAmount(v float32) int {
 		return 0
 	}
 
-	return int(v * 100)
+	return int(math.Round(float64(v) * 100))
 }
 
 // Format formats cents as whole pesos with the locale's digit grouping, e.g.

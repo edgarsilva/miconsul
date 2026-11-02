@@ -12,6 +12,8 @@ func TestStrToAmount(t *testing.T) {
 		{name: "invalid", in: "abc", want: 0},
 		{name: "integer", in: "12", want: 1200},
 		{name: "decimal", in: "12.34", want: 1234},
+		{name: "rounds to the nearest cent", in: "19.99", want: 1999},
+		{name: "small decimal", in: "0.29", want: 29},
 	}
 
 	for _, tc := range cases {
@@ -32,6 +34,7 @@ func TestFloatToAmount(t *testing.T) {
 	}{
 		{name: "zero", in: 0, want: 0},
 		{name: "positive", in: 12.34, want: 1234},
+		{name: "rounds to the nearest cent", in: 0.29, want: 29},
 		{name: "negative", in: -2.5, want: -250},
 	}
 
