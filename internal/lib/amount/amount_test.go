@@ -66,3 +66,18 @@ func TestFormat(t *testing.T) {
 		}
 	}
 }
+
+func TestFormatCompact(t *testing.T) {
+	cases := map[int]string{
+		0:         "$0",
+		99900:     "$999",
+		2450000:   "$24.5k",
+		10020000:  "$100.2k",
+		123456789: "$1.2M",
+	}
+	for cents, want := range cases {
+		if got := FormatCompact(cents, "es-MX"); got != want {
+			t.Errorf("FormatCompact(%d) = %q, want %q", cents, got, want)
+		}
+	}
+}

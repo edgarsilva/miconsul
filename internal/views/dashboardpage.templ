@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math"
 	"miconsul/internal/lib/amount"
+	"miconsul/internal/lib/number"
 	"miconsul/internal/models"
-	"strconv"
 	"time"
 )
 
@@ -90,13 +90,13 @@ templ DashboardMonthTrends(c *Ctx, stats DashboardStats) {
 					</p>
 				</dt>
 				<dd class="ml-16 flex items-baseline">
-					<p class="text-2xl font-semibold text-base-content">{ strconv.Itoa(stats.Patients.Total) }</p>
+					<p class="text-2xl font-semibold text-base-content" title={ number.Format(stats.Patients.Total, c.Locale) }>{ number.Compact(stats.Patients.Total, c.Locale) }</p>
 					<p class="ml-2 flex items-baseline text-sm font-semibold text-success">
 						<svg class="h-5 w-5 flex-shrink-0 self-center text-success" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
 							<path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clip-rule="evenodd"></path>
 						</svg>
 						<span class="sr-only">{ c.l("str.increased_by") }</span>
-						{ strconv.Itoa(stats.Patients.Diff) }
+						{ number.Compact(stats.Patients.Diff, c.Locale) }
 					</p>
 					<div class="ml-auto">
 						<a href="/patients" class="font-medium link link-hover">{ c.l("btn.view_all") }<span class="sr-only">{ c.l("str.patients") }</span></a>
@@ -115,16 +115,13 @@ templ DashboardMonthTrends(c *Ctx, stats DashboardStats) {
 					>{ c.l("str.appointments") }</p>
 				</dt>
 				<dd class="ml-16 flex items-baseline">
-					<p
-						class="text-2xl font-semibold
-          text-base-content"
-					>{ strconv.Itoa(stats.Appointments.Total) }</p>
+					<p class="text-2xl font-semibold text-base-content" title={ number.Format(stats.Appointments.Total, c.Locale) }>{ number.Compact(stats.Appointments.Total, c.Locale) }</p>
 					<p class="ml-2 flex items-baseline text-sm font-semibold text-success">
 						<svg class="h-5 w-5 flex-shrink-0 self-center text-success" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
 							<path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clip-rule="evenodd"></path>
 						</svg>
 						<span class="sr-only">{ c.l("str.increased_by") }</span>
-						{ strconv.Itoa(stats.Appointments.Diff) }
+						{ number.Compact(stats.Appointments.Diff, c.Locale) }
 					</p>
 					<div class="ml-auto">
 						<a href="/appointments?timeframe=month" class="font-medium link link-hover">{ c.l("btn.view_all") }<span class="sr-only">{ c.l("str.all_appointmens") }</span></a>
@@ -141,7 +138,7 @@ templ DashboardMonthTrends(c *Ctx, stats DashboardStats) {
 					<p class="ml-16 truncate text-sm font-medium text-base-content">{ c.l("str.revenue_month") }</p>
 				</dt>
 				<dd class="ml-16 flex items-baseline">
-					<p class="text-2xl font-semibold text-base-content">{ amount.Format(stats.Revenue.Total, c.Locale) }</p>
+					<p class="text-2xl font-semibold text-base-content" title={ amount.Format(stats.Revenue.Total, c.Locale) }>{ amount.FormatCompact(stats.Revenue.Total, c.Locale) }</p>
 					if pct, ok := stats.Revenue.Change(); ok {
 						if pct >= 0 {
 							<p class="ml-2 flex items-baseline text-sm font-semibold text-success">

@@ -4,6 +4,8 @@ import (
 	"math"
 	"strconv"
 
+	"miconsul/internal/lib/number"
+
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -30,9 +32,19 @@ func FloatToAmount(v float32) int {
 // Format formats cents as whole pesos with the locale's digit grouping, e.g.
 // $24,500 for es-MX. An unknown locale formats like the root locale.
 func Format(cents int, locale string) string {
-	pesos := int(math.Round(float64(cents) / 100))
 	tag, _ := language.Parse(locale)
 	printer := message.NewPrinter(tag)
 
-	return printer.Sprintf("$%d", pesos)
+	return printer.Sprintf("$%d", pesos(cents))
+}
+
+// FormatCompact formats cents as whole pesos in compact form, e.g. $999,
+// $24.5k, $1.2M; see number.Compact.
+func FormatCompact(cents int, locale string) string {
+	return "$" + number.Compact(pesos(cents), locale)
+}
+
+// pesos rounds cents to whole pesos.
+func pesos(cents int) int {
+	return int(math.Round(float64(cents) / 100))
 }

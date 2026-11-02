@@ -576,7 +576,7 @@ func TestDashboardRevenueCard(t *testing.T) {
 		{
 			name:    "up from last month",
 			revenue: DashboardRevenue{Total: 2450000, Previous: 2000000},
-			want:    []string{"$24,500", "22.5%", "text-success"},
+			want:    []string{"$24.5k", `title="$24,500"`, "22.5%", "text-success"},
 			notWant: []string{"text-error"},
 		},
 		{
@@ -593,7 +593,7 @@ func TestDashboardRevenueCard(t *testing.T) {
 		{
 			name:    "no revenue last month shows no change",
 			revenue: DashboardRevenue{Total: 150050},
-			want:    []string{"$1,501"},
+			want:    []string{"$1.5k", `title="$1,501"`},
 			notWant: []string{"%"},
 		},
 	}
@@ -625,4 +625,24 @@ func TestDashboardRevenueCard(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestDashboardCountsAreCompact(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		var html strings.Builder
+		stats := DashboardStats{
+			Patients:     DashboardStat{Total: 1234, Diff: 12},
+			Appointments: DashboardStat{Total: 20100, Diff: 1500},
+		}
+		if err := DashboardMonthTrends(NewCtx(fc), stats).Render(fc.Context(), &html); err != nil {
+			t.Fatalf("render: %v", err)
+		}
+
+		got := html.String()
+		for _, want := range []string{`title="1,234">1.2k<`, `title="20,100">20.1k<`, "1.5k"} {
+			if !strings.Contains(got, want) {
+				t.Errorf("expected %s", want)
+			}
+		}
+	})
 }
