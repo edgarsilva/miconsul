@@ -4,45 +4,13 @@ import (
 	"encoding/json/v2"
 	"miconsul/internal/lib/amount"
 	"miconsul/internal/lib/number"
+	"miconsul/internal/models"
 	"slices"
 	"strconv"
 	"time"
 )
 
-// RevenueMonth is the revenue of done appointments booked in one month, in
-// cents. Start is the first day of the month in the clinic timezone.
-type RevenueMonth struct {
-	Start        time.Time
-	Total        int
-	Appointments int
-}
-
-// Average returns the average revenue per appointment, in cents.
-func (m RevenueMonth) Average() int {
-	if m.Appointments == 0 {
-		return 0
-	}
-
-	return m.Total / m.Appointments
-}
-
-// RevenueClinic is one clinic's revenue in the selected month, in cents.
-type RevenueClinic struct {
-	Name         string
-	Deleted      bool
-	Total        int
-	Appointments int
-}
-
-// RevenueReport is the revenue page: the last 12 months, newest first, and the
-// selected month's revenue by clinic, highest first.
-type RevenueReport struct {
-	Months   []RevenueMonth
-	Selected RevenueMonth
-	Clinics  []RevenueClinic
-}
-
-templ RevenueIndexPage(c *Ctx, report RevenueReport) {
+templ RevenueIndexPage(c *Ctx, report models.RevenueReport) {
 	@BackBtnLayout(c, "/dashboard") {
 		<section class="grow flex flex-col gap-6 px-2 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<hgroup>
@@ -56,7 +24,7 @@ templ RevenueIndexPage(c *Ctx, report RevenueReport) {
 	}
 }
 
-templ revenueSelectedStats(c *Ctx, month RevenueMonth) {
+templ revenueSelectedStats(c *Ctx, month models.RevenueMonth) {
 	<div class="stats stats-vertical sm:stats-horizontal app-card p-0! w-full">
 		<div class="stat">
 			<div class="stat-title">{ c.l("str.revenue") }</div>
@@ -74,7 +42,7 @@ templ revenueSelectedStats(c *Ctx, month RevenueMonth) {
 	</div>
 }
 
-templ revenueClinics(c *Ctx, report RevenueReport) {
+templ revenueClinics(c *Ctx, report models.RevenueReport) {
 	<div class="app-card flex flex-col gap-6">
 		<h2 class="font-semibold text-lg">{ c.l("str.revenue_by_clinic") }</h2>
 		if len(report.Clinics) == 0 {
@@ -92,7 +60,7 @@ templ revenueClinics(c *Ctx, report RevenueReport) {
 								}
 							</span>
 							<span class="ml-auto tabular-nums font-medium">{ amount.Format(clinic.Total, c.Locale) }</span>
-							<span class="w-10 text-right tabular-nums text-base-content/40">{ revenueShare(clinic.Total, report.Selected.Total) }</span>
+							<span class="w-10 text-right tabular-nums text-base-content/40">{ strconv.Itoa(clinic.SharePercent(report.Selected.Total)) + "%" }</span>
 						</li>
 					}
 				</ul>
@@ -102,7 +70,7 @@ templ revenueClinics(c *Ctx, report RevenueReport) {
 	</div>
 }
 
-templ revenueMonths(c *Ctx, report RevenueReport) {
+templ revenueMonths(c *Ctx, report models.RevenueReport) {
 	<div class="app-card flex flex-col gap-6">
 		<h2 class="font-semibold text-lg">{ c.l("str.revenue_last_12_months") }</h2>
 		<div class={ "w-full", revenueChartWrapperClasses } data-chart="columns" data-chart-data={ revenueMonthsChartData(c, report) }></div>
@@ -158,7 +126,7 @@ type revenueChartData struct {
 
 // revenueMonthsChartData is the column chart of the last 12 months, oldest
 // first, in whole pesos.
-func revenueMonthsChartData(c *Ctx, report RevenueReport) string {
+func revenueMonthsChartData(c *Ctx, report models.RevenueReport) string {
 	data := revenueChartData{Name: c.l("str.revenue")}
 	for _, month := range slices.Backward(report.Months) {
 		data.Labels = append(data.Labels, revenueMonthShortLabel(c, month.Start))
@@ -172,7 +140,7 @@ func revenueMonthsChartData(c *Ctx, report RevenueReport) string {
 
 // revenueClinicsChartData is the donut of the selected month's revenue by
 // clinic.
-func revenueClinicsChartData(c *Ctx, report RevenueReport) string {
+func revenueClinicsChartData(c *Ctx, report models.RevenueReport) string {
 	data := revenueChartData{
 		Total:      amount.Format(report.Selected.Total, c.Locale),
 		TotalLabel: c.l("str.revenue"),
@@ -204,13 +172,4 @@ func revenueMonthShortLabel(c *Ctx, t time.Time) string {
 // revenueMonthLabel names the month in the viewer's language, e.g. Octubre 2026.
 func revenueMonthLabel(c *Ctx, t time.Time) string {
 	return c.l("str.month_"+strconv.Itoa(int(t.Month()))) + " " + strconv.Itoa(t.Year())
-}
-
-// revenueShare formats part as a whole percent of total, e.g. 42%.
-func revenueShare(part, total int) string {
-	if total == 0 {
-		return "0%"
-	}
-
-	return strconv.Itoa((part*100+total/2)/total) + "%"
 }

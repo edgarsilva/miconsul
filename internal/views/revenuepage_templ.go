@@ -13,45 +13,13 @@ import (
 	"encoding/json/v2"
 	"miconsul/internal/lib/amount"
 	"miconsul/internal/lib/number"
+	"miconsul/internal/models"
 	"slices"
 	"strconv"
 	"time"
 )
 
-// RevenueMonth is the revenue of done appointments booked in one month, in
-// cents. Start is the first day of the month in the clinic timezone.
-type RevenueMonth struct {
-	Start        time.Time
-	Total        int
-	Appointments int
-}
-
-// Average returns the average revenue per appointment, in cents.
-func (m RevenueMonth) Average() int {
-	if m.Appointments == 0 {
-		return 0
-	}
-
-	return m.Total / m.Appointments
-}
-
-// RevenueClinic is one clinic's revenue in the selected month, in cents.
-type RevenueClinic struct {
-	Name         string
-	Deleted      bool
-	Total        int
-	Appointments int
-}
-
-// RevenueReport is the revenue page: the last 12 months, newest first, and the
-// selected month's revenue by clinic, highest first.
-type RevenueReport struct {
-	Months   []RevenueMonth
-	Selected RevenueMonth
-	Clinics  []RevenueClinic
-}
-
-func RevenueIndexPage(c *Ctx, report RevenueReport) templ.Component {
+func RevenueIndexPage(c *Ctx, report models.RevenueReport) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -87,7 +55,7 @@ func RevenueIndexPage(c *Ctx, report RevenueReport) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.revenue"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 49, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 17, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -100,7 +68,7 @@ func RevenueIndexPage(c *Ctx, report RevenueReport) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(revenueMonthLabel(c, report.Selected.Start))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 50, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 18, Col: 89}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -136,7 +104,7 @@ func RevenueIndexPage(c *Ctx, report RevenueReport) templ.Component {
 	})
 }
 
-func revenueSelectedStats(c *Ctx, month RevenueMonth) templ.Component {
+func revenueSelectedStats(c *Ctx, month models.RevenueMonth) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -160,7 +128,7 @@ func revenueSelectedStats(c *Ctx, month RevenueMonth) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.revenue"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 62, Col: 47}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 30, Col: 47}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -173,7 +141,7 @@ func revenueSelectedStats(c *Ctx, month RevenueMonth) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(amount.Format(month.Total, c.Locale))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 63, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 31, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -186,7 +154,7 @@ func revenueSelectedStats(c *Ctx, month RevenueMonth) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(revenueMonthLabel(c, month.Start))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 64, Col: 61}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 32, Col: 61}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -199,7 +167,7 @@ func revenueSelectedStats(c *Ctx, month RevenueMonth) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.revenue_done_appointments"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 67, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 35, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -212,7 +180,7 @@ func revenueSelectedStats(c *Ctx, month RevenueMonth) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(number.Format(month.Appointments, c.Locale))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 68, Col: 72}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 36, Col: 72}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -225,7 +193,7 @@ func revenueSelectedStats(c *Ctx, month RevenueMonth) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.revenue_average"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 71, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 39, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -238,7 +206,7 @@ func revenueSelectedStats(c *Ctx, month RevenueMonth) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(amount.Format(month.Average(), c.Locale))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 72, Col: 69}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 40, Col: 69}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -252,7 +220,7 @@ func revenueSelectedStats(c *Ctx, month RevenueMonth) templ.Component {
 	})
 }
 
-func revenueClinics(c *Ctx, report RevenueReport) templ.Component {
+func revenueClinics(c *Ctx, report models.RevenueReport) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -276,7 +244,7 @@ func revenueClinics(c *Ctx, report RevenueReport) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.revenue_by_clinic"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 79, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 47, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -294,7 +262,7 @@ func revenueClinics(c *Ctx, report RevenueReport) templ.Component {
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.revenue_none"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 81, Col: 73}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 49, Col: 73}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -357,7 +325,7 @@ func revenueClinics(c *Ctx, report RevenueReport) templ.Component {
 				var templ_7745c5c3_Var18 string
 				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(clinic.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 89, Col: 21}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 57, Col: 21}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 				if templ_7745c5c3_Err != nil {
@@ -375,7 +343,7 @@ func revenueClinics(c *Ctx, report RevenueReport) templ.Component {
 					var templ_7745c5c3_Var19 string
 					templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.clinic_deleted"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 91, Col: 82}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 59, Col: 82}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 					if templ_7745c5c3_Err != nil {
@@ -393,7 +361,7 @@ func revenueClinics(c *Ctx, report RevenueReport) templ.Component {
 				var templ_7745c5c3_Var20 string
 				templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(amount.Format(clinic.Total, c.Locale))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 94, Col: 93}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 62, Col: 93}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 				if templ_7745c5c3_Err != nil {
@@ -404,9 +372,9 @@ func revenueClinics(c *Ctx, report RevenueReport) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var21 string
-				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(revenueShare(clinic.Total, report.Selected.Total))
+				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(clinic.SharePercent(report.Selected.Total)) + "%")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 95, Col: 122}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 63, Col: 135}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 				if templ_7745c5c3_Err != nil {
@@ -450,7 +418,7 @@ func revenueClinics(c *Ctx, report RevenueReport) templ.Component {
 				var templ_7745c5c3_Var24 string
 				templ_7745c5c3_Var24, templ_7745c5c3_Err = templruntime.NewAttributeExpression(revenueClinicsChartData(c, report)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 99, Col: 136}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 67, Col: 136}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var24)
 				if templ_7745c5c3_Err != nil {
@@ -483,7 +451,7 @@ func revenueClinics(c *Ctx, report RevenueReport) templ.Component {
 	})
 }
 
-func revenueMonths(c *Ctx, report RevenueReport) templ.Component {
+func revenueMonths(c *Ctx, report models.RevenueReport) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -507,7 +475,7 @@ func revenueMonths(c *Ctx, report RevenueReport) templ.Component {
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.revenue_last_12_months"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 107, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 75, Col: 71}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 		if templ_7745c5c3_Err != nil {
@@ -546,7 +514,7 @@ func revenueMonths(c *Ctx, report RevenueReport) templ.Component {
 			var templ_7745c5c3_Var29 string
 			templ_7745c5c3_Var29, templ_7745c5c3_Err = templruntime.NewAttributeExpression(revenueMonthsChartData(c, report)).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 108, Col: 126}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 76, Col: 126}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 			if templ_7745c5c3_Err != nil {
@@ -573,7 +541,7 @@ func revenueMonths(c *Ctx, report RevenueReport) templ.Component {
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.month"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 113, Col: 28}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 81, Col: 28}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 		if templ_7745c5c3_Err != nil {
@@ -586,7 +554,7 @@ func revenueMonths(c *Ctx, report RevenueReport) templ.Component {
 		var templ_7745c5c3_Var31 string
 		templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.appointments"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 114, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 82, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 		if templ_7745c5c3_Err != nil {
@@ -599,7 +567,7 @@ func revenueMonths(c *Ctx, report RevenueReport) templ.Component {
 		var templ_7745c5c3_Var32 string
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.revenue"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 115, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 83, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 		if templ_7745c5c3_Err != nil {
@@ -653,7 +621,7 @@ func revenueMonths(c *Ctx, report RevenueReport) templ.Component {
 			var templ_7745c5c3_Var35 string
 			templ_7745c5c3_Var35, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.URL("/revenue?month=" + month.Start.Format("2006-01"))).ResolveURL(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 122, Col: 78}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 90, Col: 78}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 			if templ_7745c5c3_Err != nil {
@@ -666,7 +634,7 @@ func revenueMonths(c *Ctx, report RevenueReport) templ.Component {
 			var templ_7745c5c3_Var36 string
 			templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(revenueMonthLabel(c, month.Start))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 123, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 91, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 			if templ_7745c5c3_Err != nil {
@@ -679,7 +647,7 @@ func revenueMonths(c *Ctx, report RevenueReport) templ.Component {
 			var templ_7745c5c3_Var37 string
 			templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(number.Format(month.Appointments, c.Locale))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 126, Col: 88}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 94, Col: 88}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 			if templ_7745c5c3_Err != nil {
@@ -692,7 +660,7 @@ func revenueMonths(c *Ctx, report RevenueReport) templ.Component {
 			var templ_7745c5c3_Var38 string
 			templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(amount.Format(month.Total, c.Locale))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 127, Col: 81}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 95, Col: 81}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 			if templ_7745c5c3_Err != nil {
@@ -710,7 +678,7 @@ func revenueMonths(c *Ctx, report RevenueReport) templ.Component {
 		var templ_7745c5c3_Var39 string
 		templ_7745c5c3_Var39, templ_7745c5c3_Err = templruntime.NewAttributeExpression("/public/js/charts.js?v=" + assetVersion).ResolveURL(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 134, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 102, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var39)
 		if templ_7745c5c3_Err != nil {
@@ -748,7 +716,7 @@ type revenueChartData struct {
 
 // revenueMonthsChartData is the column chart of the last 12 months, oldest
 // first, in whole pesos.
-func revenueMonthsChartData(c *Ctx, report RevenueReport) string {
+func revenueMonthsChartData(c *Ctx, report models.RevenueReport) string {
 	data := revenueChartData{Name: c.l("str.revenue")}
 	for _, month := range slices.Backward(report.Months) {
 		data.Labels = append(data.Labels, revenueMonthShortLabel(c, month.Start))
@@ -762,7 +730,7 @@ func revenueMonthsChartData(c *Ctx, report RevenueReport) string {
 
 // revenueClinicsChartData is the donut of the selected month's revenue by
 // clinic.
-func revenueClinicsChartData(c *Ctx, report RevenueReport) string {
+func revenueClinicsChartData(c *Ctx, report models.RevenueReport) string {
 	data := revenueChartData{
 		Total:      amount.Format(report.Selected.Total, c.Locale),
 		TotalLabel: c.l("str.revenue"),
@@ -794,15 +762,6 @@ func revenueMonthShortLabel(c *Ctx, t time.Time) string {
 // revenueMonthLabel names the month in the viewer's language, e.g. Octubre 2026.
 func revenueMonthLabel(c *Ctx, t time.Time) string {
 	return c.l("str.month_"+strconv.Itoa(int(t.Month()))) + " " + strconv.Itoa(t.Year())
-}
-
-// revenueShare formats part as a whole percent of total, e.g. 42%.
-func revenueShare(part, total int) string {
-	if total == 0 {
-		return "0%"
-	}
-
-	return strconv.Itoa((part*100+total/2)/total) + "%"
 }
 
 var _ = templruntime.GeneratedTemplate
