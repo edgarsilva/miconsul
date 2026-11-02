@@ -66,7 +66,7 @@ func CmpStatusBadge(c *Ctx, status models.AppointmentStatus) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		case "in_progress":
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"badge badge-accent badge-sm gap-1\"><span class=\"inline-block h-1.5 w-1.5 rounded-full bg-current animate-pulse\"></span> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"badge badge-accent badge-sm gap-1\"><span class=\"inline-block h-1.5 w-1.5 rounded-full bg-current\"></span> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

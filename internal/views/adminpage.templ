@@ -236,7 +236,12 @@ templ adminComponentsPatientRow(c *Ctx, props adminComponentsPatientRowProps) {
 					if props.inSession {
 						@CmpStatusBadge(c, models.AppointmentInProgress)
 					} else if props.next != "" {
-						<span class={ "badge badge-sm", props.nextClass }>{ props.next }</span>
+						<span class={ "badge badge-sm gap-1", props.nextClass }>
+							if props.nextDot {
+								<span class="inline-block h-1.5 w-1.5 rounded-full bg-current"></span>
+							}
+							{ props.next }
+						</span>
 					}
 				</div>
 				<p class="text-xs leading-5 text-base-content/60 truncate">{ props.contact }</p>
@@ -268,6 +273,7 @@ type adminComponentsPatientRowProps struct {
 	contact         string
 	next            string
 	nextClass       string
+	nextDot         bool
 	inSession       bool
 	lastAppointment time.Time
 }
@@ -293,6 +299,7 @@ func adminComponentsPatientRowSamples() []adminComponentsPatientRowProps {
 			contact:         "alma@example.com",
 			next:            "Today",
 			nextClass:       "badge-accent",
+			nextDot:         true,
 			lastAppointment: now.AddDate(0, -1, 0),
 		},
 		{

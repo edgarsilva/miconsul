@@ -14,7 +14,7 @@ templ CmpStatusBadge(c *Ctx, status models.AppointmentStatus) {
 			</div>
 		case "in_progress":
 			<div class="badge badge-accent badge-sm gap-1">
-				<span class="inline-block h-1.5 w-1.5 rounded-full bg-current animate-pulse"></span>
+				<span class="inline-block h-1.5 w-1.5 rounded-full bg-current"></span>
 				{ c.l("str.in_progress") }
 			</div>
 		case "done":
