@@ -17,14 +17,15 @@ templ RevenueIndexPage(c *Ctx, report models.RevenueReport) {
 				<h1 class="font-bold text-2xl">{ c.l("str.revenue") }</h1>
 				<p class="text-sm text-base-content/60">{ revenueMonthLabel(c, report.Selected.Start) }</p>
 			</hgroup>
-			@revenueSelectedStats(c, report.Selected)
+			@revenueSelectedStats(c, report)
 			@revenueClinics(c, report)
 			@revenueMonths(c, report)
 		</section>
 	}
 }
 
-templ revenueSelectedStats(c *Ctx, month models.RevenueMonth) {
+templ revenueSelectedStats(c *Ctx, report models.RevenueReport) {
+	{{ month := report.Selected }}
 	<div class="stats stats-vertical sm:stats-horizontal app-card p-0! w-full">
 		<div class="stat">
 			<div class="stat-title">{ c.l("str.revenue") }</div>
@@ -37,7 +38,8 @@ templ revenueSelectedStats(c *Ctx, month models.RevenueMonth) {
 		</div>
 		<div class="stat">
 			<div class="stat-title">{ c.l("str.revenue_average") }</div>
-			<div class="stat-value">{ amount.Format(month.Average(), c.Locale) }</div>
+			<div class="stat-value">{ amount.Format(report.MonthlyAverage, c.Locale) }</div>
+			<div class="stat-desc">{ c.l("str.revenue_average_desc") }</div>
 		</div>
 	</div>
 }

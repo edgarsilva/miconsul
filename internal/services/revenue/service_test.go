@@ -48,7 +48,8 @@ func TestReport(t *testing.T) {
 		{1, north.ID, time.Date(2026, time.October, 12, 9, 0, 0, 0, mx), models.AppointmentCanceled, 99900}, // canceled
 		{2, north.ID, time.Date(2026, time.October, 12, 9, 0, 0, 0, mx), models.AppointmentDone, 99900},     // other user
 		{1, north.ID, time.Date(2025, time.December, 1, 9, 0, 0, 0, mx), models.AppointmentDone, 30000},     // 12th month
-		{1, north.ID, time.Date(2025, time.November, 30, 9, 0, 0, 0, mx), models.AppointmentDone, 99900},    // 13 months ago
+		{1, north.ID, time.Date(2025, time.November, 30, 9, 0, 0, 0, mx), models.AppointmentDone, 99900},    // 13th month: average only
+		{1, north.ID, time.Date(2025, time.October, 31, 9, 0, 0, 0, mx), models.AppointmentDone, 99900},     // 14 months ago
 	}
 	for i, b := range bookings {
 		apnt := models.Appointment{
@@ -88,6 +89,11 @@ func TestReport(t *testing.T) {
 		}
 		if got := report.Selected.Start.Format("2006-01"); got != "2026-11" {
 			t.Errorf("selected = %s, want the current month", got)
+		}
+		// Oct 2026 (160000) + Dec 2025 (30000) + Nov 2025 (99900), over 12 months;
+		// the current month is not complete and is left out.
+		if report.MonthlyAverage != 289900/12 {
+			t.Errorf("monthly average = %d, want %d", report.MonthlyAverage, 289900/12)
 		}
 		if len(report.Clinics) != 1 || report.Clinics[0].Name != "North" || report.Clinics[0].Total != 100000 {
 			t.Errorf("clinics = %+v, want North with 100000", report.Clinics)

@@ -2,15 +2,6 @@ package models
 
 import "testing"
 
-func TestRevenueMonthAverage(t *testing.T) {
-	if got := (RevenueMonth{Total: 1850000, Appointments: 15}).Average(); got != 123333 {
-		t.Errorf("Average = %d, want 123333", got)
-	}
-	if got := (RevenueMonth{}).Average(); got != 0 {
-		t.Errorf("Average with no appointments = %d, want 0", got)
-	}
-}
-
 func TestRevenueClinicSharePercent(t *testing.T) {
 	cases := []struct {
 		total, of, want int

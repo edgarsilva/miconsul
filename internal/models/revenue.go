@@ -9,6 +9,9 @@ type RevenueReport struct {
 	Months   []RevenueMonth
 	Selected RevenueMonth
 	Clinics  []RevenueClinic
+	// MonthlyAverage is the average revenue of the 12 complete months before
+	// the current one, e.g. 3000000 over 12 months -> 250000.
+	MonthlyAverage int
 }
 
 // RevenueMonth is the revenue of done appointments booked in one month, in
@@ -17,16 +20,6 @@ type RevenueMonth struct {
 	Start        time.Time
 	Total        int
 	Appointments int
-}
-
-// Average returns the average revenue per appointment, in cents, e.g. 1850000
-// over 15 appointments -> 123333.
-func (m RevenueMonth) Average() int {
-	if m.Appointments == 0 {
-		return 0
-	}
-
-	return m.Total / m.Appointments
 }
 
 // RevenueClinic is one clinic's revenue in the selected month, in cents.

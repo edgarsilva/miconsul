@@ -18,6 +18,10 @@ import (
 // reportMonths is how many months the revenue page covers, current included.
 const reportMonths = 12
 
+// averageMonths is how many complete months before the current one the
+// monthly average covers.
+const averageMonths = 12
+
 type service struct {
 	*server.Server
 }
@@ -31,14 +35,15 @@ func NewService(s *server.Server) (*service, error) {
 }
 
 // Report returns the user's revenue for the last 12 months up to now, newest
-// first, and the selected month's revenue by clinic. Months follow the clinic
+// first, the selected month's revenue by clinic, and the monthly average of
+// the 12 complete months before the current one. Months follow the clinic
 // timezone; a selected month outside the report means the current month.
 func (s *service) Report(ctx context.Context, userID uint, now time.Time, selected time.Time) (models.RevenueReport, error) {
 	ctx, span := s.Trace(ctx, "revenue/service:Report")
 	defer span.End()
 
-	monthStarts := lastMonthStarts(now, reportMonths)
-	if !slices.ContainsFunc(monthStarts, selected.Equal) {
+	monthStarts := lastMonthStarts(now, max(reportMonths, averageMonths+1))
+	if !slices.ContainsFunc(monthStarts[:reportMonths], selected.Equal) {
 		selected = monthStarts[0]
 	}
 
@@ -88,10 +93,16 @@ func (s *service) Report(ctx context.Context, userID uint, now time.Time, select
 		return cmp.Compare(b.Total, a.Total)
 	})
 
+	completed := 0
+	for _, m := range months[1 : averageMonths+1] {
+		completed += m.Total
+	}
+
 	report := models.RevenueReport{
-		Months:   months,
-		Selected: months[slices.IndexFunc(monthStarts, selected.Equal)],
-		Clinics:  clinics,
+		Months:         months[:reportMonths],
+		Selected:       months[slices.IndexFunc(monthStarts, selected.Equal)],
+		Clinics:        clinics,
+		MonthlyAverage: completed / averageMonths,
 	}
 
 	return report, nil

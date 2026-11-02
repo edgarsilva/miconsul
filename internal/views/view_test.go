@@ -662,6 +662,7 @@ func TestRevenueIndexPage(t *testing.T) {
 				{Name: "North", Total: 1200000, Appointments: 10},
 				{Name: "South", Deleted: true, Total: 650000, Appointments: 5},
 			},
+			MonthlyAverage: 2425000,
 		}
 
 		var html strings.Builder
@@ -677,6 +678,8 @@ func TestRevenueIndexPage(t *testing.T) {
 			`href="/revenue?month=2026-10"`,
 			"$18,500",
 			"65%",
+			"$24,250",
+			"Promedio mensual",
 		} {
 			if !strings.Contains(got, want) {
 				t.Errorf("expected %s", want)
