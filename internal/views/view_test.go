@@ -357,13 +357,11 @@ func TestDashboardViewAllLinks(t *testing.T) {
 		for _, want := range []string{
 			`href="/patients"`,
 			`href="/appointments?timeframe=month"`,
+			`href="/revenue"`,
 		} {
 			if !strings.Contains(got, want) {
 				t.Errorf("expected %s", want)
 			}
-		}
-		if strings.Contains(got, "status=done") {
-			t.Errorf("expected no revenue View all link until there is a revenue page")
 		}
 	})
 }
