@@ -207,7 +207,7 @@ func TestCreateBulkPastAppointments(t *testing.T) {
 	now := time.Date(2026, time.March, 15, 12, 0, 0, 0, mx)
 	rng := rand.New(rand.NewSource(1))
 
-	created, err := createBulkPastAppointments(t.Context(), db, owner, rng, 1, []models.Clinic{clinic}, []models.Patient{patient}, 200, now)
+	created, err := createBulkPastAppointments(t.Context(), db, owner, rng, 1, []models.Clinic{clinic}, []models.Patient{patient}, 200, 2, now)
 	if err != nil {
 		t.Fatalf("create past appointments: %v", err)
 	}

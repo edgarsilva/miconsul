@@ -453,7 +453,7 @@ func seedBulk(ctx context.Context, db *gorm.DB, owner models.User, opts Options)
 	}
 	result.AppointmentsCreated += createdAppointments
 
-	createdPast, err := createBulkPastAppointments(ctx, db, owner, rng, runID, clinics, patients, opts.BulkPastAppointments, time.Now())
+	createdPast, err := createBulkPastAppointments(ctx, db, owner, rng, runID, clinics, patients, opts.BulkPastAppointments, opts.BulkPastMonths, time.Now())
 	if err != nil {
 		return Result{}, err
 	}
@@ -584,15 +584,15 @@ func createBulkAppointments(ctx context.Context, db *gorm.DB, owner models.User,
 }
 
 // createBulkPastAppointments creates priced appointments booked between the
-// start of last month and an hour before now: mostly done, some canceled or
-// still pending.
-func createBulkPastAppointments(ctx context.Context, db *gorm.DB, owner models.User, rng *rand.Rand, runID int64, clinics []models.Clinic, patients []models.Patient, count int, now time.Time) (int, error) {
+// start of the month months-1 before now's and an hour before now: mostly
+// done, some canceled or still pending.
+func createBulkPastAppointments(ctx context.Context, db *gorm.DB, owner models.User, rng *rand.Rand, runID int64, clinics []models.Clinic, patients []models.Patient, count, months int, now time.Time) (int, error) {
 	if count <= 0 || len(clinics) == 0 || len(patients) == 0 {
 		return 0, nil
 	}
 
 	monthStart, _ := libtime.TimeframeBounds(now, models.DefaultTimezone, libtime.TimeframeMonth)
-	start := monthStart.AddDate(0, -1, 0)
+	start := monthStart.AddDate(0, -(max(months, 1) - 1), 0)
 	span := now.Add(-time.Hour).Sub(start)
 
 	appointments := make([]models.Appointment, 0, count)
