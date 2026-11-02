@@ -6,6 +6,13 @@
 	themes: dracula --prefersdark;
 }
 
+/* Same border width as cupcake, so switching themes does not shift the layout */
+@plugin "daisyui/theme" {
+  name: "dracula";
+  prefersdark: true;
+  --border: 2px;
+}
+
 @plugin "daisyui/theme" {
   name: "cupcake";
   default: true;
