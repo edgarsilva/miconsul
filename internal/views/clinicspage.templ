@@ -78,7 +78,7 @@ templ ClinicLi(c *Ctx, clinic models.Clinic) {
 			}
 			<div class="min-w-0">
 				<p class="font-semibold text-base-content flex items-center" hx-boost:inherited="true">
-					<a href="/clinics">
+					<a href={ templ.URL("/clinics/" + clinic.UID) }>
 						{ clinic.Name }
 					</a>
 					if clinic.Favorite {
@@ -91,7 +91,7 @@ templ ClinicLi(c *Ctx, clinic models.Clinic) {
 				</p>
 				<p class="flex text-xs text-base-content/60">
 					<a
-						href="mailto:leslie.alexander@example.com"
+						href={ templ.URL("mailto:" + clinic.Email) }
 						class="relative truncate hover:underline"
 					>
 						{ clinic.Email }
