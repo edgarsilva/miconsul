@@ -94,13 +94,14 @@ func runSeed(ctx context.Context, args []string, deps seedRuntimeDeps) error {
 	}
 
 	deps.logStep("🚀", ansiCyan, "Starting database seed bootstrap")
-	deps.logStep("🧩", ansiCyan, fmt.Sprintf("Config: baseline=%t bulk=%t users=%d clinics=%d patients=%d appointments=%d",
+	deps.logStep("🧩", ansiCyan, fmt.Sprintf("Config: baseline=%t bulk=%t users=%d clinics=%d patients=%d appointments=%d past_appointments=%d",
 		opts.Baseline,
 		opts.RandomizedBulk,
 		opts.BulkUsers,
 		opts.BulkClinics,
 		opts.BulkPatients,
 		opts.BulkAppointments,
+		opts.BulkPastAppointments,
 	))
 	if opts.OwnerEmail != "" {
 		deps.logStep("👤", ansiCyan, fmt.Sprintf("Owner: email=%s ensure_owner=%t", opts.OwnerEmail, opts.EnsureOwner))
@@ -151,6 +152,7 @@ func parseSeedArgs(args []string) (opts seeder.Options, skipMigrate bool, verbos
 	fs.IntVar(&opts.BulkClinics, "clinics", 20, "number of randomized clinics to create")
 	fs.IntVar(&opts.BulkPatients, "patients", 60, "number of randomized patients to create")
 	fs.IntVar(&opts.BulkAppointments, "appointments", 120, "number of randomized appointments to create")
+	fs.IntVar(&opts.BulkPastAppointments, "past-appointments", 80, "number of priced past appointments (since last month, mostly done) to create")
 	fs.StringVar(&opts.OwnerEmail, "owner-email", "", "attach clinic/patient/appointment seed records to this existing user email")
 	fs.BoolVar(&opts.EnsureOwner, "ensure-owner", false, "create owner-email user if missing (default password: SeedOwner123!)")
 	fs.BoolVar(&skipMigrate, "skip-migrate", false, "skip running goose migrations before seeding")

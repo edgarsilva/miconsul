@@ -1,8 +1,10 @@
 package seeder
 
 import (
+	"math/rand"
 	"strings"
 	"testing"
+	"time"
 
 	"miconsul/internal/models"
 
@@ -180,5 +182,59 @@ func assertBaselineAppointmentsExist(t *testing.T, db *gorm.DB) {
 		if err := db.WithContext(t.Context()).Where("ext_id = ?", extID).Take(&appointment).Error; err != nil {
 			t.Fatalf("expected baseline appointment %q to exist: %v", extID, err)
 		}
+	}
+}
+
+func TestCreateBulkPastAppointments(t *testing.T) {
+	db := newSeederDB(t)
+	owner := models.User{Email: "owner-past@example.com", Password: "hash", Role: models.UserRoleUser}
+	if err := db.WithContext(t.Context()).Create(&owner).Error; err != nil {
+		t.Fatalf("create owner user: %v", err)
+	}
+	clinic := models.Clinic{UserID: owner.ID, Name: "Past Clinic"}
+	patient := models.Patient{UserID: owner.ID, Name: "Past Patient", Age: 30, Phone: "555", Email: "past@example.com"}
+	if err := db.WithContext(t.Context()).Create(&clinic).Error; err != nil {
+		t.Fatalf("create clinic: %v", err)
+	}
+	if err := db.WithContext(t.Context()).Create(&patient).Error; err != nil {
+		t.Fatalf("create patient: %v", err)
+	}
+
+	mx, err := time.LoadLocation(models.DefaultTimezone)
+	if err != nil {
+		t.Fatalf("load %s: %v", models.DefaultTimezone, err)
+	}
+	now := time.Date(2026, time.March, 15, 12, 0, 0, 0, mx)
+	rng := rand.New(rand.NewSource(1))
+
+	created, err := createBulkPastAppointments(t.Context(), db, owner, rng, 1, []models.Clinic{clinic}, []models.Patient{patient}, 200, now)
+	if err != nil {
+		t.Fatalf("create past appointments: %v", err)
+	}
+	if created != 200 {
+		t.Fatalf("created = %d, want 200", created)
+	}
+
+	var appointments []models.Appointment
+	if err := db.WithContext(t.Context()).Where("user_id = ?", owner.ID).Find(&appointments).Error; err != nil {
+		t.Fatalf("load appointments: %v", err)
+	}
+
+	start := time.Date(2026, time.February, 1, 0, 0, 0, 0, mx)
+	end := now.Add(-time.Hour)
+	done := 0
+	for _, a := range appointments {
+		if a.BookedAt.Before(start) || !a.BookedAt.Before(end) {
+			t.Errorf("booked at %s, want between %s and %s", a.BookedAt.In(mx), start, end)
+		}
+		if a.Price < 30000 || a.Price > 200000 {
+			t.Errorf("price = %d cents, want $300 to $2,000", a.Price)
+		}
+		if a.Status == models.AppointmentDone {
+			done++
+		}
+	}
+	if done < 140 {
+		t.Errorf("done = %d of 200, want most of them done", done)
 	}
 }

@@ -44,3 +44,40 @@ func TestFloatToAmount(t *testing.T) {
 		})
 	}
 }
+
+func TestFormat(t *testing.T) {
+	cases := []struct {
+		cents  int
+		locale string
+		want   string
+	}{
+		{0, "es-MX", "$0"},
+		{49, "es-MX", "$0"},
+		{50, "es-MX", "$1"},
+		{99900, "es-MX", "$999"},
+		{2450000, "es-MX", "$24,500"},
+		{123456789, "es-MX", "$1,234,568"},
+		{2450000, "en-US", "$24,500"},
+		{2450000, "", "$24,500"},
+	}
+	for _, tc := range cases {
+		if got := Format(tc.cents, tc.locale); got != tc.want {
+			t.Errorf("Format(%d, %q) = %q, want %q", tc.cents, tc.locale, got, tc.want)
+		}
+	}
+}
+
+func TestFormatCompact(t *testing.T) {
+	cases := map[int]string{
+		0:         "$0",
+		99900:     "$999",
+		2450000:   "$24.5k",
+		10020000:  "$100.2k",
+		123456789: "$1.2M",
+	}
+	for cents, want := range cases {
+		if got := FormatCompact(cents, "es-MX"); got != want {
+			t.Errorf("FormatCompact(%d) = %q, want %q", cents, got, want)
+		}
+	}
+}

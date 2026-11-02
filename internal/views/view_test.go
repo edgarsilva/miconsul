@@ -356,11 +356,13 @@ func TestDashboardViewAllLinks(t *testing.T) {
 		for _, want := range []string{
 			`href="/patients"`,
 			`href="/appointments?timeframe=month"`,
-			`href="/appointments?timeframe=month&amp;status=done"`,
 		} {
 			if !strings.Contains(got, want) {
 				t.Errorf("expected %s", want)
 			}
+		}
+		if strings.Contains(got, "status=done") {
+			t.Errorf("expected no revenue View all link until there is a revenue page")
 		}
 	})
 }
@@ -562,6 +564,87 @@ func TestCmpSearchInputTriggersAtMinSearchTermLen(t *testing.T) {
 		want := fmt.Sprintf("this.value.length &gt;= %d", models.MinSearchTermLen)
 		if !strings.Contains(html.String(), want) {
 			t.Errorf("hx-trigger should search at %d characters, got %s", models.MinSearchTermLen, html.String())
+		}
+	})
+}
+
+func TestDashboardRevenueCard(t *testing.T) {
+	cases := []struct {
+		name    string
+		revenue DashboardRevenue
+		want    []string
+		notWant []string
+	}{
+		{
+			name:    "up from last month",
+			revenue: DashboardRevenue{Total: 2450000, Previous: 2000000},
+			want:    []string{"$24.5k", `title="$24,500"`, "22.5%", "text-success"},
+			notWant: []string{"text-error"},
+		},
+		{
+			name:    "down from last month",
+			revenue: DashboardRevenue{Total: 96800, Previous: 100000},
+			want:    []string{"$968", "3.2%", "text-error"},
+		},
+		{
+			name:    "same as last month shows no change",
+			revenue: DashboardRevenue{Total: 100000, Previous: 100000},
+			want:    []string{"$1,000"},
+			notWant: []string{"%"},
+		},
+		{
+			name:    "no revenue last month shows no change",
+			revenue: DashboardRevenue{Total: 150050},
+			want:    []string{"$1.5k", `title="$1,501"`},
+			notWant: []string{"%"},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+				var html strings.Builder
+				stats := DashboardStats{Revenue: tc.revenue}
+				if err := DashboardMonthTrends(NewCtx(fc), stats).Render(fc.Context(), &html); err != nil {
+					t.Fatalf("render: %v", err)
+				}
+
+				got := html.String()
+				card := got[strings.Index(got, "/public/images/funds.png"):]
+				for _, want := range tc.want {
+					if !strings.Contains(card, want) {
+						t.Errorf("expected the revenue card to show %q", want)
+					}
+				}
+				for _, notWant := range tc.notWant {
+					if strings.Contains(card, notWant) {
+						t.Errorf("expected the revenue card not to show %q", notWant)
+					}
+				}
+				if strings.Contains(got, "24500<") {
+					t.Errorf("expected no hard-coded revenue")
+				}
+			})
+		})
+	}
+}
+
+func TestDashboardCountsAreCompact(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		var html strings.Builder
+		stats := DashboardStats{
+			Patients:     DashboardStat{Total: 1234, Diff: 12},
+			Appointments: DashboardStat{Total: 20100, Diff: 1500},
+		}
+		if err := DashboardMonthTrends(NewCtx(fc), stats).Render(fc.Context(), &html); err != nil {
+			t.Fatalf("render: %v", err)
+		}
+
+		got := html.String()
+		for _, want := range []string{`title="1,234">1.2k<`, `title="20,100">20.1k<`, "1.5k"} {
+			if !strings.Contains(got, want) {
+				t.Errorf("expected %s", want)
+			}
 		}
 	})
 }
