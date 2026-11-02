@@ -239,14 +239,7 @@ func (s *service) HandleDelete(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/patients", "Failed to delete patient", view.LevelError)
 	}
 
-	searchTerm := strings.TrimSpace(c.Query("searchTerm", ""))
-	patients, err := s.SearchPatientsByUser(c.Context(), cu, searchTerm, QUERY_LIMIT)
-	if err != nil {
-		return s.RedirectWithToast(c, "/patients", "Failed to load patients", view.LevelError)
-	}
-
-	vc := view.NewCtx(c)
-	return view.Render(c, view.PatientList(vc, patients))
+	return s.RedirectWithToast(c, "/patients", "Patient deleted", view.LevelSuccess)
 }
 
 func normalizeSearchTerm(raw string) (string, error) {

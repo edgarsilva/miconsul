@@ -27,6 +27,20 @@ func TestPatientHandlers(t *testing.T) {
 		}
 	})
 
+	t.Run("delete button shows on the edit page only", func(t *testing.T) {
+		patient := h.createPatient(u.ID, "Patient To Delete")
+
+		_, editBody := h.doRequest(requestOptions{path: "/patients/" + patient.UID, authToken: token})
+		if !strings.Contains(editBody, `hx-delete="/patients/`+patient.UID+`"`) {
+			t.Fatalf("expected the edit page to offer deleting the patient")
+		}
+
+		_, newBody := h.doRequest(requestOptions{path: "/patients/new", authToken: token})
+		if strings.Contains(newBody, "hx-delete=") {
+			t.Fatalf("expected no delete button on the new patient page")
+		}
+	})
+
 	t.Run("update patient htmx returns success redirect header", func(t *testing.T) {
 		patient := h.createPatient(u.ID, "Patient One")
 

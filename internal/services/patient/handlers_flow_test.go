@@ -105,8 +105,11 @@ func TestPatientHandlersFlows(t *testing.T) {
 	req6 := httptest.NewRequest(http.MethodPost, "/patients/"+seed.UID+"/delete", nil)
 	req6.Header.Set("HX-Request", "true")
 	resp6, err := app.Test(req6)
-	if err != nil || resp6.StatusCode != fiber.StatusOK {
-		t.Fatalf("delete patient expected 200 for htmx, got status=%d err=%v", resp6.StatusCode, err)
+	if err != nil || resp6.StatusCode != fiber.StatusNoContent {
+		t.Fatalf("delete patient expected 204 for htmx, got status=%d err=%v", resp6.StatusCode, err)
+	}
+	if got := resp6.Header.Get("HX-Redirect"); got != "/patients" {
+		t.Fatalf("delete patient expected HX-Redirect /patients, got %q", got)
 	}
 
 	resp8, err := app.Test(httptest.NewRequest(http.MethodGet, "/patients/search?searchTerm=", nil))
