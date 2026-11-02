@@ -84,3 +84,18 @@ func TestFormatCompact(t *testing.T) {
 		}
 	}
 }
+
+func TestInputValue(t *testing.T) {
+	cases := map[int]string{
+		0:     "0.00",
+		5:     "0.05",
+		2500:  "25.00",
+		12345: "123.45",
+		-250:  "-2.50",
+	}
+	for cents, want := range cases {
+		if got := InputValue(cents); got != want {
+			t.Errorf("InputValue(%d) = %q, want %q", cents, got, want)
+		}
+	}
+}

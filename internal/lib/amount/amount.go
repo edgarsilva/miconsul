@@ -1,6 +1,7 @@
 package amount
 
 import (
+	"fmt"
 	"math"
 	"strconv"
 
@@ -28,6 +29,16 @@ func FloatToAmount(v float32) int {
 	}
 
 	return int(math.Round(float64(v) * 100))
+}
+
+// InputValue formats cents as a decimal string for form inputs, e.g. 123.45.
+func InputValue(cents int) string {
+	sign := ""
+	if cents < 0 {
+		sign, cents = "-", -cents
+	}
+
+	return fmt.Sprintf("%s%d.%02d", sign, cents/100, cents%100)
 }
 
 // Format formats cents as whole pesos with the locale's digit grouping, e.g.
