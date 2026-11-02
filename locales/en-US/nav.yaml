@@ -1,6 +1,7 @@
 clinics: "Clinics"
 appointments: "Appointments"
 patients: "Patients"
+revenue: "Revenue"
 exp_rev: "Expents/Revenue"
 next_5: "Next 5"
 my_day: "My day"

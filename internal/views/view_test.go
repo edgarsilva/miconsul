@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"miconsul/internal/models"
 
@@ -645,6 +646,50 @@ func TestDashboardCountsAreCompact(t *testing.T) {
 			if !strings.Contains(got, want) {
 				t.Errorf("expected %s", want)
 			}
+		}
+	})
+}
+
+func TestRevenueIndexPage(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		october := time.Date(2026, time.October, 1, 0, 0, 0, 0, time.UTC)
+		november := time.Date(2026, time.November, 1, 0, 0, 0, 0, time.UTC)
+		report := RevenueReport{
+			Months: []RevenueMonth{
+				{Start: november, Total: 185000, Appointments: 1},
+				{Start: october, Total: 1850000, Appointments: 15},
+			},
+			Selected: RevenueMonth{Start: october, Total: 1850000, Appointments: 15},
+			Clinics: []RevenueClinic{
+				{Name: "North", Total: 1200000, Appointments: 10},
+				{Name: "South", Deleted: true, Total: 650000, Appointments: 5},
+			},
+		}
+
+		var html strings.Builder
+		if err := RevenueIndexPage(NewCtx(fc), report).Render(fc.Context(), &html); err != nil {
+			t.Fatalf("render: %v", err)
+		}
+
+		got := html.String()
+		for _, want := range []string{
+			`data-chart="columns"`,
+			`data-chart="donut"`,
+			`<script src="/public/js/charts.js?v=` + assetVersion + `">`,
+			`href="/revenue?month=2026-10"`,
+			"$18,500",
+			"65%",
+		} {
+			if !strings.Contains(got, want) {
+				t.Errorf("expected %s", want)
+			}
+		}
+		i := strings.Index(got, `data-chart="columns" data-chart-data="`)
+		if i < 0 || !strings.Contains(got[i:i+400], "values&#34;:[18500,1850]") {
+			t.Errorf("expected the column chart values oldest first, in pesos: %s", got[max(i, 0):max(i, 0)+400])
+		}
+		if !strings.Contains(got, "badge-ghost") {
+			t.Errorf("expected deleted clinics to be marked")
 		}
 	})
 }

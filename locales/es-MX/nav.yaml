@@ -1,6 +1,7 @@
 clinics: "Consultorios"
 appointments: "Citas"
 patients: "Pacientes"
+revenue: "Ingresos"
 exp_rev: "Contabilidad"
 next_5: "Siguientes 5"
 my_day: "Mi dia"
