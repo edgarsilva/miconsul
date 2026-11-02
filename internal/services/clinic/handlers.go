@@ -150,7 +150,7 @@ func (s *service) HandleDelete(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/clinics", "Failed to delete clinic", view.LevelError)
 	}
 
-	return s.HXRedirect(c, "/clinics")
+	return s.RedirectWithToast(c, "/clinics", "Clinic deleted", view.LevelSuccess)
 }
 
 // HandleIndexSearch searches clinics and returns an HTML fragment to be
