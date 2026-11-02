@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"miconsul/internal/lib/avatar"
+	"miconsul/internal/lib/libtime"
 	"miconsul/internal/models"
 
 	"golang.org/x/crypto/bcrypt"
@@ -452,6 +453,12 @@ func seedBulk(ctx context.Context, db *gorm.DB, owner models.User, opts Options)
 	}
 	result.AppointmentsCreated += createdAppointments
 
+	createdPast, err := createBulkPastAppointments(ctx, db, owner, rng, runID, clinics, patients, opts.BulkPastAppointments, time.Now())
+	if err != nil {
+		return Result{}, err
+	}
+	result.AppointmentsCreated += createdPast
+
 	feedEventsCreated, err := seedFeedEvents(ctx, db, owner)
 	if err != nil {
 		return Result{}, err
@@ -571,6 +578,69 @@ func createBulkAppointments(ctx context.Context, db *gorm.DB, owner models.User,
 
 	if err := db.WithContext(ctx).Create(&appointments).Error; err != nil {
 		return 0, fmt.Errorf("create bulk appointments: %w", err)
+	}
+
+	return len(appointments), nil
+}
+
+// createBulkPastAppointments creates priced appointments booked between the
+// start of last month and an hour before now: mostly done, some canceled or
+// still pending.
+func createBulkPastAppointments(ctx context.Context, db *gorm.DB, owner models.User, rng *rand.Rand, runID int64, clinics []models.Clinic, patients []models.Patient, count int, now time.Time) (int, error) {
+	if count <= 0 || len(clinics) == 0 || len(patients) == 0 {
+		return 0, nil
+	}
+
+	monthStart, _ := libtime.TimeframeBounds(now, models.DefaultTimezone, libtime.TimeframeMonth)
+	start := monthStart.AddDate(0, -1, 0)
+	span := now.Add(-time.Hour).Sub(start)
+
+	appointments := make([]models.Appointment, 0, count)
+	for i := range count {
+		clinic := clinics[rng.Intn(len(clinics))]
+		patient := patients[rng.Intn(len(patients))]
+		bookedAt := start.Add(time.Duration(rng.Int63n(int64(span)))).UTC()
+		price := (300 + rng.Intn(35)*50) * 100
+
+		appointment := models.Appointment{
+			ExtID:     fmt.Sprintf("seed-bulk-past-appointment-%d-%d", runID, i+1),
+			UserID:    owner.ID,
+			ClinicID:  clinic.ID,
+			PatientID: patient.ID,
+			BookedAt:  bookedAt,
+			Timezone:  models.DefaultTimezone,
+			Duration:  45,
+			Price:     price,
+			Status:    models.AppointmentDone,
+			DoneAt:    bookedAt.Add(45 * time.Minute),
+			Summary:   fmt.Sprintf("Seed past appointment #%d", i+1),
+			Token:     fmt.Sprintf("seed-bulk-past-token-%d-%d", runID, i+1),
+		}
+		switch roll := rng.Intn(10); {
+		case roll == 0:
+			appointment.Status = models.AppointmentCanceled
+			appointment.DoneAt = time.Time{}
+			appointment.CanceledAt = bookedAt.Add(-24 * time.Hour)
+		case roll == 1:
+			appointment.Status = models.AppointmentPending
+			appointment.DoneAt = time.Time{}
+		}
+
+		appointments = append(appointments, appointment)
+	}
+
+	// One insert per row: a multi-row insert can't mix set and unset
+	// done_at/canceled_at in SQLite.
+	err := db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for i := range appointments {
+			if err := tx.Create(&appointments[i]).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return 0, fmt.Errorf("create bulk past appointments: %w", err)
 	}
 
 	return len(appointments), nil

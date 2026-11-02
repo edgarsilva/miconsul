@@ -7,8 +7,11 @@ type Options struct {
 	BulkClinics      int
 	BulkPatients     int
 	BulkAppointments int
-	OwnerEmail       string
-	EnsureOwner      bool
+	// BulkPastAppointments are booked from the start of last month up to now,
+	// priced, and mostly done, so revenue has data.
+	BulkPastAppointments int
+	OwnerEmail           string
+	EnsureOwner          bool
 }
 
 func (o Options) withDefaults() Options {
@@ -27,6 +30,9 @@ func (o Options) withDefaults() Options {
 	}
 	if o.BulkAppointments < 0 {
 		o.BulkAppointments = 0
+	}
+	if o.BulkPastAppointments < 0 {
+		o.BulkPastAppointments = 0
 	}
 
 	return o
