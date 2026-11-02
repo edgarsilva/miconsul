@@ -3,6 +3,7 @@ package views
 import (
 	"fmt"
 	"math"
+	"miconsul/internal/lib/amount"
 	"miconsul/internal/models"
 	"strconv"
 	"time"
@@ -140,7 +141,7 @@ templ DashboardMonthTrends(c *Ctx, stats DashboardStats) {
 					<p class="ml-16 truncate text-sm font-medium text-base-content">{ c.l("str.revenue_month") }</p>
 				</dt>
 				<dd class="ml-16 flex items-baseline">
-					<p class="text-2xl font-semibold text-base-content">{ dashboardRevenueAmount(stats.Revenue.Total) }</p>
+					<p class="text-2xl font-semibold text-base-content">{ amount.Format(stats.Revenue.Total, c.Locale) }</p>
 					if pct, ok := stats.Revenue.Change(); ok {
 						if pct >= 0 {
 							<p class="ml-2 flex items-baseline text-sm font-semibold text-success">
@@ -167,22 +168,6 @@ templ DashboardMonthTrends(c *Ctx, stats DashboardStats) {
 			</div>
 		</dl>
 	</div>
-}
-
-// dashboardRevenueAmount formats cents as whole pesos with thousands
-// separators, e.g. $24,500.
-func dashboardRevenueAmount(cents int) string {
-	pesos := strconv.Itoa(int(math.Round(float64(cents) / 100)))
-
-	grouped := make([]byte, 0, len(pesos)+len(pesos)/3)
-	for i := range len(pesos) {
-		if i > 0 && (len(pesos)-i)%3 == 0 {
-			grouped = append(grouped, ',')
-		}
-		grouped = append(grouped, pesos[i])
-	}
-
-	return "$" + string(grouped)
 }
 
 // dashboardRevenueChange formats a percent change without its sign, e.g. 3.2%.

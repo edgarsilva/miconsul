@@ -626,20 +626,3 @@ func TestDashboardRevenueCard(t *testing.T) {
 		})
 	}
 }
-
-func TestDashboardRevenueAmount(t *testing.T) {
-	cases := map[int]string{
-		0:          "$0",
-		49:         "$0",
-		50:         "$1",
-		99900:      "$999",
-		100000:     "$1,000",
-		123456789:  "$1,234,568",
-		1000000000: "$10,000,000",
-	}
-	for cents, want := range cases {
-		if got := dashboardRevenueAmount(cents); got != want {
-			t.Errorf("dashboardRevenueAmount(%d) = %q, want %q", cents, got, want)
-		}
-	}
-}
