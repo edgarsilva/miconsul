@@ -55,6 +55,53 @@ templ BackBtnLayout(c *Ctx, backpath string) {
 	}
 }
 
+// ChartsLayout is the signed-in app page for pages with charts: its <head>
+// loads ApexCharts, deferred. Each page includes
+// public/js/charts.js, deferred, after its charts. Links to these pages must
+// not be boosted: htmx drops the <head> of boosted pages.
+templ ChartsLayout(c *Ctx) {
+	<!DOCTYPE html>
+	<html
+		lang={ c.Locale }
+		if c.Theme != "" {
+			data-theme={ preferences.ThemeName(preferences.ThemeLight) }
+		}
+	>
+		<head>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<meta name="color-scheme" content="light dark"/>
+			<meta name="htmx-config" content='{"includeIndicatorCSS":false}'/>
+			@favicons(c)
+			<title>Miconsul</title>
+			<link href={ "/public/global.css?v=" + assetVersion } rel="stylesheet"/>
+			<script src="https://cdn.jsdelivr.net/npm/htmx.org@4.0.0/dist/htmx.min.js" integrity="sha384-BvJpBiO8Kh31EqtJe5DRIeWrHWnCGkwytKs9NKFi86Hhw96dEqdEMzZDeK9iEGTc" crossorigin="anonymous"></script>
+			<link
+				rel="stylesheet"
+				href="https://cdn.jsdelivr.net/npm/apexcharts@6.10.0/dist/apexcharts.css"
+				integrity="sha384-xiwYvoUk6woTSrViYmFRB6voHXkdMsbOIPNggFn88nizTDFhys4ThD1QO/AhVyJA"
+				crossorigin="anonymous"
+			/>
+			<script
+				defer
+				src="https://cdn.jsdelivr.net/npm/apexcharts@6.10.0/dist/apexcharts.min.js"
+				integrity="sha384-5EG9CeSqSzymwY307XCL4zMqifjcpwh/uGHYg1CPiyMNHVvfCcx8VZi2JzW2035O"
+				crossorigin="anonymous"
+			></script>
+		</head>
+		<body class="grow">
+			<div id="root" class="bg-base-200">
+				@CmpNavbar(c)
+				<main id="main" class="grow flex flex-col">
+					{ children... }
+				</main>
+				@CmpFooter(c)
+			</div>
+			@CmpToastRegion(c)
+		</body>
+	</html>
+}
+
 templ AuthLayout(c *Ctx) {
 	@RootLayout(c) {
 		<div id="root" class="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-base-200">
