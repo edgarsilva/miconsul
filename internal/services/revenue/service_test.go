@@ -34,6 +34,17 @@ func TestReport(t *testing.T) {
 		t.Fatalf("delete clinic: %v", err)
 	}
 
+	alma := models.Patient{UserID: 1, Name: "Alma", Age: 30, Phone: "555", Email: "alma@example.com"}
+	bruno := models.Patient{UserID: 1, Name: "Bruno", Age: 40, Phone: "556", Email: "bruno@example.com"}
+	for _, patient := range []*models.Patient{&alma, &bruno} {
+		if err := gorm.G[models.Patient](svc.DB.GormDB()).Create(t.Context(), patient); err != nil {
+			t.Fatalf("create patient: %v", err)
+		}
+	}
+	if _, err := gorm.G[models.Patient](svc.DB.GormDB()).Where("id = ?", bruno.ID).Delete(t.Context()); err != nil {
+		t.Fatalf("delete patient: %v", err)
+	}
+
 	bookings := []struct {
 		userID   uint
 		clinicID uint
@@ -55,7 +66,7 @@ func TestReport(t *testing.T) {
 		apnt := models.Appointment{
 			UserID:    b.userID,
 			ClinicID:  b.clinicID,
-			PatientID: 1,
+			PatientID: patientFor(b.clinicID, south.ID, alma.ID, bruno.ID),
 			BookedAt:  b.bookedAt,
 			Status:    b.status,
 			Price:     b.price,
@@ -100,6 +111,30 @@ func TestReport(t *testing.T) {
 		}
 	})
 
+	t.Run("selected month by patient, deleted patients included", func(t *testing.T) {
+		october := time.Date(2026, time.October, 1, 0, 0, 0, 0, mx)
+		report, err := svc.Report(t.Context(), 1, now, october)
+		if err != nil {
+			t.Fatalf("Report: %v", err)
+		}
+
+		// Most recently seen first: Alma on Oct 31, Bruno on Oct 10.
+		want := []models.RevenuePatient{
+			{UID: alma.UID, Name: "Alma", Total: 70000, Appointments: 1, LastAppointment: time.Date(2026, time.October, 31, 22, 0, 0, 0, mx)},
+			{UID: bruno.UID, Name: "Bruno", Deleted: true, Total: 90000, Appointments: 1, LastAppointment: time.Date(2026, time.October, 10, 9, 0, 0, 0, mx)},
+		}
+		if len(report.Patients) != len(want) || report.PatientCount != len(want) {
+			t.Fatalf("patients = %+v (count %d), want %+v", report.Patients, report.PatientCount, want)
+		}
+		for i, w := range want {
+			got := report.Patients[i]
+			if got.UID != w.UID || got.Name != w.Name || got.Deleted != w.Deleted || got.Total != w.Total ||
+				got.Appointments != w.Appointments || !got.LastAppointment.Equal(w.LastAppointment) {
+				t.Errorf("patient %d = %+v, want %+v", i, got, w)
+			}
+		}
+	})
+
 	t.Run("selected month by clinic, deleted clinics included", func(t *testing.T) {
 		october := time.Date(2026, time.October, 1, 0, 0, 0, 0, mx)
 		report, err := svc.Report(t.Context(), 1, now, october)
@@ -135,6 +170,45 @@ func TestReport(t *testing.T) {
 	})
 }
 
+func TestReportListsTheTenMostRecentPatients(t *testing.T) {
+	svc := newRevenueServiceForTests(t)
+	mx, err := time.LoadLocation(models.DefaultTimezone)
+	if err != nil {
+		t.Fatalf("load %s: %v", models.DefaultTimezone, err)
+	}
+	now := time.Date(2026, time.November, 20, 13, 0, 0, 0, mx)
+
+	for day := 1; day <= 12; day++ {
+		patient := models.Patient{UserID: 1, Name: fmt.Sprintf("Patient %02d", day), Age: 30, Phone: "555", Email: fmt.Sprintf("p%d@example.com", day)}
+		if err := gorm.G[models.Patient](svc.DB.GormDB()).Create(t.Context(), &patient); err != nil {
+			t.Fatalf("create patient: %v", err)
+		}
+		apnt := models.Appointment{
+			UserID:    1,
+			ClinicID:  1,
+			PatientID: patient.ID,
+			BookedAt:  time.Date(2026, time.November, day, 9, 0, 0, 0, mx),
+			Status:    models.AppointmentDone,
+			Price:     10000,
+			Token:     fmt.Sprintf("tok_recent_%d", day),
+		}
+		if err := gorm.G[models.Appointment](svc.DB.GormDB()).Create(t.Context(), &apnt); err != nil {
+			t.Fatalf("create appointment: %v", err)
+		}
+	}
+
+	report, err := svc.Report(t.Context(), 1, now, time.Time{})
+	if err != nil {
+		t.Fatalf("Report: %v", err)
+	}
+	if len(report.Patients) != 10 || report.PatientCount != 12 {
+		t.Fatalf("patients = %d of %d, want 10 of 12", len(report.Patients), report.PatientCount)
+	}
+	if first, last := report.Patients[0].Name, report.Patients[9].Name; first != "Patient 12" || last != "Patient 03" {
+		t.Errorf("patients run %s to %s, want Patient 12 to Patient 03", first, last)
+	}
+}
+
 func TestParseMonth(t *testing.T) {
 	start, ok := ParseMonth("2026-10")
 	if !ok || start.Format("2006-01-02 15:04 MST") != "2026-10-01 00:00 CST" {
@@ -155,7 +229,7 @@ func newRevenueServiceForTests(t *testing.T) *service {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := gdb.AutoMigrate(&models.Clinic{}, &models.Appointment{}); err != nil {
+	if err := gdb.AutoMigrate(&models.Clinic{}, &models.Patient{}, &models.Appointment{}); err != nil {
 		t.Fatalf("migrate: %v", err)
 	}
 
@@ -168,4 +242,14 @@ func newRevenueServiceForTests(t *testing.T) *service {
 	}
 
 	return svc
+}
+
+// patientFor books the deleted clinic's appointments for bruno and the rest
+// for alma.
+func patientFor(clinicID, southID, almaID, brunoID uint) uint {
+	if clinicID == southID {
+		return brunoID
+	}
+
+	return almaID
 }

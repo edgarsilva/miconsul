@@ -31,7 +31,7 @@ func TestRevenueHandlers(t *testing.T) {
 		if got := strings.Count(body, `href="/revenue?month=`); got != 12 {
 			t.Errorf("expected 12 month links, got %d", got)
 		}
-		for _, want := range []string{"Revenue Clinic", "$24,500", `href="/revenue"`} {
+		for _, want := range []string{"Revenue Clinic", "Revenue Patient", "$24,500", `href="/revenue"`} {
 			if !strings.Contains(body, want) {
 				t.Errorf("expected the page to show %q", want)
 			}

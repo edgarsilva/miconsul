@@ -658,6 +658,11 @@ func TestRevenueIndexPage(t *testing.T) {
 				{Start: october, Total: 1850000, Appointments: 15},
 			},
 			Selected: models.RevenueMonth{Start: october, Total: 1850000, Appointments: 15},
+			Patients: []models.RevenuePatient{
+				{UID: "ptnt_alma", Name: "Alma", Total: 1250000, Appointments: 10, LastAppointment: october.AddDate(0, 0, 30)},
+				{UID: "ptnt_bruno", Name: "Bruno", Deleted: true, Total: 600000, Appointments: 5, LastAppointment: october.AddDate(0, 0, 9)},
+			},
+			PatientCount: 37,
 			Clinics: []models.RevenueClinic{
 				{Name: "North", Total: 1200000, Appointments: 10},
 				{Name: "South", Deleted: true, Total: 650000, Appointments: 5},
@@ -679,6 +684,11 @@ func TestRevenueIndexPage(t *testing.T) {
 			"$18,500",
 			"65%",
 			"$24,250",
+			`href="/patients/ptnt_alma"`,
+			"$12,500",
+			"68%",
+			"31 Oct",
+			"Mostrando 2 de 37",
 			"Promedio mensual",
 		} {
 			if !strings.Contains(got, want) {
@@ -688,6 +698,9 @@ func TestRevenueIndexPage(t *testing.T) {
 		i := strings.Index(got, `data-chart="columns" data-chart-data="`)
 		if i < 0 || !strings.Contains(got[i:i+400], "values&#34;:[18500,1850]") {
 			t.Errorf("expected the column chart values oldest first, in pesos: %s", got[max(i, 0):max(i, 0)+400])
+		}
+		if strings.Contains(got, `href="/patients/ptnt_bruno"`) {
+			t.Errorf("expected no link to a deleted patient, whose page is gone")
 		}
 		if !strings.Contains(got, "badge-ghost") {
 			t.Errorf("expected deleted clinics to be marked")
