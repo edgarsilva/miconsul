@@ -758,3 +758,17 @@ func TestLinksToRevenueAreNotBoosted(t *testing.T) {
 		}
 	})
 }
+
+func TestNavbarLinksToTheDashboard(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		var html strings.Builder
+		c := NewCtx(fc, WithCurrentUser(models.User{UID: "usr_1"}))
+		if err := CmpNavbar(c).Render(fc.Context(), &html); err != nil {
+			t.Fatalf("render: %v", err)
+		}
+
+		if n := strings.Count(html.String(), `<a href="/dashboard" class="btn btn-ghost`); n != 2 {
+			t.Errorf("expected a Dashboard link in the desktop navbar and the mobile menu, got %d", n)
+		}
+	})
+}
