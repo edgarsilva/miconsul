@@ -334,8 +334,8 @@ func (s *service) CancelAppointment(ctx context.Context, appointment models.Appo
 }
 
 // RequestAppointmentDateChange marks a loaded appointment as pending a new
-// date. It returns ErrAppointmentChanged when the status changed since the
-// appointment was loaded.
+// date and records a feed event. It returns ErrAppointmentChanged when the
+// status changed since the appointment was loaded.
 func (s *service) RequestAppointmentDateChange(ctx context.Context, appointment models.Appointment) (models.Appointment, error) {
 	now := time.Now().UTC()
 	if err := s.setAppointmentStatus(ctx, appointment, models.AppointmentPending, "pending_at", now); err != nil {
@@ -344,7 +344,7 @@ func (s *service) RequestAppointmentDateChange(ctx context.Context, appointment 
 	appointment.Status = models.AppointmentPending
 	appointment.PendingAt = now
 
-	return appointment, nil
+	return appointment, s.recordPatientFeedEvent(ctx, appointment, models.EventActionChanged)
 }
 
 // recordFeedEvent records an appointment feed event. It is best-effort: a

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"miconsul/internal/lib/amount"
+	"miconsul/internal/lib/libtime"
 	"miconsul/internal/lib/number"
 	"miconsul/internal/models"
 	"time"
@@ -379,7 +380,7 @@ func feedEventColorClass(action string) string {
 		return "text-success"
 	case "canceled", "deleted":
 		return "text-error"
-	case "updated":
+	case "updated", "changed":
 		return "text-warning"
 	default:
 		return "text-base-content/60"
@@ -399,7 +400,7 @@ func feedEventShortDateTime(t time.Time) string {
 		return ""
 	}
 
-	return t.Format("02 Jan, 3:04pm")
+	return libtime.InTimezone(t, models.DefaultTimezone).Format("02 Jan, 3:04pm")
 }
 
 func feedEventTitle(c *Ctx, event models.FeedEvent) string {

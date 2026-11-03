@@ -5,7 +5,7 @@ import "miconsul/internal/models"
 templ CmpStatusBadge(c *Ctx, status models.AppointmentStatus) {
 	switch status {
 		case "viewed":
-			<div class="badge badge-secondary bagce-sm">
+			<div class="badge badge-secondary badge-sm">
 				{ c.l("str.viewed") }
 			</div>
 		case "confirmed":
