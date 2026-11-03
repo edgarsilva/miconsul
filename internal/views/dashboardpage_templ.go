@@ -730,7 +730,7 @@ func feedEventColorClass(action string) string {
 		return "text-success"
 	case "canceled", "deleted":
 		return "text-error"
-	case "updated":
+	case "updated", "changed":
 		return "text-warning"
 	default:
 		return "text-base-content/60"
