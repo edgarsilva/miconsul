@@ -21,7 +21,9 @@ templ CmpNavbar(c *Ctx) {
 			<div class="navbar-end flex items-center">
 				@navbarSearch()
 				@navbarDesktop(c)
+				@navbarThemeBtn(c)
 				@navbarUserAvatar(c)
+				@navbarAuthLink(c)
 				@navbarMobile(c)
 			</div>
 		</nav>
@@ -70,7 +72,11 @@ templ navbarDesktop(c *Ctx) {
 		<a href="/patients" class={ "btn btn-ghost text-sm", navbarActiveLink(c, "/patients") }>{ c.l("nav.patients") }</a>
 		<a href="/revenue" hx-boost="false" class={ "btn btn-ghost text-sm", navbarActiveLink(c, "/revenue") }>{ c.l("nav.revenue") }</a>
 		<div class="divider divider-horizontal"></div>
-		@navbarThemeBtn(c)
+	</div>
+}
+
+templ navbarAuthLink(c *Ctx) {
+	<div class="hidden lg:flex">
 		if c.CurrentUser.IsLoggedIn() {
 			<a class="btn btn-ghost" href="/logout">
 				{ c.l("btn.logout") }
