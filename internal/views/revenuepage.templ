@@ -19,6 +19,7 @@ templ RevenueIndexPage(c *Ctx, report models.RevenueReport) {
 			</hgroup>
 			@revenueSelectedStats(c, report)
 			@revenueClinics(c, report)
+			@revenuePatients(c, report)
 			@revenueMonths(c, report)
 		</section>
 	}
@@ -44,6 +45,54 @@ templ revenueSelectedStats(c *Ctx, report models.RevenueReport) {
 	</div>
 }
 
+templ revenuePatients(c *Ctx, report models.RevenueReport) {
+	<div class="app-card flex flex-col gap-4">
+		<h2 class="font-semibold text-lg">{ c.l("str.revenue_by_patient") }</h2>
+		if len(report.Patients) == 0 {
+			<p class="text-sm text-base-content/60 py-2">{ c.l("str.revenue_none") }</p>
+		} else {
+			<div class="overflow-x-auto">
+				<table class="table table-sm" hx-boost:inherited="true">
+					<thead>
+						<tr>
+							<th>{ c.l("str.patient") }</th>
+							<th>{ c.l("str.revenue_last_appointment") }</th>
+							<th class="text-right">{ c.l("str.appointments") }</th>
+							<th class="text-right">{ c.l("str.revenue") }</th>
+							<th class="text-right">{ c.l("str.revenue_share") }</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, patient := range report.Patients {
+							<tr class="hover:bg-base-200/60">
+								<td>
+									if patient.Deleted || patient.UID == "" {
+										{ patient.Name }
+									} else {
+										<a href={ templ.URL("/patients/" + patient.UID) } class="link font-medium underline-offset-4">{ patient.Name }</a>
+									}
+									if patient.Deleted {
+										<span class="badge badge-ghost badge-xs ml-1">{ c.l("str.deleted") }</span>
+									}
+								</td>
+								<td class="tabular-nums text-base-content/70">{ revenueDayLabel(c, patient.LastAppointment) }</td>
+								<td class="text-right tabular-nums">{ number.Format(patient.Appointments, c.Locale) }</td>
+								<td class="text-right tabular-nums">{ amount.Format(patient.Total, c.Locale) }</td>
+								<td class="text-right tabular-nums text-base-content/60">{ strconv.Itoa(patient.SharePercent(report.Selected.Total)) + "%" }</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+			if report.PatientCount > len(report.Patients) {
+				<p class="text-xs text-base-content/60">
+					{ c.l("str.showing") } { number.Format(len(report.Patients), c.Locale) } { c.l("str.of") } { number.Format(report.PatientCount, c.Locale) }
+				</p>
+			}
+		}
+	</div>
+}
+
 templ revenueClinics(c *Ctx, report models.RevenueReport) {
 	<div class="app-card flex flex-col gap-6">
 		<h2 class="font-semibold text-lg">{ c.l("str.revenue_by_clinic") }</h2>
@@ -58,7 +107,7 @@ templ revenueClinics(c *Ctx, report models.RevenueReport) {
 							<span class="text-base-content/70 truncate">
 								{ clinic.Name }
 								if clinic.Deleted {
-									<span class="badge badge-ghost badge-xs ml-1">{ c.l("str.clinic_deleted") }</span>
+									<span class="badge badge-ghost badge-xs ml-1">{ c.l("str.deleted") }</span>
 								}
 							</span>
 							<span class="ml-auto tabular-nums font-medium">{ amount.Format(clinic.Total, c.Locale) }</span>
@@ -87,9 +136,9 @@ templ revenueMonths(c *Ctx, report models.RevenueReport) {
 				</thead>
 				<tbody>
 					for _, month := range report.Months {
-						<tr class={ templ.KV("bg-base-200", month.Start.Equal(report.Selected.Start)) }>
+						<tr class={ "hover:bg-base-200/60", templ.KV("bg-base-200", month.Start.Equal(report.Selected.Start)) }>
 							<td>
-								<a href={ templ.URL("/revenue?month=" + month.Start.Format("2006-01")) } class="link link-hover">
+								<a href={ templ.URL("/revenue?month=" + month.Start.Format("2006-01")) } class="link font-medium underline-offset-4">
 									{ revenueMonthLabel(c, month.Start) }
 								</a>
 							</td>
@@ -163,6 +212,11 @@ func revenueChartJSON(data revenueChartData) string {
 	}
 
 	return string(b)
+}
+
+// revenueDayLabel is the day and the month's first three letters, e.g. 31 Oct.
+func revenueDayLabel(c *Ctx, t time.Time) string {
+	return strconv.Itoa(t.Day()) + " " + revenueMonthShortLabel(c, t)
 }
 
 // revenueMonthShortLabel is the month's first three letters, e.g. Oct.

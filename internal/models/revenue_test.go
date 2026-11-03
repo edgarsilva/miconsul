@@ -18,3 +18,12 @@ func TestRevenueClinicSharePercent(t *testing.T) {
 		}
 	}
 }
+
+func TestRevenuePatientSharePercent(t *testing.T) {
+	if got := (RevenuePatient{Total: 650000}).SharePercent(1850000); got != 35 {
+		t.Errorf("SharePercent = %d, want 35", got)
+	}
+	if got := (RevenuePatient{Total: 100}).SharePercent(0); got != 0 {
+		t.Errorf("SharePercent of nothing = %d, want 0", got)
+	}
+}

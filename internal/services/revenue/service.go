@@ -22,6 +22,10 @@ const reportMonths = 12
 // monthly average covers.
 const averageMonths = 12
 
+// recentPatients is how many of the selected month's patients the report
+// lists, most recently seen first.
+const recentPatients = 10
+
 type service struct {
 	*server.Server
 }
@@ -35,7 +39,8 @@ func NewService(s *server.Server) (*service, error) {
 }
 
 // Report returns the user's revenue for the last 12 months up to now, newest
-// first, the selected month's revenue by clinic, and the monthly average of
+// first, the selected month's revenue by clinic and by its 10 most recently
+// seen patients, and the monthly average of
 // the 12 complete months before the current one. Months follow the clinic
 // timezone; a selected month outside the report means the current month.
 func (s *service) Report(ctx context.Context, userID uint, now time.Time, selected time.Time) (models.RevenueReport, error) {
@@ -57,6 +62,8 @@ func (s *service) Report(ctx context.Context, userID uint, now time.Time, select
 		months[i].Start = start
 	}
 
+	byPatient := map[uint]*models.RevenuePatient{}
+	patientIDs := []uint{}
 	byClinic := map[uint]*models.RevenueClinic{}
 	clinicIDs := []uint{}
 	for _, a := range done {
@@ -71,6 +78,18 @@ func (s *service) Report(ctx context.Context, userID uint, now time.Time, select
 		if !start.Equal(selected) {
 			continue
 		}
+		patient, ok := byPatient[a.PatientID]
+		if !ok {
+			patient = &models.RevenuePatient{}
+			byPatient[a.PatientID] = patient
+			patientIDs = append(patientIDs, a.PatientID)
+		}
+		patient.Total += a.Price
+		patient.Appointments++
+		if bookedAt := libtime.InTimezone(a.BookedAt, models.DefaultTimezone); bookedAt.After(patient.LastAppointment) {
+			patient.LastAppointment = bookedAt
+		}
+
 		clinic, ok := byClinic[a.ClinicID]
 		if !ok {
 			clinic = &models.RevenueClinic{}
@@ -81,9 +100,20 @@ func (s *service) Report(ctx context.Context, userID uint, now time.Time, select
 		clinic.Appointments++
 	}
 
+	if err := s.namePatients(ctx, userID, byPatient, patientIDs); err != nil {
+		return models.RevenueReport{}, fmt.Errorf("load patient names: %w", err)
+	}
 	if err := s.nameClinics(ctx, userID, byClinic, clinicIDs); err != nil {
 		return models.RevenueReport{}, fmt.Errorf("load clinic names: %w", err)
 	}
+
+	patients := make([]models.RevenuePatient, 0, len(byPatient))
+	for _, id := range patientIDs {
+		patients = append(patients, *byPatient[id])
+	}
+	slices.SortStableFunc(patients, func(a, b models.RevenuePatient) int {
+		return cmp.Or(b.LastAppointment.Compare(a.LastAppointment), cmp.Compare(a.Name, b.Name))
+	})
 
 	clinics := make([]models.RevenueClinic, 0, len(byClinic))
 	for _, id := range clinicIDs {
@@ -101,6 +131,8 @@ func (s *service) Report(ctx context.Context, userID uint, now time.Time, select
 	report := models.RevenueReport{
 		Months:         months[:reportMonths],
 		Selected:       months[slices.IndexFunc(monthStarts, selected.Equal)],
+		Patients:       patients[:min(len(patients), recentPatients)],
+		PatientCount:   len(patients),
 		Clinics:        clinics,
 		MonthlyAverage: completed / averageMonths,
 	}
@@ -124,14 +156,39 @@ func ParseMonth(value string) (start time.Time, ok bool) {
 	return start, true
 }
 
-// doneAppointments returns the price, clinic and booking time of the user's
-// done appointments booked in [start, end).
+// doneAppointments returns the price, patient, clinic and booking time of the
+// user's done appointments booked in [start, end).
 func (s *service) doneAppointments(ctx context.Context, userID uint, start, end time.Time) ([]models.Appointment, error) {
 	return gorm.G[models.Appointment](s.DB.GormDB()).
-		Select("booked_at", "price", "clinic_id").
+		Select("booked_at", "price", "patient_id", "clinic_id").
 		Where("user_id = ? AND status = ?", userID, models.AppointmentDone).
 		Where("booked_at >= ? AND booked_at < ?", start.UTC(), end.UTC()).
 		Find(ctx)
+}
+
+// namePatients fills in the uids and names of the user's patients, deleted
+// ones included.
+func (s *service) namePatients(ctx context.Context, userID uint, byPatient map[uint]*models.RevenuePatient, ids []uint) error {
+	if len(ids) == 0 {
+		return nil
+	}
+
+	var patients []models.Patient
+	err := s.DB.WithContext(ctx).Unscoped().
+		Select("id", "uid", "name", "deleted_at").
+		Where("user_id = ? AND id IN ?", userID, ids).
+		Find(&patients).Error
+	if err != nil {
+		return err
+	}
+
+	for _, patient := range patients {
+		byPatient[patient.ID].UID = patient.UID
+		byPatient[patient.ID].Name = patient.Name
+		byPatient[patient.ID].Deleted = patient.DeletedAt.Valid
+	}
+
+	return nil
 }
 
 // nameClinics fills in the names of the user's clinics, deleted ones included.
