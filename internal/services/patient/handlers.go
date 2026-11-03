@@ -31,7 +31,12 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/patients", "Failed to load patients", view.LevelError)
 	}
 
-	return view.Render(c, view.PatientIndexPage(vc, patients))
+	lastAppointments, err := s.FindLastAppointmentsByPatient(c.Context(), cu.ID, patients)
+	if err != nil {
+		return s.RedirectWithToast(c, "/patients", "Failed to load patients", view.LevelError)
+	}
+
+	return view.Render(c, view.PatientIndexPage(vc, patients, lastAppointments))
 }
 
 // HandleIndexSearch runs the index search on patients.
@@ -49,8 +54,14 @@ func (s *service) HandleIndexSearch(c fiber.Ctx) error {
 		return view.Render(c, view.CmpSearchFailedToast())
 	}
 
+	lastAppointments, err := s.FindLastAppointmentsByPatient(c.Context(), cu.ID, patients)
+	if err != nil {
+		c.Status(fiber.StatusInternalServerError)
+		return view.Render(c, view.CmpSearchFailedToast())
+	}
+
 	vc := view.NewCtx(c)
-	return view.Render(c, view.PatientList(vc, patients))
+	return view.Render(c, view.PatientList(vc, patients, lastAppointments))
 }
 
 // HandleNewPage renders the new patient page.

@@ -6,7 +6,9 @@ import (
 	"time"
 )
 
-templ PatientIndexPage(c *Ctx, patients []models.Patient) {
+// PatientIndexPage lists the patients with the booked time of their last done
+// appointment, keyed by patient ID.
+templ PatientIndexPage(c *Ctx, patients []models.Patient, lastAppointments map[uint]time.Time) {
 	@DefaultLayout(c) {
 		<section id="patients_section" class="grow flex flex-col px-0 sm:px-4 pt-4 md:pt-6 md:pb-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<div
@@ -35,7 +37,7 @@ templ PatientIndexPage(c *Ctx, patients []models.Patient) {
 					</a>
 				</hgroup>
 				if (len(patients) > 0) {
-					@PatientList(c, patients)
+					@PatientList(c, patients, lastAppointments)
 				} else {
 					@PatientEmptyList(c)
 				}
@@ -53,15 +55,19 @@ templ PatientFormPage(c *Ctx, patient models.Patient) {
 	}
 }
 
-templ PatientList(c *Ctx, patients []models.Patient) {
+// PatientList renders a row per patient; lastAppointments holds the booked time
+// of each patient's last done appointment, keyed by patient ID.
+templ PatientList(c *Ctx, patients []models.Patient, lastAppointments map[uint]time.Time) {
 	<ul id="patients_list" role="list" class="app-card divide-y divide-base-content/10 overflow-hidden">
 		for _, patient := range patients {
-			@PatientLi(c, patient)
+			@PatientLi(c, patient, lastAppointments[patient.ID])
 		}
 	</ul>
 }
 
-templ PatientLi(c *Ctx, patient models.Patient) {
+// PatientLi is a patient row; lastAppointment is zero when the patient has no
+// done appointment.
+templ PatientLi(c *Ctx, patient models.Patient, lastAppointment time.Time) {
 	<li class="relative flex justify-between items-center gap-x-6 px-2 py-2 hover:bg-base-200/75">
 		<div class="flex items-center min-w-0 gap-x-4">
 			@CmpAvatar(patient)
@@ -73,7 +79,11 @@ templ PatientLi(c *Ctx, patient models.Patient) {
 				</p>
 				<p class="text-xs leading-5 text-base-content/50">
 					{ c.l("str.last_appointment") }
-					@CmpTime(time.Now())
+					if lastAppointment.IsZero() {
+						<span>—</span>
+					} else {
+						@CmpTimeInTimezone(lastAppointment, models.DefaultTimezone)
+					}
 				</p>
 			</div>
 		</div>
