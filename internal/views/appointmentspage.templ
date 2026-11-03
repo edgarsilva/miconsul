@@ -45,8 +45,8 @@ func appointmentToggleStatusFilter(currentStatus, status string) string {
 }
 
 templ AppointmentIndexPage(c *Ctx, appointments []models.Appointment, selectedPatient models.Patient, selectedClinic models.Clinic) {
-	@BackBtnLayout(c, "/") {
-		<section class="grow flex flex-col px-0 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
+	@DefaultLayout(c) {
+		<section class="grow flex flex-col px-0 sm:px-4 py-0 md:pb-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<div
 				class="relative"
 			>

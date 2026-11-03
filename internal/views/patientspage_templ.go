@@ -44,7 +44,7 @@ func PatientIndexPage(c *Ctx, patients []models.Patient) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section id=\"patients_section\" class=\"grow flex flex-col px-0 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto\"><div class=\"relative\"><hgroup class=\"md:flex md:justify-between md:items-center pb-4 px-2 md:px-0 w-full\" hx-boost:inherited=\"true\"><div class=\"md:flex md:gap-2 items-baseline w-full md:justify-between md:pr-4\"><h1 class=\"flex w-full md:w-auto font-bold text-2xl mb-4 md:mb-0\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section id=\"patients_section\" class=\"grow flex flex-col px-0 sm:px-4 py-0 md:pb-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto\"><div class=\"relative\"><hgroup class=\"md:flex md:justify-between md:items-center pb-4 px-2 md:px-0 w-full\" hx-boost:inherited=\"true\"><div class=\"md:flex md:gap-2 items-baseline w-full md:justify-between md:pr-4\"><h1 class=\"flex w-full md:w-auto font-bold text-2xl mb-4 md:mb-0\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -128,7 +128,7 @@ func PatientIndexPage(c *Ctx, patients []models.Patient) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = BackBtnLayout(c, "/").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = DefaultLayout(c).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

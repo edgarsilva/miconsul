@@ -48,7 +48,7 @@ func RevenueIndexPage(c *Ctx, report models.RevenueReport) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section class=\"grow flex flex-col gap-6 px-2 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto\"><hgroup><h1 class=\"font-bold text-2xl\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section class=\"grow flex flex-col gap-6 px-2 sm:px-4 py-0 md:pb-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto\"><hgroup><h1 class=\"font-bold text-2xl\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
