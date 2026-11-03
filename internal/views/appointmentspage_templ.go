@@ -732,7 +732,7 @@ func AppointmentListSection(c *Ctx, props AppointmentListSectionProps) templ.Com
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "</div></div><details class=\"dropdown dropdown-end md:hidden\"><summary class=\"flex items-center gap-1 list-none cursor-pointer rounded-md px-3 py-2 text-sm font-medium bg-secondary/35 text-secondary-content\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "</div></div><details class=\"group dropdown dropdown-end md:hidden\"><summary class=\"flex items-center gap-1 list-none cursor-pointer rounded-md px-3 py-2 text-sm font-medium bg-secondary/35 text-secondary-content\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -778,7 +778,7 @@ func AppointmentListSection(c *Ctx, props AppointmentListSectionProps) templ.Com
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = CmpChevronDownIcon("size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpChevronDownIcon("size-4 transition-transform group-open:rotate-180").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
