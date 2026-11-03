@@ -8,7 +8,7 @@ templ CmpNavbar(c *Ctx) {
 			<div class="navbar-start">
 				<a
 					href={ templ.URL(navbarHomePath(c)) }
-					class="relative px-2 rounded-lg self-stretch flex items-center text-xl font-semibold hover:ring hover:ring-secondary hover:bg-secondary/50 active:ring"
+					class="relative pr-2 lg:pl-2 rounded-lg self-stretch flex items-center text-xl font-semibold hover:ring hover:ring-secondary hover:bg-secondary/50 active:ring"
 				>
 					<div class="avatar overflow-hidden mr-2">
 						<div class="h-10">
@@ -27,6 +27,7 @@ templ CmpNavbar(c *Ctx) {
 				@navbarMobile(c)
 			</div>
 		</nav>
+		@navbarSearchFab(c)
 	</header>
 }
 
@@ -46,17 +47,25 @@ templ navbarThemeBtn(c *Ctx) {
 
 templ navbarUserAvatar(c *Ctx) {
 	<a href="/profile" class="px-2">
-		@CmpAvatar(c.CurrentUser)
+		@CmpAvatar(c.CurrentUser, "max-lg:w-9", "max-lg:[&>span]:text-base")
 	</a>
 }
 
 templ navbarSearch() {
-	<div class="flex gap-2 mr-2 items-center">
+	<div class="hidden lg:flex gap-2 mr-2 items-center">
 		<button class="p-1 hover:outline rounded-xl" aria-label="Global Search">
 			@CmpSearchIcon("")
 		</button>
 		<kbd class="hidden md:kbd md:kbd-sm">ctrl</kbd>
 		<kbd class="hidden md:kbd md:kbd-sm">/</kbd>
+	</div>
+}
+
+templ navbarSearchFab(c *Ctx) {
+	<div class="fab bottom-7 lg:hidden">
+		<button class="btn btn-lg btn-circle btn-secondary shadow-xl" aria-label={ c.l("str.search_anything") }>
+			@CmpSearchIcon("")
+		</button>
 	</div>
 }
 
