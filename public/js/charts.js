@@ -1,18 +1,9 @@
-// Renders the daisyUI ApexCharts charts on a page. A chart is an element with
-// data-chart="<kind>" and its data as JSON in data-chart-data. ApexCharts and
-// its stylesheet load once, from jsdelivr with SRI, the first time a page has a
-// chart. Colors are theme variables, so charts follow theme changes.
+// Draws the daisyUI ApexCharts charts on a page: every element with
+// data-chart="<kind>" and its data as JSON in data-chart-data. Pages include
+// it deferred after their charts; ChartsLayout loads ApexCharts deferred in
+// <head>, so by document order ApexCharts runs first and the page is parsed.
+// Colors are theme variables, so charts follow theme changes.
 (() => {
-  const apexVersion = "6.10.0";
-  const apexScript = {
-    src: `https://cdn.jsdelivr.net/npm/apexcharts@${apexVersion}/dist/apexcharts.min.js`,
-    integrity: "sha384-5EG9CeSqSzymwY307XCL4zMqifjcpwh/uGHYg1CPiyMNHVvfCcx8VZi2JzW2035O",
-  };
-  const apexStyles = {
-    href: `https://cdn.jsdelivr.net/npm/apexcharts@${apexVersion}/dist/apexcharts.css`,
-    integrity: "sha384-xiwYvoUk6woTSrViYmFRB6voHXkdMsbOIPNggFn88nizTDFhys4ThD1QO/AhVyJA",
-  };
-
   const baseContent = "var(--color-base-content)";
   const shade = (transparent) => `color-mix(in srgb, var(--color-base-content), transparent ${transparent}%)`;
   // Tooltip dots use classes, not inline styles, which the CSP blocks.
@@ -98,45 +89,13 @@
 
   const kinds = { columns, donut };
 
-  const loadApex = () => {
-    if (window.ApexCharts) return Promise.resolve();
-    if (!document.querySelector(`link[href="${apexStyles.href}"]`)) {
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = apexStyles.href;
-      link.integrity = apexStyles.integrity;
-      link.crossOrigin = "anonymous";
-      document.head.append(link);
-    }
-    let script = document.querySelector(`script[src="${apexScript.src}"]`);
-    if (!script) {
-      script = document.createElement("script");
-      script.src = apexScript.src;
-      script.integrity = apexScript.integrity;
-      script.crossOrigin = "anonymous";
-      document.head.append(script);
-    }
-    return new Promise((resolve, reject) => {
-      script.addEventListener("load", resolve, { once: true });
-      script.addEventListener("error", reject, { once: true });
-    });
-  };
-
-  const render = async () => {
-    const elements = [...document.querySelectorAll("[data-chart]:not([data-chart-rendered])")];
-    if (elements.length === 0) return;
-    await loadApex();
-    for (const el of elements) {
+  const renderCharts = () => {
+    for (const el of document.querySelectorAll("[data-chart]")) {
       const build = kinds[el.dataset.chart];
       if (!build) continue;
-      el.dataset.chartRendered = "true";
       new window.ApexCharts(el, build(JSON.parse(el.dataset.chartData))).render();
     }
   };
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", render, { once: true });
-  } else {
-    render();
-  }
+  renderCharts();
 })();

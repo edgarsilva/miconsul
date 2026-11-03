@@ -679,7 +679,7 @@ func TestRevenueIndexPage(t *testing.T) {
 		for _, want := range []string{
 			`data-chart="columns"`,
 			`data-chart="donut"`,
-			`<script src="/public/js/charts.js?v=` + assetVersion + `">`,
+			`<script defer src="/public/js/charts.js?v=` + assetVersion + `">`,
 			`href="/revenue?month=2026-10"`,
 			"$18,500",
 			"65%",
@@ -704,6 +704,57 @@ func TestRevenueIndexPage(t *testing.T) {
 		}
 		if !strings.Contains(got, "badge-ghost") {
 			t.Errorf("expected deleted clinics to be marked")
+		}
+	})
+}
+
+func TestChartsLayoutLoadsApexChartsBeforeTheChartsScript(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		var html strings.Builder
+		if err := RevenueIndexPage(NewCtx(fc), models.RevenueReport{}).Render(fc.Context(), &html); err != nil {
+			t.Fatalf("render: %v", err)
+		}
+
+		got := html.String()
+		headEnd := strings.Index(got, "</head>")
+		head := got[:headEnd]
+		if !strings.Contains(head, `<script defer src="https://cdn.jsdelivr.net/npm/apexcharts@6.10.0/dist/apexcharts.min.js" integrity="sha384-`) {
+			t.Errorf("expected <head> to load ApexCharts deferred, with SRI")
+		}
+		if !strings.Contains(head, `apexcharts.css" integrity="sha384-`) {
+			t.Errorf("expected the ApexCharts stylesheet with SRI in <head>")
+		}
+		script := strings.Index(got, `<script defer src="/public/js/charts.js`)
+		lastChart := strings.LastIndex(got, "data-chart=")
+		if script < headEnd || script < lastChart || strings.Count(got, "charts.js") != 1 {
+			t.Errorf("expected charts.js once, deferred, in the page after its charts")
+		}
+	})
+}
+
+// Links into chart pages must be full page loads: htmx drops the <head> of
+// boosted pages, and ChartsLayout loads ApexCharts there.
+func TestLinksToRevenueAreNotBoosted(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		c := NewCtx(fc, WithCurrentUser(models.User{UID: "usr_1"}))
+		october := time.Date(2026, time.October, 1, 0, 0, 0, 0, time.UTC)
+		report := models.RevenueReport{
+			Months:   []models.RevenueMonth{{Start: october}},
+			Selected: models.RevenueMonth{Start: october},
+		}
+
+		var html strings.Builder
+		if err := RevenueIndexPage(c, report).Render(fc.Context(), &html); err != nil {
+			t.Fatalf("render: %v", err)
+		}
+
+		got := html.String()
+		if n := strings.Count(got, `<a href="/revenue" hx-boost="false"`); n != 2 {
+			t.Errorf("expected both navbar Revenue links unboosted, got %d", n)
+		}
+		months := got[strings.Index(got, `data-chart="columns"`):]
+		if strings.Contains(months[:strings.Index(months, "</table>")], "hx-boost") {
+			t.Errorf("expected the month links not to be boosted")
 		}
 	})
 }

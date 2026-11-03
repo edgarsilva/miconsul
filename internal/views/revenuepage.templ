@@ -11,7 +11,7 @@ import (
 )
 
 templ RevenueIndexPage(c *Ctx, report models.RevenueReport) {
-	@BackBtnLayout(c, "/dashboard") {
+	@ChartsLayout(c) {
 		<section class="grow flex flex-col gap-6 px-2 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<hgroup>
 				<h1 class="font-bold text-2xl">{ c.l("str.revenue") }</h1>
@@ -22,6 +22,7 @@ templ RevenueIndexPage(c *Ctx, report models.RevenueReport) {
 			@revenuePatients(c, report)
 			@revenueMonths(c, report)
 		</section>
+		<script defer src={ "/public/js/charts.js?v=" + assetVersion }></script>
 	}
 }
 
@@ -126,7 +127,7 @@ templ revenueMonths(c *Ctx, report models.RevenueReport) {
 		<h2 class="font-semibold text-lg">{ c.l("str.revenue_last_12_months") }</h2>
 		<div class={ "w-full", revenueChartWrapperClasses } data-chart="columns" data-chart-data={ revenueMonthsChartData(c, report) }></div>
 		<div class="overflow-x-auto">
-			<table class="table table-sm" hx-boost:inherited="true">
+			<table class="table table-sm">
 				<thead>
 					<tr>
 						<th>{ c.l("str.month") }</th>
@@ -150,7 +151,6 @@ templ revenueMonths(c *Ctx, report models.RevenueReport) {
 			</table>
 		</div>
 	</div>
-	<script src={ "/public/js/charts.js?v=" + assetVersion }></script>
 }
 
 // revenueChartWrapperClasses style the ApexCharts tooltips with the theme, as in
