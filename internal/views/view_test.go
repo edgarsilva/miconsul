@@ -699,6 +699,11 @@ func TestRevenueIndexPage(t *testing.T) {
 		if i < 0 || !strings.Contains(got[i:i+400], "values&#34;:[18500,1850]") {
 			t.Errorf("expected the column chart values oldest first, in pesos: %s", got[max(i, 0):max(i, 0)+400])
 		}
+		d := strings.Index(got, `data-chart="donut" data-chart-data="`)
+		if d < 0 || !strings.Contains(got[d:d+600], "dots&#34;:[&#34;bg-base-content&#34;,&#34;bg-base-content/70&#34;]") ||
+			!strings.Contains(got[d:d+600], "opacities&#34;:[1,0.7]") {
+			t.Errorf("expected the donut dot classes and opacities from Go: %s", got[max(d, 0):max(d, 0)+600])
+		}
 		if strings.Contains(got, `href="/patients/ptnt_bruno"`) {
 			t.Errorf("expected no link to a deleted patient, whose page is gone")
 		}
@@ -728,6 +733,13 @@ func TestChartsLayoutLoadsApexChartsBeforeTheChartsScript(t *testing.T) {
 		lastChart := strings.LastIndex(got, "data-chart=")
 		if script < headEnd || script < lastChart || strings.Count(got, "charts.js") != 1 {
 			t.Errorf("expected charts.js once, deferred, in the page after its charts")
+		}
+		tooltip := strings.Index(got, `<template id="chart-tooltip">`)
+		if tooltip < strings.Index(got, "</section>") || tooltip > script || strings.Count(got, `id="chart-tooltip"`) != 1 {
+			t.Errorf("expected one tooltip template after the charts, outside them, before charts.js")
+		}
+		if !strings.Contains(got, `<span data-tooltip-label></span>: <b`) {
+			t.Errorf("expected the tooltip label and value separated by a colon")
 		}
 	})
 }

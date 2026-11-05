@@ -22,6 +22,7 @@ templ RevenueIndexPage(c *Ctx, report models.RevenueReport) {
 			@revenuePatients(c, report)
 			@revenueMonths(c, report)
 		</section>
+		@revenueChartTooltip()
 		<script defer src={ "/public/js/charts.js?v=" + assetVersion }></script>
 	}
 }
@@ -157,22 +158,56 @@ templ revenueMonths(c *Ctx, report models.RevenueReport) {
 // the daisyUI charts.
 const revenueChartWrapperClasses = "[&_.apexcharts-tooltip]:bg-base-200! [&_.apexcharts-tooltip]:border-base-content/5! [&_.apexcharts-tooltip]:shadow-xl! [&_.apexcharts-tooltip]:rounded-box! [&_.apexcharts-svg]:outline-none"
 
-// revenueShadeClass is the legend dot color of the i-th clinic; it matches the
-// donut slice colors in public/js/charts.js.
+// revenueChartTooltip is the tooltip both charts clone: public/js/charts.js
+// fills the dot class, label and value. It sits outside the charts, whose
+// contents ApexCharts redraws.
+templ revenueChartTooltip() {
+	<template id="chart-tooltip">
+		<div class="bg-base-100 border-(length:--border) border-base-content/10 rounded-box p-3 text-xs">
+			<div class="flex items-center gap-2">
+				<span class="size-2 rounded-selector" data-tooltip-dot></span>
+				<span class="text-base-content/70"><span data-tooltip-label></span>: <b class="text-base-content ml-1" data-tooltip-value></b></span>
+			</div>
+		</div>
+	</template>
+}
+
+// revenueShade is a clinic's color: the base content at an opacity. The class
+// colors legend and tooltip dots, since the CSP blocks inline styles; the
+// opacity fills its donut slice.
+type revenueShade struct {
+	class   string
+	opacity float64
+}
+
+var revenueShades = []revenueShade{
+	{class: "bg-base-content", opacity: 1},
+	{class: "bg-base-content/70", opacity: 0.7},
+	{class: "bg-base-content/50", opacity: 0.5},
+	{class: "bg-base-content/30", opacity: 0.3},
+}
+
+// revenueShadeAt is the shade of the i-th clinic; shades repeat past the last.
+func revenueShadeAt(i int) revenueShade {
+	return revenueShades[i%len(revenueShades)]
+}
+
+// revenueShadeClass is the dot color of the i-th clinic.
 func revenueShadeClass(i int) string {
-	shades := []string{"bg-base-content", "bg-base-content/70", "bg-base-content/50", "bg-base-content/30"}
-	return shades[i%len(shades)]
+	return revenueShadeAt(i).class
 }
 
 // revenueChartData is the data of a chart in public/js/charts.js.
 type revenueChartData struct {
-	Name       string   `json:"name,omitempty"`
-	Labels     []string `json:"labels"`
-	Titles     []string `json:"titles,omitempty"`
-	Values     []int    `json:"values"`
-	Formatted  []string `json:"formatted"`
-	Total      string   `json:"total,omitempty"`
-	TotalLabel string   `json:"totalLabel,omitempty"`
+	Name       string    `json:"name,omitempty"`
+	Labels     []string  `json:"labels"`
+	Titles     []string  `json:"titles,omitempty"`
+	Values     []int     `json:"values"`
+	Formatted  []string  `json:"formatted"`
+	Dots       []string  `json:"dots"`
+	Opacities  []float64 `json:"opacities,omitempty"`
+	Total      string    `json:"total,omitempty"`
+	TotalLabel string    `json:"totalLabel,omitempty"`
 }
 
 // revenueMonthsChartData is the column chart of the last 12 months, oldest
@@ -184,6 +219,7 @@ func revenueMonthsChartData(c *Ctx, report models.RevenueReport) string {
 		data.Titles = append(data.Titles, revenueMonthLabel(c, month.Start))
 		data.Values = append(data.Values, month.Total/100)
 		data.Formatted = append(data.Formatted, amount.Format(month.Total, c.Locale))
+		data.Dots = append(data.Dots, revenueShades[0].class)
 	}
 
 	return revenueChartJSON(data)
@@ -196,10 +232,13 @@ func revenueClinicsChartData(c *Ctx, report models.RevenueReport) string {
 		Total:      amount.Format(report.Selected.Total, c.Locale),
 		TotalLabel: c.l("str.revenue"),
 	}
-	for _, clinic := range report.Clinics {
+	for i, clinic := range report.Clinics {
+		shade := revenueShadeAt(i)
 		data.Labels = append(data.Labels, clinic.Name)
 		data.Values = append(data.Values, clinic.Total/100)
 		data.Formatted = append(data.Formatted, amount.Format(clinic.Total, c.Locale))
+		data.Dots = append(data.Dots, shade.class)
+		data.Opacities = append(data.Opacities, shade.opacity)
 	}
 
 	return revenueChartJSON(data)
