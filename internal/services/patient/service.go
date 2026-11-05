@@ -3,8 +3,10 @@ package patient
 import (
 	"context"
 	"errors"
+	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"miconsul/internal/models"
 	"miconsul/internal/server"
@@ -78,6 +80,46 @@ func (s service) SearchPatientsByUser(ctx context.Context, cu models.User, query
 	}
 
 	return patients, nil
+}
+
+// FindLastAppointmentsByPatient returns the booked time of each patient's
+// latest done appointment, keyed by patient ID. Patients without one are
+// left out.
+func (s service) FindLastAppointmentsByPatient(ctx context.Context, userID uint, patients []models.Patient) (map[uint]time.Time, error) {
+	lastAppointments := map[uint]time.Time{}
+	if len(patients) == 0 {
+		return lastAppointments, nil
+	}
+
+	patientIDs := make([]uint, len(patients))
+	for i, patient := range patients {
+		patientIDs[i] = patient.ID
+	}
+
+	rows := []struct {
+		PatientID uint
+		BookedAt  time.Time
+	}{}
+	err := gorm.G[models.Appointment](s.DB.GormDB()).
+		Select("patient_id, booked_at").
+		Where("user_id = ? AND patient_id IN ? AND status = ?", userID, patientIDs, models.AppointmentDone).
+		Where(`booked_at = (
+			SELECT MAX(latest.booked_at) FROM appointments AS latest
+			WHERE latest.user_id = appointments.user_id
+				AND latest.patient_id = appointments.patient_id
+				AND latest.status = appointments.status
+				AND latest.deleted_at IS NULL
+		)`).
+		Scan(ctx, &rows)
+	if err != nil {
+		return lastAppointments, fmt.Errorf("find last done appointments: %w", err)
+	}
+
+	for _, row := range rows {
+		lastAppointments[row.PatientID] = row.BookedAt
+	}
+
+	return lastAppointments, nil
 }
 
 func (s service) CreatePatient(ctx context.Context, patient *models.Patient) error {

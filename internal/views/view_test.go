@@ -772,3 +772,31 @@ func TestNavbarLinksToTheDashboard(t *testing.T) {
 		}
 	})
 }
+
+func TestPatientListShowsTheLastDoneAppointment(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		patients := []models.Patient{
+			{ID: 1, UID: "ptnt_seen", Name: "Seen"},
+			{ID: 2, UID: "ptnt_unseen", Name: "Unseen"},
+		}
+		lastAppointments := map[uint]time.Time{
+			1: time.Date(2026, time.October, 20, 16, 30, 0, 0, time.UTC),
+		}
+
+		var html strings.Builder
+		if err := PatientList(NewCtx(fc), patients, lastAppointments).Render(fc.Context(), &html); err != nil {
+			t.Fatalf("render: %v", err)
+		}
+
+		rows := strings.Split(html.String(), "<li ")[1:]
+		if len(rows) != 2 {
+			t.Fatalf("expected 2 patient rows, got %d", len(rows))
+		}
+		if !strings.Contains(rows[0], "Tue 20/Oct/26 10:30 AM") || strings.Contains(rows[0], "—") {
+			t.Errorf("expected the seen patient's last appointment in the clinic timezone")
+		}
+		if !strings.Contains(rows[1], "—") {
+			t.Errorf("expected a dash for the patient without a done appointment")
+		}
+	})
+}
