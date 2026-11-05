@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -24,6 +25,10 @@ const (
 	AppointmentDone       AppointmentStatus = "done"
 	AppointmentCanceled   AppointmentStatus = "canceled"
 )
+
+// AwaitingVisitStatuses are the statuses of an appointment whose visit has not
+// started, finished or been canceled; only these get reminders and alerts.
+var AwaitingVisitStatuses = []AppointmentStatus{AppointmentPending, AppointmentConfirmed}
 
 func (s AppointmentStatus) IsValid() bool {
 	switch s {
@@ -110,6 +115,12 @@ func (a *Appointment) PriceInputValue() string {
 // PatientLinkGrace is how long after the appointment time its patient links
 // keep working.
 const PatientLinkGrace = time.Hour
+
+// AwaitingVisit reports whether the visit has not started, finished or been
+// canceled yet.
+func (a Appointment) AwaitingVisit() bool {
+	return slices.Contains(AwaitingVisitStatuses, a.Status)
+}
 
 // PatientCanConfirm reports whether the patient may still confirm or ask to
 // change the date.

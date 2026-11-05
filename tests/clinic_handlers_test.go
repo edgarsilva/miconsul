@@ -17,6 +17,24 @@ func TestClinicHandlers(t *testing.T) {
 	u := h.createUser(models.UserRoleUser)
 	token := h.authToken(u)
 
+	t.Run("list rows link to the clinic and its email", func(t *testing.T) {
+		clinic := models.Clinic{Name: "Clinic Links", Email: "links@clinic.example", UserID: u.ID}
+		if err := gorm.G[models.Clinic](h.db.GormDB()).Create(t.Context(), &clinic); err != nil {
+			t.Fatalf("create clinic: %v", err)
+		}
+
+		_, body := h.doRequest(requestOptions{path: "/clinics", authToken: token})
+		if !strings.Contains(body, `href="/clinics/`+clinic.UID+`">Clinic Links</a>`) {
+			t.Fatalf("expected the clinic name to link to the clinic page")
+		}
+		if !strings.Contains(body, `href="mailto:`+clinic.Email+`"`) {
+			t.Fatalf("expected the list to link to the clinic email %q", clinic.Email)
+		}
+		if strings.Contains(body, "leslie.alexander@example.com") {
+			t.Fatalf("expected no placeholder email in the list")
+		}
+	})
+
 	t.Run("form fallback update route is gone", func(t *testing.T) {
 		clinic := h.createClinic(u.ID, "Clinic Fallback")
 

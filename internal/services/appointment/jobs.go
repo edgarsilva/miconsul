@@ -151,6 +151,9 @@ func (s *service) handleReminderJob(ctx context.Context, job jobs.Job) error {
 	if err != nil {
 		return fmt.Errorf("load appointment for reminder: %w", err)
 	}
+	if !appointment.AwaitingVisit() {
+		return nil
+	}
 
 	sent, err := s.notificationSentAnyMedium(ctx, appointment, "appointment_reminder")
 	if err != nil {
@@ -183,6 +186,9 @@ func (s *service) handleBookedAlertJob(ctx context.Context, job jobs.Job) error 
 	}
 	if err != nil {
 		return fmt.Errorf("load appointment for booked alert: %w", err)
+	}
+	if !appointment.AwaitingVisit() {
+		return nil
 	}
 
 	sent, err := s.notificationSentAnyMedium(ctx, appointment, "appointment_booked")
@@ -222,5 +228,6 @@ func (s *service) findAppointmentsDueForReminder(ctx context.Context, now time.T
 	return gorm.G[models.Appointment](s.DB.GormDB()).
 		Where("booked_at > ?", start).
 		Where("booked_at <= ?", end).
+		Where("status IN ?", models.AwaitingVisitStatuses).
 		Find(ctx)
 }
