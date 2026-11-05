@@ -1361,6 +1361,7 @@ func adminComponentsIcons() []adminComponentsIcon {
 		{"CmpPencilIcon", CmpPencilIcon()},
 		{"CmpCloseIcon", CmpCloseIcon()},
 		{"CmpCheckIcon", CmpCheckIcon()},
+		{"CmpChevronDownIcon", CmpChevronDownIcon()},
 		{"CmpTrashIcon", CmpTrashIcon()},
 		{"CmpPlusCircleFilledIcon", CmpPlusCircleFilledIcon()},
 		{"CmpPencilFilledIcon", CmpPencilFilledIcon()},

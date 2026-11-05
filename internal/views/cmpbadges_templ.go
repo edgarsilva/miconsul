@@ -30,7 +30,7 @@ func CmpStatusBadge(c *Ctx, status models.AppointmentStatus) templ.Component {
 		ctx = templ.ClearChildren(ctx)
 		switch status {
 		case "viewed":
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"badge badge-secondary bagce-sm\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"badge badge-secondary badge-sm\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -14,6 +14,7 @@ import (
 	"miconsul/internal/services/clinic"
 	"miconsul/internal/services/dashboard"
 	"miconsul/internal/services/patient"
+	"miconsul/internal/services/revenue"
 	"miconsul/internal/services/theme"
 	"miconsul/internal/services/user"
 )
@@ -38,6 +39,7 @@ func RegisterServices(s *server.Server) error {
 		{name: "user", fn: UserRoutes},
 		{name: "admin", fn: AdminRoutes},
 		{name: "dashboard", fn: DashboardRoutes},
+		{name: "revenue", fn: RevenueRoutes},
 		{name: "clinic", fn: ClinicsRoutes},
 		{name: "patient", fn: PatientRoutes},
 		{name: "appointment", fn: AppointmentRoutes},
@@ -118,6 +120,17 @@ func DashboardRoutes(s *server.Server, authSvc auth.Runtime) error {
 	g := s.Group("/dashboard", mw.MustAuthenticate(authSvc))
 	g.Get("", d.HandleIndexPage)
 	g.Get("/appointments", d.HandleAppointmentsSection)
+
+	return nil
+}
+
+func RevenueRoutes(s *server.Server, authSvc auth.Runtime) error {
+	r, err := revenue.NewService(s)
+	if err != nil {
+		return err
+	}
+
+	s.Get("/revenue", mw.MustAuthenticate(authSvc), r.HandleIndexPage)
 
 	return nil
 }

@@ -299,6 +299,41 @@ func TestPatientLinkActionsAreIdempotent(t *testing.T) {
 	}
 }
 
+func TestRequestDateChangeRecordsFeedEvent(t *testing.T) {
+	svc, user, clinic, patient := newAppointmentServiceForTests(t)
+	ctx := context.Background()
+
+	apnt := models.Appointment{
+		UserID:    user.ID,
+		ClinicID:  clinic.ID,
+		PatientID: patient.ID,
+		BookedAt:  time.Now().Add(24 * time.Hour),
+		Token:     "tok_date_change",
+	}
+	if err := svc.CreateAppointment(ctx, &apnt); err != nil {
+		t.Fatalf("create appointment: %v", err)
+	}
+
+	loaded, err := svc.TakeAppointmentByToken(ctx, apnt.Token)
+	if err != nil {
+		t.Fatalf("take by token: %v", err)
+	}
+	if loaded.Status != models.AppointmentPending {
+		t.Fatalf("new appointment status = %q, want %q", loaded.Status, models.AppointmentPending)
+	}
+	if _, err := svc.RequestAppointmentDateChange(ctx, loaded); err != nil {
+		t.Fatalf("request date change: %v", err)
+	}
+
+	var n int64
+	if err := svc.DB.GormDB().Model(&models.FeedEvent{}).Where("action = ? AND feed_eventable_id = ?", string(models.EventActionChanged), apnt.UID).Count(&n).Error; err != nil {
+		t.Fatalf("count feed events: %v", err)
+	}
+	if n != 1 {
+		t.Fatalf("changed feed events = %d, want 1", n)
+	}
+}
+
 func TestPatientActionRefusedAfterConcurrentChange(t *testing.T) {
 	svc, user, clinic, patient := newAppointmentServiceForTests(t)
 	ctx := context.Background()

@@ -22,6 +22,7 @@ func TestSerializeDeserializeRoundTrip(t *testing.T) {
 	original := view.DashboardStats{
 		Patients:     view.DashboardStat{Total: 10, Diff: 2},
 		Appointments: view.DashboardStat{Total: 7, Diff: -1},
+		Revenue:      view.DashboardRevenue{Total: 150050, Previous: 140000},
 	}
 
 	encoded, err := Serialize(original)
@@ -185,4 +186,56 @@ func newStatsServiceForTests(t *testing.T) (service, *inMemoryCache) {
 	}}
 
 	return svc, cache
+}
+
+func TestCalcMonthRevenue(t *testing.T) {
+	svc, _ := newStatsServiceForTests(t)
+	user := models.User{ID: 1, UID: "user_1"}
+
+	mx, err := time.LoadLocation(models.DefaultTimezone)
+	if err != nil {
+		t.Fatalf("load %s: %v", models.DefaultTimezone, err)
+	}
+	now := time.Date(2026, time.March, 31, 10, 0, 0, 0, mx)
+
+	bookings := []struct {
+		userID   uint
+		bookedAt time.Time
+		status   models.AppointmentStatus
+		price    int
+	}{
+		{1, time.Date(2026, time.March, 2, 9, 0, 0, 0, mx), models.AppointmentDone, 100000},
+		{1, time.Date(2026, time.March, 31, 9, 0, 0, 0, mx), models.AppointmentDone, 50050},
+		{1, time.Date(2026, time.March, 31, 12, 0, 0, 0, mx), models.AppointmentDone, 70000},    // later today
+		{1, time.Date(2026, time.March, 10, 9, 0, 0, 0, mx), models.AppointmentCanceled, 99900}, // canceled
+		{1, time.Date(2026, time.March, 11, 9, 0, 0, 0, mx), models.AppointmentPending, 99900},  // not done
+		{2, time.Date(2026, time.March, 12, 9, 0, 0, 0, mx), models.AppointmentDone, 99900},     // other user
+		{1, time.Date(2026, time.February, 10, 9, 0, 0, 0, mx), models.AppointmentDone, 120000},
+		{1, time.Date(2026, time.February, 28, 20, 0, 0, 0, mx), models.AppointmentDone, 20000},
+		{1, time.Date(2026, time.January, 31, 9, 0, 0, 0, mx), models.AppointmentDone, 99900}, // two months ago
+	}
+	for i, b := range bookings {
+		apnt := models.Appointment{
+			UserID:    b.userID,
+			ClinicID:  1,
+			PatientID: 1,
+			BookedAt:  b.bookedAt,
+			Status:    b.status,
+			Price:     b.price,
+			Token:     fmt.Sprintf("tok_revenue_%d", i),
+		}
+		if err := gorm.G[models.Appointment](svc.DB.GormDB()).Create(t.Context(), &apnt); err != nil {
+			t.Fatalf("create appointment %d: %v", i, err)
+		}
+	}
+
+	got, err := svc.CalcMonthRevenue(t.Context(), user, now)
+	if err != nil {
+		t.Fatalf("CalcMonthRevenue: %v", err)
+	}
+
+	want := view.DashboardRevenue{Total: 150050, Previous: 140000}
+	if got != want {
+		t.Fatalf("revenue = %+v, want %+v", got, want)
+	}
 }

@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"miconsul/internal/models"
 
@@ -356,7 +357,7 @@ func TestDashboardViewAllLinks(t *testing.T) {
 		for _, want := range []string{
 			`href="/patients"`,
 			`href="/appointments?timeframe=month"`,
-			`href="/appointments?timeframe=month&amp;status=done"`,
+			`href="/revenue"`,
 		} {
 			if !strings.Contains(got, want) {
 				t.Errorf("expected %s", want)
@@ -562,6 +563,212 @@ func TestCmpSearchInputTriggersAtMinSearchTermLen(t *testing.T) {
 		want := fmt.Sprintf("this.value.length &gt;= %d", models.MinSearchTermLen)
 		if !strings.Contains(html.String(), want) {
 			t.Errorf("hx-trigger should search at %d characters, got %s", models.MinSearchTermLen, html.String())
+		}
+	})
+}
+
+func TestDashboardRevenueCard(t *testing.T) {
+	cases := []struct {
+		name    string
+		revenue DashboardRevenue
+		want    []string
+		notWant []string
+	}{
+		{
+			name:    "up from last month",
+			revenue: DashboardRevenue{Total: 2450000, Previous: 2000000},
+			want:    []string{"$24.5k", `title="$24,500"`, "22.5%", "text-success"},
+			notWant: []string{"text-error"},
+		},
+		{
+			name:    "down from last month",
+			revenue: DashboardRevenue{Total: 96800, Previous: 100000},
+			want:    []string{"$968", "3.2%", "text-error"},
+		},
+		{
+			name:    "same as last month shows no change",
+			revenue: DashboardRevenue{Total: 100000, Previous: 100000},
+			want:    []string{"$1,000"},
+			notWant: []string{"%"},
+		},
+		{
+			name:    "no revenue last month shows no change",
+			revenue: DashboardRevenue{Total: 150050},
+			want:    []string{"$1.5k", `title="$1,501"`},
+			notWant: []string{"%"},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+				var html strings.Builder
+				stats := DashboardStats{Revenue: tc.revenue}
+				if err := DashboardMonthTrends(NewCtx(fc), stats).Render(fc.Context(), &html); err != nil {
+					t.Fatalf("render: %v", err)
+				}
+
+				got := html.String()
+				card := got[strings.Index(got, "/public/images/funds.png"):]
+				for _, want := range tc.want {
+					if !strings.Contains(card, want) {
+						t.Errorf("expected the revenue card to show %q", want)
+					}
+				}
+				for _, notWant := range tc.notWant {
+					if strings.Contains(card, notWant) {
+						t.Errorf("expected the revenue card not to show %q", notWant)
+					}
+				}
+				if strings.Contains(got, "24500<") {
+					t.Errorf("expected no hard-coded revenue")
+				}
+			})
+		})
+	}
+}
+
+func TestDashboardCountsAreCompact(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		var html strings.Builder
+		stats := DashboardStats{
+			Patients:     DashboardStat{Total: 1234, Diff: 12},
+			Appointments: DashboardStat{Total: 20100, Diff: 1500},
+		}
+		if err := DashboardMonthTrends(NewCtx(fc), stats).Render(fc.Context(), &html); err != nil {
+			t.Fatalf("render: %v", err)
+		}
+
+		got := html.String()
+		for _, want := range []string{`title="1,234">1.2k<`, `title="20,100">20.1k<`, "1.5k"} {
+			if !strings.Contains(got, want) {
+				t.Errorf("expected %s", want)
+			}
+		}
+	})
+}
+
+func TestRevenueIndexPage(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		october := time.Date(2026, time.October, 1, 0, 0, 0, 0, time.UTC)
+		november := time.Date(2026, time.November, 1, 0, 0, 0, 0, time.UTC)
+		report := models.RevenueReport{
+			Months: []models.RevenueMonth{
+				{Start: november, Total: 185000, Appointments: 1},
+				{Start: october, Total: 1850000, Appointments: 15},
+			},
+			Selected: models.RevenueMonth{Start: october, Total: 1850000, Appointments: 15},
+			Patients: []models.RevenuePatient{
+				{UID: "ptnt_alma", Name: "Alma", Total: 1250000, Appointments: 10, LastAppointment: october.AddDate(0, 0, 30)},
+				{UID: "ptnt_bruno", Name: "Bruno", Deleted: true, Total: 600000, Appointments: 5, LastAppointment: october.AddDate(0, 0, 9)},
+			},
+			PatientCount: 37,
+			Clinics: []models.RevenueClinic{
+				{Name: "North", Total: 1200000, Appointments: 10},
+				{Name: "South", Deleted: true, Total: 650000, Appointments: 5},
+			},
+			MonthlyAverage: 2425000,
+		}
+
+		var html strings.Builder
+		if err := RevenueIndexPage(NewCtx(fc), report).Render(fc.Context(), &html); err != nil {
+			t.Fatalf("render: %v", err)
+		}
+
+		got := html.String()
+		for _, want := range []string{
+			`data-chart="columns"`,
+			`data-chart="donut"`,
+			`<script defer src="/public/js/charts.js?v=` + assetVersion + `">`,
+			`href="/revenue?month=2026-10"`,
+			"$18,500",
+			"65%",
+			"$24,250",
+			`href="/patients/ptnt_alma"`,
+			"$12,500",
+			"68%",
+			"31 Oct",
+			"Mostrando 2 de 37",
+			"Promedio mensual",
+		} {
+			if !strings.Contains(got, want) {
+				t.Errorf("expected %s", want)
+			}
+		}
+		i := strings.Index(got, `data-chart="columns" data-chart-data="`)
+		if i < 0 || !strings.Contains(got[i:i+400], "values&#34;:[18500,1850]") {
+			t.Errorf("expected the column chart values oldest first, in pesos: %s", got[max(i, 0):max(i, 0)+400])
+		}
+		if strings.Contains(got, `href="/patients/ptnt_bruno"`) {
+			t.Errorf("expected no link to a deleted patient, whose page is gone")
+		}
+		if !strings.Contains(got, "badge-ghost") {
+			t.Errorf("expected deleted clinics to be marked")
+		}
+	})
+}
+
+func TestChartsLayoutLoadsApexChartsBeforeTheChartsScript(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		var html strings.Builder
+		if err := RevenueIndexPage(NewCtx(fc), models.RevenueReport{}).Render(fc.Context(), &html); err != nil {
+			t.Fatalf("render: %v", err)
+		}
+
+		got := html.String()
+		headEnd := strings.Index(got, "</head>")
+		head := got[:headEnd]
+		if !strings.Contains(head, `<script defer src="https://cdn.jsdelivr.net/npm/apexcharts@6.10.0/dist/apexcharts.min.js" integrity="sha384-`) {
+			t.Errorf("expected <head> to load ApexCharts deferred, with SRI")
+		}
+		if !strings.Contains(head, `apexcharts.css" integrity="sha384-`) {
+			t.Errorf("expected the ApexCharts stylesheet with SRI in <head>")
+		}
+		script := strings.Index(got, `<script defer src="/public/js/charts.js`)
+		lastChart := strings.LastIndex(got, "data-chart=")
+		if script < headEnd || script < lastChart || strings.Count(got, "charts.js") != 1 {
+			t.Errorf("expected charts.js once, deferred, in the page after its charts")
+		}
+	})
+}
+
+// Links into chart pages must be full page loads: htmx drops the <head> of
+// boosted pages, and ChartsLayout loads ApexCharts there.
+func TestLinksToRevenueAreNotBoosted(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		c := NewCtx(fc, WithCurrentUser(models.User{UID: "usr_1"}))
+		october := time.Date(2026, time.October, 1, 0, 0, 0, 0, time.UTC)
+		report := models.RevenueReport{
+			Months:   []models.RevenueMonth{{Start: october}},
+			Selected: models.RevenueMonth{Start: october},
+		}
+
+		var html strings.Builder
+		if err := RevenueIndexPage(c, report).Render(fc.Context(), &html); err != nil {
+			t.Fatalf("render: %v", err)
+		}
+
+		got := html.String()
+		if n := strings.Count(got, `<a href="/revenue" hx-boost="false"`); n != 2 {
+			t.Errorf("expected both navbar Revenue links unboosted, got %d", n)
+		}
+		months := got[strings.Index(got, `data-chart="columns"`):]
+		if strings.Contains(months[:strings.Index(months, "</table>")], "hx-boost") {
+			t.Errorf("expected the month links not to be boosted")
+		}
+	})
+}
+
+func TestNavbarLinksToTheDashboard(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		var html strings.Builder
+		c := NewCtx(fc, WithCurrentUser(models.User{UID: "usr_1"}))
+		if err := CmpNavbar(c).Render(fc.Context(), &html); err != nil {
+			t.Fatalf("render: %v", err)
+		}
+
+		if n := strings.Count(html.String(), `<a href="/dashboard" class="btn btn-ghost`); n != 2 {
+			t.Errorf("expected a Dashboard link in the desktop navbar and the mobile menu, got %d", n)
 		}
 	})
 }

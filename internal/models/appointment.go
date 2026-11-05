@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"miconsul/internal/lib/amount"
 	"miconsul/internal/lib/libtime"
 	"miconsul/internal/lib/xid"
 
@@ -108,9 +109,7 @@ func (a *Appointment) BeforeSave(tx *gorm.DB) error {
 }
 
 func (a *Appointment) PriceInputValue() string {
-	v := strconv.FormatFloat(float64(a.Price/100), 'f', 1, 32)
-
-	return v
+	return amount.InputValue(a.Price)
 }
 
 // PatientLinkGrace is how long after the appointment time its patient links

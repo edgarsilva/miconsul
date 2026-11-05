@@ -1,0 +1,231 @@
+package views
+
+import (
+	"encoding/json/v2"
+	"miconsul/internal/lib/amount"
+	"miconsul/internal/lib/number"
+	"miconsul/internal/models"
+	"slices"
+	"strconv"
+	"time"
+)
+
+templ RevenueIndexPage(c *Ctx, report models.RevenueReport) {
+	@ChartsLayout(c) {
+		<section class="grow flex flex-col gap-6 px-2 sm:px-4 pt-4 md:pt-6 md:pb-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
+			<hgroup>
+				<h1 class="font-bold text-2xl">{ c.l("str.revenue") }</h1>
+				<p class="text-sm text-base-content/60">{ revenueMonthLabel(c, report.Selected.Start) }</p>
+			</hgroup>
+			@revenueSelectedStats(c, report)
+			@revenueClinics(c, report)
+			@revenuePatients(c, report)
+			@revenueMonths(c, report)
+		</section>
+		<script defer src={ "/public/js/charts.js?v=" + assetVersion }></script>
+	}
+}
+
+templ revenueSelectedStats(c *Ctx, report models.RevenueReport) {
+	{{ month := report.Selected }}
+	<div class="stats stats-vertical sm:stats-horizontal app-card p-0! w-full">
+		<div class="stat">
+			<div class="stat-title">{ c.l("str.revenue") }</div>
+			<div class="stat-value">{ amount.Format(month.Total, c.Locale) }</div>
+			<div class="stat-desc">{ revenueMonthLabel(c, month.Start) }</div>
+		</div>
+		<div class="stat">
+			<div class="stat-title">{ c.l("str.revenue_done_appointments") }</div>
+			<div class="stat-value">{ number.Format(month.Appointments, c.Locale) }</div>
+		</div>
+		<div class="stat">
+			<div class="stat-title">{ c.l("str.revenue_average") }</div>
+			<div class="stat-value">{ amount.Format(report.MonthlyAverage, c.Locale) }</div>
+			<div class="stat-desc">{ c.l("str.revenue_average_desc") }</div>
+		</div>
+	</div>
+}
+
+templ revenuePatients(c *Ctx, report models.RevenueReport) {
+	<div class="app-card flex flex-col gap-4">
+		<h2 class="font-semibold text-lg">{ c.l("str.revenue_by_patient") }</h2>
+		if len(report.Patients) == 0 {
+			<p class="text-sm text-base-content/60 py-2">{ c.l("str.revenue_none") }</p>
+		} else {
+			<div class="overflow-x-auto">
+				<table class="table table-sm" hx-boost:inherited="true">
+					<thead>
+						<tr>
+							<th>{ c.l("str.patient") }</th>
+							<th>{ c.l("str.revenue_last_appointment") }</th>
+							<th class="text-right">{ c.l("str.appointments") }</th>
+							<th class="text-right">{ c.l("str.revenue") }</th>
+							<th class="text-right">{ c.l("str.revenue_share") }</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, patient := range report.Patients {
+							<tr class="hover:bg-base-200/60">
+								<td>
+									if patient.Deleted || patient.UID == "" {
+										{ patient.Name }
+									} else {
+										<a href={ templ.URL("/patients/" + patient.UID) } class="link font-medium underline-offset-4">{ patient.Name }</a>
+									}
+									if patient.Deleted {
+										<span class="badge badge-ghost badge-xs ml-1">{ c.l("str.deleted") }</span>
+									}
+								</td>
+								<td class="tabular-nums text-base-content/70">{ revenueDayLabel(c, patient.LastAppointment) }</td>
+								<td class="text-right tabular-nums">{ number.Format(patient.Appointments, c.Locale) }</td>
+								<td class="text-right tabular-nums">{ amount.Format(patient.Total, c.Locale) }</td>
+								<td class="text-right tabular-nums text-base-content/60">{ strconv.Itoa(patient.SharePercent(report.Selected.Total)) + "%" }</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+			if report.PatientCount > len(report.Patients) {
+				<p class="text-xs text-base-content/60">
+					{ c.l("str.showing") } { number.Format(len(report.Patients), c.Locale) } { c.l("str.of") } { number.Format(report.PatientCount, c.Locale) }
+				</p>
+			}
+		}
+	</div>
+}
+
+templ revenueClinics(c *Ctx, report models.RevenueReport) {
+	<div class="app-card flex flex-col gap-6">
+		<h2 class="font-semibold text-lg">{ c.l("str.revenue_by_clinic") }</h2>
+		if len(report.Clinics) == 0 {
+			<p class="text-sm text-base-content/60 py-2">{ c.l("str.revenue_none") }</p>
+		} else {
+			<div class="flex flex-col-reverse md:flex-row items-center gap-6">
+				<ul class="flex flex-col gap-3 w-full md:w-1/2">
+					for i, clinic := range report.Clinics {
+						<li class="flex items-center gap-2 text-sm">
+							<span class={ "size-2.5 rounded-full shrink-0", revenueShadeClass(i) }></span>
+							<span class="text-base-content/70 truncate">
+								{ clinic.Name }
+								if clinic.Deleted {
+									<span class="badge badge-ghost badge-xs ml-1">{ c.l("str.deleted") }</span>
+								}
+							</span>
+							<span class="ml-auto tabular-nums font-medium">{ amount.Format(clinic.Total, c.Locale) }</span>
+							<span class="w-10 text-right tabular-nums text-base-content/40">{ strconv.Itoa(clinic.SharePercent(report.Selected.Total)) + "%" }</span>
+						</li>
+					}
+				</ul>
+				<div class={ "w-full md:w-1/2", revenueChartWrapperClasses } data-chart="donut" data-chart-data={ revenueClinicsChartData(c, report) }></div>
+			</div>
+		}
+	</div>
+}
+
+templ revenueMonths(c *Ctx, report models.RevenueReport) {
+	<div class="app-card flex flex-col gap-6">
+		<h2 class="font-semibold text-lg">{ c.l("str.revenue_last_12_months") }</h2>
+		<div class={ "w-full", revenueChartWrapperClasses } data-chart="columns" data-chart-data={ revenueMonthsChartData(c, report) }></div>
+		<div class="overflow-x-auto">
+			<table class="table table-sm">
+				<thead>
+					<tr>
+						<th>{ c.l("str.month") }</th>
+						<th class="text-right">{ c.l("str.appointments") }</th>
+						<th class="text-right">{ c.l("str.revenue") }</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, month := range report.Months {
+						<tr class={ "hover:bg-base-200/60", templ.KV("bg-base-200", month.Start.Equal(report.Selected.Start)) }>
+							<td>
+								<a href={ templ.URL("/revenue?month=" + month.Start.Format("2006-01")) } class="link font-medium underline-offset-4">
+									{ revenueMonthLabel(c, month.Start) }
+								</a>
+							</td>
+							<td class="text-right tabular-nums">{ number.Format(month.Appointments, c.Locale) }</td>
+							<td class="text-right tabular-nums">{ amount.Format(month.Total, c.Locale) }</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	</div>
+}
+
+// revenueChartWrapperClasses style the ApexCharts tooltips with the theme, as in
+// the daisyUI charts.
+const revenueChartWrapperClasses = "[&_.apexcharts-tooltip]:bg-base-200! [&_.apexcharts-tooltip]:border-base-content/5! [&_.apexcharts-tooltip]:shadow-xl! [&_.apexcharts-tooltip]:rounded-box! [&_.apexcharts-svg]:outline-none"
+
+// revenueShadeClass is the legend dot color of the i-th clinic; it matches the
+// donut slice colors in public/js/charts.js.
+func revenueShadeClass(i int) string {
+	shades := []string{"bg-base-content", "bg-base-content/70", "bg-base-content/50", "bg-base-content/30"}
+	return shades[i%len(shades)]
+}
+
+// revenueChartData is the data of a chart in public/js/charts.js.
+type revenueChartData struct {
+	Name       string   `json:"name,omitempty"`
+	Labels     []string `json:"labels"`
+	Titles     []string `json:"titles,omitempty"`
+	Values     []int    `json:"values"`
+	Formatted  []string `json:"formatted"`
+	Total      string   `json:"total,omitempty"`
+	TotalLabel string   `json:"totalLabel,omitempty"`
+}
+
+// revenueMonthsChartData is the column chart of the last 12 months, oldest
+// first, in whole pesos.
+func revenueMonthsChartData(c *Ctx, report models.RevenueReport) string {
+	data := revenueChartData{Name: c.l("str.revenue")}
+	for _, month := range slices.Backward(report.Months) {
+		data.Labels = append(data.Labels, revenueMonthShortLabel(c, month.Start))
+		data.Titles = append(data.Titles, revenueMonthLabel(c, month.Start))
+		data.Values = append(data.Values, month.Total/100)
+		data.Formatted = append(data.Formatted, amount.Format(month.Total, c.Locale))
+	}
+
+	return revenueChartJSON(data)
+}
+
+// revenueClinicsChartData is the donut of the selected month's revenue by
+// clinic.
+func revenueClinicsChartData(c *Ctx, report models.RevenueReport) string {
+	data := revenueChartData{
+		Total:      amount.Format(report.Selected.Total, c.Locale),
+		TotalLabel: c.l("str.revenue"),
+	}
+	for _, clinic := range report.Clinics {
+		data.Labels = append(data.Labels, clinic.Name)
+		data.Values = append(data.Values, clinic.Total/100)
+		data.Formatted = append(data.Formatted, amount.Format(clinic.Total, c.Locale))
+	}
+
+	return revenueChartJSON(data)
+}
+
+func revenueChartJSON(data revenueChartData) string {
+	b, err := json.Marshal(data)
+	if err != nil {
+		return "{}"
+	}
+
+	return string(b)
+}
+
+// revenueDayLabel is the day and the month's first three letters, e.g. 31 Oct.
+func revenueDayLabel(c *Ctx, t time.Time) string {
+	return strconv.Itoa(t.Day()) + " " + revenueMonthShortLabel(c, t)
+}
+
+// revenueMonthShortLabel is the month's first three letters, e.g. Oct.
+func revenueMonthShortLabel(c *Ctx, t time.Time) string {
+	name := []rune(c.l("str.month_" + strconv.Itoa(int(t.Month()))))
+	return string(name[:min(3, len(name))])
+}
+
+// revenueMonthLabel names the month in the viewer's language, e.g. Octubre 2026.
+func revenueMonthLabel(c *Ctx, t time.Time) string {
+	return c.l("str.month_"+strconv.Itoa(int(t.Month()))) + " " + strconv.Itoa(t.Year())
+}

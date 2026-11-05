@@ -7,8 +7,14 @@ type Options struct {
 	BulkClinics      int
 	BulkPatients     int
 	BulkAppointments int
-	OwnerEmail       string
-	EnsureOwner      bool
+	// BulkPastAppointments are booked over the last BulkPastMonths months up to
+	// now, priced, and mostly done, so revenue has data.
+	BulkPastAppointments int
+	// BulkPastMonths is how many months, the current one included, the past
+	// appointments spread over; below 1 means 1.
+	BulkPastMonths int
+	OwnerEmail     string
+	EnsureOwner    bool
 }
 
 func (o Options) withDefaults() Options {
@@ -27,6 +33,12 @@ func (o Options) withDefaults() Options {
 	}
 	if o.BulkAppointments < 0 {
 		o.BulkAppointments = 0
+	}
+	if o.BulkPastAppointments < 0 {
+		o.BulkPastAppointments = 0
+	}
+	if o.BulkPastMonths < 1 {
+		o.BulkPastMonths = 1
 	}
 
 	return o

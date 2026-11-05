@@ -8,7 +8,7 @@ templ CmpNavbar(c *Ctx) {
 			<div class="navbar-start">
 				<a
 					href={ templ.URL(navbarHomePath(c)) }
-					class="relative px-2 rounded-lg self-stretch flex items-center text-xl font-semibold hover:ring hover:ring-secondary hover:bg-secondary/50 active:ring"
+					class="relative pr-2 lg:pl-2 rounded-lg self-stretch flex items-center text-xl font-semibold hover:ring hover:ring-secondary hover:bg-secondary/50 active:ring"
 				>
 					<div class="avatar overflow-hidden mr-2">
 						<div class="h-10">
@@ -21,10 +21,13 @@ templ CmpNavbar(c *Ctx) {
 			<div class="navbar-end flex items-center">
 				@navbarSearch()
 				@navbarDesktop(c)
+				@navbarThemeBtn(c)
 				@navbarUserAvatar(c)
+				@navbarAuthLink(c)
 				@navbarMobile(c)
 			</div>
 		</nav>
+		@navbarSearchFab(c)
 	</header>
 }
 
@@ -44,12 +47,12 @@ templ navbarThemeBtn(c *Ctx) {
 
 templ navbarUserAvatar(c *Ctx) {
 	<a href="/profile" class="px-2">
-		@CmpAvatar(c.CurrentUser)
+		@CmpAvatar(c.CurrentUser, "max-lg:w-9", "max-lg:[&>span]:text-base")
 	</a>
 }
 
 templ navbarSearch() {
-	<div class="flex gap-2 mr-2 items-center">
+	<div class="hidden lg:flex gap-2 mr-2 items-center">
 		<button class="p-1 hover:outline rounded-xl" aria-label="Global Search">
 			@CmpSearchIcon("")
 		</button>
@@ -58,20 +61,31 @@ templ navbarSearch() {
 	</div>
 }
 
+templ navbarSearchFab(c *Ctx) {
+	<div class="fab bottom-7 lg:hidden">
+		<button class="btn btn-lg btn-circle btn-secondary shadow-xl" aria-label={ c.l("str.search_anything") }>
+			@CmpSearchIcon("")
+		</button>
+	</div>
+}
+
 func navbarActiveLink(c *Ctx, p string) templ.KeyValue[string, bool] {
 	return templ.KV("underline underline-offset-4", strings.Contains(c.Path(), p))
 }
 
 templ navbarDesktop(c *Ctx) {
-	<div class="hidden md:flex justify-center">
+	<div class="hidden lg:flex justify-center">
+		<a href="/dashboard" class={ "btn btn-ghost text-sm", navbarActiveLink(c, "/dashboard") }>{ c.l("nav.dashboard") }</a>
 		<a href="/appointments?timeframe=day" class={ "btn btn-ghost text-sm", navbarActiveLink(c, "/appointments") }>{ c.l("nav.appointments") }</a>
 		<a href="/clinics" class={ "btn btn-ghost text-sm", navbarActiveLink(c, "/clinics") }>{ c.l("nav.clinics") }</a>
 		<a href="/patients" class={ "btn btn-ghost text-sm", navbarActiveLink(c, "/patients") }>{ c.l("nav.patients") }</a>
-		<div class="tooltip tooltip-bottom hidden" data-tip={ c.l("str.coming_soon") }>
-			<a href="#" class="btn btn-ghost text-sm text-base-content/35">{ c.l("nav.exp_rev") }</a>
-		</div>
+		<a href="/revenue" hx-boost="false" class={ "btn btn-ghost text-sm", navbarActiveLink(c, "/revenue") }>{ c.l("nav.revenue") }</a>
 		<div class="divider divider-horizontal"></div>
-		@navbarThemeBtn(c)
+	</div>
+}
+
+templ navbarAuthLink(c *Ctx) {
+	<div class="hidden lg:flex">
 		if c.CurrentUser.IsLoggedIn() {
 			<a class="btn btn-ghost" href="/logout">
 				{ c.l("btn.logout") }
@@ -87,7 +101,7 @@ templ navbarDesktop(c *Ctx) {
 }
 
 templ navbarMobile(c *Ctx) {
-	<div class="md:hidden flex-none dropdown dropdown-end">
+	<div class="lg:hidden flex-none dropdown dropdown-end">
 		<button tabindex="0" role="button" class="btn btn-square btn-ghost">
 			@CmpMenuIcon()
 		</button>
@@ -95,9 +109,11 @@ templ navbarMobile(c *Ctx) {
 			tabindex="0"
 			class="menu dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
 		>
+			<li><a href="/dashboard" class="btn btn-ghost justify-start">{ c.l("nav.dashboard") }</a></li>
 			<li><a href="/appointments?timeframe=day" class="btn btn-ghost justify-start">{ c.l("nav.appointments") }</a></li>
 			<li><a href="/clinics" class="btn btn-ghost justify-start">{ c.l("nav.clinics") }</a></li>
 			<li><a href="/patients" class="btn btn-ghost justify-start">{ c.l("nav.patients") }</a></li>
+			<li><a href="/revenue" hx-boost="false" class="btn btn-ghost justify-start">{ c.l("nav.revenue") }</a></li>
 			if c.CurrentUser.IsLoggedIn() {
 				<li>
 					<a href="/logout" class="btn btn-ghost justify-start">
