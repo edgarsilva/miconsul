@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
@@ -135,8 +136,8 @@ func newPatientServiceForTests(t *testing.T) (service, models.User) {
 		t.Fatalf("open sqlite: %v", err)
 	}
 
-	if err := gdb.AutoMigrate(&models.User{}, &models.Patient{}); err != nil {
-		t.Fatalf("automigrate user/patient: %v", err)
+	if err := gdb.AutoMigrate(&models.User{}, &models.Patient{}, &models.Clinic{}, &models.Appointment{}); err != nil {
+		t.Fatalf("automigrate: %v", err)
 	}
 
 	srv := &server.Server{
@@ -154,4 +155,68 @@ func newPatientServiceForTests(t *testing.T) (service, models.User) {
 	}
 
 	return svc, u
+}
+
+func TestFindLastAppointmentsByPatient(t *testing.T) {
+	svc, user := newPatientServiceForTests(t)
+	ctx := context.Background()
+	gdb := svc.DB.GormDB()
+
+	other := models.User{Email: "other@example.com", Password: "hash", Role: models.UserRoleUser}
+	if err := gorm.G[models.User](gdb).Create(ctx, &other); err != nil {
+		t.Fatalf("create other user: %v", err)
+	}
+
+	clinic := models.Clinic{UserID: user.ID, Name: "Clinic"}
+	if err := gorm.G[models.Clinic](gdb).Create(ctx, &clinic); err != nil {
+		t.Fatalf("create clinic: %v", err)
+	}
+
+	seen := models.Patient{UserID: user.ID, Name: "Seen", Age: 30, Phone: "111", Email: "seen@example.com"}
+	unseen := models.Patient{UserID: user.ID, Name: "Unseen", Age: 30, Phone: "222", Email: "unseen@example.com"}
+	for _, p := range []*models.Patient{&seen, &unseen} {
+		if err := svc.CreatePatient(ctx, p); err != nil {
+			t.Fatalf("create patient %s: %v", p.Name, err)
+		}
+	}
+
+	last := time.Date(2026, 10, 20, 16, 30, 0, 0, time.UTC)
+	appointments := []models.Appointment{
+		{UserID: user.ID, PatientID: seen.ID, BookedAt: last.AddDate(0, -1, 0), Status: models.AppointmentDone},
+		{UserID: user.ID, PatientID: seen.ID, BookedAt: last, Status: models.AppointmentDone},
+		{UserID: user.ID, PatientID: seen.ID, BookedAt: last.AddDate(0, 0, 1), Status: models.AppointmentPending},
+		{UserID: user.ID, PatientID: seen.ID, BookedAt: last.AddDate(0, 0, 2), Status: models.AppointmentConfirmed},
+		{UserID: user.ID, PatientID: seen.ID, BookedAt: last.AddDate(0, 0, 3), Status: models.AppointmentInProgress},
+		{UserID: user.ID, PatientID: seen.ID, BookedAt: last.AddDate(0, 0, 4), Status: models.AppointmentCanceled},
+		{UserID: other.ID, PatientID: seen.ID, BookedAt: last.AddDate(0, 0, 5), Status: models.AppointmentDone},
+		{UserID: user.ID, PatientID: unseen.ID, BookedAt: last, Status: models.AppointmentPending},
+		{UserID: user.ID, PatientID: seen.ID, BookedAt: last.AddDate(0, 0, 6), Status: models.AppointmentDone}, // soft deleted below
+	}
+	for i := range appointments {
+		appointments[i].ClinicID = clinic.ID
+		if err := gorm.G[models.Appointment](gdb).Create(ctx, &appointments[i]); err != nil {
+			t.Fatalf("create appointment %d: %v", i, err)
+		}
+	}
+	deletedUID := appointments[len(appointments)-1].UID
+	if _, err := gorm.G[models.Appointment](gdb).Where("uid = ?", deletedUID).Delete(ctx); err != nil {
+		t.Fatalf("soft delete appointment: %v", err)
+	}
+
+	got, err := svc.FindLastAppointmentsByPatient(ctx, user.ID, []models.Patient{seen, unseen})
+	if err != nil {
+		t.Fatalf("find last appointments: %v", err)
+	}
+
+	if len(got) != 1 {
+		t.Fatalf("expected only the seen patient, got %v", got)
+	}
+	if !got[seen.ID].Equal(last) {
+		t.Fatalf("expected last done appointment %v, got %v", last, got[seen.ID])
+	}
+
+	empty, err := svc.FindLastAppointmentsByPatient(ctx, user.ID, nil)
+	if err != nil || len(empty) != 0 {
+		t.Fatalf("expected empty result for no patients, got %v, %v", empty, err)
+	}
 }
