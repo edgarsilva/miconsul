@@ -1038,9 +1038,9 @@ func revenueMonths(c *Ctx, report models.RevenueReport) templ.Component {
 	})
 }
 
-// revenueChartWrapperClasses style the ApexCharts tooltips with the theme, as in
-// the daisyUI charts.
-const revenueChartWrapperClasses = "[&_.apexcharts-tooltip]:bg-base-200! [&_.apexcharts-tooltip]:border-base-content/5! [&_.apexcharts-tooltip]:shadow-xl! [&_.apexcharts-tooltip]:rounded-box! [&_.apexcharts-svg]:outline-none"
+// revenueChartWrapperClasses style the ApexCharts tooltip box with the theme:
+// the one card around the chart-tooltip content.
+const revenueChartWrapperClasses = "[&_.apexcharts-tooltip]:bg-base-100! [&_.apexcharts-tooltip]:border-base-content/10! [&_.apexcharts-tooltip]:shadow-2xl! [&_.apexcharts-tooltip]:rounded-box! [&_.apexcharts-svg]:outline-none"
 
 // revenueChartTooltip is the tooltip both charts clone: public/js/charts.js
 // fills the dot class, label and value. It sits outside the charts, whose
@@ -1062,7 +1062,7 @@ func revenueChartTooltip() templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 83, "<template id=\"chart-tooltip\"><div class=\"bg-base-100 border-(length:--border) border-base-content/10 rounded-box p-3 text-xs\"><div class=\"flex items-center gap-2\"><span class=\"size-2 rounded-selector\" data-tooltip-dot></span> <span class=\"text-base-content/70\"><span data-tooltip-label></span>: <b class=\"text-base-content ml-1\" data-tooltip-value></b></span></div></div></template>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 83, "<template id=\"chart-tooltip\"><div class=\"text-base-content p-3 text-xs\"><div class=\"flex items-center gap-2\"><span class=\"size-2 rounded-selector\" data-tooltip-dot></span> <span class=\"text-base-content/70\"><span data-tooltip-label></span>: <b class=\"text-base-content ml-1\" data-tooltip-value></b></span></div></div></template>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
