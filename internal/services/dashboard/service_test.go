@@ -164,6 +164,63 @@ func TestCalcDashboardStats(t *testing.T) {
 	})
 }
 
+func TestFindFeedEventsByUserID(t *testing.T) {
+	svc, _ := newStatsServiceForTests(t)
+	now := time.Now().UTC()
+
+	mine := models.Appointment{UserID: 1, ClinicID: 1, PatientID: 1, BookedAt: now, Token: "tok_feed_mine"}
+	theirs := models.Appointment{UserID: 2, ClinicID: 1, PatientID: 1, BookedAt: now, Token: "tok_feed_theirs"}
+	for _, apnt := range []*models.Appointment{&mine, &theirs} {
+		if err := gorm.G[models.Appointment](svc.DB.GormDB()).Create(t.Context(), apnt); err != nil {
+			t.Fatalf("create appointment: %v", err)
+		}
+	}
+
+	// One event a day for the last 14 days, newest first; the oldest are well
+	// past any recent-days window.
+	newEvent := func(apnt models.Appointment, ocurredAt time.Time) *models.FeedEvent {
+		return &models.FeedEvent{
+			Name:              "updated",
+			SubjectID:         "user_1",
+			SubjectType:       "users",
+			Target:            "Appointment",
+			TargetID:          apnt.UID,
+			FeedEventableID:   apnt.UID,
+			FeedEventableType: "appointments",
+			OcurredAt:         ocurredAt,
+		}
+	}
+	events := []*models.FeedEvent{newEvent(theirs, now)}
+	for day := range 14 {
+		events = append(events, newEvent(mine, now.AddDate(0, 0, -day)))
+	}
+	for _, event := range events {
+		if err := gorm.G[models.FeedEvent](svc.DB.GormDB()).Create(t.Context(), event); err != nil {
+			t.Fatalf("create feed event: %v", err)
+		}
+	}
+
+	got, err := svc.FindFeedEventsByUserID(t.Context(), 1, 10)
+	if err != nil {
+		t.Fatalf("FindFeedEventsByUserID: %v", err)
+	}
+
+	if len(got) != 10 {
+		t.Fatalf("got %d events, want 10", len(got))
+	}
+	for i, event := range got {
+		if event.FeedEventableID != mine.UID {
+			t.Errorf("event %d belongs to another user's appointment", i)
+		}
+		if i > 0 && event.OcurredAt.After(got[i-1].OcurredAt) {
+			t.Errorf("event %d is newer than event %d, want newest first", i, i-1)
+		}
+	}
+	if oldest := got[len(got)-1].OcurredAt; now.Sub(oldest) < 8*24*time.Hour {
+		t.Errorf("oldest event is %s old, want events older than 3 days to still show", now.Sub(oldest))
+	}
+}
+
 // newStatsServiceForTests returns a dashboard service with an in-memory
 // database and cache.
 func newStatsServiceForTests(t *testing.T) (service, *inMemoryCache) {
@@ -174,7 +231,7 @@ func newStatsServiceForTests(t *testing.T) (service, *inMemoryCache) {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := gdb.AutoMigrate(&models.Patient{}, &models.Appointment{}); err != nil {
+	if err := gdb.AutoMigrate(&models.Patient{}, &models.Appointment{}, &models.FeedEvent{}); err != nil {
 		t.Fatalf("migrate: %v", err)
 	}
 

@@ -454,8 +454,7 @@ templ DashboardFeed(c *Ctx, events []models.FeedEvent) {
 								<a href={ templ.SafeURL(event.SubjectURL) } class="hover:underline">{ feedEventTitle(c, event) }</a>
 							</p>
 							<p class="text-[11px] text-base-content/50 mt-0.5">
-								<span>{ c.l("str.patient") }</span>
-								<a href={ templ.SafeURL(event.TargetURL) } class="font-medium text-base-content hover:underline">{ event.Target }</a>
+								<a href={ templ.SafeURL(event.TargetURL) } title={ event.Target } class="inline-block max-w-[16ch] truncate align-bottom font-medium text-base-content hover:underline">{ event.Target }</a>
 								if feedEventShortDateTime(event.OcurredAt) != "" {
 									<span>{ " • " }</span>
 									<a href={ templ.SafeURL(event.SubjectURL) } class="badge badge-accent badge-xs hover:opacity-90">{ feedEventShortDateTime(event.OcurredAt) }</a>

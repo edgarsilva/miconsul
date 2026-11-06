@@ -45,6 +45,15 @@ vet: fmt ## Run go vet (after fmt)
 
 lint: vet ## Alias for vet
 
+##@ Security
+sec/check: sec/vuln sec/gosec ## Run govulncheck and gosec
+
+sec/vuln: ## Report known vulnerabilities the code reaches in dependencies and the Go toolchain (govulncheck)
+	$(GO_TOOL) govulncheck -tags fts5 ./...
+
+sec/gosec: ## Scan the code for insecure patterns, skipping generated files (gosec)
+	$(GO_TOOL) gosec -tags fts5 -exclude-generated ./...
+
 ##@ Frontend
 tailwind/build: ## Build Tailwind CSS
 	@echo "🌬️ Generating Tailwind CSS styles..."
@@ -247,6 +256,7 @@ load/test: ## Run authenticated oha load test (30s, 30 concurrency)
 
 
 .PHONY: help install install/deps install/tools check/npm fmt vet lint \
+	sec/check sec/vuln sec/gosec \
 	tailwind/build tailwind/watch templ/build templ/watch locales/build \
 	locales/normalize \
 	ai/templ-sync \

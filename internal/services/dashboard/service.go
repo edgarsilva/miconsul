@@ -69,14 +69,14 @@ func (s service) FindAppointmentsBy(ctx context.Context, userID uint, timeframe 
 	return appointments, nil
 }
 
+// FindFeedEventsByUserID returns the user's newest appointment feed events,
+// at most limit, however old they are.
 func (s service) FindFeedEventsByUserID(ctx context.Context, userID uint, limit int) ([]models.FeedEvent, error) {
 	var events []models.FeedEvent
-	since := time.Now().UTC().AddDate(0, 0, -3)
 	err := s.DB.WithContext(ctx).
 		Model(&models.FeedEvent{}).
 		Joins("JOIN appointments ON appointments.uid = feed_events.feed_eventable_id AND feed_events.feed_eventable_type = ?", "appointments").
 		Where("appointments.user_id = ?", userID).
-		Where("feed_events.ocurred_at > ?", since).
 		Order("feed_events.ocurred_at DESC").
 		Limit(limit).
 		Find(&events).Error
