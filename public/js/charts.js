@@ -1,29 +1,21 @@
 // Draws the daisyUI ApexCharts charts on a page: every element with
-// data-chart="<kind>" and its data as JSON in data-chart-data. Pages include
+// data-chart="<kind>" and its data as JSON in data-chart-data, with one
+// <template id="chart-tooltip"> for the tooltips. Pages include
 // it deferred after their charts; ChartsLayout loads ApexCharts deferred in
 // <head>, so by document order ApexCharts runs first and the page is parsed.
 // Colors are theme variables, so charts follow theme changes.
 (() => {
   const baseContent = "var(--color-base-content)";
   const shade = (transparent) => `color-mix(in srgb, var(--color-base-content), transparent ${transparent}%)`;
-  // Tooltip dots use classes, not inline styles, which the CSP blocks.
-  const shades = [
-    { opacity: 1, dot: "bg-base-content" },
-    { opacity: 0.7, dot: "bg-base-content/70" },
-    { opacity: 0.5, dot: "bg-base-content/50" },
-    { opacity: 0.3, dot: "bg-base-content/30" },
-  ];
-
-  const escapeHTML = (value) =>
-    String(value).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
-
-  const tooltip = (dot, label, value) => `
-    <div class="bg-base-100 border-(length:--border) border-base-content/10 rounded-box p-3 text-xs">
-      <div class="flex items-center gap-2">
-        <span class="size-2 rounded-selector ${dot}"></span>
-        <span class="text-base-content/70">${escapeHTML(label)}: <b class="text-base-content ml-1">${escapeHTML(value)}</b></span>
-      </div>
-    </div>`;
+  // tooltip fills the page's #chart-tooltip template; ApexCharts takes HTML, and
+  // serializing the clone escapes the text.
+  const tooltip = (dot, label, value) => {
+    const tip = document.getElementById("chart-tooltip").content.firstElementChild.cloneNode(true);
+    tip.querySelector("[data-tooltip-dot]").classList.add(dot);
+    tip.querySelector("[data-tooltip-label]").textContent = label;
+    tip.querySelector("[data-tooltip-value]").textContent = value;
+    return tip.outerHTML;
+  };
 
   // Column Chart One: monthly revenue columns.
   const columns = (data) => ({
@@ -45,7 +37,7 @@
     legend: { show: false },
     tooltip: {
       enabled: true,
-      custom: ({ dataPointIndex }) => tooltip(shades[0].dot, data.titles[dataPointIndex], data.formatted[dataPointIndex]),
+      custom: ({ dataPointIndex }) => tooltip(data.dots[dataPointIndex], data.titles[dataPointIndex], data.formatted[dataPointIndex]),
     },
   });
 
@@ -55,7 +47,7 @@
     series: data.values,
     labels: data.labels,
     colors: data.values.map(() => baseContent),
-    fill: { opacity: data.values.map((_, i) => shades[i % shades.length].opacity) },
+    fill: { opacity: data.opacities },
     stroke: { show: true, width: 1, colors: ["var(--color-base-200)"] },
     plotOptions: {
       pie: {
@@ -82,8 +74,7 @@
     legend: { show: false },
     tooltip: {
       enabled: true,
-      custom: ({ seriesIndex }) =>
-        tooltip(shades[seriesIndex % shades.length].dot, data.labels[seriesIndex], data.formatted[seriesIndex]),
+      custom: ({ seriesIndex }) => tooltip(data.dots[seriesIndex], data.labels[seriesIndex], data.formatted[seriesIndex]),
     },
   });
 
