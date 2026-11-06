@@ -276,3 +276,146 @@ func TestAlertJobsSendNothingForCanceledAppointments(t *testing.T) {
 		t.Fatalf("expected no send attempts for a canceled appointment, got %d", attempts)
 	}
 }
+
+func TestAppointmentsToRemindCountsOnlyRemindersSinceReschedule(t *testing.T) {
+	svc, user, clinic, patient := newAppointmentServiceForTests(t)
+
+	create := func(token string) models.Appointment {
+		t.Helper()
+		apnt := models.Appointment{
+			UserID:    user.ID,
+			ClinicID:  clinic.ID,
+			PatientID: patient.ID,
+			BookedAt:  time.Now().Add(time.Hour),
+			Token:     token,
+		}
+		if err := svc.CreateAppointment(t.Context(), &apnt); err != nil {
+			t.Fatalf("create %s: %v", token, err)
+		}
+		return apnt
+	}
+	remind := func(apnt models.Appointment) {
+		t.Helper()
+		svc.appendNotification(t.Context(), apnt, models.Notification{
+			Medium: models.NotificationMediumEmail,
+			Name:   "appointment_reminder",
+			Status: models.NotificationSent,
+			To:     patient.Email,
+		})
+	}
+
+	neverMoved := create("tok_never_moved")
+	remind(neverMoved)
+
+	movedAfterReminder := create("tok_moved_after_reminder")
+	remind(movedAfterReminder)
+	rescheduleForTest(t, svc, movedAfterReminder)
+
+	remindedAfterMove := create("tok_reminded_after_move")
+	rescheduleForTest(t, svc, remindedAfterMove)
+	remind(remindedAfterMove)
+
+	neverReminded := create("tok_never_reminded")
+
+	var appointments []models.Appointment
+	for _, apnt := range []models.Appointment{neverMoved, movedAfterReminder, remindedAfterMove, neverReminded} {
+		loaded, err := svc.TakeAppointmentByUID(t.Context(), user.ID, apnt.UID)
+		if err != nil {
+			t.Fatalf("load %s: %v", apnt.Token, err)
+		}
+		appointments = append(appointments, loaded)
+	}
+
+	unreminded, err := svc.appointmentsToRemind(t.Context(), appointments)
+	if err != nil {
+		t.Fatalf("appointmentsToRemind: %v", err)
+	}
+	got := dueTokens(unreminded)
+	slices.Sort(got)
+	want := []string{"tok_moved_after_reminder", "tok_never_reminded"}
+	if !slices.Equal(got, want) {
+		t.Fatalf("to remind = %v, want %v", got, want)
+	}
+}
+
+func TestReminderJobRemindsAgainAfterReschedule(t *testing.T) {
+	svc, user, clinic, patient := newAppointmentServiceForTests(t)
+
+	patient.EnableNotifications = true
+	patient.ViaEmail = true
+	if err := svc.DB.GormDB().Save(&patient).Error; err != nil {
+		t.Fatalf("enable patient notifications: %v", err)
+	}
+
+	apnt := models.Appointment{
+		UserID:    user.ID,
+		ClinicID:  clinic.ID,
+		PatientID: patient.ID,
+		BookedAt:  time.Now().Add(time.Hour),
+		Token:     "tok_reschedule_job",
+	}
+	if err := svc.CreateAppointment(t.Context(), &apnt); err != nil {
+		t.Fatalf("create appointment: %v", err)
+	}
+	svc.appendNotification(t.Context(), apnt, models.Notification{
+		Medium: models.NotificationMediumEmail,
+		Name:   "appointment_reminder",
+		Status: models.NotificationSent,
+		To:     patient.Email,
+	})
+
+	payload, err := json.Marshal(JobPayload{AppointmentID: apnt.UID})
+	if err != nil {
+		t.Fatalf("marshal payload: %v", err)
+	}
+	job := jobs.Job{Payload: payload}
+	reminderAttempts := func() int64 {
+		t.Helper()
+		var n int64
+		err := svc.DB.GormDB().Model(&models.Notification{}).
+			Where("notificationable_type = ? AND notificationable_id = ?", apnt.AlertableType(), apnt.AlertableID()).
+			Where("name = ?", "appointment_reminder").
+			Count(&n).Error
+		if err != nil {
+			t.Fatalf("count reminders: %v", err)
+		}
+		return n
+	}
+
+	if err := svc.handleReminderJob(t.Context(), job); err != nil {
+		t.Fatalf("reminder job: %v", err)
+	}
+	if n := reminderAttempts(); n != 1 {
+		t.Fatalf("expected no new reminder before a reschedule, got %d reminders", n)
+	}
+
+	rescheduleForTest(t, svc, apnt)
+	if err := svc.handleReminderJob(t.Context(), job); err != nil {
+		t.Fatalf("reminder job after reschedule: %v", err)
+	}
+	if n := reminderAttempts(); n < 2 {
+		t.Fatalf("expected a new reminder attempt after the reschedule, got %d reminders", n)
+	}
+}
+
+// rescheduleForTest moves apnt 30 minutes later through the update service,
+// stamping RescheduledAt as HandleUpdate does.
+func rescheduleForTest(t *testing.T, svc *service, apnt models.Appointment) {
+	t.Helper()
+
+	bookedAt := apnt.BookedAt.Add(30 * time.Minute).UTC()
+	updates := appointmentPatchUpdates{
+		BookedAt:      bookedAt,
+		RescheduledAt: time.Now().UTC(),
+		BookedYear:    bookedAt.Year(),
+		BookedMonth:   int(bookedAt.Month()),
+		BookedDay:     bookedAt.Day(),
+		BookedHour:    bookedAt.Hour(),
+		BookedMinute:  bookedAt.Minute(),
+		ClinicID:      apnt.ClinicID,
+		PatientID:     apnt.PatientID,
+	}
+	if err := svc.UpdateAppointmentByID(t.Context(), apnt.UserID, apnt.UID, updates); err != nil {
+		t.Fatalf("reschedule %s: %v", apnt.Token, err)
+	}
+}

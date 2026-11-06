@@ -139,6 +139,9 @@ func (s *service) UpdateAppointmentByID(ctx context.Context, userID uint, appoin
 		"PatientID",
 		"Duration",
 	}
+	if !updates.RescheduledAt.IsZero() {
+		columns = append(columns, "RescheduledAt")
+	}
 
 	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, columns, &updates); err != nil {
 		return err

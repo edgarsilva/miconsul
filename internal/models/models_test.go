@@ -81,6 +81,20 @@ func TestAppointmentBeforeSaveAndHelpers(t *testing.T) {
 	}
 }
 
+func TestAppointmentIsRescheduledTo(t *testing.T) {
+	apnt := Appointment{BookedAt: time.Date(2026, 12, 1, 16, 30, 42, 500, time.UTC)}
+
+	if apnt.IsRescheduledTo(time.Date(2026, 12, 1, 16, 30, 0, 0, time.UTC)) {
+		t.Errorf("same minute (the form drops seconds) must not count as a reschedule")
+	}
+	if !apnt.IsRescheduledTo(time.Date(2026, 12, 1, 16, 35, 0, 0, time.UTC)) {
+		t.Errorf("a new minute must count as a reschedule")
+	}
+	if !apnt.IsRescheduledTo(time.Date(2026, 12, 2, 16, 30, 0, 0, time.UTC)) {
+		t.Errorf("a new day must count as a reschedule")
+	}
+}
+
 func TestScopesAndBaseHelpers(t *testing.T) {
 	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{DryRun: true})
 	if err != nil {

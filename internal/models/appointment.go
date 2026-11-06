@@ -122,6 +122,12 @@ func (a Appointment) AwaitingVisit() bool {
 	return slices.Contains(AwaitingVisitStatuses, a.Status)
 }
 
+// IsRescheduledTo reports whether booking at bookedAt moves the appointment,
+// compared to the minute like the booking form.
+func (a Appointment) IsRescheduledTo(bookedAt time.Time) bool {
+	return !a.BookedAt.Truncate(time.Minute).Equal(bookedAt.Truncate(time.Minute))
+}
+
 // PatientCanConfirm reports whether the patient may still confirm or ask to
 // change the date.
 func (a Appointment) PatientCanConfirm() bool {
