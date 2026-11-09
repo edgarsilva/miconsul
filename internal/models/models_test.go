@@ -81,17 +81,17 @@ func TestAppointmentBeforeSaveAndHelpers(t *testing.T) {
 	}
 }
 
-func TestAppointmentIsRescheduledTo(t *testing.T) {
+func TestAppointmentIsBookedAtChanged(t *testing.T) {
 	apnt := Appointment{BookedAt: time.Date(2026, 12, 1, 16, 30, 42, 500, time.UTC)}
 
-	if apnt.IsRescheduledTo(time.Date(2026, 12, 1, 16, 30, 0, 0, time.UTC)) {
-		t.Errorf("same minute (the form drops seconds) must not count as a reschedule")
+	if apnt.IsBookedAtChanged(time.Date(2026, 12, 1, 16, 30, 0, 0, time.UTC)) {
+		t.Errorf("same minute (the form drops seconds) must not count as a change")
 	}
-	if !apnt.IsRescheduledTo(time.Date(2026, 12, 1, 16, 35, 0, 0, time.UTC)) {
-		t.Errorf("a new minute must count as a reschedule")
+	if !apnt.IsBookedAtChanged(time.Date(2026, 12, 1, 16, 35, 0, 0, time.UTC)) {
+		t.Errorf("a new minute must count as a change")
 	}
-	if !apnt.IsRescheduledTo(time.Date(2026, 12, 2, 16, 30, 0, 0, time.UTC)) {
-		t.Errorf("a new day must count as a reschedule")
+	if !apnt.IsBookedAtChanged(time.Date(2026, 12, 2, 16, 30, 0, 0, time.UTC)) {
+		t.Errorf("a new day must count as a change")
 	}
 }
 

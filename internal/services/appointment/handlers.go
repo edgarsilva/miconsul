@@ -385,7 +385,7 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 		PatientID:    0,
 		Duration:     input.Duration,
 	}
-	if existing.IsRescheduledTo(bookedAt) {
+	if existing.IsBookedAtChanged(bookedAt) {
 		appointment.RescheduledAt = time.Now().UTC()
 	}
 

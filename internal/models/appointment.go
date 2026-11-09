@@ -122,10 +122,10 @@ func (a Appointment) AwaitingVisit() bool {
 	return slices.Contains(AwaitingVisitStatuses, a.Status)
 }
 
-// IsRescheduledTo reports whether booking at bookedAt moves the appointment,
-// compared to the minute like the booking form.
-func (a Appointment) IsRescheduledTo(bookedAt time.Time) bool {
-	return !a.BookedAt.Truncate(time.Minute).Equal(bookedAt.Truncate(time.Minute))
+// IsBookedAtChanged reports whether t is a different time than BookedAt.
+// It ignores seconds, because the booking form sends only hours and minutes.
+func (a Appointment) IsBookedAtChanged(t time.Time) bool {
+	return !a.BookedAt.Truncate(time.Minute).Equal(t.Truncate(time.Minute))
 }
 
 // PatientCanConfirm reports whether the patient may still confirm or ask to
