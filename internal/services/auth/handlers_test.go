@@ -840,6 +840,14 @@ func TestAuthHandlersResetPasswordPaths(t *testing.T) {
 		if resp.StatusCode != fiber.StatusOK {
 			t.Fatalf("expected 200 success render, got %d", resp.StatusCode)
 		}
+
+		saved, err := gorm.G[models.User](svc.DB.GormDB()).Where("email = ?", "reset@example.com").Take(context.Background())
+		if err != nil {
+			t.Fatalf("load user: %v", err)
+		}
+		if saved.ResetToken == "" || !saved.ResetTokenExpiresAt.After(time.Now().UTC()) {
+			t.Errorf("reset token = %q expires %v, want a saved token that expires later", saved.ResetToken, saved.ResetTokenExpiresAt)
+		}
 	})
 
 	t.Run("HandleChangePasswordPage redirects on invalid token", func(t *testing.T) {

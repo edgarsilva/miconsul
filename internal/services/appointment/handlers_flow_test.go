@@ -166,6 +166,11 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 			t.Fatalf("price fragment expected 200, got status=%d err=%v", resp6.StatusCode, err)
 		}
 
+		resp6b, err := app.Test(httptest.NewRequest(http.MethodGet, "/appointments/new/pricefrg/unknown-clinic", nil))
+		if err != nil || resp6b.StatusCode != fiber.StatusNotFound {
+			t.Fatalf("price fragment unknown clinic expected 404, got status=%d err=%v", resp6b.StatusCode, err)
+		}
+
 		searchReq := httptest.NewRequest(http.MethodPost, "/appointments/search/clinics", strings.NewReader(url.Values{"searchTerm": {""}}.Encode()))
 		searchReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		resp7, err := app.Test(searchReq)

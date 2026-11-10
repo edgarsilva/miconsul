@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"miconsul/internal/models"
+	"miconsul/internal/server/servertest"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -337,5 +338,39 @@ func TestHandleAdminRemoveProfilePic(t *testing.T) {
 	}
 	if adminAfter.ProfilePic != "admin.png" {
 		t.Errorf("admin picture = %q, want unchanged", adminAfter.ProfilePic)
+	}
+}
+
+func TestHandleRemoveProfilePic(t *testing.T) {
+	svc, currentUser := newUserServiceForTests(t)
+	if err := svc.DB.GormDB().Model(&models.User{}).Where("uid = ?", currentUser.UID).Update("profile_pic", "me.png").Error; err != nil {
+		t.Fatalf("seed picture: %v", err)
+	}
+
+	app := fiber.New()
+	app.Patch("/profile/removepic", func(c fiber.Ctx) error {
+		c.Locals("current_user", currentUser)
+		return svc.HandleRemoveProfilePic(c)
+	})
+
+	req := httptest.NewRequest(http.MethodPatch, "/profile/removepic", nil)
+	req.Header.Set("HX-Request", "true")
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatalf("remove picture request: %v", err)
+	}
+	if got := resp.Header.Get("HX-Redirect"); got != "/profile" {
+		t.Fatalf("HX-Redirect = %q, want /profile (status %d)", got, resp.StatusCode)
+	}
+	if msg, level := servertest.FlashToast(t, resp); msg != "Profile picture removed" || level != "success" {
+		t.Errorf("toast = %q %q, want removed success", msg, level)
+	}
+
+	saved, err := svc.TakeUserByUID(context.Background(), currentUser.UID)
+	if err != nil {
+		t.Fatalf("load user: %v", err)
+	}
+	if saved.ProfilePic != "" {
+		t.Errorf("picture = %q, want removed", saved.ProfilePic)
 	}
 }
