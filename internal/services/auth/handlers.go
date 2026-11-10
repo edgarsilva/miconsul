@@ -4,16 +4,13 @@ import (
 	"errors"
 	"strconv"
 	"strings"
-	"time"
 
-	"miconsul/internal/models"
 	view "miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"gorm.io/gorm"
 )
 
 // HandleSigninPage returns the signin page html. With a sign-in provider
@@ -206,10 +203,7 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 		return s.RedirectWithAlert(c, "/signin", "unable to confirm email, try signin instead", view.LevelError)
 	}
 
-	user, err := gorm.G[models.User](s.DB.GormDB()).
-		Select("uid, email, confirm_email_token").
-		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now().UTC()).
-		Take(ctx)
+	user, err := s.takeUserByConfirmToken(ctx, token)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "invalid or expired confirmation token")
@@ -217,11 +211,7 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 	}
 	span.SetAttributes(attribute.String("auth.signup.confirm_email", strings.ToLower(strings.TrimSpace(user.Email))))
 
-	_, err = gorm.G[models.User](s.DB.GormDB()).
-		Select("confirm_email_token", "confirm_email_expires_at").
-		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now().UTC()).
-		Updates(ctx, models.User{})
-	if err != nil {
+	if err := s.clearUserConfirmToken(ctx, token); err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "confirmation token clear failed")
 		return s.RedirectWithAlert(c, "/signin", "Email confirmed, you should be able to signin now", view.LevelSuccess)
@@ -277,24 +267,19 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 		return view.Render(c, view.AuthResetPasswordPage(vc, email, "", errView))
 	}
 
-	user, err := gorm.G[models.User](s.DB.GormDB()).Select("id", "name").Where("email = ?", email).Take(c.Context())
+	user, err := s.userFetch(c.Context(), email)
 	if err != nil {
 		errView := errors.New("user not found with that email")
 		return view.Render(c, view.AuthResetPasswordPage(vc, email, "", errView))
 	}
 
-	user.ResetToken = newResetPasswordToken()
-	user.ResetTokenExpiresAt = time.Now().UTC().Add(time.Hour * 1)
-	rowsAffected, err := gorm.G[models.User](s.DB.GormDB()).
-		Select("reset_token", "reset_token_expires_at").
-		Where("id = ?", user.ID).
-		Updates(c.Context(), user)
-	if err != nil || rowsAffected != 1 {
+	resetToken := newResetPasswordToken()
+	if err := s.updateUserResetToken(c.Context(), user.ID, resetToken); err != nil {
 		errView := errors.New("failed to create reset password token")
 		return view.Render(c, view.AuthResetPasswordPage(vc, email, "", errView))
 	}
 
-	if err := s.sendResetPasswordEmailAsync(c.Context(), email, user.ResetToken); err != nil {
+	if err := s.sendResetPasswordEmailAsync(c.Context(), email, resetToken); err != nil {
 		log.Error("queue reset password email:", err)
 		errView := errors.New("could not send the reset password email, please try again")
 		return view.Render(c, view.AuthResetPasswordPage(vc, email, "", errView))

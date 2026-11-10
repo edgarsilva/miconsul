@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"miconsul/internal/models"
 	"miconsul/internal/services/auth"
 	view "miconsul/internal/views"
 
@@ -167,7 +166,7 @@ func (s *service) HandleProfilePic(c fiber.Ctx) error {
 func (s *service) HandleRemoveProfilePic(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
-	_, err := gorm.G[models.User](s.GormDB()).Where("uid = ?", cu.UID).Update(c.Context(), "profile_pic", "")
+	_, err := s.RemoveProfilePicByUID(c.Context(), cu.UID)
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.RedirectWithToast(c, "/profile", "User does not exist", view.LevelWarning)
 	}

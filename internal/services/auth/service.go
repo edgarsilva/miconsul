@@ -247,6 +247,55 @@ func (s *service) userUpdateConfirmToken(ctx context.Context, email, token strin
 	return nil
 }
 
+// updateUserResetToken saves a password reset token for the user. The token
+// expires in one hour.
+func (s *service) updateUserResetToken(ctx context.Context, userID uint, token string) error {
+	user := models.User{
+		ResetToken:          token,
+		ResetTokenExpiresAt: time.Now().UTC().Add(time.Hour * 1),
+	}
+	rowsAffected, err := gorm.G[models.User](s.DB.GormDB()).
+		Select("reset_token", "reset_token_expires_at").
+		Where("id = ?", userID).
+		Updates(ctx, user)
+	if err != nil {
+		return fmt.Errorf("update reset token: %w", err)
+	}
+	if rowsAffected != 1 {
+		return fmt.Errorf("update reset token: %w", gorm.ErrRecordNotFound)
+	}
+
+	return nil
+}
+
+// takeUserByConfirmToken returns the user that holds the unexpired email
+// confirmation token.
+func (s *service) takeUserByConfirmToken(ctx context.Context, token string) (models.User, error) {
+	user, err := gorm.G[models.User](s.DB.GormDB()).
+		Select("uid, email, confirm_email_token").
+		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now().UTC()).
+		Take(ctx)
+	if err != nil {
+		return models.User{}, fmt.Errorf("take user by confirm token: %w", err)
+	}
+
+	return user, nil
+}
+
+// clearUserConfirmToken clears the unexpired email confirmation token, which
+// marks the email as confirmed.
+func (s *service) clearUserConfirmToken(ctx context.Context, token string) error {
+	_, err := gorm.G[models.User](s.DB.GormDB()).
+		Select("confirm_email_token", "confirm_email_expires_at").
+		Where("confirm_email_token = ? AND confirm_email_expires_at > ?", token, time.Now().UTC()).
+		Updates(ctx, models.User{})
+	if err != nil {
+		return fmt.Errorf("clear confirm token: %w", err)
+	}
+
+	return nil
+}
+
 func (s *service) resetPasswordVerifyToken(ctx context.Context, token string) (email string, err error) {
 	user, err := gorm.G[models.User](s.DB.GormDB()).
 		Select("id, email").
