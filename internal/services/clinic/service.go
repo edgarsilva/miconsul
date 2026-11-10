@@ -3,6 +3,7 @@ package clinic
 import (
 	"context"
 	"errors"
+	"fmt"
 	"miconsul/internal/models"
 	"miconsul/internal/server"
 	"strings"
@@ -68,6 +69,7 @@ func (s service) CreateClinic(ctx context.Context, clinic *models.Clinic) error 
 	return gorm.G[models.Clinic](s.DB.GormDB()).Create(ctx, clinic)
 }
 
+// UpdateClinicByID writes the clinic form's columns, so cleared fields save as empty.
 func (s service) UpdateClinicByID(ctx context.Context, userID uint, clinicID string, clinic models.Clinic) error {
 	clinicID = strings.TrimSpace(clinicID)
 	if clinicID == "" {
@@ -81,9 +83,38 @@ func (s service) UpdateClinicByID(ctx context.Context, userID uint, clinicID str
 
 	rowsAffected, err := gorm.G[models.Clinic](s.DB.GormDB()).
 		Where("uid = ? AND user_id = ?", clinicID, userID).
+		Select(clinicFormColumns[0], clinicFormColumns[1:]).
 		Updates(ctx, clinic)
 	if err != nil {
 		return err
+	}
+	if rowsAffected == 1 {
+		return nil
+	}
+
+	exists, err := s.clinicExistsByID(ctx, userID, clinicID)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
+
+// UpdateClinicProfilePic sets the clinic's profile picture path.
+func (s service) UpdateClinicProfilePic(ctx context.Context, userID uint, clinicID string, path string) error {
+	clinicID = strings.TrimSpace(clinicID)
+	if clinicID == "" {
+		return ErrIDRequired
+	}
+
+	rowsAffected, err := gorm.G[models.Clinic](s.DB.GormDB()).
+		Where("uid = ? AND user_id = ?", clinicID, userID).
+		Update(ctx, "profile_pic", path)
+	if err != nil {
+		return fmt.Errorf("update clinic profile pic: %w", err)
 	}
 	if rowsAffected == 1 {
 		return nil

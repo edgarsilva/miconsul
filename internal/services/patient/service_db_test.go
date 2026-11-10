@@ -68,8 +68,15 @@ func TestPatientServiceDBFlows(t *testing.T) {
 			t.Fatalf("expected normalization error on long email")
 		}
 
-		if err := svc.UpdatePatientByID(ctx, user.ID, base.UID, models.Patient{ProfilePic: "avatar.png", Name: "Alpha Updated", Email: "updated@example.com", Phone: "999"}); err != nil {
+		if err := svc.UpdatePatientProfilePic(ctx, user.ID, base.UID, "avatar.png"); err != nil {
 			t.Fatalf("update profile pic: %v", err)
+		}
+		withPic, err := svc.TakePatientByID(ctx, user.ID, base.UID)
+		if err != nil || withPic.ProfilePic != "avatar.png" {
+			t.Fatalf("profile pic = %q (err %v), want avatar.png", withPic.ProfilePic, err)
+		}
+		if err := svc.UpdatePatientProfilePic(ctx, user.ID, "missing", "avatar.png"); err != gorm.ErrRecordNotFound {
+			t.Fatalf("expected record not found on missing profile pic update, got %v", err)
 		}
 		if err := svc.ClearPatientProfilePic(ctx, user.ID, base.UID); err != nil {
 			t.Fatalf("clear profile pic: %v", err)

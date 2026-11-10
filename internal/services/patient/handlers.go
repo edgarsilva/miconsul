@@ -119,8 +119,7 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 		}
 	} else {
 		patient.ProfilePic = path
-		profilePicUpdate := models.Patient{ProfilePic: path}
-		err = s.UpdatePatientByID(c.Context(), cu.ID, patient.UID, profilePicUpdate)
+		err = s.UpdatePatientProfilePic(c.Context(), cu.ID, patient.UID, path)
 		if err != nil {
 			log.Error(err)
 		}
@@ -171,8 +170,8 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 		if !errors.Is(picErr, ErrProfilePicNotProvided) {
 			log.Error(picErr)
 		}
-	} else {
-		patient.ProfilePic = path
+	} else if err := s.UpdatePatientProfilePic(c.Context(), cu.ID, patientID, path); err != nil {
+		log.Error(err)
 	}
 
 	err = s.UpdatePatientByID(c.Context(), cu.ID, patientID, patient)

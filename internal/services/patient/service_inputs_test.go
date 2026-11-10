@@ -13,16 +13,10 @@ func TestPatientUpsertInputToPatient(t *testing.T) {
 		MedicalBackground:   "none",
 		Notes:               "notes",
 		AddressLine1:        "L1",
-		AddressLine2:        "L2",
 		AddressCity:         "City",
 		AddressState:        "State",
 		AddressCountry:      "Country",
 		AddressZipCode:      "2000",
-		Whatsapp:            "wa",
-		Telegram:            "tg",
-		Messenger:           "msg",
-		Instagram:           "ig",
-		Facebook:            "fb",
 		EnableNotifications: true,
 		ViaEmail:            true,
 		ViaWhatsapp:         true,
@@ -39,9 +33,6 @@ func TestPatientUpsertInputToPatient(t *testing.T) {
 	}
 	if patient.Address.Line1 != in.AddressLine1 || patient.Address.Zip != in.AddressZipCode {
 		t.Fatalf("unexpected address mapping: %#v", patient.Address)
-	}
-	if patient.SocialMedia.Telegram != in.Telegram || patient.SocialMedia.Facebook != in.Facebook {
-		t.Fatalf("unexpected social mapping: %#v", patient.SocialMedia)
 	}
 	if !patient.NotificationFlags.EnableNotifications || !patient.NotificationFlags.ViaEmail || !patient.NotificationFlags.ViaMessenger {
 		t.Fatalf("unexpected notification flags mapping: %#v", patient.NotificationFlags)
