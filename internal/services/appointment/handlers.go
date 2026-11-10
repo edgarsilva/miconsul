@@ -351,7 +351,7 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/appointments", "can't update without an id", view.LevelError)
 	}
 
-	_, err := s.TakeAppointmentByUID(c.Context(), cu.ID, appointmentID)
+	existing, err := s.TakeAppointmentByUID(c.Context(), cu.ID, appointmentID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", view.LevelWarning)
 	}
@@ -384,6 +384,9 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 		ClinicID:     0,
 		PatientID:    0,
 		Duration:     input.Duration,
+	}
+	if existing.IsBookedAtChanged(bookedAt) {
+		appointment.RescheduledAt = time.Now().UTC()
 	}
 
 	clinic, err := s.TakeClinicByUID(c.Context(), cu.ID, input.ClinicUID)

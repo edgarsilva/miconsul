@@ -122,6 +122,12 @@ func (a Appointment) AwaitingVisit() bool {
 	return slices.Contains(AwaitingVisitStatuses, a.Status)
 }
 
+// IsBookedAtChanged reports whether t is a different time than BookedAt.
+// It ignores seconds, because the booking form sends only hours and minutes.
+func (a Appointment) IsBookedAtChanged(t time.Time) bool {
+	return !a.BookedAt.Truncate(time.Minute).Equal(t.Truncate(time.Minute))
+}
+
 // PatientCanConfirm reports whether the patient may still confirm or ask to
 // change the date.
 func (a Appointment) PatientCanConfirm() bool {

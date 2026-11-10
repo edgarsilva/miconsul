@@ -637,3 +637,61 @@ func TestIndexSectionFilterLinks(t *testing.T) {
 		})
 	}
 }
+
+func TestHandleUpdateStampsRescheduledAtOnlyWhenTheTimeMoves(t *testing.T) {
+	svc, user, clinic, patient := newAppointmentServiceForTests(t)
+
+	mx, err := time.LoadLocation(models.DefaultTimezone)
+	if err != nil {
+		t.Fatalf("load %s: %v", models.DefaultTimezone, err)
+	}
+	// Seconds the edit form can't show, as in seeded and older rows.
+	bookedAt := time.Date(2026, 12, 1, 16, 30, 42, 0, time.UTC)
+	apnt := models.Appointment{
+		UserID:    user.ID,
+		ClinicID:  clinic.ID,
+		PatientID: patient.ID,
+		BookedAt:  bookedAt,
+		Token:     "tok_reschedule_handler",
+	}
+	if err := svc.CreateAppointment(t.Context(), &apnt); err != nil {
+		t.Fatalf("seed appointment: %v", err)
+	}
+
+	app := fiber.New()
+	app.Patch("/appointments/:id", func(c fiber.Ctx) error {
+		c.Locals("current_user", user)
+		return svc.HandleUpdate(c)
+	})
+	save := func(t *testing.T, at time.Time) models.Appointment {
+		t.Helper()
+		form := url.Values{
+			"bookedAt":  {at.In(mx).Format("2006-01-02T15:04")},
+			"price":     {"100"},
+			"clinicId":  {clinic.UID},
+			"patientId": {patient.UID},
+			"duration":  {"30"},
+		}
+		req := httptest.NewRequest(http.MethodPatch, "/appointments/"+apnt.UID, strings.NewReader(form.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		resp, err := app.Test(req)
+		if err != nil || resp.StatusCode != fiber.StatusSeeOther {
+			t.Fatalf("update expected 303, got status=%d err=%v", resp.StatusCode, err)
+		}
+		saved, err := svc.TakeAppointmentByUID(t.Context(), user.ID, apnt.UID)
+		if err != nil {
+			t.Fatalf("load appointment: %v", err)
+		}
+		return saved
+	}
+
+	if saved := save(t, bookedAt); !saved.RescheduledAt.IsZero() {
+		t.Fatalf("saving the same time stamped RescheduledAt = %v", saved.RescheduledAt)
+	}
+
+	before := time.Now().UTC()
+	saved := save(t, bookedAt.Add(time.Hour))
+	if saved.RescheduledAt.Before(before.Add(-time.Second)) {
+		t.Fatalf("moving the time stamped RescheduledAt = %v, want about now", saved.RescheduledAt)
+	}
+}
