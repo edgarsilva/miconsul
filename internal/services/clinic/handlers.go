@@ -190,8 +190,7 @@ func (s *service) attachClinicProfilePicBestEffort(c fiber.Ctx, userID uint, cli
 	}
 
 	clinic.ProfilePic = path
-	profilePicUpdate := models.Clinic{ProfilePic: path}
-	err := s.UpdateClinicByID(c.Context(), userID, clinic.UID, profilePicUpdate)
+	err := s.UpdateClinicProfilePic(c.Context(), userID, clinic.UID, path)
 	if err != nil {
 		log.Error(err)
 	}

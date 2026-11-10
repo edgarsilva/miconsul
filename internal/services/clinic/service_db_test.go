@@ -86,6 +86,22 @@ func TestClinicServiceDBFlows(t *testing.T) {
 		}
 	})
 
+	t.Run("update clinic profile pic", func(t *testing.T) {
+		if err := svc.UpdateClinicProfilePic(ctx, user.ID, base.UID, "avatar.png"); err != nil {
+			t.Fatalf("update profile pic: %v", err)
+		}
+		got, err := svc.TakeClinicByID(ctx, user.ID, base.UID)
+		if err != nil || got.ProfilePic != "avatar.png" {
+			t.Fatalf("profile pic = %q (err %v), want avatar.png", got.ProfilePic, err)
+		}
+		if err := svc.UpdateClinicProfilePic(ctx, user.ID, "missing", "avatar.png"); err != gorm.ErrRecordNotFound {
+			t.Fatalf("expected not found on missing profile pic update, got %v", err)
+		}
+		if err := svc.UpdateClinicProfilePic(ctx, user.ID, " ", "avatar.png"); err != ErrIDRequired {
+			t.Fatalf("expected ErrIDRequired on blank id, got %v", err)
+		}
+	})
+
 	t.Run("delete clinic by id", func(t *testing.T) {
 		if err := svc.DeleteClinicByID(ctx, user.ID, base.UID); err != nil {
 			t.Fatalf("delete clinic by id: %v", err)

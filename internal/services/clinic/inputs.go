@@ -8,7 +8,6 @@ type clinicUpsertInput struct {
 	Phone string `form:"phone"`
 
 	AddressLine1   string `form:"addressLine1"`
-	AddressLine2   string `form:"addressLine2"`
 	AddressCity    string `form:"addressCity"`
 	AddressState   string `form:"addressState"`
 	AddressCountry string `form:"addressCountry"`
@@ -16,9 +15,15 @@ type clinicUpsertInput struct {
 
 	Whatsapp  string `form:"whatsapp"`
 	Telegram  string `form:"telegram"`
-	Messenger string `form:"messenger"`
 	Instagram string `form:"instagram"`
 	Facebook  string `form:"facebook"`
+}
+
+// clinicFormColumns are the columns the clinic form writes, zero values included.
+var clinicFormColumns = []string{
+	"Name", "Email", "Phone", "Price",
+	"Line1", "City", "State", "Country", "Zip",
+	"Whatsapp", "Telegram", "Instagram", "Facebook",
 }
 
 func (in clinicUpsertInput) toClinic(id uint, uid string, userID uint, price int) models.Clinic {
@@ -31,14 +36,12 @@ func (in clinicUpsertInput) toClinic(id uint, uid string, userID uint, price int
 		Email:     in.Email,
 		Phone:     in.Phone,
 		Line1:     in.AddressLine1,
-		Line2:     in.AddressLine2,
 		City:      in.AddressCity,
 		State:     in.AddressState,
 		Country:   in.AddressCountry,
 		Zip:       in.AddressZipCode,
 		Whatsapp:  in.Whatsapp,
 		Telegram:  in.Telegram,
-		Messenger: in.Messenger,
 		Instagram: in.Instagram,
 		Facebook:  in.Facebook,
 	}

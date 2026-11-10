@@ -131,6 +131,7 @@ func (s service) CreatePatient(ctx context.Context, patient *models.Patient) err
 	return gorm.G[models.Patient](s.DB.GormDB()).Create(ctx, patient)
 }
 
+// UpdatePatientByID writes the patient form's columns, so cleared fields save as empty.
 func (s service) UpdatePatientByID(ctx context.Context, userID uint, patientID string, patient models.Patient) error {
 	patientID = strings.TrimSpace(patientID)
 	if patientID == "" {
@@ -143,6 +144,7 @@ func (s service) UpdatePatientByID(ctx context.Context, userID uint, patientID s
 
 	rowsAffected, err := gorm.G[models.Patient](s.DB.GormDB()).
 		Where("uid = ? AND user_id = ?", patientID, userID).
+		Select(patientFormColumns[0], patientFormColumns[1:]).
 		Updates(ctx, patient)
 	if err != nil {
 		return err
@@ -182,6 +184,11 @@ func (s service) DeletePatientByID(ctx context.Context, userID uint, patientID s
 }
 
 func (s service) ClearPatientProfilePic(ctx context.Context, userID uint, patientID string) error {
+	return s.UpdatePatientProfilePic(ctx, userID, patientID, "")
+}
+
+// UpdatePatientProfilePic sets the patient's profile picture path.
+func (s service) UpdatePatientProfilePic(ctx context.Context, userID uint, patientID string, path string) error {
 	patientID = strings.TrimSpace(patientID)
 	if patientID == "" {
 		return ErrIDRequired
@@ -189,9 +196,9 @@ func (s service) ClearPatientProfilePic(ctx context.Context, userID uint, patien
 
 	rowsAffected, err := gorm.G[models.Patient](s.DB.GormDB()).
 		Where("uid = ? AND user_id = ?", patientID, userID).
-		Update(ctx, "profile_pic", "")
+		Update(ctx, "profile_pic", path)
 	if err != nil {
-		return err
+		return fmt.Errorf("update patient profile pic: %w", err)
 	}
 	if rowsAffected == 1 {
 		return nil

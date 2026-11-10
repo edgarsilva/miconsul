@@ -13,23 +13,23 @@ type patientUpsertInput struct {
 	Notes             string `form:"notes"`
 
 	AddressLine1   string `form:"addressLine1"`
-	AddressLine2   string `form:"addressLine2"`
 	AddressCity    string `form:"addressCity"`
 	AddressState   string `form:"addressState"`
 	AddressCountry string `form:"addressCountry"`
 	AddressZipCode string `form:"addressZipCode"`
-
-	Whatsapp  string `form:"whatsapp"`
-	Telegram  string `form:"telegram"`
-	Messenger string `form:"messenger"`
-	Instagram string `form:"instagram"`
-	Facebook  string `form:"facebook"`
 
 	EnableNotifications bool `form:"enableNotifications"`
 	ViaEmail            bool `form:"viaEmail"`
 	ViaWhatsapp         bool `form:"viaWhatsapp"`
 	ViaTelegram         bool `form:"viaTelegram"`
 	ViaMessenger        bool `form:"viaMessenger"`
+}
+
+// patientFormColumns are the columns the patient form writes, zero values included.
+var patientFormColumns = []string{
+	"Name", "Email", "Phone", "Age", "Ocupation", "FamilyHistory", "MedicalBackground", "Notes",
+	"Line1", "City", "State", "Country", "Zip",
+	"EnableNotifications", "ViaEmail", "ViaWhatsapp", "ViaTelegram", "ViaMessenger",
 }
 
 func (in patientUpsertInput) toPatient(id uint, uid string, userID uint) models.Patient {
@@ -47,16 +47,10 @@ func (in patientUpsertInput) toPatient(id uint, uid string, userID uint) models.
 		Notes:             in.Notes,
 
 		Line1:               in.AddressLine1,
-		Line2:               in.AddressLine2,
 		City:                in.AddressCity,
 		State:               in.AddressState,
 		Country:             in.AddressCountry,
 		Zip:                 in.AddressZipCode,
-		Whatsapp:            in.Whatsapp,
-		Telegram:            in.Telegram,
-		Messenger:           in.Messenger,
-		Instagram:           in.Instagram,
-		Facebook:            in.Facebook,
 		EnableNotifications: in.EnableNotifications,
 		ViaEmail:            in.ViaEmail,
 		ViaWhatsapp:         in.ViaWhatsapp,
