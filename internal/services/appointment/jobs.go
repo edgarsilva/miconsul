@@ -82,47 +82,12 @@ func (s *service) handleReminderSweepJob(ctx context.Context, _ jobs.Job) error 
 		return fmt.Errorf("load appointments for reminder sweep: %w", err)
 	}
 
-	if len(appointments) == 0 {
-		return nil
-	}
-
-	candidateIDs := make([]string, 0, len(appointments))
-	for _, appointment := range appointments {
-		candidateID := appointment.AlertableID()
-		if candidateID == "" {
-			continue
-		}
-		candidateIDs = append(candidateIDs, candidateID)
-	}
-	if len(candidateIDs) == 0 {
-		return nil
-	}
-
-	var notifiedIDs []string
-	err = s.DB.WithContext(ctx).
-		Model(&models.Notification{}).
-		Where("notificationable_type = ?", "appointments").
-		Where("name = ?", "appointment_reminder").
-		Where("status IN ?", []models.NotificationStatus{models.NotificationSent, models.NotificationSuccess}).
-		Where("notificationable_id IN ?", candidateIDs).
-		Pluck("notificationable_id", &notifiedIDs).Error
+	unreminded, err := s.appointmentsToRemind(ctx, appointments)
 	if err != nil {
-		return fmt.Errorf("load existing reminder notifications: %w", err)
+		return fmt.Errorf("reminder sweep: %w", err)
 	}
 
-	notifiedSet := make(map[string]struct{}, len(notifiedIDs))
-	for _, id := range notifiedIDs {
-		notifiedSet[id] = struct{}{}
-	}
-
-	for _, appointment := range appointments {
-		alertableID := appointment.AlertableID()
-		if alertableID == "" {
-			continue
-		}
-		if _, ok := notifiedSet[alertableID]; ok {
-			continue
-		}
+	for _, appointment := range unreminded {
 		if _, err := s.EnqueueJob(ctx, ReminderJob, JobPayload{AppointmentID: appointment.UID}); err != nil {
 			log.Printf("appointment jobs: enqueue reminder failed for %s: %v", appointment.UID, err)
 		}
@@ -155,11 +120,11 @@ func (s *service) handleReminderJob(ctx context.Context, job jobs.Job) error {
 		return nil
 	}
 
-	sent, err := s.notificationSentAnyMedium(ctx, appointment, "appointment_reminder")
+	unreminded, err := s.appointmentsToRemind(ctx, []models.Appointment{appointment})
 	if err != nil {
-		return fmt.Errorf("check reminder notification status: %w", err)
+		return fmt.Errorf("reminder job: %w", err)
 	}
-	if sent {
+	if len(unreminded) == 0 {
 		return nil
 	}
 
@@ -217,6 +182,52 @@ func (s *service) notificationSentAnyMedium(ctx context.Context, appointment mod
 	}
 
 	return count > 0, nil
+}
+
+// appointmentsToRemind returns the appointments without a reminder sent since
+// they were last rescheduled, or ever when never rescheduled.
+func (s *service) appointmentsToRemind(ctx context.Context, appointments []models.Appointment) ([]models.Appointment, error) {
+	alertableIDs := make([]string, 0, len(appointments))
+	for _, appointment := range appointments {
+		if id := appointment.AlertableID(); id != "" {
+			alertableIDs = append(alertableIDs, id)
+		}
+	}
+	if len(alertableIDs) == 0 {
+		return nil, nil
+	}
+
+	reminders, err := gorm.G[models.Notification](s.DB.GormDB()).
+		Select("notificationable_id", "created_at").
+		Where("notificationable_type = ?", "appointments").
+		Where("name = ?", "appointment_reminder").
+		Where("status IN ?", []models.NotificationStatus{models.NotificationSent, models.NotificationSuccess}).
+		Where("notificationable_id IN ?", alertableIDs).
+		Find(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("load sent reminders: %w", err)
+	}
+
+	lastReminded := make(map[string]time.Time, len(reminders))
+	for _, reminder := range reminders {
+		if reminder.CreatedAt.After(lastReminded[reminder.NotificationableID]) {
+			lastReminded[reminder.NotificationableID] = reminder.CreatedAt
+		}
+	}
+
+	unreminded := make([]models.Appointment, 0, len(appointments))
+	for _, appointment := range appointments {
+		id := appointment.AlertableID()
+		if id == "" {
+			continue
+		}
+		if remindedAt, ok := lastReminded[id]; ok && remindedAt.After(appointment.RescheduledAt) {
+			continue
+		}
+		unreminded = append(unreminded, appointment)
+	}
+
+	return unreminded, nil
 }
 
 // findAppointmentsDueForReminder returns appointments booked within the two

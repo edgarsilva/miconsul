@@ -7,16 +7,17 @@ import (
 )
 
 type appointmentPatchUpdates struct {
-	BookedAt     time.Time
-	BookedYear   int
-	BookedMonth  int
-	BookedDay    int
-	BookedHour   int
-	BookedMinute int
-	Price        int
-	ClinicID     uint
-	PatientID    uint
-	Duration     int
+	BookedAt      time.Time
+	RescheduledAt time.Time
+	BookedYear    int
+	BookedMonth   int
+	BookedDay     int
+	BookedHour    int
+	BookedMinute  int
+	Price         int
+	ClinicID      uint
+	PatientID     uint
+	Duration      int
 }
 
 type appointmentCompleteUpdates struct {
