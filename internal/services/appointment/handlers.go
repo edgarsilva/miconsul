@@ -567,11 +567,8 @@ func (s *service) HandlePriceFrg(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusNotFound)
 	}
 
-	clinic, err := gorm.G[models.Clinic](s.DB.GormDB()).
-		Select("id", "uid", "price").
-		Where("uid = ? AND user_id = ?", clinicID, cu.ID).
-		Take(c.Context())
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	clinic, err := s.TakeClinicByUID(c.Context(), cu.ID, clinicID)
+	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
 		return c.SendStatus(fiber.StatusNotFound)
 	}
 	if err != nil {

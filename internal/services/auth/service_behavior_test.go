@@ -86,7 +86,7 @@ func TestSaveLogtoUserPaths(t *testing.T) {
 			t.Fatalf("expected no-op logto sync success, got %v", err)
 		}
 
-		got, err := svc.userFetch(context.Background(), "logto-existing@example.com")
+		got, err := svc.takeUserByEmail(context.Background(), "logto-existing@example.com")
 		if err != nil {
 			t.Fatalf("fetch user: %v", err)
 		}
@@ -109,7 +109,7 @@ func TestSaveLogtoUserPaths(t *testing.T) {
 			t.Fatalf("expected saveLogtoUser create success, got %v", err)
 		}
 
-		got, err := svc.userFetch(context.Background(), "logto-new@example.com")
+		got, err := svc.takeUserByEmail(context.Background(), "logto-new@example.com")
 		if err != nil {
 			t.Fatalf("fetch user: %v", err)
 		}
@@ -136,7 +136,7 @@ func TestSaveLogtoUserPaths(t *testing.T) {
 			t.Fatalf("expected update success, got %v", err)
 		}
 
-		got, err := svc.userFetch(context.Background(), "logto-update@example.com")
+		got, err := svc.takeUserByEmail(context.Background(), "logto-update@example.com")
 		if err != nil {
 			t.Fatalf("fetch user: %v", err)
 		}
