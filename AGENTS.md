@@ -27,6 +27,8 @@ This file provides repo-specific guidance for coding assistants working on this 
   - Never bind requests into, or serialize responses from, `models.*` structs directly.
   - Bind request data into unexported `xxxInput` types in the service's `inputs.go`. Map them to models with methods like `toClinic(...)`, and set IDs and ownership (`ID`, `UID`, `UserID`) on the server.
   - Return JSON through unexported `xxxOutput` types in the service's `outputs.go`, built by `newXxxOutput(...)`. Use a shared model view such as `models.PublicUser` (`User.Public()`) for the fields; don't use anonymous structs as response envelopes.
+  - Name inputs `<resource><Action>Input` (`clinicUpsertInput`, `appointmentCompleteInput`). Read every form value an action writes through the input, including `bookedAt` and `price`; handlers do not call `c.FormValue` for them (`c.FormValue("id")` for the resource id is fine).
+  - Create: `in.toClinic(...)` returns the model. Update: either map the input to the model and write a service-owned column list (`clinicFormColumns`), or, when each action writes a few columns, map it with `in.to<Resource>Updates()` / `in.to<Resource><Action>Updates()` to an unexported `<resource><Action>Updates` type from `updates.go` (`appointmentUpdates`, `appointmentCancelUpdates`). The service owns the column list; callers never pass columns.
   - Handlers then only orchestrate the request: bind the input, call the service, build the output.
   - One-off `fiber.Map{"error": ...}` replies are fine.
   - Tag secret model fields `json:"-" form:"-"`. Fiber's form binder ignores `json` tags.
@@ -79,6 +81,17 @@ One rule: namespace + what + kind. The namespace is the domain, singular and nam
 Routes and handlers split by action (`GET /clinics/new` → `HandleNewPage`, `GET /clinics/:id` → `HandleEditPage`); both render the resource's Form page, and its section decides which state to show, since it re-renders itself after an htmx save. No `"new"` id sentinel.
 
 Handler names don't repeat their package's name (`clinic.HandleCreate`, not `HandleClinicsCreate`); keep words that name another actor or resource (`HandlePatientConfirm`, `HandleAdminUpdateUser`). `Page` marks a GET that returns a full page; fragments, files, redirects and JSON don't take it.
+
+## Service Method Naming
+
+Name data-access methods `<GormVerb><Model>[By<Field>]`, verb first. Exported or unexported by use.
+
+- `Take`: one row, `gorm.ErrRecordNotFound` if none, singular model (`TakeClinicByUID`, `takeUserByEmail`).
+- `Find`: many rows, plural model (`FindPatientsBySearchTerm`).
+- `Create` / `Update` / `Save` / `Delete` / `Count`: as GORM (`CreateClinic`, `createUser`); add `By<Field>` when the method filters on a field (`UpdateClinicByID`).
+- A domain action that is not plain CRUD keeps its domain verb (`ConfirmAppointment`, `clearUserConfirmToken`).
+- No `With` suffix. No resource-first prefix (`userFetch`); the model name follows the verb.
+- Normalizers are `normalize<Model>` (`normalizeClinic`).
 
 ## Build/Test Workflow
 

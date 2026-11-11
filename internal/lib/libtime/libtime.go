@@ -12,6 +12,9 @@ import (
 
 type Timezone = string
 
+// DateTimeLocalLayout is the value format of <input type="datetime-local">.
+const DateTimeLocalLayout = "2006-01-02T15:04"
+
 // Timeframe is a calendar day, a week starting Monday, or a month.
 type Timeframe string
 
@@ -111,6 +114,18 @@ func NewInTimezone(t time.Time, tz Timezone) time.Time {
 	}
 
 	return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), loc)
+}
+
+// ParseDateTimeLocal parses a datetime-local value as wall time in tz and
+// returns it in UTC. Example: "2026-12-01T10:30" in America/Mexico_City ->
+// 2026-12-01 16:30 UTC.
+func ParseDateTimeLocal(value string, tz Timezone) (time.Time, error) {
+	t, err := time.Parse(DateTimeLocalLayout, value)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("parse datetime-local value: %w", err)
+	}
+
+	return NewInTimezone(t, tz).UTC(), nil
 }
 
 func InTimezone(t time.Time, tz Timezone) time.Time {

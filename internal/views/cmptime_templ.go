@@ -59,9 +59,9 @@ func CmpTime(t time.Time, class ...string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var4 string
-			templ_7745c5c3_Var4, templ_7745c5c3_Err = templruntime.NewAttributeExpression(t.Format(FormTimeFormat)).Resolve(ctx)
+			templ_7745c5c3_Var4, templ_7745c5c3_Err = templruntime.NewAttributeExpression(t.Format(libtime.DateTimeLocalLayout)).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmptime.templ`, Line: 10, Col: 77}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmptime.templ`, Line: 10, Col: 90}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 			if templ_7745c5c3_Err != nil {
@@ -88,7 +88,7 @@ func CmpTime(t time.Time, class ...string) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(t.Format(ViewTimeFormat))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmptime.templ`, Line: 10, Col: 106}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/cmptime.templ`, Line: 10, Col: 119}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {

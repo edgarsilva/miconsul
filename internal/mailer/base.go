@@ -11,7 +11,6 @@ import (
 var locales = localize.New(preferences.LocaleSpanish, preferences.LocaleEnglish)
 
 const (
-	FormTimeFormat = "2006-01-02T15:04"
 	ViewTimeFormat = "Mon 02/Jan/06 3:04 PM"
 )
 

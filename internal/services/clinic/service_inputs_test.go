@@ -4,6 +4,7 @@ import "testing"
 
 func TestClinicUpsertInputToClinic(t *testing.T) {
 	in := clinicUpsertInput{
+		Price:          "250",
 		Name:           "Clinic",
 		Email:          "clinic@example.com",
 		Phone:          "+123",
@@ -18,8 +19,8 @@ func TestClinicUpsertInputToClinic(t *testing.T) {
 		Facebook:       "fb",
 	}
 
-	clinic := in.toClinic(1, "cln_1", 2, 250)
-	if clinic.ID != 1 || clinic.UID != "cln_1" || clinic.UserID != 2 || clinic.Price != 250 {
+	clinic := in.toClinic(1, "cln_1", 2)
+	if clinic.ID != 1 || clinic.UID != "cln_1" || clinic.UserID != 2 || clinic.Price != 25000 {
 		t.Fatalf("unexpected identifiers mapping: %#v", clinic)
 	}
 	if clinic.Name != in.Name || clinic.Email != in.Email || clinic.Phone != in.Phone {

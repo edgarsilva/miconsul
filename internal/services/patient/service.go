@@ -123,7 +123,7 @@ func (s service) FindLastAppointmentsByPatient(ctx context.Context, userID uint,
 }
 
 func (s service) CreatePatient(ctx context.Context, patient *models.Patient) error {
-	err := normalizePatientWriteInput(patient)
+	err := normalizePatient(patient)
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func (s service) UpdatePatientByID(ctx context.Context, userID uint, patientID s
 	if patientID == "" {
 		return ErrIDRequired
 	}
-	err := normalizePatientWriteInput(&patient)
+	err := normalizePatient(&patient)
 	if err != nil {
 		return err
 	}
@@ -242,7 +242,7 @@ func (s service) CreatePatientsInBatches(ctx context.Context, patients []models.
 	return result.RowsAffected, nil
 }
 
-func normalizePatientWriteInput(patient *models.Patient) error {
+func normalizePatient(patient *models.Patient) error {
 	if patient == nil {
 		return errors.New("patient is required")
 	}

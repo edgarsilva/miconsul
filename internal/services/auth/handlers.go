@@ -336,7 +336,7 @@ func (s *service) HandleResetPasswordUpdate(c fiber.Ctx) error {
 		return view.Render(c, view.AuthChangePasswordPage(vc, email, token, err))
 	}
 
-	_, err = s.userUpdatePassword(c.Context(), email, password, token)
+	_, err = s.updateUserPassword(c.Context(), email, password, token)
 	if err != nil {
 		return s.RedirectWithAlert(c, "/resetpassword", "something went wrong, try again!", view.LevelError)
 	}

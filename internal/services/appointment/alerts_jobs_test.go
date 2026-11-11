@@ -404,7 +404,7 @@ func rescheduleForTest(t *testing.T, svc *service, apnt models.Appointment) {
 	t.Helper()
 
 	bookedAt := apnt.BookedAt.Add(30 * time.Minute).UTC()
-	updates := appointmentPatchUpdates{
+	updates := appointmentUpdates{
 		BookedAt:      bookedAt,
 		RescheduledAt: time.Now().UTC(),
 		BookedYear:    bookedAt.Year(),

@@ -90,7 +90,7 @@ func (s *service) signup(ctx context.Context, email string, password string) err
 	}
 
 	token := newConfirmEmailToken()
-	_, err = s.userCreate(ctx, email, string(pwd), token)
+	_, err = s.createUser(ctx, email, string(pwd), token)
 	if err != nil {
 		return errors.New("failed to save email or password, try again")
 	}
@@ -152,8 +152,8 @@ func (s *service) userPendingConfirmation(ctx context.Context, email string) err
 	return nil
 }
 
-// userCreate creates a new row in the users table
-func (s *service) userCreate(ctx context.Context, email, password, token string) (models.User, error) {
+// createUser creates a new row in the users table
+func (s *service) createUser(ctx context.Context, email, password, token string) (models.User, error) {
 	user := models.User{
 		Email:                 email,
 		Password:              password,
@@ -206,8 +206,8 @@ func (s *service) authenticateCredentials(ctx context.Context, email, password s
 	return user, nil
 }
 
-// userUpdatePassword updates a user password
-func (s *service) userUpdatePassword(ctx context.Context, email, password, token string) (models.User, error) {
+// updateUserPassword updates a user password
+func (s *service) updateUserPassword(ctx context.Context, email, password, token string) (models.User, error) {
 	pwd, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
 		return models.User{}, errors.New("update password")
@@ -230,7 +230,7 @@ func (s *service) userUpdatePassword(ctx context.Context, email, password, token
 	return user, nil
 }
 
-func (s *service) userUpdateConfirmToken(ctx context.Context, email, token string) error {
+func (s *service) updateUserConfirmToken(ctx context.Context, email, token string) error {
 	user := models.User{
 		ConfirmEmailToken:     token,
 		ConfirmEmailExpiresAt: time.Now().UTC().Add(time.Hour * 24),
@@ -352,7 +352,7 @@ func (s *service) saveLogtoUser(ctx context.Context, logtoUser LogtoUser) error 
 
 func (s *service) resendPendingConfirmation(ctx context.Context, email string) error {
 	token := newConfirmEmailToken()
-	if err := s.userUpdateConfirmToken(ctx, email, token); err != nil {
+	if err := s.updateUserConfirmToken(ctx, email, token); err != nil {
 		return err
 	}
 

@@ -9,7 +9,7 @@ import (
 
 func TestNormalizeClinicWriteInput(t *testing.T) {
 	t.Run("nil clinic returns error", func(t *testing.T) {
-		if err := normalizeClinicWriteInput(nil); err == nil {
+		if err := normalizeClinic(nil); err == nil {
 			t.Fatalf("expected nil clinic to fail")
 		}
 	})
@@ -21,7 +21,7 @@ func TestNormalizeClinicWriteInput(t *testing.T) {
 			Phone: "  +12345  ",
 		}
 
-		if err := normalizeClinicWriteInput(clinic); err != nil {
+		if err := normalizeClinic(clinic); err != nil {
 			t.Fatalf("expected normalized input to pass: %v", err)
 		}
 		if clinic.Name != "Clinic Name" {
@@ -48,7 +48,7 @@ func TestNormalizeClinicWriteInput(t *testing.T) {
 		for _, tc := range cases {
 			t.Run(tc.name, func(t *testing.T) {
 				c := tc.clinic
-				if err := normalizeClinicWriteInput(&c); err == nil {
+				if err := normalizeClinic(&c); err == nil {
 					t.Fatalf("expected boundary validation error")
 				}
 			})

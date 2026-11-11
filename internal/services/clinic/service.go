@@ -61,7 +61,7 @@ func (s service) FindClinicsBySearchTerm(ctx context.Context, cu models.User, se
 }
 
 func (s service) CreateClinic(ctx context.Context, clinic *models.Clinic) error {
-	err := normalizeClinicWriteInput(clinic)
+	err := normalizeClinic(clinic)
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func (s service) UpdateClinicByID(ctx context.Context, userID uint, clinicID str
 		return ErrIDRequired
 	}
 
-	err := normalizeClinicWriteInput(&clinic)
+	err := normalizeClinic(&clinic)
 	if err != nil {
 		return err
 	}
@@ -168,7 +168,7 @@ func (s service) clinicExistsByID(ctx context.Context, userID uint, clinicID str
 	return count > 0, nil
 }
 
-func normalizeClinicWriteInput(clinic *models.Clinic) error {
+func normalizeClinic(clinic *models.Clinic) error {
 	if clinic == nil {
 		return errors.New("clinic is required")
 	}
