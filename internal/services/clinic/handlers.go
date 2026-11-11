@@ -5,7 +5,6 @@ import (
 	"errors"
 	"strings"
 
-	"miconsul/internal/lib/amount"
 	"miconsul/internal/models"
 	view "miconsul/internal/views"
 
@@ -67,13 +66,12 @@ func (s *service) HandleEditPage(c fiber.Ctx) error {
 // POST: /clinics
 func (s *service) HandleCreate(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
-	price := amount.StrToAmount(c.FormValue("price", ""))
 	input := clinicUpsertInput{}
 	err := c.Bind().Body(&input)
 	if err != nil {
 		return s.RedirectWithToast(c, "/clinics/new", "Invalid clinic input", view.LevelError)
 	}
-	clinic := input.toClinic(0, "", cu.ID, price)
+	clinic := input.toClinic(0, "", cu.ID)
 
 	err = s.CreateClinic(c.Context(), &clinic)
 	if err != nil {
@@ -110,7 +108,7 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/clinics/"+clinicID, "Invalid clinic input", view.LevelError)
 	}
 
-	clinic = input.toClinic(clinic.ID, clinic.UID, clinic.UserID, amount.StrToAmount(c.FormValue("price", "")))
+	clinic = input.toClinic(clinic.ID, clinic.UID, clinic.UserID)
 
 	s.attachClinicProfilePicBestEffort(c, cu.ID, &clinic)
 

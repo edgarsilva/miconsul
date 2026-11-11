@@ -17,7 +17,7 @@ func TestHandleUpdateSavesClearedFields(t *testing.T) {
 
 	var full clinicUpsertInput
 	fillFields(&full)
-	filled := full.toClinic(0, "", user.ID, 50000)
+	filled := full.toClinic(0, "", user.ID)
 
 	// The form does not render these fields, so an update must keep them.
 	notInForm := []string{"Line2", "Messenger"}
