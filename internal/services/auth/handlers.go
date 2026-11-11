@@ -267,7 +267,7 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 		return view.Render(c, view.AuthResetPasswordPage(vc, email, "", errView))
 	}
 
-	user, err := s.userFetch(c.Context(), email)
+	user, err := s.takeUserByEmail(c.Context(), email)
 	if err != nil {
 		errView := errors.New("user not found with that email")
 		return view.Render(c, view.AuthResetPasswordPage(vc, email, "", errView))

@@ -171,9 +171,9 @@ func (s *service) userCreate(ctx context.Context, email, password, token string)
 	return user, nil
 }
 
-// userFetch returns a User by email
-func (s *service) userFetch(ctx context.Context, email string) (models.User, error) {
-	ctx, span := s.Trace(ctx, "auth/services:userFetch")
+// takeUserByEmail returns the user with the email.
+func (s *service) takeUserByEmail(ctx context.Context, email string) (models.User, error) {
+	ctx, span := s.Trace(ctx, "auth/services:takeUserByEmail")
 	defer span.End()
 
 	user, err := gorm.G[models.User](s.DB.GormDB()).Where("email = ?", email).Take(ctx)
@@ -190,7 +190,7 @@ func (s *service) LogtoEnabled() bool {
 }
 
 func (s *service) authenticateCredentials(ctx context.Context, email, password string) (models.User, error) {
-	user, err := s.userFetch(ctx, email)
+	user, err := s.takeUserByEmail(ctx, email)
 	if err != nil {
 		return models.User{}, errAuthInvalidCredentials
 	}
