@@ -26,13 +26,13 @@ func TestServiceTraceWithNilContext(t *testing.T) {
 }
 
 func TestSignupAndCreateFailurePaths(t *testing.T) {
-	t.Run("userCreate returns generic error on db create failure", func(t *testing.T) {
+	t.Run("createUser returns generic error on db create failure", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		forceUsersCreateError(t, svc)
 
-		_, err := svc.userCreate(context.Background(), "createfail@example.com", "Password1!", "token")
+		_, err := svc.createUser(context.Background(), "createfail@example.com", "Password1!", "token")
 		if err == nil {
-			t.Fatalf("expected userCreate error")
+			t.Fatalf("expected createUser error")
 		}
 	})
 
@@ -53,7 +53,7 @@ func TestSignupAndCreateFailurePaths(t *testing.T) {
 func TestUserUpdateConfirmTokenPaths(t *testing.T) {
 	t.Run("returns error when no rows are updated", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
-		err := svc.userUpdateConfirmToken(context.Background(), "missing@example.com", "token")
+		err := svc.updateUserConfirmToken(context.Background(), "missing@example.com", "token")
 		if err == nil {
 			t.Fatalf("expected update confirm token error")
 		}
@@ -64,7 +64,7 @@ func TestUserUpdateConfirmTokenPaths(t *testing.T) {
 		seedAuthUserWithOptions(t, svc, authUserSeedOptions{Email: "confirm-update@example.com", Password: "Password1!"})
 		forceUsersUpdateError(t, svc)
 
-		err := svc.userUpdateConfirmToken(context.Background(), "confirm-update@example.com", "token")
+		err := svc.updateUserConfirmToken(context.Background(), "confirm-update@example.com", "token")
 		if err == nil {
 			t.Fatalf("expected update confirm token error")
 		}
