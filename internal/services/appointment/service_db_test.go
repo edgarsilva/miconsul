@@ -171,7 +171,7 @@ func TestAppointmentServiceDBFlows(t *testing.T) {
 			t.Fatalf("create appointment for update/delete: %v", err)
 		}
 
-		patch := appointmentPatchUpdates{
+		patch := appointmentUpdates{
 			BookedAt:     time.Now().Add(4 * time.Hour),
 			BookedYear:   time.Now().Year(),
 			BookedMonth:  int(time.Now().Month()),

@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"miconsul/internal/lib/amount"
 	"miconsul/internal/lib/libtime"
 	"miconsul/internal/models"
 	view "miconsul/internal/views"
@@ -214,12 +213,7 @@ func (s *service) HandleSaveSession(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/appointments/"+appointmentID+"/open", "Invalid appointment input", view.LevelError)
 	}
 
-	updates := appointmentSessionUpdates{
-		Observations: input.Observations,
-		Conclusions:  input.Conclusions,
-		Summary:      input.Summary,
-		Notes:        input.Notes,
-	}
+	updates := input.toAppointmentSessionUpdates()
 
 	err = s.SaveAppointmentSessionByID(c.Context(), cu.ID, appointmentID, updates)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -252,15 +246,9 @@ func (s *service) HandleComplete(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "Invalid appointment input", view.LevelError)
 	}
 
-	appointment := appointmentCompleteUpdates{
-		Status:       models.AppointmentDone,
-		Observations: input.Observations,
-		Conclusions:  input.Conclusions,
-		Summary:      input.Summary,
-		Notes:        input.Notes,
-	}
+	updates := input.toAppointmentCompleteUpdates()
 
-	err = s.CompleteAppointmentByID(c.Context(), cu.ID, appointmentID, appointment)
+	err = s.CompleteAppointmentByID(c.Context(), cu.ID, appointmentID, updates)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", view.LevelWarning)
 	}
@@ -276,36 +264,10 @@ func (s *service) HandleComplete(c fiber.Ctx) error {
 func (s *service) HandleCreate(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
-	bookedAtValue := c.FormValue("bookedAt", "")
-	bookedAt, err := time.Parse(view.FormTimeFormat, bookedAtValue)
-	if err != nil {
-		bookedAt = time.Now()
-	}
-
-	priceValue := c.FormValue("price", "")
-
-	bookedAt = libtime.NewInTimezone(bookedAt, models.DefaultTimezone)
-	bookedAt = bookedAt.UTC()
 	input := appointmentUpsertInput{}
-	err = c.Bind().Body(&input)
+	err := c.Bind().Body(&input)
 	if err != nil {
 		return s.RedirectWithToast(c, "/appointments/new", "Invalid appointment input", view.LevelError)
-	}
-
-	appointment := models.Appointment{
-		Token:        rand.Text(),
-		UserID:       cu.ID,
-		BookedAt:     bookedAt,
-		BookedYear:   bookedAt.Year(),
-		BookedMonth:  int(bookedAt.Month()),
-		BookedDay:    bookedAt.Day(),
-		BookedHour:   bookedAt.Hour(),
-		BookedMinute: bookedAt.Minute(),
-		Timezone:     models.DefaultTimezone,
-		Price:        amount.StrToAmount(priceValue),
-		ClinicID:     0,
-		PatientID:    0,
-		Duration:     input.Duration,
 	}
 
 	clinic, err := s.TakeClinicByUID(c.Context(), cu.ID, input.ClinicUID)
@@ -316,8 +278,7 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 	if err != nil {
 		return s.RedirectWithToast(c, "/appointments/new", "Invalid patient selected", view.LevelError)
 	}
-	appointment.ClinicID = clinic.ID
-	appointment.PatientID = patient.ID
+	appointment := input.toAppointment(cu.ID, clinic.ID, patient.ID, rand.Text())
 
 	err = s.CreateAppointment(c.Context(), &appointment)
 	if err != nil {
@@ -359,34 +320,10 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "Failed to load appointment", view.LevelError)
 	}
 
-	bookedAtStr := c.FormValue("bookedAt", "")
-	bookedAt, err := time.Parse(view.FormTimeFormat, bookedAtStr)
-	if err != nil {
-		bookedAt = time.Now()
-	}
-
-	bookedAt = libtime.NewInTimezone(bookedAt, models.DefaultTimezone)
-	bookedAt = bookedAt.UTC()
 	input := appointmentUpsertInput{}
 	err = c.Bind().Body(&input)
 	if err != nil {
 		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "Invalid appointment input", view.LevelError)
-	}
-
-	appointment := appointmentPatchUpdates{
-		BookedAt:     bookedAt,
-		BookedYear:   bookedAt.Year(),
-		BookedMonth:  int(bookedAt.Month()),
-		BookedDay:    bookedAt.Day(),
-		BookedHour:   bookedAt.Hour(),
-		BookedMinute: bookedAt.Minute(),
-		Price:        amount.StrToAmount(c.FormValue("price", "")),
-		ClinicID:     0,
-		PatientID:    0,
-		Duration:     input.Duration,
-	}
-	if existing.IsBookedAtChanged(bookedAt) {
-		appointment.RescheduledAt = time.Now().UTC()
 	}
 
 	clinic, err := s.TakeClinicByUID(c.Context(), cu.ID, input.ClinicUID)
@@ -397,10 +334,12 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	if err != nil {
 		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "Invalid patient selected", view.LevelError)
 	}
-	appointment.ClinicID = clinic.ID
-	appointment.PatientID = patient.ID
+	updates := input.toAppointmentUpdates(clinic.ID, patient.ID)
+	if existing.IsBookedAtChanged(updates.BookedAt) {
+		updates.RescheduledAt = time.Now().UTC()
+	}
 
-	err = s.UpdateAppointmentByID(c.Context(), cu.ID, appointmentID, appointment)
+	err = s.UpdateAppointmentByID(c.Context(), cu.ID, appointmentID, updates)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.RedirectWithToast(c, "/appointments", "The appointment does not exist", view.LevelWarning)
 	}

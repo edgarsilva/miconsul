@@ -120,6 +120,9 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 		if err := svc.DB.WithContext(t.Context()).Where("user_id = ? AND uid <> ?", user.ID, apnt.UID).Order("id desc").Take(&created).Error; err != nil {
 			t.Fatalf("load created appointment: %v", err)
 		}
+		if created.Price != 10000 || created.Duration != 30 || created.BookedAt.IsZero() {
+			t.Fatalf("form bookedAt/price/duration not bound: price=%d duration=%d bookedAt=%v", created.Price, created.Duration, created.BookedAt)
+		}
 		// The UID's first 16 xid chars encode time, machine and pid.
 		uidBody := strings.TrimPrefix(created.UID, "apnt")
 		if created.Token == "" || strings.Contains(created.Token, uidBody[:16]) {
@@ -138,6 +141,13 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 		resp3, err := app.Test(req3)
 		if err != nil || resp3.StatusCode != fiber.StatusSeeOther {
 			t.Fatalf("update expected 303, got status=%d err=%v", resp3.StatusCode, err)
+		}
+		var updated models.Appointment
+		if err := svc.DB.WithContext(t.Context()).Where("uid = ?", apnt.UID).Take(&updated).Error; err != nil {
+			t.Fatalf("load updated appointment: %v", err)
+		}
+		if updated.Price != 12000 || updated.Duration != 45 || updated.RescheduledAt.IsZero() {
+			t.Fatalf("form bookedAt/price/duration not bound on update: price=%d duration=%d rescheduledAt=%v", updated.Price, updated.Duration, updated.RescheduledAt)
 		}
 
 		completeForm := url.Values{

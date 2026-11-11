@@ -36,7 +36,7 @@ func TestServiceInputValidation(t *testing.T) {
 	})
 
 	t.Run("id-guarded mutations fail fast on blank id", func(t *testing.T) {
-		if err := svc.UpdateAppointmentByID(ctx, 1, "", appointmentPatchUpdates{}); !errors.Is(err, ErrIDRequired) {
+		if err := svc.UpdateAppointmentByID(ctx, 1, "", appointmentUpdates{}); !errors.Is(err, ErrIDRequired) {
 			t.Fatalf("expected ErrIDRequired for update, got %v", err)
 		}
 		if err := svc.DeleteAppointmentByID(ctx, 1, ""); !errors.Is(err, ErrIDRequired) {
@@ -67,10 +67,10 @@ func TestServiceInputValidation(t *testing.T) {
 		}
 	})
 
-	t.Run("update columns validates required columns", func(t *testing.T) {
-		err := svc.updateAppointmentColumnsByID(ctx, 1, "apnt_1", nil, appointmentPatchUpdates{})
+	t.Run("update columns rejects unsupported updates", func(t *testing.T) {
+		err := svc.updateAppointmentColumnsByID(ctx, 1, "apnt_1", struct{}{})
 		if err == nil {
-			t.Fatalf("expected columns required error")
+			t.Fatalf("expected unsupported updates error")
 		}
 	})
 }

@@ -121,29 +121,13 @@ func (s *service) TakeAppointmentByUID(ctx context.Context, userID uint, appoint
 	return appointment, nil
 }
 
-func (s *service) UpdateAppointmentByID(ctx context.Context, userID uint, appointmentID string, updates appointmentPatchUpdates) error {
+func (s *service) UpdateAppointmentByID(ctx context.Context, userID uint, appointmentID string, updates appointmentUpdates) error {
 	appointmentID = strings.TrimSpace(appointmentID)
 	if appointmentID == "" {
 		return ErrIDRequired
 	}
 
-	columns := []string{
-		"BookedAt",
-		"BookedYear",
-		"BookedMonth",
-		"BookedDay",
-		"BookedHour",
-		"BookedMinute",
-		"Price",
-		"ClinicID",
-		"PatientID",
-		"Duration",
-	}
-	if !updates.RescheduledAt.IsZero() {
-		columns = append(columns, "RescheduledAt")
-	}
-
-	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, columns, &updates); err != nil {
+	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, updates); err != nil {
 		return err
 	}
 
@@ -161,9 +145,7 @@ func (s *service) CompleteAppointmentByID(ctx context.Context, userID uint, appo
 		return errors.New("invalid appointment status")
 	}
 
-	columns := []string{"Status", "Observations", "Conclusions", "Summary", "Notes"}
-
-	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, columns, &updates); err != nil {
+	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, updates); err != nil {
 		return err
 	}
 
@@ -177,9 +159,7 @@ func (s *service) SaveAppointmentSessionByID(ctx context.Context, userID uint, a
 		return ErrIDRequired
 	}
 
-	columns := []string{"Observations", "Conclusions", "Summary", "Notes"}
-
-	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, columns, &updates); err != nil {
+	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, updates); err != nil {
 		return err
 	}
 
@@ -193,8 +173,8 @@ func (s *service) StartAppointmentSessionByID(ctx context.Context, userID uint, 
 		return ErrIDRequired
 	}
 
-	updates := appointmentCompleteUpdates{Status: models.AppointmentInProgress}
-	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, []string{"Status"}, &updates); err != nil {
+	updates := appointmentStartUpdates{Status: models.AppointmentInProgress}
+	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, updates); err != nil {
 		return err
 	}
 
@@ -209,7 +189,7 @@ func (s *service) PauseAppointmentSessionByID(ctx context.Context, userID uint, 
 	}
 
 	updates := appointmentPauseUpdates{Status: models.AppointmentPending, PendingAt: time.Now().UTC()}
-	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, []string{"Status", "PendingAt"}, &updates); err != nil {
+	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, updates); err != nil {
 		return err
 	}
 
@@ -227,9 +207,7 @@ func (s *service) CancelAppointmentByID(ctx context.Context, userID uint, appoin
 		return errors.New("invalid appointment status")
 	}
 
-	columns := []string{"Status", "CanceledAt"}
-
-	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, columns, &updates); err != nil {
+	if err := s.updateAppointmentColumnsByID(ctx, userID, appointmentID, updates); err != nil {
 		return err
 	}
 
@@ -237,9 +215,10 @@ func (s *service) CancelAppointmentByID(ctx context.Context, userID uint, appoin
 	return nil
 }
 
-func (s *service) updateAppointmentColumnsByID(ctx context.Context, userID uint, appointmentID string, columns []string, updates any) error {
-	if len(columns) == 0 {
-		return errors.New("columns are required")
+func (s *service) updateAppointmentColumnsByID(ctx context.Context, userID uint, appointmentID string, updates any) error {
+	columns, err := appointmentUpdateColumns(updates)
+	if err != nil {
+		return err
 	}
 
 	result := s.DB.WithContext(ctx).
