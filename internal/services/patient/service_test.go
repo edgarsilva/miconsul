@@ -9,7 +9,7 @@ import (
 
 func TestNormalizePatientWriteInput(t *testing.T) {
 	t.Run("nil patient returns error", func(t *testing.T) {
-		if err := normalizePatientWriteInput(nil); err == nil {
+		if err := normalizePatient(nil); err == nil {
 			t.Fatalf("expected nil patient to fail")
 		}
 	})
@@ -21,7 +21,7 @@ func TestNormalizePatientWriteInput(t *testing.T) {
 			Phone: "  312 101-4574  ",
 		}
 
-		if err := normalizePatientWriteInput(patient); err != nil {
+		if err := normalizePatient(patient); err != nil {
 			t.Fatalf("expected normalized input to pass: %v", err)
 		}
 		if patient.Name != "Patient Name" {
@@ -37,7 +37,7 @@ func TestNormalizePatientWriteInput(t *testing.T) {
 
 	t.Run("keeps un-normalizable phone as-is", func(t *testing.T) {
 		patient := &models.Patient{Phone: "ext-123"}
-		if err := normalizePatientWriteInput(patient); err != nil {
+		if err := normalizePatient(patient); err != nil {
 			t.Fatalf("expected input to pass: %v", err)
 		}
 		if patient.Phone != "ext-123" {
@@ -47,7 +47,7 @@ func TestNormalizePatientWriteInput(t *testing.T) {
 
 	t.Run("normalizes whatsapp prefix", func(t *testing.T) {
 		patient := &models.Patient{Phone: "whatsapp:+52 1312 101 4574"}
-		if err := normalizePatientWriteInput(patient); err != nil {
+		if err := normalizePatient(patient); err != nil {
 			t.Fatalf("expected input to pass: %v", err)
 		}
 		if patient.Phone != "+5213121014574" {
@@ -68,7 +68,7 @@ func TestNormalizePatientWriteInput(t *testing.T) {
 		for _, tc := range cases {
 			t.Run(tc.name, func(t *testing.T) {
 				p := tc.patient
-				if err := normalizePatientWriteInput(&p); err == nil {
+				if err := normalizePatient(&p); err == nil {
 					t.Fatalf("expected boundary validation error")
 				}
 			})
