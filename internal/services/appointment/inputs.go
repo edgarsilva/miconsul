@@ -6,7 +6,6 @@ import (
 	"miconsul/internal/lib/amount"
 	"miconsul/internal/lib/libtime"
 	"miconsul/internal/models"
-	view "miconsul/internal/views"
 )
 
 type appointmentUpsertInput struct {
@@ -27,12 +26,12 @@ type appointmentCompleteInput struct {
 // bookedAtUTC parses the form time as clinic-local time and returns it in UTC.
 // It falls back to now when the value is empty or invalid.
 func (in appointmentUpsertInput) bookedAtUTC() time.Time {
-	bookedAt, err := time.Parse(view.FormTimeFormat, in.BookedAt)
+	bookedAt, err := libtime.ParseDateTimeLocal(in.BookedAt, models.DefaultTimezone)
 	if err != nil {
-		bookedAt = time.Now()
+		return time.Now().UTC()
 	}
 
-	return libtime.NewInTimezone(bookedAt, models.DefaultTimezone).UTC()
+	return bookedAt
 }
 
 func (in appointmentUpsertInput) toAppointment(userID, clinicID, patientID uint, token string) models.Appointment {

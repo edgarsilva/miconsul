@@ -202,3 +202,19 @@ func TestParseTimeframe(t *testing.T) {
 		}
 	}
 }
+
+func TestParseDateTimeLocal(t *testing.T) {
+	got, err := ParseDateTimeLocal("2026-12-01T10:30", "America/Mexico_City")
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	if want := time.Date(2026, 12, 1, 16, 30, 0, 0, time.UTC); !got.Equal(want) || got.Location() != time.UTC {
+		t.Fatalf("got %v, want %v in UTC", got, want)
+	}
+
+	for _, value := range []string{"", "2026-12-01", "not a time"} {
+		if _, err := ParseDateTimeLocal(value, "America/Mexico_City"); err == nil {
+			t.Fatalf("expected error for %q", value)
+		}
+	}
+}
