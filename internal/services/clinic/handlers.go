@@ -108,7 +108,9 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/clinics/"+clinicID, "Invalid clinic input", view.LevelError)
 	}
 
+	profilePic := clinic.ProfilePic
 	clinic = input.toClinic(clinic.ID, clinic.UID, clinic.UserID)
+	clinic.ProfilePic = profilePic // the form has no picture value; keep it for the fragment
 
 	s.attachClinicProfilePicBestEffort(c, cu.ID, &clinic)
 

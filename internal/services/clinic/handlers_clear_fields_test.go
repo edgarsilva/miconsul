@@ -3,6 +3,7 @@ package clinic
 import (
 	"encoding/hex"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -52,6 +53,14 @@ func TestHandleUpdateSavesClearedFields(t *testing.T) {
 	resp, err := app.Test(req)
 	if err != nil || resp.StatusCode != fiber.StatusOK {
 		t.Fatalf("update clinic expected 200, got status=%d err=%v", resp.StatusCode, err)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("read body: %v", err)
+	}
+	if !strings.Contains(string(body), "old.png") {
+		t.Errorf("fragment does not show the existing profile picture when none is uploaded")
 	}
 
 	saved, err := svc.TakeClinicByID(t.Context(), user.ID, seed.UID)
