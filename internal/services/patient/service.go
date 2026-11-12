@@ -18,7 +18,11 @@ type service struct {
 	*server.Server
 }
 
-var ErrIDRequired = errors.New("id is required")
+var (
+	ErrIDRequired = errors.New("id is required")
+	// ErrInvalidPatient is returned when an update leaves a required field blank.
+	ErrInvalidPatient = errors.New("patient is invalid")
+)
 
 var ErrInvalidFilename = errors.New("invalid filename")
 
@@ -131,7 +135,8 @@ func (s service) CreatePatient(ctx context.Context, patient *models.Patient) err
 	return gorm.G[models.Patient](s.DB.GormDB()).Create(ctx, patient)
 }
 
-// UpdatePatientByID writes the patient form's columns, so cleared fields save as empty.
+// UpdatePatientByID writes the patient form's columns, so cleared fields save as
+// empty. A blank required field returns ErrInvalidPatient and saves nothing.
 func (s service) UpdatePatientByID(ctx context.Context, userID uint, patientID string, patient models.Patient) error {
 	patientID = strings.TrimSpace(patientID)
 	if patientID == "" {
@@ -140,6 +145,9 @@ func (s service) UpdatePatientByID(ctx context.Context, userID uint, patientID s
 	err := normalizePatient(&patient)
 	if err != nil {
 		return err
+	}
+	if err := patient.IsValid(); err != nil {
+		return fmt.Errorf("%w: %w", ErrInvalidPatient, err)
 	}
 
 	rowsAffected, err := gorm.G[models.Patient](s.DB.GormDB()).

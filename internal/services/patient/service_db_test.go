@@ -55,7 +55,7 @@ func TestPatientServiceDBFlows(t *testing.T) {
 	})
 
 	t.Run("update patient and clear profile pic", func(t *testing.T) {
-		upd := models.Patient{Name: "Alpha Updated", Email: "updated@example.com", Phone: "999"}
+		upd := models.Patient{Name: "Alpha Updated", Email: "updated@example.com", Phone: "999", Age: 30}
 		if err := svc.UpdatePatientByID(ctx, user.ID, base.UID, upd); err != nil {
 			t.Fatalf("update patient: %v", err)
 		}

@@ -113,6 +113,9 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	s.attachClinicProfilePicBestEffort(c, cu.ID, &clinic)
 
 	err = s.UpdateClinicByID(c.Context(), cu.ID, clinicID, clinic)
+	if errors.Is(err, ErrInvalidClinic) {
+		return s.RedirectWithToast(c, "/clinics/"+clinicID, "Clinic name can't be blank", view.LevelWarning)
+	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.RedirectWithToast(c, "/clinics", "Clinic does not exist", view.LevelWarning)
 	}

@@ -1,6 +1,8 @@
 package clinic
 
 import (
+	"encoding/hex"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -8,6 +10,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -40,7 +44,8 @@ func TestHandleUpdateSavesClearedFields(t *testing.T) {
 		return svc.HandleUpdate(c)
 	})
 
-	form := url.Values{"name": {""}, "price": {"0"}}
+	// Name is required, so it stays; every other field is cleared.
+	form := url.Values{"name": {"Renamed"}, "price": {"0"}}
 	req := httptest.NewRequest(http.MethodPatch, "/clinics/"+seed.UID, strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("HX-Request", "true")
@@ -53,7 +58,7 @@ func TestHandleUpdateSavesClearedFields(t *testing.T) {
 	if err != nil {
 		t.Fatalf("reload clinic: %v", err)
 	}
-	assertFieldsCleared(t, filled, saved, "UserID")
+	assertFieldsCleared(t, filled, saved, "UserID", "Name")
 	for _, name := range notInForm {
 		if got := reflect.ValueOf(saved).FieldByName(name).String(); got != "kept" {
 			t.Errorf("%s = %q, want it kept because the form does not render it", name, got)
@@ -98,4 +103,62 @@ func assertFieldsCleared(t *testing.T, filled, got any, skip ...string) {
 			t.Errorf("%s = %v, want empty after clearing the form", field.Name, value.Interface())
 		}
 	}
+}
+
+func TestHandleUpdateRejectsBlankName(t *testing.T) {
+	svc, user := newClinicServiceForTests(t)
+	seed := clinicUpsertInput{Name: "Original"}.toClinic(0, "", user.ID)
+	if err := svc.CreateClinic(t.Context(), &seed); err != nil {
+		t.Fatalf("seed clinic: %v", err)
+	}
+
+	err := svc.UpdateClinicByID(t.Context(), user.ID, seed.UID, models.Clinic{Name: "  "})
+	if !errors.Is(err, ErrInvalidClinic) {
+		t.Fatalf("expected ErrInvalidClinic, got %v", err)
+	}
+
+	saved, err := svc.TakeClinicByID(t.Context(), user.ID, seed.UID)
+	if err != nil {
+		t.Fatalf("reload clinic: %v", err)
+	}
+	if saved.Name != "Original" {
+		t.Fatalf("Name = %q, want Original kept after a rejected update", saved.Name)
+	}
+
+	app := fiber.New()
+	app.Patch("/clinics/:id", func(c fiber.Ctx) error {
+		c.Locals("current_user", user)
+		return svc.HandleUpdate(c)
+	})
+	req := httptest.NewRequest(http.MethodPatch, "/clinics/"+seed.UID, strings.NewReader(url.Values{"name": {""}}.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("HX-Request", "true")
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatalf("update clinic: %v", err)
+	}
+	if resp.StatusCode != fiber.StatusNoContent || resp.Header.Get("HX-Redirect") != "/clinics/"+seed.UID {
+		t.Fatalf("status=%d HX-Redirect=%q, want 204 back to the clinic", resp.StatusCode, resp.Header.Get("HX-Redirect"))
+	}
+	if flash := flashText(t, resp); !strings.Contains(flash, "Clinic name can't be blank") {
+		t.Fatalf("flash = %q, want the blank-name message", flash)
+	}
+}
+
+// flashText returns the flash cookie's decoded content, which carries the toast message.
+func flashText(t *testing.T, resp *http.Response) string {
+	t.Helper()
+
+	for _, cookie := range resp.Cookies() {
+		if cookie.Name != "fiber_flash" {
+			continue
+		}
+		raw, err := hex.DecodeString(cookie.Value)
+		if err != nil {
+			t.Fatalf("decode flash cookie: %v", err)
+		}
+		return string(raw)
+	}
+
+	return ""
 }
