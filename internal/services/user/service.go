@@ -65,7 +65,9 @@ func (s service) UpdateUserProfileByUID(ctx context.Context, userUID string, upd
 		return models.User{}, err
 	}
 
+	columns := userUpdateColumns(updates)
 	rowsAffected, err := gorm.G[models.User](s.DB.GormDB()).
+		Select(columns[0], columns[1:]).
 		Where("uid = ?", userUID).
 		Updates(ctx, updates)
 	if err != nil {
@@ -102,6 +104,25 @@ func (s service) RemoveProfilePicByUID(ctx context.Context, userUID string) (mod
 	}
 
 	return s.TakeUserByUID(ctx, userUID)
+}
+
+// userUpdateColumns returns the columns UpdateUserProfileByUID writes. Name and
+// phone are always written, so they can be cleared. Email is the login identity
+// and unique, so an empty one is left alone, as are an unsent locale or profile
+// picture.
+func userUpdateColumns(updates models.User) []string {
+	columns := []string{"Name", "Phone"}
+	if updates.Email != "" {
+		columns = append(columns, "Email")
+	}
+	if updates.Locale != "" {
+		columns = append(columns, "Locale")
+	}
+	if updates.ProfilePic != "" {
+		columns = append(columns, "ProfilePic")
+	}
+
+	return columns
 }
 
 func normalizeUserWriteInput(user *models.User) error {
