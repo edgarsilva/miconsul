@@ -1,11 +1,15 @@
 package appointment
 
 import (
-	"fmt"
 	"time"
 
 	"miconsul/internal/models"
 )
+
+// appointmentColumner is implemented by every updates type: the columns it writes, zero values included.
+type appointmentColumner interface {
+	columns() []string
+}
 
 type appointmentUpdates struct {
 	BookedAt      time.Time
@@ -50,29 +54,34 @@ type appointmentPauseUpdates struct {
 	PendingAt time.Time
 }
 
-// appointmentUpdateColumns returns the columns an updates value writes, zero values included.
-func appointmentUpdateColumns(updates any) ([]string, error) {
-	switch u := updates.(type) {
-	case appointmentUpdates:
-		columns := []string{
-			"BookedAt", "BookedYear", "BookedMonth", "BookedDay", "BookedHour", "BookedMinute",
-			"Price", "ClinicID", "PatientID", "Duration",
-		}
-		if !u.RescheduledAt.IsZero() {
-			columns = append(columns, "RescheduledAt")
-		}
-		return columns, nil
-	case appointmentCompleteUpdates:
-		return []string{"Status", "Observations", "Conclusions", "Summary", "Notes"}, nil
-	case appointmentSessionUpdates:
-		return []string{"Observations", "Conclusions", "Summary", "Notes"}, nil
-	case appointmentStartUpdates:
-		return []string{"Status"}, nil
-	case appointmentPauseUpdates:
-		return []string{"Status", "PendingAt"}, nil
-	case appointmentCancelUpdates:
-		return []string{"Status", "CanceledAt"}, nil
-	default:
-		return nil, fmt.Errorf("select appointment columns: unsupported updates %T", updates)
+func (u appointmentUpdates) columns() []string {
+	columns := []string{
+		"BookedAt", "BookedYear", "BookedMonth", "BookedDay", "BookedHour", "BookedMinute",
+		"Price", "ClinicID", "PatientID", "Duration",
 	}
+	if !u.RescheduledAt.IsZero() {
+		columns = append(columns, "RescheduledAt")
+	}
+
+	return columns
+}
+
+func (u appointmentCompleteUpdates) columns() []string {
+	return []string{"Status", "Observations", "Conclusions", "Summary", "Notes"}
+}
+
+func (u appointmentSessionUpdates) columns() []string {
+	return []string{"Observations", "Conclusions", "Summary", "Notes"}
+}
+
+func (u appointmentStartUpdates) columns() []string {
+	return []string{"Status"}
+}
+
+func (u appointmentPauseUpdates) columns() []string {
+	return []string{"Status", "PendingAt"}
+}
+
+func (u appointmentCancelUpdates) columns() []string {
+	return []string{"Status", "CanceledAt"}
 }

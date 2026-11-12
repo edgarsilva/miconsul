@@ -66,13 +66,6 @@ func TestServiceInputValidation(t *testing.T) {
 			t.Fatalf("expected cancel invalid status error")
 		}
 	})
-
-	t.Run("update columns rejects unsupported updates", func(t *testing.T) {
-		err := svc.updateAppointmentColumnsByID(ctx, 1, "apnt_1", struct{}{})
-		if err == nil {
-			t.Fatalf("expected unsupported updates error")
-		}
-	})
 }
 
 func TestNewServiceNilServer(t *testing.T) {

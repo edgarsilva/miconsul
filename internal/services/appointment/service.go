@@ -215,11 +215,8 @@ func (s *service) CancelAppointmentByID(ctx context.Context, userID uint, appoin
 	return nil
 }
 
-func (s *service) updateAppointmentColumnsByID(ctx context.Context, userID uint, appointmentID string, updates any) error {
-	columns, err := appointmentUpdateColumns(updates)
-	if err != nil {
-		return err
-	}
+func (s *service) updateAppointmentColumnsByID(ctx context.Context, userID uint, appointmentID string, updates appointmentColumner) error {
+	columns := updates.columns()
 
 	result := s.DB.WithContext(ctx).
 		Model(&models.Appointment{}).

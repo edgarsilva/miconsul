@@ -166,7 +166,7 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 		return view.Render(c, view.AuthSignupPage(vc, email, err))
 	}
 
-	err = s.userPendingConfirmation(ctx, email)
+	err = s.checkUserPendingConfirmation(ctx, email)
 	if err != nil {
 		if resendErr := s.resendPendingConfirmation(ctx, email); resendErr != nil {
 			span.RecordError(resendErr)

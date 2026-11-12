@@ -140,7 +140,7 @@ func (s *service) signupIsPasswordValid(pwd string) error {
 	return nil
 }
 
-func (s *service) userPendingConfirmation(ctx context.Context, email string) error {
+func (s *service) checkUserPendingConfirmation(ctx context.Context, email string) error {
 	user, err := gorm.G[models.User](s.DB.GormDB()).
 		Select("id, email, confirm_email_token").
 		Where("email = ? AND confirm_email_token IS NOT null AND confirm_email_token != ''", email).
