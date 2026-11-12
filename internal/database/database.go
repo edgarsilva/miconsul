@@ -2,6 +2,7 @@
 package database
 
 import (
+	"errors"
 	// libsql "github.com/edgarsilva/gorm-libsql"
 
 	"database/sql"
@@ -128,9 +129,13 @@ func (d *Database) GormDB() *gorm.DB {
 	return d.DB
 }
 
+// ErrNoDatabase is returned when the Database wrapper has no GORM handle.
+var ErrNoDatabase = errors.New("database is not initialized")
+
+// SQLDB returns the underlying sql.DB, or ErrNoDatabase when there is none.
 func (d *Database) SQLDB() (*sql.DB, error) {
 	if d == nil || d.DB == nil {
-		return nil, nil
+		return nil, ErrNoDatabase
 	}
 
 	sqlDB, err := d.DB.DB()
@@ -143,12 +148,11 @@ func (d *Database) SQLDB() (*sql.DB, error) {
 
 func (d *Database) Close() error {
 	sqlDB, err := d.SQLDB()
+	if errors.Is(err, ErrNoDatabase) {
+		return nil // nothing to close
+	}
 	if err != nil {
 		return err
-	}
-
-	if sqlDB == nil {
-		return nil
 	}
 
 	return sqlDB.Close()
@@ -168,15 +172,15 @@ func applyMigrations(database *Database, silent bool) error {
 	}
 
 	if database == nil {
-		return fmt.Errorf("database is not initialized")
+		return ErrNoDatabase
 	}
 
 	sqlDB, err := database.SQLDB()
+	if errors.Is(err, ErrNoDatabase) {
+		return err
+	}
 	if err != nil {
 		return fmt.Errorf("resolve sql db handle: %w", err)
-	}
-	if sqlDB == nil {
-		return fmt.Errorf("database is not initialized")
 	}
 	if !silent && database.otelLogger == nil {
 		return fmt.Errorf("database logger is not set; build the database with New")

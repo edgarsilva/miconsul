@@ -1,6 +1,7 @@
 package database
 
 import (
+	"errors"
 	"net/url"
 	"path/filepath"
 	"strings"
@@ -225,16 +226,19 @@ func TestNewGormLoggerAndDatabaseHelpers(t *testing.T) {
 }
 
 func TestDatabaseNilReceiverMethods(t *testing.T) {
-	var d *Database
-	sqlDB, err := d.SQLDB()
-	if err != nil {
-		t.Fatalf("expected nil receiver SQLDB to return nil,nil, got err=%v", err)
-	}
-	if sqlDB != nil {
-		t.Fatalf("expected nil sql db handle for nil receiver")
-	}
+	for name, d := range map[string]*Database{"nil receiver": nil, "empty wrapper": {}} {
+		t.Run(name, func(t *testing.T) {
+			sqlDB, err := d.SQLDB()
+			if !errors.Is(err, ErrNoDatabase) {
+				t.Fatalf("expected SQLDB to return ErrNoDatabase, got %v", err)
+			}
+			if sqlDB != nil {
+				t.Fatalf("expected nil sql db handle")
+			}
 
-	if err := d.Close(); err != nil {
-		t.Fatalf("expected nil receiver Close to be no-op, got %v", err)
+			if err := d.Close(); err != nil {
+				t.Fatalf("expected Close to be a no-op, got %v", err)
+			}
+		})
 	}
 }
