@@ -3,8 +3,10 @@ package server
 import (
 	"context"
 	"fmt"
+	"runtime/debug"
 	"time"
 
+	"github.com/gofiber/fiber/v3"
 	"go.opentelemetry.io/otel/attribute"
 	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/trace"
@@ -75,6 +77,44 @@ func (s *Server) emitWorkerError(ctx context.Context, err error) {
 		attribute.String("event", "worker_panic"),
 		attribute.String("error", err.Error()),
 	)
+
+	s.Logger.Emit(ctx, rec)
+}
+
+// emitRequestPanic logs a panic recovered from a request, with its stack trace.
+// The recover middleware turns the panic into a 500 and the span records it.
+func (s *Server) emitRequestPanic(c fiber.Ctx, r any) {
+	ctx := c.Context()
+	if !s.LoggerEnabled(ctx) {
+		return
+	}
+
+	route := c.Path()
+	if rt := c.Route(); rt != nil && rt.Path != "" {
+		route = rt.Path
+	}
+
+	err := fmt.Errorf("panic: %v", r)
+	attrs := []attribute.KeyValue{
+		attribute.String("event", "request_panic"),
+		attribute.String("route", route),
+		attribute.String("method", c.Method()),
+		attribute.String("error", err.Error()),
+		attribute.String("exception.stacktrace", string(debug.Stack())),
+	}
+	if spanCtx := trace.SpanFromContext(ctx).SpanContext(); spanCtx.IsValid() {
+		attrs = append(attrs, attribute.String("trace_id", spanCtx.TraceID().String()))
+	}
+
+	rec := otellog.Record{}
+	rec.SetTimestamp(time.Now())
+	rec.SetObservedTimestamp(time.Now())
+	rec.SetEventName("request_panic")
+	rec.SetBody(attribute.StringValue("request_panic"))
+	rec.SetSeverity(otellog.SeverityError)
+	rec.SetSeverityText("ERROR")
+	rec.SetErr(err)
+	rec.AddAttributes(attrs...)
 
 	s.Logger.Emit(ctx, rec)
 }
