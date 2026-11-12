@@ -248,3 +248,52 @@ func forceUsersUpdateError(t *testing.T, svc *service) {
 		t.Fatalf("register update callback: %v", err)
 	}
 }
+
+func forceUsersQueryError(t *testing.T, svc *service) {
+	t.Helper()
+	name := "test_force_users_query_error_" + strings.ReplaceAll(t.Name(), "/", "_")
+	if err := svc.DB.GormDB().Callback().Query().Before("gorm:query").Register(name, func(db *gorm.DB) {
+		if db.Statement != nil && db.Statement.Table == "users" {
+			db.AddError(errors.New("forced users query error"))
+		}
+	}); err != nil {
+		t.Fatalf("register query callback: %v", err)
+	}
+}
+
+func TestCheckUserPendingConfirmation(t *testing.T) {
+	t.Run("returns nil when no user is pending", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		seedAuthUserWithOptions(t, svc, authUserSeedOptions{Email: "confirmed@example.com", Password: "Password1!"})
+
+		if err := svc.checkUserPendingConfirmation(context.Background(), "confirmed@example.com"); err != nil {
+			t.Fatalf("expected nil, got %v", err)
+		}
+		if err := svc.checkUserPendingConfirmation(context.Background(), "unknown@example.com"); err != nil {
+			t.Fatalf("expected nil for unknown email, got %v", err)
+		}
+	})
+
+	t.Run("returns errUserPendingConfirmation when confirmation is pending", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		seedAuthUserWithOptions(t, svc, authUserSeedOptions{Email: "pending@example.com", Password: "Password1!", ConfirmToken: "token"})
+
+		err := svc.checkUserPendingConfirmation(context.Background(), "pending@example.com")
+		if !errors.Is(err, errUserPendingConfirmation) {
+			t.Fatalf("expected errUserPendingConfirmation, got %v", err)
+		}
+	})
+
+	t.Run("returns the database error, not the pending sentinel", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		forceUsersQueryError(t, svc)
+
+		err := svc.checkUserPendingConfirmation(context.Background(), "any@example.com")
+		if err == nil {
+			t.Fatalf("expected the database error")
+		}
+		if errors.Is(err, errUserPendingConfirmation) {
+			t.Fatalf("a database error must not read as pending: %v", err)
+		}
+	})
+}

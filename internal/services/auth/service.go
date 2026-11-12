@@ -32,6 +32,7 @@ type service struct {
 var (
 	errAuthInvalidCredentials  = errors.New("invalid credentials")
 	errAuthPendingConfirmation = errors.New("email pending confirmation")
+	errUserPendingConfirmation = errors.New("user pending confirmation")
 	errAuthSessionCreate       = errors.New("create session")
 	errAuthConfirmEmailSend    = errors.New("send confirmation email")
 
@@ -140,13 +141,22 @@ func (s *service) signupIsPasswordValid(pwd string) error {
 	return nil
 }
 
+// checkUserPendingConfirmation returns errUserPendingConfirmation when the
+// email has an unconfirmed signup, nil when it has none, and the database error
+// when the lookup fails.
 func (s *service) checkUserPendingConfirmation(ctx context.Context, email string) error {
 	user, err := gorm.G[models.User](s.DB.GormDB()).
 		Select("id, email, confirm_email_token").
 		Where("email = ? AND confirm_email_token IS NOT null AND confirm_email_token != ''", email).
 		Take(ctx)
-	if err == nil && user.ID != 0 { // If a row/record exists it means confirmation is pending and we should re-send
-		return errors.New("user pending confirmation")
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("take pending confirmation: %w", err)
+	}
+	if user.ID != 0 { // A row exists, so confirmation is pending and we should re-send
+		return errUserPendingConfirmation
 	}
 
 	return nil
