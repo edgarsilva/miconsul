@@ -222,7 +222,11 @@ func setupFiberApp(s *Server) {
 func setupCoreMiddleware(s *Server) {
 	app := s.App
 
-	app.Use(fiberrecover.New()) // Recover MW catches panics that might stop app execution
+	// Recover MW catches panics that might stop app execution.
+	app.Use(fiberrecover.New(fiberrecover.Config{
+		EnableStackTrace:  true,
+		StackTraceHandler: s.emitRequestPanic,
+	}))
 	app.Use(otel.New(
 		otel.WithTracerProvider(s.TracerProvider),
 		otel.WithMeterProvider(s.MeterProvider),

@@ -29,6 +29,24 @@ func TestCurrentUser(t *testing.T) {
 	})
 }
 
+func TestCurrentUserIgnoresWrongLocalType(t *testing.T) {
+	s := &Server{}
+
+	for name, local := range map[string]any{
+		"pointer":     &models.User{UID: "usr_1"},
+		"string":      "usr_1",
+		"typed nil":   (*models.User)(nil),
+		"untyped nil": nil,
+	} {
+		runWithCtx(t, http.MethodGet, "/", nil, func(c fiber.Ctx) {
+			c.Locals("current_user", local)
+			if got := s.CurrentUser(c); got.ID != 0 || got.UID != "" {
+				t.Fatalf("%s: expected zero user, got %#v", name, got)
+			}
+		})
+	}
+}
+
 func TestHTMXHelpers(t *testing.T) {
 	s := &Server{}
 

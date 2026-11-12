@@ -69,6 +69,35 @@ func TestNewCtxAndOptions(t *testing.T) {
 	})
 }
 
+func TestNewCtxWithMissingOrWrongTypeLocals(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		c := NewCtx(fc)
+		if c.CurrentUser.ID != 0 || c.CurrentUser.UID != "" {
+			t.Fatalf("expected zero user for missing local, got %+v", c.CurrentUser)
+		}
+		if c.Locale == "" {
+			t.Fatalf("expected default locale for missing local")
+		}
+	})
+
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		fc.Locals("current_user", &models.User{UID: "usr_1"})
+		fc.Locals("locale", 42)
+		fc.Locals("theme", true)
+
+		c := NewCtx(fc)
+		if c.CurrentUser.UID != "" {
+			t.Fatalf("expected zero user for wrong-typed local, got %+v", c.CurrentUser)
+		}
+		if c.Locale == "" {
+			t.Fatalf("expected default locale for wrong-typed local")
+		}
+		if c.Theme != "" {
+			t.Fatalf("expected empty theme for wrong-typed local, got %q", c.Theme)
+		}
+	})
+}
+
 func TestNewCtxOptionsFallBackAndAllApply(t *testing.T) {
 	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
 		fc.Locals("theme", "dark")
