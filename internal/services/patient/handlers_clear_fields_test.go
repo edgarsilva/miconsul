@@ -2,6 +2,8 @@ package patient
 
 import (
 	"bytes"
+	"encoding/hex"
+	"errors"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -45,7 +47,8 @@ func TestHandleUpdateSavesClearedFields(t *testing.T) {
 	})
 
 	// A browser leaves unchecked checkboxes out of the form.
-	form := url.Values{"name": {""}}
+	// Name, age and phone are required, so they stay; every other field is cleared.
+	form := url.Values{"name": {"Renamed"}, "age": {"1"}, "phone": {"1"}}
 	req := httptest.NewRequest(http.MethodPatch, "/patients/"+seed.UID, strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("HX-Request", "true")
@@ -58,7 +61,7 @@ func TestHandleUpdateSavesClearedFields(t *testing.T) {
 	if err != nil {
 		t.Fatalf("reload patient: %v", err)
 	}
-	assertFieldsCleared(t, filled, saved, "UserID")
+	assertFieldsCleared(t, filled, saved, "UserID", "Name", "Age", "Phone")
 	for _, name := range notInForm {
 		if got := reflect.ValueOf(saved).FieldByName(name).String(); got != "kept" {
 			t.Errorf("%s = %q, want it kept because the form does not render it", name, got)
@@ -151,4 +154,80 @@ func TestHandleUpdateSavesUploadedProfilePic(t *testing.T) {
 	if saved.ProfilePic == "" || saved.ProfilePic == "old.png" {
 		t.Errorf("ProfilePic = %q, want the uploaded picture", saved.ProfilePic)
 	}
+}
+
+func TestUpdatePatientByIDRejectsBlankRequiredFields(t *testing.T) {
+	svc, user := newPatientServiceForTests(t)
+	seed := patientUpsertInput{Name: "Original", Age: 30, Phone: "555"}.toPatient(0, "", user.ID)
+	if err := svc.CreatePatient(t.Context(), &seed); err != nil {
+		t.Fatalf("seed patient: %v", err)
+	}
+
+	cases := map[string]models.Patient{
+		"blank name":  {Name: "", Age: 30, Phone: "555"},
+		"zero age":    {Name: "Original", Age: 0, Phone: "555"},
+		"blank phone": {Name: "Original", Age: 30, Phone: " "},
+	}
+	for name, updates := range cases {
+		t.Run(name, func(t *testing.T) {
+			err := svc.UpdatePatientByID(t.Context(), user.ID, seed.UID, updates)
+			if !errors.Is(err, ErrInvalidPatient) {
+				t.Fatalf("expected ErrInvalidPatient, got %v", err)
+			}
+
+			saved, err := svc.TakePatientByID(t.Context(), user.ID, seed.UID)
+			if err != nil {
+				t.Fatalf("reload patient: %v", err)
+			}
+			if saved.Name != "Original" || saved.Age != 30 || saved.Phone != "555" {
+				t.Fatalf("patient changed by a rejected update: %+v", saved)
+			}
+		})
+	}
+}
+
+func TestHandleUpdateRejectsBlankRequiredFields(t *testing.T) {
+	svc, user := newPatientServiceForTests(t)
+	seed := patientUpsertInput{Name: "Original", Age: 30, Phone: "555"}.toPatient(0, "", user.ID)
+	if err := svc.CreatePatient(t.Context(), &seed); err != nil {
+		t.Fatalf("seed patient: %v", err)
+	}
+
+	app := fiber.New()
+	app.Patch("/patients/:id", func(c fiber.Ctx) error {
+		c.Locals("current_user", user)
+		return svc.HandleUpdate(c)
+	})
+	form := url.Values{"name": {"Original"}, "age": {"30"}, "phone": {""}}
+	req := httptest.NewRequest(http.MethodPatch, "/patients/"+seed.UID, strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("HX-Request", "true")
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatalf("update patient: %v", err)
+	}
+	if resp.StatusCode != fiber.StatusNoContent || resp.Header.Get("HX-Redirect") != "/patients/"+seed.UID {
+		t.Fatalf("status=%d HX-Redirect=%q, want 204 back to the patient", resp.StatusCode, resp.Header.Get("HX-Redirect"))
+	}
+	if flash := flashText(t, resp); !strings.Contains(flash, "Name, age and phone can't be blank") {
+		t.Fatalf("flash = %q, want the blank-field message", flash)
+	}
+}
+
+// flashText returns the flash cookie's decoded content, which carries the toast message.
+func flashText(t *testing.T, resp *http.Response) string {
+	t.Helper()
+
+	for _, cookie := range resp.Cookies() {
+		if cookie.Name != "fiber_flash" {
+			continue
+		}
+		raw, err := hex.DecodeString(cookie.Value)
+		if err != nil {
+			t.Fatalf("decode flash cookie: %v", err)
+		}
+		return string(raw)
+	}
+
+	return ""
 }

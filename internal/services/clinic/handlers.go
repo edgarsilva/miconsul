@@ -108,11 +108,16 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/clinics/"+clinicID, "Invalid clinic input", view.LevelError)
 	}
 
+	profilePic := clinic.ProfilePic
 	clinic = input.toClinic(clinic.ID, clinic.UID, clinic.UserID)
+	clinic.ProfilePic = profilePic // the form has no picture value; keep it for the fragment
 
 	s.attachClinicProfilePicBestEffort(c, cu.ID, &clinic)
 
 	err = s.UpdateClinicByID(c.Context(), cu.ID, clinicID, clinic)
+	if errors.Is(err, ErrInvalidClinic) {
+		return s.RedirectWithToast(c, "/clinics/"+clinicID, "Clinic name can't be blank", view.LevelWarning)
+	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.RedirectWithToast(c, "/clinics", "Clinic does not exist", view.LevelWarning)
 	}

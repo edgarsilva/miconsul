@@ -175,6 +175,9 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	}
 
 	err = s.UpdatePatientByID(c.Context(), cu.ID, patientID, patient)
+	if errors.Is(err, ErrInvalidPatient) {
+		return s.RedirectWithToast(c, "/patients/"+patientID, "Name, age and phone can't be blank", view.LevelWarning)
+	}
 	if errors.Is(err, ErrIDRequired) {
 		return s.RedirectWithToast(c, "/patients", "Can't update without an id", view.LevelError)
 	}
