@@ -57,7 +57,7 @@ func (s *service) HandleSignin(c fiber.Ctx) error {
 
 	vc := view.NewCtx(c)
 	respErr := errors.New("incorrect email and password combination")
-	loginErr := errors.New("Failed to login, please try again")
+	loginErr := errors.New("failed to login, please try again")
 
 	email, password, err := credentialsFromRequest(c)
 	if err != nil {

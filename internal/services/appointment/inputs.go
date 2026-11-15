@@ -72,6 +72,7 @@ func (in appointmentUpsertInput) toAppointmentUpdates(clinicID, patientID uint) 
 }
 
 func (in appointmentCompleteInput) toAppointmentSessionUpdates() appointmentSessionUpdates {
+	//lint:ignore S1016 inputs map to updates field by field so a new form field is never written by accident
 	return appointmentSessionUpdates{
 		Observations: in.Observations,
 		Conclusions:  in.Conclusions,

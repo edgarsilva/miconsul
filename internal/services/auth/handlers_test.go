@@ -202,7 +202,7 @@ func TestAuthHandlersSigninAndAPI(t *testing.T) {
 		if err != nil {
 			t.Fatalf("read body: %v", err)
 		}
-		if !strings.Contains(string(body), "Failed to login, please try again") {
+		if !strings.Contains(string(body), "failed to login, please try again") {
 			t.Fatalf("expected the login error on the page")
 		}
 	})

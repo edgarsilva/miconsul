@@ -54,10 +54,7 @@ type Ctx struct {
 
 type ContextOption func(*Ctx)
 
-var (
-	phoneRegex = "^[\\+]?[(]?[0-9]{3}[)]?[-\\s\\.]?[0-9]{3}[-\\s\\.]?[0-9]{4,6}$"
-	locales    = localize.New(preferences.LocaleSpanish, preferences.LocaleEnglish)
-)
+var locales = localize.New(preferences.LocaleSpanish, preferences.LocaleEnglish)
 
 func (c *Ctx) l(key string) string {
 	return locales.GetWithLocale(c.Locale, key)

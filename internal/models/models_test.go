@@ -332,7 +332,7 @@ func TestUserPublic(t *testing.T) {
 	u := User{
 		ID: 42, UID: "user_123", ExtID: "logto_1", Name: "Ana", Email: "ana@example.com",
 		ProfilePic: "/p.png", Phone: "555", Timezone: "America/Mexico_City", Theme: "dark", Locale: "en-US",
-		Role: UserRoleAdmin, ModelBase: ModelBase{CreatedAt: now, UpdatedAt: now},
+		Role: UserRoleAdmin, CreatedAt: now, UpdatedAt: now,
 	}
 
 	want := PublicUser{
