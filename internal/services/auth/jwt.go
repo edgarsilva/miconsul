@@ -28,10 +28,8 @@ func NewAuthClaims(user models.User, rememberMe bool) AuthClaims {
 	return AuthClaims{
 		UID:        user.UID,
 		RememberMe: rememberMe,
-		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   user.Email,
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(authTokenTTL(rememberMe))),
-		},
+		Subject:    user.Email,
+		ExpiresAt:  jwt.NewNumericDate(time.Now().Add(authTokenTTL(rememberMe))),
 	}
 }
 
