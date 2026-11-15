@@ -62,9 +62,9 @@ func (s *service) Report(ctx context.Context, userID uint, now time.Time, select
 		months[i].Start = start
 	}
 
-	byPatient := map[uint]*models.RevenuePatient{}
+	byPatient := map[uint]models.RevenuePatient{}
 	patientIDs := []uint{}
-	byClinic := map[uint]*models.RevenueClinic{}
+	byClinic := map[uint]models.RevenueClinic{}
 	clinicIDs := []uint{}
 	for _, a := range done {
 		start := libtime.BoM(libtime.InTimezone(a.BookedAt, models.DefaultTimezone))
@@ -78,10 +78,8 @@ func (s *service) Report(ctx context.Context, userID uint, now time.Time, select
 		if !start.Equal(selected) {
 			continue
 		}
-		patient, ok := byPatient[a.PatientID]
-		if !ok {
-			patient = &models.RevenuePatient{}
-			byPatient[a.PatientID] = patient
+		patient, seen := byPatient[a.PatientID]
+		if !seen {
 			patientIDs = append(patientIDs, a.PatientID)
 		}
 		patient.Total += a.Price
@@ -89,15 +87,15 @@ func (s *service) Report(ctx context.Context, userID uint, now time.Time, select
 		if bookedAt := libtime.InTimezone(a.BookedAt, models.DefaultTimezone); bookedAt.After(patient.LastAppointment) {
 			patient.LastAppointment = bookedAt
 		}
+		byPatient[a.PatientID] = patient
 
-		clinic, ok := byClinic[a.ClinicID]
-		if !ok {
-			clinic = &models.RevenueClinic{}
-			byClinic[a.ClinicID] = clinic
+		clinic, seen := byClinic[a.ClinicID]
+		if !seen {
 			clinicIDs = append(clinicIDs, a.ClinicID)
 		}
 		clinic.Total += a.Price
 		clinic.Appointments++
+		byClinic[a.ClinicID] = clinic
 	}
 
 	if err := s.namePatients(ctx, userID, byPatient, patientIDs); err != nil {
@@ -109,7 +107,7 @@ func (s *service) Report(ctx context.Context, userID uint, now time.Time, select
 
 	patients := make([]models.RevenuePatient, 0, len(byPatient))
 	for _, id := range patientIDs {
-		patients = append(patients, *byPatient[id])
+		patients = append(patients, byPatient[id])
 	}
 	slices.SortStableFunc(patients, func(a, b models.RevenuePatient) int {
 		return cmp.Or(b.LastAppointment.Compare(a.LastAppointment), cmp.Compare(a.Name, b.Name))
@@ -117,7 +115,7 @@ func (s *service) Report(ctx context.Context, userID uint, now time.Time, select
 
 	clinics := make([]models.RevenueClinic, 0, len(byClinic))
 	for _, id := range clinicIDs {
-		clinics = append(clinics, *byClinic[id])
+		clinics = append(clinics, byClinic[id])
 	}
 	slices.SortStableFunc(clinics, func(a, b models.RevenueClinic) int {
 		return cmp.Compare(b.Total, a.Total)
@@ -168,7 +166,7 @@ func (s *service) doneAppointments(ctx context.Context, userID uint, start, end 
 
 // namePatients fills in the uids and names of the user's patients, deleted
 // ones included.
-func (s *service) namePatients(ctx context.Context, userID uint, byPatient map[uint]*models.RevenuePatient, ids []uint) error {
+func (s *service) namePatients(ctx context.Context, userID uint, byPatient map[uint]models.RevenuePatient, ids []uint) error {
 	if len(ids) == 0 {
 		return nil
 	}
@@ -183,16 +181,21 @@ func (s *service) namePatients(ctx context.Context, userID uint, byPatient map[u
 	}
 
 	for _, patient := range patients {
-		byPatient[patient.ID].UID = patient.UID
-		byPatient[patient.ID].Name = patient.Name
-		byPatient[patient.ID].Deleted = patient.DeletedAt.Valid
+		named, ok := byPatient[patient.ID]
+		if !ok {
+			continue
+		}
+		named.UID = patient.UID
+		named.Name = patient.Name
+		named.Deleted = patient.DeletedAt.Valid
+		byPatient[patient.ID] = named
 	}
 
 	return nil
 }
 
 // nameClinics fills in the names of the user's clinics, deleted ones included.
-func (s *service) nameClinics(ctx context.Context, userID uint, byClinic map[uint]*models.RevenueClinic, ids []uint) error {
+func (s *service) nameClinics(ctx context.Context, userID uint, byClinic map[uint]models.RevenueClinic, ids []uint) error {
 	if len(ids) == 0 {
 		return nil
 	}
@@ -207,8 +210,13 @@ func (s *service) nameClinics(ctx context.Context, userID uint, byClinic map[uin
 	}
 
 	for _, clinic := range clinics {
-		byClinic[clinic.ID].Name = clinic.Name
-		byClinic[clinic.ID].Deleted = clinic.DeletedAt.Valid
+		named, ok := byClinic[clinic.ID]
+		if !ok {
+			continue
+		}
+		named.Name = clinic.Name
+		named.Deleted = clinic.DeletedAt.Valid
+		byClinic[clinic.ID] = named
 	}
 
 	return nil

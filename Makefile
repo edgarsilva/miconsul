@@ -43,7 +43,10 @@ fmt: ## Run go fmt
 vet: fmt ## Run go vet (after fmt)
 	go vet ./...
 
-lint: vet ## Alias for vet
+nilaway: ## Report possible nil dereferences in our packages, tests included (NilAway)
+	$(GO_TOOL) nilaway -include-pkgs=miconsul -tags fts5 ./...
+
+lint: vet nilaway ## Run vet and nilaway
 
 ##@ Security
 sec/check: sec/vuln sec/gosec ## Run govulncheck and gosec
@@ -255,7 +258,7 @@ load/test: ## Run authenticated oha load test (30s, 30 concurrency)
 	./scripts/load_test.sh
 
 
-.PHONY: help install install/deps install/tools check/npm fmt vet lint \
+.PHONY: help install install/deps install/tools check/npm fmt vet nilaway lint \
 	sec/check sec/vuln sec/gosec \
 	tailwind/build tailwind/watch templ/build templ/watch locales/build \
 	locales/normalize \
