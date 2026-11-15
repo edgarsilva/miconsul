@@ -53,6 +53,7 @@ func TestExtractDBOperation(t *testing.T) {
 }
 
 func TestTraceIDFromContext(t *testing.T) {
+	//lint:ignore SA1012 tests the nil-context guard
 	if got := traceIDFromContext(nil); got != "" {
 		t.Fatalf("expected empty trace id for nil context, got %q", got)
 	}

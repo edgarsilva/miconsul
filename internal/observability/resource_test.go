@@ -16,7 +16,7 @@ func TestNewResource(t *testing.T) {
 
 	got := map[string]string{}
 	for _, kv := range res.Attributes() {
-		got[string(kv.Key)] = kv.Value.Emit()
+		got[string(kv.Key)] = kv.Value.String()
 	}
 	want := map[string]string{
 		"service.name":                "miconsul.prod",
@@ -38,8 +38,8 @@ func TestNewResource(t *testing.T) {
 		t.Fatalf("new resource without service name: %v", err)
 	}
 	for _, kv := range res.Attributes() {
-		if kv.Key == "service.name" && kv.Value.Emit() != "miconsul" {
-			t.Errorf("service.name falls back to AppName, got %q", kv.Value.Emit())
+		if kv.Key == "service.name" && kv.Value.String() != "miconsul" {
+			t.Errorf("service.name falls back to AppName, got %q", kv.Value.String())
 		}
 	}
 }

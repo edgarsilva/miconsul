@@ -7,8 +7,8 @@ import (
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/observability"
 
+	"go.opentelemetry.io/otel"
 	otellog "go.opentelemetry.io/otel/log"
-	"go.opentelemetry.io/otel/log/global"
 	"go.opentelemetry.io/otel/log/noop"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 
@@ -48,7 +48,7 @@ func NewProvider(ctx context.Context, env *appenv.Env) (otellog.LoggerProvider, 
 		sdklog.WithResource(res),
 	)
 
-	global.SetLoggerProvider(provider)
+	otel.SetLoggerProvider(provider)
 
 	shutdown := func() error {
 		if err := provider.Shutdown(context.Background()); err != nil {

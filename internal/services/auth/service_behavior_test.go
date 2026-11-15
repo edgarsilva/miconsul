@@ -17,6 +17,7 @@ import (
 func TestServiceTraceWithNilContext(t *testing.T) {
 	svc := newAuthServiceForTests(t)
 
+	//lint:ignore SA1012 tests the nil-context guard
 	ctx, span := svc.Trace(nil, "auth/test:trace")
 	defer span.End()
 
