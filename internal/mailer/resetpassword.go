@@ -18,7 +18,6 @@ func ResetPassword(env *appenv.Env, email, token string) error {
 	lang := emailLocale()
 	m.SetHeader("From", env.EmailFromAddress)
 	m.SetHeader("To", email)
-	// m.SetAddressHeader("Cc", "dan@example.com", "Dan")
 	m.SetHeader("Subject", "Miconsul: "+l(lang, "email.reset_password_subject"))
 
 	url := env.AppProtocol + "://" + env.AppDomain + "/resetpassword/change/" + token
@@ -27,13 +26,6 @@ func ResetPassword(env *appenv.Env, email, token string) error {
 		return errors.New("couldn't create HTML from templ comp to send email")
 	}
 	m.SetBody("text/html", emailHTML.String())
-
-	// cwd, err := os.Getwd()
-	// if err != nil {
-	// return err
-	// }
-	// log.Info("sent CWD ->", cwd)
-	// m.Attach(cwd + "/public/images/ripple-pic.jpg")
 
 	d := gomail.NewDialer(env.EmailSMTPURL, 587, dialerUsername(env), dialerPassword(env))
 

@@ -3,7 +3,6 @@ package database
 
 import (
 	"errors"
-	// libsql "github.com/edgarsilva/gorm-libsql"
 
 	"database/sql"
 	"fmt"

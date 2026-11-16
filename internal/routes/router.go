@@ -174,15 +174,6 @@ func PatientRoutes(s *server.Server, authSvc auth.Runtime) error {
 	g.Patch("/:id/removepic", p.HandleRemovePic)
 	g.Delete("/:id", p.HandleDelete)
 
-	// g.Get("/:id", p.HandleIndexPage)
-
-	// Fragments
-	// g.Get("/fragment/footer", u.HandleFooterFragment)
-
-	// API
-	// api := p.Group("/api/patients")
-	// api.Get("", p.HandleAPIPatients)
-
 	return nil
 }
 
