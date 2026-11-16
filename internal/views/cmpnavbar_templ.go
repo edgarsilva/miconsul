@@ -28,7 +28,7 @@ func CmpNavbar(c *Ctx) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<header id=\"header\" class=\"relative mb-8 lg:mb-12 bg-base-100 border-y border-base-content/10\" hx-boost:inherited=\"true\"><nav id=\"navbar\" class=\"navbar rounded-lg p-4\"><div class=\"navbar-start\"><a href=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<header id=\"header\" class=\"relative mb-8 lg:mb-12 bg-base-100 border-y border-base-content/10\" hx-boost:inherited=\"true\"><nav id=\"navbar\" class=\"navbar rounded-lg p-4\"><div class=\"navbar-start w-auto\"><a href=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -41,7 +41,7 @@ func CmpNavbar(c *Ctx) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" class=\"relative pr-2 lg:pl-2 rounded-lg self-stretch flex items-center text-xl font-semibold hover:ring hover:ring-secondary hover:bg-secondary/50 active:ring\"><div class=\"avatar overflow-hidden mr-2\"><div class=\"h-10\"><img class=\"\" src=\"/public/images/labcoat64.png\" alt=\"Miconsul logo\"></div></div>Miconsul</a></div><div class=\"navbar-end flex items-center\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" class=\"relative pr-2 lg:pl-2 rounded-lg self-stretch flex items-center text-xl font-semibold hover:ring hover:ring-secondary hover:bg-secondary/50 active:ring\"><div class=\"avatar overflow-hidden mr-2\"><div class=\"h-10\"><img class=\"\" src=\"/public/images/labcoat64.png\" alt=\"Miconsul logo\"></div></div>Miconsul</a></div><div class=\"navbar-end flex flex-1 items-center\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
