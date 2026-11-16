@@ -27,9 +27,8 @@ type iconSet interface {
 	ChevronDown(class string) templ.Component
 }
 
-var _ iconSet = heroIcons{}
 var _ iconSet = lucideIcons{}
 var _ iconSet = phosphorIcons{}
 
 // icons is the active icon set. Change it to switch the whole app.
-var icons iconSet = heroIcons{}
+var icons iconSet = lucideIcons{}
