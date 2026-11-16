@@ -28,6 +28,7 @@ type iconSet interface {
 }
 
 var _ iconSet = heroIcons{}
+var _ iconSet = lucideIcons{}
 
 // icons is the active icon set. Change it to switch the whole app.
 var icons iconSet = heroIcons{}
