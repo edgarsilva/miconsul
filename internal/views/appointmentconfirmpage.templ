@@ -108,7 +108,7 @@ templ AppointmentDescription(c *Ctx, appointment models.Appointment) {
 		<div class="flex items-start gap-x-3">
 			<dt class="flex-none text-base-content/60">
 				<span class="sr-only">{ c.l("str.clinic") }</span>
-				@CmpMarkerIcon()
+				@CmpMapPinIcon()
 			</dt>
 			<dd class="text-sm font-medium leading-6 text-base-content/90">
 				{  } { appointment.Clinic.Name }

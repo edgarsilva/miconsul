@@ -100,7 +100,7 @@ templ PatientLi(c *Ctx, patient models.Patient, lastAppointment time.Time) {
 				href={ templ.URL("/patients/" + patient.UID) }
 				hx-boost="true"
 			>
-				@CmpEditIcon("size-4")
+				@CmpPencilIcon("size-4")
 				{ c.l("btn.edit") }
 			</a>
 		</div>

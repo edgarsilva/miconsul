@@ -1207,7 +1207,7 @@ func adminComponentsPatientRow(c *Ctx, props adminComponentsPatientRowProps) tem
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = CmpEditIcon("size-4").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpPencilIcon("size-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1349,23 +1349,20 @@ func adminComponentsIcons() []adminComponentsIcon {
 		{"CmpSunIcon", CmpSunIcon()},
 		{"CmpSunSmIcon", CmpSunSmIcon()},
 		{"CmpSearchIcon", CmpSearchIcon()},
-		{"CmpMarkerIcon", CmpMarkerIcon()},
+		{"CmpMapPinIcon", CmpMapPinIcon()},
 		{"CmpUserIcon", CmpUserIcon()},
 		{"CmpStethoscopeIcon", CmpStethoscopeIcon()},
 		{"CmpUserAddIcon", CmpUserAddIcon()},
 		{"CmpMenuIcon", CmpMenuIcon()},
 		{"CmpBuildingIcon", CmpBuildingIcon()},
 		{"CmpPhoneIcon", CmpPhoneIcon()},
-		{"CmpPlusCircledIcon", CmpPlusCircledIcon()},
-		{"CmpEditIcon", CmpEditIcon()},
+		{"CmpPlusCircleIcon", CmpPlusCircleIcon()},
 		{"CmpPencilIcon", CmpPencilIcon()},
 		{"CmpCloseIcon", CmpCloseIcon()},
-		{"CmpCheckIcon", CmpCheckIcon()},
+		{"CmpCheckCircleIcon", CmpCheckCircleIcon()},
 		{"CmpChevronDownIcon", CmpChevronDownIcon()},
 		{"CmpTrashIcon", CmpTrashIcon()},
-		{"CmpPlusCircleFilledIcon", CmpPlusCircleFilledIcon()},
-		{"CmpPencilFilledIcon", CmpPencilFilledIcon()},
-		{"CmpCloseCircleFilledIcon", CmpCloseCircleFilledIcon()},
+		{"CmpCloseCircleIcon", CmpCloseCircleIcon()},
 	}
 }
 

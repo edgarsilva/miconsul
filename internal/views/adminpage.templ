@@ -254,7 +254,7 @@ templ adminComponentsPatientRow(c *Ctx, props adminComponentsPatientRowProps) {
 					{ c.l("btn.appointments") }
 				</a>
 				<a class="btn btn-sm" href="/admin/components">
-					@CmpEditIcon("size-4")
+					@CmpPencilIcon("size-4")
 					{ c.l("btn.edit") }
 				</a>
 			</div>
@@ -366,23 +366,20 @@ func adminComponentsIcons() []adminComponentsIcon {
 		{"CmpSunIcon", CmpSunIcon()},
 		{"CmpSunSmIcon", CmpSunSmIcon()},
 		{"CmpSearchIcon", CmpSearchIcon()},
-		{"CmpMarkerIcon", CmpMarkerIcon()},
+		{"CmpMapPinIcon", CmpMapPinIcon()},
 		{"CmpUserIcon", CmpUserIcon()},
 		{"CmpStethoscopeIcon", CmpStethoscopeIcon()},
 		{"CmpUserAddIcon", CmpUserAddIcon()},
 		{"CmpMenuIcon", CmpMenuIcon()},
 		{"CmpBuildingIcon", CmpBuildingIcon()},
 		{"CmpPhoneIcon", CmpPhoneIcon()},
-		{"CmpPlusCircledIcon", CmpPlusCircledIcon()},
-		{"CmpEditIcon", CmpEditIcon()},
+		{"CmpPlusCircleIcon", CmpPlusCircleIcon()},
 		{"CmpPencilIcon", CmpPencilIcon()},
 		{"CmpCloseIcon", CmpCloseIcon()},
-		{"CmpCheckIcon", CmpCheckIcon()},
+		{"CmpCheckCircleIcon", CmpCheckCircleIcon()},
 		{"CmpChevronDownIcon", CmpChevronDownIcon()},
 		{"CmpTrashIcon", CmpTrashIcon()},
-		{"CmpPlusCircleFilledIcon", CmpPlusCircleFilledIcon()},
-		{"CmpPencilFilledIcon", CmpPencilFilledIcon()},
-		{"CmpCloseCircleFilledIcon", CmpCloseCircleFilledIcon()},
+		{"CmpCloseCircleIcon", CmpCloseCircleIcon()},
 	}
 }
 

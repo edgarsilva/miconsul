@@ -11,22 +11,19 @@ type iconSet interface {
 	Signout(class string) templ.Component
 	Signin(class string) templ.Component
 	Search(class string) templ.Component
-	Marker(class string) templ.Component
+	MapPin(class string) templ.Component
 	User(class string) templ.Component
 	Stethoscope(class string) templ.Component
 	UserAdd(class string) templ.Component
 	Menu(class string) templ.Component
 	Building(class string) templ.Component
 	Phone(class string) templ.Component
-	PlusCircled(class string) templ.Component
-	Edit(class string) templ.Component
+	PlusCircle(class string) templ.Component
 	Pencil(class string) templ.Component
 	Close(class string) templ.Component
-	Check(class string) templ.Component
+	CheckCircle(class string) templ.Component
 	Trash(class string) templ.Component
-	PlusCircleFilled(class string) templ.Component
-	PencilFilled(class string) templ.Component
-	CloseCircleFilled(class string) templ.Component
+	CloseCircle(class string) templ.Component
 	ChevronDown(class string) templ.Component
 }
 
