@@ -164,6 +164,7 @@ templ AdminComponentsPage(c *Ctx) {
 					}
 				</div>
 			</section>
+			@adminComponentsIconSets()
 			@adminComponentsGroup("Not used yet") {
 				@adminComponentsWideExample("LatestTransactions (payments and revenue placeholder)") {
 					<div class="w-full">
@@ -343,6 +344,76 @@ type adminComponentsAvatar struct {
 
 func (a adminComponentsAvatar) AvatarPic() string { return a.pic }
 func (a adminComponentsAvatar) Initials() string  { return a.initials }
+
+// adminComponentsIconSets compares the icon sets side by side, each icon at
+// size-6 and size-4.
+templ adminComponentsIconSets() {
+	<section class="flex flex-col gap-4">
+		<h2 class="text-lg font-semibold">Icon sets</h2>
+		<div class="card card-border bg-base-100 overflow-x-auto">
+			<table class="table table-sm">
+				<thead>
+					<tr>
+						<th>Icon</th>
+						<th>Lucide</th>
+						<th>Phosphor</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, row := range adminComponentsIconRows() {
+						<tr>
+							<td><code class="text-xs">{ row.name }</code></td>
+							<td>
+								<div class="flex items-center gap-4">
+									@row.icon(lucideIcons{}, "size-6")
+									@row.icon(lucideIcons{}, "size-4")
+								</div>
+							</td>
+							<td>
+								<div class="flex items-center gap-4">
+									@row.icon(phosphorIcons{}, "size-6")
+									@row.icon(phosphorIcons{}, "size-4")
+								</div>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	</section>
+}
+
+// adminComponentsIconRow pairs an iconSet method with its name.
+type adminComponentsIconRow struct {
+	name string
+	icon func(iconSet, string) templ.Component
+}
+
+// adminComponentsIconRows returns one row for every iconSet method.
+func adminComponentsIconRows() []adminComponentsIconRow {
+	return []adminComponentsIconRow{
+		{"Email", iconSet.Email},
+		{"Calendar", iconSet.Calendar},
+		{"BookOpen", iconSet.BookOpen},
+		{"Signout", iconSet.Signout},
+		{"Signin", iconSet.Signin},
+		{"Search", iconSet.Search},
+		{"MapPin", iconSet.MapPin},
+		{"User", iconSet.User},
+		{"Stethoscope", iconSet.Stethoscope},
+		{"UserAdd", iconSet.UserAdd},
+		{"Menu", iconSet.Menu},
+		{"Building", iconSet.Building},
+		{"Phone", iconSet.Phone},
+		{"PlusCircle", iconSet.PlusCircle},
+		{"Pencil", iconSet.Pencil},
+		{"Close", iconSet.Close},
+		{"CheckCircle", iconSet.CheckCircle},
+		{"CloseCircle", iconSet.CloseCircle},
+		{"Trash", iconSet.Trash},
+		{"ChevronDown", iconSet.ChevronDown},
+	}
+}
 
 // adminComponentsIcon pairs an icon with its component name.
 type adminComponentsIcon struct {

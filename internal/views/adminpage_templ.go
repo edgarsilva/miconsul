@@ -780,6 +780,10 @@ func AdminComponentsPage(c *Ctx) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
+			templ_7745c5c3_Err = adminComponentsIconSets().Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 			templ_7745c5c3_Var33 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 				templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 				templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -898,7 +902,7 @@ func adminComponentsGroup(title string) templ.Component {
 		var templ_7745c5c3_Var37 string
 		templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/adminpage.templ`, Line: 186, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/adminpage.templ`, Line: 187, Col: 43}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 		if templ_7745c5c3_Err != nil {
@@ -946,7 +950,7 @@ func adminComponentsExample(name string) templ.Component {
 		var templ_7745c5c3_Var39 string
 		templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/adminpage.templ`, Line: 197, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/adminpage.templ`, Line: 198, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 		if templ_7745c5c3_Err != nil {
@@ -1093,7 +1097,7 @@ func adminComponentsPatientRow(c *Ctx, props adminComponentsPatientRowProps) tem
 		var templ_7745c5c3_Var44 string
 		templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(props.name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/adminpage.templ`, Line: 235, Col: 72}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/adminpage.templ`, Line: 236, Col: 72}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 		if templ_7745c5c3_Err != nil {
@@ -1158,7 +1162,7 @@ func adminComponentsPatientRow(c *Ctx, props adminComponentsPatientRowProps) tem
 			var templ_7745c5c3_Var47 string
 			templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(props.next)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/adminpage.templ`, Line: 243, Col: 19}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/adminpage.templ`, Line: 244, Col: 19}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 			if templ_7745c5c3_Err != nil {
@@ -1176,7 +1180,7 @@ func adminComponentsPatientRow(c *Ctx, props adminComponentsPatientRowProps) tem
 		var templ_7745c5c3_Var48 string
 		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(props.contact)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/adminpage.templ`, Line: 247, Col: 78}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/adminpage.templ`, Line: 248, Col: 78}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 		if templ_7745c5c3_Err != nil {
@@ -1197,7 +1201,7 @@ func adminComponentsPatientRow(c *Ctx, props adminComponentsPatientRowProps) tem
 		var templ_7745c5c3_Var49 string
 		templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("btn.appointments"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/adminpage.templ`, Line: 254, Col: 30}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/adminpage.templ`, Line: 255, Col: 30}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 		if templ_7745c5c3_Err != nil {
@@ -1218,7 +1222,7 @@ func adminComponentsPatientRow(c *Ctx, props adminComponentsPatientRowProps) tem
 		var templ_7745c5c3_Var50 string
 		templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("btn.edit"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/adminpage.templ`, Line: 258, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/adminpage.templ`, Line: 259, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 		if templ_7745c5c3_Err != nil {
@@ -1231,7 +1235,7 @@ func adminComponentsPatientRow(c *Ctx, props adminComponentsPatientRowProps) tem
 		var templ_7745c5c3_Var51 string
 		templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(c.l("str.last_appointment"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/adminpage.templ`, Line: 262, Col: 33}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/adminpage.templ`, Line: 263, Col: 33}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 		if templ_7745c5c3_Err != nil {
@@ -1326,6 +1330,112 @@ type adminComponentsAvatar struct {
 
 func (a adminComponentsAvatar) AvatarPic() string { return a.pic }
 func (a adminComponentsAvatar) Initials() string  { return a.initials }
+
+// adminComponentsIconSets compares the icon sets side by side, each icon at
+// size-6 and size-4.
+func adminComponentsIconSets() templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "<section class=\"flex flex-col gap-4\"><h2 class=\"text-lg font-semibold\">Icon sets</h2><div class=\"card card-border bg-base-100 overflow-x-auto\"><table class=\"table table-sm\"><thead><tr><th>Icon</th><th>Lucide</th><th>Phosphor</th></tr></thead> <tbody>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		for _, row := range adminComponentsIconRows() {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "<tr><td><code class=\"text-xs\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var53 string
+			templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(row.name)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/adminpage.templ`, Line: 365, Col: 43}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "</code></td><td><div class=\"flex items-center gap-4\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = row.icon(lucideIcons{}, "size-6").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = row.icon(lucideIcons{}, "size-4").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "</div></td><td><div class=\"flex items-center gap-4\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = row.icon(phosphorIcons{}, "size-6").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = row.icon(phosphorIcons{}, "size-4").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "</div></td></tr>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "</tbody></table></div></section>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+// adminComponentsIconRow pairs an iconSet method with its name.
+type adminComponentsIconRow struct {
+	name string
+	icon func(iconSet, string) templ.Component
+}
+
+// adminComponentsIconRows returns one row for every iconSet method.
+func adminComponentsIconRows() []adminComponentsIconRow {
+	return []adminComponentsIconRow{
+		{"Email", iconSet.Email},
+		{"Calendar", iconSet.Calendar},
+		{"BookOpen", iconSet.BookOpen},
+		{"Signout", iconSet.Signout},
+		{"Signin", iconSet.Signin},
+		{"Search", iconSet.Search},
+		{"MapPin", iconSet.MapPin},
+		{"User", iconSet.User},
+		{"Stethoscope", iconSet.Stethoscope},
+		{"UserAdd", iconSet.UserAdd},
+		{"Menu", iconSet.Menu},
+		{"Building", iconSet.Building},
+		{"Phone", iconSet.Phone},
+		{"PlusCircle", iconSet.PlusCircle},
+		{"Pencil", iconSet.Pencil},
+		{"Close", iconSet.Close},
+		{"CheckCircle", iconSet.CheckCircle},
+		{"CloseCircle", iconSet.CloseCircle},
+		{"Trash", iconSet.Trash},
+		{"ChevronDown", iconSet.ChevronDown},
+	}
+}
 
 // adminComponentsIcon pairs an icon with its component name.
 type adminComponentsIcon struct {
