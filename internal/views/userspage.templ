@@ -96,7 +96,7 @@ templ UserLi(c *Ctx, user models.User) {
 						href={ templ.URL("/admin/users/" + user.UID) }
 						hx-boost="true"
 					>
-						@CmpEditIcon("size-6")
+						@CmpPencilIcon("size-6")
 						{ c.l("btn.edit") }
 					</a>
 				</div>

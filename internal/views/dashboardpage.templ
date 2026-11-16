@@ -414,13 +414,13 @@ func feedEventTitle(c *Ctx, event models.FeedEvent) string {
 templ feedEventIcon(action string) {
 	switch action {
 		case "created":
-			@CmpPlusCircleFilledIcon("size-5")
+			@CmpPlusCircleIcon("size-5")
 		case "updated":
-			@CmpPencilFilledIcon("size-5")
+			@CmpPencilIcon("size-5")
 		case "confirmed", "completed":
-			@CmpCheckIcon("size-5")
+			@CmpCheckCircleIcon("size-5")
 		case "canceled":
-			@CmpCloseCircleFilledIcon("size-5")
+			@CmpCloseCircleIcon("size-5")
 		case "deleted":
 			@CmpTrashIcon("size-5")
 		default:

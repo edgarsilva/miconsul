@@ -239,7 +239,7 @@ func UserLi(c *Ctx, user models.User) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = CmpEditIcon("size-6").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = CmpPencilIcon("size-6").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
