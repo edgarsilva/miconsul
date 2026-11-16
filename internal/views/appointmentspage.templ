@@ -132,7 +132,7 @@ templ AppointmentListSection(c *Ctx, props AppointmentListSectionProps) {
 							class="badge badge-secondary badge-outline gap-2 hover:bg-secondary hover:text-secondary-content"
 						>
 							{ props.SelectedPatient.Email }
-							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="inline-block w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+							@CmpCloseIcon("inline-block w-4 h-4")
 						</a>
 					}
 					if c.Query("clinicId", "") != "" {
@@ -141,7 +141,7 @@ templ AppointmentListSection(c *Ctx, props AppointmentListSectionProps) {
 							class="badge badge-secondary badge-outline gap-2 hover:bg-secondary hover:text-secondary-content"
 						>
 							{ props.SelectedClinic.Name }
-							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="inline-block w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+							@CmpCloseIcon("inline-block w-4 h-4")
 						</a>
 					}
 				</h3>
@@ -278,9 +278,7 @@ templ AppointmentLi(c *Ctx, appointment models.Appointment) {
 				</a>
 				<span class="text-base-content/50">
 					(
-					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 inline-block">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z"></path>
-					</svg>
+					@CmpPhoneIcon("w-4 h-4 inline-block")
 					{ appointment.Patient.Phone }
 					)
 				</span>
@@ -289,16 +287,7 @@ templ AppointmentLi(c *Ctx, appointment models.Appointment) {
 				<div class="flex items-center space-x-3 text-base-content/50">
 					<dt class="mt-0.5">
 						<span class="sr-only">{ c.l("str.date") }</span>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							fill="none"
-							viewBox="0 0 24 24"
-							stroke-width="1.5"
-							stroke="currentColor"
-							class="w-5 h-5"
-						>
-							<path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"></path>
-						</svg>
+						@CmpCalendarIcon("w-5 h-5")
 					</dt>
 					<dd class="flex flex-col">
 						@CmpContextualTime(appointment.BookedAt, appointment.LocalTimezone(), "font-semibold")
@@ -307,9 +296,7 @@ templ AppointmentLi(c *Ctx, appointment models.Appointment) {
 				<div class="mt-2 flex items-center space-x-3 xl:ml-3.5 xl:mt-0 xl:border-l xl:border-base-300 xl:border-opacity-50 xl:pl-3.5">
 					<dt>
 						<span class="sr-only">{ c.l("str.location") }</span>
-						<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-							<path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clip-rule="evenodd"></path>
-						</svg>
+						@CmpMapPinIcon("h-5 w-5")
 					</dt>
 					<dd class="flex items-baseline">
 						<span class="flex-1">
@@ -540,16 +527,7 @@ templ AppointmentClinicPicker(c *Ctx, clinics []models.Clinic, selectedUID strin
 	<section class="p-4 md:p-6 bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
 		<span class="absolute top-2 right-2 loading loading-ring text-primary loading-md htmx-indicator"></span>
 		<label class="relative input rounded-full flex items-center gap-2 mb-4">
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				fill="none"
-				viewBox="0 0 24 24"
-				stroke-width="1.5"
-				stroke="currentColor"
-				class="w-5 h-5 text-base-content/40"
-			>
-				<path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"></path>
-			</svg>
+			@CmpSearchIcon("w-5 h-5 text-base-content/40")
 			<input
 				class="grow"
 				type="search"
@@ -626,16 +604,7 @@ templ AppointmentPatientPicker(c *Ctx, patients []models.Patient, selectedUID st
 	<section class="p-4 md:p-6 bg-base-100 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
 		<span class="absolute top-2 right-2 loading loading-ring text-primary loading-md htmx-indicator"></span>
 		<label class="relative input rounded-full flex items-center gap-2 mb-4">
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				fill="none"
-				viewBox="0 0 24 24"
-				stroke-width="1.5"
-				stroke="currentColor"
-				class="w-5 h-5 text-base-content/40"
-			>
-				<path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"></path>
-			</svg>
+			@CmpSearchIcon("w-5 h-5 text-base-content/40")
 			<input
 				class="grow"
 				type="search"
