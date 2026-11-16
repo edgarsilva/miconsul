@@ -25,10 +25,29 @@ type iconSet interface {
 	Trash(class string) templ.Component
 	CloseCircle(class string) templ.Component
 	ChevronDown(class string) templ.Component
+	Warning(class string) templ.Component
+	Info(class string) templ.Component
+	Eye(class string) templ.Component
+	EyeOff(class string) templ.Component
+	Key(class string) templ.Component
+	ShieldCheck(class string) templ.Component
+	Star(class string) templ.Component
+	Image(class string) templ.Component
+	Download(class string) templ.Component
+	Upload(class string) templ.Component
+	ChevronUp(class string) templ.Component
+	ChevronLeft(class string) templ.Component
+	ChevronRight(class string) templ.Component
+	ArrowUp(class string) templ.Component
+	ArrowDown(class string) templ.Component
+	ArrowLeft(class string) templ.Component
+	ArrowRight(class string) templ.Component
 }
 
-var _ iconSet = lucideIcons{}
-var _ iconSet = phosphorIcons{}
+var (
+	_ iconSet = lucideIcons{}
+	_ iconSet = phosphorIcons{}
+)
 
 // icons is the active icon set. Change it to switch the whole app.
 var icons iconSet = lucideIcons{}
