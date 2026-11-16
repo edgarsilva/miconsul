@@ -105,6 +105,11 @@ Name data-access methods `<GormVerb><Model>[By<Field>]`, verb first. Exported or
 - Keep a feature map in `docs/features.md`, from the user's view: feature -> how the user reaches it -> what proves it works. Agents reuse it when they verify.
 - Use CLI tools and helper scripts as support when they make verification faster or cheaper. Create a small one when it will be reused. They do not replace browser or runtime checks.
 
+## Icons
+
+- Render icons with the `Cmp<Name>Icon` components, not inline `<svg>`. Brand marks and illustrations may stay inline.
+- The default size is `size-5`. Any class you pass replaces the whole default, so always include a size class, even when you only add a colour (`size-5 text-error`). Use a larger size only where the design needs it.
+
 ## Build/Test Workflow
 
 - Regenerate templ output after templ changes:
