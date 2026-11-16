@@ -93,6 +93,18 @@ Name data-access methods `<GormVerb><Model>[By<Field>]`, verb first. Exported or
 - No `With` suffix. No resource-first prefix (`userFetch`); the model name follows the verb.
 - Normalizers are `normalize<Model>` (`normalizeClinic`).
 
+## Code Rules
+
+- No comments. Allowed: doc comments in the language's standard format (GoDoc) and tool directives (`//go:generate`, `//lint:ignore <check> <reason>`). Doc comments state what the code does, never why it was written or how it got its form. A comment that explains a workaround means the fix is wrong: fix the cause or propose the correct fix.
+- Do not write rules, notes or docs that justify an exception, quick fix or workaround.
+- Domain features (`internal/services/<pkg>`, except `auth`: clinic, patient, appointment, dashboard) are self-contained: they do not import other features' code, not even types. Platform code may be shared: `internal/server`, auth and session, `internal/mailer`, `internal/views`, `internal/lib/*`, `internal/models`, DB and clients, `internal/lib/appenv`. This is a guideline: use judgment at the border.
+
+## Verification
+
+- Before merge, put verification evidence in the PR: browser check, runtime check, test output, screenshot or video. Match it to the change.
+- Keep a feature map in `docs/features.md`, from the user's view: feature -> how the user reaches it -> what proves it works. Agents reuse it when they verify.
+- Use CLI tools and helper scripts as support when they make verification faster or cheaper. Create a small one when it will be reused. They do not replace browser or runtime checks.
+
 ## Build/Test Workflow
 
 - Regenerate templ output after templ changes:
