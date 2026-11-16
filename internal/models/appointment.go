@@ -171,8 +171,6 @@ func (a Appointment) AlertableType() string {
 	return "appointments"
 }
 
-// Scopes
-
 func AppointmentBookedToday(db *gorm.DB) *gorm.DB {
 	return db.Scopes(AppointmentBookedIn(libtime.TimeframeDay))
 }

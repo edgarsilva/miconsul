@@ -25,7 +25,6 @@ type routeBootstrap struct {
 }
 
 func RegisterServices(s *server.Server) error {
-	// Middlewares implemented in all handlers
 	s.Use(mw.LocaleLang())
 	s.Use(mw.UITheme())
 
@@ -141,7 +140,6 @@ func ClinicsRoutes(s *server.Server, authSvc auth.Runtime) error {
 		return err
 	}
 
-	// Pages
 	g := c.Group("/clinics", mw.MustAuthenticate(authSvc))
 	g.Get("/", c.HandleIndexPage)
 	g.Get("/search", c.HandleIndexSearch)

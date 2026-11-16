@@ -315,9 +315,9 @@ func ensureBaselineAppointments(ctx context.Context, db *gorm.DB, owner models.U
 
 	now := time.Now().UTC()
 	bookedAt := []time.Time{
-		now.Add(48 * time.Hour),     // 2 days from now
-		now.Add(72 * time.Hour),     // 3 days from now
-		now.Add(7 * 24 * time.Hour), // 1 week from now
+		now.Add(48 * time.Hour),
+		now.Add(72 * time.Hour),
+		now.Add(7 * 24 * time.Hour),
 	}
 
 	created := 0
@@ -395,14 +395,13 @@ func seedFeedEvents(ctx context.Context, db *gorm.DB, owner models.User) (int, e
 	now := time.Now().UTC()
 	created := 0
 	for i, apnt := range appointments {
-		// Create 1-3 feed events per appointment with recent timestamps
 		eventCount := 1 + (i % 3)
 		for j := 0; j < eventCount && j < len(actions); j++ {
 			action := actions[j]
 			// Vary timestamps within last 2.5 days so they show in dashboard feed
 			offset := time.Duration(i*30+j*15) * time.Minute
 			apntCopy := apnt
-			apntCopy.Patient = apnt.Patient // ensure patient is set for FeedEventSource
+			apntCopy.Patient = apnt.Patient
 			actorName := owner.Name
 			if actorName == "" {
 				actorName = "Seed Admin"

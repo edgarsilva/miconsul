@@ -199,12 +199,10 @@ func ContextualTime(t time.Time, tz Timezone) string {
 	localT := InTimezone(t, tz)
 	localNow := InTimezone(now, tz)
 
-	// Same day
 	if localT.Year() == localNow.Year() && localT.YearDay() == localNow.YearDay() {
 		return fmt.Sprintf("Today @ %s", localT.Format("3:04pm"))
 	}
 
-	// Within current week - past days show absolute, future days show day name
 	weekStart := BoW(localNow)
 	weekEnd := weekStart.AddDate(0, 0, 7)
 	if localT.After(weekStart) && localT.Before(weekEnd) {
@@ -214,14 +212,12 @@ func ContextualTime(t time.Time, tz Timezone) string {
 		return fmt.Sprintf("%s @ %s", localT.Format("Monday"), localT.Format("3:04pm"))
 	}
 
-	// Next week
 	nextWeekStart := weekEnd
 	nextWeekEnd := nextWeekStart.AddDate(0, 0, 7)
 	if localT.After(nextWeekStart) && localT.Before(nextWeekEnd) {
 		return "Next Week"
 	}
 
-	// Next month
 	monthStart := BoM(localNow)
 	nextMonthStart := monthStart.AddDate(0, 1, 0)
 	nextMonthEnd := nextMonthStart.AddDate(0, 1, 0)
@@ -229,7 +225,6 @@ func ContextualTime(t time.Time, tz Timezone) string {
 		return "Next Month"
 	}
 
-	// In X months
 	monthsDiff := int(localT.Year()-localNow.Year())*12 + int(localT.Month()-localNow.Month())
 	if monthsDiff > 0 {
 		if monthsDiff == 1 {
@@ -238,6 +233,5 @@ func ContextualTime(t time.Time, tz Timezone) string {
 		return fmt.Sprintf("In %d Months", monthsDiff)
 	}
 
-	// Past dates - show absolute date for clarity
 	return localT.Format("Mon 02/Jan @ 3:04pm")
 }
