@@ -626,7 +626,7 @@ func DashboardFavoriteClinic(c *Ctx, clinic models.Clinic) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = CmpPhoneIcon("size-6").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = CmpPhoneIcon().Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -653,7 +653,7 @@ func DashboardFavoriteClinic(c *Ctx, clinic models.Clinic) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = CmpEmailIcon("size-6").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = CmpEmailIcon().Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

@@ -195,7 +195,7 @@ templ DashboardFavoriteClinic(c *Ctx, clinic models.Clinic) {
 					<div class="mt-4 flex w-full flex-none gap-x-4">
 						<dt class="flex-none">
 							<span class="sr-only">Phone</span>
-							@CmpPhoneIcon("size-6")
+							@CmpPhoneIcon()
 						</dt>
 						<dd class="text-sm leading-6 ">
 							{ clinic.Phone }
@@ -206,7 +206,7 @@ templ DashboardFavoriteClinic(c *Ctx, clinic models.Clinic) {
 					<div class="mt-4 flex w-full flex-none gap-x-4">
 						<dt class="flex-none">
 							<span class="sr-only">Email</span>
-							@CmpEmailIcon("size-6")
+							@CmpEmailIcon()
 						</dt>
 						<dd class="text-sm leading-6 ">
 							{ clinic.Email }
