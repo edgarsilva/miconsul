@@ -262,39 +262,61 @@ func forceUsersQueryError(t *testing.T, svc *service) {
 	}
 }
 
-func TestCheckUserPendingConfirmation(t *testing.T) {
-	t.Run("returns nil when no user is pending", func(t *testing.T) {
+func TestAuthenticateCredentialsLookup(t *testing.T) {
+	t.Run("unknown email is invalid credentials", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
-		seedAuthUserWithOptions(t, svc, authUserSeedOptions{Email: "confirmed@example.com", Password: "Password1!"})
 
-		if err := svc.checkUserPendingConfirmation(context.Background(), "confirmed@example.com"); err != nil {
-			t.Fatalf("expected nil, got %v", err)
-		}
-		if err := svc.checkUserPendingConfirmation(context.Background(), "unknown@example.com"); err != nil {
-			t.Fatalf("expected nil for unknown email, got %v", err)
+		_, err := svc.authenticateCredentials(context.Background(), "missing@example.com", "Password1!")
+		if !errors.Is(err, errAuthInvalidCredentials) {
+			t.Fatalf("expected errAuthInvalidCredentials, got %v", err)
 		}
 	})
 
-	t.Run("returns errUserPendingConfirmation when confirmation is pending", func(t *testing.T) {
-		svc := newAuthServiceForTests(t)
-		seedAuthUserWithOptions(t, svc, authUserSeedOptions{Email: "pending@example.com", Password: "Password1!", ConfirmToken: "token"})
-
-		err := svc.checkUserPendingConfirmation(context.Background(), "pending@example.com")
-		if !errors.Is(err, errUserPendingConfirmation) {
-			t.Fatalf("expected errUserPendingConfirmation, got %v", err)
-		}
-	})
-
-	t.Run("returns the database error, not the pending sentinel", func(t *testing.T) {
+	t.Run("database error is not invalid credentials", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		forceUsersQueryError(t, svc)
 
-		err := svc.checkUserPendingConfirmation(context.Background(), "any@example.com")
-		if err == nil {
-			t.Fatalf("expected the database error")
+		_, err := svc.authenticateCredentials(context.Background(), "any@example.com", "Password1!")
+		if err == nil || errors.Is(err, errAuthInvalidCredentials) {
+			t.Fatalf("expected the database error, got %v", err)
 		}
-		if errors.Is(err, errUserPendingConfirmation) {
-			t.Fatalf("a database error must not read as pending: %v", err)
+	})
+}
+
+func TestSignupEmailStatusOf(t *testing.T) {
+	tests := []struct {
+		name string
+		seed *authUserSeedOptions
+		want signupEmailStatus
+	}{
+		{"unknown email", nil, signupEmailAvailable},
+		{"unconfirmed user", &authUserSeedOptions{Email: "ana@example.com", Password: "Password1!", ConfirmToken: "token"}, signupEmailPending},
+		{"confirmed user", &authUserSeedOptions{Email: "ana@example.com", Password: "Password1!"}, signupEmailTaken},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := newAuthServiceForTests(t)
+			if tt.seed != nil {
+				seedAuthUserWithOptions(t, svc, *tt.seed)
+			}
+
+			got, err := svc.signupEmailStatusOf(context.Background(), "ana@example.com")
+			if err != nil {
+				t.Fatalf("signupEmailStatusOf: %v", err)
+			}
+			if got != tt.want {
+				t.Fatalf("status = %d, want %d", got, tt.want)
+			}
+		})
+	}
+
+	t.Run("database error is returned", func(t *testing.T) {
+		svc := newAuthServiceForTests(t)
+		forceUsersQueryError(t, svc)
+
+		if _, err := svc.signupEmailStatusOf(context.Background(), "ana@example.com"); err == nil {
+			t.Fatalf("expected the database error")
 		}
 	})
 }

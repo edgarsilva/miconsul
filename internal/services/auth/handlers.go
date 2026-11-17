@@ -11,6 +11,7 @@ import (
 	"github.com/gofiber/fiber/v3/log"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"gorm.io/gorm"
 )
 
 // HandleSigninPage returns the signin page html. With a sign-in provider
@@ -150,49 +151,55 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 	span.SetAttributes(attribute.String("auth.provider", "local"))
 
 	vc := view.NewCtx(c)
-	email, password, err := credentialsFromRequest(c)
+	var in signupInput
+	if err := c.Bind().Body(&in); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "bind signup input failed")
+		return view.Render(c, view.AuthSignupPage(vc, "", errors.New("invalid signup form, please try again")))
+	}
+	in = in.trim()
+	if err := in.validate(); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "invalid signup input")
+		return view.Render(c, view.AuthSignupPage(vc, in.Email, err))
+	}
+	email, password := in.Email, in.Password
+	span.SetAttributes(attribute.String("auth.signup.email", strings.ToLower(email)))
+
+	status, err := s.signupEmailStatusOf(ctx, email)
 	if err != nil {
 		span.RecordError(err)
-		span.SetStatus(codes.Error, "invalid signup credentials input")
-		return view.Render(c, view.AuthSignupPage(vc, email, err))
-	}
-	span.SetAttributes(attribute.String("auth.signup.email", strings.ToLower(strings.TrimSpace(email))))
-
-	confirm := c.FormValue("confirm", "")
-	if confirm == "" || password != confirm {
-		err := errors.New("passwords don't match")
-		span.RecordError(err)
-		span.SetStatus(codes.Error, "signup password confirmation mismatch")
-		return view.Render(c, view.AuthSignupPage(vc, email, err))
-	}
-
-	err = s.checkUserPendingConfirmation(ctx, email)
-	if err != nil && !errors.Is(err, errUserPendingConfirmation) {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, "check pending confirmation failed")
+		span.SetStatus(codes.Error, "signup email status failed")
 		return view.Render(c, view.AuthSignupPage(vc, email, errors.New("could not check your account, please try again")))
 	}
-	if err != nil {
-		if resendErr := s.resendPendingConfirmation(ctx, email); resendErr != nil {
-			span.RecordError(resendErr)
+
+	switch status {
+	case signupEmailPending:
+		if err := s.resendPendingConfirmation(ctx, email); err != nil {
+			span.RecordError(err)
 			span.SetStatus(codes.Error, "resend confirmation failed")
 			return view.Render(c, view.AuthSignupPage(vc, email, errors.New("failed to resend confirmation email, please try again")))
 		}
 		span.SetStatus(codes.Ok, "pending confirmation resent")
 		return s.RedirectWithAlert(c, "/signin", "check your inbox, we'll re-send a confirmation link", view.LevelInfo)
-	}
-
-	if err := s.signup(ctx, email, password); err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, "signup failed")
-		if errors.Is(err, errAuthConfirmEmailSend) {
-			err = errors.New("failed to send confirmation email, please try again")
+	case signupEmailTaken:
+		return view.Render(c, view.AuthSignupPage(vc, email, errors.New("email already exists, try login instead")))
+	case signupEmailAvailable:
+		if err := s.signup(ctx, email, password); err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, "signup failed")
+			if errors.Is(err, errAuthConfirmEmailSend) {
+				err = errors.New("failed to send confirmation email, please try again")
+			}
+			return view.Render(c, view.AuthSignupPage(vc, email, err))
 		}
-		return view.Render(c, view.AuthSignupPage(vc, email, err))
-	}
-	span.SetStatus(codes.Ok, "signup confirmation email sent")
+		span.SetStatus(codes.Ok, "signup confirmation email sent")
 
-	return s.RedirectWithAlert(c, "/signin", "check your inbox to confirm your email", view.LevelInfo)
+		return s.RedirectWithAlert(c, "/signin", "check your inbox to confirm your email", view.LevelInfo)
+	}
+
+	span.SetStatus(codes.Error, "unknown signup email status")
+	return view.Render(c, view.AuthSignupPage(vc, email, errors.New("could not check your account, please try again")))
 }
 
 // HandleSignupConfirmEmail validates an email confirmation token.
@@ -273,8 +280,13 @@ func (s *service) HandleResetPassword(c fiber.Ctx) error {
 	}
 
 	user, err := s.takeUserByEmail(c.Context(), email)
-	if err != nil {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		errView := errors.New("user not found with that email")
+		return view.Render(c, view.AuthResetPasswordPage(vc, email, "", errView))
+	}
+	if err != nil {
+		log.Error("take user by email:", err)
+		errView := errors.New("could not check your account, please try again")
 		return view.Render(c, view.AuthResetPasswordPage(vc, email, "", errView))
 	}
 
