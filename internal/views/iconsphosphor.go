@@ -1,7 +1,5 @@
 package views
 
-// Phosphor icons (https://phosphoricons.com), MIT licensed. The licence notice
-// is in THIRD_PARTY_NOTICES.md.
-
-// phosphorIcons is the Phosphor icon set, regular weight.
+// phosphorIcons is the Phosphor icon set (https://phosphoricons.com), regular
+// weight, MIT licensed. The licence notice is in THIRD_PARTY_NOTICES.md.
 type phosphorIcons struct{}

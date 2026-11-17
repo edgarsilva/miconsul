@@ -42,13 +42,11 @@ func waURL(phone, msg string) string {
 func keepChars(input string, charsToKeep string) string {
 	var builder strings.Builder
 
-	// Create a map for quick lookup of characters to remove
 	keepMap := make(map[rune]bool)
 	for _, char := range charsToKeep {
 		keepMap[char] = true
 	}
 
-	// Iterate over the input string and add only characters not in removeMap
 	for _, char := range input {
 		if keepMap[char] {
 			builder.WriteRune(char)
@@ -62,13 +60,11 @@ func keepChars(input string, charsToKeep string) string {
 func removeChars(input string, charsToRemove string) string {
 	var builder strings.Builder
 
-	// Create a map for quick lookup of characters to remove
 	removeMap := make(map[rune]bool)
 	for _, char := range charsToRemove {
 		removeMap[char] = true
 	}
 
-	// Iterate over the input string and add only characters not in removeMap
 	for _, char := range input {
 		if !removeMap[char] {
 			builder.WriteRune(char)

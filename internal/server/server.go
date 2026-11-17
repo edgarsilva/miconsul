@@ -45,7 +45,7 @@ type Cache interface {
 type Server struct {
 	Env               *appenv.Env
 	DB                *database.Database
-	wp                *ants.Pool // <- WorkPool - handles Background Goroutines or Async Jobs (emails) with Ants
+	wp                *ants.Pool
 	jobs              *jobs.Runtime
 	Cache             Cache
 	SessionStore      *session.Store
@@ -222,7 +222,6 @@ func setupFiberApp(s *Server) {
 func setupCoreMiddleware(s *Server) {
 	app := s.App
 
-	// Recover MW catches panics that might stop app execution.
 	app.Use(fiberrecover.New(fiberrecover.Config{
 		EnableStackTrace:  true,
 		StackTraceHandler: s.emitRequestPanic,

@@ -3,7 +3,6 @@ package database
 
 import (
 	"errors"
-	// libsql "github.com/edgarsilva/gorm-libsql"
 
 	"database/sql"
 	"fmt"
@@ -149,7 +148,7 @@ func (d *Database) SQLDB() (*sql.DB, error) {
 func (d *Database) Close() error {
 	sqlDB, err := d.SQLDB()
 	if errors.Is(err, ErrNoDatabase) {
-		return nil // nothing to close
+		return nil
 	}
 	if err != nil {
 		return err

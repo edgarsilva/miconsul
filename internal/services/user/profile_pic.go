@@ -54,7 +54,6 @@ func SaveProfilePicPreviewToTmp(c fiber.Ctx, user models.User, assetsDir string)
 
 	filename := user.UID + "_preview"
 
-	// Save tmp preview pic to /tmp directory
 	filePath, err := ProfilePicPath(filename, assetsDir)
 	if err != nil {
 		return "", fmt.Errorf("save profile pic without an ASSETS_DIR: %w", err)

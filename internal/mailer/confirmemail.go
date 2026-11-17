@@ -18,7 +18,6 @@ func ConfirmEmail(env *appenv.Env, email, token string) error {
 	lang := emailLocale()
 	m.SetHeader("From", env.EmailFromAddress)
 	m.SetHeader("To", email)
-	// m.SetAddressHeader("Cc", "dan@example.com", "Dan")
 	m.SetHeader("Subject", "Miconsul: "+l(lang, "email.confirm_email_subject"))
 
 	url := "https://" + env.AppDomain + "/signup/confirm/" + token

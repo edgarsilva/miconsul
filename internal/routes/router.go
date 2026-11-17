@@ -25,7 +25,6 @@ type routeBootstrap struct {
 }
 
 func RegisterServices(s *server.Server) error {
-	// Middlewares implemented in all handlers
 	s.Use(mw.LocaleLang())
 	s.Use(mw.UITheme())
 
@@ -141,7 +140,6 @@ func ClinicsRoutes(s *server.Server, authSvc auth.Runtime) error {
 		return err
 	}
 
-	// Pages
 	g := c.Group("/clinics", mw.MustAuthenticate(authSvc))
 	g.Get("/", c.HandleIndexPage)
 	g.Get("/search", c.HandleIndexSearch)
@@ -173,15 +171,6 @@ func PatientRoutes(s *server.Server, authSvc auth.Runtime) error {
 	g.Patch("/:id", p.HandleUpdate)
 	g.Patch("/:id/removepic", p.HandleRemovePic)
 	g.Delete("/:id", p.HandleDelete)
-
-	// g.Get("/:id", p.HandleIndexPage)
-
-	// Fragments
-	// g.Get("/fragment/footer", u.HandleFooterFragment)
-
-	// API
-	// api := p.Group("/api/patients")
-	// api.Get("", p.HandleAPIPatients)
 
 	return nil
 }
@@ -242,23 +231,22 @@ func UserRoutes(s *server.Server, authSvc auth.Runtime) error {
 		return err
 	}
 
-	// Pages
-	u.Get("/profile", mw.MustAuthenticate(authSvc), u.HandleProfilePage)
-	u.Patch("/profile", mw.MustAuthenticate(authSvc), u.HandleUpdateProfile)
-	u.Post("/profile/avatar/preview", mw.MustAuthenticate(authSvc), u.HandleProfilePicPreview)
-	u.Delete("/profile/avatar", mw.MustAuthenticate(authSvc), u.HandleRemoveProfilePic)
-	u.Get("/profile/avatar", mw.MustAuthenticate(authSvc), u.HandleProfilePic)
-	u.Get("/profile/avatar/preview", mw.MustAuthenticate(authSvc), u.HandleProfilePic)
+	authedPages := u.Group("/profile", mw.MustAuthenticate(authSvc))
+	authedPages.Get("/", u.HandleProfilePage)
+	authedPages.Patch("/", u.HandleUpdateProfile)
+	authedPages.Post("/avatar/preview", u.HandleProfilePicPreview)
+	authedPages.Delete("/avatar", u.HandleRemoveProfilePic)
+	authedPages.Get("/avatar", u.HandleProfilePic)
+	authedPages.Get("/avatar/preview", u.HandleProfilePic)
 
-	// Admin only
-	u.Get("/admin/users", mw.MustBeAdmin(authSvc), u.HandleIndexPage)
-	u.Get("/admin/users/:id", mw.MustBeAdmin(authSvc), u.HandleEditPage)
-	u.Patch("/admin/users/:id", mw.MustBeAdmin(authSvc), u.HandleAdminUpdateUser)
-	u.Patch("/admin/users/:id/removepic", mw.MustBeAdmin(authSvc), u.HandleAdminRemoveProfilePic)
+	adminPages := u.Group("/admin/users", mw.MustBeAdmin(authSvc))
+	adminPages.Get("/", u.HandleIndexPage)
+	adminPages.Get("/:id", u.HandleEditPage)
+	adminPages.Patch("/:id", u.HandleAdminUpdateUser)
+	adminPages.Patch("/:id/removepic", u.HandleAdminRemoveProfilePic)
 
-	// API
-	api := u.Group("/api/users", mw.MustBeAdmin(authSvc))
-	api.Get("", u.HandleAPIUsers)
+	adminAPI := u.Group("/api/users", mw.MustBeAdmin(authSvc))
+	adminAPI.Get("", u.HandleAPIUsers)
 
 	return nil
 }

@@ -33,8 +33,6 @@ func (s *service) HandleLogtoSignin(c fiber.Ctx) error {
 		return c.Redirect().Status(fiber.StatusTemporaryRedirect).To("/")
 	}
 
-	// The sign-in request is handled by Logto.
-	// The user will be redirected to the RedirectURI after successful sign in.
 	callbackURI, err := logtoRedirectURI(s.Env, "/logto/callback")
 	if err != nil {
 		span.RecordError(err)
@@ -52,7 +50,6 @@ func (s *service) HandleLogtoSignin(c fiber.Ctx) error {
 		return s.Redirect(c, "/signin?logto_error=signin")
 	}
 
-	// Redirect the user to the Logto sign-in page.
 	return c.Redirect().Status(fiber.StatusTemporaryRedirect).To(signInURI)
 }
 
@@ -162,7 +159,6 @@ func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
 		return s.Redirect(c, "/signin?logto_error=user_sync")
 	}
 
-	// This example takes the user back to the home page.
 	return s.Redirect(c, "/")
 }
 
@@ -181,8 +177,6 @@ func (s *service) HandleLogtoSignout(c fiber.Ctx) error {
 	logtoClient, saveSess := NewLogtoClient(sess, LogtoConfig(s.Env))
 	defer deferLogtoSessionSave("logto signout", saveSess)
 
-	// The sign-out request is handled by Logto.
-	// The user will be redirected to the Post Sign-out Redirect URI on signed out.
 	postSignOutURI, err := logtoRedirectURI(s.Env, "/logto/signin")
 	if err != nil {
 		log.Error("failed to compose post logout redirect uri:", err)

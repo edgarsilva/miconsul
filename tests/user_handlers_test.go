@@ -41,6 +41,15 @@ func TestUserHandlers(t *testing.T) {
 		}
 	})
 
+	t.Run("admin pages reject a regular user", func(t *testing.T) {
+		for _, path := range []string{"/admin/users", "/admin/users/" + admin.UID} {
+			resp, _ := h.doRequest(requestOptions{path: path, authToken: h.authToken(regular)})
+			if resp.StatusCode == http.StatusOK {
+				t.Errorf("%s: expected a regular user to be rejected, got 200", path)
+			}
+		}
+	})
+
 	t.Run("profile update persists and renders the profile section", func(t *testing.T) {
 		resp, _ := h.doRequest(requestOptions{
 			method:    http.MethodPatch,

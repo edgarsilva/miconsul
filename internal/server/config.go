@@ -149,7 +149,6 @@ func sendErrorPage(c fiber.Ctx, code int) error {
 // recoverConfig returns recover middleware config object with the yield func
 // executed with the request ctx to trace the panic error
 func fiberAppErrorHandler(c fiber.Ctx, err error) error {
-	// Status code defaults to 500
 	code := fiber.StatusInternalServerError
 
 	if e, ok := errors.AsType[*fiber.Error](err); ok {
