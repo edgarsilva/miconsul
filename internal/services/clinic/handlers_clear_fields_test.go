@@ -24,7 +24,6 @@ func TestHandleUpdateSavesClearedFields(t *testing.T) {
 	fillFields(&full)
 	filled := full.toClinic(0, "", user.ID)
 
-	// The form does not render these fields, so an update must keep them.
 	notInForm := []string{"Line2", "Messenger"}
 	seed := filled
 	seed.ProfilePic = "old.png"
@@ -45,9 +44,8 @@ func TestHandleUpdateSavesClearedFields(t *testing.T) {
 		return svc.HandleUpdate(c)
 	})
 
-	// Name is required, so it stays; every other field is cleared.
-	form := url.Values{"name": {"Renamed"}, "price": {"0"}}
-	req := httptest.NewRequest(http.MethodPatch, "/clinics/"+seed.UID, strings.NewReader(form.Encode()))
+	requiredFieldsOnly := url.Values{"name": {"Renamed"}, "price": {"0"}}
+	req := httptest.NewRequest(http.MethodPatch, "/clinics/"+seed.UID, strings.NewReader(requiredFieldsOnly.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("HX-Request", "true")
 	resp, err := app.Test(req)

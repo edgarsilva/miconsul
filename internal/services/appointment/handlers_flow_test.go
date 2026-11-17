@@ -123,9 +123,9 @@ func TestAppointmentHandlersFlows(t *testing.T) {
 		if created.Price != 10000 || created.Duration != 30 || created.BookedAt.IsZero() {
 			t.Fatalf("form bookedAt/price/duration not bound: price=%d duration=%d bookedAt=%v", created.Price, created.Duration, created.BookedAt)
 		}
-		// The UID's first 16 xid chars encode time, machine and pid.
 		uidBody := strings.TrimPrefix(created.UID, "apnt")
-		if created.Token == "" || strings.Contains(created.Token, uidBody[:16]) {
+		uidTimeMachinePid := uidBody[:16]
+		if created.Token == "" || strings.Contains(created.Token, uidTimeMachinePid) {
 			t.Fatalf("token must not be derived from the UID: uid=%q token=%q", created.UID, created.Token)
 		}
 
@@ -519,9 +519,8 @@ func TestPickerSearchToasts(t *testing.T) {
 	}{
 		{"clinic short term", "/appointments/search/clinics", "clinicId", "ab", fiber.StatusOK, "at least 3 characters"},
 		{"patient short term", "/appointments/search/patients", "patientId", "ab", fiber.StatusOK, "at least 3 characters"},
-		// The test DB has no FTS table, so any real search term fails.
-		{"clinic search error", "/appointments/search/clinics", "clinicId", "alpha", fiber.StatusInternalServerError, "couldn&#39;t be completed"},
-		{"patient search error", "/appointments/search/patients", "patientId", "alpha", fiber.StatusInternalServerError, "couldn&#39;t be completed"},
+		{"clinic search without FTS table", "/appointments/search/clinics", "clinicId", "alpha", fiber.StatusInternalServerError, "couldn&#39;t be completed"},
+		{"patient search without FTS table", "/appointments/search/patients", "patientId", "alpha", fiber.StatusInternalServerError, "couldn&#39;t be completed"},
 	}
 
 	for _, tt := range tests {
@@ -559,8 +558,7 @@ func TestIndexSearchToasts(t *testing.T) {
 		wantToast  string
 	}{
 		{"short term", "ab", true, fiber.StatusOK, "at least 3 characters"},
-		// The test DB has no FTS table, so any real search term fails.
-		{"search error", "alpha", true, fiber.StatusInternalServerError, "couldn&#39;t be completed"},
+		{"search without FTS table", "alpha", true, fiber.StatusInternalServerError, "couldn&#39;t be completed"},
 		{"short term without htmx", "ab", false, fiber.StatusOK, "at least 3 characters"},
 	}
 
@@ -660,13 +658,12 @@ func TestHandleUpdateStampsRescheduledAtOnlyWhenTheTimeMoves(t *testing.T) {
 	if err != nil {
 		t.Fatalf("load %s: %v", models.DefaultTimezone, err)
 	}
-	// Seconds the edit form can't show, as in seeded and older rows.
-	bookedAt := time.Date(2026, 12, 1, 16, 30, 42, 0, time.UTC)
+	bookedAtWithSeconds := time.Date(2026, 12, 1, 16, 30, 42, 0, time.UTC)
 	apnt := models.Appointment{
 		UserID:    user.ID,
 		ClinicID:  clinic.ID,
 		PatientID: patient.ID,
-		BookedAt:  bookedAt,
+		BookedAt:  bookedAtWithSeconds,
 		Token:     "tok_reschedule_handler",
 	}
 	if err := svc.CreateAppointment(t.Context(), &apnt); err != nil {
@@ -700,12 +697,12 @@ func TestHandleUpdateStampsRescheduledAtOnlyWhenTheTimeMoves(t *testing.T) {
 		return saved
 	}
 
-	if saved := save(t, bookedAt); !saved.RescheduledAt.IsZero() {
+	if saved := save(t, bookedAtWithSeconds); !saved.RescheduledAt.IsZero() {
 		t.Fatalf("saving the same time stamped RescheduledAt = %v", saved.RescheduledAt)
 	}
 
 	before := time.Now().UTC()
-	saved := save(t, bookedAt.Add(time.Hour))
+	saved := save(t, bookedAtWithSeconds.Add(time.Hour))
 	if saved.RescheduledAt.Before(before.Add(-time.Second)) {
 		t.Fatalf("moving the time stamped RescheduledAt = %v, want about now", saved.RescheduledAt)
 	}

@@ -25,7 +25,6 @@ func TestHandleUpdateSavesClearedFields(t *testing.T) {
 	fillFields(&full)
 	filled := full.toPatient(0, "", user.ID)
 
-	// The form does not render these fields, so an update must keep them.
 	notInForm := []string{"Line2", "Whatsapp", "Telegram", "Messenger", "Instagram", "Facebook"}
 	seed := filled
 	seed.ProfilePic = "old.png"
@@ -46,10 +45,8 @@ func TestHandleUpdateSavesClearedFields(t *testing.T) {
 		return svc.HandleUpdate(c)
 	})
 
-	// A browser leaves unchecked checkboxes out of the form.
-	// Name, age and phone are required, so they stay; every other field is cleared.
-	form := url.Values{"name": {"Renamed"}, "age": {"1"}, "phone": {"1"}}
-	req := httptest.NewRequest(http.MethodPatch, "/patients/"+seed.UID, strings.NewReader(form.Encode()))
+	requiredFieldsOnly := url.Values{"name": {"Renamed"}, "age": {"1"}, "phone": {"1"}}
+	req := httptest.NewRequest(http.MethodPatch, "/patients/"+seed.UID, strings.NewReader(requiredFieldsOnly.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("HX-Request", "true")
 	resp, err := app.Test(req)
