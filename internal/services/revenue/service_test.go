@@ -46,21 +46,22 @@ func TestReport(t *testing.T) {
 	}
 
 	bookings := []struct {
+		name     string
 		userID   uint
 		clinicID uint
 		bookedAt time.Time
 		status   models.AppointmentStatus
 		price    int
 	}{
-		{1, north.ID, time.Date(2026, time.November, 1, 9, 0, 0, 0, mx), models.AppointmentDone, 100000},
-		{1, north.ID, time.Date(2026, time.November, 2, 18, 0, 0, 0, mx), models.AppointmentDone, 50000},    // later today
-		{1, north.ID, time.Date(2026, time.October, 31, 22, 0, 0, 0, mx), models.AppointmentDone, 70000},    // November in UTC
-		{1, south.ID, time.Date(2026, time.October, 10, 9, 0, 0, 0, mx), models.AppointmentDone, 90000},     // deleted clinic
-		{1, north.ID, time.Date(2026, time.October, 12, 9, 0, 0, 0, mx), models.AppointmentCanceled, 99900}, // canceled
-		{2, north.ID, time.Date(2026, time.October, 12, 9, 0, 0, 0, mx), models.AppointmentDone, 99900},     // other user
-		{1, north.ID, time.Date(2025, time.December, 1, 9, 0, 0, 0, mx), models.AppointmentDone, 30000},     // 12th month
-		{1, north.ID, time.Date(2025, time.November, 30, 9, 0, 0, 0, mx), models.AppointmentDone, 99900},    // 13th month: average only
-		{1, north.ID, time.Date(2025, time.October, 31, 9, 0, 0, 0, mx), models.AppointmentDone, 99900},     // 14 months ago
+		{"this month", 1, north.ID, time.Date(2026, time.November, 1, 9, 0, 0, 0, mx), models.AppointmentDone, 100000},
+		{"later today", 1, north.ID, time.Date(2026, time.November, 2, 18, 0, 0, 0, mx), models.AppointmentDone, 50000},
+		{"November in UTC", 1, north.ID, time.Date(2026, time.October, 31, 22, 0, 0, 0, mx), models.AppointmentDone, 70000},
+		{"deleted clinic", 1, south.ID, time.Date(2026, time.October, 10, 9, 0, 0, 0, mx), models.AppointmentDone, 90000},
+		{"canceled", 1, north.ID, time.Date(2026, time.October, 12, 9, 0, 0, 0, mx), models.AppointmentCanceled, 99900},
+		{"other user", 2, north.ID, time.Date(2026, time.October, 12, 9, 0, 0, 0, mx), models.AppointmentDone, 99900},
+		{"12th month", 1, north.ID, time.Date(2025, time.December, 1, 9, 0, 0, 0, mx), models.AppointmentDone, 30000},
+		{"13th month: average only", 1, north.ID, time.Date(2025, time.November, 30, 9, 0, 0, 0, mx), models.AppointmentDone, 99900},
+		{"14 months ago", 1, north.ID, time.Date(2025, time.October, 31, 9, 0, 0, 0, mx), models.AppointmentDone, 99900},
 	}
 	for i, b := range bookings {
 		apnt := models.Appointment{
@@ -73,7 +74,7 @@ func TestReport(t *testing.T) {
 			Token:     fmt.Sprintf("tok_revenue_%d", i),
 		}
 		if err := gorm.G[models.Appointment](svc.DB.GormDB()).Create(t.Context(), &apnt); err != nil {
-			t.Fatalf("create appointment %d: %v", i, err)
+			t.Fatalf("create appointment %d (%s): %v", i, b.name, err)
 		}
 	}
 
@@ -101,10 +102,14 @@ func TestReport(t *testing.T) {
 		if got := report.Selected.Start.Format("2006-01"); got != "2026-11" {
 			t.Errorf("selected = %s, want the current month", got)
 		}
-		// Oct 2026 (160000) + Dec 2025 (30000) + Nov 2025 (99900), over 12 months;
-		// the current month is not complete and is left out.
-		if report.MonthlyAverage != 289900/12 {
-			t.Errorf("monthly average = %d, want %d", report.MonthlyAverage, 289900/12)
+		const (
+			october2026Total  = 160000
+			december2025Total = 30000
+			november2025Total = 99900
+		)
+		wantAverage := (october2026Total + december2025Total + november2025Total) / 12
+		if report.MonthlyAverage != wantAverage {
+			t.Errorf("monthly average = %d, want %d", report.MonthlyAverage, wantAverage)
 		}
 		if len(report.Clinics) != 1 || report.Clinics[0].Name != "North" || report.Clinics[0].Total != 100000 {
 			t.Errorf("clinics = %+v, want North with 100000", report.Clinics)
@@ -118,7 +123,6 @@ func TestReport(t *testing.T) {
 			t.Fatalf("Report: %v", err)
 		}
 
-		// Most recently seen first: Alma on Oct 31, Bruno on Oct 10.
 		want := []models.RevenuePatient{
 			{UID: alma.UID, Name: "Alma", Total: 70000, Appointments: 1, LastAppointment: time.Date(2026, time.October, 31, 22, 0, 0, 0, mx)},
 			{UID: bruno.UID, Name: "Bruno", Deleted: true, Total: 90000, Appointments: 1, LastAppointment: time.Date(2026, time.October, 10, 9, 0, 0, 0, mx)},

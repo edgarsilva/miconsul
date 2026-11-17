@@ -197,7 +197,7 @@ func TestFindLastAppointmentsByPatient(t *testing.T) {
 		{UserID: user.ID, PatientID: seen.ID, BookedAt: last.AddDate(0, 0, 4), Status: models.AppointmentCanceled},
 		{UserID: other.ID, PatientID: seen.ID, BookedAt: last.AddDate(0, 0, 5), Status: models.AppointmentDone},
 		{UserID: user.ID, PatientID: unseen.ID, BookedAt: last, Status: models.AppointmentPending},
-		{UserID: user.ID, PatientID: seen.ID, BookedAt: last.AddDate(0, 0, 6), Status: models.AppointmentDone}, // soft deleted below
+		{UserID: user.ID, PatientID: seen.ID, BookedAt: last.AddDate(0, 0, 6), Status: models.AppointmentDone},
 	}
 	for i := range appointments {
 		appointments[i].ClinicID = clinic.ID

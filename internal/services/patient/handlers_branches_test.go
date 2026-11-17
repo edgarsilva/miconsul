@@ -90,8 +90,7 @@ func TestIndexSearchToasts(t *testing.T) {
 		wantToast  string
 	}{
 		{"short term", "ab", true, fiber.StatusOK, "at least 3 characters"},
-		// The test DB has no FTS table, so any real search term fails.
-		{"search error", "alpha", true, fiber.StatusInternalServerError, "couldn&#39;t be completed"},
+		{"search without FTS table", "alpha", true, fiber.StatusInternalServerError, "couldn&#39;t be completed"},
 		{"short term without htmx", "ab", false, fiber.StatusOK, "at least 3 characters"},
 	}
 

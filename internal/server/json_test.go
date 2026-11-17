@@ -71,7 +71,6 @@ func TestFiberJSONUsesV2(t *testing.T) {
 			t.Fatalf("read body: %v", err)
 		}
 
-		// Map key order is not guaranteed, so check each member on its own.
 		for _, want := range []string{`"alpha":[]`, `"html":"<b>&</b>"`, `"zeta":1`} {
 			if !strings.Contains(string(body), want) {
 				t.Fatalf("body %s is missing %s", body, want)

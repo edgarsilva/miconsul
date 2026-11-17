@@ -26,7 +26,7 @@ func TestTimeHelpers(t *testing.T) {
 	})
 
 	t.Run("BoW returns beginning of week", func(t *testing.T) {
-		now := time.Date(2026, 3, 11, 16, 45, 12, 10, time.UTC) // Wednesday
+		now := time.Date(2026, 3, 11, 16, 45, 12, 10, time.UTC)
 		got := BoW(now)
 		if got.Hour() != 0 || got.Minute() != 0 || got.Second() != 0 || got.Nanosecond() != 0 {
 			t.Fatalf("expected beginning of day for BoW, got %v", got)
@@ -134,7 +134,6 @@ func TestTimeHelpers(t *testing.T) {
 
 	t.Run("RelativeTime returns abbreviated future times", func(t *testing.T) {
 		now := time.Now()
-		// Future times should start with "in"
 		got := RelativeTime(now.Add(5 * time.Minute))
 		if !strings.HasPrefix(got, "in ") {
 			t.Fatalf("RelativeTime(future) = %q, expected to start with 'in '", got)
@@ -163,7 +162,6 @@ func TestTimeframeBounds(t *testing.T) {
 	if err != nil {
 		t.Fatalf("load %s: %v", AmericaMexicoCity, err)
 	}
-	// Saturday October 31 at 20:00 in Mexico City is already November in UTC.
 	now := time.Date(2026, 10, 31, 20, 0, 0, 0, time.UTC).Add(6 * time.Hour)
 
 	tests := []struct {

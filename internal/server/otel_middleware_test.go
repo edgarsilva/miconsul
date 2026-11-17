@@ -56,8 +56,8 @@ func TestOtelMiddlewareServesStaticFiles(t *testing.T) {
 		{path: "/boom", wantStatus: fiber.StatusInternalServerError},
 	}
 
-	// Repeat so fasthttp serves from its file cache, where the panic surfaced.
-	for range 3 {
+	const fileCacheRounds = 3
+	for range fileCacheRounds {
 		for _, tt := range tests {
 			req := httptest.NewRequest(http.MethodGet, tt.path, nil)
 			if tt.acceptEncoding != "" {

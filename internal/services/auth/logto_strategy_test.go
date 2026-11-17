@@ -253,7 +253,8 @@ func seedLogtoSession(t *testing.T, svc *service, user models.User, refreshToken
 		logtoClient, saveSess := NewLogtoClient(sess, LogtoConfig(svc.Env))
 		logtoClient.SetIdToken(signedIDToken)
 		logtoClient.SetRefreshToken(refreshToken)
-		logtoClient.SaveAccessToken("@", accessToken) // key of the sign-in (no resource) access token
+		const signInAccessTokenKey = "@"
+		logtoClient.SaveAccessToken(signInAccessTokenKey, accessToken)
 		return saveSess()
 	})
 
