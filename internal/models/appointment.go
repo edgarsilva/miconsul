@@ -96,7 +96,6 @@ func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
 func (a *Appointment) BeforeSave(tx *gorm.DB) error {
 	a.BookedAt = a.BookedAt.UTC()
 
-	// Allow partial updates where status is intentionally omitted.
 	if a.Status == "" {
 		return nil
 	}

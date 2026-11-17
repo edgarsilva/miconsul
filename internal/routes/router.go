@@ -72,7 +72,6 @@ func AuthRoutes(s *server.Server) (auth.Runtime, error) {
 	a.Get("/signin", mw.MaybeAuthenticate(a), a.HandleSigninPage)
 	a.All("/logout", a.HandleLogout)
 
-	// Local auth only when Logto is off; Logto handles sign-up and resets.
 	if a.LogtoEnabled() {
 		a.Get("/signup", a.HandleProviderSignin)
 		a.Get("/resetpassword", a.HandleProviderSignin)
@@ -87,7 +86,6 @@ func AuthRoutes(s *server.Server) (auth.Runtime, error) {
 		a.Post("/resetpassword/change", a.HandleResetPasswordUpdate)
 	}
 
-	// Logto only when configured; the claims debug page only outside production.
 	if a.LogtoEnabled() {
 		a.AddHealthCheck("logto", a.CheckLogto)
 		a.Get("/logto/signin", a.HandleLogtoSignin)
@@ -202,13 +200,12 @@ func AppointmentRoutes(s *server.Server, authSvc auth.Runtime) error {
 	g.Patch("/:id", a.HandleUpdate)
 	g.Delete("/:id", a.HandleDelete)
 
-	// Patient links are public: the token in the link is the credential.
-	pg := a.Group("/p/a")
-	pg.Get("/:token/confirm", a.HandlePatientConfirmPage)
-	pg.Post("/:token/confirm", a.HandlePatientConfirm)
-	pg.Post("/:token/changedate", a.HandlePatientChangeDate)
-	pg.Get("/:token/cancel", a.HandlePatientCancelPage)
-	pg.Post("/:token/cancel", a.HandlePatientCancel)
+	patientLinks := a.Group("/p/a")
+	patientLinks.Get("/:token/confirm", a.HandlePatientConfirmPage)
+	patientLinks.Post("/:token/confirm", a.HandlePatientConfirm)
+	patientLinks.Post("/:token/changedate", a.HandlePatientChangeDate)
+	patientLinks.Get("/:token/cancel", a.HandlePatientCancelPage)
+	patientLinks.Post("/:token/cancel", a.HandlePatientCancel)
 
 	return nil
 }

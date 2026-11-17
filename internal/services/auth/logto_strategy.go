@@ -101,9 +101,7 @@ func (s LogtoStrategy) Metadata() AuthenticatorMeta {
 func LogtoConfig(env *appenv.Env) *logto.LogtoConfig {
 	config := logto.LogtoConfig{
 		Resources: []string{},
-		// Keep login scopes minimal. If downstream API flows break, re-evaluate
-		// whether resource scopes (for example app:write) are actually required.
-		Scopes: []string{"email", "phone", "picture", "custom_data", "app:read"},
+		Scopes:    []string{"email", "phone", "picture", "custom_data", "app:read"},
 	}
 
 	if env == nil {

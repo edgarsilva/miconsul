@@ -43,6 +43,8 @@ func (s *Server) SendFile(c fiber.Ctx, path string) error {
 	return c.Send(fileBytes)
 }
 
+// redirectWithFlash redirects to path with a flash message and level. For htmx
+// it answers 204 with an HX-Redirect header.
 func (s *Server) redirectWithFlash(c fiber.Ctx, path, msgKey, msg, levelKey, level string) error {
 	status := fiber.StatusSeeOther
 	if s.IsHTMX(c) {
@@ -50,6 +52,5 @@ func (s *Server) redirectWithFlash(c fiber.Ctx, path, msgKey, msg, levelKey, lev
 		c.Set("HX-Redirect", path)
 	}
 
-	// Fiber only writes the flash cookie in Redirect().To(); HTMX navigates via HX-Redirect.
 	return c.Redirect().Status(status).With(msgKey, msg).With(levelKey, level).To(path)
 }
