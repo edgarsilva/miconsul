@@ -149,9 +149,9 @@ const (
 	signupEmailTaken
 )
 
-// signupEmailStatusOf reports whether email is free to sign up, has an
+// signupEmailStatus reports whether email is free to sign up, has an
 // unconfirmed signup, or belongs to a confirmed user.
-func (s *service) signupEmailStatusOf(ctx context.Context, email string) (signupEmailStatus, error) {
+func (s *service) signupEmailStatus(ctx context.Context, email string) (signupEmailStatus, error) {
 	user, err := s.takeUserByEmail(ctx, email)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return signupEmailAvailable, nil

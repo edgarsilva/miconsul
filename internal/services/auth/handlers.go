@@ -166,7 +166,7 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 	email, password := in.Email, in.Password
 	span.SetAttributes(attribute.String("auth.signup.email", strings.ToLower(email)))
 
-	status, err := s.signupEmailStatusOf(ctx, email)
+	status, err := s.signupEmailStatus(ctx, email)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "signup email status failed")
@@ -196,10 +196,10 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 		span.SetStatus(codes.Ok, "signup confirmation email sent")
 
 		return s.RedirectWithAlert(c, "/signin", "check your inbox to confirm your email", view.LevelInfo)
+	default:
+		span.SetStatus(codes.Error, "unknown signup email status")
+		return view.Render(c, view.AuthSignupPage(vc, email, errors.New("could not check your account, please try again")))
 	}
-
-	span.SetStatus(codes.Error, "unknown signup email status")
-	return view.Render(c, view.AuthSignupPage(vc, email, errors.New("could not check your account, please try again")))
 }
 
 // HandleSignupConfirmEmail validates an email confirmation token.
