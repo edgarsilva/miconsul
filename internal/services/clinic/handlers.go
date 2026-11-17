@@ -110,7 +110,7 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 
 	profilePic := clinic.ProfilePic
 	clinic = input.toClinic(clinic.ID, clinic.UID, clinic.UserID)
-	clinic.ProfilePic = profilePic // the form has no picture value; keep it for the fragment
+	clinic.ProfilePic = profilePic
 
 	s.attachClinicProfilePicBestEffort(c, cu.ID, &clinic)
 

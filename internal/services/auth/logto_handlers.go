@@ -118,7 +118,6 @@ func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
 		return s.Redirect(c, "/signin?logto_error=callback")
 	}
 
-	// Move the signed-in session to a new ID, keeping its tokens.
 	if err := sess.Regenerate(); err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "session regenerate failed")
@@ -127,7 +126,6 @@ func (s *service) HandleLogtoCallback(c fiber.Ctx) error {
 		return s.Redirect(c, "/signin?logto_error=session")
 	}
 
-	// Identity-critical fields come from ID token claims after callback verification.
 	claims, err := logtoClient.GetIdTokenClaims()
 	if err != nil {
 		span.RecordError(err)

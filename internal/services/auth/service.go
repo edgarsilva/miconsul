@@ -155,7 +155,7 @@ func (s *service) checkUserPendingConfirmation(ctx context.Context, email string
 	if err != nil {
 		return fmt.Errorf("take pending confirmation: %w", err)
 	}
-	if user.ID != 0 { // A row exists, so confirmation is pending and we should re-send
+	if user.ID != 0 {
 		return errUserPendingConfirmation
 	}
 

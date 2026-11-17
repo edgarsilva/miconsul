@@ -364,7 +364,6 @@ func ensureBaselineAppointments(ctx context.Context, db *gorm.DB, owner models.U
 }
 
 func seedFeedEvents(ctx context.Context, db *gorm.DB, owner models.User) (int, error) {
-	// Delete existing feed events for this user's appointments so re-seeding regenerates fresh data
 	if err := db.WithContext(ctx).
 		Exec("DELETE FROM feed_events WHERE feed_eventable_type = ? AND feed_eventable_id IN (SELECT uid FROM appointments WHERE user_id = ?)", "appointments", owner.ID).Error; err != nil {
 		return 0, fmt.Errorf("delete old feed events: %w", err)
@@ -398,7 +397,6 @@ func seedFeedEvents(ctx context.Context, db *gorm.DB, owner models.User) (int, e
 		eventCount := 1 + (i % 3)
 		for j := 0; j < eventCount && j < len(actions); j++ {
 			action := actions[j]
-			// Vary timestamps within last 2.5 days so they show in dashboard feed
 			offset := time.Duration(i*30+j*15) * time.Minute
 			apntCopy := apnt
 			apntCopy.Patient = apnt.Patient
@@ -628,8 +626,6 @@ func createBulkPastAppointments(ctx context.Context, db *gorm.DB, owner models.U
 		appointments = append(appointments, appointment)
 	}
 
-	// One insert per row: a multi-row insert can't mix set and unset
-	// done_at/canceled_at in SQLite.
 	err := db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for i := range appointments {
 			if err := tx.Create(&appointments[i]).Error; err != nil {
