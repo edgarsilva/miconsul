@@ -24,16 +24,16 @@ const (
 )
 
 type AuthSnapshot struct {
-	Token          string          // t
-	UserID         uint            // id
-	UserUID        string          // uid
-	UserEmail      string          // em
-	UserRole       models.UserRole // rl
-	UserName       string          // nm
-	UserProfilePic string          // pp
-	UserTheme      string          // th
-	UserLocale     string          // lc
-	CachedAtUnix   int64           // cat
+	Token          string          `query:"t"`
+	UserID         uint            `query:"id"`
+	UserUID        string          `query:"uid"`
+	UserEmail      string          `query:"em"`
+	UserRole       models.UserRole `query:"rl"`
+	UserName       string          `query:"nm"`
+	UserProfilePic string          `query:"pp"`
+	UserTheme      string          `query:"th"`
+	UserLocale     string          `query:"lc"`
+	CachedAtUnix   int64           `query:"cat"`
 }
 
 type LocalStrategy struct {
