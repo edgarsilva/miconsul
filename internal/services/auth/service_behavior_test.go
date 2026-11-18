@@ -283,7 +283,7 @@ func TestAuthenticateCredentialsLookup(t *testing.T) {
 	})
 }
 
-func TestSignupEmailStatus(t *testing.T) {
+func TestClassifySignupEmail(t *testing.T) {
 	tests := []struct {
 		name string
 		seed *authUserSeedOptions
@@ -301,9 +301,9 @@ func TestSignupEmailStatus(t *testing.T) {
 				seedAuthUserWithOptions(t, svc, *tt.seed)
 			}
 
-			got, err := svc.signupEmailStatus(context.Background(), "ana@example.com")
+			got, err := svc.classifySignupEmail(context.Background(), "ana@example.com")
 			if err != nil {
-				t.Fatalf("signupEmailStatus: %v", err)
+				t.Fatalf("classifySignupEmail: %v", err)
 			}
 			if got != tt.want {
 				t.Fatalf("status = %d, want %d", got, tt.want)
@@ -315,7 +315,7 @@ func TestSignupEmailStatus(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		forceUsersQueryError(t, svc)
 
-		if _, err := svc.signupEmailStatus(context.Background(), "ana@example.com"); err == nil {
+		if _, err := svc.classifySignupEmail(context.Background(), "ana@example.com"); err == nil {
 			t.Fatalf("expected the database error")
 		}
 	})

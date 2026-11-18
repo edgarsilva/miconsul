@@ -166,7 +166,7 @@ func (s *service) HandleSignup(c fiber.Ctx) error {
 	email, password := in.Email, in.Password
 	span.SetAttributes(attribute.String("auth.signup.email", strings.ToLower(email)))
 
-	status, err := s.signupEmailStatus(ctx, email)
+	status, err := s.classifySignupEmail(ctx, email)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "signup email status failed")
