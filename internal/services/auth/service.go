@@ -32,7 +32,6 @@ type service struct {
 var (
 	errAuthInvalidCredentials  = errors.New("invalid credentials")
 	errAuthPendingConfirmation = errors.New("email pending confirmation")
-	errUserPendingConfirmation = errors.New("user pending confirmation")
 	errAuthSessionCreate       = errors.New("create session")
 	errAuthConfirmEmailSend    = errors.New("send confirmation email")
 
@@ -77,10 +76,6 @@ func (s *service) Trace(ctx context.Context, spanName string, opts ...trace.Span
 // Signup creates a new user record if req.body Email & Password are valid.
 // The confirmation email is sent synchronously so SMTP failures surface to the user.
 func (s *service) signup(ctx context.Context, email string, password string) error {
-	if err := s.signupIsEmailValid(ctx, email); err != nil {
-		return err
-	}
-
 	if err := s.signupIsPasswordValid(password); err != nil {
 		return err
 	}
@@ -97,20 +92,6 @@ func (s *service) signup(ctx context.Context, email string, password string) err
 	}
 
 	return s.sendConfirmEmail(ctx, email, token)
-}
-
-// IsEmailValidForSignup returns nil if valid, otherwise returns an error
-func (s *service) signupIsEmailValid(ctx context.Context, email string) error {
-	if !isEmail(email) {
-		return errors.New("email address is invalid")
-	}
-
-	user, err := gorm.G[models.User](s.DB.GormDB()).Where("email = ?", email).Take(ctx)
-	if err == nil && user.ID != 0 {
-		return errors.New("email already exists, try login instead")
-	}
-
-	return nil
 }
 
 func (s *service) sendConfirmEmail(ctx context.Context, email, token string) error {
@@ -141,27 +122,6 @@ func (s *service) signupIsPasswordValid(pwd string) error {
 	return nil
 }
 
-// checkUserPendingConfirmation returns errUserPendingConfirmation when the
-// email has an unconfirmed signup, nil when it has none, and the database error
-// when the lookup fails.
-func (s *service) checkUserPendingConfirmation(ctx context.Context, email string) error {
-	user, err := gorm.G[models.User](s.DB.GormDB()).
-		Select("id, email, confirm_email_token").
-		Where("email = ? AND confirm_email_token IS NOT null AND confirm_email_token != ''", email).
-		Take(ctx)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("take pending confirmation: %w", err)
-	}
-	if user.ID != 0 {
-		return errUserPendingConfirmation
-	}
-
-	return nil
-}
-
 // createUser creates a new row in the users table
 func (s *service) createUser(ctx context.Context, email, password, token string) (models.User, error) {
 	user := models.User{
@@ -181,14 +141,40 @@ func (s *service) createUser(ctx context.Context, email, password, token string)
 	return user, nil
 }
 
-// takeUserByEmail returns the user with the email.
+type signupEmailStatus int
+
+const (
+	signupEmailAvailable signupEmailStatus = iota
+	signupEmailPending
+	signupEmailTaken
+)
+
+// classifySignupEmail reports whether email is free to sign up, has an
+// unconfirmed signup, or belongs to a confirmed user.
+func (s *service) classifySignupEmail(ctx context.Context, email string) (signupEmailStatus, error) {
+	user, err := s.takeUserByEmail(ctx, email)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return signupEmailAvailable, nil
+	}
+	if err != nil {
+		return signupEmailAvailable, err
+	}
+	if user.ConfirmEmailToken != "" {
+		return signupEmailPending, nil
+	}
+
+	return signupEmailTaken, nil
+}
+
+// takeUserByEmail returns the user with the email, or an error wrapping
+// gorm.ErrRecordNotFound when there is none.
 func (s *service) takeUserByEmail(ctx context.Context, email string) (models.User, error) {
 	ctx, span := s.Trace(ctx, "auth/services:takeUserByEmail")
 	defer span.End()
 
 	user, err := gorm.G[models.User](s.DB.GormDB()).Where("email = ?", email).Take(ctx)
 	if err != nil {
-		return models.User{}, errors.New("user not found")
+		return models.User{}, fmt.Errorf("take user by email: %w", err)
 	}
 
 	return user, nil
@@ -201,8 +187,11 @@ func (s *service) LogtoEnabled() bool {
 
 func (s *service) authenticateCredentials(ctx context.Context, email, password string) (models.User, error) {
 	user, err := s.takeUserByEmail(ctx, email)
-	if err != nil {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return models.User{}, errAuthInvalidCredentials
+	}
+	if err != nil {
+		return models.User{}, err
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
