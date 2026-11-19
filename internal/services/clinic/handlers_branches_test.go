@@ -1,9 +1,13 @@
 package clinic
 
 import (
+	"bytes"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -129,6 +133,84 @@ func TestIndexSearchToasts(t *testing.T) {
 			}
 			if strings.Contains(string(body), `id="clinics_list"`) {
 				t.Errorf("search replaced the list")
+			}
+		})
+	}
+}
+
+func TestHandleUpdateClinicProfilePic(t *testing.T) {
+	tests := []struct {
+		name  string
+		form  map[string]string
+		saved bool
+	}{
+		{"valid update saves the uploaded picture", map[string]string{"name": "Renamed", "price": "0"}, true},
+		{"invalid update keeps the old picture and writes no file", map[string]string{"name": "   ", "price": "0"}, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Chdir(t.TempDir())
+			picsDir := filepath.Join("public", "assets", "profile_pics")
+			if err := os.MkdirAll(picsDir, 0o755); err != nil {
+				t.Fatalf("create pics dir: %v", err)
+			}
+
+			svc, user := newClinicServiceForTests(t)
+			seed := models.Clinic{UserID: user.ID, Name: "Seed", ProfilePic: "old.png"}
+			if err := svc.CreateClinic(t.Context(), &seed); err != nil {
+				t.Fatalf("seed clinic: %v", err)
+			}
+
+			app := fiber.New()
+			app.Patch("/clinics/:id", func(c fiber.Ctx) error {
+				c.Locals("current_user", user)
+				return svc.HandleUpdate(c)
+			})
+
+			body := &bytes.Buffer{}
+			writer := multipart.NewWriter(body)
+			for name, value := range tt.form {
+				if err := writer.WriteField(name, value); err != nil {
+					t.Fatalf("write %s field: %v", name, err)
+				}
+			}
+			part, err := writer.CreateFormFile("profilePic", "logo.png")
+			if err != nil {
+				t.Fatalf("create multipart file: %v", err)
+			}
+			if _, err := part.Write([]byte("png-data")); err != nil {
+				t.Fatalf("write multipart file: %v", err)
+			}
+			if err := writer.Close(); err != nil {
+				t.Fatalf("close multipart writer: %v", err)
+			}
+
+			req := httptest.NewRequest(http.MethodPatch, "/clinics/"+seed.UID, body)
+			req.Header.Set("Content-Type", writer.FormDataContentType())
+			req.Header.Set("HX-Request", "true")
+			resp, err := app.Test(req)
+			if err != nil || resp.StatusCode == fiber.StatusInternalServerError {
+				t.Fatalf("update clinic failed: status=%d err=%v", resp.StatusCode, err)
+			}
+
+			saved, err := svc.TakeClinicByID(t.Context(), user.ID, seed.UID)
+			if err != nil {
+				t.Fatalf("reload clinic: %v", err)
+			}
+			entries, err := os.ReadDir(picsDir)
+			if err != nil {
+				t.Fatalf("read pics dir: %v", err)
+			}
+
+			if tt.saved {
+				if saved.ProfilePic == "" || saved.ProfilePic == "old.png" || len(entries) != 1 {
+					t.Errorf("ProfilePic = %q with %d files, want the uploaded picture", saved.ProfilePic, len(entries))
+				}
+				return
+			}
+			if saved.ProfilePic != "old.png" || len(entries) != 0 {
+				t.Errorf("ProfilePic = %q with %d files, want old.png and no files after an invalid update", saved.ProfilePic, len(entries))
 			}
 		})
 	}

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"reflect"
 	"slices"
 	"strings"
@@ -105,51 +106,76 @@ func assertFieldsCleared(t *testing.T, filled, got any, skip ...string) {
 	}
 }
 
-func TestHandleUpdateSavesUploadedProfilePic(t *testing.T) {
-	svc, user := newPatientServiceForTests(t)
-	svc.Env.AssetsDir = t.TempDir()
-
-	seed := models.Patient{UserID: user.ID, Name: "Alpha", Age: 30, Phone: "111", ProfilePic: "old.png"}
-	if err := svc.CreatePatient(t.Context(), &seed); err != nil {
-		t.Fatalf("seed patient: %v", err)
+func TestHandleUpdateProfilePic(t *testing.T) {
+	tests := []struct {
+		name   string
+		fields map[string]string
+		saved  bool
+	}{
+		{"valid update saves the uploaded picture", map[string]string{"name": "Alpha", "age": "30", "phone": "111"}, true},
+		{"invalid update keeps the old picture", map[string]string{"name": "Alpha"}, false},
 	}
 
-	app := fiber.New()
-	app.Patch("/patients/:id", func(c fiber.Ctx) error {
-		c.Locals("current_user", user)
-		return svc.HandleUpdate(c)
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc, user := newPatientServiceForTests(t)
+			svc.Env.AssetsDir = t.TempDir()
 
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-	if err := writer.WriteField("name", "Alpha"); err != nil {
-		t.Fatalf("write name field: %v", err)
-	}
-	part, err := writer.CreateFormFile("profilePic", "avatar.png")
-	if err != nil {
-		t.Fatalf("create multipart file: %v", err)
-	}
-	if _, err := part.Write([]byte("png-data")); err != nil {
-		t.Fatalf("write multipart file: %v", err)
-	}
-	if err := writer.Close(); err != nil {
-		t.Fatalf("close multipart writer: %v", err)
-	}
+			seed := models.Patient{UserID: user.ID, Name: "Alpha", Age: 30, Phone: "111", ProfilePic: "old.png"}
+			if err := svc.CreatePatient(t.Context(), &seed); err != nil {
+				t.Fatalf("seed patient: %v", err)
+			}
 
-	req := httptest.NewRequest(http.MethodPatch, "/patients/"+seed.UID, body)
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-	req.Header.Set("HX-Request", "true")
-	resp, err := app.Test(req)
-	if err != nil || resp.StatusCode != fiber.StatusNoContent {
-		t.Fatalf("update patient expected 204, got status=%d err=%v", resp.StatusCode, err)
-	}
+			app := fiber.New()
+			app.Patch("/patients/:id", func(c fiber.Ctx) error {
+				c.Locals("current_user", user)
+				return svc.HandleUpdate(c)
+			})
 
-	saved, err := svc.TakePatientByID(t.Context(), user.ID, seed.UID)
-	if err != nil {
-		t.Fatalf("reload patient: %v", err)
-	}
-	if saved.ProfilePic == "" || saved.ProfilePic == "old.png" {
-		t.Errorf("ProfilePic = %q, want the uploaded picture", saved.ProfilePic)
+			body := &bytes.Buffer{}
+			writer := multipart.NewWriter(body)
+			for name, value := range tt.fields {
+				if err := writer.WriteField(name, value); err != nil {
+					t.Fatalf("write %s field: %v", name, err)
+				}
+			}
+			part, err := writer.CreateFormFile("profilePic", "avatar.png")
+			if err != nil {
+				t.Fatalf("create multipart file: %v", err)
+			}
+			if _, err := part.Write([]byte("png-data")); err != nil {
+				t.Fatalf("write multipart file: %v", err)
+			}
+			if err := writer.Close(); err != nil {
+				t.Fatalf("close multipart writer: %v", err)
+			}
+
+			req := httptest.NewRequest(http.MethodPatch, "/patients/"+seed.UID, body)
+			req.Header.Set("Content-Type", writer.FormDataContentType())
+			req.Header.Set("HX-Request", "true")
+			resp, err := app.Test(req)
+			if err != nil || resp.StatusCode != fiber.StatusNoContent {
+				t.Fatalf("update patient expected 204, got status=%d err=%v", resp.StatusCode, err)
+			}
+
+			saved, err := svc.TakePatientByID(t.Context(), user.ID, seed.UID)
+			if err != nil {
+				t.Fatalf("reload patient: %v", err)
+			}
+			if tt.saved && (saved.ProfilePic == "" || saved.ProfilePic == "old.png") {
+				t.Errorf("ProfilePic = %q, want the uploaded picture", saved.ProfilePic)
+			}
+			if !tt.saved && saved.ProfilePic != "old.png" {
+				t.Errorf("ProfilePic = %q, want old.png kept after an invalid update", saved.ProfilePic)
+			}
+			entries, err := os.ReadDir(svc.Env.AssetsDir)
+			if err != nil {
+				t.Fatalf("read assets dir: %v", err)
+			}
+			if !tt.saved && len(entries) != 0 {
+				t.Errorf("assets dir has %d entries, want none after an invalid update", len(entries))
+			}
+		})
 	}
 }
 

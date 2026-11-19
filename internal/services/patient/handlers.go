@@ -165,15 +165,6 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 
 	patient.Sanitize()
 
-	path, picErr := SaveProfilePicToDisk(c, patient, s.Env.AssetsDir)
-	if picErr != nil {
-		if !errors.Is(picErr, ErrProfilePicNotProvided) {
-			log.Error(picErr)
-		}
-	} else if err := s.UpdatePatientProfilePic(c.Context(), cu.ID, patientID, path); err != nil {
-		log.Error(err)
-	}
-
 	err = s.UpdatePatientByID(c.Context(), cu.ID, patientID, patient)
 	if errors.Is(err, ErrInvalidPatient) {
 		return s.RedirectWithToast(c, "/patients/"+patientID, "Name, age and phone can't be blank", view.LevelWarning)
@@ -186,6 +177,15 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	}
 	if err != nil {
 		return s.RedirectWithToast(c, "/patients", "Failed to update patient", view.LevelError)
+	}
+
+	path, picErr := SaveProfilePicToDisk(c, patient, s.Env.AssetsDir)
+	if picErr != nil {
+		if !errors.Is(picErr, ErrProfilePicNotProvided) {
+			log.Error(picErr)
+		}
+	} else if err := s.UpdatePatientProfilePic(c.Context(), cu.ID, patientID, path); err != nil {
+		log.Error(err)
 	}
 
 	return s.RedirectWithToast(c, "/patients/"+patientID, "Patient changes saved", view.LevelSuccess)
