@@ -88,6 +88,9 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 	}
 
 	updatedUser, err := s.UpdateUserProfileByUID(c.Context(), cu.UID, userUpds)
+	if errors.Is(err, ErrInvalidUser) {
+		return s.RedirectWithToast(c, "/profile", "Name can't be blank", view.LevelWarning)
+	}
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.RedirectWithToast(c, "/profile", "User does not exist", view.LevelWarning)
 	}
@@ -214,6 +217,9 @@ func (s *service) HandleAdminUpdateUser(c fiber.Ctx) error {
 	}
 
 	updatedUser, err := s.UpdateUserProfileByUID(c.Context(), userID, input.toUserUpdates())
+	if errors.Is(err, ErrInvalidUser) {
+		return s.RedirectWithToast(c, "/admin/users/"+userID, "Name can't be blank", view.LevelWarning)
+	}
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.RedirectWithToast(c, "/admin/users", "User does not exist", view.LevelWarning)
 	}

@@ -374,3 +374,48 @@ func TestHandleRemoveProfilePic(t *testing.T) {
 		t.Errorf("picture = %q, want removed", saved.ProfilePic)
 	}
 }
+
+func TestHandleUpdateRejectsBlankName(t *testing.T) {
+	routes := []struct {
+		name    string
+		method  string
+		pattern string
+		path    func(models.User) string
+		handler func(*service) fiber.Handler
+	}{
+		{"profile", http.MethodPost, "/profile", func(models.User) string { return "/profile" }, func(svc *service) fiber.Handler { return svc.HandleUpdateProfile }},
+		{"admin", http.MethodPatch, "/admin/users/:id", func(u models.User) string { return "/admin/users/" + u.UID }, func(svc *service) fiber.Handler { return svc.HandleAdminUpdateUser }},
+	}
+
+	for _, rt := range routes {
+		t.Run(rt.name, func(t *testing.T) {
+			svc, target := newUserServiceForTests(t)
+			if err := svc.DB.GormDB().Model(&models.User{}).Where("uid = ?", target.UID).Update("name", "Kept Name").Error; err != nil {
+				t.Fatalf("seed name: %v", err)
+			}
+
+			app := fiber.New()
+			app.Add([]string{rt.method}, rt.pattern, func(c fiber.Ctx) error {
+				c.Locals("current_user", target)
+				return rt.handler(&svc)(c)
+			})
+
+			form := url.Values{"name": {"  "}, "email": {target.Email}, "phone": {"5551234567"}}
+			req := httptest.NewRequest(rt.method, rt.path(target), strings.NewReader(form.Encode()))
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			req.Header.Set("HX-Request", "true")
+			resp, err := app.Test(req)
+			if err != nil || resp.StatusCode != fiber.StatusNoContent {
+				t.Fatalf("blank name expected 204 redirect, got status=%d err=%v", resp.StatusCode, err)
+			}
+
+			saved, err := svc.TakeUserByUID(context.Background(), target.UID)
+			if err != nil {
+				t.Fatalf("load user: %v", err)
+			}
+			if saved.Name != "Kept Name" {
+				t.Errorf("name = %q, want it unchanged after a rejected update", saved.Name)
+			}
+		})
+	}
+}

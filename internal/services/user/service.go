@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"miconsul/internal/models"
@@ -16,6 +17,9 @@ type service struct {
 }
 
 var ErrIDRequired = errors.New("id is required")
+
+// ErrInvalidUser is returned when a user update is missing a required field.
+var ErrInvalidUser = errors.New("invalid user")
 
 func NewService(s *server.Server) (service, error) {
 	if s == nil {
@@ -107,7 +111,7 @@ func (s service) RemoveProfilePicByUID(ctx context.Context, userUID string) (mod
 }
 
 // userUpdateColumns returns the columns UpdateUserProfileByUID writes. Name and
-// phone are always written, so they can be cleared. Email is the login identity
+// phone are always written, and phone can be cleared. Email is the login identity
 // and unique, so an empty one is left alone, as are an unsent locale or profile
 // picture.
 func userUpdateColumns(updates models.User) []string {
@@ -134,6 +138,9 @@ func normalizeUserWriteInput(user *models.User) error {
 	user.Email = strings.ToLower(strings.TrimSpace(user.Email))
 	user.Phone = strings.TrimSpace(user.Phone)
 
+	if user.Name == "" {
+		return fmt.Errorf("%w: name can't be blank", ErrInvalidUser)
+	}
 	if len(user.Name) > 120 {
 		return errors.New("name exceeds max length")
 	}

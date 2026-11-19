@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -62,24 +63,33 @@ func TestUserServiceDBFlows(t *testing.T) {
 		}
 	})
 
-	t.Run("update user profile saves cleared fields and keeps unsent ones", func(t *testing.T) {
+	t.Run("update user profile clears phone, keeps unsent fields and rejects a blank name", func(t *testing.T) {
 		if err := svc.DB.GormDB().Model(&models.User{}).Where("uid = ?", seededUser.UID).
 			Updates(map[string]any{"name": "Kept Name", "email": "kept@example.com", "phone": "555", "locale": "es-MX", "profile_pic": "pic.png"}).Error; err != nil {
 			t.Fatalf("seed user fields: %v", err)
 		}
 
-		updated, err := svc.UpdateUserProfileByUID(ctx, seededUser.UID, models.User{Name: "", Email: "", Phone: ""})
+		_, err := svc.UpdateUserProfileByUID(ctx, seededUser.UID, models.User{Name: "", Email: "", Phone: ""})
+		if !errors.Is(err, ErrInvalidUser) {
+			t.Fatalf("expected ErrInvalidUser for a blank name, got %v", err)
+		}
+		kept, err := svc.TakeUserByUID(ctx, seededUser.UID)
+		if err != nil {
+			t.Fatalf("reload user: %v", err)
+		}
+		if kept.Name != "Kept Name" || kept.Phone != "555" {
+			t.Fatalf("expected a rejected update to change nothing, got name=%q phone=%q", kept.Name, kept.Phone)
+		}
+
+		updated, err := svc.UpdateUserProfileByUID(ctx, seededUser.UID, models.User{Name: "Kept Name", Email: "", Phone: ""})
 		if err != nil {
 			t.Fatalf("update user profile: %v", err)
 		}
-		if updated.Phone != "" || updated.Name != "" {
-			t.Fatalf("expected cleared name and phone to save, got name=%q phone=%q", updated.Name, updated.Phone)
+		if updated.Phone != "" {
+			t.Fatalf("expected cleared phone to save, got %q", updated.Phone)
 		}
 		if updated.Email != "kept@example.com" {
 			t.Fatalf("expected email to stay when empty (login identity), got %q", updated.Email)
-		}
-		if updated.Locale != "es-MX" || updated.ProfilePic != "pic.png" {
-			t.Fatalf("expected locale and profile pic to stay when unsent, got locale=%q pic=%q", updated.Locale, updated.ProfilePic)
 		}
 	})
 }
