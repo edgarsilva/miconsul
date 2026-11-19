@@ -14,6 +14,9 @@ import (
 	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
+	"go.opentelemetry.io/otel/codes"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
 func TestClinicHandlerBranches(t *testing.T) {
@@ -213,5 +216,106 @@ func TestHandleUpdateClinicProfilePic(t *testing.T) {
 				t.Errorf("ProfilePic = %q with %d files, want old.png and no files after an invalid update", saved.ProfilePic, len(entries))
 			}
 		})
+	}
+}
+
+func TestAttachClinicPicRecordsAFailedSave(t *testing.T) {
+	t.Chdir(t.TempDir())
+
+	svc, user := newClinicServiceForTests(t)
+	recorder := tracetest.NewSpanRecorder()
+	svc.Tracer = sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")
+
+	clinic := models.Clinic{UserID: user.ID, Name: "Seed", ProfilePic: "old.png"}
+	if err := svc.CreateClinic(t.Context(), &clinic); err != nil {
+		t.Fatalf("seed clinic: %v", err)
+	}
+
+	var got string
+	app := fiber.New()
+	app.Post("/pic", func(c fiber.Ctx) error {
+		got = svc.attachClinicPic(c, user.ID, clinic)
+		return c.SendStatus(fiber.StatusNoContent)
+	})
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("profilePic", "logo.png")
+	if err != nil {
+		t.Fatalf("create multipart file: %v", err)
+	}
+	if _, err := part.Write([]byte("png-data")); err != nil {
+		t.Fatalf("write multipart file: %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("close multipart writer: %v", err)
+	}
+	req := httptest.NewRequest(http.MethodPost, "/pic", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	if _, err := app.Test(req); err != nil {
+		t.Fatalf("attach picture: %v", err)
+	}
+
+	if got != "old.png" {
+		t.Errorf("picture = %q, want the current one kept after a failed save", got)
+	}
+	spans := recorder.Ended()
+	if len(spans) != 1 || spans[0].Name() != "clinic/attachPic" {
+		t.Fatalf("spans = %d, want one clinic/attachPic span", len(spans))
+	}
+	if spans[0].Status().Code != codes.Error || len(spans[0].Events()) == 0 {
+		t.Errorf("span status = %v with %d events, want an error with the exception recorded", spans[0].Status().Code, len(spans[0].Events()))
+	}
+}
+
+func TestAttachClinicPicRecordsAFailedDBUpdate(t *testing.T) {
+	t.Chdir(t.TempDir())
+	if err := os.MkdirAll(filepath.Join("public", "assets", "profile_pics"), 0o755); err != nil {
+		t.Fatalf("create pics dir: %v", err)
+	}
+
+	svc, user := newClinicServiceForTests(t)
+	recorder := tracetest.NewSpanRecorder()
+	svc.Tracer = sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")
+
+	clinic := models.Clinic{UserID: user.ID, Name: "Seed", ProfilePic: "old.png"}
+	if err := svc.CreateClinic(t.Context(), &clinic); err != nil {
+		t.Fatalf("seed clinic: %v", err)
+	}
+
+	var got string
+	app := fiber.New()
+	app.Post("/pic", func(c fiber.Ctx) error {
+		got = svc.attachClinicPic(c, user.ID+1, clinic)
+		return c.SendStatus(fiber.StatusNoContent)
+	})
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("profilePic", "logo.png")
+	if err != nil {
+		t.Fatalf("create multipart file: %v", err)
+	}
+	if _, err := part.Write([]byte("png-data")); err != nil {
+		t.Fatalf("write multipart file: %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("close multipart writer: %v", err)
+	}
+	req := httptest.NewRequest(http.MethodPost, "/pic", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	if _, err := app.Test(req); err != nil {
+		t.Fatalf("attach picture: %v", err)
+	}
+
+	if got != "old.png" {
+		t.Errorf("picture = %q, want the current one kept after a failed update", got)
+	}
+	spans := recorder.Ended()
+	if len(spans) != 1 {
+		t.Fatalf("spans = %d, want one clinic/attachPic span", len(spans))
+	}
+	if status := spans[0].Status(); status.Code != codes.Error || status.Description != "attach profile pic failed" {
+		t.Errorf("span status = %v %q, want the attach failure", status.Code, status.Description)
 	}
 }

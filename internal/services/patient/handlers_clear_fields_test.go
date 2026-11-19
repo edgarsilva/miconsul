@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"path/filepath"
 	"reflect"
 	"slices"
 	"strings"
@@ -17,6 +18,9 @@ import (
 	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
+	"go.opentelemetry.io/otel/codes"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
 func TestHandleUpdateSavesClearedFields(t *testing.T) {
@@ -253,4 +257,107 @@ func flashText(t *testing.T, resp *http.Response) string {
 	}
 
 	return ""
+}
+
+func TestAttachPatientPicRecordsAFailedSave(t *testing.T) {
+	svc, user := newPatientServiceForTests(t)
+
+	notADir := filepath.Join(t.TempDir(), "file")
+	if err := os.WriteFile(notADir, []byte("x"), 0o600); err != nil {
+		t.Fatalf("write file: %v", err)
+	}
+	svc.Env.AssetsDir = notADir
+
+	recorder := tracetest.NewSpanRecorder()
+	svc.Tracer = sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")
+
+	patient := models.Patient{UserID: user.ID, Name: "Alpha", Age: 30, Phone: "111", ProfilePic: "old.png"}
+	if err := svc.CreatePatient(t.Context(), &patient); err != nil {
+		t.Fatalf("seed patient: %v", err)
+	}
+
+	var got string
+	app := fiber.New()
+	app.Post("/pic", func(c fiber.Ctx) error {
+		got = svc.attachPatientPic(c, user.ID, patient)
+		return c.SendStatus(fiber.StatusNoContent)
+	})
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("profilePic", "avatar.png")
+	if err != nil {
+		t.Fatalf("create multipart file: %v", err)
+	}
+	if _, err := part.Write([]byte("png-data")); err != nil {
+		t.Fatalf("write multipart file: %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("close multipart writer: %v", err)
+	}
+	req := httptest.NewRequest(http.MethodPost, "/pic", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	if _, err := app.Test(req); err != nil {
+		t.Fatalf("attach picture: %v", err)
+	}
+
+	if got != "old.png" {
+		t.Errorf("picture = %q, want the current one kept after a failed save", got)
+	}
+	spans := recorder.Ended()
+	if len(spans) != 1 || spans[0].Name() != "patient/attachPic" {
+		t.Fatalf("spans = %d, want one patient/attachPic span", len(spans))
+	}
+	if spans[0].Status().Code != codes.Error || len(spans[0].Events()) == 0 {
+		t.Errorf("span status = %v with %d events, want an error with the exception recorded", spans[0].Status().Code, len(spans[0].Events()))
+	}
+}
+
+func TestAttachPatientPicRecordsAFailedDBUpdate(t *testing.T) {
+	svc, user := newPatientServiceForTests(t)
+	svc.Env.AssetsDir = t.TempDir()
+
+	recorder := tracetest.NewSpanRecorder()
+	svc.Tracer = sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")
+
+	patient := models.Patient{UserID: user.ID, Name: "Alpha", Age: 30, Phone: "111", ProfilePic: "old.png"}
+	if err := svc.CreatePatient(t.Context(), &patient); err != nil {
+		t.Fatalf("seed patient: %v", err)
+	}
+
+	var got string
+	app := fiber.New()
+	app.Post("/pic", func(c fiber.Ctx) error {
+		got = svc.attachPatientPic(c, user.ID+1, patient)
+		return c.SendStatus(fiber.StatusNoContent)
+	})
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("profilePic", "avatar.png")
+	if err != nil {
+		t.Fatalf("create multipart file: %v", err)
+	}
+	if _, err := part.Write([]byte("png-data")); err != nil {
+		t.Fatalf("write multipart file: %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("close multipart writer: %v", err)
+	}
+	req := httptest.NewRequest(http.MethodPost, "/pic", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	if _, err := app.Test(req); err != nil {
+		t.Fatalf("attach picture: %v", err)
+	}
+
+	if got != "old.png" {
+		t.Errorf("picture = %q, want the current one kept after a failed update", got)
+	}
+	spans := recorder.Ended()
+	if len(spans) != 1 {
+		t.Fatalf("spans = %d, want one patient/attachPic span", len(spans))
+	}
+	if status := spans[0].Status(); status.Code != codes.Error || status.Description != "attach profile pic failed" {
+		t.Errorf("span status = %v %q, want the attach failure", status.Code, status.Description)
+	}
 }
