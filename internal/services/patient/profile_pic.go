@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/log"
 )
 
 const patientsDir = "/patients"
@@ -46,6 +47,28 @@ func SaveProfilePicToDisk(c fiber.Ctx, patient models.Patient, assetsDir string)
 
 	imgsrc := "/patients/" + patient.UID + "/profilepic/" + filename
 	return imgsrc, nil
+}
+
+// attachPatientPic saves the uploaded profile picture and stores its path on
+// the patient. It returns the patient's picture path: the new one, or the
+// current one when nothing was uploaded or saving failed, which is logged.
+func (s service) attachPatientPic(c fiber.Ctx, userID uint, patient models.Patient) string {
+	path, err := SaveProfilePicToDisk(c, patient, s.Env.AssetsDir)
+	if errors.Is(err, ErrProfilePicNotProvided) {
+		return patient.ProfilePic
+	}
+	if err != nil {
+		log.Errorf("save patient profile pic: %v", err)
+		return patient.ProfilePic
+	}
+
+	err = s.UpdatePatientProfilePic(c.Context(), userID, patient.UID, path)
+	if err != nil {
+		log.Errorf("attach patient profile pic: %v", err)
+		return patient.ProfilePic
+	}
+
+	return path
 }
 
 func ProfilePicPath(filename, assetsDir string) (string, error) {

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/log"
 )
 
 var ErrProfilePicNotProvided = errors.New("profile picture not provided")
@@ -36,4 +37,26 @@ func SaveProfilePicToDisk(c fiber.Ctx, clinic models.Clinic) (string, error) {
 	}
 
 	return profilePath, nil
+}
+
+// attachClinicPic saves the uploaded profile picture and stores its path on
+// the clinic. It returns the clinic's picture path: the new one, or the
+// current one when nothing was uploaded or saving failed, which is logged.
+func (s service) attachClinicPic(c fiber.Ctx, userID uint, clinic models.Clinic) string {
+	path, err := SaveProfilePicToDisk(c, clinic)
+	if errors.Is(err, ErrProfilePicNotProvided) {
+		return clinic.ProfilePic
+	}
+	if err != nil {
+		log.Errorf("save clinic profile pic: %v", err)
+		return clinic.ProfilePic
+	}
+
+	err = s.UpdateClinicProfilePic(c.Context(), userID, clinic.UID, path)
+	if err != nil {
+		log.Errorf("attach clinic profile pic: %v", err)
+		return clinic.ProfilePic
+	}
+
+	return path
 }
