@@ -78,6 +78,14 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 	}
 
 	userUpds := input.toUserProfileUpdates()
+	err = normalizeUserWriteInput(&userUpds)
+	if errors.Is(err, ErrInvalidUser) {
+		return s.RedirectWithToast(c, "/profile", "Name can't be blank", view.LevelWarning)
+	}
+	if err != nil {
+		return s.RedirectWithToast(c, "/profile", "Failed to update profile", view.LevelError)
+	}
+
 	path, picErr := SaveProfilePicToDisk(c, cu, s.Env.AssetsDir)
 	if picErr != nil {
 		if !errors.Is(picErr, ErrProfilePicNotProvided) {
@@ -88,9 +96,6 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 	}
 
 	updatedUser, err := s.UpdateUserProfileByUID(c.Context(), cu.UID, userUpds)
-	if errors.Is(err, ErrInvalidUser) {
-		return s.RedirectWithToast(c, "/profile", "Name can't be blank", view.LevelWarning)
-	}
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.RedirectWithToast(c, "/profile", "User does not exist", view.LevelWarning)
 	}
