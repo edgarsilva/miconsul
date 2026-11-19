@@ -1473,8 +1473,8 @@ func adminComponentsIcons() []adminComponentsIcon {
 		{"CmpTelegramIcon", CmpTelegramIcon()},
 		{"CmpMessengerIcon", CmpMessengerIcon()},
 		{"CmpGmailIcon", CmpGmailIcon()},
-		{"CmpSunIcon", CmpSunIcon()},
-		{"CmpSunSmIcon", CmpSunSmIcon()},
+		{"CmpSunArt", CmpSunArt()},
+		{"CmpSunSmArt", CmpSunSmArt()},
 		{"CmpSearchIcon", CmpSearchIcon()},
 		{"CmpMapPinIcon", CmpMapPinIcon()},
 		{"CmpUserIcon", CmpUserIcon()},
@@ -1507,6 +1507,8 @@ func adminComponentsIcons() []adminComponentsIcon {
 		{"CmpArrowDownIcon", CmpArrowDownIcon()},
 		{"CmpArrowLeftIcon", CmpArrowLeftIcon()},
 		{"CmpArrowRightIcon", CmpArrowRightIcon()},
+		{"CmpSunIcon", CmpSunIcon()},
+		{"CmpMoonIcon", CmpMoonIcon()},
 	}
 }
 

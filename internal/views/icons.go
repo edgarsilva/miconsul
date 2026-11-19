@@ -42,6 +42,8 @@ type iconSet interface {
 	ArrowDown(class string) templ.Component
 	ArrowLeft(class string) templ.Component
 	ArrowRight(class string) templ.Component
+	Sun(class string) templ.Component
+	Moon(class string) templ.Component
 }
 
 var (
