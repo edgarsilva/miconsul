@@ -76,7 +76,7 @@ func (s *service) Trace(ctx context.Context, spanName string, opts ...trace.Span
 // Signup creates a new user record if req.body Email & Password are valid.
 // The confirmation email is sent synchronously so SMTP failures surface to the user.
 func (s *service) signup(ctx context.Context, email string, password string) error {
-	if err := s.signupIsPasswordValid(password); err != nil {
+	if err := s.validatePassword(password); err != nil {
 		return err
 	}
 
@@ -105,8 +105,8 @@ func (s *service) sendConfirmEmail(ctx context.Context, email, token string) err
 	return nil
 }
 
-// signupIsPasswordValid returns nil if valid, otherwise returns an error
-func (s *service) signupIsPasswordValid(pwd string) error {
+// validatePassword returns nil if valid, otherwise returns an error
+func (s *service) validatePassword(pwd string) error {
 	if len(pwd) < 8 {
 		return errors.New("password is too short")
 	}
