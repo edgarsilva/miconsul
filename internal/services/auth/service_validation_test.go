@@ -88,7 +88,7 @@ func TestSignupPasswordValidation(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := svc.signupIsPasswordValid(tc.pwd)
+			err := svc.validatePassword(tc.pwd)
 			if tc.wantErr && err == nil {
 				t.Fatalf("expected password validation error")
 			}
