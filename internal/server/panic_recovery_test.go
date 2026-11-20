@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -76,6 +77,15 @@ func TestHandlerPanicIsRecorded(t *testing.T) {
 		}
 		if span.Status().Code != codes.Error {
 			t.Fatalf("span status = %v, want Error", span.Status().Code)
+		}
+		exceptions := 0
+		for _, event := range span.Events() {
+			if event.Name == "exception" {
+				exceptions++
+			}
+		}
+		if exceptions != 1 {
+			t.Fatalf("span has %d exception events, want 1: %+v", exceptions, span.Events())
 		}
 		for _, event := range span.Events() {
 			if event.Name != "exception" {
@@ -164,4 +174,55 @@ func checkPanicLogTrace(t *testing.T, capture *recordCapture, recorder *tracetes
 		return
 	}
 	t.Fatalf("no span named GET /panic was recorded")
+}
+
+// TestHandlerErrorIsRecordedOnce checks that a handler returning a 500 error
+// leaves exactly one exception event on the request span.
+func TestHandlerErrorIsRecordedOnce(t *testing.T) {
+	setWorkingDirToRepoRoot(t)
+	recorder := tracetest.NewSpanRecorder()
+	logs := sdklog.NewLoggerProvider(sdklog.WithProcessor(&recordCapture{}))
+	defer func() { _ = logs.Shutdown(t.Context()) }()
+
+	s := &Server{
+		Logger:         logs.Logger("miconsul.test.error"),
+		TracerProvider: sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)),
+		Env: &appenv.Env{
+			Environment:   appenv.EnvironmentProduction,
+			AppProtocol:   "http",
+			CookieSecret:  "0123456789abcdef0123456789abcdef",
+			SessionDBPath: filepath.Join(t.TempDir(), "session.sqlite3"),
+		},
+		DB: &database.Database{DB: openTestDB(t)},
+	}
+	setupSessionStore(s)
+	setupFiberApp(s)
+	s.Get("/fail", func(c fiber.Ctx) error {
+		return errors.New("handler failed")
+	})
+
+	resp, err := s.App.Test(httptest.NewRequest(http.MethodGet, "/fail", nil), fiber.TestConfig{Timeout: 5 * time.Second})
+	if err != nil {
+		t.Fatalf("GET /fail failed: %v", err)
+	}
+	if resp.StatusCode != fiber.StatusInternalServerError {
+		t.Fatalf("status = %d, want 500", resp.StatusCode)
+	}
+
+	for _, span := range recorder.Ended() {
+		if span.Name() != "GET /fail" {
+			continue
+		}
+		exceptions := 0
+		for _, event := range span.Events() {
+			if event.Name == "exception" {
+				exceptions++
+			}
+		}
+		if exceptions != 1 {
+			t.Fatalf("span has %d exception events, want 1: %+v", exceptions, span.Events())
+		}
+		return
+	}
+	t.Fatalf("no span named GET /fail was recorded")
 }

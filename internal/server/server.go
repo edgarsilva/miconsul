@@ -24,7 +24,6 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/helmet"
 	"github.com/gofiber/fiber/v3/middleware/limiter"
 	"github.com/gofiber/fiber/v3/middleware/logger"
-	fiberrecover "github.com/gofiber/fiber/v3/middleware/recover"
 	"github.com/gofiber/fiber/v3/middleware/requestid"
 	"github.com/gofiber/fiber/v3/middleware/session"
 	"github.com/gofiber/fiber/v3/middleware/static"
@@ -230,10 +229,7 @@ func setupCoreMiddleware(s *Server) {
 			return path == "/readyz" || path == "/livez"
 		}),
 	))
-	app.Use(fiberrecover.New(fiberrecover.Config{
-		EnableStackTrace:  true,
-		StackTraceHandler: s.emitRequestPanic,
-	}))
+	app.Use(s.recoverMiddleware())
 	app.Use(logger.New())
 	app.Use(cors.New())
 	app.Use(requestid.New())

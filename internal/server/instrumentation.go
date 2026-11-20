@@ -81,15 +81,38 @@ func (s *Server) emitWorkerError(ctx context.Context, err error) {
 	s.Logger.Emit(ctx, rec)
 }
 
-// emitRequestPanic records a panic recovered from a request on the request span
-// and logs it, both with the stack trace.
-func (s *Server) emitRequestPanic(c fiber.Ctx, r any) {
+// panicError is the error a recovered request panic is returned as.
+type panicError struct {
+	value any
+}
+
+func (e *panicError) Error() string {
+	return fmt.Sprintf("panic: %v", e.value)
+}
+
+// recoverMiddleware recovers a panic in the rest of the chain, records it and
+// answers the request through the app error handler.
+func (s *Server) recoverMiddleware() fiber.Handler {
+	return func(c fiber.Ctx) (err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = c.App().ErrorHandler(c, s.recordRequestPanic(c, r))
+			}
+		}()
+
+		return c.Next()
+	}
+}
+
+// recordRequestPanic records a recovered request panic on the request span and
+// logs it, both with the stack trace. It returns the panic as a *panicError.
+func (s *Server) recordRequestPanic(c fiber.Ctx, r any) error {
 	ctx := c.Context()
-	err := fmt.Errorf("panic: %v", r)
+	err := &panicError{value: r}
 	trace.SpanFromContext(ctx).RecordError(err, trace.WithStackTrace(true))
 
 	if !s.LoggerEnabled(ctx) {
-		return
+		return err
 	}
 
 	route := c.Path()
@@ -119,6 +142,8 @@ func (s *Server) emitRequestPanic(c fiber.Ctx, r any) {
 	rec.AddAttributes(attrs...)
 
 	s.Logger.Emit(ctx, rec)
+
+	return err
 }
 
 func emitStartupBootstrapLog(s *Server) {
