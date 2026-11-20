@@ -81,10 +81,13 @@ func (s *Server) emitWorkerError(ctx context.Context, err error) {
 	s.Logger.Emit(ctx, rec)
 }
 
-// emitRequestPanic logs a panic recovered from a request, with its stack trace.
-// The recover middleware turns the panic into a 500 and the span records it.
+// emitRequestPanic records a panic recovered from a request on the request span
+// and logs it, both with the stack trace.
 func (s *Server) emitRequestPanic(c fiber.Ctx, r any) {
 	ctx := c.Context()
+	err := fmt.Errorf("panic: %v", r)
+	trace.SpanFromContext(ctx).RecordError(err, trace.WithStackTrace(true))
+
 	if !s.LoggerEnabled(ctx) {
 		return
 	}
@@ -94,7 +97,6 @@ func (s *Server) emitRequestPanic(c fiber.Ctx, r any) {
 		route = rt.Path
 	}
 
-	err := fmt.Errorf("panic: %v", r)
 	attrs := []attribute.KeyValue{
 		attribute.String("event", "request_panic"),
 		attribute.String("route", route),
