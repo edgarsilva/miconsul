@@ -32,6 +32,21 @@ func (s *service) DispatchBookedAlert(appointment models.Appointment) error {
 	})
 }
 
+func (s *service) DispatchRescheduledAlert(appointment models.Appointment) error {
+	if s.Env.JobsEnabled {
+		payload := JobPayload{AppointmentID: appointment.UID}
+		_, err := s.EnqueueJob(context.Background(), RescheduledAlertJob, payload)
+		return err
+	}
+
+	return s.SendToWorker(context.Background(), func() {
+		ctx, cancel := context.WithTimeout(context.Background(), defaultWorkerContextTimeout)
+		defer cancel()
+
+		s.sendRescheduledNow(ctx, appointment)
+	})
+}
+
 func (s *service) SendReminder(appointment models.Appointment) error {
 	return s.SendToWorker(context.Background(), func() {
 		ctx, cancel := context.WithTimeout(context.Background(), defaultWorkerContextTimeout)
@@ -122,6 +137,32 @@ func (s *service) sendBookedNow(ctx context.Context, appointment models.Appointm
 
 	if span.SpanContext().IsValid() {
 		if hadErrors {
+			span.SetStatus(codes.Error, "notifications processed with errors")
+		} else {
+			span.SetStatus(codes.Ok, "notifications processed")
+		}
+	}
+}
+
+func (s *service) sendRescheduledNow(ctx context.Context, appointment models.Appointment) {
+	ctx, span := s.Trace(ctx, "appointment/sendRescheduledNow")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("appointment.uid", appointment.UID))
+
+	enabled := appointment.EnableNotifications || appointment.Patient.EnableNotifications
+	if !enabled {
+		span.SetAttributes(attribute.Bool("notification.enabled", false))
+		return
+	}
+	span.SetAttributes(attribute.Bool("notification.enabled", true))
+
+	err := s.sendEmailNotification(ctx, span, appointment, "appointment_rescheduled", func() error {
+		return mailer.SendAppointmentRescheduledEmail(s.Env, appointment)
+	})
+
+	if span.SpanContext().IsValid() {
+		if err != nil {
 			span.SetStatus(codes.Error, "notifications processed with errors")
 		} else {
 			span.SetStatus(codes.Ok, "notifications processed")

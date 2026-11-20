@@ -69,3 +69,29 @@ func SendAppointmentReminderEmail(env *appenv.Env, appointment models.Appointmen
 
 	return nil
 }
+
+func SendAppointmentRescheduledEmail(env *appenv.Env, appointment models.Appointment) error {
+	if env == nil {
+		return errors.New("appointment rescheduled mailer requires non-nil env")
+	}
+
+	if appointment.Patient.ID == 0 || appointment.Clinic.ID == 0 {
+		return errors.New("appointment Clinic or Patient association is missing, they must be Preloaded")
+	}
+
+	m := gomail.NewMessage()
+	lang := emailLocale()
+	m.SetHeader("From", env.EmailFromAddress)
+	m.SetHeader("To", appointment.Patient.Email)
+	m.SetHeader("Subject", "Miconsul: "+l(lang, "email.rescheduled_subject"))
+
+	emailHTML := bytes.Buffer{}
+	if err := AppointmentRescheduledEmail(lang, appointment).Render(context.Background(), &emailHTML); err != nil {
+		return errors.New("couldn't create HTML from templ comp to send email")
+	}
+	m.SetBody("text/html", emailHTML.String())
+
+	d := gomail.NewDialer(env.EmailSMTPURL, 587, dialerUsername(env), dialerPassword(env))
+
+	return d.DialAndSend(m)
+}

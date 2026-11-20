@@ -707,3 +707,83 @@ func TestHandleUpdateStampsRescheduledAtOnlyWhenTheTimeMoves(t *testing.T) {
 		t.Fatalf("moving the time stamped RescheduledAt = %v, want about now", saved.RescheduledAt)
 	}
 }
+
+func TestHandleUpdateSendsRescheduleNoticeOutsideTheReminderWindow(t *testing.T) {
+	tests := []struct {
+		name       string
+		newBooking func(now time.Time) time.Time
+		wantNotice bool
+	}{
+		{"far move sends the notice", func(now time.Time) time.Time { return now.Add(72 * time.Hour) }, true},
+		{"move into the reminder window leaves it to the reminder", func(now time.Time) time.Time { return now.Add(time.Hour) }, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc, user, clinic, patient := newAppointmentServiceForTests(t)
+			patient.EnableNotifications = true
+			patient.ViaEmail = true
+			if err := svc.DB.GormDB().Save(&patient).Error; err != nil {
+				t.Fatalf("enable patient notifications: %v", err)
+			}
+
+			now := time.Now()
+			apnt := models.Appointment{
+				UserID:    user.ID,
+				ClinicID:  clinic.ID,
+				PatientID: patient.ID,
+				BookedAt:  now.Add(48 * time.Hour),
+				Token:     "tok_notice_" + strings.ReplaceAll(tt.name, " ", "_"),
+			}
+			if err := svc.CreateAppointment(t.Context(), &apnt); err != nil {
+				t.Fatalf("seed appointment: %v", err)
+			}
+
+			mx, err := time.LoadLocation(models.DefaultTimezone)
+			if err != nil {
+				t.Fatalf("load %s: %v", models.DefaultTimezone, err)
+			}
+			app := fiber.New()
+			app.Patch("/appointments/:id", func(c fiber.Ctx) error {
+				c.Locals("current_user", user)
+				return svc.HandleUpdate(c)
+			})
+			form := url.Values{
+				"bookedAt":  {tt.newBooking(now).In(mx).Format("2006-01-02T15:04")},
+				"price":     {"100"},
+				"clinicId":  {clinic.UID},
+				"patientId": {patient.UID},
+				"duration":  {"30"},
+			}
+			req := httptest.NewRequest(http.MethodPatch, "/appointments/"+apnt.UID, strings.NewReader(form.Encode()))
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			resp, err := app.Test(req)
+			if err != nil || resp.StatusCode != fiber.StatusSeeOther {
+				t.Fatalf("update expected 303, got status=%d err=%v", resp.StatusCode, err)
+			}
+
+			notices := func() int64 {
+				var n int64
+				err := svc.DB.GormDB().Model(&models.Notification{}).
+					Where("notificationable_type = ? AND notificationable_id = ?", apnt.AlertableType(), apnt.AlertableID()).
+					Where("name = ?", "appointment_rescheduled").
+					Count(&n).Error
+				if err != nil {
+					t.Fatalf("count notices: %v", err)
+				}
+				return n
+			}
+
+			deadline := time.Now().Add(3 * time.Second)
+			for tt.wantNotice && notices() == 0 && time.Now().Before(deadline) {
+				time.Sleep(20 * time.Millisecond)
+			}
+			if !tt.wantNotice {
+				time.Sleep(300 * time.Millisecond)
+			}
+			if got := notices() > 0; got != tt.wantNotice {
+				t.Errorf("reschedule notice sent = %v, want %v", got, tt.wantNotice)
+			}
+		})
+	}
+}
