@@ -702,3 +702,27 @@ templ AppointmentReminderEmail(env *appenv.Env, appointment models.Appointment) 
 		</body>
 	</html>
 }
+
+templ AppointmentRescheduledEmail(locale string, appointment models.Appointment) {
+	@EmailLayout() {
+		<p>
+			{ l(locale, "email.greeting") }
+			<b>{ appointment.Patient.Name }</b>,
+			<br/>
+			<br/>
+			<span>{ l(locale, "email.rescheduled_body") }</span>
+			<br/>
+			<br/>
+			<b>{ appointment.BookedAtInLocalTime().Format(ViewTimeFormat) }</b>
+			<br/>
+			{ appointment.Clinic.Name }
+			<br/>
+			{ appointment.Clinic.Line1 }
+			<br/>
+			{ appointment.Clinic.City }, { appointment.Clinic.State }
+			<br/>
+			<br/>
+			<span>{ l(locale, "email.rescheduled_closing") }</span>
+		</p>
+	}
+}

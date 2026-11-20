@@ -419,3 +419,142 @@ func rescheduleForTest(t *testing.T, svc *service, apnt models.Appointment) {
 		t.Fatalf("reschedule %s: %v", apnt.Token, err)
 	}
 }
+
+func TestIsDueForReminder(t *testing.T) {
+	now := time.Date(2026, 12, 1, 15, 0, 30, 0, time.UTC)
+	tests := []struct {
+		name     string
+		bookedAt time.Time
+		want     bool
+	}{
+		{"in the past", now.Add(-time.Minute), false},
+		{"right now", now, false},
+		{"one minute ahead", now.Add(time.Minute), true},
+		{"at the window end", time.Date(2026, 12, 1, 17, 0, 0, 0, time.UTC), true},
+		{"after the window end", time.Date(2026, 12, 1, 17, 0, 1, 0, time.UTC), false},
+		{"next week", now.Add(7 * 24 * time.Hour), false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isDueForReminder(tt.bookedAt, now); got != tt.want {
+				t.Errorf("isDueForReminder(%v) = %v, want %v", tt.bookedAt, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRescheduledAlertJobNotifiesOncePerReschedule(t *testing.T) {
+	svc, user, clinic, patient := newAppointmentServiceForTests(t)
+
+	patient.EnableNotifications = true
+	patient.ViaEmail = true
+	if err := svc.DB.GormDB().Save(&patient).Error; err != nil {
+		t.Fatalf("enable patient notifications: %v", err)
+	}
+
+	apnt := models.Appointment{
+		UserID:    user.ID,
+		ClinicID:  clinic.ID,
+		PatientID: patient.ID,
+		BookedAt:  time.Now().Add(72 * time.Hour),
+		Token:     "tok_rescheduled_alert",
+	}
+	if err := svc.CreateAppointment(t.Context(), &apnt); err != nil {
+		t.Fatalf("create appointment: %v", err)
+	}
+
+	payload, err := json.Marshal(JobPayload{AppointmentID: apnt.UID})
+	if err != nil {
+		t.Fatalf("marshal payload: %v", err)
+	}
+	job := jobs.Job{Payload: payload}
+	notices := func() int64 {
+		t.Helper()
+		var n int64
+		err := svc.DB.GormDB().Model(&models.Notification{}).
+			Where("notificationable_type = ? AND notificationable_id = ?", apnt.AlertableType(), apnt.AlertableID()).
+			Where("name = ?", "appointment_rescheduled").
+			Count(&n).Error
+		if err != nil {
+			t.Fatalf("count rescheduled notices: %v", err)
+		}
+		return n
+	}
+
+	rescheduleForTest(t, svc, apnt)
+	if err := svc.handleRescheduledAlertJob(t.Context(), job); err != nil {
+		t.Fatalf("rescheduled alert job: %v", err)
+	}
+	if n := notices(); n != 1 {
+		t.Fatalf("expected one send attempt after the reschedule, got %d", n)
+	}
+
+	svc.appendNotification(t.Context(), apnt, models.Notification{
+		Medium: models.NotificationMediumEmail,
+		Name:   "appointment_rescheduled",
+		Status: models.NotificationSent,
+		To:     patient.Email,
+	})
+	if err := svc.handleRescheduledAlertJob(t.Context(), job); err != nil {
+		t.Fatalf("rescheduled alert job after a sent notice: %v", err)
+	}
+	if n := notices(); n != 2 {
+		t.Fatalf("expected no new attempt once a notice was sent, got %d rows", n)
+	}
+
+	time.Sleep(20 * time.Millisecond)
+	moved, err := svc.TakeAppointmentByUID(t.Context(), user.ID, apnt.UID)
+	if err != nil {
+		t.Fatalf("reload appointment: %v", err)
+	}
+	rescheduleForTest(t, svc, moved)
+	if err := svc.handleRescheduledAlertJob(t.Context(), job); err != nil {
+		t.Fatalf("rescheduled alert job after a second reschedule: %v", err)
+	}
+	if n := notices(); n != 3 {
+		t.Fatalf("expected a new attempt after a second reschedule, got %d rows", n)
+	}
+}
+
+func TestRescheduledAlertJobSkipsCanceledAppointments(t *testing.T) {
+	svc, user, clinic, patient := newAppointmentServiceForTests(t)
+
+	patient.EnableNotifications = true
+	patient.ViaEmail = true
+	if err := svc.DB.GormDB().Save(&patient).Error; err != nil {
+		t.Fatalf("enable patient notifications: %v", err)
+	}
+
+	apnt := models.Appointment{
+		UserID:    user.ID,
+		ClinicID:  clinic.ID,
+		PatientID: patient.ID,
+		BookedAt:  time.Now().Add(72 * time.Hour),
+		Token:     "tok_rescheduled_canceled",
+		Status:    models.AppointmentCanceled,
+	}
+	if err := svc.CreateAppointment(t.Context(), &apnt); err != nil {
+		t.Fatalf("create appointment: %v", err)
+	}
+	rescheduleForTest(t, svc, apnt)
+
+	payload, err := json.Marshal(JobPayload{AppointmentID: apnt.UID})
+	if err != nil {
+		t.Fatalf("marshal payload: %v", err)
+	}
+	if err := svc.handleRescheduledAlertJob(t.Context(), jobs.Job{Payload: payload}); err != nil {
+		t.Fatalf("rescheduled alert job: %v", err)
+	}
+
+	var attempts int64
+	err = svc.DB.GormDB().Model(&models.Notification{}).
+		Where("notificationable_type = ? AND notificationable_id = ?", apnt.AlertableType(), apnt.AlertableID()).
+		Count(&attempts).Error
+	if err != nil {
+		t.Fatalf("count notifications: %v", err)
+	}
+	if attempts != 0 {
+		t.Fatalf("expected no notice for a canceled appointment, got %d", attempts)
+	}
+}

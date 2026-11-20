@@ -15,11 +15,13 @@ import (
 )
 
 const (
-	BookedAlertJob   jobs.JobType = "appointment:booked_alert"
-	ReminderJob      jobs.JobType = "appointment:reminder"
-	ReminderSweepJob jobs.JobType = "appointment:reminder_sweep"
+	BookedAlertJob      jobs.JobType = "appointment:booked_alert"
+	RescheduledAlertJob jobs.JobType = "appointment:rescheduled_alert"
+	ReminderJob         jobs.JobType = "appointment:reminder"
+	ReminderSweepJob    jobs.JobType = "appointment:reminder_sweep"
 
 	ReminderSweepCronspec = "@every 1m"
+	reminderWindow        = 2 * time.Hour
 )
 
 type JobPayload struct {
@@ -41,6 +43,13 @@ func (s *service) bootstrapJobs() error {
 	}
 
 	if err := s.registerBookedAlertHandler(); err != nil {
+		if errors.Is(err, jobs.ErrRuntimeUnavailable) {
+			return nil
+		}
+		return err
+	}
+
+	if err := s.registerRescheduledAlertHandler(); err != nil {
 		if errors.Is(err, jobs.ErrRuntimeUnavailable) {
 			return nil
 		}
@@ -70,6 +79,10 @@ func (s *service) registerReminderSweepHandler() error {
 
 func (s *service) registerBookedAlertHandler() error {
 	return s.RegisterJobHandler(BookedAlertJob, s.handleBookedAlertJob)
+}
+
+func (s *service) registerRescheduledAlertHandler() error {
+	return s.RegisterJobHandler(RescheduledAlertJob, s.handleRescheduledAlertJob)
 }
 
 func (s *service) registerReminderHandler() error {
@@ -168,6 +181,42 @@ func (s *service) handleBookedAlertJob(ctx context.Context, job jobs.Job) error 
 	return nil
 }
 
+func (s *service) handleRescheduledAlertJob(ctx context.Context, job jobs.Job) error {
+	payload := JobPayload{}
+	if err := json.Unmarshal(job.Payload, &payload); err != nil {
+		return fmt.Errorf("decode rescheduled alert payload: %w", err)
+	}
+	if payload.AppointmentID == "" {
+		return errors.New("appointment_id is required")
+	}
+
+	appointment, err := gorm.G[models.Appointment](s.DB.GormDB()).
+		Preload("Patient", nil).
+		Preload("Clinic", nil).
+		Where("uid = ?", payload.AppointmentID).
+		First(ctx)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("load appointment for rescheduled alert: %w", err)
+	}
+	if !appointment.AwaitingVisit() {
+		return nil
+	}
+
+	sent, err := s.notificationSentSince(ctx, appointment, "appointment_rescheduled", appointment.RescheduledAt)
+	if err != nil {
+		return fmt.Errorf("check rescheduled notification status: %w", err)
+	}
+	if sent {
+		return nil
+	}
+
+	s.sendRescheduledNow(ctx, appointment)
+	return nil
+}
+
 func (s *service) notificationSentAnyMedium(ctx context.Context, appointment models.Appointment, name string) (bool, error) {
 	var count int64
 	err := s.DB.WithContext(ctx).
@@ -182,6 +231,38 @@ func (s *service) notificationSentAnyMedium(ctx context.Context, appointment mod
 	}
 
 	return count > 0, nil
+}
+
+// notificationSentSince reports whether a notification with the given name was
+// sent for the appointment after since.
+func (s *service) notificationSentSince(ctx context.Context, appointment models.Appointment, name string, since time.Time) (bool, error) {
+	sent, err := gorm.G[models.Notification](s.DB.GormDB()).
+		Select("created_at").
+		Where("notificationable_id = ?", appointment.AlertableID()).
+		Where("notificationable_type = ?", appointment.AlertableType()).
+		Where("name = ?", name).
+		Where("status IN ?", []models.NotificationStatus{models.NotificationSent, models.NotificationSuccess}).
+		Find(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	for _, notification := range sent {
+		if notification.CreatedAt.After(since) {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+// isDueForReminder reports whether the reminder sweep picks up an appointment
+// booked at bookedAt.
+func isDueForReminder(bookedAt, now time.Time) bool {
+	start := now.UTC()
+	end := start.Truncate(time.Minute).Add(reminderWindow)
+
+	return bookedAt.After(start) && !bookedAt.After(end)
 }
 
 // appointmentsToRemind returns the appointments without a reminder sent since
@@ -234,7 +315,7 @@ func (s *service) appointmentsToRemind(ctx context.Context, appointments []model
 // hours after now.
 func (s *service) findAppointmentsDueForReminder(ctx context.Context, now time.Time) ([]models.Appointment, error) {
 	start := now.UTC()
-	end := start.Truncate(time.Minute).Add(2 * time.Hour)
+	end := start.Truncate(time.Minute).Add(reminderWindow)
 
 	return gorm.G[models.Appointment](s.DB.GormDB()).
 		Where("booked_at > ?", start).

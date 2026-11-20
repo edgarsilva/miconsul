@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"errors"
+	"fmt"
 	"net/url"
 	"strings"
 	"time"
@@ -335,7 +336,8 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "Invalid patient selected", view.LevelError)
 	}
 	updates := input.toAppointmentUpdates(clinic.ID, patient.ID)
-	if existing.IsBookedAtChanged(updates.BookedAt) {
+	rescheduled := existing.IsBookedAtChanged(updates.BookedAt)
+	if rescheduled {
 		updates.RescheduledAt = time.Now().UTC()
 	}
 
@@ -346,6 +348,13 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 
 	if err != nil {
 		return s.RedirectWithToast(c, "/appointments/"+appointmentID, "failed to update appointment", view.LevelError)
+	}
+
+	if rescheduled && !isDueForReminder(updates.BookedAt, time.Now()) {
+		err = s.dispatchRescheduledAlert(c, cu.ID, appointmentID)
+		if err != nil {
+			return s.RedirectWithToast(c, "/appointments?patientId="+url.QueryEscape(patient.UID), "Appointment saved, but failed to queue the reschedule notice", view.LevelWarning)
+		}
 	}
 
 	return s.RedirectWithToast(c, "/appointments?patientId="+url.QueryEscape(patient.UID), "Appointment saved", view.LevelSuccess)
@@ -662,4 +671,13 @@ func (s *service) renderFormPage(c fiber.Ctx, appointment models.Appointment) er
 	vc := view.NewCtx(c)
 
 	return view.Render(c, view.AppointmentFormPage(vc, appointment, patients, clinics))
+}
+
+func (s *service) dispatchRescheduledAlert(c fiber.Ctx, userID uint, appointmentID string) error {
+	appointment, err := s.TakeAppointmentByUID(c.Context(), userID, appointmentID)
+	if err != nil {
+		return fmt.Errorf("load appointment for rescheduled alert: %w", err)
+	}
+
+	return s.DispatchRescheduledAlert(appointment)
 }
