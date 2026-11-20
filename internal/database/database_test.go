@@ -191,6 +191,18 @@ func TestNewStampsTimestampsInUTC(t *testing.T) {
 	}
 }
 
+func TestNewSkipsDefaultTransaction(t *testing.T) {
+	db, err := New(&appenv.Env{DBPath: filepath.Join(t.TempDir(), "tx.sqlite")}, lognoop.NewLoggerProvider(), tracenoop.NewTracerProvider(), nil)
+	if err != nil {
+		t.Fatalf("new database: %v", err)
+	}
+	defer func() { _ = db.Close() }()
+
+	if !db.Config.SkipDefaultTransaction {
+		t.Fatal("expected default transactions to be skipped")
+	}
+}
+
 func TestNewRequiresTracerProvider(t *testing.T) {
 	if _, err := New(&appenv.Env{DBPath: filepath.Join(t.TempDir(), "x.sqlite")}, lognoop.NewLoggerProvider(), nil, nil); err == nil {
 		t.Fatal("expected nil tracer provider error")
