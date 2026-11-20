@@ -52,6 +52,7 @@ This file provides repo-specific guidance for coding assistants working on this 
   - Reserve natural, conversational sentences (`"could not send email, please try again"`) for user-facing messages rendered to templates/HTTP responses — not internal plumbing.
   - Sentinels: `var ErrX = errors.New("lowercase message")`; compare with `errors.Is` / `errors.As`.
   - GORM API choice: default to `gorm.G[T]`, which requires the context and returns the error. Use the classic `*gorm.DB` chain only when the query needs something `gorm.G` lacks: `func(*gorm.DB) *gorm.DB` scopes, raw `Joins`, `Pluck`, `Association` or `Save`. Start it with `s.DB.WithContext(ctx)` and end it with a checked `.Error`.
+  - Single writes run without a wrapping transaction. Writes that must succeed or fail together go in an explicit `.Transaction(...)`.
   - Check every GORM chain's error: end it in `.Error` and check it (`if err := db...Count(&n).Error; err != nil`), or use the `gorm.G` API that returns `err`. A bare `s.DB...Count(&n)` or `Find(&x)` statement drops the error silently, and errcheck can't flag it because the chain returns `*gorm.DB`, not an `error`.
   - Discard an error with `_ =` only for best-effort work whose failure must not change the outcome; otherwise return it, or log it and tell the user.
 
@@ -59,6 +60,7 @@ This file provides repo-specific guidance for coding assistants working on this 
 
 - For templ syntax/rules, use: `docs/ai/templ_llms_compact.md`.
 - Only load that document when the task touches templ/view/email templates.
+- `internal/views` and `internal/mailer` are presentation only. They render the values they are given and never query the database or call services. The service loads and preloads, then passes the finished models in.
 - If task is not templ-related, skip it to keep context focused.
 
 ## templ Naming
