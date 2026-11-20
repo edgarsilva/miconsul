@@ -68,6 +68,7 @@ func TestHandlerPanicIsRecorded(t *testing.T) {
 	}
 
 	checkPanicLogRecord(t, capture)
+	checkPanicLogTrace(t, capture, recorder)
 
 	for _, span := range recorder.Ended() {
 		if span.Name() != "GET /panic" {
@@ -90,12 +91,11 @@ func TestHandlerPanicIsRecorded(t *testing.T) {
 					hasStack = value != ""
 				}
 			}
-			if !hasPanic || !hasStack {
-				t.Fatalf("exception event needs the panic message and a stack trace: %+v", event.Attributes)
+			if hasPanic && hasStack {
+				return
 			}
-			return
 		}
-		t.Fatalf("span GET /panic has no exception event: %+v", span.Events())
+		t.Fatalf("no exception event has the panic message and a stack trace: %+v", span.Events())
 	}
 	t.Fatalf("no span named GET /panic was recorded")
 }
@@ -129,4 +129,39 @@ func checkPanicLogRecord(t *testing.T, capture *recordCapture) {
 	if got := attrs["exception.stacktrace"].AsString(); got == "" {
 		t.Fatalf("exception.stacktrace is empty")
 	}
+}
+
+// checkPanicLogTrace checks that the request_panic record carries the trace and
+// span IDs of the request span.
+func checkPanicLogTrace(t *testing.T, capture *recordCapture, recorder *tracetest.SpanRecorder) {
+	t.Helper()
+
+	var found *sdklog.Record
+	for i := range capture.records {
+		if capture.records[i].EventName() == "request_panic" {
+			found = &capture.records[i]
+		}
+	}
+	if found == nil {
+		t.Fatalf("no request_panic log record was emitted")
+	}
+
+	for _, span := range recorder.Ended() {
+		if span.Name() != "GET /panic" {
+			continue
+		}
+		if got, want := found.TraceID(), span.SpanContext().TraceID(); got != want {
+			t.Fatalf("log trace id = %s, want %s", got, want)
+		}
+		if got, want := found.SpanID(), span.SpanContext().SpanID(); got != want {
+			t.Fatalf("log span id = %s, want %s", got, want)
+		}
+		attrs := map[string]attribute.Value{}
+		found.WalkAttributes(func(kv attribute.KeyValue) bool { attrs[string(kv.Key)] = kv.Value; return true })
+		if got, want := attrs["trace_id"].AsString(), span.SpanContext().TraceID().String(); got != want {
+			t.Fatalf("trace_id attribute = %q, want %q", got, want)
+		}
+		return
+	}
+	t.Fatalf("no span named GET /panic was recorded")
 }

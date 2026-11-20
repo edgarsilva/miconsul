@@ -222,10 +222,6 @@ func setupFiberApp(s *Server) {
 func setupCoreMiddleware(s *Server) {
 	app := s.App
 
-	app.Use(fiberrecover.New(fiberrecover.Config{
-		EnableStackTrace:  true,
-		StackTraceHandler: s.emitRequestPanic,
-	}))
 	app.Use(otel.New(
 		otel.WithTracerProvider(s.TracerProvider),
 		otel.WithMeterProvider(s.MeterProvider),
@@ -234,6 +230,10 @@ func setupCoreMiddleware(s *Server) {
 			return path == "/readyz" || path == "/livez"
 		}),
 	))
+	app.Use(fiberrecover.New(fiberrecover.Config{
+		EnableStackTrace:  true,
+		StackTraceHandler: s.emitRequestPanic,
+	}))
 	app.Use(logger.New())
 	app.Use(cors.New())
 	app.Use(requestid.New())
