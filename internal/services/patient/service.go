@@ -241,6 +241,8 @@ func (s service) patientExistsByID(ctx context.Context, userID uint, patientID s
 	return count > 0, nil
 }
 
+// CreatePatientsInBatches inserts patients in batches of batchSize. Each batch
+// commits on its own, so a failure leaves earlier batches in place.
 func (s service) CreatePatientsInBatches(ctx context.Context, patients []models.Patient, batchSize int) (int64, error) {
 	result := s.DB.WithContext(ctx).CreateInBatches(&patients, batchSize)
 	if result.Error != nil {
