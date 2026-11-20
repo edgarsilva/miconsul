@@ -2,14 +2,17 @@
 
 ## Next Up
 
-- [feature/notifications] Multi-channel notifications baseline
-  - Keep email templates/actions synced with appointment + professional details.
-  - Add clinic address to patient-facing appointment confirmation details card.
-  - Add Telegram reschedule CTA alongside WhatsApp when clinic Telegram is configured.
-  - Add Telegram provider integration (credentials, send path, retry/error handling).
-  - Add WhatsApp provider integration.
-  - Add Facebook Messenger provider integration.
-  - Define per-channel opt-in/opt-out + fallback policy (email as default fallback).
+- [feature/search] Global Ctrl+K search modal
+  - [ ] Add keyboard shortcut (`Ctrl+K`) to open a global search modal.
+  - [ ] Search across appointments, clinics, and patients from a single input.
+  - [ ] Support keyboard navigation + enter-to-open selected result.
+  - [ ] Keep existing index search endpoints; add a dedicated global search endpoint contract.
+  - [ ] Define result grouping and ranking order (appointments first vs mixed relevance).
+
+- [feature/htmx4] Replace OOB price update with partials pattern
+  - [ ] Refactor appointment clinic-search response to use HTMX 4 partial swap flow instead of `hx-swap-oob`.
+  - [ ] Keep clinic list and price updates independent targets with explicit swap contracts.
+  - [ ] Add regression check for clinic search + price update on repeated searches and back navigation.
 
 - [feature/status-history] Appointment status events audit trail
   - [ ] Add `appointment_status_events` table for status transition history.
@@ -23,17 +26,23 @@
   - [ ] Keep feed scoped to current user and recent window.
   - [ ] Re-evaluate need for FeedEvent `Attribute/From/To` after status events are in place.
 
-- [feature/search] Global Ctrl+K search modal
-  - [ ] Add keyboard shortcut (`Ctrl+K`) to open a global search modal.
-  - [ ] Search across appointments, clinics, and patients from a single input.
-  - [ ] Support keyboard navigation + enter-to-open selected result.
-  - [ ] Keep existing index search endpoints; add a dedicated global search endpoint contract.
-  - [ ] Define result grouping and ranking order (appointments first vs mixed relevance).
+- [feature/forms] Keep submitted values when an update fails validation
+  - [ ] On a validation failure, re-render the form fragment with the submitted values and field errors instead of redirecting to the edit page.
+  - [ ] Apply to the clinic, patient and user forms.
+  - [ ] Decide how to keep an uploaded picture across a failed save; a file input cannot be refilled.
 
-- [feature/htmx4] Replace OOB price update with partials pattern
-  - [ ] Refactor appointment clinic-search response to use HTMX 4 partial swap flow instead of `hx-swap-oob`.
-  - [ ] Keep clinic list and price updates independent targets with explicit swap contracts.
-  - [ ] Add regression check for clinic search + price update on repeated searches and back navigation.
+- [infra/profile-pic] Profile picture handling across clinic, patient and user
+  - [ ] The three `profile_pic.go` files duplicate the filename cleaning, safe-filename check, missing-file detection and path building, and have drifted (user's `isSafeFilename` has extra `..` checks; clinic ignores `AssetsDir` and writes to `./public/assets/profile_pics`).
+  - [ ] Review the drift, then decide the shape: a shared leaf package in `internal/lib/` that the three services call, since features must not import each other.
+
+- [feature/notifications] Multi-channel notifications baseline
+  - Keep email templates/actions synced with appointment + professional details.
+  - Add clinic address to patient-facing appointment confirmation details card.
+  - Add Telegram reschedule CTA alongside WhatsApp when clinic Telegram is configured.
+  - Add Telegram provider integration (credentials, send path, retry/error handling).
+  - Add WhatsApp provider integration.
+  - Add Facebook Messenger provider integration.
+  - Define per-channel opt-in/opt-out + fallback policy (email as default fallback).
 
 - [feature/storage] Object storage uploads for images (RustFS S3-compatible)
   - Define storage abstraction and configuration wiring for local disk vs S3-compatible backends.

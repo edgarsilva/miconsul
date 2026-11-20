@@ -9,7 +9,6 @@ import (
 	view "miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/gofiber/fiber/v3/log"
 	"gorm.io/gorm"
 )
 
@@ -78,7 +77,7 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/clinics/new", "Failed to create clinic", view.LevelError)
 	}
 
-	s.attachClinicProfilePicBestEffort(c, cu.ID, &clinic)
+	clinic.ProfilePic = s.attachClinicPic(c, cu.ID, clinic)
 	return s.respondWithClinicPage(c, clinic)
 }
 
@@ -112,8 +111,6 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	clinic = input.toClinic(clinic.ID, clinic.UID, clinic.UserID)
 	clinic.ProfilePic = profilePic
 
-	s.attachClinicProfilePicBestEffort(c, cu.ID, &clinic)
-
 	err = s.UpdateClinicByID(c.Context(), cu.ID, clinicID, clinic)
 	if errors.Is(err, ErrInvalidClinic) {
 		return s.RedirectWithToast(c, "/clinics/"+clinicID, "Clinic name can't be blank", view.LevelWarning)
@@ -125,6 +122,7 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/clinics", "Failed to update clinic", view.LevelError)
 	}
 
+	clinic.ProfilePic = s.attachClinicPic(c, cu.ID, clinic)
 	return s.respondWithClinicPage(c, clinic)
 }
 
@@ -180,21 +178,4 @@ func (s *service) respondWithClinicPage(c fiber.Ctx, clinic models.Clinic) error
 	c.Set("HX-Push-Url", "/clinics/"+clinic.UID)
 	vc := view.NewCtx(c)
 	return view.Render(c, view.ClinicProfileSection(vc, clinic))
-}
-
-func (s *service) attachClinicProfilePicBestEffort(c fiber.Ctx, userID uint, clinic *models.Clinic) {
-	path, picErr := SaveProfilePicToDisk(c, *clinic)
-	if errors.Is(picErr, ErrProfilePicNotProvided) {
-		return
-	}
-	if picErr != nil {
-		log.Error(picErr)
-		return
-	}
-
-	clinic.ProfilePic = path
-	err := s.UpdateClinicProfilePic(c.Context(), userID, clinic.UID, path)
-	if err != nil {
-		log.Error(err)
-	}
 }

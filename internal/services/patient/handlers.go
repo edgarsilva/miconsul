@@ -11,7 +11,6 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/gofiber/fiber/v3"
-	"github.com/gofiber/fiber/v3/log"
 	"gorm.io/gorm"
 )
 
@@ -112,18 +111,7 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/patients/new", "Failed to create new patient", view.LevelError)
 	}
 
-	path, picErr := SaveProfilePicToDisk(c, patient, s.Env.AssetsDir)
-	if picErr != nil {
-		if !errors.Is(picErr, ErrProfilePicNotProvided) {
-			log.Error(picErr)
-		}
-	} else {
-		patient.ProfilePic = path
-		err = s.UpdatePatientProfilePic(c.Context(), cu.ID, patient.UID, path)
-		if err != nil {
-			log.Error(err)
-		}
-	}
+	patient.ProfilePic = s.attachPatientPic(c, cu.ID, patient)
 
 	c.Set("HX-Push-Url", "/patients/"+patient.UID)
 	vc := view.NewCtx(c)
@@ -165,15 +153,6 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 
 	patient.Sanitize()
 
-	path, picErr := SaveProfilePicToDisk(c, patient, s.Env.AssetsDir)
-	if picErr != nil {
-		if !errors.Is(picErr, ErrProfilePicNotProvided) {
-			log.Error(picErr)
-		}
-	} else if err := s.UpdatePatientProfilePic(c.Context(), cu.ID, patientID, path); err != nil {
-		log.Error(err)
-	}
-
 	err = s.UpdatePatientByID(c.Context(), cu.ID, patientID, patient)
 	if errors.Is(err, ErrInvalidPatient) {
 		return s.RedirectWithToast(c, "/patients/"+patientID, "Name, age and phone can't be blank", view.LevelWarning)
@@ -187,6 +166,8 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	if err != nil {
 		return s.RedirectWithToast(c, "/patients", "Failed to update patient", view.LevelError)
 	}
+
+	s.attachPatientPic(c, cu.ID, patient)
 
 	return s.RedirectWithToast(c, "/patients/"+patientID, "Patient changes saved", view.LevelSuccess)
 }

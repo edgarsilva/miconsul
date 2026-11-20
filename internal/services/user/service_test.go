@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 
@@ -26,11 +27,20 @@ func TestNormalizeUserWriteInput(t *testing.T) {
 		}
 	})
 
+	t.Run("rejects a blank name", func(t *testing.T) {
+		for _, name := range []string{"", "   "} {
+			u := models.User{Name: name, Email: "a@example.com"}
+			if err := normalizeUserWriteInput(&u); !errors.Is(err, ErrInvalidUser) {
+				t.Fatalf("name %q: expected ErrInvalidUser, got %v", name, err)
+			}
+		}
+	})
+
 	t.Run("rejects over max lengths", func(t *testing.T) {
 		cases := []models.User{
 			{Name: strings.Repeat("n", 121)},
-			{Email: strings.Repeat("e", 255)},
-			{Phone: strings.Repeat("p", 41)},
+			{Name: "n", Email: strings.Repeat("e", 255)},
+			{Name: "n", Phone: strings.Repeat("p", 41)},
 		}
 		for _, c := range cases {
 			u := c

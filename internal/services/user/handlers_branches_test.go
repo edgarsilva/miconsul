@@ -1,8 +1,10 @@
 package user
 
 import (
+	"bytes"
 	"context"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -372,5 +374,101 @@ func TestHandleRemoveProfilePic(t *testing.T) {
 	}
 	if saved.ProfilePic != "" {
 		t.Errorf("picture = %q, want removed", saved.ProfilePic)
+	}
+}
+
+func TestHandleUpdateRejectsBlankName(t *testing.T) {
+	routes := []struct {
+		name    string
+		method  string
+		pattern string
+		path    func(models.User) string
+		handler func(*service) fiber.Handler
+	}{
+		{"profile", http.MethodPost, "/profile", func(models.User) string { return "/profile" }, func(svc *service) fiber.Handler { return svc.HandleUpdateProfile }},
+		{"admin", http.MethodPatch, "/admin/users/:id", func(u models.User) string { return "/admin/users/" + u.UID }, func(svc *service) fiber.Handler { return svc.HandleAdminUpdateUser }},
+	}
+
+	for _, rt := range routes {
+		t.Run(rt.name, func(t *testing.T) {
+			svc, target := newUserServiceForTests(t)
+			if err := svc.DB.GormDB().Model(&models.User{}).Where("uid = ?", target.UID).Update("name", "Kept Name").Error; err != nil {
+				t.Fatalf("seed name: %v", err)
+			}
+
+			app := fiber.New()
+			app.Add([]string{rt.method}, rt.pattern, func(c fiber.Ctx) error {
+				c.Locals("current_user", target)
+				return rt.handler(&svc)(c)
+			})
+
+			form := url.Values{"name": {"  "}, "email": {target.Email}, "phone": {"5551234567"}}
+			req := httptest.NewRequest(rt.method, rt.path(target), strings.NewReader(form.Encode()))
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			req.Header.Set("HX-Request", "true")
+			resp, err := app.Test(req)
+			if err != nil || resp.StatusCode != fiber.StatusNoContent {
+				t.Fatalf("blank name expected 204 redirect, got status=%d err=%v", resp.StatusCode, err)
+			}
+
+			saved, err := svc.TakeUserByUID(context.Background(), target.UID)
+			if err != nil {
+				t.Fatalf("load user: %v", err)
+			}
+			if saved.Name != "Kept Name" {
+				t.Errorf("name = %q, want it unchanged after a rejected update", saved.Name)
+			}
+		})
+	}
+}
+
+func TestHandleUpdateProfileBlankNameKeepsTheAvatar(t *testing.T) {
+	svc, user := newUserServiceForTests(t)
+	svc.Env.AssetsDir = t.TempDir()
+
+	avatarPath, err := ProfilePicPath(user.UID+"_avatar", svc.Env.AssetsDir)
+	if err != nil {
+		t.Fatalf("avatar path: %v", err)
+	}
+	if err := os.WriteFile(avatarPath, []byte("old-avatar"), 0o600); err != nil {
+		t.Fatalf("seed avatar: %v", err)
+	}
+
+	app := fiber.New()
+	app.Post("/profile", func(c fiber.Ctx) error {
+		c.Locals("current_user", user)
+		return svc.HandleUpdateProfile(c)
+	})
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	if err := writer.WriteField("name", "   "); err != nil {
+		t.Fatalf("write name field: %v", err)
+	}
+	part, err := writer.CreateFormFile("profilePic", "new.png")
+	if err != nil {
+		t.Fatalf("create multipart file: %v", err)
+	}
+	if _, err := part.Write([]byte("new-avatar")); err != nil {
+		t.Fatalf("write multipart file: %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("close multipart writer: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/profile", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("HX-Request", "true")
+	resp, err := app.Test(req)
+	if err != nil || resp.StatusCode != fiber.StatusNoContent {
+		t.Fatalf("blank name expected 204 redirect, got status=%d err=%v", resp.StatusCode, err)
+	}
+
+	got, err := os.ReadFile(avatarPath)
+	if err != nil {
+		t.Fatalf("read avatar: %v", err)
+	}
+	if string(got) != "old-avatar" {
+		t.Errorf("avatar = %q, want it untouched after a rejected update", got)
 	}
 }

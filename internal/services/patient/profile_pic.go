@@ -11,6 +11,9 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/log"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 )
 
 const patientsDir = "/patients"
@@ -46,6 +49,38 @@ func SaveProfilePicToDisk(c fiber.Ctx, patient models.Patient, assetsDir string)
 
 	imgsrc := "/patients/" + patient.UID + "/profilepic/" + filename
 	return imgsrc, nil
+}
+
+// attachPatientPic saves the uploaded profile picture and stores its path on
+// the patient. It returns the patient's picture path: the new one, or the
+// current one when nothing was uploaded or saving failed, which is recorded on
+// the span and logged.
+func (s service) attachPatientPic(c fiber.Ctx, userID uint, patient models.Patient) string {
+	ctx, span := s.Trace(c.Context(), "patient/attachPic")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("patient.uid", patient.UID))
+
+	path, err := SaveProfilePicToDisk(c, patient, s.Env.AssetsDir)
+	if errors.Is(err, ErrProfilePicNotProvided) {
+		return patient.ProfilePic
+	}
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "save profile pic failed")
+		log.Errorf("save patient profile pic: %v", err)
+		return patient.ProfilePic
+	}
+
+	err = s.UpdatePatientProfilePic(ctx, userID, patient.UID, path)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "attach profile pic failed")
+		log.Errorf("attach patient profile pic: %v", err)
+		return patient.ProfilePic
+	}
+
+	return path
 }
 
 func ProfilePicPath(filename, assetsDir string) (string, error) {
