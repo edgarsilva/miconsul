@@ -146,8 +146,8 @@ func sendErrorPage(c fiber.Ctx, code int) error {
 	return c.Status(code).SendString("Not Found")
 }
 
-// recoverConfig returns recover middleware config object with the yield func
-// executed with the request ctx to trace the panic error
+// fiberAppErrorHandler records a server error on the request span, except a
+// *panicError, and sends the error page.
 func fiberAppErrorHandler(c fiber.Ctx, err error) error {
 	code := fiber.StatusInternalServerError
 
@@ -158,7 +158,9 @@ func fiberAppErrorHandler(c fiber.Ctx, err error) error {
 	span := trace.SpanFromContext(c.Context())
 
 	if err != nil && code >= fiber.StatusInternalServerError {
-		span.RecordError(err)
+		if _, isPanic := errors.AsType[*panicError](err); !isPanic {
+			span.RecordError(err)
+		}
 		span.SetStatus(codes.Error, err.Error())
 	}
 
