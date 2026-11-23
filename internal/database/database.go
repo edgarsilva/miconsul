@@ -59,9 +59,10 @@ func New(env *appenv.Env, loggerProvider otellog.LoggerProvider, tracerProvider 
 	dbLogger := NewGormLogger(env, otelLogger)
 	dsn := buildSQLiteDSN(env.DBPath, opts)
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
-		Logger:      dbLogger,
-		PrepareStmt: true,
-		NowFunc:     nowUTC,
+		Logger:                 dbLogger,
+		PrepareStmt:            true,
+		SkipDefaultTransaction: true,
+		NowFunc:                nowUTC,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("database: open sqlite: %w", err)

@@ -138,7 +138,7 @@ func newPatientServiceForTests(t *testing.T) (service, models.User) {
 	t.Helper()
 
 	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())
-	gdb, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+	gdb, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{SkipDefaultTransaction: true})
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
