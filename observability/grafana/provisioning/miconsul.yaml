@@ -1,0 +1,9 @@
+apiVersion: 1
+
+providers:
+  - name: Miconsul
+    type: file
+    folder: Miconsul
+    folderUid: miconsul
+    options:
+      path: /otel-lgtm/miconsul-dashboards
