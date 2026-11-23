@@ -30,6 +30,11 @@ type Env struct {
 	SessionDBPath string `env:"SESSION_DB_PATH"`
 	CacheDBPath   string `env:"CACHE_DB_PATH;optional"`
 
+	DBMaxOpenConns    int           `env:"DB_MAX_OPEN_CONNS;optional;min=1"`
+	DBMaxIdleConns    int           `env:"DB_MAX_IDLE_CONNS;optional;min=1"`
+	DBConnMaxLifetime time.Duration `env:"DB_CONN_MAX_LIFETIME;optional;min=1s"`
+	DBConnMaxIdleTime time.Duration `env:"DB_CONN_MAX_IDLE_TIME;optional;min=1s"`
+
 	EmailSender              string `env:"EMAIL_SENDER"`
 	EmailSecret              string `env:"EMAIL_SECRET"`
 	EmailFromAddress         string `env:"EMAIL_FROM_ADDRESS"`
@@ -76,6 +81,10 @@ func New() (*Env, error) {
 	env := &Env{
 		AppShutdownTimeout: 10 * time.Second,
 		RateLimiterEnabled: true,
+		DBMaxOpenConns:     10,
+		DBMaxIdleConns:     5,
+		DBConnMaxLifetime:  30 * time.Minute,
+		DBConnMaxIdleTime:  5 * time.Minute,
 		OTelServiceName:    "miconsul",
 		OTelTracerServer:   "miconsul.server",
 		OTelTracerAuth:     "miconsul.auth",

@@ -101,6 +101,42 @@ func TestEnvLoadOptionalDefaults(t *testing.T) {
 	}
 }
 
+func TestNewAppliesDatabasePoolDefaults(t *testing.T) {
+	setRequiredEnv(t)
+
+	env, err := New()
+	if err != nil {
+		t.Fatalf("new env: %v", err)
+	}
+
+	if env.DBMaxOpenConns != 10 || env.DBMaxIdleConns != 5 {
+		t.Fatalf("expected pool defaults 10/5, got %d/%d", env.DBMaxOpenConns, env.DBMaxIdleConns)
+	}
+	if env.DBConnMaxLifetime != 30*time.Minute || env.DBConnMaxIdleTime != 5*time.Minute {
+		t.Fatalf("expected pool durations 30m/5m, got %v/%v", env.DBConnMaxLifetime, env.DBConnMaxIdleTime)
+	}
+}
+
+func TestNewParsesDatabasePoolOverrides(t *testing.T) {
+	setRequiredEnv(t)
+	t.Setenv("DB_MAX_OPEN_CONNS", "20")
+	t.Setenv("DB_MAX_IDLE_CONNS", "8")
+	t.Setenv("DB_CONN_MAX_LIFETIME", "1h")
+	t.Setenv("DB_CONN_MAX_IDLE_TIME", "90s")
+
+	env, err := New()
+	if err != nil {
+		t.Fatalf("new env: %v", err)
+	}
+
+	if env.DBMaxOpenConns != 20 || env.DBMaxIdleConns != 8 {
+		t.Fatalf("expected pool overrides 20/8, got %d/%d", env.DBMaxOpenConns, env.DBMaxIdleConns)
+	}
+	if env.DBConnMaxLifetime != time.Hour || env.DBConnMaxIdleTime != 90*time.Second {
+		t.Fatalf("expected pool durations 1h/90s, got %v/%v", env.DBConnMaxLifetime, env.DBConnMaxIdleTime)
+	}
+}
+
 func TestEnvLoadOptionalOverrides(t *testing.T) {
 	setRequiredEnv(t)
 	t.Setenv("APP_SHUTDOWN_TIMEOUT", "25s")
@@ -289,6 +325,10 @@ func setRequiredEnv(t *testing.T) {
 		"APP_SHUTDOWN_TIMEOUT",
 		"RATE_LIMITER_ENABLED",
 		"CACHE_DB_PATH",
+		"DB_MAX_OPEN_CONNS",
+		"DB_MAX_IDLE_CONNS",
+		"DB_CONN_MAX_LIFETIME",
+		"DB_CONN_MAX_IDLE_TIME",
 		"LOGTO_RESOURCE",
 		"LOGTO_URL",
 		"LOGTO_APP_ID",
