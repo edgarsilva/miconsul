@@ -247,3 +247,68 @@ func TestHandleHealthPages(t *testing.T) {
 		t.Fatalf("expected only the checks fragment")
 	}
 }
+
+func TestHandleAPIRuntimeHistoryShape(t *testing.T) {
+	svc, srv := newDiagnosticsService(t)
+	if err := srv.StartRuntimeSampler(t.Context(), 5*time.Second, 5); err != nil {
+		t.Fatalf("start sampler: %v", err)
+	}
+	for len(srv.RuntimeHistory()) == 0 {
+		time.Sleep(time.Millisecond)
+	}
+	srv.App.Get("/history", svc.HandleAPIRuntimeHistory)
+
+	body := get(t, srv, "/history", fiber.StatusOK)
+
+	assertKeys(t, body, "interval_seconds", "samples")
+	var payload runtimeHistoryOutput
+	if err := json.Unmarshal(body, &payload); err != nil {
+		t.Fatalf("decode payload: %v", err)
+	}
+	if payload.IntervalSeconds != 5 {
+		t.Fatalf("interval_seconds = %d, want 5", payload.IntervalSeconds)
+	}
+	if len(payload.Samples) != 1 || payload.Samples[0].At == "" || payload.Samples[0].Goroutines <= 0 {
+		t.Fatalf("expected one populated sample, got %+v", payload.Samples)
+	}
+	var raw struct {
+		Samples []map[string]jsontext.Value `json:"samples"`
+	}
+	if err := json.Unmarshal(body, &raw); err != nil {
+		t.Fatalf("decode samples: %v", err)
+	}
+	assertKeysOf(t, raw.Samples[0], "at", "gc_cycles", "goroutines", "live_heap_bytes")
+}
+
+func TestHandleAPIRuntimeHistoryIsAnEmptyListBeforeSampling(t *testing.T) {
+	svc, srv := newDiagnosticsService(t)
+	srv.App.Get("/history", svc.HandleAPIRuntimeHistory)
+
+	body := get(t, srv, "/history", fiber.StatusOK)
+
+	if !strings.Contains(string(body), `"samples":[]`) {
+		t.Fatalf("expected an empty samples list, got %s", body)
+	}
+}
+
+func TestHandleRuntimeChartsFragmentAndPageEmbedding(t *testing.T) {
+	svc, srv := newDiagnosticsService(t)
+	if err := srv.StartRuntimeSampler(t.Context(), time.Hour, 5); err != nil {
+		t.Fatalf("start sampler: %v", err)
+	}
+	for len(srv.RuntimeHistory()) == 0 {
+		time.Sleep(time.Millisecond)
+	}
+	srv.App.Get("/admin/runtime", svc.HandleRuntimePage)
+	srv.App.Get("/admin/runtime/charts", svc.HandleRuntimeCharts)
+
+	fragment := string(get(t, srv, "/admin/runtime/charts", fiber.StatusOK))
+	page := string(get(t, srv, "/admin/runtime", fiber.StatusOK))
+
+	if !strings.Contains(fragment, `data-chart="sparkline"`) || strings.Contains(fragment, "<html") {
+		t.Fatalf("expected only the sparklines fragment, got %s", fragment)
+	}
+	if !strings.Contains(page, `id="admin_runtime_charts"`) || !strings.Contains(page, "charts.js") || !strings.Contains(page, `id="chart-tooltip"`) {
+		t.Fatalf("expected the runtime page to embed the charts, the tooltip template and charts.js")
+	}
+}

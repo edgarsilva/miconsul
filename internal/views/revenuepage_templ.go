@@ -98,7 +98,7 @@ func RevenueIndexPage(c *Ctx, report models.RevenueReport) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = revenueChartTooltip().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = CmpChartTooltip().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -756,7 +756,7 @@ func revenueClinics(c *Ctx, report models.RevenueReport) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var44 = []any{"w-full md:w-1/2", revenueChartWrapperClasses}
+				var templ_7745c5c3_Var44 = []any{"w-full md:w-1/2", chartWrapperClasses}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_ElementWriter, templ_7745c5c3_Var44...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -777,7 +777,7 @@ func revenueClinics(c *Ctx, report models.RevenueReport) templ.Component {
 				var templ_7745c5c3_Var46 string
 				templ_7745c5c3_Var46, templ_7745c5c3_Err = templruntime.NewAttributeExpression(revenueClinicsChartData(c, report)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 120, Col: 136}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 120, Col: 129}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var46)
 				if templ_7745c5c3_Err != nil {
@@ -852,7 +852,7 @@ func revenueMonths(c *Ctx, report models.RevenueReport) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var49 = []any{"w-full", revenueChartWrapperClasses}
+			var templ_7745c5c3_Var49 = []any{"w-full", chartWrapperClasses}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_ElementWriter, templ_7745c5c3_Var49...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -873,7 +873,7 @@ func revenueMonths(c *Ctx, report models.RevenueReport) templ.Component {
 			var templ_7745c5c3_Var51 string
 			templ_7745c5c3_Var51, templ_7745c5c3_Err = templruntime.NewAttributeExpression(revenueMonthsChartData(c, report)).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 129, Col: 126}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/revenuepage.templ`, Line: 129, Col: 119}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var51)
 			if templ_7745c5c3_Err != nil {
@@ -1031,38 +1031,6 @@ func revenueMonths(c *Ctx, report models.RevenueReport) templ.Component {
 			}
 		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, "</tbody></table></div></div>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		return nil
-	})
-}
-
-// revenueChartWrapperClasses style the ApexCharts tooltip box with the theme:
-// the one card around the chart-tooltip content.
-const revenueChartWrapperClasses = "[&_.apexcharts-tooltip]:bg-base-100! [&_.apexcharts-tooltip]:border-base-content/10! [&_.apexcharts-tooltip]:shadow-2xl! [&_.apexcharts-tooltip]:rounded-box! [&_.apexcharts-svg]:outline-none"
-
-// revenueChartTooltip is the tooltip both charts clone: public/js/charts.js
-// fills the dot class, label and value. It sits outside the charts, whose
-// contents ApexCharts redraws.
-func revenueChartTooltip() templ.Component {
-	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
-			return templ_7745c5c3_CtxErr
-		}
-		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-		if !templ_7745c5c3_IsBuffer {
-			defer func() {
-				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err == nil {
-					templ_7745c5c3_Err = templ_7745c5c3_BufErr
-				}
-			}()
-		}
-		ctx = templ.InitializeContext(ctx)
-		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 83, "<template id=\"chart-tooltip\"><div class=\"text-base-content p-3 text-xs\"><div class=\"flex items-center gap-2\"><span class=\"size-2 rounded-selector\" data-tooltip-dot></span> <span class=\"text-base-content/70\"><span data-tooltip-label></span>: <b class=\"text-base-content ml-1\" data-tooltip-value></b></span></div></div></template>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

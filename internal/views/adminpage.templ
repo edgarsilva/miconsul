@@ -1,6 +1,7 @@
 package views
 
 import (
+	"encoding/json/v2"
 	"fmt"
 	"time"
 
@@ -525,27 +526,27 @@ templ AdminIndexPage(c *Ctx, stats models.RuntimeStats, userCount int64, jobsEna
 				<p class="text-sm text-base-content/60">Everything an administrator can inspect and manage.</p>
 			</hgroup>
 			<div class="grid gap-4 sm:grid-cols-2">
-				@adminIndexCard("/admin/users", "Users", "Accounts, roles and profile pictures.") {
+				@adminIndexCard("/admin/users", "Users", "Accounts, roles and profile pictures.", true) {
 					@CmpUserIcon("size-6")
 					<span class="badge badge-soft">{ adminUserCount(userCount) }</span>
 				}
-				@adminIndexCard("/admin/components", "Components", "An example of every UI component.") {
+				@adminIndexCard("/admin/components", "Components", "An example of every UI component.", true) {
 					@CmpStarIcon("size-6")
 					<span class="badge badge-soft">Style reference</span>
 				}
 				if jobsEnabled {
-					@adminIndexCard("/admin/jobs", "Jobs", "Background job queues and their runs.") {
+					@adminIndexCard("/admin/jobs", "Jobs", "Background job queues and their runs.", true) {
 						@CmpCalendarIcon("size-6")
 						<span class="badge badge-soft">Queue monitor</span>
 					}
 				}
-				@adminIndexCard("/admin/runtime", "Runtime", "Uptime, goroutines and memory of the app process.") {
+				@adminIndexCard("/admin/runtime", "Runtime", "Uptime, goroutines and memory of the app process.", false) {
 					@CmpInfoIcon("size-6")
 					<span class="badge badge-soft">
 						{ fmt.Sprintf("Up %s · %d goroutines", adminDuration(stats.Uptime), stats.Goroutines) }
 					</span>
 				}
-				@adminIndexCard("/admin/health", "Health", "Probes and dependency checks.") {
+				@adminIndexCard("/admin/health", "Health", "Probes and dependency checks.", true) {
 					@CmpShieldCheckIcon("size-6")
 					<span hx-get="/admin/health/status" hx-trigger="load" hx-swap="innerHTML">
 						<span class="loading loading-dots loading-xs"></span>
@@ -571,10 +572,13 @@ templ AdminHealthStatus(report models.HealthReport) {
 	}
 }
 
-templ adminIndexCard(href, title, description string) {
+templ adminIndexCard(href, title, description string, boosted bool) {
 	<a
 		href={ templ.URL(href) }
 		class="card card-border bg-base-100 transition hover:border-primary hover:shadow-md"
+		if !boosted {
+			hx-boost="false"
+		}
 	>
 		<div class="card-body gap-3">
 			<div class="flex items-center justify-between text-base-content/70">
@@ -607,15 +611,16 @@ func adminDuration(d time.Duration) string {
 	}
 }
 
-// AdminRuntimePage renders the process runtime stats of the app. The stats
-// fragment polls itself every few seconds.
-templ AdminRuntimePage(c *Ctx, stats models.RuntimeStats, version, environment string) {
-	@BackBtnLayout(c, "/admin") {
+// AdminRuntimePage renders the process runtime stats and the sparklines of the
+// runtime history. The stats and charts fragments poll themselves.
+templ AdminRuntimePage(c *Ctx, stats models.RuntimeStats, history []models.RuntimeSample, version, environment string) {
+	@ChartsLayout(c) {
 		<section class="grow flex flex-col gap-8 px-4 py-8 lg:w-2/3 lg:max-w-5xl lg:mx-auto">
+			@CmpBackBtn("Admin", "/admin")
 			<hgroup class="flex flex-wrap items-end justify-between gap-2">
 				<div>
 					<h1 class="text-2xl font-bold">Runtime</h1>
-					<p class="text-sm text-base-content/60">The app process, refreshed every 5 seconds.</p>
+					<p class="text-sm text-base-content/60">The app process. Stats refresh every 5 seconds, charts every 15.</p>
 				</div>
 				<div class="flex gap-2">
 					<span class="badge badge-soft">{ version }</span>
@@ -623,7 +628,10 @@ templ AdminRuntimePage(c *Ctx, stats models.RuntimeStats, version, environment s
 				</div>
 			</hgroup>
 			@AdminRuntimeStats(stats)
+			@AdminRuntimeCharts(history)
 		</section>
+		@CmpChartTooltip()
+		<script defer src={ "/public/js/charts.js?v=" + assetVersion }></script>
 	}
 }
 
@@ -680,6 +688,39 @@ templ AdminRuntimeStats(stats models.RuntimeStats) {
 				</p>
 			</div>
 		</div>
+	</div>
+}
+
+// AdminRuntimeCharts renders the live heap and goroutine sparklines of the
+// runtime history. It replaces itself with a fresh copy every 15 seconds; the
+// charts are drawn by public/js/charts.js.
+templ AdminRuntimeCharts(history []models.RuntimeSample) {
+	<div
+		id="admin_runtime_charts"
+		class={ "grid gap-4 md:grid-cols-2", chartWrapperClasses }
+		hx-get="/admin/runtime/charts"
+		hx-trigger="every 15s"
+		hx-swap="outerHTML"
+	>
+		if len(history) == 0 {
+			<p class="text-sm text-base-content/60 md:col-span-2">No samples recorded yet.</p>
+		} else {
+			@adminSparklineCard("Live heap", adminBytes(history[len(history)-1].LiveHeapBytes), adminHeapChange(history), adminHeapChartJSON(history))
+			@adminSparklineCard("Goroutines", fmt.Sprintf("%d", history[len(history)-1].Goroutines), adminGoroutineChange(history), adminGoroutineChartJSON(history))
+		}
+	</div>
+}
+
+templ adminSparklineCard(title, latest, change, chartJSON string) {
+	<div class="rounded-box border border-base-content/10 bg-base-200/80 p-5">
+		<div class="flex items-center justify-between px-3">
+			<div class="flex flex-col gap-1">
+				<span class="text-xs md:text-sm text-base-content/60">{ title }</span>
+				<span class="text-lg md:text-2xl font-medium">{ latest }</span>
+			</div>
+			<span class="badge badge-soft">{ change }</span>
+		</div>
+		<div class="w-full" data-chart="sparkline" data-chart-data={ chartJSON }></div>
 	</div>
 }
 
@@ -816,4 +857,57 @@ func adminBytes(b uint64) string {
 	}
 
 	return fmt.Sprintf("%.1f %ciB", float64(b)/float64(div), "KMGTPE"[exp])
+}
+
+type adminSparklineData struct {
+	Name   string    `json:"name"`
+	Suffix string    `json:"suffix"`
+	Times  []int64   `json:"times"`
+	Values []float64 `json:"values"`
+}
+
+func adminHeapChartJSON(history []models.RuntimeSample) string {
+	data := adminSparklineData{Name: "Live heap", Suffix: " MiB"}
+	for _, sample := range history {
+		data.Times = append(data.Times, sample.At.Unix())
+		data.Values = append(data.Values, float64(sample.LiveHeapBytes)/(1<<20))
+	}
+
+	return adminSparklineJSON(data)
+}
+
+func adminGoroutineChartJSON(history []models.RuntimeSample) string {
+	data := adminSparklineData{Name: "Goroutines"}
+	for _, sample := range history {
+		data.Times = append(data.Times, sample.At.Unix())
+		data.Values = append(data.Values, float64(sample.Goroutines))
+	}
+
+	return adminSparklineJSON(data)
+}
+
+func adminSparklineJSON(data adminSparklineData) string {
+	b, err := json.Marshal(data)
+	if err != nil {
+		return "{}"
+	}
+
+	return string(b)
+}
+
+// adminHeapChange is the live heap's change over the history, e.g. a heap that
+// went from 7.0 MiB to 7.4 MiB -> +0.4 MiB.
+func adminHeapChange(history []models.RuntimeSample) string {
+	first, last := history[0].LiveHeapBytes, history[len(history)-1].LiveHeapBytes
+	if last >= first {
+		return "+" + adminBytes(last-first)
+	}
+
+	return "-" + adminBytes(first-last)
+}
+
+// adminGoroutineChange is the goroutine count's change over the history, e.g.
+// 37 to 40 -> +3.
+func adminGoroutineChange(history []models.RuntimeSample) string {
+	return fmt.Sprintf("%+d", history[len(history)-1].Goroutines-history[0].Goroutines)
 }

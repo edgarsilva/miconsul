@@ -12,6 +12,8 @@ import (
 	"miconsul/internal/jobs"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/localize"
+	"miconsul/internal/lib/ringbuf"
+	"miconsul/internal/models"
 
 	"github.com/gofiber/contrib/v3/otel"
 	"github.com/gofiber/fiber/v3"
@@ -42,22 +44,24 @@ type Cache interface {
 }
 
 type Server struct {
-	Env               *appenv.Env
-	DB                *database.Database
-	wp                *ants.Pool
-	jobs              *jobs.Runtime
-	Cache             Cache
-	SessionStore      *session.Store
-	Localizer         *localize.Localizer
-	TracerProvider    trace.TracerProvider
-	Tracer            trace.Tracer
-	MeterProvider     metric.MeterProvider
-	LoggerProvider    otellog.LoggerProvider
-	Logger            otellog.Logger
-	StartedAt         time.Time
-	ReadyAt           time.Time
-	BootstrapDuration time.Duration
-	healthChecks      []healthCheck
+	Env                   *appenv.Env
+	DB                    *database.Database
+	wp                    *ants.Pool
+	jobs                  *jobs.Runtime
+	Cache                 Cache
+	SessionStore          *session.Store
+	Localizer             *localize.Localizer
+	TracerProvider        trace.TracerProvider
+	Tracer                trace.Tracer
+	MeterProvider         metric.MeterProvider
+	LoggerProvider        otellog.LoggerProvider
+	Logger                otellog.Logger
+	StartedAt             time.Time
+	ReadyAt               time.Time
+	BootstrapDuration     time.Duration
+	healthChecks          []healthCheck
+	runtimeHistory        *ringbuf.Buffer[models.RuntimeSample]
+	runtimeSampleInterval time.Duration
 	*fiber.App
 }
 

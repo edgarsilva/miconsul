@@ -172,6 +172,11 @@ func bootstrapServer(ctx context.Context) (bootstrapResult, error) {
 	}
 	result.server = s
 
+	if err := s.StartRuntimeSampler(ctx, env.RuntimeSampleInterval, env.RuntimeSampleSize); err != nil {
+		log.Printf("failed to start runtime sampler: %v", err)
+		return result, err
+	}
+
 	fmt.Println(" Registering routes...")
 	if err := setupRoutes(s); err != nil {
 		log.Printf("failed to register routes: %v", err)

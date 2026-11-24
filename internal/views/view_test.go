@@ -930,7 +930,7 @@ func TestAdminPagesLinkBackToAdminIndex(t *testing.T) {
 		pages := map[string]templ.Component{
 			"components": AdminComponentsPage(c),
 			"users":      UserIndexPage(c, []models.User{admin}),
-			"runtime":    AdminRuntimePage(c, models.RuntimeStats{}, "1.0.0", "test"),
+			"runtime":    AdminRuntimePage(c, models.RuntimeStats{}, nil, "1.0.0", "test"),
 			"health":     AdminHealthPage(c, models.HealthReport{}),
 		}
 		for name, page := range pages {
@@ -957,6 +957,89 @@ func TestUserFormBackPath(t *testing.T) {
 		}
 		if got := userFormBackPath(c, admin); got != "/dashboard" {
 			t.Fatalf("user editing their own form: back path = %q, want /dashboard", got)
+		}
+	})
+}
+
+func TestAdminRuntimeChartsRenderSparklines(t *testing.T) {
+	at := time.Date(2026, 11, 24, 18, 0, 0, 0, time.UTC)
+	history := []models.RuntimeSample{
+		{At: at, LiveHeapBytes: 7 << 20, Goroutines: 37},
+		{At: at.Add(5 * time.Second), LiveHeapBytes: 8 << 20, Goroutines: 40},
+	}
+
+	var buf strings.Builder
+	if err := AdminRuntimeCharts(history).Render(context.Background(), &buf); err != nil {
+		t.Fatalf("render charts: %v", err)
+	}
+	html := buf.String()
+
+	for _, want := range []string{`hx-get="/admin/runtime/charts"`, `data-chart="sparkline"`, "Live heap", "Goroutines", "+1.0 MiB", "+3", "8.0 MiB"} {
+		if !strings.Contains(html, want) {
+			t.Fatalf("expected the charts fragment to contain %q, got %s", want, html)
+		}
+	}
+	if got := strings.Count(html, `data-chart="sparkline"`); got != 2 {
+		t.Fatalf("expected 2 sparklines, got %d", got)
+	}
+}
+
+func TestAdminRuntimeChartsEmptyHistory(t *testing.T) {
+	var buf strings.Builder
+	if err := AdminRuntimeCharts(nil).Render(context.Background(), &buf); err != nil {
+		t.Fatalf("render charts: %v", err)
+	}
+
+	if !strings.Contains(buf.String(), "No samples recorded yet.") || strings.Contains(buf.String(), "data-chart") {
+		t.Fatalf("expected the empty state and no charts, got %s", buf.String())
+	}
+}
+
+func TestAdminSparklineJSON(t *testing.T) {
+	at := time.Date(2026, 11, 24, 18, 0, 0, 0, time.UTC)
+	history := []models.RuntimeSample{{At: at, LiveHeapBytes: 2 << 20, Goroutines: 9}}
+
+	if got, want := adminHeapChartJSON(history), fmt.Sprintf(`{"name":"Live heap","suffix":" MiB","times":[%d],"values":[2]}`, at.Unix()); got != want {
+		t.Fatalf("adminHeapChartJSON = %s, want %s", got, want)
+	}
+	if got, want := adminGoroutineChartJSON(history), fmt.Sprintf(`{"name":"Goroutines","suffix":"","times":[%d],"values":[9]}`, at.Unix()); got != want {
+		t.Fatalf("adminGoroutineChartJSON = %s, want %s", got, want)
+	}
+}
+
+func TestAdminHeapChange(t *testing.T) {
+	grew := []models.RuntimeSample{{LiveHeapBytes: 7 << 20}, {LiveHeapBytes: 8 << 20}}
+	shrank := []models.RuntimeSample{{LiveHeapBytes: 8 << 20}, {LiveHeapBytes: 6 << 20}}
+
+	if got := adminHeapChange(grew); got != "+1.0 MiB" {
+		t.Fatalf("adminHeapChange(grew) = %q, want +1.0 MiB", got)
+	}
+	if got := adminHeapChange(shrank); got != "-2.0 MiB" {
+		t.Fatalf("adminHeapChange(shrank) = %q, want -2.0 MiB", got)
+	}
+}
+
+func TestAdminIndexRuntimeCardIsNotBoosted(t *testing.T) {
+	admin := models.User{UID: "usr_a", Role: models.UserRoleAdmin}
+
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		c := NewCtx(fc, WithLocale("en-US"), WithCurrentUser(admin))
+
+		var buf strings.Builder
+		if err := AdminIndexPage(c, models.RuntimeStats{}, 1, false).Render(context.Background(), &buf); err != nil {
+			t.Fatalf("render index: %v", err)
+		}
+		html := buf.String()
+
+		runtimeCard := html[strings.Index(html, `href="/admin/runtime"`):]
+		runtimeCard = runtimeCard[:strings.Index(runtimeCard, ">")]
+		if !strings.Contains(runtimeCard, `hx-boost="false"`) {
+			t.Fatalf("expected the runtime card to opt out of boosting, got %s", runtimeCard)
+		}
+		usersCard := html[strings.Index(html, `href="/admin/users"`):]
+		usersCard = usersCard[:strings.Index(usersCard, ">")]
+		if strings.Contains(usersCard, "hx-boost") {
+			t.Fatalf("expected the users card to stay boosted, got %s", usersCard)
 		}
 	})
 }

@@ -100,7 +100,7 @@ func TestAdminRoutesRequireAdmin(t *testing.T) {
 		t.Fatalf("register admin routes: %v", err)
 	}
 
-	for _, path := range []string{"/admin", "/admin/runtime", "/admin/runtime/stats", "/admin/health", "/admin/health/checks", "/admin/health/status", "/api/admin/runtime", "/api/admin/health", "/debug/runtime", "/debug/health"} {
+	for _, path := range []string{"/admin", "/admin/runtime", "/admin/runtime/stats", "/admin/runtime/charts", "/admin/health", "/admin/health/checks", "/admin/health/status", "/api/admin/runtime", "/api/admin/runtime/history", "/api/admin/health", "/debug/runtime", "/debug/health"} {
 		req := httptest.NewRequest(http.MethodGet, path, nil)
 		req.Header.Set("Accept", "application/json")
 		resp, err := s.App.Test(req)

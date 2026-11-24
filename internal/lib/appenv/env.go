@@ -35,6 +35,9 @@ type Env struct {
 	DBConnMaxLifetime time.Duration `env:"DB_CONN_MAX_LIFETIME;optional;min=1s"`
 	DBConnMaxIdleTime time.Duration `env:"DB_CONN_MAX_IDLE_TIME;optional;min=1s"`
 
+	RuntimeSampleInterval time.Duration `env:"RUNTIME_SAMPLE_INTERVAL;optional;min=1s"`
+	RuntimeSampleSize     int           `env:"RUNTIME_SAMPLE_SIZE;optional;min=1;max=100000"`
+
 	EmailSender              string `env:"EMAIL_SENDER"`
 	EmailSecret              string `env:"EMAIL_SECRET"`
 	EmailFromAddress         string `env:"EMAIL_FROM_ADDRESS"`
@@ -93,6 +96,9 @@ func New() (*Env, error) {
 		ValkeyHost:         "127.0.0.1",
 		ValkeyPort:         6379,
 		ValkeyDB:           0,
+
+		RuntimeSampleInterval: 5 * time.Second,
+		RuntimeSampleSize:     720,
 	}
 	err := simpleenv.Load(env)
 	if err != nil {

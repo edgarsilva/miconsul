@@ -17,6 +17,8 @@ Minimum runtime vars for production deploy:
 
 Optional database pool limits (defaults in parentheses): `DB_MAX_OPEN_CONNS` (10), `DB_MAX_IDLE_CONNS` (5), `DB_CONN_MAX_LIFETIME` (30m), `DB_CONN_MAX_IDLE_TIME` (5m).
 
+Optional runtime history for `/admin/runtime` (defaults in parentheses): `RUNTIME_SAMPLE_INTERVAL` (5s) and `RUNTIME_SAMPLE_SIZE` (720 samples, one hour at the default interval). History is kept in memory per process and resets on every deploy.
+
 Optional one-time admin bootstrap vars:
 
 - `ADMIN_USER`

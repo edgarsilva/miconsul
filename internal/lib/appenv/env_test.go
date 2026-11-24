@@ -117,6 +117,51 @@ func TestNewAppliesDatabasePoolDefaults(t *testing.T) {
 	}
 }
 
+func TestNewAppliesRuntimeSampleDefaults(t *testing.T) {
+	setRequiredEnv(t)
+
+	env, err := New()
+	if err != nil {
+		t.Fatalf("new env: %v", err)
+	}
+
+	if env.RuntimeSampleInterval != 5*time.Second || env.RuntimeSampleSize != 720 {
+		t.Fatalf("expected runtime sample defaults 5s/720, got %v/%d", env.RuntimeSampleInterval, env.RuntimeSampleSize)
+	}
+}
+
+func TestNewParsesRuntimeSampleOverrides(t *testing.T) {
+	setRequiredEnv(t)
+	t.Setenv("RUNTIME_SAMPLE_INTERVAL", "10s")
+	t.Setenv("RUNTIME_SAMPLE_SIZE", "8640")
+
+	env, err := New()
+	if err != nil {
+		t.Fatalf("new env: %v", err)
+	}
+
+	if env.RuntimeSampleInterval != 10*time.Second || env.RuntimeSampleSize != 8640 {
+		t.Fatalf("expected runtime sample overrides 10s/8640, got %v/%d", env.RuntimeSampleInterval, env.RuntimeSampleSize)
+	}
+}
+
+func TestNewRejectsRuntimeSampleOutOfRange(t *testing.T) {
+	for name, set := range map[string]func(*testing.T){
+		"interval below 1s": func(t *testing.T) { t.Setenv("RUNTIME_SAMPLE_INTERVAL", "100ms") },
+		"size below 1":      func(t *testing.T) { t.Setenv("RUNTIME_SAMPLE_SIZE", "0") },
+		"size above max":    func(t *testing.T) { t.Setenv("RUNTIME_SAMPLE_SIZE", "100001") },
+	} {
+		t.Run(name, func(t *testing.T) {
+			setRequiredEnv(t)
+			set(t)
+
+			if _, err := New(); err == nil {
+				t.Fatal("expected New to reject the value")
+			}
+		})
+	}
+}
+
 func TestNewParsesDatabasePoolOverrides(t *testing.T) {
 	setRequiredEnv(t)
 	t.Setenv("DB_MAX_OPEN_CONNS", "20")
@@ -329,6 +374,8 @@ func setRequiredEnv(t *testing.T) {
 		"DB_MAX_IDLE_CONNS",
 		"DB_CONN_MAX_LIFETIME",
 		"DB_CONN_MAX_IDLE_TIME",
+		"RUNTIME_SAMPLE_INTERVAL",
+		"RUNTIME_SAMPLE_SIZE",
 		"LOGTO_RESOURCE",
 		"LOGTO_URL",
 		"LOGTO_APP_ID",
