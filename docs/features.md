@@ -1,0 +1,76 @@
+# Features
+
+What a person can do in Miconsul, how they reach it, and what proves it works. Agents use this map with the `verify-miconsul` skill (`.agents/skills/verify-miconsul/SKILL.md`): start the app with `scripts/stack.sh up`, sign in as the seed admin, and follow a row. Tests named under "Proof" exist today; the observable result is what to check in the running app.
+
+Seed data from `scripts/stack.sh up`: the admin `admin@seed.local` / `Admin123!`, one clinic "Seed Family Clinic", patients "Alma Rivera", "Bruno Chavez" and "Carla Medina", and three confirmed appointments 48 hours, 72 hours and 7 days from the start. Nothing is booked for today, so "My day" is empty; "My week" and "My month" show the appointments that fall inside them. Email, SMS and WhatsApp are off, so a link that arrives by email (sign-up confirmation, password reset, patient links) is read from the database instead.
+
+## Accounts
+
+| Feature | How the user reaches it | Proof |
+|---|---|---|
+| Sign in | "Sign in" on the landing page or in the navbar; fill the email and password, press "Sign in" | Lands on the dashboard and the navbar now says "Sign out". Tests: `TestAuthHandlers`, `TestAuthHandlersSigninAndAPI` |
+| Sign out | "Sign out" in the navbar | Back on the sign-in page; the old session no longer opens `/dashboard`. Tests: `TestAuthHandlersLogoutAndSessionEndpoints` |
+| Sign up and confirm email | "Sign up" on the landing page or "Create an account" on the sign-in page; the confirmation link is `/signup/confirm/<token>` | A user row exists with a `confirm_email_token`; opening the link redirects to the sign-in page with "Email confirmed, you should be able to signin now", and the user can sign in. Tests: `TestAuthHandlersSignupPaths`, `TestAuthHandlersSignupConfirmEmailPaths` |
+| Reset password | "Forgot password?" on the sign-in page, "Reset my password"; the link is `/resetpassword/change/<token>`, then "Change password" | The reset token appears on the user row; after "Change password" the new password signs in. Tests: `TestAuthHandlersResetPasswordPaths` |
+| Sign in through Logto | With Logto configured, "Sign in" goes to the provider and sign-up and reset go there too | Local sign-up and reset routes hand off to Logto. Tests: `TestLocalAuthDisabledWithLogto` |
+
+## Dashboard
+
+| Feature | How the user reaches it | Proof |
+|---|---|---|
+| Landing page | `/` while signed out: "Sign up" and "Sign in" | Signed in, `/` redirects to the dashboard. Tests: `TestHandleHomePage` |
+| Dashboard | "Dashboard" in the navbar | Cards "Patients", "Appointments" and "Revenue this month" with "View all" links; the appointments list with the tabs "My day", "My week", "My month" and the pills "confirmed", "pending", "done"; "My feed" lists recent activity or "No recent activity". Tests: `TestDashboardHandlers`, `TestHandleAppointmentsSection` |
+
+## Appointments
+
+| Feature | How the user reaches it | Proof |
+|---|---|---|
+| List and filter | "Appointments" in the navbar; the tabs and pills; type in "Search appointments" | The list narrows to the chosen timeframe, status and search; the address bar keeps the filters. Tests: `TestAppointmentHandlersFlows`, `TestIndexSectionFilterLinks` |
+| Create | "Add new" on Appointments: Step 1 select the clinic, Step 2 select the patient, Step 3 "Booked at", "Duration", "Price", then "Save" | The appointment appears in the list. Tests: `TestAppointmentHandlersFlows` |
+| Pick the clinic and patient | "Search clinics" and "Search patients" inside the form; choosing a clinic fills the price | The picker lists matches and keeps the selection. Tests: `TestHandleSearchClinicsKeepsSelection`, `TestHandleSearchPatientsKeepsSelection` |
+| Edit and reschedule | "Change" on a row, edit, "Save" | The list shows the new details; moving the time marks the appointment rescheduled. Tests: `TestAppointmentEditPageSelectsItsClinicAndPatient`, `TestHandleUpdateStampsRescheduledAtOnlyWhenTheTimeMoves` |
+| Run a session | "Open" on a row: "Start session", "Pause session", "Save" the notes, "End session" | Start and pause swap the button; "End session" returns to the list with the appointment "done" and the notes stored. Tests: `TestAppointmentStartEndSessionPostsComplete` |
+
+## Clinics
+
+| Feature | How the user reaches it | Proof |
+|---|---|---|
+| List and search | "Clinics" in the navbar; "Search clinics" | Matching clinics are listed. Tests: `TestClinicHandlers` |
+| Create, edit, delete | "Add new"; "Edit" on a row, change the fields, "Save"; "Delete" and confirm "Are you sure?" | The row appears, changes or disappears; cleared fields stay cleared. Tests: `TestClinicHandlers`, `TestHandleUpdateSavesClearedFields` |
+
+## Patients
+
+| Feature | How the user reaches it | Proof |
+|---|---|---|
+| List and search | "Patients" in the navbar; "Search patients" | Matching patients are listed with their last appointment. Tests: `TestPatientHandlers` |
+| Create, edit, delete | "Add new"; "Edit" on a row, change the fields, "Save"; "Delete" and confirm "Are you sure?"; "Remove" drops the picture | The row appears, changes or disappears. Tests: `TestPatientHandlers`, `TestPatientHTMXResponsesAreFragments` |
+
+## Revenue and profile
+
+| Feature | How the user reaches it | Proof |
+|---|---|---|
+| Revenue | "Revenue" in the navbar; a month row in "Last 12 months" selects that month | "Revenue", "Done appointments" and "Monthly average" for the month, plus "By patient", "By clinic" and the "Last 12 months" chart. Tests: `TestRevenueHandlers`, `TestReport` |
+| Profile | The avatar in the navbar opens "My profile": name, phone, "Language", picture, "Save" | The change persists after a reload and the navbar reflects it. Tests: `TestUserHandlers`, `TestProfileUpdateRefreshesSignedInUser` |
+| Theme | The sun and moon icon in the navbar | The page theme switches and the choice is remembered. Tests: `TestThemeHandlers`, `TestHandleToggle` |
+
+## Patient links and notifications
+
+| Feature | How the user reaches it | Proof |
+|---|---|---|
+| Confirm or cancel from the email | The patient opens `/p/a/<token>/confirm` from the email, no sign-in: "Confirm my appointment", or "Need changes?" then "Cancel my appointment" | "Your appointment has been confirmed." or "Your appointment has been canceled."; the status changes in the database; an expired or unknown link shows "Appointment not found!". Tests: `TestPatientLinksWorkWithoutLogin`, `TestPatientLinkExpiry`, `TestPatientLinkStatusRules` |
+| Reschedule email | When a booked appointment's time moves, the patient gets an email once per reschedule | The email carries the new time and the subject "Your appointment has been rescheduled". Tests: `TestAppointmentRescheduledEmailRenders`, `TestRescheduledEmailStringsAreLocalized`, `TestRescheduledAlertJobNotifiesOncePerReschedule` |
+
+## Admin
+
+Admins see "Admin" in the navbar; everyone else is turned away.
+
+| Feature | How the user reaches it | Proof |
+|---|---|---|
+| Admin index | "Admin" in the navbar | Cards "Users", "Components", "Runtime" and "Health" ("Jobs" only when the jobs UI is enabled); the health card loads "All systems operational". Tests: `TestHandleIndexPageRendersToolCards`, `TestNavbarShowsAdminLinkOnlyToAdmins` |
+| Users | The "Users" card, then "Edit" on a row | The user's changes persist; a regular user gets no access. Tests: `TestUserHandlers`, `TestAdminRoutesRequireAdmin` |
+| Runtime | The "Runtime" card | Tiles for "Uptime", "Goroutines", "GC cycles", "Live heap" and "Heap objects" refresh every 5 seconds; the "Live heap" and "Goroutines" charts draw once a sample exists, and the page keeps exactly two charts across refreshes. Tests: `TestHandleRuntimePages`, `TestHandleRuntimeChartsFragmentAndPageEmbedding`, `TestRuntimeSamplerRecordsSamplesUntilCancelled` |
+| Health | The "Health" card | "All systems operational", the probes "Liveness", "Readiness" and "Startup" as "Passing", and the boot timings. Tests: `TestHandleHealthPages`, `TestHandleAPIHealthDependencies` |
+| Admin JSON | Signed-in admin: `GET /api/admin/runtime`, `/api/admin/runtime/history`, `/api/admin/health`, `/api/users` | JSON with the documented keys; 401 without a session. Tests: `TestHandleAPIRuntimeKeys`, `TestHandleAPIRuntimeHistoryShape`, `TestHandleAPIHealthKeys` |
+| API sign-in | `POST /api/auth/signin` with an email and password as JSON, when Logto is off | `{"ok":true}` and a `session_id` cookie that opens the admin JSON. Tests: `TestAuthHandlersSigninAndAPI` |
+| Components | The "Components" card | Every UI component renders with sample data. Tests: `TestAdminHandlers` |
+| Jobs monitor | The "Jobs" card, only with `JOBS_UI_ENABLED` | The queue monitor opens for an admin; without the setting `/admin/jobs` does not exist. Tests: `TestAdminHandlers` |
