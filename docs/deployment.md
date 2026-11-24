@@ -15,6 +15,8 @@ Minimum runtime vars for production deploy:
 - `OTEL_EXPORTER_OTLP_ENDPOINT` (startup fails without it in production)
 - `OTEL_EXPORTER_OTLP_INSECURE=true` when the collector has no TLS (e.g. LGTM on Coolify); otherwise exports fail the TLS handshake
 
+Optional database pool limits (defaults in parentheses): `DB_MAX_OPEN_CONNS` (10), `DB_MAX_IDLE_CONNS` (5), `DB_CONN_MAX_LIFETIME` (30m), `DB_CONN_MAX_IDLE_TIME` (5m).
+
 Optional one-time admin bootstrap vars:
 
 - `ADMIN_USER`
