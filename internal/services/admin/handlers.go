@@ -34,13 +34,19 @@ func (s *service) HandleRuntimePage(c fiber.Ctx) error {
 	env := s.AppEnv()
 
 	vc := view.NewCtx(c)
-	return view.Render(c, view.AdminRuntimePage(vc, s.RuntimeStats(), env.AppVersion, string(env.Environment)))
+	return view.Render(c, view.AdminRuntimePage(vc, s.RuntimeStats(), s.RuntimeHistory(), env.AppVersion, string(env.Environment)))
 }
 
 // HandleRuntimeStats renders the runtime stats fragment the runtime page polls.
 // GET: /admin/runtime/stats
 func (s *service) HandleRuntimeStats(c fiber.Ctx) error {
 	return view.Render(c, view.AdminRuntimeStats(s.RuntimeStats()))
+}
+
+// HandleRuntimeCharts renders the sparklines fragment the runtime page polls.
+// GET: /admin/runtime/charts
+func (s *service) HandleRuntimeCharts(c fiber.Ctx) error {
+	return view.Render(c, view.AdminRuntimeCharts(s.RuntimeHistory()))
 }
 
 // HandleHealthPage renders the probes and dependency checks page.

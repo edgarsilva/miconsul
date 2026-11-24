@@ -250,6 +250,7 @@ func AdminRoutes(s *server.Server, authSvc auth.Runtime) error {
 	adminPages.Get("", a.HandleIndexPage)
 	adminPages.Get("/runtime", a.HandleRuntimePage)
 	adminPages.Get("/runtime/stats", a.HandleRuntimeStats)
+	adminPages.Get("/runtime/charts", a.HandleRuntimeCharts)
 	adminPages.Get("/health", a.HandleHealthPage)
 	adminPages.Get("/health/checks", a.HandleHealthChecks)
 	adminPages.Get("/health/status", a.HandleHealthStatus)
@@ -257,6 +258,7 @@ func AdminRoutes(s *server.Server, authSvc auth.Runtime) error {
 
 	adminAPI := a.Group("/api/admin", mw.MustBeAdmin(authSvc))
 	adminAPI.Get("/runtime", a.HandleAPIRuntime)
+	adminAPI.Get("/runtime/history", a.HandleAPIRuntimeHistory)
 	adminAPI.Get("/health", a.HandleAPIHealth)
 
 	if s.AppEnv().JobsUIEnabled {

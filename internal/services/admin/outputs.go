@@ -30,6 +30,35 @@ func newRuntimeOutput(r models.RuntimeStats) runtimeOutput {
 	}
 }
 
+type runtimeHistoryOutput struct {
+	IntervalSeconds int                   `json:"interval_seconds"`
+	Samples         []runtimeSampleOutput `json:"samples"`
+}
+
+type runtimeSampleOutput struct {
+	At            string `json:"at"`
+	LiveHeapBytes uint64 `json:"live_heap_bytes"`
+	Goroutines    int    `json:"goroutines"`
+	GCCycles      uint32 `json:"gc_cycles"`
+}
+
+func newRuntimeHistoryOutput(interval time.Duration, samples []models.RuntimeSample) runtimeHistoryOutput {
+	out := runtimeHistoryOutput{
+		IntervalSeconds: int(interval.Seconds()),
+		Samples:         make([]runtimeSampleOutput, 0, len(samples)),
+	}
+	for _, sample := range samples {
+		out.Samples = append(out.Samples, runtimeSampleOutput{
+			At:            timeStringOrEmpty(sample.At),
+			LiveHeapBytes: sample.LiveHeapBytes,
+			Goroutines:    sample.Goroutines,
+			GCCycles:      sample.GCCycles,
+		})
+	}
+
+	return out
+}
+
 type healthOutput struct {
 	Status              string             `json:"status"`
 	StartedAt           string             `json:"started_at"`
