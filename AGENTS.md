@@ -106,6 +106,7 @@ Name data-access methods `<GormVerb><Model>[By<Field>]`, verb first. Exported or
 
 - Before merge, put verification evidence in the PR: browser check, runtime check, test output, screenshot or video. Match it to the change.
 - Keep a feature map in `docs/features.md`, from the user's view: feature -> how the user reaches it -> what proves it works. Agents reuse it when they verify.
+- Verify in the running app with the `verify-miconsul` skill (`.agents/skills/verify-miconsul/SKILL.md`, linked from `.claude/skills/`) and `scripts/stack.sh`; it points at `docs/features.md` for what to drive.
 - Use CLI tools and helper scripts as support when they make verification faster or cheaper. Create a small one when it will be reused. They do not replace browser or runtime checks.
 
 ## Icons
