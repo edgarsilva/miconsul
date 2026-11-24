@@ -55,8 +55,13 @@ func RegisterServices(s *server.Server) error {
 }
 
 func DebugRoutes(s *server.Server, authSvc auth.Runtime) error {
-	s.Get("/debug/runtime", mw.MustBeAdmin(authSvc), s.HandleDebugRuntime)
-	s.Get("/debug/health", mw.MustBeAdmin(authSvc), s.HandleDebugHealthDetails)
+	a, err := admin.NewService(s)
+	if err != nil {
+		return err
+	}
+
+	a.Get("/debug/runtime", mw.MustBeAdmin(authSvc), a.HandleAPIRuntime)
+	a.Get("/debug/health", mw.MustBeAdmin(authSvc), a.HandleAPIHealth)
 
 	return nil
 }
