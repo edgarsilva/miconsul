@@ -34,7 +34,6 @@ func RegisterServices(s *server.Server) error {
 	}
 
 	bootstraps := []routeBootstrap{
-		{name: "debug", fn: DebugRoutes},
 		{name: "user", fn: UserRoutes},
 		{name: "admin", fn: AdminRoutes},
 		{name: "dashboard", fn: DashboardRoutes},
@@ -50,13 +49,6 @@ func RegisterServices(s *server.Server) error {
 			return fmt.Errorf("bootstrap %s routes: %w", rb.name, err)
 		}
 	}
-
-	return nil
-}
-
-func DebugRoutes(s *server.Server, authSvc auth.Runtime) error {
-	s.Get("/debug/runtime", mw.MustBeAdmin(authSvc), s.HandleDebugRuntime)
-	s.Get("/debug/health", mw.MustBeAdmin(authSvc), s.HandleDebugHealthDetails)
 
 	return nil
 }
@@ -254,7 +246,18 @@ func AdminRoutes(s *server.Server, authSvc auth.Runtime) error {
 		return err
 	}
 
-	a.Get("/admin/components", mw.MustBeAdmin(authSvc), a.HandleComponentsPage)
+	adminPages := a.Group("/admin", mw.MustBeAdmin(authSvc))
+	adminPages.Get("", a.HandleIndexPage)
+	adminPages.Get("/runtime", a.HandleRuntimePage)
+	adminPages.Get("/runtime/stats", a.HandleRuntimeStats)
+	adminPages.Get("/health", a.HandleHealthPage)
+	adminPages.Get("/health/checks", a.HandleHealthChecks)
+	adminPages.Get("/health/status", a.HandleHealthStatus)
+	adminPages.Get("/components", a.HandleComponentsPage)
+
+	adminAPI := a.Group("/api/admin", mw.MustBeAdmin(authSvc))
+	adminAPI.Get("/runtime", a.HandleAPIRuntime)
+	adminAPI.Get("/health", a.HandleAPIHealth)
 
 	if s.AppEnv().JobsUIEnabled {
 		jobsHandler := jobs.NewMonitorHandler("/admin/jobs", s.AppEnv())

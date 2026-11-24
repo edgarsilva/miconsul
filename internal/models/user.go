@@ -53,6 +53,11 @@ func (u User) IsLoggedIn() bool {
 	return u.UID != ""
 }
 
+// IsAdmin reports whether the user has the admin role.
+func (u User) IsAdmin() bool {
+	return u.Role == UserRoleAdmin
+}
+
 func (u User) Initials() string {
 	if u.Name == "" {
 		return "PA"

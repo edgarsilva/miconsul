@@ -70,11 +70,13 @@ What these scenarios validate:
 - DB down path: readiness fails when the DB handle is closed
 - slow/blocked DB path: readiness fails while DB is lock-blocked beyond probe timeout
 
-## Debug Health Details Contract
+## Admin Health Details Contract
 
 Internal diagnostics endpoint:
 
-- `GET /debug/health` (admin-only)
+- `GET /api/admin/health` (admin-only)
+
+The same data renders as pages for admins in the browser: `/admin/health` (probes, dependency checks and boot timings, refreshed every 10 seconds) and `/admin/runtime` (uptime, goroutines and memory, refreshed every 5 seconds), both linked from `/admin`. The runtime JSON is `GET /api/admin/runtime`.
 
 Contract guarantees:
 
@@ -108,10 +110,10 @@ Quick triage:
 ```bash
 curl -sS -o /dev/null -w "livez:%{http_code}\n" http://localhost:3000/livez
 curl -sS -o /dev/null -w "readyz:%{http_code}\n" http://localhost:3000/readyz
-# /debug/health is admin-only. Sign-in is Logto only in production, so there is no
+# /api/admin/health is admin-only. Sign-in is Logto only in production, so there is no
 # API token: sign in as an admin in a browser and copy the session_id cookie from
 # devtools (it is HttpOnly, so scripts can't read it).
-curl -sS http://localhost:3000/debug/health -H "Cookie: session_id=<ADMIN_SESSION_ID>" | jq
+curl -sS http://localhost:3000/api/admin/health -H "Cookie: session_id=<ADMIN_SESSION_ID>" | jq
 ```
 
 What to check next:
@@ -123,7 +125,7 @@ What to check next:
 Recovery actions:
 
 - if DB is unavailable or locked, restore DB availability first; app restart alone may not fix root cause
-- if DB recovered but readiness still fails, restart app and re-check `/readyz` and `/debug/health`
+- if DB recovered but readiness still fails, restart app and re-check `/readyz` and `/api/admin/health`
 - escalate when `/readyz` remains failing for 3+ checks or latency remains elevated after dependency recovery
 
 ## Telemetry Configuration

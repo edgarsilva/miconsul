@@ -80,6 +80,9 @@ templ navbarDesktop(c *Ctx) {
 		<a href="/clinics" class={ "btn btn-ghost text-sm", navbarActiveLink(c, "/clinics") }>{ c.l("nav.clinics") }</a>
 		<a href="/patients" class={ "btn btn-ghost text-sm", navbarActiveLink(c, "/patients") }>{ c.l("nav.patients") }</a>
 		<a href="/revenue" hx-boost="false" class={ "btn btn-ghost text-sm", navbarActiveLink(c, "/revenue") }>{ c.l("nav.revenue") }</a>
+		if c.CurrentUser.IsAdmin() {
+			<a href="/admin" class={ "btn btn-ghost text-sm", navbarActiveLink(c, "/admin") }>{ c.l("nav.admin") }</a>
+		}
 		<div class="divider divider-horizontal"></div>
 	</div>
 }
@@ -114,6 +117,9 @@ templ navbarMobile(c *Ctx) {
 			<li><a href="/clinics" class="btn btn-ghost justify-start">{ c.l("nav.clinics") }</a></li>
 			<li><a href="/patients" class="btn btn-ghost justify-start">{ c.l("nav.patients") }</a></li>
 			<li><a href="/revenue" hx-boost="false" class="btn btn-ghost justify-start">{ c.l("nav.revenue") }</a></li>
+			if c.CurrentUser.IsAdmin() {
+				<li><a href="/admin" class="btn btn-ghost justify-start">{ c.l("nav.admin") }</a></li>
+			}
 			if c.CurrentUser.IsLoggedIn() {
 				<li>
 					<a href="/logout" class="btn btn-ghost justify-start">

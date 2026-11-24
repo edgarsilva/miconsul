@@ -841,3 +841,122 @@ func TestPatientListShowsTheLastDoneAppointment(t *testing.T) {
 		}
 	})
 }
+
+func TestAdminDuration(t *testing.T) {
+	tests := []struct {
+		d    time.Duration
+		want string
+	}{
+		{42 * time.Second, "42s"},
+		{5*time.Minute + 30*time.Second, "5m"},
+		{3*time.Hour + 20*time.Minute, "3h 20m"},
+		{50*time.Hour + 10*time.Minute, "2d 2h"},
+	}
+	for _, tt := range tests {
+		if got := adminDuration(tt.d); got != tt.want {
+			t.Fatalf("adminDuration(%v) = %q, want %q", tt.d, got, tt.want)
+		}
+	}
+}
+
+func TestAdminUserCount(t *testing.T) {
+	for n, want := range map[int64]string{0: "0 users", 1: "1 user", 12: "12 users"} {
+		if got := adminUserCount(n); got != want {
+			t.Fatalf("adminUserCount(%d) = %q, want %q", n, got, want)
+		}
+	}
+}
+
+func TestAdminBytes(t *testing.T) {
+	tests := map[uint64]string{
+		512:                    "512 B",
+		2048:                   "2.0 KiB",
+		5 * 1024 * 1024:        "5.0 MiB",
+		3 * 1024 * 1024 * 1024: "3.0 GiB",
+	}
+	for b, want := range tests {
+		if got := adminBytes(b); got != want {
+			t.Fatalf("adminBytes(%d) = %q, want %q", b, got, want)
+		}
+	}
+}
+
+func TestAdminFailingChecks(t *testing.T) {
+	report := models.HealthReport{
+		Livez:        true,
+		Dependencies: []models.HealthDependency{{Name: "logto"}},
+	}
+
+	if got := adminFailingChecks(report); got != "Degraded: 3 checks are failing" {
+		t.Fatalf("adminFailingChecks = %q", got)
+	}
+}
+
+func TestNavbarShowsAdminLinkOnlyToAdmins(t *testing.T) {
+	tests := []struct {
+		name string
+		user models.User
+		want bool
+	}{
+		{"admin", models.User{UID: "usr_a", Role: models.UserRoleAdmin}, true},
+		{"regular user", models.User{UID: "usr_u", Role: models.UserRoleUser}, false},
+		{"logged out", models.User{}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+				c := NewCtx(fc, WithLocale("en-US"), WithCurrentUser(tt.user))
+
+				for name, component := range map[string]templ.Component{"desktop": navbarDesktop(c), "mobile": navbarMobile(c)} {
+					var buf strings.Builder
+					if err := component.Render(context.Background(), &buf); err != nil {
+						t.Fatalf("render %s navbar: %v", name, err)
+					}
+					if got := strings.Contains(buf.String(), `href="/admin"`); got != tt.want {
+						t.Fatalf("%s navbar admin link = %v, want %v", name, got, tt.want)
+					}
+				}
+			})
+		})
+	}
+}
+
+func TestAdminPagesLinkBackToAdminIndex(t *testing.T) {
+	admin := models.User{UID: "usr_a", Role: models.UserRoleAdmin}
+
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		c := NewCtx(fc, WithLocale("en-US"), WithCurrentUser(admin))
+
+		pages := map[string]templ.Component{
+			"components": AdminComponentsPage(c),
+			"users":      UserIndexPage(c, []models.User{admin}),
+			"runtime":    AdminRuntimePage(c, models.RuntimeStats{}, "1.0.0", "test"),
+			"health":     AdminHealthPage(c, models.HealthReport{}),
+		}
+		for name, page := range pages {
+			var buf strings.Builder
+			if err := page.Render(context.Background(), &buf); err != nil {
+				t.Fatalf("render %s page: %v", name, err)
+			}
+			if !strings.Contains(buf.String(), `class="btn btn-secondary btn-sm"`) || !strings.Contains(buf.String(), `href="/admin"`) {
+				t.Fatalf("expected the %s page to have a back button to /admin", name)
+			}
+		}
+	})
+}
+
+func TestUserFormBackPath(t *testing.T) {
+	admin := models.User{UID: "usr_a", Role: models.UserRoleAdmin}
+	other := models.User{UID: "usr_b", Role: models.UserRoleUser}
+
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		c := NewCtx(fc, WithLocale("en-US"), WithCurrentUser(admin))
+
+		if got := userFormBackPath(c, other); got != "/admin/users" {
+			t.Fatalf("admin editing another user: back path = %q, want /admin/users", got)
+		}
+		if got := userFormBackPath(c, admin); got != "/dashboard" {
+			t.Fatalf("user editing their own form: back path = %q, want /dashboard", got)
+		}
+	})
+}

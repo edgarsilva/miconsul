@@ -2,6 +2,7 @@ package admin
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"io/fs"
 	"os"
@@ -9,7 +10,10 @@ import (
 	"runtime"
 	"strings"
 
+	"miconsul/internal/models"
 	"miconsul/internal/server"
+
+	"gorm.io/gorm"
 )
 
 type service struct {
@@ -45,6 +49,11 @@ func NewServiceWithModelNameProvider(s *server.Server, provider modelNameProvide
 		Server:            s,
 		modelNameProvider: provider,
 	}, nil
+}
+
+// countUsers returns the number of users.
+func (s *service) countUsers(ctx context.Context) (int64, error) {
+	return gorm.G[models.User](s.DB.GormDB()).Count(ctx, "*")
 }
 
 func (provider fileModelNameProvider) ListModelNames() ([]string, error) {
