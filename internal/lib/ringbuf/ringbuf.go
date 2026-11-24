@@ -37,17 +37,16 @@ func (b *Buffer[T]) Snapshot() []T {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
 
-	out := make([]T, b.count())
+	out := make([]T, 0, b.count())
 
 	if !b.full {
-		copy(out, b.values[:b.next])
-		return out
+		return append(out, b.values[:b.next]...)
 	}
 
 	older := b.values[b.next:]
 	newer := b.values[:b.next]
-	copy(out, older)
-	copy(out[len(older):], newer)
+	out = append(out, older...)
+	out = append(out, newer...)
 
 	return out
 }
