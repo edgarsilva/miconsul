@@ -92,7 +92,7 @@ func AuthRoutes(s *server.Server) (auth.Runtime, error) {
 	if !a.LogtoEnabled() {
 		g.Post("/signin", a.HandleAPISignin)
 	}
-	g.Get("/protected", mw.MustAuthenticate(a), a.HandleShowUser)
+	g.Get("/protected", mw.MustAuthenticate(a), a.HandleAPIShowUser)
 	g.Post("/validate", mw.MustAuthenticate(a), a.HandleValidate)
 
 	return a, nil

@@ -418,7 +418,7 @@ func TestAuthHandlersLogoutAndSessionEndpoints(t *testing.T) {
 		}
 	})
 
-	t.Run("HandleShowUser returns only public user fields", func(t *testing.T) {
+	t.Run("HandleAPIShowUser returns only public user fields", func(t *testing.T) {
 		svc := newAuthServiceForTests(t)
 		app := fiber.New()
 		app.Get("/api/auth/protected", func(c fiber.Ctx) error {
@@ -432,7 +432,7 @@ func TestAuthHandlersLogoutAndSessionEndpoints(t *testing.T) {
 				ConfirmEmailToken:     "confirm-token-secret",
 				ConfirmEmailExpiresAt: time.Now().UTC().Add(time.Hour),
 			})
-			return svc.HandleShowUser(c)
+			return svc.HandleAPIShowUser(c)
 		})
 
 		resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/api/auth/protected", nil))

@@ -23,6 +23,7 @@ This file provides repo-specific guidance for coding assistants working on this 
 - Prefer `c.Context()` when passing request context to non-Fiber libraries (DB, tracing, etc.).
 - In service/handler files, keep primary exported handlers/entrypoints near the top and move private helpers/utilities to the bottom.
 - Avoid code fragmentation: keep module logic cohesive in `handlers.go` (transport) and `service.go` (business orchestration); split only when a concern is clearly standalone and reused.
+- JSON handlers (`HandleAPI*`) live in `api_handlers.go`, next to `outputs.go`; page and fragment handlers stay in `handlers.go`.
 - Request and response data (inputs and outputs):
   - Never bind requests into, or serialize responses from, `models.*` structs directly.
   - Bind request data into unexported `xxxInput` types in the service's `inputs.go`. Map them to models with methods like `toClinic(...)`, and set IDs and ownership (`ID`, `UID`, `UserID`) on the server.
@@ -105,6 +106,7 @@ Name data-access methods `<GormVerb><Model>[By<Field>]`, verb first. Exported or
 
 - Before merge, put verification evidence in the PR: browser check, runtime check, test output, screenshot or video. Match it to the change.
 - Keep a feature map in `docs/features.md`, from the user's view: feature -> how the user reaches it -> what proves it works. Agents reuse it when they verify.
+- Verify in the running app with the `verify-miconsul` skill (`.agents/skills/verify-miconsul/SKILL.md`, linked from `.claude/skills/`) and `scripts/stack.sh`; it points at `docs/features.md` for what to drive.
 - Use CLI tools and helper scripts as support when they make verification faster or cheaper. Create a small one when it will be reused. They do not replace browser or runtime checks.
 
 ## Icons

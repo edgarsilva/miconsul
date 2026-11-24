@@ -91,42 +91,6 @@ func (s *service) HandleSignin(c fiber.Ctx) error {
 	return s.Redirect(c, "/?timeframe=day")
 }
 
-// HandleAPISignin authenticates a user and starts a session (session_id cookie)
-// for API clients.
-// POST: /api/auth/signin
-func (s *service) HandleAPISignin(c fiber.Ctx) error {
-	ctx, span := s.Trace(c.Context(), "auth/handlers:HandleAPISignin")
-	defer span.End()
-
-	input := signinInput{}
-	if err := c.Bind().Body(&input); err != nil {
-		return apiError(c, fiber.StatusBadRequest, "invalid request body")
-	}
-
-	if input.Email == "" || input.Password == "" {
-		return apiError(c, fiber.StatusBadRequest, "email and password can't be blank")
-	}
-
-	user, err := s.authenticateCredentials(ctx, input.Email, input.Password)
-	if errors.Is(err, errAuthInvalidCredentials) {
-		return apiError(c, fiber.StatusUnauthorized, "invalid credentials")
-	}
-	if errors.Is(err, errAuthPendingConfirmation) {
-		return apiError(c, fiber.StatusForbidden, "email pending confirmation")
-	}
-	if err != nil {
-		return apiError(c, fiber.StatusInternalServerError, "authentication failed")
-	}
-
-	if err := NewLocalStrategy(s).SignIn(c, user, input.RememberMe); err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, "create session failed")
-		return apiError(c, fiber.StatusInternalServerError, "failed to create session")
-	}
-
-	return apiOK(c, fiber.Map{"ok": true})
-}
-
 // HandleSignupPage returns the Signup form page html
 //
 // GET: /signup
@@ -231,14 +195,6 @@ func (s *service) HandleSignupConfirmEmail(c fiber.Ctx) error {
 
 	span.SetStatus(codes.Ok, "email confirmed")
 	return s.RedirectWithAlert(c, "/signin", "Email confirmed, you should be able to signin now", view.LevelSuccess)
-}
-
-func apiError(c fiber.Ctx, status int, message string) error {
-	return c.Status(status).JSON(fiber.Map{"error": message})
-}
-
-func apiOK(c fiber.Ctx, payload fiber.Map) error {
-	return c.Status(fiber.StatusOK).JSON(payload)
 }
 
 // HandleLogout destroys session state and redirects to login.
@@ -365,16 +321,6 @@ func (s *service) HandleResetPasswordUpdate(c fiber.Ctx) error {
 // POST: /api/auth/validate
 func (s *service) HandleValidate(c fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusOK)
-}
-
-// HandleShowUser returns the current user's public fields as JSON.
-// GET: /api/auth/protected
-func (s *service) HandleShowUser(c fiber.Ctx) error {
-	_, span := s.Trace(c.Context(), "auth/handlers:HandleShowUser")
-	defer span.End()
-
-	out := newShowUserOutput(s.CurrentUser(c))
-	return c.JSON(out)
 }
 
 func (s *service) providerSigninRedirect(c fiber.Ctx) (redirectURL string, msg string) {

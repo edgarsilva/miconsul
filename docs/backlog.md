@@ -39,13 +39,16 @@
   - [ ] Repo-owned load stack (`make load/up`, `make load/down`): isolated app and temp SQLite files, bulk seed, jobs, outbound messaging and rate limiter off.
   - [ ] `k6` scenario: sign in as the seed admin, then a weighted mix of reads (dashboard, appointments, clinic and patient search, revenue) and writes (create and update an appointment), with pass/fail thresholds.
   - [ ] Memory sampler: poll `/api/admin/runtime` during a run and write live heap, GC cycles and goroutines to a CSV; report peak, end value and whether the live-heap floor rises.
-  - [ ] Fix `scripts/load_test.sh` and `scripts/obs_load.sh`: both sign in through the removed `/api/auth/signin`.
+  - [ ] Fix `scripts/load_test.sh` and `scripts/obs_load.sh`: both look for an `Auth` cookie after `POST /api/auth/signin`, but the app sets `session_id`, and that route exists only when Logto is disabled.
   - [ ] Make targets for the quick `oha` baseline and the full `k6` run, and a short doc with the baselines.
 
-- [refactor/api-handlers] Move `HandleAPI*` handlers to `api_handlers.go` in every service
-  - [ ] Admin already has `api_handlers.go`; move `HandleAPISignin` (auth) and `HandleAPIUsers` (user) the same way, as a pure file move.
-  - [ ] Add the convention to AGENTS.md: `HandleAPI*` handlers live in `api_handlers.go`, page and fragment handlers in `handlers.go`.
-  - Do this last, after the current batch of PRs.
+- [bug/dead-ui] Views that point at routes or strings that do not exist (found while writing `docs/features.md`)
+  - [ ] `/admin/users`: "Search users" calls `GET /users/search` and "Add new" and "New" link to `/users/new`; only the `/admin/users` routes are registered.
+  - [ ] Locale keys that are in no `locales/*/str.yaml`, so the page shows the raw key: `str.clinic` (patient confirm page), `str.create_new_user`, `str.new_user` and `str.updated` (admin users).
+  - [ ] A signed-in visitor on `/signup` is redirected to `/todos`, which is not a route.
+  - [ ] The session page's "Appointments" button links to `/patients/new`.
+  - [ ] Staff cancel (`POST /appointments/:id/cancel`) and delete (`DELETE /appointments/:id`) have routes and no button. `POST /p/a/:token/changedate` has no page or button, and the patient email has only the confirm link.
+  - [ ] `AdminModelsPage` has a handler and no route.
 
 - [feature/notifications] Multi-channel notifications baseline
   - Keep email templates/actions synced with appointment + professional details.
