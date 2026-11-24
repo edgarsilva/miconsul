@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -92,30 +93,27 @@ func TestUserRoutesProtectAdminAndProfileEndpoints(t *testing.T) {
 	}
 }
 
-func TestDebugRoutesProtectEndpoint(t *testing.T) {
-	s := &server.Server{App: fiber.New()}
+func TestAdminAPIRoutesRequireAdmin(t *testing.T) {
+	s := &server.Server{App: fiber.New(), Env: &appenv.Env{}}
 	rt := testAuthRuntime{env: &appenv.Env{JWTSecret: "01234567890123456789012345678901"}}
-	if err := DebugRoutes(s, rt); err != nil {
-		t.Fatalf("register debug routes: %v", err)
+	if err := AdminRoutes(s, rt); err != nil {
+		t.Fatalf("register admin routes: %v", err)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/debug/runtime", nil)
-	req.Header.Set("Accept", "application/json")
-	resp, err := s.App.Test(req)
-	if err != nil {
-		t.Fatalf("request failed: %v", err)
-	}
-	if resp.StatusCode != http.StatusUnauthorized {
-		t.Fatalf("expected 401 for unauthenticated debug route, got %d", resp.StatusCode)
-	}
+	for _, path := range []string{"/api/admin/runtime", "/api/admin/health", "/debug/runtime", "/debug/health"} {
+		req := httptest.NewRequest(http.MethodGet, path, nil)
+		req.Header.Set("Accept", "application/json")
+		resp, err := s.App.Test(req)
+		if err != nil {
+			t.Fatalf("request %s failed: %v", path, err)
+		}
 
-	req = httptest.NewRequest(http.MethodGet, "/debug/health", nil)
-	req.Header.Set("Accept", "application/json")
-	resp, err = s.App.Test(req)
-	if err != nil {
-		t.Fatalf("request failed: %v", err)
-	}
-	if resp.StatusCode != http.StatusUnauthorized {
-		t.Fatalf("expected 401 for unauthenticated debug health route, got %d", resp.StatusCode)
+		want := http.StatusUnauthorized
+		if strings.HasPrefix(path, "/debug/") {
+			want = http.StatusNotFound
+		}
+		if resp.StatusCode != want {
+			t.Fatalf("expected %d for %s, got %d", want, path, resp.StatusCode)
+		}
 	}
 }
