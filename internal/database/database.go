@@ -67,6 +67,10 @@ func New(env *appenv.Env, loggerProvider otellog.LoggerProvider, tracerProvider 
 	if err != nil {
 		return nil, fmt.Errorf("database: open sqlite: %w", err)
 	}
+	if err := configurePool(db, env); err != nil {
+		return nil, err
+	}
+
 	pluginOpts := []otelgorm.Option{otelgorm.WithTracerProvider(tracerProvider)}
 	dbName := filepath.Base(env.DBPath)
 	if dbName != "" && dbName != "." {
@@ -81,6 +85,30 @@ func New(env *appenv.Env, loggerProvider otellog.LoggerProvider, tracerProvider 
 		DB:         db,
 		otelLogger: otelLogger,
 	}, nil
+}
+
+// configurePool applies the connection pool limits from env to the underlying
+// sql.DB. A zero value keeps the database/sql default for that limit.
+func configurePool(db *gorm.DB, env *appenv.Env) error {
+	sqlDB, err := db.DB()
+	if err != nil {
+		return fmt.Errorf("database: get sql db handle: %w", err)
+	}
+
+	if env.DBMaxOpenConns > 0 {
+		sqlDB.SetMaxOpenConns(env.DBMaxOpenConns)
+	}
+	if env.DBMaxIdleConns > 0 {
+		sqlDB.SetMaxIdleConns(env.DBMaxIdleConns)
+	}
+	if env.DBConnMaxLifetime > 0 {
+		sqlDB.SetConnMaxLifetime(env.DBConnMaxLifetime)
+	}
+	if env.DBConnMaxIdleTime > 0 {
+		sqlDB.SetConnMaxIdleTime(env.DBConnMaxIdleTime)
+	}
+
+	return nil
 }
 
 func buildSQLiteDSN(dbPath string, opts SQLiteOptions) string {

@@ -153,6 +153,46 @@ func TestNewTracesQueriesWithInjectedProvider(t *testing.T) {
 	}
 }
 
+func TestNewAppliesPoolLimits(t *testing.T) {
+	env := &appenv.Env{
+		DBPath:         filepath.Join(t.TempDir(), "pool.sqlite"),
+		DBMaxOpenConns: 7,
+		DBMaxIdleConns: 3,
+	}
+
+	db, err := New(env, lognoop.NewLoggerProvider(), tracenoop.NewTracerProvider(), nil)
+	if err != nil {
+		t.Fatalf("new database: %v", err)
+	}
+	defer func() { _ = db.Close() }()
+
+	sqlDB, err := db.SQLDB()
+	if err != nil {
+		t.Fatalf("sql db: %v", err)
+	}
+	if got := sqlDB.Stats().MaxOpenConnections; got != 7 {
+		t.Fatalf("max open connections = %d, want 7", got)
+	}
+}
+
+func TestNewKeepsDriverDefaultsWhenPoolLimitsUnset(t *testing.T) {
+	env := &appenv.Env{DBPath: filepath.Join(t.TempDir(), "pool.sqlite")}
+
+	db, err := New(env, lognoop.NewLoggerProvider(), tracenoop.NewTracerProvider(), nil)
+	if err != nil {
+		t.Fatalf("new database: %v", err)
+	}
+	defer func() { _ = db.Close() }()
+
+	sqlDB, err := db.SQLDB()
+	if err != nil {
+		t.Fatalf("sql db: %v", err)
+	}
+	if got := sqlDB.Stats().MaxOpenConnections; got != 0 {
+		t.Fatalf("max open connections = %d, want 0 (unlimited)", got)
+	}
+}
+
 func TestNewStampsTimestampsInUTC(t *testing.T) {
 	mx, err := time.LoadLocation("America/Mexico_City")
 	if err != nil {
