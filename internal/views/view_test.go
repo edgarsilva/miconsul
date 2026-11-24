@@ -930,6 +930,8 @@ func TestAdminPagesLinkBackToAdminIndex(t *testing.T) {
 		pages := map[string]templ.Component{
 			"components": AdminComponentsPage(c),
 			"users":      UserIndexPage(c, []models.User{admin}),
+			"runtime":    AdminRuntimePage(c, models.RuntimeStats{}, "1.0.0", "test"),
+			"health":     AdminHealthPage(c, models.HealthReport{}),
 		}
 		for name, page := range pages {
 			var buf strings.Builder

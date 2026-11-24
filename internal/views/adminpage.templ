@@ -610,9 +610,8 @@ func adminDuration(d time.Duration) string {
 // AdminRuntimePage renders the process runtime stats of the app. The stats
 // fragment polls itself every few seconds.
 templ AdminRuntimePage(c *Ctx, stats models.RuntimeStats, version, environment string) {
-	@DefaultLayout(c) {
+	@BackBtnLayout(c, "/admin") {
 		<section class="grow flex flex-col gap-8 px-4 py-8 lg:w-2/3 lg:max-w-5xl lg:mx-auto">
-			@CmpBackBtn("Admin", "/admin")
 			<hgroup class="flex flex-wrap items-end justify-between gap-2">
 				<div>
 					<h1 class="text-2xl font-bold">Runtime</h1>
@@ -687,9 +686,8 @@ templ AdminRuntimeStats(stats models.RuntimeStats) {
 // AdminHealthPage renders the probes and dependency checks of the app. The
 // checks fragment polls itself every few seconds.
 templ AdminHealthPage(c *Ctx, report models.HealthReport) {
-	@DefaultLayout(c) {
+	@BackBtnLayout(c, "/admin") {
 		<section class="grow flex flex-col gap-8 px-4 py-8 lg:w-2/3 lg:max-w-5xl lg:mx-auto">
-			@CmpBackBtn("Admin", "/admin")
 			<hgroup class="flex flex-wrap items-end justify-between gap-2">
 				<div>
 					<h1 class="text-2xl font-bold">Health</h1>
