@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"runtime"
 	"testing"
 	"time"
 
@@ -21,6 +22,11 @@ func TestRuntimeStats(t *testing.T) {
 
 	if stats.Uptime < 2*time.Second {
 		t.Fatalf("expected uptime of at least 2s, got %v", stats.Uptime)
+	}
+	runtime.GC()
+	stats = s.RuntimeStats()
+	if stats.LiveHeapBytes == 0 || stats.GCCycles == 0 {
+		t.Fatalf("expected live heap and GC cycles after a collection, got %+v", stats)
 	}
 	if stats.Goroutines <= 0 || stats.AllocBytes == 0 || stats.SysBytes == 0 {
 		t.Fatalf("expected populated runtime stats, got %+v", stats)

@@ -248,6 +248,10 @@ func AdminRoutes(s *server.Server, authSvc auth.Runtime) error {
 
 	adminPages := a.Group("/admin", mw.MustBeAdmin(authSvc))
 	adminPages.Get("", a.HandleIndexPage)
+	adminPages.Get("/runtime", a.HandleRuntimePage)
+	adminPages.Get("/runtime/stats", a.HandleRuntimeStats)
+	adminPages.Get("/health", a.HandleHealthPage)
+	adminPages.Get("/health/checks", a.HandleHealthChecks)
 	adminPages.Get("/health/status", a.HandleHealthStatus)
 	adminPages.Get("/components", a.HandleComponentsPage)
 

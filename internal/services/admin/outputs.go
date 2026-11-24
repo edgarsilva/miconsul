@@ -13,6 +13,8 @@ type runtimeOutput struct {
 	TotalAllocBytes uint64 `json:"total_alloc_bytes"`
 	SysBytes        uint64 `json:"sys_bytes"`
 	HeapObjects     uint64 `json:"heap_objects"`
+	LiveHeapBytes   uint64 `json:"live_heap_bytes"`
+	GCCycles        uint32 `json:"gc_cycles"`
 }
 
 func newRuntimeOutput(r models.RuntimeStats) runtimeOutput {
@@ -23,6 +25,8 @@ func newRuntimeOutput(r models.RuntimeStats) runtimeOutput {
 		TotalAllocBytes: r.TotalAllocBytes,
 		SysBytes:        r.SysBytes,
 		HeapObjects:     r.HeapObjects,
+		LiveHeapBytes:   r.LiveHeapBytes,
+		GCCycles:        r.GCCycles,
 	}
 }
 

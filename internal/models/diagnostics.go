@@ -3,7 +3,10 @@ package models
 import "time"
 
 // RuntimeStats is a snapshot of the running process: how long it has been up,
-// its goroutines and its memory use in bytes.
+// its goroutines and its memory use in bytes. HeapObjects counts garbage the
+// collector has not freed yet, so it rises between collections; LiveHeapBytes
+// is the heap the last collection found in use, and a floor that keeps rising
+// across collections is what a leak looks like.
 type RuntimeStats struct {
 	Uptime          time.Duration
 	Goroutines      int
@@ -11,6 +14,14 @@ type RuntimeStats struct {
 	TotalAllocBytes uint64
 	SysBytes        uint64
 	HeapObjects     uint64
+	LiveHeapBytes   uint64
+	GCCycles        uint32
+}
+
+// HeapInUsePercent returns the heap in use as a whole percent of the memory
+// reserved from the OS, rounded half up, e.g. 25 MiB of 100 MiB -> 25.
+func (r RuntimeStats) HeapInUsePercent() int {
+	return sharePercent(int(r.AllocBytes), int(r.SysBytes))
 }
 
 // HealthReport is the result of the liveness, readiness and startup probes
@@ -50,4 +61,23 @@ func (r HealthReport) OK() bool {
 	}
 
 	return true
+}
+
+// FailingChecks returns how many probes and dependency checks failed,
+// e.g. readiness and one dependency failing -> 2.
+func (r HealthReport) FailingChecks() int {
+	failing := 0
+	for _, ok := range []bool{r.Livez, r.Readyz, r.Startupz} {
+		if !ok {
+			failing++
+		}
+	}
+
+	for _, dep := range r.Dependencies {
+		if !dep.OK {
+			failing++
+		}
+	}
+
+	return failing
 }

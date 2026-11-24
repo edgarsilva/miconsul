@@ -76,6 +76,8 @@ Internal diagnostics endpoint:
 
 - `GET /api/admin/health` (admin-only)
 
+The same data renders as pages for admins in the browser: `/admin/health` (probes, dependency checks and boot timings, refreshed every 10 seconds) and `/admin/runtime` (uptime, goroutines and memory, refreshed every 5 seconds), both linked from `/admin`. The runtime JSON is `GET /api/admin/runtime`.
+
 Contract guarantees:
 
 - always returns the same JSON keys (stable schema)

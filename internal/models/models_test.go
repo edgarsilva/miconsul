@@ -428,3 +428,23 @@ func TestUserIsAdmin(t *testing.T) {
 		t.Fatal("expected a regular user not to be admin")
 	}
 }
+
+func TestRuntimeStatsHeapInUsePercent(t *testing.T) {
+	if got := (RuntimeStats{AllocBytes: 25, SysBytes: 100}).HeapInUsePercent(); got != 25 {
+		t.Fatalf("HeapInUsePercent() = %d, want 25", got)
+	}
+	if got := (RuntimeStats{AllocBytes: 5}).HeapInUsePercent(); got != 0 {
+		t.Fatalf("HeapInUsePercent() with no OS memory = %d, want 0", got)
+	}
+}
+
+func TestHealthReportFailingChecks(t *testing.T) {
+	report := HealthReport{
+		Livez:        true,
+		Dependencies: []HealthDependency{{Name: "logto", OK: true}, {Name: "valkey"}},
+	}
+
+	if got := report.FailingChecks(); got != 3 {
+		t.Fatalf("FailingChecks() = %d, want 3 (readyz, startupz, valkey)", got)
+	}
+}

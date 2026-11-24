@@ -606,3 +606,216 @@ func adminDuration(d time.Duration) string {
 		return fmt.Sprintf("%ds", int(d.Seconds()))
 	}
 }
+
+// AdminRuntimePage renders the process runtime stats of the app. The stats
+// fragment polls itself every few seconds.
+templ AdminRuntimePage(c *Ctx, stats models.RuntimeStats, version, environment string) {
+	@DefaultLayout(c) {
+		<section class="grow flex flex-col gap-8 px-4 py-8 lg:w-2/3 lg:max-w-5xl lg:mx-auto">
+			@CmpBackBtn("Admin", "/admin")
+			<hgroup class="flex flex-wrap items-end justify-between gap-2">
+				<div>
+					<h1 class="text-2xl font-bold">Runtime</h1>
+					<p class="text-sm text-base-content/60">The app process, refreshed every 5 seconds.</p>
+				</div>
+				<div class="flex gap-2">
+					<span class="badge badge-soft">{ version }</span>
+					<span class="badge badge-soft">{ environment }</span>
+				</div>
+			</hgroup>
+			@AdminRuntimeStats(stats)
+		</section>
+	}
+}
+
+// AdminRuntimeStats renders the runtime stat tiles and the heap gauge. It
+// replaces itself with a fresh copy every 5 seconds.
+templ AdminRuntimeStats(stats models.RuntimeStats) {
+	<div
+		id="admin_runtime_stats"
+		class="flex flex-col gap-6"
+		hx-get="/admin/runtime/stats"
+		hx-trigger="every 5s"
+		hx-swap="outerHTML"
+	>
+		<div class="stats stats-vertical sm:stats-horizontal w-full border border-base-300 bg-base-100">
+			<div class="stat">
+				<div class="stat-title">Uptime</div>
+				<div class="stat-value text-primary">{ adminDuration(stats.Uptime) }</div>
+				<div class="stat-desc">since the app started</div>
+			</div>
+			<div class="stat">
+				<div class="stat-title">Goroutines</div>
+				<div class="stat-value">{ fmt.Sprintf("%d", stats.Goroutines) }</div>
+				<div class="stat-desc">running right now</div>
+			</div>
+			<div class="stat">
+				<div class="stat-title">GC cycles</div>
+				<div class="stat-value">{ fmt.Sprintf("%d", stats.GCCycles) }</div>
+				<div class="stat-desc">collections since start</div>
+			</div>
+		</div>
+		<div class="stats stats-vertical sm:stats-horizontal w-full border border-base-300 bg-base-100">
+			<div class="stat">
+				<div class="stat-title">Live heap</div>
+				<div class="stat-value">{ adminBytes(stats.LiveHeapBytes) }</div>
+				<div class="stat-desc">in use after the last collection; a rising floor means a leak</div>
+			</div>
+			<div class="stat">
+				<div class="stat-title">Heap objects</div>
+				<div class="stat-value">{ fmt.Sprintf("%d", stats.HeapObjects) }</div>
+				<div class="stat-desc">includes garbage not collected yet, so it rises and drops</div>
+			</div>
+		</div>
+		<div class="card card-border bg-base-100">
+			<div class="card-body gap-3">
+				<div class="flex items-baseline justify-between">
+					<h2 class="card-title">Memory</h2>
+					<span class="text-sm text-base-content/60">
+						{ adminBytes(stats.AllocBytes) } in use of { adminBytes(stats.SysBytes) } from the OS
+					</span>
+				</div>
+				<progress class="progress progress-primary w-full" value={ fmt.Sprintf("%d", stats.HeapInUsePercent()) } max="100"></progress>
+				<p class="text-sm text-base-content/60">
+					{ adminBytes(stats.TotalAllocBytes) } allocated over the lifetime of the process.
+				</p>
+			</div>
+		</div>
+	</div>
+}
+
+// AdminHealthPage renders the probes and dependency checks of the app. The
+// checks fragment polls itself every few seconds.
+templ AdminHealthPage(c *Ctx, report models.HealthReport) {
+	@DefaultLayout(c) {
+		<section class="grow flex flex-col gap-8 px-4 py-8 lg:w-2/3 lg:max-w-5xl lg:mx-auto">
+			@CmpBackBtn("Admin", "/admin")
+			<hgroup class="flex flex-wrap items-end justify-between gap-2">
+				<div>
+					<h1 class="text-2xl font-bold">Health</h1>
+					<p class="text-sm text-base-content/60">Probes and dependency checks, refreshed every 10 seconds.</p>
+				</div>
+			</hgroup>
+			@AdminHealthChecks(report)
+		</section>
+	}
+}
+
+// AdminHealthChecks renders the health banner, the three probes, the
+// dependency checks and the boot timings. It replaces itself with a fresh copy
+// every 10 seconds and always answers 200, so a degraded app still swaps.
+templ AdminHealthChecks(report models.HealthReport) {
+	<div
+		id="admin_health_checks"
+		class="flex flex-col gap-6"
+		hx-get="/admin/health/checks"
+		hx-trigger="every 10s"
+		hx-swap="outerHTML"
+	>
+		if report.OK() {
+			<div role="alert" class="alert alert-success alert-soft">
+				@CmpCheckCircleIcon("size-6")
+				<span class="font-semibold">All systems operational</span>
+			</div>
+		} else {
+			<div role="alert" class="alert alert-error alert-soft">
+				@CmpWarningIcon("size-6")
+				<span class="font-semibold">{ adminFailingChecks(report) }</span>
+			</div>
+		}
+		<div class="grid gap-4 sm:grid-cols-3">
+			@adminHealthProbe("Liveness", "/livez", "The process is up.", report.Livez)
+			@adminHealthProbe("Readiness", "/readyz", "The database answers a round trip.", report.Readyz)
+			@adminHealthProbe("Startup", "/startupz", "Boot finished and the app is ready.", report.Startupz)
+		</div>
+		<div class="card card-border bg-base-100">
+			<div class="card-body gap-3">
+				<h2 class="card-title">Dependencies</h2>
+				if len(report.Dependencies) == 0 {
+					<p class="text-sm text-base-content/60">No external dependencies are registered.</p>
+				} else {
+					<ul class="list">
+						for _, dep := range report.Dependencies {
+							<li class="list-row items-center">
+								<span class={ "status", templ.KV("status-success", dep.OK), templ.KV("status-error", !dep.OK) }></span>
+								<div class="list-col-grow">
+									<div class="font-semibold">{ dep.Name }</div>
+									if dep.Error != "" {
+										<div class="text-sm text-error">{ dep.Error }</div>
+									}
+								</div>
+								<span class="badge badge-soft">{ fmt.Sprintf("%d ms", dep.Latency.Milliseconds()) }</span>
+							</li>
+						}
+					</ul>
+				}
+			</div>
+		</div>
+		<div class="stats stats-vertical sm:stats-horizontal w-full border border-base-300 bg-base-100">
+			<div class="stat">
+				<div class="stat-title">Started</div>
+				<div class="stat-value text-lg">{ adminTime(report.StartedAt) }</div>
+				<div class="stat-desc">up for { adminDuration(report.Uptime) }</div>
+			</div>
+			<div class="stat">
+				<div class="stat-title">Ready</div>
+				<div class="stat-value text-lg">{ adminTime(report.ReadyAt) }</div>
+				<div class="stat-desc">boot took { fmt.Sprintf("%d ms", report.BootstrapDuration.Milliseconds()) }</div>
+			</div>
+			<div class="stat">
+				<div class="stat-title">Version</div>
+				<div class="stat-value text-lg">{ report.Version }</div>
+				<div class="stat-desc">{ report.Environment }</div>
+			</div>
+		</div>
+	</div>
+}
+
+templ adminHealthProbe(title, path, description string, ok bool) {
+	<div class="card card-border bg-base-100">
+		<div class="card-body gap-2">
+			<div class="flex items-center justify-between">
+				<h3 class="card-title text-base">{ title }</h3>
+				if ok {
+					<span class="badge badge-soft badge-success gap-2"><span class="status status-success"></span>Passing</span>
+				} else {
+					<span class="badge badge-soft badge-error gap-2"><span class="status status-error"></span>Failing</span>
+				}
+			</div>
+			<p class="text-sm text-base-content/60">{ description }</p>
+			<code class="text-xs text-base-content/50">{ path }</code>
+		</div>
+	</div>
+}
+
+func adminFailingChecks(report models.HealthReport) string {
+	failing := report.FailingChecks()
+	if failing == 1 {
+		return "Degraded: 1 check is failing"
+	}
+
+	return fmt.Sprintf("Degraded: %d checks are failing", failing)
+}
+
+func adminTime(t time.Time) string {
+	if t.IsZero() {
+		return "—"
+	}
+
+	return t.UTC().Format("2006-01-02 15:04:05 UTC")
+}
+
+func adminBytes(b uint64) string {
+	const unit = 1024
+	if b < unit {
+		return fmt.Sprintf("%d B", b)
+	}
+
+	div, exp := uint64(unit), 0
+	for n := b / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+
+	return fmt.Sprintf("%.1f %ciB", float64(b)/float64(div), "KMGTPE"[exp])
+}

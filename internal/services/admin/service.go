@@ -51,8 +51,8 @@ func NewServiceWithModelNameProvider(s *server.Server, provider modelNameProvide
 	}, nil
 }
 
-// CountUsers returns the number of users.
-func (s *service) CountUsers(ctx context.Context) (int64, error) {
+// countUsers returns the number of users.
+func (s *service) countUsers(ctx context.Context) (int64, error) {
 	return gorm.G[models.User](s.DB.GormDB()).Count(ctx, "*")
 }
 

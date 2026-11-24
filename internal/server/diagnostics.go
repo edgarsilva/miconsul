@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"runtime"
+	"runtime/metrics"
 	"time"
 
 	"miconsul/internal/models"
@@ -32,6 +33,8 @@ func (s *Server) RuntimeStats() models.RuntimeStats {
 	}
 
 	return models.RuntimeStats{
+		LiveHeapBytes:   liveHeapBytes(),
+		GCCycles:        mem.NumGC,
 		Uptime:          uptime,
 		Goroutines:      runtime.NumGoroutine(),
 		AllocBytes:      mem.Alloc,
@@ -39,6 +42,16 @@ func (s *Server) RuntimeStats() models.RuntimeStats {
 		SysBytes:        mem.Sys,
 		HeapObjects:     mem.HeapObjects,
 	}
+}
+
+func liveHeapBytes() uint64 {
+	sample := []metrics.Sample{{Name: "/gc/heap/live:bytes"}}
+	metrics.Read(sample)
+	if sample[0].Value.Kind() != metrics.KindUint64 {
+		return 0
+	}
+
+	return sample[0].Value.Uint64()
 }
 
 // HealthReport runs the liveness, readiness and startup probes and every

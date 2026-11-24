@@ -29,7 +29,7 @@ func TestHandleAPIRuntimeKeys(t *testing.T) {
 
 	body := get(t, srv, "/runtime", fiber.StatusOK)
 
-	assertKeys(t, body, "alloc_bytes", "goroutines", "heap_objects", "sys_bytes", "total_alloc_bytes", "uptime_seconds")
+	assertKeys(t, body, "alloc_bytes", "gc_cycles", "goroutines", "heap_objects", "live_heap_bytes", "sys_bytes", "total_alloc_bytes", "uptime_seconds")
 }
 
 func TestHandleAPIHealthKeys(t *testing.T) {
@@ -207,5 +207,43 @@ func TestHandleHealthStatusRendersDegradedWith200(t *testing.T) {
 
 	if !strings.Contains(body, "Degraded") {
 		t.Fatalf("expected a degraded badge, got %s", body)
+	}
+}
+
+func TestHandleRuntimePages(t *testing.T) {
+	svc, srv := newDiagnosticsService(t)
+	srv.App.Get("/admin/runtime", svc.HandleRuntimePage)
+	srv.App.Get("/admin/runtime/stats", svc.HandleRuntimeStats)
+
+	page := string(get(t, srv, "/admin/runtime", fiber.StatusOK))
+	fragment := string(get(t, srv, "/admin/runtime/stats", fiber.StatusOK))
+
+	if !strings.Contains(page, `id="admin_runtime_stats"`) || !strings.Contains(page, "1.2.3") {
+		t.Fatalf("expected the runtime page to embed the stats fragment and the version")
+	}
+	if !strings.Contains(fragment, `hx-get="/admin/runtime/stats"`) || strings.Contains(fragment, "<html") {
+		t.Fatalf("expected only the self-polling stats fragment, got %s", fragment)
+	}
+}
+
+func TestHandleHealthPages(t *testing.T) {
+	svc, srv := newDiagnosticsService(t)
+	srv.AddHealthCheck("logto", func(context.Context) error { return errors.New("logto unreachable") })
+	srv.App.Get("/admin/health", svc.HandleHealthPage)
+	srv.App.Get("/admin/health/checks", svc.HandleHealthChecks)
+
+	page := string(get(t, srv, "/admin/health", fiber.StatusOK))
+	fragment := string(get(t, srv, "/admin/health/checks", fiber.StatusOK))
+
+	if !strings.Contains(page, `id="admin_health_checks"`) {
+		t.Fatalf("expected the health page to embed the checks fragment")
+	}
+	for _, want := range []string{`hx-get="/admin/health/checks"`, "Degraded: 1 check is failing", "logto unreachable"} {
+		if !strings.Contains(fragment, want) {
+			t.Fatalf("expected the checks fragment to contain %q", want)
+		}
+	}
+	if strings.Contains(fragment, "<html") {
+		t.Fatalf("expected only the checks fragment")
 	}
 }
