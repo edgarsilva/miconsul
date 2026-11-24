@@ -841,3 +841,28 @@ func TestPatientListShowsTheLastDoneAppointment(t *testing.T) {
 		}
 	})
 }
+
+func TestAdminDuration(t *testing.T) {
+	tests := []struct {
+		d    time.Duration
+		want string
+	}{
+		{42 * time.Second, "42s"},
+		{5*time.Minute + 30*time.Second, "5m"},
+		{3*time.Hour + 20*time.Minute, "3h 20m"},
+		{50*time.Hour + 10*time.Minute, "2d 2h"},
+	}
+	for _, tt := range tests {
+		if got := adminDuration(tt.d); got != tt.want {
+			t.Fatalf("adminDuration(%v) = %q, want %q", tt.d, got, tt.want)
+		}
+	}
+}
+
+func TestAdminUserCount(t *testing.T) {
+	for n, want := range map[int64]string{0: "0 users", 1: "1 user", 12: "12 users"} {
+		if got := adminUserCount(n); got != want {
+			t.Fatalf("adminUserCount(%d) = %q, want %q", n, got, want)
+		}
+	}
+}

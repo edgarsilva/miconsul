@@ -246,7 +246,10 @@ func AdminRoutes(s *server.Server, authSvc auth.Runtime) error {
 		return err
 	}
 
-	a.Get("/admin/components", mw.MustBeAdmin(authSvc), a.HandleComponentsPage)
+	adminPages := a.Group("/admin", mw.MustBeAdmin(authSvc))
+	adminPages.Get("", a.HandleIndexPage)
+	adminPages.Get("/health/status", a.HandleHealthStatus)
+	adminPages.Get("/components", a.HandleComponentsPage)
 
 	adminAPI := a.Group("/api/admin", mw.MustBeAdmin(authSvc))
 	adminAPI.Get("/runtime", a.HandleAPIRuntime)

@@ -15,6 +15,7 @@ import (
 
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
+	"miconsul/internal/models"
 	"miconsul/internal/server"
 
 	"github.com/gofiber/fiber/v3"
@@ -121,6 +122,9 @@ func newDiagnosticsService(t *testing.T) (service, *server.Server) {
 	if err != nil {
 		t.Fatalf("open in-memory sqlite: %v", err)
 	}
+	if err := db.AutoMigrate(&models.User{}); err != nil {
+		t.Fatalf("migrate users: %v", err)
+	}
 	srv := &server.Server{
 		App:               fiber.New(),
 		DB:                &database.Database{DB: db},
@@ -175,5 +179,33 @@ func assertKeysOf(t *testing.T, got map[string]jsontext.Value, want ...string) {
 	slices.Sort(keys)
 	if !slices.Equal(keys, want) {
 		t.Fatalf("expected keys %v, got %v", want, keys)
+	}
+}
+
+func TestHandleIndexPageRendersToolCards(t *testing.T) {
+	svc, srv := newDiagnosticsService(t)
+	srv.App.Get("/admin", svc.HandleIndexPage)
+
+	body := string(get(t, srv, "/admin", fiber.StatusOK))
+
+	for _, want := range []string{`href="/admin/users"`, `href="/admin/components"`, `href="/admin/runtime"`, `href="/admin/health"`, `hx-get="/admin/health/status"`} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("expected the index page to contain %s", want)
+		}
+	}
+	if strings.Contains(body, `href="/admin/jobs"`) {
+		t.Fatalf("expected no jobs card while the jobs UI is disabled")
+	}
+}
+
+func TestHandleHealthStatusRendersDegradedWith200(t *testing.T) {
+	svc, srv := newDiagnosticsService(t)
+	srv.AddHealthCheck("logto", func(context.Context) error { return errors.New("logto unreachable") })
+	srv.App.Get("/admin/health/status", svc.HandleHealthStatus)
+
+	body := string(get(t, srv, "/admin/health/status", fiber.StatusOK))
+
+	if !strings.Contains(body, "Degraded") {
+		t.Fatalf("expected a degraded badge, got %s", body)
 	}
 }

@@ -419,3 +419,12 @@ func TestSearchTermTooShortCountsCharacters(t *testing.T) {
 		}
 	}
 }
+
+func TestUserIsAdmin(t *testing.T) {
+	if !(User{Role: UserRoleAdmin}).IsAdmin() {
+		t.Fatal("expected an admin user to be admin")
+	}
+	if (User{Role: UserRoleUser}).IsAdmin() {
+		t.Fatal("expected a regular user not to be admin")
+	}
+}

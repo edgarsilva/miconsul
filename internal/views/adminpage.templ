@@ -1,6 +1,7 @@
 package views
 
 import (
+	"fmt"
 	"time"
 
 	"miconsul/internal/models"
@@ -512,4 +513,96 @@ func adminComponentsAlertCtx(c *Ctx, level Level) *Ctx {
 	alertCtx := *c
 	alertCtx.Alert = Alert{Msg: "Your changes were saved", Level: level}
 	return &alertCtx
+}
+
+// AdminIndexPage renders the admin landing page: one card per admin tool,
+// with a live status line on the runtime and health cards.
+templ AdminIndexPage(c *Ctx, stats models.RuntimeStats, userCount int64, jobsEnabled bool) {
+	@DefaultLayout(c) {
+		<section class="grow flex flex-col gap-8 px-4 py-8 lg:w-2/3 lg:max-w-5xl lg:mx-auto">
+			<hgroup>
+				<h1 class="text-2xl font-bold">Admin</h1>
+				<p class="text-sm text-base-content/60">Everything an administrator can inspect and manage.</p>
+			</hgroup>
+			<div class="grid gap-4 sm:grid-cols-2">
+				@adminIndexCard("/admin/users", "Users", "Accounts, roles and profile pictures.") {
+					@CmpUserIcon("size-6")
+					<span class="badge badge-soft">{ adminUserCount(userCount) }</span>
+				}
+				@adminIndexCard("/admin/components", "Components", "An example of every UI component.") {
+					@CmpStarIcon("size-6")
+					<span class="badge badge-soft">Style reference</span>
+				}
+				if jobsEnabled {
+					@adminIndexCard("/admin/jobs", "Jobs", "Background job queues and their runs.") {
+						@CmpCalendarIcon("size-6")
+						<span class="badge badge-soft">Queue monitor</span>
+					}
+				}
+				@adminIndexCard("/admin/runtime", "Runtime", "Uptime, goroutines and memory of the app process.") {
+					@CmpInfoIcon("size-6")
+					<span class="badge badge-soft">
+						{ fmt.Sprintf("Up %s · %d goroutines", adminDuration(stats.Uptime), stats.Goroutines) }
+					</span>
+				}
+				@adminIndexCard("/admin/health", "Health", "Probes and dependency checks.") {
+					@CmpShieldCheckIcon("size-6")
+					<span hx-get="/admin/health/status" hx-trigger="load" hx-swap="innerHTML">
+						<span class="loading loading-dots loading-xs"></span>
+					</span>
+				}
+			</div>
+		</section>
+	}
+}
+
+// AdminHealthStatus renders the overall health of the app as a badge.
+templ AdminHealthStatus(report models.HealthReport) {
+	if report.OK() {
+		<span class="badge badge-soft badge-success gap-2">
+			<span class="status status-success"></span>
+			All systems operational
+		</span>
+	} else {
+		<span class="badge badge-soft badge-error gap-2">
+			<span class="status status-error"></span>
+			Degraded
+		</span>
+	}
+}
+
+templ adminIndexCard(href, title, description string) {
+	<a
+		href={ templ.URL(href) }
+		class="card card-border bg-base-100 transition hover:border-primary hover:shadow-md"
+	>
+		<div class="card-body gap-3">
+			<div class="flex items-center justify-between text-base-content/70">
+				{ children... }
+			</div>
+			<h2 class="card-title">{ title }</h2>
+			<p class="text-sm text-base-content/60">{ description }</p>
+		</div>
+	</a>
+}
+
+func adminUserCount(n int64) string {
+	if n == 1 {
+		return "1 user"
+	}
+
+	return fmt.Sprintf("%d users", n)
+}
+
+func adminDuration(d time.Duration) string {
+	switch {
+	case d >= 24*time.Hour:
+		return fmt.Sprintf("%dd %dh", int(d.Hours())/24, int(d.Hours())%24)
+	case d >= time.Hour:
+		return fmt.Sprintf("%dh %dm", int(d.Hours()), int(d.Minutes())%60)
+	case d >= time.Minute:
+		return fmt.Sprintf("%dm", int(d.Minutes()))
+	default:
+		return fmt.Sprintf("%ds", int(d.Seconds()))
+	}
 }

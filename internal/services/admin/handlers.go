@@ -1,11 +1,32 @@
 package admin
 
 import (
+	"fmt"
+
 	view "miconsul/internal/views"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
 )
+
+// HandleIndexPage renders the admin landing page.
+// GET: /admin
+func (s *service) HandleIndexPage(c fiber.Ctx) error {
+	userCount, err := s.CountUsers(c.Context())
+	if err != nil {
+		return fmt.Errorf("count users: %w", err)
+	}
+
+	vc := view.NewCtx(c)
+	return view.Render(c, view.AdminIndexPage(vc, s.RuntimeStats(), userCount, s.AppEnv().JobsUIEnabled))
+}
+
+// HandleHealthStatus renders the overall health badge, always with 200 so
+// htmx swaps it when the app is degraded.
+// GET: /admin/health/status
+func (s *service) HandleHealthStatus(c fiber.Ctx) error {
+	return view.Render(c, view.AdminHealthStatus(s.HealthReport(c)))
+}
 
 // HandleComponentsPage renders an example of every component, as a style
 // reference for admins.

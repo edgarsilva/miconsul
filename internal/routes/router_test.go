@@ -93,14 +93,14 @@ func TestUserRoutesProtectAdminAndProfileEndpoints(t *testing.T) {
 	}
 }
 
-func TestAdminAPIRoutesRequireAdmin(t *testing.T) {
+func TestAdminRoutesRequireAdmin(t *testing.T) {
 	s := &server.Server{App: fiber.New(), Env: &appenv.Env{}}
 	rt := testAuthRuntime{env: &appenv.Env{JWTSecret: "01234567890123456789012345678901"}}
 	if err := AdminRoutes(s, rt); err != nil {
 		t.Fatalf("register admin routes: %v", err)
 	}
 
-	for _, path := range []string{"/api/admin/runtime", "/api/admin/health", "/debug/runtime", "/debug/health"} {
+	for _, path := range []string{"/admin", "/admin/health/status", "/api/admin/runtime", "/api/admin/health", "/debug/runtime", "/debug/health"} {
 		req := httptest.NewRequest(http.MethodGet, path, nil)
 		req.Header.Set("Accept", "application/json")
 		resp, err := s.App.Test(req)
