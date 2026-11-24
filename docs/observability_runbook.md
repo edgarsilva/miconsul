@@ -9,6 +9,21 @@ local LGTM setup (Loki, Grafana, Tempo, Prometheus(Mimir too if needed)).
 - LGTM stack running (`make docker/up`)
 - Grafana available on `http://localhost:3080` (override with `GRAFANA_PORT`)
 
+## Local Dashboard
+
+`make docker/up` provisions the `Miconsul Overview` dashboard into the
+`Miconsul` folder at `http://localhost:3080/d/miconsul-overview`. The
+definition lives in `observability/grafana/dashboards/miconsul-overview.json`
+and is mounted read-only, so edit the JSON and recreate the `lgtm` service
+(`docker compose up -d lgtm`) to apply a change.
+
+Sections: overview stats, HTTP RED by route and status, GORM span rates and
+the connection pool, internal spans, logs (errors, panics, slow queries),
+slow and failing traces, and the OpenTelemetry Collector pipeline.
+
+The `Rate window` variable defaults to `5m`. The app exports metrics every
+60 seconds, so a window under 2 minutes shows no rate.
+
 ## Health Probe Monitoring Profile (Uptime Kuma)
 
 Use HTTP(s) monitors with follow-redirects disabled and response status checks
