@@ -42,6 +42,11 @@
   - [ ] Fix `scripts/load_test.sh` and `scripts/obs_load.sh`: both sign in through the removed `/api/auth/signin`.
   - [ ] Make targets for the quick `oha` baseline and the full `k6` run, and a short doc with the baselines.
 
+- [refactor/api-handlers] Move `HandleAPI*` handlers to `api_handlers.go` in every service
+  - [ ] Admin already has `api_handlers.go`; move `HandleAPISignin` (auth) and `HandleAPIUsers` (user) the same way, as a pure file move.
+  - [ ] Add the convention to AGENTS.md: `HandleAPI*` handlers live in `api_handlers.go`, page and fragment handlers in `handlers.go`.
+  - Do this last, after the current batch of PRs.
+
 - [feature/notifications] Multi-channel notifications baseline
   - Keep email templates/actions synced with appointment + professional details.
   - Add clinic address to patient-facing appointment confirmation details card.
