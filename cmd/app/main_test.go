@@ -449,3 +449,23 @@ func noopTelemetry() telemetryRuntime {
 		tracerProvider: tracenoop.NewTracerProvider(),
 	}
 }
+
+func TestBootstrapServerStartsRuntimeSampler(t *testing.T) {
+	setWorkingDirToRepoRoot(t)
+	setRequiredEnv(t, map[string]string{})
+	skipIfNoFTS5(t)
+
+	result, err := bootstrapServer(t.Context())
+	if err != nil {
+		t.Fatalf("bootstrapServer() unexpected error: %v", err)
+	}
+	t.Cleanup(result.cleanup)
+
+	deadline := time.Now().Add(2 * time.Second)
+	for len(result.server.RuntimeHistory()) == 0 {
+		if time.Now().After(deadline) {
+			t.Fatal("bootstrapServer() expected the runtime sampler to record a sample")
+		}
+		time.Sleep(time.Millisecond)
+	}
+}

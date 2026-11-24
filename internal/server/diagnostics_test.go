@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"runtime"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"miconsul/internal/lib/appenv"
@@ -138,4 +139,59 @@ func reportFor(t *testing.T, s *Server) models.HealthReport {
 	}
 
 	return report
+}
+
+func TestRuntimeSamplerRecordsSamplesUntilCancelled(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		s := &Server{}
+		ctx, cancel := context.WithCancel(t.Context())
+
+		if err := s.StartRuntimeSampler(ctx, time.Second, 3); err != nil {
+			t.Fatalf("start sampler: %v", err)
+		}
+		synctest.Wait()
+		if got := len(s.RuntimeHistory()); got != 1 {
+			t.Fatalf("expected an immediate first sample, got %d", got)
+		}
+
+		time.Sleep(10*time.Second + time.Second/2)
+		synctest.Wait()
+		history := s.RuntimeHistory()
+		if len(history) != 3 {
+			t.Fatalf("expected the history capped at 3 samples, got %d", len(history))
+		}
+		for i := 1; i < len(history); i++ {
+			if !history[i].At.After(history[i-1].At) {
+				t.Fatalf("expected samples oldest first, got %v then %v", history[i-1].At, history[i].At)
+			}
+		}
+
+		cancel()
+		synctest.Wait()
+		before := len(s.RuntimeHistory())
+		time.Sleep(5 * time.Second)
+		synctest.Wait()
+		if got := len(s.RuntimeHistory()); got != before {
+			t.Fatalf("expected the sampler to stop after cancel, history went from %d to %d", before, got)
+		}
+	})
+}
+
+func TestStartRuntimeSamplerRejectsInvalidArguments(t *testing.T) {
+	s := &Server{}
+
+	if err := s.StartRuntimeSampler(t.Context(), 0, 10); err == nil {
+		t.Fatal("expected an error for a zero interval")
+	}
+	if err := s.StartRuntimeSampler(t.Context(), time.Second, 0); err == nil {
+		t.Fatal("expected an error for a zero size")
+	}
+}
+
+func TestRuntimeHistoryIsEmptyBeforeTheSamplerStarts(t *testing.T) {
+	s := &Server{}
+
+	if got := s.RuntimeHistory(); got == nil || len(got) != 0 {
+		t.Fatalf("expected an empty, non-nil history, got %v", got)
+	}
 }

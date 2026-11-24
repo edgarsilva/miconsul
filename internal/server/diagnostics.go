@@ -2,10 +2,12 @@ package server
 
 import (
 	"context"
+	"errors"
 	"runtime"
 	"runtime/metrics"
 	"time"
 
+	"miconsul/internal/lib/ringbuf"
 	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
@@ -52,6 +54,58 @@ func liveHeapBytes() uint64 {
 	}
 
 	return sample[0].Value.Uint64()
+}
+
+// StartRuntimeSampler records a runtime sample now and then every interval,
+// keeping the last size samples, until ctx is cancelled. Call it once at
+// startup, before the server serves requests.
+func (s *Server) StartRuntimeSampler(ctx context.Context, interval time.Duration, size int) error {
+	if interval <= 0 || size < 1 {
+		return errors.New("runtime sampler needs a positive interval and size")
+	}
+
+	history := ringbuf.New[models.RuntimeSample](size)
+	s.runtimeHistory = history
+	s.runtimeSampleInterval = interval
+
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+
+		for {
+			stats := s.RuntimeStats()
+			history.Add(models.RuntimeSample{
+				At:            time.Now(),
+				LiveHeapBytes: stats.LiveHeapBytes,
+				Goroutines:    stats.Goroutines,
+				GCCycles:      stats.GCCycles,
+			})
+
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+			}
+		}
+	}()
+
+	return nil
+}
+
+// RuntimeSampleInterval returns how often the runtime sampler records a sample.
+// It is zero until StartRuntimeSampler has run.
+func (s *Server) RuntimeSampleInterval() time.Duration {
+	return s.runtimeSampleInterval
+}
+
+// RuntimeHistory returns a copy of the recorded runtime samples, oldest first.
+// It is empty until StartRuntimeSampler has run.
+func (s *Server) RuntimeHistory() []models.RuntimeSample {
+	if s.runtimeHistory == nil {
+		return []models.RuntimeSample{}
+	}
+
+	return s.runtimeHistory.Snapshot()
 }
 
 // HealthReport runs the liveness, readiness and startup probes and every

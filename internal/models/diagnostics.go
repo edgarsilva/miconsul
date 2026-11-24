@@ -18,6 +18,15 @@ type RuntimeStats struct {
 	GCCycles        uint32
 }
 
+// RuntimeSample is one point of runtime history: the live heap, the goroutines
+// and the GC cycles at a moment.
+type RuntimeSample struct {
+	At            time.Time
+	LiveHeapBytes uint64
+	Goroutines    int
+	GCCycles      uint32
+}
+
 // HeapInUsePercent returns the heap in use as a whole percent of the memory
 // reserved from the OS, rounded half up, e.g. 25 MiB of 100 MiB -> 25.
 func (r RuntimeStats) HeapInUsePercent() int {
