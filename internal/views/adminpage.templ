@@ -45,7 +45,7 @@ templ AdminComponentsPage(c *Ctx) {
 	{{ now := time.Now() }}
 	{{ patient := models.Patient{Name: "Alma Rivera"} }}
 	{{ withPic := adminComponentsAvatar{pic: "https://i.pravatar.cc/300?img=47", initials: "AR"} }}
-	@DefaultLayout(c) {
+	@BackBtnLayout(c, "/admin") {
 		<section class="grow flex flex-col gap-10 px-4 py-8 lg:w-2/3 lg:max-w-5xl lg:mx-auto">
 			<hgroup>
 				<h1 class="text-2xl font-bold">Components</h1>

@@ -6,7 +6,7 @@ import (
 )
 
 templ UserIndexPage(c *Ctx, users []models.User) {
-	@BackBtnLayout(c, "/") {
+	@BackBtnLayout(c, "/admin") {
 		<section id="users_section" class="grow flex flex-col px-0 sm:px-4 py-0 md:py-16 lg:w-2/3 lg:max-w-4xl lg:mx-auto">
 			<div
 				class="relative"

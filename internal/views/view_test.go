@@ -920,3 +920,41 @@ func TestNavbarShowsAdminLinkOnlyToAdmins(t *testing.T) {
 		})
 	}
 }
+
+func TestAdminPagesLinkBackToAdminIndex(t *testing.T) {
+	admin := models.User{UID: "usr_a", Role: models.UserRoleAdmin}
+
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		c := NewCtx(fc, WithLocale("en-US"), WithCurrentUser(admin))
+
+		pages := map[string]templ.Component{
+			"components": AdminComponentsPage(c),
+			"users":      UserIndexPage(c, []models.User{admin}),
+		}
+		for name, page := range pages {
+			var buf strings.Builder
+			if err := page.Render(context.Background(), &buf); err != nil {
+				t.Fatalf("render %s page: %v", name, err)
+			}
+			if !strings.Contains(buf.String(), `class="btn btn-secondary btn-sm"`) || !strings.Contains(buf.String(), `href="/admin"`) {
+				t.Fatalf("expected the %s page to have a back button to /admin", name)
+			}
+		}
+	})
+}
+
+func TestUserFormBackPath(t *testing.T) {
+	admin := models.User{UID: "usr_a", Role: models.UserRoleAdmin}
+	other := models.User{UID: "usr_b", Role: models.UserRoleUser}
+
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		c := NewCtx(fc, WithLocale("en-US"), WithCurrentUser(admin))
+
+		if got := userFormBackPath(c, other); got != "/admin/users" {
+			t.Fatalf("admin editing another user: back path = %q, want /admin/users", got)
+		}
+		if got := userFormBackPath(c, admin); got != "/dashboard" {
+			t.Fatalf("user editing their own form: back path = %q, want /dashboard", got)
+		}
+	})
+}

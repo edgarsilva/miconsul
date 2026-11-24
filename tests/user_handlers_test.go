@@ -27,8 +27,9 @@ func TestUserHandlers(t *testing.T) {
 		tests := []struct {
 			name, path, token, wantHref string
 		}{
-			{"own profile", "/profile", h.authToken(regular), `href="/"`},
+			{"own profile", "/profile", h.authToken(regular), `href="/dashboard"`},
 			{"admin editing another user", "/admin/users/" + regular.UID, h.authToken(admin), `href="/admin/users"`},
+			{"admin user list", "/admin/users", h.authToken(admin), `href="/admin"`},
 		}
 		for _, tt := range tests {
 			resp, body := h.doRequest(requestOptions{path: tt.path, authToken: tt.token})
