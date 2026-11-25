@@ -269,6 +269,32 @@ obs/load/heavy: ## Run heavier synthetic traffic (~80 RPM total)
 load/test: ## Run authenticated oha load test (30s, 30 concurrency)
 	./scripts/load_test.sh
 
+##@ Load
+LOAD_URL ?= http://localhost:3200
+LOAD_DIR ?= tmp/load
+
+load/up: ## Start the isolated stack with bulk seed data for load runs
+	./scripts/stack.sh up --bulk
+
+load/down: ## Stop the isolated stack and delete its data
+	./scripts/stack.sh down
+
+load/oha: ## Run the oha baseline against the stack (30s, 30 concurrency)
+	BASE_URL=$(LOAD_URL) ./scripts/load_test.sh
+
+load/k6: ## Run the k6 read and write mix against the stack (VUS=20 DURATION=30s)
+	BASE_URL=$(LOAD_URL) k6 run ./scripts/load/scenario.js
+
+load/run: ## Run the k6 mix while sampling memory, then report heap and goroutines
+	@mkdir -p $(LOAD_DIR)
+	@BASE_URL=$(LOAD_URL) ./scripts/load/memory.sh sample $(LOAD_DIR)/memory.csv & sampler=$$!; \
+	trap 'kill $$sampler 2>/dev/null' EXIT; \
+	BASE_URL=$(LOAD_URL) k6 run ./scripts/load/scenario.js; status=$$?; \
+	kill $$sampler 2>/dev/null; wait $$sampler 2>/dev/null; \
+	echo; echo "Memory ($(LOAD_DIR)/memory.csv)"; \
+	./scripts/load/memory.sh report $(LOAD_DIR)/memory.csv; \
+	exit $$status
+
 
 .PHONY: help install install/deps install/tools check/npm fmt vet gofix staticcheck nilaway lint \
 	sec/check sec/vuln sec/gosec \
@@ -283,4 +309,5 @@ load/test: ## Run authenticated oha load test (30s, 30 concurrency)
 	migrations/apply migrate migrations/create migrations/status migrations/rollback migrations/redo \
 	docker/up docker/dev docker/detached docker/down docker/logs docker/app-logs docker/lgtm-logs docker/build docker/image \
 	docker/valkey-logs \
-	obs/load obs/load/light obs/load/medium obs/load/heavy load/test
+	obs/load obs/load/light obs/load/medium obs/load/heavy \
+	load/test load/up load/down load/oha load/k6 load/run
