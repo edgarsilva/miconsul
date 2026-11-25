@@ -45,7 +45,6 @@
   - [ ] Make targets for the quick `oha` baseline and the full `k6` run, run manually on the local machine, and a short doc with the baselines.
 
 - [bug/dead-ui] Views that point at routes or strings that do not exist (found while writing `docs/features.md`)
-  - [ ] `/admin/users`: "Search users" calls `GET /users/search` and "Add new" and "New" link to `/users/new`; only the `/admin/users` routes are registered.
   - [ ] Staff delete (`DELETE /appointments/:id`) has a route and no button. `POST /p/a/:token/changedate` has no page or button, and the patient email has only the confirm link.
 
 - [verify/plans] Verification plans for the features that have none

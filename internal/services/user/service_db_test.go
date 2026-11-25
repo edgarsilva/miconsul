@@ -123,3 +123,39 @@ func newUserServiceForTests(t *testing.T) (service, models.User) {
 
 	return svc, u
 }
+
+func TestFindUsersBySearchTerm(t *testing.T) {
+	svc, _ := newUserServiceForTests(t)
+	ctx := context.Background()
+
+	for _, u := range []models.User{
+		{Email: "alma@example.com", Password: "hash", Name: "Alma Rivera", Role: models.UserRoleUser},
+		{Email: "bruno@clinic.test", Password: "hash", Name: "Bruno 100%", Role: models.UserRoleUser},
+	} {
+		if err := gorm.G[models.User](svc.DB.GormDB()).Create(ctx, &u); err != nil {
+			t.Fatalf("create user: %v", err)
+		}
+	}
+
+	tests := []struct {
+		term string
+		want int
+	}{
+		{"alma", 1},
+		{"CLINIC.test", 1},
+		{"example.com", 2},
+		{"100%", 1},
+		{"%", 1},
+		{"_", 0},
+		{"nobody", 0},
+	}
+	for _, tt := range tests {
+		users, err := svc.FindUsersBySearchTerm(ctx, tt.term, 10)
+		if err != nil {
+			t.Fatalf("search %q: %v", tt.term, err)
+		}
+		if len(users) != tt.want {
+			t.Errorf("search %q: got %d users, want %d", tt.term, len(users), tt.want)
+		}
+	}
+}
