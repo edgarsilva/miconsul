@@ -74,3 +74,21 @@ Admins see "Admin" in the navbar; everyone else is turned away.
 | API sign-in | `POST /api/auth/signin` with an email and password as JSON, when Logto is off | `{"ok":true}` and a `session_id` cookie that opens the admin JSON. Tests: `TestAuthHandlersSigninAndAPI` |
 | Components | The "Components" card | Every UI component renders with sample data. Tests: `TestAdminHandlers` |
 | Jobs monitor | The "Jobs" card, only with `JOBS_UI_ENABLED` | The queue monitor opens for an admin; without the setting `/admin/jobs` does not exist. Tests: `TestAdminHandlers` |
+
+## Where each feature lives
+
+Which source paths belong to which feature, and which plan in `.agents/skills/verify-miconsul/plans/` drives it. Pick rows from `git diff --name-only`; a row with "none yet" has no plan, so drive it from the table above.
+
+| Feature area | Source paths | Plan |
+|---|---|---|
+| Accounts | `internal/services/auth/`, `internal/views/auth*.templ`, `internal/views/landingpage.templ` | sign-in |
+| Dashboard | `internal/services/dashboard/`, `internal/views/dashboardpage.templ` | none yet |
+| Appointments | `internal/services/appointment/`, `internal/views/appointment*.templ` | appointment-session, htmx-routes |
+| Clinics | `internal/services/clinic/`, `internal/views/clinicspage.templ` | htmx-routes |
+| Patients | `internal/services/patient/`, `internal/views/patientspage.templ` | htmx-routes |
+| Revenue | `internal/services/revenue/`, `internal/views/revenuepage.templ` | none yet |
+| Profile | `internal/services/user/`, `internal/views/userspage.templ` | htmx-routes |
+| Theme | `internal/services/theme/`, `internal/views/cmpthemetoggle.templ` | htmx-routes |
+| Patient links and notifications | `internal/services/appointment/`, `internal/mailer/` | none yet |
+| Admin | `internal/services/admin/`, `internal/views/adminpage.templ`, `internal/server/diagnostics.go`, `internal/lib/ringbuf/`, `public/js/charts.js` | admin |
+| Shared: routes, layouts, htmx responses | `internal/routes/router.go`, `internal/server/`, `internal/views/layouts.templ`, `internal/views/cmpnavbar.templ` | htmx-routes, sign-in |

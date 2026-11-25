@@ -50,6 +50,9 @@
   - [ ] Staff cancel (`POST /appointments/:id/cancel`) and delete (`DELETE /appointments/:id`) have routes and no button. `POST /p/a/:token/changedate` has no page or button, and the patient email has only the confirm link.
   - [ ] `AdminModelsPage` has a handler and no route.
 
+- [verify/plans] Verification plans for the features that have none
+  - [ ] Plans, run once on the stack with evidence, for the dashboard, revenue, the patient email links (`/p/a/<token>/...`) and creating an appointment.
+
 - [feature/notifications] Multi-channel notifications baseline
   - Keep email templates/actions synced with appointment + professional details.
   - Add clinic address to patient-facing appointment confirmation details card.
@@ -77,6 +80,10 @@
 
 - [external/runtime] Beta tester release prep
   - Define exit criteria and communication checklist for first beta group.
+
+- [verify/docker] Container check for the verification stack
+  - Add `scripts/stack.sh up --docker`: build the real image and run it on its own port, to verify what only the image shows (files in the image, the cgo build) and features that need Valkey (jobs).
+  - Add it when a deploy problem gets past the native stack, or a jobs feature needs end-to-end verification.
 
 - [feature/feed-audit] Granular change tracking for FeedEvents (icebox)
   - Add `Attribute`, `From`, `To` fields to `FeedEvent` for audit-trail granularity.

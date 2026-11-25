@@ -30,9 +30,28 @@ scripts/stack.sh doctor
 
 Read-only. Checks that the process behind the pid file is our binary, which commit it was built from, that the port is owned by that process, and that `/livez`, `/readyz` and `/signin` answer 200. Run it first whenever a page looks wrong, and before trusting an instance you did not start.
 
+## Plans
+
+`plans/` holds step lists, each step a "Do" and an "Expect" with the request it should make, all run against the real app. Pick the plans whose `Covers:` paths match what changed:
+
+```
+git diff --name-only --relative $(git merge-base HEAD origin/main)
+```
+
+If none match, or for an upgrade, run all of them. Order when running several: `sign-in`, `appointment-session`, `admin`, `htmx-routes` (it deletes the seed clinic, so it goes last).
+
+| Plan | Drives |
+|---|---|
+| `plans/sign-in.plan.md` | sign in and out, sign up and confirm, password reset, API sign-in, the admin boundary for a regular user |
+| `plans/appointment-session.plan.md` | start, pause, save and end a session |
+| `plans/admin.plan.md` | the admin index, runtime, health, components, editing another user, the admin JSON |
+| `plans/htmx-routes.plan.md` | patient search, filter pills, theme toggle, creating and editing records, deletes, boosted navigation |
+
+A step fails when its "Expect" is not on the page, when the page logs a console error or an uncaught page error, or when a request returns 400 or more, unless it is listed under known noise. Use `docs/features.md` for features no plan covers yet.
+
 ## Drive
 
-Browser, with `playwright-cli` (`@playwright/cli`, session flag `-s=<name>`):
+Source the helpers from the evidence folder, then call them: `. <repo>/.agents/skills/verify-miconsul/drive.sh`. Underneath is `playwright-cli` (`@playwright/cli`, session flag `-s=<name>`):
 
 ```
 playwright-cli -s=verify open http://localhost:3200/signin
@@ -91,7 +110,22 @@ playwright-cli -s=verify close
 
 ## Helpers
 
-`scripts/stack.sh` is the only helper. `up [checkout]` builds another checkout or worktree instead of the current one; `logs` follows the app log.
+`scripts/stack.sh`: `up [checkout]` builds another checkout or worktree instead of the current one; `logs` follows the app log.
+
+`.agents/skills/verify-miconsul/drive.sh`: source it from the evidence folder. It puts the mise-installed `playwright-cli` first on PATH when there is one and defines:
+
+| Function | Does |
+|---|---|
+| `pw <args>` | `playwright-cli` in the session `$PW_SESSION` (default `verify`) |
+| `ref <role> <name>` | the ref of the first element with that role and accessible name, e.g. `pw click "$(ref button 'Sign in')"` |
+| `first <role>` | the ref of the first element with that role |
+| `textboxes` | the refs of the page's text boxes, in order |
+| `has <text>` | `true` or `false`: whether the page text contains it |
+| `path` | the current path and query |
+| `signin` | signs in as the seed admin |
+| `db <sql>` | runs a read-only query on the stack's database |
+
+`$BASE` is the base URL.
 
 ## Known noise
 
