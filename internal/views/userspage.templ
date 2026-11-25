@@ -52,7 +52,7 @@ templ UserLi(c *Ctx, user models.User) {
 					</span>
 				</p>
 				<p class="text-xs leading-5 text-base-content/50">
-					{ c.l("str.updated") }
+					{ c.l("str.updated") + " " }
 					@CmpRelativeTime(user.UpdatedAt)
 				</p>
 			</div>
