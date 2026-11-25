@@ -48,7 +48,6 @@
   - [ ] A signed-in visitor on `/signup` is redirected to `/todos`, which is not a route.
   - [ ] The session page's "Appointments" button links to `/patients/new`.
   - [ ] Staff cancel (`POST /appointments/:id/cancel`) and delete (`DELETE /appointments/:id`) have routes and no button. `POST /p/a/:token/changedate` has no page or button, and the patient email has only the confirm link.
-  - [ ] `AdminModelsPage` has a handler and no route.
 
 - [verify/plans] Verification plans for the features that have none
   - [ ] Plans, run once on the stack with evidence, for the dashboard, revenue, the patient email links (`/p/a/<token>/...`) and creating an appointment.
