@@ -289,3 +289,31 @@ CREATE INDEX idx_notifications_status ON notifications(status);
 CREATE INDEX idx_notifications_name ON notifications(name);
 CREATE INDEX idx_notifications_medium ON notifications(medium);
 CREATE UNIQUE INDEX idx_appointments_token ON appointments(token) WHERE token IS NOT NULL AND token != '';
+CREATE TRIGGER trgr_insert_users_on_gfts
+  AFTER INSERT ON users
+BEGIN
+  INSERT INTO global_search_docs (gid, kind, "primary", "secondary", "tertiary")
+  VALUES (
+      NEW.uid,
+      'users',
+      ifnull(NEW.name, ''),
+      NEW.email,
+      ''
+  );
+END;
+CREATE TRIGGER trgr_update_users_on_gfts
+  AFTER UPDATE OF uid, name, email ON users
+BEGIN
+  UPDATE global_search_docs
+  SET
+      gid = NEW.uid,
+      "primary" = ifnull(NEW.name, ''),
+      "secondary" = NEW.email
+  WHERE gid = OLD.uid;
+END;
+CREATE TRIGGER trgr_delete_users_on_gfts
+  AFTER DELETE ON users
+BEGIN
+  DELETE FROM global_search_docs
+  WHERE gid = OLD.uid;
+END;
