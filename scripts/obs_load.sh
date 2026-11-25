@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# shellcheck source=scripts/load/signin.sh
+source "$(dirname "${BASH_SOURCE[0]}")/load/signin.sh"
+
 BASE_URL="${BASE_URL:-http://localhost:3000}"
 CURL_TIMEOUT_SECONDS="${CURL_TIMEOUT_SECONDS:-5}"
 
@@ -38,13 +41,7 @@ fi
 MAIN_INTERVAL_SECONDS="$(rpm_to_interval_seconds "$TOTAL_RPM")"
 
 get_auth_cookie() {
-  curl -sS -X POST "$BASE_URL/api/auth/signin" \
-    -H "Content-Type: application/json" \
-    -d "{\"email\":\"$AUTH_EMAIL\",\"password\":\"$AUTH_PASSWORD\"}" \
-    -D - -o /dev/null \
-    | tr -d '\r' \
-    | awk '/^Set-Cookie: Auth=/{print $2}' \
-    | cut -d';' -f1
+  signin_cookie "$BASE_URL" "$AUTH_EMAIL" "$AUTH_PASSWORD"
 }
 
 random_index() {
