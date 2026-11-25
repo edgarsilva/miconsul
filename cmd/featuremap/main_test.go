@@ -189,3 +189,13 @@ func TestAttachFlowsRejectsUnknownReferences(t *testing.T) {
 		}
 	}
 }
+
+func TestEntryTextDropsAnAreaThatSharesTheScreenName(t *testing.T) {
+	l := screenLink{"Dashboard", "navbar", "Clinics list"}
+	if got := entryText("Dashboard", l); got != "Dashboard: navbar" {
+		t.Fatalf("same name: %q", got)
+	}
+	if got := entryText("Home", l); got != "Home › Dashboard: navbar" {
+		t.Fatalf("different name: %q", got)
+	}
+}

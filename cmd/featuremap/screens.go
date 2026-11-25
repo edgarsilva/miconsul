@@ -86,8 +86,7 @@ func attachFlows(areas []area, screens []screen, links []screenLink) (flowDiagra
 			inArea[fa] = append(inArea[fa], graphLink{From: local[from], To: local[to], Label: l.Does})
 			continue
 		}
-		areas[ta].Entries = append(areas[ta].Entries,
-			fmt.Sprintf("%s › %s: %s", areas[fa].Name, l.From, l.Does))
+		areas[ta].Entries = append(areas[ta].Entries, entryText(areas[fa].Name, l))
 		key := [2]int{fa, ta}
 		if _, seen := overview[key]; !seen {
 			overview[key] = graphLink{From: fa, To: ta, Label: l.Does}
@@ -136,4 +135,11 @@ func findFeature(areas []area, ai int, name string) *feature {
 		}
 	}
 	return nil
+}
+
+func entryText(areaName string, l screenLink) string {
+	if areaName == l.From {
+		return fmt.Sprintf("%s: %s", l.From, l.Does)
+	}
+	return fmt.Sprintf("%s › %s: %s", areaName, l.From, l.Does)
 }
