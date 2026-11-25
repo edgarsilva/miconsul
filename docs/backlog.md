@@ -36,16 +36,17 @@
   - [ ] Review the drift, then decide the shape: a shared leaf package in `internal/lib/` that the three services call, since features must not import each other.
 
 - [infra/load] Load and memory tests
-  - [ ] Repo-owned load stack (`make load/up`, `make load/down`): isolated app and temp SQLite files, bulk seed, jobs, outbound messaging and rate limiter off.
+  - [x] Isolated app with seed data, jobs, outbound messaging and rate limiter off: `scripts/stack.sh up`. It seeds without `-bulk`.
+  - [x] `scripts/load_test.sh` runs an `oha` baseline against the app.
+  - [ ] Fix `scripts/load_test.sh` and `scripts/obs_load.sh`: both look for an `Auth` cookie after `POST /api/auth/signin`, but the app sets `session_id`, and that route exists only when Logto is disabled.
+  - [ ] Bulk seed for the stack (`cmd/seed -bulk`), so the run has realistic volume.
   - [ ] `k6` scenario: sign in as the seed admin, then a weighted mix of reads (dashboard, appointments, clinic and patient search, revenue) and writes (create and update an appointment), with pass/fail thresholds.
   - [ ] Memory sampler: poll `/api/admin/runtime` during a run and write live heap, GC cycles and goroutines to a CSV; report peak, end value and whether the live-heap floor rises.
-  - [ ] Fix `scripts/load_test.sh` and `scripts/obs_load.sh`: both look for an `Auth` cookie after `POST /api/auth/signin`, but the app sets `session_id`, and that route exists only when Logto is disabled.
-  - [ ] Make targets for the quick `oha` baseline and the full `k6` run, and a short doc with the baselines.
+  - [ ] Make targets for the quick `oha` baseline and the full `k6` run, run manually on the local machine, and a short doc with the baselines.
 
 - [bug/dead-ui] Views that point at routes or strings that do not exist (found while writing `docs/features.md`)
   - [ ] `/admin/users`: "Search users" calls `GET /users/search` and "Add new" and "New" link to `/users/new`; only the `/admin/users` routes are registered.
   - [ ] Locale keys that are in no `locales/*/str.yaml`, so the page shows the raw key: `str.clinic` (patient confirm page), `str.create_new_user`, `str.new_user` and `str.updated` (admin users).
-  - [ ] A signed-in visitor on `/signup` is redirected to `/todos`, which is not a route.
   - [ ] Staff delete (`DELETE /appointments/:id`) has a route and no button. `POST /p/a/:token/changedate` has no page or button, and the patient email has only the confirm link.
 
 - [verify/plans] Verification plans for the features that have none
@@ -65,14 +66,12 @@
   - Upload and retrieval path for patient/profile images via RustFS.
   - Migration/fallback strategy for existing disk-backed image files.
 
-- [infra/build] Generate Tailwind CSS at Docker build time
-  - [ ] Add Bun/Node build stage in `Dockerfile` to compile `styles/global.css` → `public/global.css`.
-  - [ ] Stop committing generated `public/global.css`; treat it as a build artifact.
-  - [ ] Keep runtime image free of Bun/Node binaries.
+- [infra/build] Tailwind CSS is generated at Docker build time
+  - [x] The Dockerfile installs Node, runs `npm ci` and `npm run css:build`; `public/global.css` is gitignored and built into the image.
+  - [x] The runtime image has no Node.
 
-- [infra/build] Define templ generation policy for CI/image builds
-  - [ ] Decide and document templ artifact strategy (`*.templ` source vs committed generated `*_templ.go`).
-  - [ ] Enforce one canonical source of truth via CI if generating at build time.
+- [infra/build] templ generated files are committed
+  - [x] `*_templ.go` stays tracked, so anyone can build and run the app without generating templ files. The Docker build runs no `templ generate`.
 
 ## Icebox
 
