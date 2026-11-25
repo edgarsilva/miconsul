@@ -2,6 +2,7 @@ package views
 
 import (
 	"miconsul/internal/models"
+	"net/url"
 	"strconv"
 )
 
@@ -24,7 +25,7 @@ templ AppointmentPatientCard(c *Ctx, patient models.Patient) {
 		>
 			<h1 class="font-bold text-2xl">{ c.l("str.patient") }</h1>
 			<a
-				href="/patients/new"
+				href={ templ.URL("/appointments?patientId=" + url.QueryEscape(patient.UID)) }
 				class="btn btn-primary btn-sm"
 			>
 				@CmpCalendarIcon("w-5 h-5")
