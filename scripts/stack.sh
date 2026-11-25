@@ -7,7 +7,9 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 usage() {
 	cat >&2 <<EOF
-usage: scripts/stack.sh up [checkout]   build, seed and start an isolated app on port $PORT
+usage: scripts/stack.sh up [--bulk] [checkout]
+                                        build, seed and start an isolated app on port $PORT;
+                                        --bulk adds randomized users, clinics, patients and appointments
        scripts/stack.sh doctor          read-only check that the running instance is ours and usable
        scripts/stack.sh logs            follow the app log
        scripts/stack.sh down            stop the instance and delete its databases and logs
@@ -54,7 +56,11 @@ own_pid() {
 }
 
 up() {
-	local checkout
+	local bulk=false checkout
+	if [ "${1:-}" = "--bulk" ]; then
+		bulk=true
+		shift
+	fi
 	checkout="$(realpath "${1:-$ROOT}")"
 	down quiet
 	mkdir -p "$RUN"
@@ -69,7 +75,7 @@ up() {
 	echo "$(git rev-parse --short HEAD) $dirty $checkout" >"$RUN/build.info"
 
 	stack_env
-	go run -tags fts5 ./cmd/seed -bulk=false >"$RUN/seed.log" 2>&1
+	go run -tags fts5 ./cmd/seed -bulk="$bulk" >"$RUN/seed.log" 2>&1
 
 	nohup "$RUN/app" >"$RUN/app.log" 2>&1 &
 	echo $! >"$RUN/app.pid"
@@ -133,7 +139,7 @@ down() {
 }
 
 case "${1:-}" in
-up) up "${2:-}" ;;
+up) shift; up "$@" ;;
 doctor) doctor ;;
 logs) tail -f "$RUN/app.log" ;;
 down) down ;;

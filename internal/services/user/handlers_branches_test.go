@@ -472,3 +472,35 @@ func TestHandleUpdateProfileBlankNameKeepsTheAvatar(t *testing.T) {
 		t.Errorf("avatar = %q, want it untouched after a rejected update", got)
 	}
 }
+
+func TestHandleIndexSearch(t *testing.T) {
+	svc, _ := newUserServiceForTests(t)
+
+	app := fiber.New()
+	app.Get("/admin/users/search", svc.HandleIndexSearch)
+
+	tests := []struct {
+		name, query, wantBody string
+	}{
+		{"match", "?searchTerm=seed", "Seed User"},
+		{"blank shows recent users", "", "Seed User"},
+		{"no match", "?searchTerm=nobody", "No se encontraron usuarios"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/admin/users/search"+tt.query, nil))
+			if err != nil || resp.StatusCode != fiber.StatusOK {
+				t.Fatalf("expected 200, got status=%v err=%v", resp, err)
+			}
+			body, _ := io.ReadAll(resp.Body)
+			if !strings.Contains(string(body), tt.wantBody) {
+				t.Fatalf("body does not contain %q: %s", tt.wantBody, body)
+			}
+		})
+	}
+
+	short, err := app.Test(httptest.NewRequest(http.MethodGet, "/admin/users/search?searchTerm=ab", nil))
+	if err != nil || short.StatusCode != fiber.StatusOK {
+		t.Fatalf("short term expected 200, got status=%v err=%v", short, err)
+	}
+}

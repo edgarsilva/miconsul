@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# shellcheck source=scripts/load/signin.sh
+source "$(dirname "${BASH_SOURCE[0]}")/load/signin.sh"
+
 BASE_URL="${BASE_URL:-http://localhost:3000}"
 TARGET_PATH="${TARGET_PATH:-/appointments/}"
 DURATION="${DURATION:-30s}"
@@ -16,13 +19,7 @@ if ! command -v oha >/dev/null 2>&1; then
 fi
 
 get_auth_cookie() {
-  curl -sS -X POST "$BASE_URL/api/auth/signin" \
-    -H "Content-Type: application/json" \
-    -d "{\"email\":\"$AUTH_EMAIL\",\"password\":\"$AUTH_PASSWORD\"}" \
-    -D - -o /dev/null \
-    | tr -d '\r' \
-    | awk '/^Set-Cookie: Auth=/{print $2}' \
-    | cut -d';' -f1
+  signin_cookie "$BASE_URL" "$AUTH_EMAIL" "$AUTH_PASSWORD"
 }
 
 echo "Starting authenticated load test"
@@ -33,7 +30,7 @@ echo "Concurrency:  $CONCURRENCY"
 
 AUTH_COOKIE="$(get_auth_cookie || true)"
 if [[ -z "$AUTH_COOKIE" ]]; then
-  echo "error: failed to authenticate and retrieve Auth cookie"
+  echo "error: failed to authenticate and retrieve the session cookie"
   exit 1
 fi
 

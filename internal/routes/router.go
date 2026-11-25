@@ -230,6 +230,7 @@ func UserRoutes(s *server.Server, authSvc auth.Runtime) error {
 
 	adminPages := u.Group("/admin/users", mw.MustBeAdmin(authSvc))
 	adminPages.Get("/", u.HandleIndexPage)
+	adminPages.Get("/search", u.HandleIndexSearch)
 	adminPages.Get("/:id", u.HandleEditPage)
 	adminPages.Patch("/:id", u.HandleAdminUpdateUser)
 	adminPages.Patch("/:id/removepic", u.HandleAdminRemoveProfilePic)

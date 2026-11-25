@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"miconsul/internal/models"
 	"miconsul/internal/services/auth"
 	view "miconsul/internal/views"
 
@@ -16,7 +17,10 @@ import (
 	"gorm.io/gorm"
 )
 
-const localeCookieTTL = 365 * 24 * time.Hour
+const (
+	localeCookieTTL  = 365 * 24 * time.Hour
+	recentUsersLimit = 10
+)
 
 // HandleIndexPage renders the admin users index page.
 // GET: /admin/users
@@ -24,13 +28,37 @@ func (s *service) HandleIndexPage(c fiber.Ctx) error {
 	ctx, span := s.Trace(c.Context(), "user/handlers:HandleIndexPage")
 	defer span.End()
 
-	users, err := s.FindRecentUsers(ctx, 10)
+	users, err := s.FindRecentUsers(ctx, recentUsersLimit)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
 	vc := view.NewCtx(c)
 	return view.Render(c, view.UserIndexPage(vc, users))
+}
+
+// HandleIndexSearch renders the admin users list filtered by the search term.
+// GET: /admin/users/search
+func (s *service) HandleIndexSearch(c fiber.Ctx) error {
+	term := strings.TrimSpace(c.Query("searchTerm", ""))
+	if models.SearchTermTooShort(term) {
+		return view.Render(c, view.CmpSearchTooShortToast())
+	}
+
+	var users []models.User
+	var err error
+	if term == "" {
+		users, err = s.FindRecentUsers(c.Context(), recentUsersLimit)
+	} else {
+		users, err = s.FindUsersBySearchTerm(c.Context(), term, recentUsersLimit)
+	}
+	if err != nil {
+		c.Status(fiber.StatusInternalServerError)
+		return view.Render(c, view.CmpSearchFailedToast())
+	}
+
+	vc := view.NewCtx(c)
+	return view.Render(c, view.UserList(vc, users))
 }
 
 // HandleEditPage renders the user edit page for admins.

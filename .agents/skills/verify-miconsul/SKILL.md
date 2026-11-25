@@ -15,6 +15,7 @@ scripts/stack.sh up
 
 Builds the current checkout, creates a throwaway SQLite database, seeds it, starts the app and waits until `/signin` answers. It prints `miconsul ready on http://localhost:3200 (<commit> clean|dirty <path>)`. `dirty` means uncommitted changes are included in the build.
 
+- `scripts/stack.sh up --bulk` also seeds randomized users, clinics, patients and appointments, for load runs.
 - Base URL: `http://localhost:3200` (set `MICONSUL_STACK_PORT` to change it).
 - Isolated: its own port, and databases in `${TMPDIR:-/tmp}/miconsul-stack`. The dev database and the dev server on port 3000 are never touched.
 - Off: jobs, the rate limiter, Logto and all outbound email, SMS and WhatsApp.

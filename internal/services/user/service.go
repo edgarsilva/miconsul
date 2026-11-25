@@ -40,6 +40,22 @@ func (s service) FindRecentUsers(ctx context.Context, limit int) ([]models.User,
 	return users, nil
 }
 
+// FindUsersBySearchTerm returns up to limit users whose name or email contains
+// term, newest first.
+func (s service) FindUsersBySearchTerm(ctx context.Context, term string, limit int) ([]models.User, error) {
+	pattern := "%" + likeEscaper.Replace(strings.TrimSpace(term)) + "%"
+	users, err := gorm.G[models.User](s.DB.GormDB()).
+		Where(`name LIKE ? ESCAPE '\' OR email LIKE ? ESCAPE '\'`, pattern, pattern).
+		Order("id DESC").
+		Limit(limit).
+		Find(ctx)
+	if err != nil {
+		return []models.User{}, err
+	}
+
+	return users, nil
+}
+
 func (s service) TakeUserByUID(ctx context.Context, UID string) (models.User, error) {
 	UID = strings.TrimSpace(UID)
 	if UID == "" {
@@ -153,3 +169,5 @@ func normalizeUserWriteInput(user *models.User) error {
 
 	return nil
 }
+
+var likeEscaper = strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`)
