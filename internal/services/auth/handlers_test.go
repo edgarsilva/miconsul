@@ -519,8 +519,8 @@ func TestAuthHandlersSignupPaths(t *testing.T) {
 		if resp.StatusCode != fiber.StatusSeeOther {
 			t.Fatalf("expected 303, got %d", resp.StatusCode)
 		}
-		if got := resp.Header.Get("Location"); got != "/todos" {
-			t.Fatalf("expected /todos redirect, got %q", got)
+		if got := resp.Header.Get("Location"); got != "/?timeframe=day" {
+			t.Fatalf("expected /?timeframe=day redirect, got %q", got)
 		}
 	})
 

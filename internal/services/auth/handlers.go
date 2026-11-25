@@ -98,7 +98,7 @@ func (s *service) HandleSignupPage(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 
 	if cu.IsLoggedIn() {
-		return s.Redirect(c, "/todos")
+		return s.Redirect(c, "/?timeframe=day")
 	}
 
 	vc := view.NewCtx(c)
