@@ -403,6 +403,18 @@ templ AppointmentProfile(c *Ctx, appointment models.Appointment, patients []mode
 					</div>
 				}
 				<div class="flex items-center justify-end gap-x-6 border-t border-base-content/10 px-4 py-4 sm:px-8">
+					if appointment.UID != "" && appointment.AwaitingVisit() {
+						<a
+							href={ templ.URL("/appointments/" + appointment.UID + "/cancel") }
+							hx-post={ "/appointments/" + appointment.UID + "/cancel" }
+							hx-confirm={ c.l("str.are_you_sure") }
+							hx-swap="none"
+							class="btn btn-ghost"
+						>
+							@CmpCloseCircleIcon("size-5")
+							{ c.l("btn.cancel_appointment") }
+						</a>
+					}
 					<button
 						form="new_appointment"
 						type="submit"

@@ -46,7 +46,7 @@
   - [ ] `/admin/users`: "Search users" calls `GET /users/search` and "Add new" and "New" link to `/users/new`; only the `/admin/users` routes are registered.
   - [ ] Locale keys that are in no `locales/*/str.yaml`, so the page shows the raw key: `str.clinic` (patient confirm page), `str.create_new_user`, `str.new_user` and `str.updated` (admin users).
   - [ ] A signed-in visitor on `/signup` is redirected to `/todos`, which is not a route.
-  - [ ] Staff cancel (`POST /appointments/:id/cancel`) and delete (`DELETE /appointments/:id`) have routes and no button. `POST /p/a/:token/changedate` has no page or button, and the patient email has only the confirm link.
+  - [ ] Staff delete (`DELETE /appointments/:id`) has a route and no button. `POST /p/a/:token/changedate` has no page or button, and the patient email has only the confirm link.
 
 - [verify/plans] Verification plans for the features that have none
   - [ ] Plans, run once on the stack with evidence, for the dashboard, revenue, the patient email links (`/p/a/<token>/...`) and creating an appointment.
