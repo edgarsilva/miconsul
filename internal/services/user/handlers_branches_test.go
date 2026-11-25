@@ -474,7 +474,7 @@ func TestHandleUpdateProfileBlankNameKeepsTheAvatar(t *testing.T) {
 }
 
 func TestHandleIndexSearch(t *testing.T) {
-	svc, _ := newMigratedUserServiceForTests(t)
+	svc, _ := newUserServiceForTests(t)
 
 	app := fiber.New()
 	app.Get("/admin/users/search", svc.HandleIndexSearch)

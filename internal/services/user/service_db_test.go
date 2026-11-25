@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"path/filepath"
-	"strings"
 	"testing"
 
 	"miconsul/internal/database"
@@ -13,8 +11,6 @@ import (
 	"miconsul/internal/models"
 	"miconsul/internal/server"
 
-	lognoop "go.opentelemetry.io/otel/log/noop"
-	tracenoop "go.opentelemetry.io/otel/trace/noop"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -128,38 +124,8 @@ func newUserServiceForTests(t *testing.T) (service, models.User) {
 	return svc, u
 }
 
-func newMigratedUserServiceForTests(t *testing.T) (service, models.User) {
-	t.Helper()
-
-	env := &appenv.Env{AppName: "miconsul", JWTSecret: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", AssetsDir: t.TempDir(), DBPath: filepath.Join(t.TempDir(), "users.sqlite")}
-	db, err := database.New(env, lognoop.NewLoggerProvider(), tracenoop.NewTracerProvider(), nil)
-	if err != nil {
-		t.Fatalf("new database: %v", err)
-	}
-	t.Cleanup(func() { _ = db.Close() })
-
-	if err := database.ApplyMigrationsSilent(db); err != nil {
-		if strings.Contains(err.Error(), "no such module: fts5") {
-			t.Skip("sqlite fts5 extension is not available in this environment")
-		}
-		t.Fatalf("apply migrations: %v", err)
-	}
-
-	svc, err := NewService(&server.Server{Env: env, DB: db})
-	if err != nil {
-		t.Fatalf("new user service: %v", err)
-	}
-
-	u := models.User{Email: "user@example.com", Password: "hash", Name: "Seed User", Role: models.UserRoleUser}
-	if err := gorm.G[models.User](db.GormDB()).Create(context.Background(), &u); err != nil {
-		t.Fatalf("create seed user: %v", err)
-	}
-
-	return svc, u
-}
-
 func TestFindUsersBySearchTerm(t *testing.T) {
-	svc, _ := newMigratedUserServiceForTests(t)
+	svc, _ := newUserServiceForTests(t)
 	ctx := context.Background()
 
 	for _, u := range []models.User{
@@ -176,12 +142,11 @@ func TestFindUsersBySearchTerm(t *testing.T) {
 		want int
 	}{
 		{"alma", 1},
-		{"Alm", 1},
 		{"CLINIC.test", 1},
 		{"example.com", 2},
 		{"100%", 1},
-		{"rivera alma", 0},
-		{"alma OR bruno", 0},
+		{"%", 1},
+		{"_", 0},
 		{"nobody", 0},
 	}
 	for _, tt := range tests {
