@@ -40,9 +40,9 @@
   - [x] `scripts/load_test.sh` runs an `oha` baseline against the app.
   - [x] Fix `scripts/load_test.sh` and `scripts/obs_load.sh`: both look for an `Auth` cookie after `POST /api/auth/signin`, but the app sets `session_id`, and that route exists only when Logto is disabled.
   - [x] Bulk seed for the stack: `scripts/stack.sh up --bulk`.
-  - [ ] `k6` scenario: sign in as the seed admin, then a weighted mix of reads (dashboard, appointments, clinic and patient search, revenue) and writes (create and update an appointment), with pass/fail thresholds.
+  - [x] `k6` scenario: sign in as the seed admin, then a weighted mix of reads (dashboard, appointments, clinic and patient search, revenue) and writes (create and update an appointment), with pass/fail thresholds.
   - [x] Memory sampler: poll `/api/admin/runtime` during a run and write live heap, GC cycles and goroutines to a CSV; report peak, end value and whether the live-heap floor rises.
-  - [ ] Make targets for the quick `oha` baseline and the full `k6` run, run manually on the local machine, and a short doc with the baselines.
+  - [x] Make targets for the quick `oha` baseline and the full `k6` run, run manually on the local machine, and a short doc with the baselines.
 
 - [bug/dead-ui] Views that point at routes or strings that do not exist (found while writing `docs/features.md`)
   - [ ] Staff delete (`DELETE /appointments/:id`) has a route and no button. `POST /p/a/:token/changedate` has no page or button, and the patient email has only the confirm link.
