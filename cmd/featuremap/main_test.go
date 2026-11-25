@@ -132,10 +132,33 @@ func TestLayoutGraphPlacesTargetsInLaterColumns(t *testing.T) {
 	}
 }
 
-func TestLayoutGraphRejectsCycles(t *testing.T) {
-	nodes := []graphNode{{Name: "A"}, {Name: "B"}}
-	if _, err := layoutGraph(nodes, []graphLink{{From: 0, To: 1}, {From: 1, To: 0}}, false, overviewMetrics); err == nil {
-		t.Fatal("cycle should fail")
+func TestLayoutGraphDrawsALoopBackBelowTheNodes(t *testing.T) {
+	nodes := []graphNode{{Name: "List"}, {Name: "Form"}}
+	d, err := layoutGraph(nodes, []graphLink{{From: 0, To: 1, Label: "Add"}, {From: 1, To: 0, Label: "Save"}}, false, screenMetrics)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(d.Nodes) != 2 || len(d.Edges) != 2 {
+		t.Fatalf("nodes=%d edges=%d", len(d.Nodes), len(d.Edges))
+	}
+	if d.Nodes[0].X >= d.Nodes[1].X {
+		t.Fatalf("the forward link should put Form right of List: %v", d.Nodes)
+	}
+	if d.Edges[0].Back || !d.Edges[1].Back {
+		t.Fatalf("only the second edge loops back: %+v", d.Edges)
+	}
+	if d.Height <= 2*marginY+screenMetrics.nodeHeight {
+		t.Fatalf("height %d leaves no room for the loop", d.Height)
+	}
+}
+
+func TestLayoutGraphKeepsASelfLinkAsALoop(t *testing.T) {
+	d, err := layoutGraph([]graphNode{{Name: "A"}}, []graphLink{{From: 0, To: 0, Label: "again"}}, false, screenMetrics)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(d.Edges) != 1 || !d.Edges[0].Back {
+		t.Fatalf("edges = %+v", d.Edges)
 	}
 }
 

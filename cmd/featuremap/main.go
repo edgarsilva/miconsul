@@ -438,7 +438,7 @@ a{color:inherit}
 func init() {
 	template.Must(page.Parse(`{{define "flowsvg"}}<div class="flow">
 <svg viewBox="0 0 {{.Width}} {{.Height}}" role="img" aria-label="Flow">
-{{range .Edges}}<path d="{{.Path}}" class="edge" marker-end="url(#arrow)"/><text x="{{.LabelX}}" y="{{.LabelY}}" class="edgelabel" text-anchor="end">{{.Label}}</text>
+{{range .Edges}}<path d="{{.Path}}" class="edge" marker-end="url(#arrow)"/><text x="{{.LabelX}}" y="{{.LabelY}}" class="edgelabel" text-anchor="{{if .Back}}middle{{else}}end{{end}}">{{.Label}}</text>
 {{end}}
 {{range .Nodes}}{{if .Href}}<a href="{{.Href}}">{{end}}<g class="node {{.Status}}">{{if .Tip}}<title>{{.Tip}}</title>{{end}}<rect x="{{.X}}" y="{{.Y}}" width="{{$.NodeWidth}}" height="{{$.NodeHeight}}" rx="8"/><text x="{{.X}}" dx="14" y="{{.Y}}" dy="22" class="nname">{{.Name}}</text><text x="{{.X}}" dx="14" y="{{.Y}}" dy="{{if gt $.NodeHeight 50}}44{{else}}39{{end}}" class="ndetail">{{.Detail}}</text></g>{{if .Href}}</a>{{end}}
 {{end}}

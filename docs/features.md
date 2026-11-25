@@ -130,7 +130,7 @@ The screens and actions a person meets, one row each: where it lives (area), its
 
 ## User flows
 
-What the person does to get from one screen to the next. Flows run forward; the generator rejects a flow that loops back.
+What the person does to get from one screen to the next. A flow that returns to an earlier screen is drawn as a loop under the screens.
 
 | From | Does | To |
 |---|---|---|
@@ -148,13 +148,16 @@ What the person does to get from one screen to the next. Flows run forward; the 
 | Dashboard | navbar | Revenue page |
 | Dashboard | avatar | Profile page |
 | Dashboard | sun and moon | Theme toggle |
+| Dashboard | Sign out | Sign in |
 | Dashboard | navbar, admins | Admin index |
 | Appointments list | tabs, pills, search | Filter appointments |
 | Appointments list | Add new | New appointment |
 | New appointment | Step 1 and 2 | Pick clinic and patient |
 | Pick clinic and patient | Save | Save appointment |
+| Save appointment | lands on the list | Appointments list |
 | Appointments list | Change | Edit appointment |
 | Edit appointment | Save | Save changes |
+| Save changes | lands on the list | Appointments list |
 | Save changes | time moved | Reschedule email |
 | Appointments list | Open | Open appointment |
 | Open appointment | Start session | Start session |
@@ -167,14 +170,18 @@ What the person does to get from one screen to the next. Flows run forward; the 
 | Clinics list | Add new | New clinic |
 | Clinics list | Edit | Edit clinic |
 | New clinic | Save | Save clinic |
+| Save clinic | lands on the list | Clinics list |
 | Edit clinic | Save | Save clinic |
 | Edit clinic | Delete | Delete clinic |
+| Delete clinic | lands on the list | Clinics list |
 | Patients list | Search patients | Search patients |
 | Patients list | Add new | New patient |
 | Patients list | Edit | Edit patient |
 | New patient | Save | Save patient |
+| Save patient | lands on the list | Patients list |
 | Edit patient | Save | Save patient |
 | Edit patient | Delete | Delete patient |
+| Delete patient | lands on the list | Patients list |
 | Profile page | Save | Save profile |
 | Admin index | Users | Users |
 | Users | Edit | Edit user |

@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	marginX = 16
-	marginY = 16
+	marginX  = 16
+	marginY  = 16
+	loopStep = 26
 )
 
 type metrics struct {
@@ -37,6 +38,7 @@ type flowNode struct {
 type flowEdge struct {
 	Path, Label    string
 	LabelX, LabelY int
+	Back           bool
 }
 
 type flowDiagram struct {
@@ -69,13 +71,12 @@ func layoutGraph(nodes []graphNode, links []graphLink, keepLone bool, m metrics)
 		connected[l.From], connected[l.To] = true, true
 	}
 
+	forward, back := splitBackLinks(len(nodes), links)
+
 	layer := make([]int, len(nodes))
-	for pass := 0; ; pass++ {
-		if pass > len(nodes) {
-			return flowDiagram{}, fmt.Errorf("flow has a cycle")
-		}
+	for {
 		changed := false
-		for _, l := range links {
+		for _, l := range forward {
 			if layer[l.To] < layer[l.From]+1 {
 				layer[l.To] = layer[l.From] + 1
 				changed = true
@@ -105,7 +106,7 @@ func layoutGraph(nodes []graphNode, links []graphLink, keepLone bool, m metrics)
 	rank := map[int]int{}
 	for col, members := range columns {
 		if col > 0 {
-			sortByParents(members, links, rank)
+			sortByParents(members, forward, rank)
 		}
 		for row, i := range members {
 			rank[i] = row
@@ -119,6 +120,8 @@ func layoutGraph(nodes []graphNode, links []graphLink, keepLone bool, m metrics)
 	d.NodeWidth, d.NodeHeight = m.nodeWidth, m.nodeHeight
 	d.Width = 2*marginX + len(columns)*m.nodeWidth + (len(columns)-1)*m.gapX
 	d.Height = 2*marginY + tallest*(m.nodeHeight+m.gapY) - m.gapY
+	nodesBottom := d.Height
+	d.Height += len(back) * loopStep
 
 	position := map[int][2]int{}
 	for col, members := range columns {
@@ -132,7 +135,7 @@ func layoutGraph(nodes []graphNode, links []graphLink, keepLone bool, m metrics)
 	}
 
 	bend := m.gapX / 2
-	for _, l := range links {
+	for _, l := range forward {
 		from, to := position[l.From], position[l.To]
 		x1, y1 := from[0]+m.nodeWidth, from[1]+m.nodeHeight/2
 		x2, y2 := to[0], to[1]+m.nodeHeight/2
@@ -143,7 +146,54 @@ func layoutGraph(nodes []graphNode, links []graphLink, keepLone bool, m metrics)
 			LabelY: y2 - 6,
 		})
 	}
+	for i, l := range back {
+		from, to := position[l.From], position[l.To]
+		x1, y1 := from[0]+m.nodeWidth/2, from[1]+m.nodeHeight
+		x2, y2 := to[0]+m.nodeWidth/2, to[1]+m.nodeHeight
+		drop := nodesBottom - marginY + (i+1)*loopStep - loopStep/2
+		d.Edges = append(d.Edges, flowEdge{
+			Path:   fmt.Sprintf("M %d %d C %d %d, %d %d, %d %d", x1, y1, x1, drop+loopStep/2, x2, drop+loopStep/2, x2, y2),
+			Label:  l.Label,
+			LabelX: (x1 + x2) / 2,
+			LabelY: drop + loopStep/2 - 4,
+			Back:   true,
+		})
+	}
 	return d, nil
+}
+
+func splitBackLinks(n int, links []graphLink) (forward, back []graphLink) {
+	const (
+		unseen = iota
+		open
+		done
+	)
+	state := make([]int, n)
+	var visit func(i int)
+	visit = func(i int) {
+		state[i] = open
+		for _, l := range links {
+			if l.From != i {
+				continue
+			}
+			switch state[l.To] {
+			case open:
+				back = append(back, l)
+			case unseen:
+				forward = append(forward, l)
+				visit(l.To)
+			default:
+				forward = append(forward, l)
+			}
+		}
+		state[i] = done
+	}
+	for i := 0; i < n; i++ {
+		if state[i] == unseen {
+			visit(i)
+		}
+	}
+	return forward, back
 }
 
 func areaNode(a area) graphNode {
