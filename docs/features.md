@@ -75,6 +75,114 @@ Admins see "Admin" in the navbar; everyone else is turned away.
 | Components | The "Components" card | Every UI component renders with sample data. Tests: `TestAdminHandlers` |
 | Jobs monitor | The "Jobs" card, only with `JOBS_UI_ENABLED` | The queue monitor opens for an admin; without the setting `/admin/jobs` does not exist. Tests: `TestAdminHandlers` |
 
+## Screens
+
+The screens and actions a person meets, one row each: where it lives (area), its route, and the feature row above that proves it. `make features/map` draws them as the user flows.
+
+| Screen | Area | Route | Feature |
+|---|---|---|---|
+| Landing page | Accounts | `/` | Landing page |
+| Sign in | Accounts | `/signin` | Sign in |
+| Sign up | Accounts | `/signup` | Sign up and confirm email |
+| Confirm email | Accounts | `/signup/confirm/:token` | Sign up and confirm email |
+| Reset password | Accounts | `/resetpassword` | Reset password |
+| Change password | Accounts | `/resetpassword/change/:token` | Reset password |
+| Dashboard | Dashboard | `/dashboard` | Dashboard |
+| Dashboard timeframe | Dashboard | `/dashboard/appointments` | Dashboard |
+| Appointments list | Appointments | `/appointments` | List and filter |
+| Filter appointments | Appointments | `/appointments/search` | List and filter |
+| New appointment | Appointments | `/appointments/new` | Create |
+| Pick clinic and patient | Appointments | `/appointments/search/clinics` | Pick the clinic and patient |
+| Save appointment | Appointments | `POST /appointments` | Create |
+| Edit appointment | Appointments | `/appointments/:id` | Edit and reschedule |
+| Save changes | Appointments | `PATCH /appointments/:id` | Edit and reschedule |
+| Open appointment | Appointments | `/appointments/:id/open` | Run a session |
+| Start session | Appointments | `POST .../start-session` | Run a session |
+| Pause session | Appointments | `POST .../pause-session` | Run a session |
+| Save notes | Appointments | `POST .../save-session` | Run a session |
+| End session | Appointments | `POST .../complete` | Run a session |
+| Clinics list | Clinics | `/clinics` | List and search |
+| Search clinics | Clinics | `/clinics/search` | List and search |
+| New clinic | Clinics | `/clinics/new` | Create, edit, delete |
+| Edit clinic | Clinics | `/clinics/:id` | Create, edit, delete |
+| Save clinic | Clinics | `POST` or `PATCH /clinics` | Create, edit, delete |
+| Delete clinic | Clinics | `DELETE /clinics/:id` | Create, edit, delete |
+| Patients list | Patients | `/patients` | List and search |
+| Search patients | Patients | `/patients/search` | List and search |
+| New patient | Patients | `/patients/new` | Create, edit, delete |
+| Edit patient | Patients | `/patients/:id` | Create, edit, delete |
+| Save patient | Patients | `POST` or `PATCH /patients` | Create, edit, delete |
+| Delete patient | Patients | `DELETE /patients/:id` | Create, edit, delete |
+| Revenue page | Revenue | `/revenue` | Revenue |
+| Profile page | Profile | `/profile` | Profile |
+| Save profile | Profile | `PATCH /profile` | Profile |
+| Theme toggle | Theme | `POST /theme/toggle` | Theme |
+| Reschedule email | Patient links and notifications | email | Reschedule email |
+| Confirm page | Patient links and notifications | `/p/a/:token/confirm` | Confirm or cancel from the email |
+| Cancel page | Patient links and notifications | `/p/a/:token/cancel` | Confirm or cancel from the email |
+| Admin index | Admin | `/admin` | Admin index |
+| Users | Admin | `/admin/users` | Users |
+| Edit user | Admin | `/admin/users/:id` | Users |
+| Runtime | Admin | `/admin/runtime` | Runtime |
+| Health | Admin | `/admin/health` | Health |
+| Components | Admin | `/admin/components` | Components |
+| Jobs monitor | Admin | `/admin/jobs` | Jobs monitor |
+
+## User flows
+
+What the person does to get from one screen to the next. Flows run forward; the generator rejects a flow that loops back.
+
+| From | Does | To |
+|---|---|---|
+| Landing page | Sign in | Sign in |
+| Landing page | Sign up | Sign up |
+| Sign in | Create an account | Sign up |
+| Sign in | Forgot password? | Reset password |
+| Sign up | opens the email link | Confirm email |
+| Reset password | opens the email link | Change password |
+| Sign in | signs in | Dashboard |
+| Dashboard | tabs and pills | Dashboard timeframe |
+| Dashboard | navbar | Appointments list |
+| Dashboard | navbar | Clinics list |
+| Dashboard | navbar | Patients list |
+| Dashboard | navbar | Revenue page |
+| Dashboard | avatar | Profile page |
+| Dashboard | sun and moon | Theme toggle |
+| Dashboard | navbar, admins | Admin index |
+| Appointments list | tabs, pills, search | Filter appointments |
+| Appointments list | Add new | New appointment |
+| New appointment | Step 1 and 2 | Pick clinic and patient |
+| Pick clinic and patient | Save | Save appointment |
+| Appointments list | Change | Edit appointment |
+| Edit appointment | Save | Save changes |
+| Save changes | time moved | Reschedule email |
+| Appointments list | Open | Open appointment |
+| Open appointment | Start session | Start session |
+| Start session | Pause session | Pause session |
+| Open appointment | Save | Save notes |
+| Open appointment | End session | End session |
+| Reschedule email | opens the link | Confirm page |
+| Confirm page | Need changes? | Cancel page |
+| Clinics list | Search clinics | Search clinics |
+| Clinics list | Add new | New clinic |
+| Clinics list | Edit | Edit clinic |
+| New clinic | Save | Save clinic |
+| Edit clinic | Save | Save clinic |
+| Edit clinic | Delete | Delete clinic |
+| Patients list | Search patients | Search patients |
+| Patients list | Add new | New patient |
+| Patients list | Edit | Edit patient |
+| New patient | Save | Save patient |
+| Edit patient | Save | Save patient |
+| Edit patient | Delete | Delete patient |
+| Profile page | Save | Save profile |
+| Admin index | Users | Users |
+| Users | Edit | Edit user |
+| Admin index | Runtime | Runtime |
+| Admin index | Health | Health |
+| Admin index | Components | Components |
+| Admin index | Jobs | Jobs monitor |
+
 ## Where each feature lives
 
 Which source paths belong to which feature, and which plan in `.agents/skills/verify-miconsul/plans/` drives it. Pick rows from `git diff --name-only`; a row with "none yet" has no plan, so drive it from the table above.

@@ -122,6 +122,12 @@ test/race: ## Run all tests with race detector
 	@echo "Testing all with race detector"
 	go test -race -tags fts5 ./cmd/... ./internal/... ./tests/...
 
+features/map: ## Generate tmp/feature-map/index.html from docs/features.md, the verification plans and the tests, and open it
+	go run ./cmd/featuremap
+	@xdg-open tmp/feature-map/index.html >/dev/null 2>&1 || \
+		python3 -m webbrowser tmp/feature-map/index.html >/dev/null 2>&1 || \
+		echo "Open tmp/feature-map/index.html manually in your browser"
+
 test/coverage: ## Coverage
 	@bash scripts/test_coverage.sh
 
@@ -271,7 +277,7 @@ load/test: ## Run authenticated oha load test (30s, 30 concurrency)
 	ai/templ-sync \
 	build start run air/watch dev \
 	test test/race clean \
-	test/coverage test/coverage/html test/coverage/service-leaderboard \
+	test/coverage test/coverage/html test/coverage/service-leaderboard features/map \
 	test/coverage/gate-global-65 test/coverage/gate-service-floor-65 \
 	db/create db/delete db/setup db/reset db/dump_schema db/seed \
 	migrations/apply migrate migrations/create migrations/status migrations/rollback migrations/redo \
