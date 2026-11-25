@@ -188,7 +188,7 @@ func splitBackLinks(n int, links []graphLink) (forward, back []graphLink) {
 		}
 		state[i] = done
 	}
-	for i := 0; i < n; i++ {
+	for i := range n {
 		if state[i] == unseen {
 			visit(i)
 		}
