@@ -53,7 +53,7 @@ templ PatientFormPage(c *Ctx, patient models.Patient) {
 			@CmpBackBtn(c.l("btn.back"), "/patients")
 		</div>
 		@PatientProfileSection(c, patient)
-		<script defer src={ "/public/js/picture-preview.js?v=" + assetVersion }></script>
+		<script defer src={ "/public/js/picture_preview.js?v=" + assetVersion }></script>
 	}
 }
 

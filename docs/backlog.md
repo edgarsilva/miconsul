@@ -30,7 +30,7 @@
   - [ ] The clinic form has a "Cover photo" upload box (`coverPhoto`) that nothing reads. Store it in `clinics.cover_pic` and show it, after the RustFS change.
 
 - [feature/pictures] Server-side picture preview
-  - [ ] After the RustFS change, stage the picked file on the server and return the preview as an HTMX fragment, like the profile form's `/profile/avatar/preview`, then remove `public/js/picture-preview.js`.
+  - [ ] After the RustFS change, stage the picked file on the server and return the preview as an HTMX fragment, like the profile form's `/profile/avatar/preview`, then remove `public/js/picture_preview.js`.
 
 - [verify/plans] Verification plans for the features that have none
   - [ ] Plans, run once on the stack with evidence, for the dashboard, revenue, the patient email links (`/p/a/<token>/...`) and creating an appointment.
@@ -80,7 +80,7 @@
 
 ## Done
 
-- [feature/pictures] Patient and clinic forms preview the picked picture before saving: `public/js/picture-preview.js` reads the file with `FileReader` and shows it in place of the avatar, so the CSP needs no `blob:`.
+- [feature/pictures] Patient and clinic forms preview the picked picture before saving: `public/js/picture_preview.js` reads the file with `FileReader` and shows it in place of the avatar, so the CSP needs no `blob:`.
 
 - [tooling/stack] `scripts/stack.sh` keeps uploads in its own run folder (`ASSETS_DIR`), so a verification run no longer writes to the real `./assets`.
 

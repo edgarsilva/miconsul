@@ -1060,7 +1060,7 @@ func TestPictureFormPagesPreviewThePickedFile(t *testing.T) {
 
 			got := html.String()
 			for _, want := range []string{
-				`<script defer src="/public/js/picture-preview.js?v=` + assetVersion + `">`,
+				`<script defer src="/public/js/picture_preview.js?v=` + assetVersion + `">`,
 				`data-picture-preview="#` + strings.Trim(strings.TrimPrefix(targets[name], "id="), `"`) + `"`,
 				targets[name],
 			} {
