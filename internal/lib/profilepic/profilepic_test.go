@@ -119,13 +119,27 @@ func TestCheckTypeAndAccept(t *testing.T) {
 		t.Fatalf("expected ErrUnsupportedType, got %v", err)
 	}
 
-	exts := strings.Split(Accept, ",")
-	if len(exts) != len(allowedExts) {
-		t.Fatalf("Accept lists %d extensions, allowedExts has %d", len(exts), len(allowedExts))
+	mimeOf := map[string]string{
+		".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".jpe": "image/jpeg", ".jfif": "image/jpeg",
+		".png": "image/png", ".webp": "image/webp",
 	}
-	for _, ext := range exts {
-		if _, ok := allowedExts[ext]; !ok {
-			t.Fatalf("Accept lists %q, which is not allowed", ext)
+	accepted := map[string]bool{}
+	for _, mimeType := range strings.Split(Accept, ",") {
+		accepted[mimeType] = false
+	}
+	for ext := range allowedExts {
+		mimeType, ok := mimeOf[ext]
+		if !ok {
+			t.Fatalf("allowed extension %q has no MIME type in this test", ext)
+		}
+		if _, ok := accepted[mimeType]; !ok {
+			t.Fatalf("allowed extension %q is %s, which Accept does not list", ext, mimeType)
+		}
+		accepted[mimeType] = true
+	}
+	for mimeType, used := range accepted {
+		if !used {
+			t.Fatalf("Accept lists %s, but no allowed extension has that type", mimeType)
 		}
 	}
 }

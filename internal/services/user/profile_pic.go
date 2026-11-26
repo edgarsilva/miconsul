@@ -12,7 +12,7 @@ import (
 
 const usersDir = "/users"
 
-const unsupportedPicMessage = "Unsupported picture type, use JPG, PNG, GIF, WebP, AVIF or HEIC"
+const unsupportedPicMessage = "Unsupported picture type, use JPG, PNG or WebP"
 
 // hasUnsupportedProfilePic reports whether the request uploads a profilePic
 // that is not a picture type.

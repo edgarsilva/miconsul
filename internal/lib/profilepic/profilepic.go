@@ -19,11 +19,13 @@ var (
 	ErrNoAssetsDir     = errors.New("assets directory not set")
 )
 
-// Accept lists the picture extensions for the accept attribute of a file input.
-const Accept = ".jpg,.jpeg,.png,.gif,.webp,.avif,.heic"
+// Accept lists the picture MIME types for the accept attribute of a file
+// input. Phones offer the camera and gallery for them, and desktop pickers show
+// every extension of these types.
+const Accept = "image/jpeg,image/png,image/webp"
 
 var allowedExts = map[string]struct{}{
-	".jpg": {}, ".jpeg": {}, ".png": {}, ".gif": {}, ".webp": {}, ".avif": {}, ".heic": {},
+	".jpg": {}, ".jpeg": {}, ".jpe": {}, ".jfif": {}, ".png": {}, ".webp": {},
 }
 
 // FormFileError maps the error of a multipart file lookup. A missing file
