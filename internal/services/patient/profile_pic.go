@@ -3,12 +3,10 @@ package patient
 import (
 	"errors"
 	"fmt"
-	"miconsul/internal/models"
-	"net/http"
-	"os"
-	"path"
-	"path/filepath"
 	"strings"
+
+	"miconsul/internal/lib/profilepic"
+	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
@@ -18,37 +16,47 @@ import (
 
 const patientsDir = "/patients"
 
+const unsupportedPicMessage = "Unsupported picture type, use JPG, PNG or WebP"
+
+// hasUnsupportedProfilePic reports whether the request uploads a profilePic
+// that is not a picture type.
+func hasUnsupportedProfilePic(c fiber.Ctx) bool {
+	upload, err := c.FormFile("profilePic")
+	if err != nil || upload == nil {
+		return false
+	}
+
+	return errors.Is(profilepic.CheckType(upload.Filename), profilepic.ErrUnsupportedType)
+}
+
+// SaveProfilePicToDisk stores the uploaded profilePic under a random name and
+// returns the URL path that serves it.
 func SaveProfilePicToDisk(c fiber.Ctx, patient models.Patient, assetsDir string) (string, error) {
-	profilePic, err := c.FormFile("profilePic")
+	upload, err := c.FormFile("profilePic")
 	if err != nil {
-		return "", profilePicFormFileErr(err)
+		return "", profilepic.FormFileError(err)
 	}
 
 	if patient.UID == "" {
 		return "", errors.New("save profile pic without patient.UID")
 	}
 
-	originalFilename := strings.TrimSpace(profilePic.Filename)
-	originalFilename = strings.ReplaceAll(originalFilename, "\\", "/")
-	originalFilename = path.Base(originalFilename)
-	safeFilename := cleanFilenameSegment(originalFilename)
-	if safeFilename == "" || safeFilename == "." || safeFilename == ".." {
-		return "", ErrInvalidFilename
+	filename, err := profilepic.RandomName(patient.UID+"_ppic_", upload.Filename)
+	if err != nil {
+		return "", fmt.Errorf("name profile pic: %w", err)
 	}
 
-	filename := patient.UID + "_ppic_" + safeFilename
 	path, err := ProfilePicPath(filename, assetsDir)
 	if err != nil {
-		return "", fmt.Errorf("save profile pic without an ASSETS_DIR: %w", err)
+		return "", fmt.Errorf("locate profile pic: %w", err)
 	}
 
-	err = c.SaveFile(profilePic, path)
+	err = c.SaveFile(upload, path)
 	if err != nil {
 		return "", fmt.Errorf("save profilePic to disk: %w", err)
 	}
 
-	imgsrc := "/patients/" + patient.UID + "/profilepic/" + filename
-	return imgsrc, nil
+	return "/patients/" + patient.UID + "/profilepic/" + filename, nil
 }
 
 // attachPatientPic saves the uploaded profile picture and stores its path on
@@ -62,7 +70,7 @@ func (s service) attachPatientPic(c fiber.Ctx, userID uint, patient models.Patie
 	span.SetAttributes(attribute.String("patient.uid", patient.UID))
 
 	path, err := SaveProfilePicToDisk(c, patient, s.Env.AssetsDir)
-	if errors.Is(err, ErrProfilePicNotProvided) {
+	if errors.Is(err, profilepic.ErrNotProvided) {
 		return patient.ProfilePic
 	}
 	if err != nil {
@@ -80,95 +88,42 @@ func (s service) attachPatientPic(c fiber.Ctx, userID uint, patient models.Patie
 		return patient.ProfilePic
 	}
 
+	s.removeReplacedPic(patient, path)
+
 	return path
 }
 
+// removeReplacedPic deletes the patient's previous picture file after a new one
+// is saved. Pictures that are not stored in the assets directory are kept.
+func (s service) removeReplacedPic(patient models.Patient, newPath string) {
+	prefix := "/patients/" + patient.UID + "/profilepic/"
+	if patient.ProfilePic == newPath || !strings.HasPrefix(patient.ProfilePic, prefix) {
+		return
+	}
+
+	filename := strings.TrimPrefix(patient.ProfilePic, prefix)
+	if !IsSafeProfilePicFilenameForPatient(patient.UID, filename) {
+		return
+	}
+
+	err := profilepic.Remove(s.Env.AssetsDir, patientsDir, filename)
+	if err != nil {
+		log.Errorf("remove replaced patient profile pic: %v", err)
+	}
+}
+
+// ProfilePicPath returns the file path of a patient picture in assetsDir.
 func ProfilePicPath(filename, assetsDir string) (string, error) {
-	if !isSafeFilename(filename) {
-		return "", ErrInvalidFilename
-	}
-
-	assetsDir = strings.TrimSpace(assetsDir)
-	if assetsDir == "" {
-		return "", errors.New("find assets directory")
-	}
-
-	path := filepath.Join(assetsDir, patientsDir)
-	if err := os.MkdirAll(path, 0o755); err != nil {
-		return "", errors.New("create assets/patients dir")
-	}
-
-	return filepath.Join(path, filename), nil
+	return profilepic.Path(assetsDir, patientsDir, filename)
 }
 
-func profilePicFormFileErr(err error) error {
-	if isMissingProfilePicErr(err) {
-		return ErrProfilePicNotProvided
-	}
-
-	return fmt.Errorf("grab profilePic from form: %w", err)
-}
-
-func isMissingProfilePicErr(err error) bool {
-	if err == nil {
-		return false
-	}
-	if errors.Is(err, http.ErrMissingFile) {
-		return true
-	}
-
-	errMsg := strings.ToLower(strings.TrimSpace(err.Error()))
-	return strings.Contains(errMsg, "no uploaded file") ||
-		strings.Contains(errMsg, "no such file") ||
-		strings.Contains(errMsg, "not multipart/form-data")
-}
-
+// IsSafeProfilePicFilenameForPatient reports whether filename is a safe
+// picture name that belongs to patientID.
 func IsSafeProfilePicFilenameForPatient(patientID, filename string) bool {
 	patientID = strings.TrimSpace(patientID)
-	if patientID == "" || !isSafeFilename(filename) {
+	if patientID == "" || !profilepic.IsSafeFilename(filename) {
 		return false
 	}
 
 	return strings.HasPrefix(filename, patientID+"_ppic_")
-}
-
-func isSafeFilename(filename string) bool {
-	filename = strings.TrimSpace(filename)
-	if filename == "" || filename == "." || filename == ".." {
-		return false
-	}
-	if strings.ContainsAny(filename, "/\\") {
-		return false
-	}
-	if strings.Contains(filename, "\x00") {
-		return false
-	}
-
-	return cleanFilenameSegment(filename) == filename
-}
-
-func cleanFilenameSegment(v string) string {
-	v = strings.TrimSpace(v)
-	if v == "" {
-		return ""
-	}
-
-	b := strings.Builder{}
-	b.Grow(len(v))
-	for _, r := range v {
-		switch {
-		case r >= 'a' && r <= 'z':
-			b.WriteRune(r)
-		case r >= 'A' && r <= 'Z':
-			b.WriteRune(r)
-		case r >= '0' && r <= '9':
-			b.WriteRune(r)
-		case r == '.', r == '-', r == '_':
-			b.WriteRune(r)
-		case r == ' ':
-			b.WriteRune('_')
-		}
-	}
-
-	return b.String()
 }

@@ -26,26 +26,8 @@
   - [ ] Keep feed scoped to current user and recent window.
   - [ ] Re-evaluate need for FeedEvent `Attribute/From/To` after status events are in place.
 
-- [feature/forms] Keep submitted values when an update fails validation
-  - [ ] On a validation failure, re-render the form fragment with the submitted values and field errors instead of redirecting to the edit page.
-  - [ ] Apply to the clinic, patient and user forms.
-  - [ ] Decide how to keep an uploaded picture across a failed save; a file input cannot be refilled.
-
-- [infra/profile-pic] Profile picture handling across clinic, patient and user
-  - [ ] The three `profile_pic.go` files duplicate the filename cleaning, safe-filename check, missing-file detection and path building, and have drifted (user's `isSafeFilename` has extra `..` checks; clinic ignores `AssetsDir` and writes to `./public/assets/profile_pics`).
-  - [ ] Review the drift, then decide the shape: a shared leaf package in `internal/lib/` that the three services call, since features must not import each other.
-
-- [infra/load] Load and memory tests
-  - [x] Isolated app with seed data, jobs, outbound messaging and rate limiter off: `scripts/stack.sh up`. It seeds without `-bulk`.
-  - [x] `scripts/load_test.sh` runs an `oha` baseline against the app.
-  - [x] Fix `scripts/load_test.sh` and `scripts/obs_load.sh`: both look for an `Auth` cookie after `POST /api/auth/signin`, but the app sets `session_id`, and that route exists only when Logto is disabled.
-  - [x] Bulk seed for the stack: `scripts/stack.sh up --bulk`.
-  - [x] `k6` scenario: sign in as the seed admin, then a weighted mix of reads (dashboard, appointments, clinic and patient search, revenue) and writes (create and update an appointment), with pass/fail thresholds.
-  - [x] Memory sampler: poll `/api/admin/runtime` during a run and write live heap, GC cycles and goroutines to a CSV; report peak, end value and whether the live-heap floor rises.
-  - [x] Make targets for the quick `oha` baseline and the full `k6` run, run manually on the local machine, and a short doc with the baselines.
-
-- [bug/dead-ui] Views that point at routes or strings that do not exist (found while writing `docs/features.md`)
-  - [ ] Staff delete (`DELETE /appointments/:id`) has a route and no button. `POST /p/a/:token/changedate` has no page or button, and the patient email has only the confirm link.
+- [feature/clinic] Clinic cover photo
+  - [ ] The clinic form has a "Cover photo" upload box (`coverPhoto`) that nothing reads. Store it in `clinics.cover_pic` and show it, after the RustFS change.
 
 - [verify/plans] Verification plans for the features that have none
   - [ ] Plans, run once on the stack with evidence, for the dashboard, revenue, the patient email links (`/p/a/<token>/...`) and creating an appointment.
@@ -64,12 +46,9 @@
   - Upload and retrieval path for patient/profile images via RustFS.
   - Migration/fallback strategy for existing disk-backed image files.
 
-- [infra/build] Tailwind CSS is generated at Docker build time
-  - [x] The Dockerfile installs Node, runs `npm ci` and `npm run css:build`; `public/global.css` is gitignored and built into the image.
-  - [x] The runtime image has no Node.
-
-- [infra/build] templ generated files are committed
-  - [x] `*_templ.go` stays tracked, so anyone can build and run the app without generating templ files. The Docker build runs no `templ generate`.
+- [infra/ids] Replace XIDs with UUIDv7
+  - [ ] `internal/lib/xid` builds record UIDs from `rs/xid`. Use the standard library `uuid.NewV7` instead, and drop the `rs/xid` dependency.
+  - [ ] Decide what happens to existing UIDs (`clnc...`, `ptnt...`) and their prefixes.
 
 ## Icebox
 
@@ -97,6 +76,40 @@
   - Define precedence rules explicitly (appointment overrides patient, or fallback behavior).
 
 ## Done
+
+- [feature/forms] Keep submitted values when an update fails validation
+  - [x] Clinic, patient, user profile and admin user updates re-render the form with the submitted values and a toast. Clinic and patient create failures do the same.
+  - [x] `Initials()` no longer panics on a blank name.
+  - [x] Clinic and patient forms keep the selected picture file across a failed save: `hx-preserve` on the file input, only when the form has field errors, and `settle:0` on the form swap (htmx copies the old attributes onto the new element during settle, so `hx-preserve` is not seen otherwise). The user form already had it.
+  - [x] An unsupported picture type returns the form with an error toast, and the file pickers list only the supported extensions (`profilepic.Accept`).
+
+- [infra/profile-pic] Profile picture handling across clinic, patient and user
+  - [x] Shared leaf package `internal/lib/profilepic`: random file names, one safe-filename rule, missing-file detection, path building.
+  - [x] Clinic pictures live in `AssetsDir/clinics` and are served by `GET /clinics/:id/profilepic/:filename`. Old `/public/assets/profile_pics` paths keep working.
+  - [x] Removed the duplicate "cover photo" file inputs from the patient and user forms, and the unused user filename helpers. The clinic form keeps a "Cover photo" box as a placeholder with no backend.
+  - [x] A replaced clinic or patient picture file is deleted after the new one is saved.
+
+- [bug/dead-ui] Views that point at routes or strings that do not exist
+  - [x] `/signup` redirects a signed-in visitor, the session page "Appointments" button links to the patient's appointments, the edit page has a "Cancel appointment" button, the unrouted models page is removed, `/admin/users` has a search and no "New" buttons, and the missing locale keys exist (#162, #163).
+  - Kept for REST completeness: `DELETE /appointments/:id` (a soft delete) has no button, and `POST /p/a/:token/changedate` has no page or button.
+
+- [tooling/feature-map] Feature map fixes: the repeated "Reached from" text on area cards, and sign out and save-to-list flows drawn as loops (#162)
+
+- [infra/load] Load and memory tests
+  - [x] Isolated app with seed data, jobs, outbound messaging and rate limiter off: `scripts/stack.sh up`. It seeds without `-bulk`.
+  - [x] `scripts/load_test.sh` runs an `oha` baseline against the app.
+  - [x] Fix `scripts/load_test.sh` and `scripts/obs_load.sh`: both look for an `Auth` cookie after `POST /api/auth/signin`, but the app sets `session_id`, and that route exists only when Logto is disabled.
+  - [x] Bulk seed for the stack: `scripts/stack.sh up --bulk`.
+  - [x] `k6` scenario: sign in as the seed admin, then a weighted mix of reads (dashboard, appointments, clinic and patient search, revenue) and writes (create and update an appointment), with pass/fail thresholds.
+  - [x] Memory sampler: poll `/api/admin/runtime` during a run and write live heap, GC cycles and goroutines to a CSV; report peak, end value and whether the live-heap floor rises.
+  - [x] Make targets for the quick `oha` baseline and the full `k6` run, run manually on the local machine, and a short doc with the baselines.
+
+- [infra/build] Tailwind CSS is generated at Docker build time
+  - [x] The Dockerfile installs Node, runs `npm ci` and `npm run css:build`; `public/global.css` is gitignored and built into the image.
+  - [x] The runtime image has no Node.
+
+- [infra/build] templ generated files are committed
+  - [x] `*_templ.go` stays tracked, so anyone can build and run the app without generating templ files. The Docker build runs no `templ generate`.
 
 - [feature/dashboard] Populate FeedEvent on appointment changes and wire Dashboard Feed widget
   - Create FeedEvent records on appointment create/update/cancel/complete/delete + patient confirm/cancel.

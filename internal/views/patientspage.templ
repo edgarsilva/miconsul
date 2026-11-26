@@ -1,6 +1,7 @@
 package views
 
 import (
+	"miconsul/internal/lib/profilepic"
 	"miconsul/internal/models"
 	"strconv"
 	"time"
@@ -154,7 +155,10 @@ templ PatientProfile(c *Ctx, patient models.Patient) {
 									name="profilePic"
 									type="file"
 									class="file-input w-full file-input-primary"
-									accept="image/*"
+									accept={ profilepic.Accept }
+									if len(patient.FieldErrors()) > 0 {
+										hx-preserve
+									}
 								/>
 							</div>
 						</div>
@@ -215,22 +219,6 @@ templ PatientProfile(c *Ctx, patient models.Patient) {
 							<label for="ocupation" class="block text-sm font-medium leading-6 text-base-content">{ c.l("str.ocupation") }</label>
 							<div class="mt-2">
 								<input type="text" name="ocupation" value={ patient.Ocupation } id="ocupation" autocomplete="ocupation" class="input block w-full"/>
-							</div>
-						</div>
-						<div class="col-span-full">
-							<label for="cover-photo" class="block text-sm font-medium leading-6">{ c.l("str.cover_photo") }</label>
-							<div class="mt-2 flex justify-center rounded-lg border border-dashed border-base-content/25 px-6 py-10">
-								<div class="text-center">
-									@CmpImageIcon("mx-auto h-12 w-12 text-base-content/60")
-									<div class="mt-4 flex text-sm leading-6 text-base-content/60">
-										<label for="file-upload" class="relative link link-primary font-semibold leading-6">
-											<span>{ c.l("str.upload_file") }</span>
-											<input id="file-upload" name="profilePic" type="file" class="sr-only"/>
-										</label>
-										<p class="pl-1">{ c.l("str.or_drag_and_drop") }</p>
-									</div>
-									<p class="text-xs leading-5 text-base-content/60">PNG, JPG, GIF { c.l("str.up_to_10mb") }</p>
-								</div>
 							</div>
 						</div>
 					</div>
@@ -471,7 +459,7 @@ templ PatientForm(c *Ctx, patient models.Patient) {
 			action="/patients"
 		}
 		hx-target="closest #patient_profile_cont"
-		hx-swap="outerHTML"
+		hx-swap="outerHTML settle:0"
 	>
 		<span class="absolute badge badge-success badge-sm p-2 top-2 right-2 htmx-indicator">
 			<span class="loading loading-ring loading-sm"></span>

@@ -407,8 +407,12 @@ func TestHandleUpdateRejectsBlankName(t *testing.T) {
 			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 			req.Header.Set("HX-Request", "true")
 			resp, err := app.Test(req)
-			if err != nil || resp.StatusCode != fiber.StatusNoContent {
-				t.Fatalf("blank name expected 204 redirect, got status=%d err=%v", resp.StatusCode, err)
+			if err != nil || resp.StatusCode != fiber.StatusOK {
+				t.Fatalf("blank name expected 200 with the form re-rendered, got status=%d err=%v", resp.StatusCode, err)
+			}
+			raw, _ := io.ReadAll(resp.Body)
+			if !strings.Contains(string(raw), `value="5551234567"`) {
+				t.Errorf("body lost the submitted phone")
 			}
 
 			saved, err := svc.TakeUserByUID(context.Background(), target.UID)
@@ -460,8 +464,8 @@ func TestHandleUpdateProfileBlankNameKeepsTheAvatar(t *testing.T) {
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Set("HX-Request", "true")
 	resp, err := app.Test(req)
-	if err != nil || resp.StatusCode != fiber.StatusNoContent {
-		t.Fatalf("blank name expected 204 redirect, got status=%d err=%v", resp.StatusCode, err)
+	if err != nil || resp.StatusCode != fiber.StatusOK {
+		t.Fatalf("blank name expected 200 with the form re-rendered, got status=%d err=%v", resp.StatusCode, err)
 	}
 
 	got, err := os.ReadFile(avatarPath)

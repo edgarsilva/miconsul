@@ -448,3 +448,25 @@ func TestHealthReportFailingChecks(t *testing.T) {
 		t.Fatalf("FailingChecks() = %d, want 3 (readyz, startupz, valkey)", got)
 	}
 }
+
+func TestInitials(t *testing.T) {
+	cases := []struct{ name, want string }{
+		{"Ana Maria Lopez", "AM"},
+		{"Ana", "A"},
+		{"  Ana   Maria ", "AM"},
+		{"Éva Ñandú", "ÉÑ"},
+		{"", "XX"},
+		{"   ", "XX"},
+	}
+	for _, tc := range cases {
+		if got := initials(tc.name, "XX"); got != tc.want {
+			t.Errorf("initials(%q) = %q, want %q", tc.name, got, tc.want)
+		}
+	}
+	if got := (Patient{Name: " "}).Initials(); got != "PA" {
+		t.Errorf("blank patient initials = %q, want PA", got)
+	}
+	if got := (User{Name: " "}).Initials(); got != "PA" {
+		t.Errorf("blank user initials = %q, want PA", got)
+	}
+}

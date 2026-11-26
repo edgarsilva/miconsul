@@ -1,9 +1,11 @@
 package clinic
 
 import (
-	"encoding/hex"
+	"bytes"
 	"errors"
+	"html"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -137,35 +139,77 @@ func TestHandleUpdateRejectsBlankName(t *testing.T) {
 		c.Locals("current_user", user)
 		return svc.HandleUpdate(c)
 	})
-	req := httptest.NewRequest(http.MethodPatch, "/clinics/"+seed.UID, strings.NewReader(url.Values{"name": {""}}.Encode()))
+	req := httptest.NewRequest(http.MethodPatch, "/clinics/"+seed.UID, strings.NewReader(url.Values{"name": {""}, "phone": {"555-0100"}}.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("HX-Request", "true")
 	resp, err := app.Test(req)
 	if err != nil {
 		t.Fatalf("update clinic: %v", err)
 	}
-	if resp.StatusCode != fiber.StatusNoContent || resp.Header.Get("HX-Redirect") != "/clinics/"+seed.UID {
-		t.Fatalf("status=%d HX-Redirect=%q, want 204 back to the clinic", resp.StatusCode, resp.Header.Get("HX-Redirect"))
+	if resp.StatusCode != fiber.StatusOK {
+		t.Fatalf("status=%d, want 200 with the form re-rendered", resp.StatusCode)
 	}
-	if flash := flashText(t, resp); !strings.Contains(flash, "Clinic name can't be blank") {
-		t.Fatalf("flash = %q, want the blank-name message", flash)
+	raw, _ := io.ReadAll(resp.Body)
+	body := html.UnescapeString(string(raw))
+	if !strings.Contains(body, "Clinic name can't be blank") {
+		t.Fatalf("body has no blank-name toast")
+	}
+	if !strings.Contains(body, `value="555-0100"`) {
+		t.Fatalf("body lost the submitted phone")
+	}
+	if !strings.Contains(body, "hx-preserve") || !strings.Contains(body, "settle:0") {
+		t.Fatalf("body does not keep the selected picture file: want hx-preserve on the input and settle:0 on the form swap")
 	}
 }
 
-// flashText returns the flash cookie's decoded content, which carries the toast message.
-func flashText(t *testing.T, resp *http.Response) string {
-	t.Helper()
+func TestHandleUpdateRejectsAnUnsupportedPicture(t *testing.T) {
+	svc, user := newClinicServiceForTests(t)
+	svc.Env.AssetsDir = t.TempDir()
 
-	for _, cookie := range resp.Cookies() {
-		if cookie.Name != "fiber_flash" {
-			continue
-		}
-		raw, err := hex.DecodeString(cookie.Value)
-		if err != nil {
-			t.Fatalf("decode flash cookie: %v", err)
-		}
-		return string(raw)
+	seed := models.Clinic{UserID: user.ID, Name: "Seed", Phone: "111"}
+	if err := svc.CreateClinic(t.Context(), &seed); err != nil {
+		t.Fatalf("seed clinic: %v", err)
 	}
 
-	return ""
+	app := fiber.New()
+	app.Patch("/clinics/:id", func(c fiber.Ctx) error {
+		c.Locals("current_user", user)
+		return svc.HandleUpdate(c)
+	})
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	_ = writer.WriteField("name", "Renamed")
+	_ = writer.WriteField("phone", "999")
+	_ = writer.WriteField("price", "5")
+	part, err := writer.CreateFormFile("profilePic", "scan.tiff")
+	if err != nil {
+		t.Fatalf("create multipart file: %v", err)
+	}
+	_, _ = part.Write([]byte("tiff"))
+	_ = writer.Close()
+
+	req := httptest.NewRequest(http.MethodPatch, "/clinics/"+seed.UID, body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("HX-Request", "true")
+	resp, err := app.Test(req)
+	if err != nil || resp.StatusCode != fiber.StatusOK {
+		t.Fatalf("status=%d err=%v, want 200 with the form re-rendered", resp.StatusCode, err)
+	}
+	raw, _ := io.ReadAll(resp.Body)
+	page := html.UnescapeString(string(raw))
+	if !strings.Contains(page, "Unsupported picture type") {
+		t.Errorf("body has no unsupported-type toast")
+	}
+	if !strings.Contains(page, `value="999"`) {
+		t.Errorf("body lost the submitted phone")
+	}
+
+	saved, err := svc.TakeClinicByID(t.Context(), user.ID, seed.UID)
+	if err != nil {
+		t.Fatalf("reload clinic: %v", err)
+	}
+	if saved.Name != "Seed" {
+		t.Errorf("Name = %q, want the clinic unchanged after a rejected upload", saved.Name)
+	}
 }

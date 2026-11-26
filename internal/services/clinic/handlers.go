@@ -3,11 +3,13 @@ package clinic
 import (
 	"cmp"
 	"errors"
+	"os"
 	"strings"
 
 	"miconsul/internal/models"
 	view "miconsul/internal/views"
 
+	"github.com/a-h/templ"
 	"github.com/gofiber/fiber/v3"
 	"gorm.io/gorm"
 )
@@ -71,10 +73,14 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/clinics/new", "Invalid clinic input", view.LevelError)
 	}
 	clinic := input.toClinic(0, "", cu.ID)
+	if hasUnsupportedProfilePic(c) {
+		return s.respondWithClinicToast(c, clinic, unsupportedPicMessage, view.LevelWarning)
+	}
 
 	err = s.CreateClinic(c.Context(), &clinic)
 	if err != nil {
-		return s.RedirectWithToast(c, "/clinics/new", "Failed to create clinic", view.LevelError)
+		clinic.UID = ""
+		return s.respondWithClinicToast(c, clinic, "Failed to create clinic", view.LevelError)
 	}
 
 	clinic.ProfilePic = s.attachClinicPic(c, cu.ID, clinic)
@@ -110,10 +116,14 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	profilePic := clinic.ProfilePic
 	clinic = input.toClinic(clinic.ID, clinic.UID, clinic.UserID)
 	clinic.ProfilePic = profilePic
+	if hasUnsupportedProfilePic(c) {
+		return s.respondWithClinicToast(c, clinic, unsupportedPicMessage, view.LevelWarning)
+	}
 
 	err = s.UpdateClinicByID(c.Context(), cu.ID, clinicID, clinic)
 	if errors.Is(err, ErrInvalidClinic) {
-		return s.RedirectWithToast(c, "/clinics/"+clinicID, "Clinic name can't be blank", view.LevelWarning)
+		clinic.SetFieldError("name", "Name can't be blank")
+		return s.respondWithClinicToast(c, clinic, "Clinic name can't be blank", view.LevelWarning)
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.RedirectWithToast(c, "/clinics", "Clinic does not exist", view.LevelWarning)
@@ -172,6 +182,49 @@ func (s *service) HandleIndexSearch(c fiber.Ctx) error {
 
 	vc := view.NewCtx(c)
 	return view.Render(c, view.ClinicList(vc, clinics))
+}
+
+// HandleProfilePic serves a clinic's profile picture file.
+// GET: /clinics/:id/profilepic/:filename
+func (s *service) HandleProfilePic(c fiber.Ctx) error {
+	cu := s.CurrentUser(c)
+
+	id := strings.TrimSpace(c.Params("id", ""))
+	filename := strings.TrimSpace(c.Params("filename", ""))
+	if !IsSafeProfilePicFilenameForClinic(id, filename) {
+		return c.SendStatus(fiber.StatusNotFound)
+	}
+
+	_, err := s.TakeClinicByID(c.Context(), cu.ID, id)
+	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
+		return c.SendStatus(fiber.StatusNotFound)
+	}
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	path, err := ProfilePicPath(filename, s.Env.AssetsDir)
+	if err != nil {
+		return c.SendStatus(fiber.StatusNotFound)
+	}
+
+	fileInfo, err := os.Stat(path)
+	if errors.Is(err, os.ErrNotExist) || (err == nil && fileInfo.IsDir()) {
+		return c.SendStatus(fiber.StatusNotFound)
+	}
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	return c.SendFile(path)
+}
+
+func (s *service) respondWithClinicToast(c fiber.Ctx, clinic models.Clinic, message string, level view.Level) error {
+	vc := view.NewCtx(c)
+	return view.Render(c, templ.Join(
+		view.ClinicProfileSection(vc, clinic),
+		view.CmpToastPartial(message, "", level),
+	))
 }
 
 func (s *service) respondWithClinicPage(c fiber.Ctx, clinic models.Clinic) error {

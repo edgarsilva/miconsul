@@ -1,6 +1,7 @@
 package views
 
 import (
+	"miconsul/internal/lib/profilepic"
 	"miconsul/internal/models"
 	"strconv"
 )
@@ -176,7 +177,10 @@ templ ClinicProfile(c *Ctx, clinic models.Clinic) {
 									name="profilePic"
 									type="file"
 									class="file-input w-full file-input-primary"
-									accept="image/*"
+									accept={ profilepic.Accept }
+									if len(clinic.FieldErrors()) > 0 {
+										hx-preserve
+									}
 								/>
 							</div>
 						</div>
@@ -230,14 +234,14 @@ templ ClinicProfile(c *Ctx, clinic models.Clinic) {
 							</div>
 						</div>
 						<div class="col-span-full">
-							<label for="file_upload" class="block text-sm font-medium leading-6">{ c.l("str.cover_photo") }</label>
+							<label for="cover_photo" class="block text-sm font-medium leading-6">{ c.l("str.cover_photo") }</label>
 							<div class="mt-2 flex justify-center rounded-lg border border-dashed border-base-content/25 px-6 py-10">
 								<div class="text-center">
 									@CmpImageIcon("mx-auto h-12 w-12 text-base-content/60")
 									<div class="mt-4 flex text-sm leading-6 text-base-content/60">
-										<label for="file_upload" class="relative link link-primary font-semibold leading-6">
+										<label for="cover_photo" class="relative link link-primary font-semibold leading-6">
 											<span>{ c.l("str.upload_file") }</span>
-											<input id="file_upload" name="profilePic" type="file" class="sr-only"/>
+											<input id="cover_photo" name="coverPhoto" type="file" class="sr-only" accept="image/*"/>
 										</label>
 										<p class="pl-1">{ c.l("str.or_drag_and_drop") }</p>
 									</div>
@@ -362,7 +366,7 @@ templ ClinicForm(c *Ctx, clinic models.Clinic) {
 			action={ templ.URL("/clinics/" + clinic.UID) }
 		}
 		hx-target="closest #clinic_profile_cont"
-		hx-swap="outerHTML"
+		hx-swap="outerHTML settle:0"
 	>
 		<span class="absolute top-2 right-2 loading loading-ring loading-sm htmx-indicator"></span>
 		{ children... }

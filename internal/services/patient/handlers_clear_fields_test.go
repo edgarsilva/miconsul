@@ -2,8 +2,9 @@ package patient
 
 import (
 	"bytes"
-	"encoding/hex"
 	"errors"
+	"html"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -158,8 +159,12 @@ func TestHandleUpdateProfilePic(t *testing.T) {
 			req.Header.Set("Content-Type", writer.FormDataContentType())
 			req.Header.Set("HX-Request", "true")
 			resp, err := app.Test(req)
-			if err != nil || resp.StatusCode != fiber.StatusNoContent {
-				t.Fatalf("update patient expected 204, got status=%d err=%v", resp.StatusCode, err)
+			wantStatus := fiber.StatusOK
+			if tt.saved {
+				wantStatus = fiber.StatusNoContent
+			}
+			if err != nil || resp.StatusCode != wantStatus {
+				t.Fatalf("update patient expected %d, got status=%d err=%v", wantStatus, resp.StatusCode, err)
 			}
 
 			saved, err := svc.TakePatientByID(t.Context(), user.ID, seed.UID)
@@ -225,7 +230,7 @@ func TestHandleUpdateRejectsBlankRequiredFields(t *testing.T) {
 		c.Locals("current_user", user)
 		return svc.HandleUpdate(c)
 	})
-	form := url.Values{"name": {"Original"}, "age": {"30"}, "phone": {""}}
+	form := url.Values{"name": {"Original Name"}, "age": {"30"}, "phone": {""}}
 	req := httptest.NewRequest(http.MethodPatch, "/patients/"+seed.UID, strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("HX-Request", "true")
@@ -233,30 +238,20 @@ func TestHandleUpdateRejectsBlankRequiredFields(t *testing.T) {
 	if err != nil {
 		t.Fatalf("update patient: %v", err)
 	}
-	if resp.StatusCode != fiber.StatusNoContent || resp.Header.Get("HX-Redirect") != "/patients/"+seed.UID {
-		t.Fatalf("status=%d HX-Redirect=%q, want 204 back to the patient", resp.StatusCode, resp.Header.Get("HX-Redirect"))
+	if resp.StatusCode != fiber.StatusOK {
+		t.Fatalf("status=%d, want 200 with the form re-rendered", resp.StatusCode)
 	}
-	if flash := flashText(t, resp); !strings.Contains(flash, "Name, age and phone can't be blank") {
-		t.Fatalf("flash = %q, want the blank-field message", flash)
+	raw, _ := io.ReadAll(resp.Body)
+	body := html.UnescapeString(string(raw))
+	if !strings.Contains(body, "Name, age and phone can't be blank") {
+		t.Fatalf("body has no blank-field toast")
 	}
-}
-
-// flashText returns the flash cookie's decoded content, which carries the toast message.
-func flashText(t *testing.T, resp *http.Response) string {
-	t.Helper()
-
-	for _, cookie := range resp.Cookies() {
-		if cookie.Name != "fiber_flash" {
-			continue
-		}
-		raw, err := hex.DecodeString(cookie.Value)
-		if err != nil {
-			t.Fatalf("decode flash cookie: %v", err)
-		}
-		return string(raw)
+	if !strings.Contains(body, `value="Original Name"`) {
+		t.Fatalf("body lost the submitted name")
 	}
-
-	return ""
+	if !strings.Contains(body, "hx-preserve") || !strings.Contains(body, "settle:0") {
+		t.Fatalf("body does not keep the selected picture file: want hx-preserve on the input and settle:0 on the form swap")
+	}
 }
 
 func TestAttachPatientPicRecordsAFailedSave(t *testing.T) {
@@ -359,5 +354,114 @@ func TestAttachPatientPicRecordsAFailedDBUpdate(t *testing.T) {
 	}
 	if status := spans[0].Status(); status.Code != codes.Error || status.Description != "attach profile pic failed" {
 		t.Errorf("span status = %v %q, want the attach failure", status.Code, status.Description)
+	}
+}
+
+func TestAttachPatientPicDeletesTheReplacedFile(t *testing.T) {
+	svc, user := newPatientServiceForTests(t)
+	svc.Env.AssetsDir = t.TempDir()
+
+	patient := models.Patient{UserID: user.ID, Name: "Alpha", Age: 30, Phone: "111"}
+	if err := svc.CreatePatient(t.Context(), &patient); err != nil {
+		t.Fatalf("seed patient: %v", err)
+	}
+
+	oldName := patient.UID + "_ppic_old.png"
+	oldPath, err := ProfilePicPath(oldName, svc.Env.AssetsDir)
+	if err != nil {
+		t.Fatalf("old picture path: %v", err)
+	}
+	if err := os.WriteFile(oldPath, []byte("old"), 0o600); err != nil {
+		t.Fatalf("write old picture: %v", err)
+	}
+	patient.ProfilePic = "/patients/" + patient.UID + "/profilepic/" + oldName
+
+	var got string
+	app := fiber.New()
+	app.Post("/pic", func(c fiber.Ctx) error {
+		got = svc.attachPatientPic(c, user.ID, patient)
+		return c.SendStatus(fiber.StatusNoContent)
+	})
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("profilePic", "new.png")
+	if err != nil {
+		t.Fatalf("create multipart file: %v", err)
+	}
+	if _, err := part.Write([]byte("new")); err != nil {
+		t.Fatalf("write multipart file: %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("close multipart writer: %v", err)
+	}
+	req := httptest.NewRequest(http.MethodPost, "/pic", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	if _, err := app.Test(req); err != nil {
+		t.Fatalf("attach picture: %v", err)
+	}
+
+	if got == "" || got == patient.ProfilePic {
+		t.Fatalf("picture = %q, want the new one", got)
+	}
+	if _, err := os.Stat(oldPath); !os.IsNotExist(err) {
+		t.Errorf("old picture file still exists: %v", err)
+	}
+	dir := filepath.Dir(oldPath)
+	entries, err := os.ReadDir(dir)
+	if err != nil || len(entries) != 1 {
+		t.Errorf("want only the new picture in %s, got %d entries err=%v", dir, len(entries), err)
+	}
+}
+
+func TestHandleUpdateRejectsAnUnsupportedPicture(t *testing.T) {
+	svc, user := newPatientServiceForTests(t)
+	svc.Env.AssetsDir = t.TempDir()
+
+	seed := models.Patient{UserID: user.ID, Name: "Seed", Age: 30, Phone: "111"}
+	if err := svc.CreatePatient(t.Context(), &seed); err != nil {
+		t.Fatalf("seed patient: %v", err)
+	}
+
+	app := fiber.New()
+	app.Patch("/patients/:id", func(c fiber.Ctx) error {
+		c.Locals("current_user", user)
+		return svc.HandleUpdate(c)
+	})
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	_ = writer.WriteField("name", "Renamed")
+	_ = writer.WriteField("phone", "999")
+	_ = writer.WriteField("age", "30")
+	part, err := writer.CreateFormFile("profilePic", "scan.tiff")
+	if err != nil {
+		t.Fatalf("create multipart file: %v", err)
+	}
+	_, _ = part.Write([]byte("tiff"))
+	_ = writer.Close()
+
+	req := httptest.NewRequest(http.MethodPatch, "/patients/"+seed.UID, body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("HX-Request", "true")
+	resp, err := app.Test(req)
+	if err != nil || resp.StatusCode != fiber.StatusOK {
+		t.Fatalf("status=%d err=%v, want 200 with the form re-rendered", resp.StatusCode, err)
+	}
+	raw, _ := io.ReadAll(resp.Body)
+	page := html.UnescapeString(string(raw))
+	if !strings.Contains(page, "Unsupported picture type") {
+		t.Errorf("body has no unsupported-type toast")
+	}
+	if !strings.Contains(page, `value="999"`) {
+		t.Errorf("body lost the submitted phone")
+	}
+
+	saved, err := svc.TakePatientByID(t.Context(), user.ID, seed.UID)
+	if err != nil {
+		t.Fatalf("reload patient: %v", err)
+	}
+	if saved.Name != "Seed" {
+		t.Errorf("Name = %q, want the patient unchanged after a rejected upload", saved.Name)
 	}
 }

@@ -2,6 +2,7 @@ package views
 
 import (
 	"miconsul/internal/lib/preferences"
+	"miconsul/internal/lib/profilepic"
 	"miconsul/internal/models"
 )
 
@@ -142,22 +143,6 @@ templ UserProfile(c *Ctx, user models.User) {
 									</select>
 								</div>
 							</div>
-							<div class="col-span-full">
-								<label for="cover-photo" class="block text-sm font-medium leading-6">{ c.l("str.cover_photo") }</label>
-								<div class="mt-2 flex justify-center rounded-lg border border-dashed border-base-content/25 px-6 py-10">
-									<div class="text-center">
-										@CmpImageIcon("mx-auto h-12 w-12 text-base-content/60")
-										<div class="mt-4 flex text-sm leading-6 text-base-content/60">
-											<label for="file-upload" class="relative link link-primary font-semibold leading-6">
-												<span>{ c.l("str.upload_file") }</span>
-												<input id="file-upload" name="profilePic" type="file" class="sr-only"/>
-											</label>
-											<p class="pl-1">{ c.l("str.or_drag_and_drop") }</p>
-										</div>
-										<p class="text-xs leading-5 text-base-content/60">PNG, JPG, GIF { c.l("str.up_to_10mb") }</p>
-									</div>
-								</div>
-							</div>
 						}
 					</div>
 				</div>
@@ -180,7 +165,7 @@ templ UserAvatarField(c *Ctx, user models.User) {
 					name="profilePic"
 					type="file"
 					class="file-input w-full file-input-primary"
-					accept="image/*"
+					accept={ profilepic.Accept }
 					hx-post="/profile/avatar/preview"
 					hx-encoding="multipart/form-data"
 					hx-trigger="input changed delay:350ms"
