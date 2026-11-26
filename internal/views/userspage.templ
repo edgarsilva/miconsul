@@ -2,6 +2,7 @@ package views
 
 import (
 	"miconsul/internal/lib/preferences"
+	"miconsul/internal/lib/profilepic"
 	"miconsul/internal/models"
 )
 
@@ -164,7 +165,7 @@ templ UserAvatarField(c *Ctx, user models.User) {
 					name="profilePic"
 					type="file"
 					class="file-input w-full file-input-primary"
-					accept="image/*"
+					accept={ profilepic.Accept }
 					hx-post="/profile/avatar/preview"
 					hx-encoding="multipart/form-data"
 					hx-trigger="input changed delay:350ms"

@@ -109,10 +109,16 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 	userUpds := input.toUserProfileUpdates()
 	err = normalizeUserWriteInput(&userUpds)
 	if errors.Is(err, ErrInvalidUser) {
-		return s.respondWithUserToast(c, userWithUpdates(cu, userUpds), "Name can't be blank", view.LevelWarning)
+		blank := userWithUpdates(cu, userUpds)
+		blank.SetFieldError("name", "Name can't be blank")
+		return s.respondWithUserToast(c, blank, "Name can't be blank", view.LevelWarning)
 	}
 	if err != nil {
 		return s.RedirectWithToast(c, "/profile", "Failed to update profile", view.LevelError)
+	}
+
+	if hasUnsupportedProfilePic(c) {
+		return s.respondWithUserToast(c, userWithUpdates(cu, userUpds), unsupportedPicMessage, view.LevelWarning)
 	}
 
 	path, picErr := SaveProfilePicToDisk(c, cu, s.Env.AssetsDir)
@@ -156,6 +162,10 @@ func (s *service) HandleProfilePicPreview(c fiber.Ctx) error {
 	user, err := s.TakeUserByUID(c.Context(), cu.UID)
 	if err != nil {
 		return s.RedirectWithToast(c, "/profile", "User does not exist", view.LevelError)
+	}
+
+	if hasUnsupportedProfilePic(c) {
+		return s.RedirectWithToast(c, "/profile", unsupportedPicMessage, view.LevelWarning)
 	}
 
 	previewPath, err := SaveProfilePicPreviewToTmp(c, user, s.Env.AssetsDir)
@@ -257,7 +267,9 @@ func (s *service) HandleAdminUpdateUser(c fiber.Ctx) error {
 		if takeErr != nil {
 			return s.RedirectWithToast(c, "/admin/users", "User does not exist", view.LevelWarning)
 		}
-		return s.respondWithUserToast(c, userWithUpdates(target, userUpds), "Name can't be blank", view.LevelWarning)
+		blank := userWithUpdates(target, userUpds)
+		blank.SetFieldError("name", "Name can't be blank")
+		return s.respondWithUserToast(c, blank, "Name can't be blank", view.LevelWarning)
 	}
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.RedirectWithToast(c, "/admin/users", "User does not exist", view.LevelWarning)
@@ -288,7 +300,6 @@ func userWithUpdates(user, updates models.User) models.User {
 	if updates.Locale != "" {
 		user.Locale = updates.Locale
 	}
-	user.SetFieldError("name", "Name can't be blank")
 
 	return user
 }

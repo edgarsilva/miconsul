@@ -73,6 +73,9 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/clinics/new", "Invalid clinic input", view.LevelError)
 	}
 	clinic := input.toClinic(0, "", cu.ID)
+	if hasUnsupportedProfilePic(c) {
+		return s.respondWithClinicToast(c, clinic, unsupportedPicMessage, view.LevelWarning)
+	}
 
 	err = s.CreateClinic(c.Context(), &clinic)
 	if err != nil {
@@ -113,6 +116,9 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	profilePic := clinic.ProfilePic
 	clinic = input.toClinic(clinic.ID, clinic.UID, clinic.UserID)
 	clinic.ProfilePic = profilePic
+	if hasUnsupportedProfilePic(c) {
+		return s.respondWithClinicToast(c, clinic, unsupportedPicMessage, view.LevelWarning)
+	}
 
 	err = s.UpdateClinicByID(c.Context(), cu.ID, clinicID, clinic)
 	if errors.Is(err, ErrInvalidClinic) {

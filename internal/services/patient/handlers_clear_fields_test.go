@@ -249,8 +249,8 @@ func TestHandleUpdateRejectsBlankRequiredFields(t *testing.T) {
 	if !strings.Contains(body, `value="Original Name"`) {
 		t.Fatalf("body lost the submitted name")
 	}
-	if !strings.Contains(body, "hx-preserve") {
-		t.Fatalf("body does not keep the selected picture file")
+	if !strings.Contains(body, "hx-preserve") || !strings.Contains(body, "settle:0") {
+		t.Fatalf("body does not keep the selected picture file: want hx-preserve on the input and settle:0 on the form swap")
 	}
 }
 
@@ -411,5 +411,57 @@ func TestAttachPatientPicDeletesTheReplacedFile(t *testing.T) {
 	entries, err := os.ReadDir(dir)
 	if err != nil || len(entries) != 1 {
 		t.Errorf("want only the new picture in %s, got %d entries err=%v", dir, len(entries), err)
+	}
+}
+
+func TestHandleUpdateRejectsAnUnsupportedPicture(t *testing.T) {
+	svc, user := newPatientServiceForTests(t)
+	svc.Env.AssetsDir = t.TempDir()
+
+	seed := models.Patient{UserID: user.ID, Name: "Seed", Age: 30, Phone: "111"}
+	if err := svc.CreatePatient(t.Context(), &seed); err != nil {
+		t.Fatalf("seed patient: %v", err)
+	}
+
+	app := fiber.New()
+	app.Patch("/patients/:id", func(c fiber.Ctx) error {
+		c.Locals("current_user", user)
+		return svc.HandleUpdate(c)
+	})
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	_ = writer.WriteField("name", "Renamed")
+	_ = writer.WriteField("phone", "999")
+	_ = writer.WriteField("age", "30")
+	part, err := writer.CreateFormFile("profilePic", "scan.tiff")
+	if err != nil {
+		t.Fatalf("create multipart file: %v", err)
+	}
+	_, _ = part.Write([]byte("tiff"))
+	_ = writer.Close()
+
+	req := httptest.NewRequest(http.MethodPatch, "/patients/"+seed.UID, body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("HX-Request", "true")
+	resp, err := app.Test(req)
+	if err != nil || resp.StatusCode != fiber.StatusOK {
+		t.Fatalf("status=%d err=%v, want 200 with the form re-rendered", resp.StatusCode, err)
+	}
+	raw, _ := io.ReadAll(resp.Body)
+	page := html.UnescapeString(string(raw))
+	if !strings.Contains(page, "Unsupported picture type") {
+		t.Errorf("body has no unsupported-type toast")
+	}
+	if !strings.Contains(page, `value="999"`) {
+		t.Errorf("body lost the submitted phone")
+	}
+
+	saved, err := svc.TakePatientByID(t.Context(), user.ID, seed.UID)
+	if err != nil {
+		t.Fatalf("reload patient: %v", err)
+	}
+	if saved.Name != "Seed" {
+		t.Errorf("Name = %q, want the patient unchanged after a rejected upload", saved.Name)
 	}
 }

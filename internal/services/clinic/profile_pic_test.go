@@ -39,8 +39,8 @@ func TestSaveProfilePicToDisk(t *testing.T) {
 	t.Run("rejects a non-image filename", func(t *testing.T) {
 		runClinicCtx(t, "..", []byte("img"), func(c fiber.Ctx) {
 			_, err := SaveProfilePicToDisk(c, models.Clinic{UID: "cln_1"}, t.TempDir())
-			if !errors.Is(err, profilepic.ErrInvalidFilename) {
-				t.Fatalf("expected ErrInvalidFilename, got %v", err)
+			if !errors.Is(err, profilepic.ErrUnsupportedType) {
+				t.Fatalf("expected ErrUnsupportedType, got %v", err)
 			}
 		})
 	})

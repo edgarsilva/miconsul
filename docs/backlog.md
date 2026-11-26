@@ -80,7 +80,8 @@
 - [feature/forms] Keep submitted values when an update fails validation
   - [x] Clinic, patient, user profile and admin user updates re-render the form with the submitted values and a toast. Clinic and patient create failures do the same.
   - [x] `Initials()` no longer panics on a blank name.
-  - [x] Clinic and patient forms keep the selected picture file across a failed save: `hx-preserve` on the file input, only when the form has field errors. The user form already had it.
+  - [x] Clinic and patient forms keep the selected picture file across a failed save: `hx-preserve` on the file input, only when the form has field errors, and `settle:0` on the form swap (htmx copies the old attributes onto the new element during settle, so `hx-preserve` is not seen otherwise). The user form already had it.
+  - [x] An unsupported picture type returns the form with an error toast, and the file pickers list only the supported extensions (`profilepic.Accept`).
 
 - [infra/profile-pic] Profile picture handling across clinic, patient and user
   - [x] Shared leaf package `internal/lib/profilepic`: random file names, one safe-filename rule, missing-file detection, path building.

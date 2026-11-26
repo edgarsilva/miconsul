@@ -24,8 +24,8 @@ func TestRandomName(t *testing.T) {
 	}
 
 	for _, upload := range []string{"", "..", "photo", "x.exe", "a.png/../b.php"} {
-		if _, err := RandomName("p_", upload); !errors.Is(err, ErrInvalidFilename) {
-			t.Fatalf("expected ErrInvalidFilename for %q, got %v", upload, err)
+		if _, err := RandomName("p_", upload); !errors.Is(err, ErrUnsupportedType) {
+			t.Fatalf("expected ErrUnsupportedType for %q, got %v", upload, err)
 		}
 	}
 }
@@ -108,5 +108,24 @@ func TestRemove(t *testing.T) {
 	}
 	if err := Remove(" ", "/patients", "a.png"); !errors.Is(err, ErrNoAssetsDir) {
 		t.Fatalf("expected ErrNoAssetsDir, got %v", err)
+	}
+}
+
+func TestCheckTypeAndAccept(t *testing.T) {
+	if err := CheckType("me.JPG"); err != nil {
+		t.Fatalf("jpg must be supported, got %v", err)
+	}
+	if err := CheckType("scan.tiff"); !errors.Is(err, ErrUnsupportedType) {
+		t.Fatalf("expected ErrUnsupportedType, got %v", err)
+	}
+
+	exts := strings.Split(Accept, ",")
+	if len(exts) != len(allowedExts) {
+		t.Fatalf("Accept lists %d extensions, allowedExts has %d", len(exts), len(allowedExts))
+	}
+	for _, ext := range exts {
+		if _, ok := allowedExts[ext]; !ok {
+			t.Fatalf("Accept lists %q, which is not allowed", ext)
+		}
 	}
 }

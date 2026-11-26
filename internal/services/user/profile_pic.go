@@ -12,6 +12,19 @@ import (
 
 const usersDir = "/users"
 
+const unsupportedPicMessage = "Unsupported picture type, use JPG, PNG, GIF, WebP, AVIF or HEIC"
+
+// hasUnsupportedProfilePic reports whether the request uploads a profilePic
+// that is not a picture type.
+func hasUnsupportedProfilePic(c fiber.Ctx) bool {
+	upload, err := c.FormFile("profilePic")
+	if err != nil || upload == nil {
+		return false
+	}
+
+	return errors.Is(profilepic.CheckType(upload.Filename), profilepic.ErrUnsupportedType)
+}
+
 // SaveProfilePicToDisk stores the uploaded profilePic as the user's avatar and
 // returns the URL path that serves it.
 func SaveProfilePicToDisk(c fiber.Ctx, user models.User, assetsDir string) (string, error) {
@@ -37,6 +50,11 @@ func saveUpload(c fiber.Ctx, user models.User, assetsDir, suffix, urlPath string
 
 	if user.UID == "" {
 		return "", errors.New("save profile pic without user.UID")
+	}
+
+	err = profilepic.CheckType(upload.Filename)
+	if err != nil {
+		return "", fmt.Errorf("check profile pic: %w", err)
 	}
 
 	filePath, err := ProfilePicPath(user.UID+suffix, assetsDir)

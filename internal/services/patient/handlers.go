@@ -105,6 +105,9 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 	patient := input.toPatient(0, "", cu.ID)
 
 	patient.Sanitize()
+	if hasUnsupportedProfilePic(c) {
+		return s.respondWithPatientToast(c, patient, unsupportedPicMessage, view.LevelWarning)
+	}
 
 	err = s.CreatePatient(c.Context(), &patient)
 	if err != nil {
@@ -154,10 +157,13 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	patient.ProfilePic = existingPatient.ProfilePic
 
 	patient.Sanitize()
+	if hasUnsupportedProfilePic(c) {
+		return s.respondWithPatientToast(c, patient, unsupportedPicMessage, view.LevelWarning)
+	}
 
 	err = s.UpdatePatientByID(c.Context(), cu.ID, patientID, patient)
 	if errors.Is(err, ErrInvalidPatient) {
-		patient.Name = strings.TrimSpace(patient.Name)
+		_ = normalizePatient(&patient)
 		_ = patient.IsValid()
 		return s.respondWithPatientToast(c, patient, "Name, age and phone can't be blank", view.LevelWarning)
 	}

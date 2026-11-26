@@ -16,6 +16,19 @@ import (
 
 const clinicsDir = "/clinics"
 
+const unsupportedPicMessage = "Unsupported picture type, use JPG, PNG, GIF, WebP, AVIF or HEIC"
+
+// hasUnsupportedProfilePic reports whether the request uploads a profilePic
+// that is not a picture type.
+func hasUnsupportedProfilePic(c fiber.Ctx) bool {
+	upload, err := c.FormFile("profilePic")
+	if err != nil || upload == nil {
+		return false
+	}
+
+	return errors.Is(profilepic.CheckType(upload.Filename), profilepic.ErrUnsupportedType)
+}
+
 // SaveProfilePicToDisk stores the uploaded profilePic under a random name and
 // returns the URL path that serves it.
 func SaveProfilePicToDisk(c fiber.Ctx, clinic models.Clinic, assetsDir string) (string, error) {

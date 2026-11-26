@@ -15,8 +15,12 @@ import (
 var (
 	ErrNotProvided     = errors.New("profile picture not provided")
 	ErrInvalidFilename = errors.New("invalid filename")
+	ErrUnsupportedType = errors.New("unsupported picture type")
 	ErrNoAssetsDir     = errors.New("assets directory not set")
 )
+
+// Accept lists the picture extensions for the accept attribute of a file input.
+const Accept = ".jpg,.jpeg,.png,.gif,.webp,.avif,.heic"
 
 var allowedExts = map[string]struct{}{
 	".jpg": {}, ".jpeg": {}, ".png": {}, ".gif": {}, ".webp": {}, ".avif": {}, ".heic": {},
@@ -37,12 +41,11 @@ func FormFileError(err error) error {
 
 // RandomName returns prefix, 16 random bytes in hex and the extension of
 // uploadName, for example ("u1_ppic_", "me.PNG") -> "u1_ppic_9f2c...e1.png".
-// It returns ErrInvalidFilename when the extension is not an image type.
+// It returns ErrUnsupportedType when the extension is not a picture type.
 func RandomName(prefix, uploadName string) (string, error) {
-	uploadName = strings.ReplaceAll(strings.TrimSpace(uploadName), "\\", "/")
-	ext := strings.ToLower(filepath.Ext(filepath.Base(uploadName)))
-	if _, ok := allowedExts[ext]; !ok {
-		return "", ErrInvalidFilename
+	ext, err := uploadExt(uploadName)
+	if err != nil {
+		return "", err
 	}
 
 	buf := make([]byte, 16)
@@ -51,6 +54,13 @@ func RandomName(prefix, uploadName string) (string, error) {
 	}
 
 	return prefix + hex.EncodeToString(buf) + ext, nil
+}
+
+// CheckType returns ErrUnsupportedType when uploadName does not have a picture
+// extension.
+func CheckType(uploadName string) error {
+	_, err := uploadExt(uploadName)
+	return err
 }
 
 // IsSafeFilename reports whether name is a single path segment made of
@@ -119,6 +129,16 @@ func Remove(assetsDir, subdir, filename string) error {
 	}
 
 	return nil
+}
+
+func uploadExt(uploadName string) (string, error) {
+	uploadName = strings.ReplaceAll(strings.TrimSpace(uploadName), "\\", "/")
+	ext := strings.ToLower(filepath.Ext(filepath.Base(uploadName)))
+	if _, ok := allowedExts[ext]; !ok {
+		return "", ErrUnsupportedType
+	}
+
+	return ext, nil
 }
 
 func isMissing(err error) bool {
