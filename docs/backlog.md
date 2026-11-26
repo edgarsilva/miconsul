@@ -26,9 +26,6 @@
   - [ ] Keep feed scoped to current user and recent window.
   - [ ] Re-evaluate need for FeedEvent `Attribute/From/To` after status events are in place.
 
-- [feature/forms] Keep an uploaded picture across a failed save
-  - [ ] A file input cannot be refilled. Try `hx-preserve` on the file input in the error fragment only; otherwise stage the upload as a preview once RustFS is in.
-
 - [verify/plans] Verification plans for the features that have none
   - [ ] Plans, run once on the stack with evidence, for the dashboard, revenue, the patient email links (`/p/a/<token>/...`) and creating an appointment.
 
@@ -80,6 +77,7 @@
 - [feature/forms] Keep submitted values when an update fails validation
   - [x] Clinic, patient, user profile and admin user updates re-render the form with the submitted values and a toast. Clinic and patient create failures do the same.
   - [x] `Initials()` no longer panics on a blank name.
+  - [x] Clinic and patient forms keep the selected picture file across a failed save: `hx-preserve` on the file input, only when the form has field errors. The user form already had it.
 
 - [infra/profile-pic] Profile picture handling across clinic, patient and user
   - [x] Shared leaf package `internal/lib/profilepic`: random file names, one safe-filename rule, missing-file detection, path building.

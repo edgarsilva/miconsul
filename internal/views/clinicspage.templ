@@ -177,6 +177,9 @@ templ ClinicProfile(c *Ctx, clinic models.Clinic) {
 									type="file"
 									class="file-input w-full file-input-primary"
 									accept="image/*"
+									if len(clinic.FieldErrors()) > 0 {
+										hx-preserve
+									}
 								/>
 							</div>
 						</div>

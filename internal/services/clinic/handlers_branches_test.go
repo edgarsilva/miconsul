@@ -196,6 +196,11 @@ func TestHandleUpdateClinicProfilePic(t *testing.T) {
 				t.Fatalf("update clinic failed: status=%d err=%v", resp.StatusCode, err)
 			}
 
+			raw, _ := io.ReadAll(resp.Body)
+			if tt.saved && strings.Contains(string(raw), "hx-preserve") {
+				t.Errorf("a saved form must not keep the selected picture file")
+			}
+
 			saved, err := svc.TakeClinicByID(t.Context(), user.ID, seed.UID)
 			if err != nil {
 				t.Fatalf("reload clinic: %v", err)

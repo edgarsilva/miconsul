@@ -249,6 +249,9 @@ func TestHandleUpdateRejectsBlankRequiredFields(t *testing.T) {
 	if !strings.Contains(body, `value="Original Name"`) {
 		t.Fatalf("body lost the submitted name")
 	}
+	if !strings.Contains(body, "hx-preserve") {
+		t.Fatalf("body does not keep the selected picture file")
+	}
 }
 
 func TestAttachPatientPicRecordsAFailedSave(t *testing.T) {

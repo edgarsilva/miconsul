@@ -155,6 +155,9 @@ templ PatientProfile(c *Ctx, patient models.Patient) {
 									type="file"
 									class="file-input w-full file-input-primary"
 									accept="image/*"
+									if len(patient.FieldErrors()) > 0 {
+										hx-preserve
+									}
 								/>
 							</div>
 						</div>

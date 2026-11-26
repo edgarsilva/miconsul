@@ -155,4 +155,7 @@ func TestHandleUpdateRejectsBlankName(t *testing.T) {
 	if !strings.Contains(body, `value="555-0100"`) {
 		t.Fatalf("body lost the submitted phone")
 	}
+	if !strings.Contains(body, "hx-preserve") {
+		t.Fatalf("body does not keep the selected picture file")
+	}
 }
