@@ -26,6 +26,9 @@
   - [ ] Keep feed scoped to current user and recent window.
   - [ ] Re-evaluate need for FeedEvent `Attribute/From/To` after status events are in place.
 
+- [feature/clinic] Clinic cover photo
+  - [ ] The clinic form has a "Cover photo" upload box (`coverPhoto`) that nothing reads. Store it in `clinics.cover_pic` and show it, after the RustFS change.
+
 - [verify/plans] Verification plans for the features that have none
   - [ ] Plans, run once on the stack with evidence, for the dashboard, revenue, the patient email links (`/p/a/<token>/...`) and creating an appointment.
 
@@ -82,7 +85,8 @@
 - [infra/profile-pic] Profile picture handling across clinic, patient and user
   - [x] Shared leaf package `internal/lib/profilepic`: random file names, one safe-filename rule, missing-file detection, path building.
   - [x] Clinic pictures live in `AssetsDir/clinics` and are served by `GET /clinics/:id/profilepic/:filename`. Old `/public/assets/profile_pics` paths keep working.
-  - [x] Removed the duplicate "cover photo" file inputs and the unused user filename helpers.
+  - [x] Removed the duplicate "cover photo" file inputs from the patient and user forms, and the unused user filename helpers. The clinic form keeps a "Cover photo" box as a placeholder with no backend.
+  - [x] A replaced clinic or patient picture file is deleted after the new one is saved.
 
 - [bug/dead-ui] Views that point at routes or strings that do not exist
   - [x] `/signup` redirects a signed-in visitor, the session page "Appointments" button links to the patient's appointments, the edit page has a "Cancel appointment" button, the unrouted models page is removed, `/admin/users` has a search and no "New" buttons, and the missing locale keys exist (#162, #163).
