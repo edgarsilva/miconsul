@@ -68,7 +68,7 @@ type Appointment struct {
 	PatientID     uint              `gorm:"index;default:null;not null" form:"patientId"`
 	Status        AppointmentStatus `gorm:"index;default:pending;not null;type:string" form:"status"`
 	FeedEvents    []FeedEvent       `gorm:"polymorphic:FeedEventable;"`
-	Notifications []Notification    `gorm:"polymorphic:Notificationable;"`
+	Notifications []Notification    `gorm:"polymorphic:Notifiable;"`
 	Clinic        Clinic
 	User          User
 	Patient       Patient
@@ -158,7 +158,7 @@ func (a *Appointment) CancelPath() string {
 	return "/p/a/" + a.Token + "/cancel"
 }
 
-func (a Appointment) AlertableID() string {
+func (a Appointment) NotifiableID() string {
 	if a.ID == 0 {
 		return ""
 	}
@@ -166,7 +166,7 @@ func (a Appointment) AlertableID() string {
 	return strconv.FormatUint(uint64(a.ID), 10)
 }
 
-func (a Appointment) AlertableType() string {
+func (a Appointment) NotifiableType() string {
 	return "appointments"
 }
 

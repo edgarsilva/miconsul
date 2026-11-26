@@ -340,9 +340,9 @@ func (s *service) newWhatsAppSender() *whatsapp.Sender {
 }
 
 func (s *service) appendNotification(ctx context.Context, appointment models.Appointment, notification models.Notification) {
-	notification.NotificationableID = appointment.AlertableID()
-	notification.NotificationableType = appointment.AlertableType()
-	if notification.NotificationableID == "" {
+	notification.NotifiableID = appointment.NotifiableID()
+	notification.NotifiableType = appointment.NotifiableType()
+	if notification.NotifiableID == "" {
 		fmt.Println("failed to append notification: appointment primary key missing")
 		return
 	}
