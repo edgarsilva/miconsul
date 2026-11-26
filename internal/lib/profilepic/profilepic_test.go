@@ -124,7 +124,7 @@ func TestCheckTypeAndAccept(t *testing.T) {
 		".png": "image/png", ".webp": "image/webp",
 	}
 	accepted := map[string]bool{}
-	for _, mimeType := range strings.Split(Accept, ",") {
+	for mimeType := range strings.SplitSeq(Accept, ",") {
 		accepted[mimeType] = false
 	}
 	for ext := range allowedExts {
