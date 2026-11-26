@@ -26,14 +26,8 @@
   - [ ] Keep feed scoped to current user and recent window.
   - [ ] Re-evaluate need for FeedEvent `Attribute/From/To` after status events are in place.
 
-- [feature/forms] Keep submitted values when an update fails validation
-  - [ ] On a validation failure, re-render the form fragment with the submitted values and field errors instead of redirecting to the edit page.
-  - [ ] Apply to the clinic, patient and user forms.
-  - [ ] Decide how to keep an uploaded picture across a failed save; a file input cannot be refilled.
-
-- [infra/profile-pic] Profile picture handling across clinic, patient and user
-  - [ ] The three `profile_pic.go` files duplicate the filename cleaning, safe-filename check, missing-file detection and path building, and have drifted (user's `isSafeFilename` has extra `..` checks; clinic ignores `AssetsDir` and writes to `./public/assets/profile_pics`).
-  - [ ] Review the drift, then decide the shape: a shared leaf package in `internal/lib/` that the three services call, since features must not import each other.
+- [feature/forms] Keep an uploaded picture across a failed save
+  - [ ] A file input cannot be refilled. Try `hx-preserve` on the file input in the error fragment only; otherwise stage the upload as a preview once RustFS is in.
 
 - [verify/plans] Verification plans for the features that have none
   - [ ] Plans, run once on the stack with evidence, for the dashboard, revenue, the patient email links (`/p/a/<token>/...`) and creating an appointment.
@@ -51,6 +45,10 @@
   - Define storage abstraction and configuration wiring for local disk vs S3-compatible backends.
   - Upload and retrieval path for patient/profile images via RustFS.
   - Migration/fallback strategy for existing disk-backed image files.
+
+- [infra/ids] Replace XIDs with UUIDv7
+  - [ ] `internal/lib/xid` builds record UIDs from `rs/xid`. Use the standard library `uuid.NewV7` instead, and drop the `rs/xid` dependency.
+  - [ ] Decide what happens to existing UIDs (`clnc...`, `ptnt...`) and their prefixes.
 
 ## Icebox
 
@@ -78,6 +76,15 @@
   - Define precedence rules explicitly (appointment overrides patient, or fallback behavior).
 
 ## Done
+
+- [feature/forms] Keep submitted values when an update fails validation
+  - [x] Clinic, patient, user profile and admin user updates re-render the form with the submitted values and a toast. Clinic and patient create failures do the same.
+  - [x] `Initials()` no longer panics on a blank name.
+
+- [infra/profile-pic] Profile picture handling across clinic, patient and user
+  - [x] Shared leaf package `internal/lib/profilepic`: random file names, one safe-filename rule, missing-file detection, path building.
+  - [x] Clinic pictures live in `AssetsDir/clinics` and are served by `GET /clinics/:id/profilepic/:filename`. Old `/public/assets/profile_pics` paths keep working.
+  - [x] Removed the duplicate "cover photo" file inputs and the unused user filename helpers.
 
 - [bug/dead-ui] Views that point at routes or strings that do not exist
   - [x] `/signup` redirects a signed-in visitor, the session page "Appointments" button links to the patient's appointments, the edit page has a "Cancel appointment" button, the unrouted models page is removed, `/admin/users` has a search and no "New" buttons, and the missing locale keys exist (#162, #163).
