@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"miconsul/internal/lib/profilepic"
 	"miconsul/internal/models"
 	"miconsul/internal/services/auth"
 	view "miconsul/internal/views"
@@ -108,7 +109,7 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 	userUpds := input.toUserProfileUpdates()
 	err = normalizeUserWriteInput(&userUpds)
 	if errors.Is(err, ErrInvalidUser) {
-		return s.RedirectWithToast(c, "/profile", "Name can't be blank", view.LevelWarning)
+		return s.respondWithUserToast(c, userWithUpdates(cu, userUpds), "Name can't be blank", view.LevelWarning)
 	}
 	if err != nil {
 		return s.RedirectWithToast(c, "/profile", "Failed to update profile", view.LevelError)
@@ -116,7 +117,7 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 
 	path, picErr := SaveProfilePicToDisk(c, cu, s.Env.AssetsDir)
 	if picErr != nil {
-		if !errors.Is(picErr, ErrProfilePicNotProvided) {
+		if !errors.Is(picErr, profilepic.ErrNotProvided) {
 			return s.RedirectWithToast(c, "/profile", "Failed to upload profile picture", view.LevelError)
 		}
 	} else {
@@ -168,7 +169,7 @@ func (s *service) HandleProfilePicPreview(c fiber.Ctx) error {
 }
 
 // HandleProfilePic serves a user's profile picture file.
-// GET: /users/:id/profilepic/:filename
+// GET: /profile/avatar and /profile/avatar/preview
 func (s *service) HandleProfilePic(c fiber.Ctx) error {
 	cu := s.CurrentUser(c)
 	isPreview := strings.HasSuffix(c.Path(), "preview")
@@ -249,9 +250,14 @@ func (s *service) HandleAdminUpdateUser(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/admin/users/"+userID, "Invalid user input", view.LevelError)
 	}
 
-	updatedUser, err := s.UpdateUserProfileByUID(c.Context(), userID, input.toUserUpdates())
+	userUpds := input.toUserUpdates()
+	updatedUser, err := s.UpdateUserProfileByUID(c.Context(), userID, userUpds)
 	if errors.Is(err, ErrInvalidUser) {
-		return s.RedirectWithToast(c, "/admin/users/"+userID, "Name can't be blank", view.LevelWarning)
+		target, takeErr := s.TakeUserByUID(c.Context(), userID)
+		if takeErr != nil {
+			return s.RedirectWithToast(c, "/admin/users", "User does not exist", view.LevelWarning)
+		}
+		return s.respondWithUserToast(c, userWithUpdates(target, userUpds), "Name can't be blank", view.LevelWarning)
 	}
 	if errors.Is(err, ErrIDRequired) || errors.Is(err, gorm.ErrRecordNotFound) {
 		return s.RedirectWithToast(c, "/admin/users", "User does not exist", view.LevelWarning)
@@ -265,4 +271,24 @@ func (s *service) HandleAdminUpdateUser(c fiber.Ctx) error {
 		view.UserProfileSection(vc, updatedUser),
 		view.CmpToastPartial("User updated", "", view.LevelSuccess),
 	))
+}
+
+func (s *service) respondWithUserToast(c fiber.Ctx, user models.User, message string, level view.Level) error {
+	vc := view.NewCtx(c)
+	return view.Render(c, templ.Join(
+		view.UserProfileSection(vc, user),
+		view.CmpToastPartial(message, "", level),
+	))
+}
+
+func userWithUpdates(user, updates models.User) models.User {
+	user.Name = updates.Name
+	user.Email = updates.Email
+	user.Phone = updates.Phone
+	if updates.Locale != "" {
+		user.Locale = updates.Locale
+	}
+	user.SetFieldError("name", "Name can't be blank")
+
+	return user
 }

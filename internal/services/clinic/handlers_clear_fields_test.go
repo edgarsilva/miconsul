@@ -1,8 +1,8 @@
 package clinic
 
 import (
-	"encoding/hex"
 	"errors"
+	"html"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -137,35 +137,22 @@ func TestHandleUpdateRejectsBlankName(t *testing.T) {
 		c.Locals("current_user", user)
 		return svc.HandleUpdate(c)
 	})
-	req := httptest.NewRequest(http.MethodPatch, "/clinics/"+seed.UID, strings.NewReader(url.Values{"name": {""}}.Encode()))
+	req := httptest.NewRequest(http.MethodPatch, "/clinics/"+seed.UID, strings.NewReader(url.Values{"name": {""}, "phone": {"555-0100"}}.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("HX-Request", "true")
 	resp, err := app.Test(req)
 	if err != nil {
 		t.Fatalf("update clinic: %v", err)
 	}
-	if resp.StatusCode != fiber.StatusNoContent || resp.Header.Get("HX-Redirect") != "/clinics/"+seed.UID {
-		t.Fatalf("status=%d HX-Redirect=%q, want 204 back to the clinic", resp.StatusCode, resp.Header.Get("HX-Redirect"))
+	if resp.StatusCode != fiber.StatusOK {
+		t.Fatalf("status=%d, want 200 with the form re-rendered", resp.StatusCode)
 	}
-	if flash := flashText(t, resp); !strings.Contains(flash, "Clinic name can't be blank") {
-		t.Fatalf("flash = %q, want the blank-name message", flash)
+	raw, _ := io.ReadAll(resp.Body)
+	body := html.UnescapeString(string(raw))
+	if !strings.Contains(body, "Clinic name can't be blank") {
+		t.Fatalf("body has no blank-name toast")
 	}
-}
-
-// flashText returns the flash cookie's decoded content, which carries the toast message.
-func flashText(t *testing.T, resp *http.Response) string {
-	t.Helper()
-
-	for _, cookie := range resp.Cookies() {
-		if cookie.Name != "fiber_flash" {
-			continue
-		}
-		raw, err := hex.DecodeString(cookie.Value)
-		if err != nil {
-			t.Fatalf("decode flash cookie: %v", err)
-		}
-		return string(raw)
+	if !strings.Contains(body, `value="555-0100"`) {
+		t.Fatalf("body lost the submitted phone")
 	}
-
-	return ""
 }

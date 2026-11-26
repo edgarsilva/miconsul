@@ -229,22 +229,6 @@ templ ClinicProfile(c *Ctx, clinic models.Clinic) {
 								/>
 							</div>
 						</div>
-						<div class="col-span-full">
-							<label for="file_upload" class="block text-sm font-medium leading-6">{ c.l("str.cover_photo") }</label>
-							<div class="mt-2 flex justify-center rounded-lg border border-dashed border-base-content/25 px-6 py-10">
-								<div class="text-center">
-									@CmpImageIcon("mx-auto h-12 w-12 text-base-content/60")
-									<div class="mt-4 flex text-sm leading-6 text-base-content/60">
-										<label for="file_upload" class="relative link link-primary font-semibold leading-6">
-											<span>{ c.l("str.upload_file") }</span>
-											<input id="file_upload" name="profilePic" type="file" class="sr-only"/>
-										</label>
-										<p class="pl-1">{ c.l("str.or_drag_and_drop") }</p>
-									</div>
-									<p class="text-xs leading-5 text-base-content/60">PNG, JPG, GIF { c.l("str.up_to_10mb") }</p>
-								</div>
-							</div>
-						</div>
 					</div>
 				</div>
 				<div class="flex items-center justify-end gap-x-6 border-t border-base-content/10 px-4 py-4 sm:px-8">

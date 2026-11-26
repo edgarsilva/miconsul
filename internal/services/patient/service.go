@@ -24,10 +24,6 @@ var (
 	ErrInvalidPatient = errors.New("patient is invalid")
 )
 
-var ErrInvalidFilename = errors.New("invalid filename")
-
-var ErrProfilePicNotProvided = errors.New("profile picture not provided")
-
 var e164Pattern = regexp.MustCompile(`^\+[1-9]\d{7,14}$`)
 
 func NewService(s *server.Server) (service, error) {

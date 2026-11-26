@@ -3,9 +3,10 @@ package clinic
 import (
 	"errors"
 	"fmt"
-	"miconsul/internal/models"
-	"path"
 	"strings"
+
+	"miconsul/internal/lib/profilepic"
+	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
@@ -13,32 +14,52 @@ import (
 	"go.opentelemetry.io/otel/codes"
 )
 
-var ErrProfilePicNotProvided = errors.New("profile picture not provided")
+const clinicsDir = "/clinics"
 
-func SaveProfilePicToDisk(c fiber.Ctx, clinic models.Clinic) (string, error) {
-	profilePic, err := c.FormFile("profilePic")
+// SaveProfilePicToDisk stores the uploaded profilePic under a random name and
+// returns the URL path that serves it.
+func SaveProfilePicToDisk(c fiber.Ctx, clinic models.Clinic, assetsDir string) (string, error) {
+	upload, err := c.FormFile("profilePic")
 	if err != nil {
-		return "", ErrProfilePicNotProvided
+		return "", profilepic.FormFileError(err)
 	}
 
 	if clinic.UID == "" {
-		return "", errors.New("can't save profile pic without clinic.UID")
+		return "", errors.New("save profile pic without clinic.UID")
 	}
 
-	filename := strings.TrimSpace(profilePic.Filename)
-	filename = strings.ReplaceAll(filename, "\\", "/")
-	filename = path.Base(filename)
-	if filename == "" || filename == "." || filename == ".." {
-		return "", errors.New("invalid profile picture filename")
+	filename, err := profilepic.RandomName(clinic.UID+"_ppic_", upload.Filename)
+	if err != nil {
+		return "", fmt.Errorf("name profile pic: %w", err)
 	}
 
-	profilePath := "/public/assets/profile_pics/" + clinic.UID + "_" + filename
-	err = c.SaveFile(profilePic, "."+profilePath)
+	path, err := ProfilePicPath(filename, assetsDir)
+	if err != nil {
+		return "", fmt.Errorf("locate profile pic: %w", err)
+	}
+
+	err = c.SaveFile(upload, path)
 	if err != nil {
 		return "", fmt.Errorf("save profilePic to disk: %w", err)
 	}
 
-	return profilePath, nil
+	return "/clinics/" + clinic.UID + "/profilepic/" + filename, nil
+}
+
+// ProfilePicPath returns the file path of a clinic picture in assetsDir.
+func ProfilePicPath(filename, assetsDir string) (string, error) {
+	return profilepic.Path(assetsDir, clinicsDir, filename)
+}
+
+// IsSafeProfilePicFilenameForClinic reports whether filename is a safe
+// picture name that belongs to clinicID.
+func IsSafeProfilePicFilenameForClinic(clinicID, filename string) bool {
+	clinicID = strings.TrimSpace(clinicID)
+	if clinicID == "" || !profilepic.IsSafeFilename(filename) {
+		return false
+	}
+
+	return strings.HasPrefix(filename, clinicID+"_ppic_")
 }
 
 // attachClinicPic saves the uploaded profile picture and stores its path on
@@ -51,8 +72,8 @@ func (s service) attachClinicPic(c fiber.Ctx, userID uint, clinic models.Clinic)
 
 	span.SetAttributes(attribute.String("clinic.uid", clinic.UID))
 
-	path, err := SaveProfilePicToDisk(c, clinic)
-	if errors.Is(err, ErrProfilePicNotProvided) {
+	path, err := SaveProfilePicToDisk(c, clinic, s.Env.AssetsDir)
+	if errors.Is(err, profilepic.ErrNotProvided) {
 		return clinic.ProfilePic
 	}
 	if err != nil {

@@ -2,8 +2,9 @@ package patient
 
 import (
 	"bytes"
-	"encoding/hex"
 	"errors"
+	"html"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -158,8 +159,12 @@ func TestHandleUpdateProfilePic(t *testing.T) {
 			req.Header.Set("Content-Type", writer.FormDataContentType())
 			req.Header.Set("HX-Request", "true")
 			resp, err := app.Test(req)
-			if err != nil || resp.StatusCode != fiber.StatusNoContent {
-				t.Fatalf("update patient expected 204, got status=%d err=%v", resp.StatusCode, err)
+			wantStatus := fiber.StatusOK
+			if tt.saved {
+				wantStatus = fiber.StatusNoContent
+			}
+			if err != nil || resp.StatusCode != wantStatus {
+				t.Fatalf("update patient expected %d, got status=%d err=%v", wantStatus, resp.StatusCode, err)
 			}
 
 			saved, err := svc.TakePatientByID(t.Context(), user.ID, seed.UID)
@@ -225,7 +230,7 @@ func TestHandleUpdateRejectsBlankRequiredFields(t *testing.T) {
 		c.Locals("current_user", user)
 		return svc.HandleUpdate(c)
 	})
-	form := url.Values{"name": {"Original"}, "age": {"30"}, "phone": {""}}
+	form := url.Values{"name": {"Original Name"}, "age": {"30"}, "phone": {""}}
 	req := httptest.NewRequest(http.MethodPatch, "/patients/"+seed.UID, strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("HX-Request", "true")
@@ -233,30 +238,17 @@ func TestHandleUpdateRejectsBlankRequiredFields(t *testing.T) {
 	if err != nil {
 		t.Fatalf("update patient: %v", err)
 	}
-	if resp.StatusCode != fiber.StatusNoContent || resp.Header.Get("HX-Redirect") != "/patients/"+seed.UID {
-		t.Fatalf("status=%d HX-Redirect=%q, want 204 back to the patient", resp.StatusCode, resp.Header.Get("HX-Redirect"))
+	if resp.StatusCode != fiber.StatusOK {
+		t.Fatalf("status=%d, want 200 with the form re-rendered", resp.StatusCode)
 	}
-	if flash := flashText(t, resp); !strings.Contains(flash, "Name, age and phone can't be blank") {
-		t.Fatalf("flash = %q, want the blank-field message", flash)
+	raw, _ := io.ReadAll(resp.Body)
+	body := html.UnescapeString(string(raw))
+	if !strings.Contains(body, "Name, age and phone can't be blank") {
+		t.Fatalf("body has no blank-field toast")
 	}
-}
-
-// flashText returns the flash cookie's decoded content, which carries the toast message.
-func flashText(t *testing.T, resp *http.Response) string {
-	t.Helper()
-
-	for _, cookie := range resp.Cookies() {
-		if cookie.Name != "fiber_flash" {
-			continue
-		}
-		raw, err := hex.DecodeString(cookie.Value)
-		if err != nil {
-			t.Fatalf("decode flash cookie: %v", err)
-		}
-		return string(raw)
+	if !strings.Contains(body, `value="Original Name"`) {
+		t.Fatalf("body lost the submitted name")
 	}
-
-	return ""
 }
 
 func TestAttachPatientPicRecordsAFailedSave(t *testing.T) {

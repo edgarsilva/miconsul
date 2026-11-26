@@ -2,40 +2,62 @@ package clinic
 
 import (
 	"bytes"
+	"errors"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
+	"miconsul/internal/lib/profilepic"
 	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
 )
 
 func TestSaveProfilePicToDisk(t *testing.T) {
-	t.Run("missing file returns ErrProfilePicNotProvided", func(t *testing.T) {
+	t.Run("missing file returns profilepic.ErrNotProvided", func(t *testing.T) {
 		runClinicCtx(t, "", nil, func(c fiber.Ctx) {
-			_, err := SaveProfilePicToDisk(c, models.Clinic{UID: "cln_1"})
-			if err != ErrProfilePicNotProvided {
-				t.Fatalf("expected ErrProfilePicNotProvided, got %v", err)
+			_, err := SaveProfilePicToDisk(c, models.Clinic{UID: "cln_1"}, t.TempDir())
+			if !errors.Is(err, profilepic.ErrNotProvided) {
+				t.Fatalf("expected profilepic.ErrNotProvided, got %v", err)
 			}
 		})
 	})
 
 	t.Run("missing clinic id returns error", func(t *testing.T) {
 		runClinicCtx(t, "photo.png", []byte("img"), func(c fiber.Ctx) {
-			_, err := SaveProfilePicToDisk(c, models.Clinic{})
+			_, err := SaveProfilePicToDisk(c, models.Clinic{}, t.TempDir())
 			if err == nil {
 				t.Fatalf("expected missing clinic id to fail")
 			}
 		})
 	})
 
-	t.Run("rejects invalid sanitized filename", func(t *testing.T) {
+	t.Run("rejects a non-image filename", func(t *testing.T) {
 		runClinicCtx(t, "..", []byte("img"), func(c fiber.Ctx) {
-			_, err := SaveProfilePicToDisk(c, models.Clinic{UID: "cln_1"})
-			if err == nil {
-				t.Fatalf("expected invalid filename error")
+			_, err := SaveProfilePicToDisk(c, models.Clinic{UID: "cln_1"}, t.TempDir())
+			if !errors.Is(err, profilepic.ErrInvalidFilename) {
+				t.Fatalf("expected ErrInvalidFilename, got %v", err)
+			}
+		})
+	})
+
+	t.Run("stores the upload under a random name", func(t *testing.T) {
+		dir := t.TempDir()
+		runClinicCtx(t, "Logo.PNG", []byte("img"), func(c fiber.Ctx) {
+			got, err := SaveProfilePicToDisk(c, models.Clinic{UID: "cln_1"}, dir)
+			if err != nil {
+				t.Fatalf("save: %v", err)
+			}
+			filename := strings.TrimPrefix(got, "/clinics/cln_1/profilepic/")
+			if filename == got || !IsSafeProfilePicFilenameForClinic("cln_1", filename) || !strings.HasSuffix(filename, ".png") {
+				t.Fatalf("unexpected url path %q", got)
+			}
+			if _, err := os.Stat(filepath.Join(dir, "clinics", filename)); err != nil {
+				t.Fatalf("expected file on disk: %v", err)
 			}
 		})
 	})

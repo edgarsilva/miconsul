@@ -135,6 +135,7 @@ func ClinicsRoutes(s *server.Server, authSvc auth.Runtime) error {
 	g.Get("/search", c.HandleIndexSearch)
 	g.Get("/new", c.HandleNewPage)
 	g.Get("/:id", c.HandleEditPage)
+	g.Get("/:id/profilepic/:filename", c.HandleProfilePic)
 
 	g.Post("/", c.HandleCreate)
 	g.Patch("/:id", c.HandleUpdate)

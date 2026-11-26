@@ -2,6 +2,7 @@ package clinic
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -153,13 +154,11 @@ func TestHandleUpdateClinicProfilePic(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Chdir(t.TempDir())
-			picsDir := filepath.Join("public", "assets", "profile_pics")
-			if err := os.MkdirAll(picsDir, 0o755); err != nil {
-				t.Fatalf("create pics dir: %v", err)
-			}
+			assetsDir := t.TempDir()
+			picsDir := filepath.Join(assetsDir, "clinics")
 
 			svc, user := newClinicServiceForTests(t)
+			svc.Env.AssetsDir = assetsDir
 			seed := models.Clinic{UserID: user.ID, Name: "Seed", ProfilePic: "old.png"}
 			if err := svc.CreateClinic(t.Context(), &seed); err != nil {
 				t.Fatalf("seed clinic: %v", err)
@@ -202,7 +201,7 @@ func TestHandleUpdateClinicProfilePic(t *testing.T) {
 				t.Fatalf("reload clinic: %v", err)
 			}
 			entries, err := os.ReadDir(picsDir)
-			if err != nil {
+			if err != nil && !errors.Is(err, os.ErrNotExist) {
 				t.Fatalf("read pics dir: %v", err)
 			}
 
@@ -269,12 +268,8 @@ func TestAttachClinicPicRecordsAFailedSave(t *testing.T) {
 }
 
 func TestAttachClinicPicRecordsAFailedDBUpdate(t *testing.T) {
-	t.Chdir(t.TempDir())
-	if err := os.MkdirAll(filepath.Join("public", "assets", "profile_pics"), 0o755); err != nil {
-		t.Fatalf("create pics dir: %v", err)
-	}
-
 	svc, user := newClinicServiceForTests(t)
+	svc.Env.AssetsDir = t.TempDir()
 	recorder := tracetest.NewSpanRecorder()
 	svc.Tracer = sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")
 

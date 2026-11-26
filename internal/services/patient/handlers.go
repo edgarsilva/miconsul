@@ -108,7 +108,8 @@ func (s *service) HandleCreate(c fiber.Ctx) error {
 
 	err = s.CreatePatient(c.Context(), &patient)
 	if err != nil {
-		return s.RedirectWithToast(c, "/patients/new", "Failed to create new patient", view.LevelError)
+		patient.UID = ""
+		return s.respondWithPatientToast(c, patient, "Failed to create new patient", view.LevelError)
 	}
 
 	patient.ProfilePic = s.attachPatientPic(c, cu.ID, patient)
@@ -150,12 +151,15 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	}
 
 	patient := input.toPatient(existingPatient.ID, existingPatient.UID, cu.ID)
+	patient.ProfilePic = existingPatient.ProfilePic
 
 	patient.Sanitize()
 
 	err = s.UpdatePatientByID(c.Context(), cu.ID, patientID, patient)
 	if errors.Is(err, ErrInvalidPatient) {
-		return s.RedirectWithToast(c, "/patients/"+patientID, "Name, age and phone can't be blank", view.LevelWarning)
+		patient.Name = strings.TrimSpace(patient.Name)
+		_ = patient.IsValid()
+		return s.respondWithPatientToast(c, patient, "Name, age and phone can't be blank", view.LevelWarning)
 	}
 	if errors.Is(err, ErrIDRequired) {
 		return s.RedirectWithToast(c, "/patients", "Can't update without an id", view.LevelError)
@@ -170,6 +174,14 @@ func (s *service) HandleUpdate(c fiber.Ctx) error {
 	s.attachPatientPic(c, cu.ID, patient)
 
 	return s.RedirectWithToast(c, "/patients/"+patientID, "Patient changes saved", view.LevelSuccess)
+}
+
+func (s *service) respondWithPatientToast(c fiber.Ctx, patient models.Patient, message string, level view.Level) error {
+	vc := view.NewCtx(c)
+	return view.Render(c, templ.Join(
+		view.PatientProfileSection(vc, patient),
+		view.CmpToastPartial(message, "", level),
+	))
 }
 
 // HandleRemovePic removes the ProfilePic from the patient
