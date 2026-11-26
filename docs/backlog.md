@@ -35,18 +35,6 @@
   - [ ] The three `profile_pic.go` files duplicate the filename cleaning, safe-filename check, missing-file detection and path building, and have drifted (user's `isSafeFilename` has extra `..` checks; clinic ignores `AssetsDir` and writes to `./public/assets/profile_pics`).
   - [ ] Review the drift, then decide the shape: a shared leaf package in `internal/lib/` that the three services call, since features must not import each other.
 
-- [infra/load] Load and memory tests
-  - [x] Isolated app with seed data, jobs, outbound messaging and rate limiter off: `scripts/stack.sh up`. It seeds without `-bulk`.
-  - [x] `scripts/load_test.sh` runs an `oha` baseline against the app.
-  - [x] Fix `scripts/load_test.sh` and `scripts/obs_load.sh`: both look for an `Auth` cookie after `POST /api/auth/signin`, but the app sets `session_id`, and that route exists only when Logto is disabled.
-  - [x] Bulk seed for the stack: `scripts/stack.sh up --bulk`.
-  - [x] `k6` scenario: sign in as the seed admin, then a weighted mix of reads (dashboard, appointments, clinic and patient search, revenue) and writes (create and update an appointment), with pass/fail thresholds.
-  - [x] Memory sampler: poll `/api/admin/runtime` during a run and write live heap, GC cycles and goroutines to a CSV; report peak, end value and whether the live-heap floor rises.
-  - [x] Make targets for the quick `oha` baseline and the full `k6` run, run manually on the local machine, and a short doc with the baselines.
-
-- [bug/dead-ui] Views that point at routes or strings that do not exist (found while writing `docs/features.md`)
-  - [ ] Staff delete (`DELETE /appointments/:id`) has a route and no button. `POST /p/a/:token/changedate` has no page or button, and the patient email has only the confirm link.
-
 - [verify/plans] Verification plans for the features that have none
   - [ ] Plans, run once on the stack with evidence, for the dashboard, revenue, the patient email links (`/p/a/<token>/...`) and creating an appointment.
 
@@ -63,13 +51,6 @@
   - Define storage abstraction and configuration wiring for local disk vs S3-compatible backends.
   - Upload and retrieval path for patient/profile images via RustFS.
   - Migration/fallback strategy for existing disk-backed image files.
-
-- [infra/build] Tailwind CSS is generated at Docker build time
-  - [x] The Dockerfile installs Node, runs `npm ci` and `npm run css:build`; `public/global.css` is gitignored and built into the image.
-  - [x] The runtime image has no Node.
-
-- [infra/build] templ generated files are committed
-  - [x] `*_templ.go` stays tracked, so anyone can build and run the app without generating templ files. The Docker build runs no `templ generate`.
 
 ## Icebox
 
@@ -97,6 +78,28 @@
   - Define precedence rules explicitly (appointment overrides patient, or fallback behavior).
 
 ## Done
+
+- [bug/dead-ui] Views that point at routes or strings that do not exist
+  - [x] `/signup` redirects a signed-in visitor, the session page "Appointments" button links to the patient's appointments, the edit page has a "Cancel appointment" button, the unrouted models page is removed, `/admin/users` has a search and no "New" buttons, and the missing locale keys exist (#162, #163).
+  - Kept for REST completeness: `DELETE /appointments/:id` (a soft delete) has no button, and `POST /p/a/:token/changedate` has no page or button.
+
+- [tooling/feature-map] Feature map fixes: the repeated "Reached from" text on area cards, and sign out and save-to-list flows drawn as loops (#162)
+
+- [infra/load] Load and memory tests
+  - [x] Isolated app with seed data, jobs, outbound messaging and rate limiter off: `scripts/stack.sh up`. It seeds without `-bulk`.
+  - [x] `scripts/load_test.sh` runs an `oha` baseline against the app.
+  - [x] Fix `scripts/load_test.sh` and `scripts/obs_load.sh`: both look for an `Auth` cookie after `POST /api/auth/signin`, but the app sets `session_id`, and that route exists only when Logto is disabled.
+  - [x] Bulk seed for the stack: `scripts/stack.sh up --bulk`.
+  - [x] `k6` scenario: sign in as the seed admin, then a weighted mix of reads (dashboard, appointments, clinic and patient search, revenue) and writes (create and update an appointment), with pass/fail thresholds.
+  - [x] Memory sampler: poll `/api/admin/runtime` during a run and write live heap, GC cycles and goroutines to a CSV; report peak, end value and whether the live-heap floor rises.
+  - [x] Make targets for the quick `oha` baseline and the full `k6` run, run manually on the local machine, and a short doc with the baselines.
+
+- [infra/build] Tailwind CSS is generated at Docker build time
+  - [x] The Dockerfile installs Node, runs `npm ci` and `npm run css:build`; `public/global.css` is gitignored and built into the image.
+  - [x] The runtime image has no Node.
+
+- [infra/build] templ generated files are committed
+  - [x] `*_templ.go` stays tracked, so anyone can build and run the app without generating templ files. The Docker build runs no `templ generate`.
 
 - [feature/dashboard] Populate FeedEvent on appointment changes and wire Dashboard Feed widget
   - Create FeedEvent records on appointment create/update/cancel/complete/delete + patient confirm/cancel.
