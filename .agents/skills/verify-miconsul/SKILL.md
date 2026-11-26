@@ -43,10 +43,10 @@ If none match, or for an upgrade, run all of them. Order when running several: `
 
 | Plan | Drives |
 |---|---|
-| `plans/sign-in.plan.md` | sign in and out, sign up and confirm, password reset, API sign-in, the admin boundary for a regular user |
-| `plans/appointment-session.plan.md` | start, pause, save and end a session |
+| `plans/sign_in.plan.md` | sign in and out, sign up and confirm, password reset, API sign-in, the admin boundary for a regular user |
+| `plans/appointment_session.plan.md` | start, pause, save and end a session |
 | `plans/admin.plan.md` | the admin index, runtime, health, components, editing another user, the admin JSON |
-| `plans/htmx-routes.plan.md` | patient search, filter pills, theme toggle, creating and editing records, deletes, boosted navigation |
+| `plans/htmx_routes.plan.md` | patient search, filter pills, theme toggle, creating and editing records, deletes, boosted navigation |
 
 A step fails when its "Expect" is not on the page, when the page logs a console error or an uncaught page error, or when a request returns 400 or more, unless it is listed under known noise. Use `docs/features.md` for features no plan covers yet.
 
