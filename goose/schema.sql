@@ -149,12 +149,12 @@ CREATE TABLE "notifications" (
   "from" TEXT,
   "to" TEXT,
   status TEXT NOT NULL DEFAULT 'pending',
-  notificationable_id TEXT,
-  notificationable_type TEXT,
+  notifiable_id TEXT,
+  notifiable_type TEXT,
   created_at DATETIME,
   updated_at DATETIME
 );
-CREATE INDEX poly_fevnt_idx ON "notifications"(notificationable_id, notificationable_type);
+CREATE INDEX poly_fevnt_idx ON "notifications"(notifiable_id, notifiable_type);
 CREATE INDEX idx_alerts_status ON "notifications"(status);
 CREATE INDEX idx_alerts_name ON "notifications"(name);
 CREATE INDEX idx_alerts_medium ON "notifications"(medium);

@@ -105,7 +105,7 @@ func TestHandleBookedAlertJobSkipsWhenAlreadySent(t *testing.T) {
 	}
 }
 
-func TestAppendNotificationPersistsPrimaryKeyAlertableID(t *testing.T) {
+func TestAppendNotificationPersistsPrimaryKeyNotifiableID(t *testing.T) {
 	svc, user, clinic, patient := newAppointmentServiceForTests(t)
 
 	apnt := models.Appointment{
@@ -136,16 +136,16 @@ func TestAppendNotificationPersistsPrimaryKeyAlertableID(t *testing.T) {
 		t.Fatalf("load notification: %v", err)
 	}
 
-	if notification.NotificationableType != "appointments" {
-		t.Fatalf("expected notificationable_type appointments, got %q", notification.NotificationableType)
+	if notification.NotifiableType != "appointments" {
+		t.Fatalf("expected notifiable_type appointments, got %q", notification.NotifiableType)
 	}
 	wantID := strconv.FormatUint(uint64(apnt.ID), 10)
-	if notification.NotificationableID != wantID {
-		t.Fatalf("expected notificationable_id %q, got %q", wantID, notification.NotificationableID)
+	if notification.NotifiableID != wantID {
+		t.Fatalf("expected notifiable_id %q, got %q", wantID, notification.NotifiableID)
 	}
 }
 
-func TestNotificationSentAnyMediumUsesPrimaryKeyAlertableID(t *testing.T) {
+func TestNotificationSentAnyMediumUsesPrimaryKeyNotifiableID(t *testing.T) {
 	svc, user, clinic, patient := newAppointmentServiceForTests(t)
 
 	apnt := models.Appointment{
@@ -161,12 +161,12 @@ func TestNotificationSentAnyMediumUsesPrimaryKeyAlertableID(t *testing.T) {
 	}
 
 	legacy := models.Notification{
-		Medium:               models.NotificationMediumEmail,
-		Name:                 "appointment_reminder",
-		Status:               models.NotificationSent,
-		To:                   patient.Email,
-		NotificationableID:   strconv.FormatUint(uint64(apnt.ID), 10),
-		NotificationableType: "appointments",
+		Medium:         models.NotificationMediumEmail,
+		Name:           "appointment_reminder",
+		Status:         models.NotificationSent,
+		To:             patient.Email,
+		NotifiableID:   strconv.FormatUint(uint64(apnt.ID), 10),
+		NotifiableType: "appointments",
 	}
 	if err := svc.DB.WithContext(t.Context()).Create(&legacy).Error; err != nil {
 		t.Fatalf("create legacy notification: %v", err)
@@ -261,7 +261,7 @@ func TestAlertJobsSendNothingForCanceledAppointments(t *testing.T) {
 
 		var attempts int64
 		err = svc.DB.GormDB().Model(&models.Notification{}).
-			Where("notificationable_type = ? AND notificationable_id = ?", apnt.AlertableType(), apnt.AlertableID()).
+			Scopes(models.NotificationsOf(apnt)).
 			Count(&attempts).Error
 		if err != nil {
 			t.Fatalf("count notifications: %v", err)
@@ -373,7 +373,7 @@ func TestReminderJobRemindsAgainAfterReschedule(t *testing.T) {
 		t.Helper()
 		var n int64
 		err := svc.DB.GormDB().Model(&models.Notification{}).
-			Where("notificationable_type = ? AND notificationable_id = ?", apnt.AlertableType(), apnt.AlertableID()).
+			Scopes(models.NotificationsOf(apnt)).
 			Where("name = ?", "appointment_reminder").
 			Count(&n).Error
 		if err != nil {
@@ -473,7 +473,7 @@ func TestRescheduledAlertJobNotifiesOncePerReschedule(t *testing.T) {
 		t.Helper()
 		var n int64
 		err := svc.DB.GormDB().Model(&models.Notification{}).
-			Where("notificationable_type = ? AND notificationable_id = ?", apnt.AlertableType(), apnt.AlertableID()).
+			Scopes(models.NotificationsOf(apnt)).
 			Where("name = ?", "appointment_rescheduled").
 			Count(&n).Error
 		if err != nil {
@@ -549,7 +549,7 @@ func TestRescheduledAlertJobSkipsCanceledAppointments(t *testing.T) {
 
 	var attempts int64
 	err = svc.DB.GormDB().Model(&models.Notification{}).
-		Where("notificationable_type = ? AND notificationable_id = ?", apnt.AlertableType(), apnt.AlertableID()).
+		Scopes(models.NotificationsOf(apnt)).
 		Count(&attempts).Error
 	if err != nil {
 		t.Fatalf("count notifications: %v", err)

@@ -765,7 +765,7 @@ func TestHandleUpdateSendsRescheduleNoticeOutsideTheReminderWindow(t *testing.T)
 			notices := func() int64 {
 				var n int64
 				err := svc.DB.GormDB().Model(&models.Notification{}).
-					Where("notificationable_type = ? AND notificationable_id = ?", apnt.AlertableType(), apnt.AlertableID()).
+					Scopes(models.NotificationsOf(apnt)).
 					Where("name = ?", "appointment_rescheduled").
 					Count(&n).Error
 				if err != nil {

@@ -221,8 +221,7 @@ func (s *service) notificationSentAnyMedium(ctx context.Context, appointment mod
 	var count int64
 	err := s.DB.WithContext(ctx).
 		Model(&models.Notification{}).
-		Where("notificationable_id = ?", appointment.AlertableID()).
-		Where("notificationable_type = ?", appointment.AlertableType()).
+		Scopes(models.NotificationsOf(appointment)).
 		Where("name = ?", name).
 		Where("status IN ?", []models.NotificationStatus{models.NotificationSent, models.NotificationSuccess}).
 		Count(&count).Error
@@ -238,8 +237,7 @@ func (s *service) notificationSentAnyMedium(ctx context.Context, appointment mod
 func (s *service) notificationSentSince(ctx context.Context, appointment models.Appointment, name string, since time.Time) (bool, error) {
 	sent, err := gorm.G[models.Notification](s.DB.GormDB()).
 		Select("created_at").
-		Where("notificationable_id = ?", appointment.AlertableID()).
-		Where("notificationable_type = ?", appointment.AlertableType()).
+		Scopes(models.NotificationsOfStatement(appointment)).
 		Where("name = ?", name).
 		Where("status IN ?", []models.NotificationStatus{models.NotificationSent, models.NotificationSuccess}).
 		Find(ctx)
@@ -268,22 +266,22 @@ func isDueForReminder(bookedAt, now time.Time) bool {
 // appointmentsToRemind returns the appointments without a reminder sent since
 // they were last rescheduled, or ever when never rescheduled.
 func (s *service) appointmentsToRemind(ctx context.Context, appointments []models.Appointment) ([]models.Appointment, error) {
-	alertableIDs := make([]string, 0, len(appointments))
+	notifiableIDs := make([]string, 0, len(appointments))
 	for _, appointment := range appointments {
-		if id := appointment.AlertableID(); id != "" {
-			alertableIDs = append(alertableIDs, id)
+		if id := appointment.NotifiableID(); id != "" {
+			notifiableIDs = append(notifiableIDs, id)
 		}
 	}
-	if len(alertableIDs) == 0 {
+	if len(notifiableIDs) == 0 {
 		return nil, nil
 	}
 
 	reminders, err := gorm.G[models.Notification](s.DB.GormDB()).
-		Select("notificationable_id", "created_at").
-		Where("notificationable_type = ?", "appointments").
+		Select("notifiable_id", "created_at").
+		Where("notifiable_type = ?", "appointments").
 		Where("name = ?", "appointment_reminder").
 		Where("status IN ?", []models.NotificationStatus{models.NotificationSent, models.NotificationSuccess}).
-		Where("notificationable_id IN ?", alertableIDs).
+		Where("notifiable_id IN ?", notifiableIDs).
 		Find(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("load sent reminders: %w", err)
@@ -291,14 +289,14 @@ func (s *service) appointmentsToRemind(ctx context.Context, appointments []model
 
 	lastReminded := make(map[string]time.Time, len(reminders))
 	for _, reminder := range reminders {
-		if reminder.CreatedAt.After(lastReminded[reminder.NotificationableID]) {
-			lastReminded[reminder.NotificationableID] = reminder.CreatedAt
+		if reminder.CreatedAt.After(lastReminded[reminder.NotifiableID]) {
+			lastReminded[reminder.NotifiableID] = reminder.CreatedAt
 		}
 	}
 
 	unreminded := make([]models.Appointment, 0, len(appointments))
 	for _, appointment := range appointments {
-		id := appointment.AlertableID()
+		id := appointment.NotifiableID()
 		if id == "" {
 			continue
 		}

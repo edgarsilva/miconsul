@@ -470,3 +470,49 @@ func TestInitials(t *testing.T) {
 		t.Errorf("blank user initials = %q, want PA", got)
 	}
 }
+
+func TestNotificationsOfScopes(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open("file:"+t.Name()+"?mode=memory"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open db: %v", err)
+	}
+	if err := db.AutoMigrate(&Notification{}); err != nil {
+		t.Fatalf("migrate: %v", err)
+	}
+
+	first := Appointment{ID: 1}
+	second := Appointment{ID: 2}
+	seed := []Notification{
+		{Medium: NotificationMediumEmail, Name: "reminder", NotifiableID: "1", NotifiableType: "appointments"},
+		{Medium: NotificationMediumEmail, Name: "reminder", NotifiableID: "2", NotifiableType: "appointments"},
+		{Medium: NotificationMediumEmail, Name: "booked", NotifiableID: "1", NotifiableType: "appointments"},
+		{Medium: NotificationMediumEmail, Name: "reminder", NotifiableID: "1", NotifiableType: "patients"},
+	}
+	for i := range seed {
+		if err := db.Create(&seed[i]).Error; err != nil {
+			t.Fatalf("create notification %d: %v", i, err)
+		}
+	}
+	want := seed[0].UID
+
+	var classic []Notification
+	if err := db.Model(&Notification{}).Scopes(NotificationsOf(first)).Where("name = ?", "reminder").Find(&classic).Error; err != nil {
+		t.Fatalf("classic scope: %v", err)
+	}
+	if len(classic) != 1 || classic[0].UID != want {
+		t.Errorf("classic scope = %d rows, want only %s", len(classic), want)
+	}
+
+	generic, err := gorm.G[Notification](db).Scopes(NotificationsOfStatement(first)).Where("name = ?", "reminder").Find(t.Context())
+	if err != nil {
+		t.Fatalf("generic scope: %v", err)
+	}
+	if len(generic) != 1 || generic[0].UID != want {
+		t.Errorf("generic scope = %d rows, want only %s", len(generic), want)
+	}
+
+	other, err := gorm.G[Notification](db).Scopes(NotificationsOfStatement(second)).Find(t.Context())
+	if err != nil || len(other) != 1 || other[0].NotifiableID != "2" {
+		t.Errorf("second appointment = %d rows err=%v, want its one notification", len(other), err)
+	}
+}
