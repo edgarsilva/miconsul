@@ -134,7 +134,7 @@ work is now coverage hardening and contract expansion, tracked in
 | --- | --- | --- | --- |
 | `GET /signin` | `200` login page (or provider message render) | `303` redirect `/` | When Logto enabled and no provider error/logout flags, auto-redirects to `/logto/signin`. |
 | `POST /signin` | `200` login page with validation/auth error | `303` redirect `/?timeframe=day` after cookie issuance | On cookie issuance failure, redirects to `/` with message query. |
-| `POST /api/auth/signin` | `400` bad payload/blank fields, `401` invalid credentials, `403` pending confirmation | `200` JSON `{ok:true}` + `Auth` cookie | JSON contract checked in handler and integration tests. |
+| `POST /api/auth/signin` | `400` bad payload/blank fields, `401` invalid credentials, `403` pending confirmation | `200` JSON `{ok:true}` + `session_id` cookie | JSON contract checked in handler and integration tests. |
 | `POST /logout` | `302/303` redirect `/signin` (or Logto signout path) | same | HTMX requests return `307` + `HX-Redirect` header. |
 | `POST /api/auth/validate` | `401` behind auth middleware | `200` | Endpoint itself returns `200`; middleware enforces auth. |
 | `GET /api/auth/protected` | `401` behind auth middleware | `200` JSON public user fields | User identity must match authenticated request context; no tokens or password. |
