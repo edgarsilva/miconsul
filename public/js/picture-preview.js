@@ -3,36 +3,54 @@
  * in place of the avatar inside the element that the selector matches.
  */
 document.addEventListener("change", (event) => {
-  const input = event.target;
-  if (!(input instanceof HTMLInputElement) || !input.matches('input[type="file"][data-picture-preview]')) {
-    return;
+  if (isPictureInput(event.target)) {
+    previewPicture(event.target);
   }
+});
 
+function isPictureInput(element) {
+  const isFileInput = element instanceof HTMLInputElement && element.type === "file";
+
+  return isFileInput && element.hasAttribute("data-picture-preview");
+}
+
+function previewPicture(input) {
   const file = input.files[0];
   const target = document.querySelector(input.dataset.picturePreview);
-  if (!file || !target || !file.type.startsWith("image/")) {
-    return;
+
+  const hasTarget = target !== null;
+  const isImage = file !== undefined && file.type.startsWith("image/");
+
+  if (hasTarget && isImage) {
+    readAsDataURL(file, (src) => showAvatar(target, src));
   }
+}
 
+function readAsDataURL(file, onLoad) {
   const reader = new FileReader();
-  reader.addEventListener("load", () => {
-    const avatar = target.querySelector(".avatar");
-    if (!avatar) {
-      return;
-    }
-
-    const image = document.createElement("img");
-    image.src = reader.result;
-
-    const frame = document.createElement("div");
-    frame.className = "w-12 rounded-full";
-    frame.append(image);
-
-    const preview = document.createElement("div");
-    preview.className = "avatar";
-    preview.append(frame);
-
-    avatar.replaceWith(preview);
-  });
+  reader.addEventListener("load", () => onLoad(reader.result));
   reader.readAsDataURL(file);
-});
+}
+
+function showAvatar(target, src) {
+  const avatar = target.querySelector(".avatar");
+
+  if (avatar) {
+    avatar.replaceWith(newAvatar(src));
+  }
+}
+
+function newAvatar(src) {
+  const image = document.createElement("img");
+  image.src = src;
+
+  const frame = document.createElement("div");
+  frame.className = "w-12 rounded-full";
+  frame.append(image);
+
+  const avatar = document.createElement("div");
+  avatar.className = "avatar";
+  avatar.append(frame);
+
+  return avatar;
+}
