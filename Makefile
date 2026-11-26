@@ -92,7 +92,7 @@ locales/normalize: ## Remove volatile timestamp from generated locales file
 ##@ AI Docs
 ai/templ-sync: ## Refresh templ LLM upstream snapshot and metadata
 	@echo "🤖 Refreshing templ LLM docs snapshot..."
-	./scripts/update-templ-llms.sh
+	./scripts/update_templ_llms.sh
 
 ##@ Build & Run
 build: templ/build locales/build ## Build Go binary with fts5
