@@ -1071,3 +1071,18 @@ func TestPictureFormPagesPreviewThePickedFile(t *testing.T) {
 		}
 	})
 }
+
+func TestPatientAppointmentsLinksShowTheMonth(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		var html strings.Builder
+		page := PatientFormPage(NewCtx(fc), models.Patient{UID: "ptnt_alma", Name: "Alma"})
+		if err := page.Render(fc.Context(), &html); err != nil {
+			t.Fatalf("render patient page: %v", err)
+		}
+
+		want := `href="/appointments?timeframe=month&amp;patientId=ptnt_alma"`
+		if !strings.Contains(html.String(), want) {
+			t.Errorf("expected %s", want)
+		}
+	})
+}

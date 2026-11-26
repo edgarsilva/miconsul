@@ -92,7 +92,7 @@ templ PatientLi(c *Ctx, patient models.Patient, lastAppointment time.Time) {
 		<div class="hidden md:flex gap-2 items-center">
 			<a
 				class="btn btn-sm"
-				href={ templ.URL("/appointments?patientId=" + patient.UID) }
+				href={ templ.URL("/appointments?timeframe=month&patientId=" + patient.UID) }
 			>
 				@CmpCalendarIcon("size-4")
 				{ c.l("btn.appointments") }
@@ -493,7 +493,7 @@ templ PatientProfileSection(c *Ctx, patient models.Patient) {
 			}
 			<div class="flex items-center gap-2">
 				<a
-					href={ templ.URL("/appointments?patientId=" + patient.UID) }
+					href={ templ.URL("/appointments?timeframe=month&patientId=" + patient.UID) }
 					class="btn btn-primary btn-sm"
 				>
 					@CmpCalendarIcon("")
