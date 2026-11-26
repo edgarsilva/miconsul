@@ -125,7 +125,7 @@ func AppointmentConfirmPage(c *Ctx, appointment models.Appointment) templ.Compon
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div><div class=\"app-card w-full mx-2 p-0 md:mx-auto md:flex md:flex-row md:max-w-4xl\"><figure class=\"p-6 pr-8 w-full flex justify-center items-center border-r border-base-300 md:w-1/3\"><img src=\"/public/miconsul-v2-sub1.png\" alt=\"Miconsul\" class=\"\"></figure><div class=\"card-body p-6 md:w-2/3\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div><div class=\"app-card w-full mx-2 p-0 md:mx-auto md:flex md:flex-row md:max-w-4xl\"><figure class=\"p-6 pr-8 w-full flex justify-center items-center border-r border-base-300 md:w-1/3\"><img src=\"/public/miconsul_v2_sub1.png\" alt=\"Miconsul\" class=\"\"></figure><div class=\"card-body p-6 md:w-2/3\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -319,7 +319,7 @@ func AppointmentCancelPage(c *Ctx, appointment models.Appointment) templ.Compone
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</div><div class=\"app-card w-full mx-2 p-0 md:mx-auto md:flex md:flex-row md:max-w-4xl text-base-content\"><figure class=\"p-6 pr-8 w-full flex justify-center items-center border-r border-base-300 md:w-1/3\"><img src=\"/public/miconsul-v2-sub1.png\" alt=\"Miconsul\" class=\"\"></figure><div class=\"card-body p-6 md:w-2/3\"><h2 class=\"card-title\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</div><div class=\"app-card w-full mx-2 p-0 md:mx-auto md:flex md:flex-row md:max-w-4xl text-base-content\"><figure class=\"p-6 pr-8 w-full flex justify-center items-center border-r border-base-300 md:w-1/3\"><img src=\"/public/miconsul_v2_sub1.png\" alt=\"Miconsul\" class=\"\"></figure><div class=\"card-body p-6 md:w-2/3\"><h2 class=\"card-title\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
