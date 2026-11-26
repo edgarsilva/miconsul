@@ -38,7 +38,7 @@ services:
       - 4318:4318
     volumes:
       - lgtm-data:/data
-      - ./observability/grafana/provisioning/default-dashboards.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/grafana-dashboards.yaml:ro
+      - ./observability/grafana/provisioning/default_dashboards.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/grafana-dashboards.yaml:ro
       - ./observability/grafana/provisioning/miconsul.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/miconsul.yaml:ro
       - ./observability/grafana/dashboards:/otel-lgtm/miconsul-dashboards:ro
 

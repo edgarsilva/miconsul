@@ -13,7 +13,7 @@ local LGTM setup (Loki, Grafana, Tempo, Prometheus(Mimir too if needed)).
 
 `make docker/up` provisions the `Miconsul Overview` dashboard into the
 `Miconsul` folder at `http://localhost:3080/d/miconsul-overview`. The
-definition lives in `observability/grafana/dashboards/miconsul-overview.json`
+definition lives in `observability/grafana/dashboards/miconsul_overview.json`
 and is mounted read-only, so edit the JSON and recreate the `lgtm` service
 (`docker compose up -d lgtm`) to apply a change.
 

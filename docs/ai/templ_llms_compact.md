@@ -7,7 +7,7 @@ Scope: preserves core templ rules, removes long tutorials and ecosystem walkthro
 ## Assistant Changelog
 
 - 2026-02-27: Created compact guide from upstream templ LLM docs and aligned it with repo workflow (templ generate + tests).
-- 2026-02-27: Added upstream snapshot refresh workflow via `scripts/update-templ-llms.sh` and `make ai/templ-sync`.
+- 2026-02-27: Added upstream snapshot refresh workflow via `scripts/update_templ_llms.sh` and `make ai/templ-sync`.
 
 ## Core Principles
 

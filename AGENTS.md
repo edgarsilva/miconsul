@@ -100,6 +100,7 @@ Name data-access methods `<GormVerb><Model>[By<Field>]`, verb first. Exported or
 
 - No comments. Allowed: doc comments in the language's standard format (GoDoc) and tool directives (`//go:generate`, `//lint:ignore <check> <reason>`). Doc comments state what the code does, never why it was written or how it got its form. A comment that explains a workaround means the fix is wrong: fix the cause or propose the correct fix.
 - Do not write rules, notes or docs that justify an exception, quick fix or workaround.
+- Name files with underscores, not hyphens, unless a tool requires the name.
 - Domain features (`internal/services/<pkg>`, except `auth`: clinic, patient, appointment, dashboard) are self-contained: they do not import other features' code, not even types. Platform code may be shared: `internal/server`, auth and session, `internal/mailer`, `internal/views`, `internal/lib/*`, `internal/models`, DB and clients, `internal/lib/appenv`. This is a guideline: use judgment at the border.
 
 ## Verification
