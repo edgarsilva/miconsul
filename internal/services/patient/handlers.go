@@ -204,7 +204,15 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/patients", "Can't remove profile picture without an id", view.LevelError)
 	}
 
-	err := s.ClearPatientProfilePic(c.Context(), cu.ID, patientID)
+	patient, err := s.TakePatientByID(c.Context(), cu.ID, patientID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return s.RedirectWithToast(c, "/patients", "Patient does not exist", view.LevelWarning)
+	}
+	if err != nil {
+		return s.RedirectWithToast(c, "/patients", "Failed to load patient", view.LevelError)
+	}
+
+	err = s.ClearPatientProfilePic(c.Context(), cu.ID, patientID)
 	if errors.Is(err, ErrIDRequired) {
 		return s.RedirectWithToast(c, "/patients", "Can't remove profile picture without an id", view.LevelError)
 	}
@@ -215,13 +223,8 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/patients", "Failed to remove profile picture", view.LevelError)
 	}
 
-	patient, err := s.TakePatientByID(c.Context(), cu.ID, patientID)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.RedirectWithToast(c, "/patients", "Patient does not exist", view.LevelWarning)
-	}
-	if err != nil {
-		return s.RedirectWithToast(c, "/patients", "Failed to load patient", view.LevelError)
-	}
+	s.removeReplacedPic(patient, "")
+	patient.ProfilePic = ""
 
 	vc := view.NewCtx(c)
 	return view.Render(c, view.PatientAvatar(vc, patient))

@@ -243,3 +243,49 @@ func TestPatientHTMXResponsesAreFragments(t *testing.T) {
 		})
 	}
 }
+
+func TestHandleRemovePicDeletesTheFile(t *testing.T) {
+	svc, user := newPatientServiceForTests(t)
+	svc.Env.AssetsDir = t.TempDir()
+
+	seed := models.Patient{UserID: user.ID, Name: "Pic Owner", Age: 30, Phone: "123"}
+	if err := svc.CreatePatient(t.Context(), &seed); err != nil {
+		t.Fatalf("create patient: %v", err)
+	}
+
+	filename := seed.UID + "_ppic_0123456789abcdef.png"
+	path, err := ProfilePicPath(filename, svc.Env.AssetsDir)
+	if err != nil {
+		t.Fatalf("picture path: %v", err)
+	}
+	if err := os.WriteFile(path, []byte("img"), 0o600); err != nil {
+		t.Fatalf("write picture: %v", err)
+	}
+	if err := svc.UpdatePatientProfilePic(t.Context(), user.ID, seed.UID, "/patients/"+seed.UID+"/profilepic/"+filename); err != nil {
+		t.Fatalf("attach picture: %v", err)
+	}
+
+	app := fiber.New()
+	app.Patch("/patients/:id/removepic", func(c fiber.Ctx) error {
+		c.Locals("current_user", user)
+		return svc.HandleRemovePic(c)
+	})
+
+	req := httptest.NewRequest(http.MethodPatch, "/patients/"+seed.UID+"/removepic", nil)
+	req.Header.Set("HX-Request", "true")
+	resp, err := app.Test(req)
+	if err != nil || resp.StatusCode != fiber.StatusOK {
+		t.Fatalf("remove picture: status=%d err=%v", resp.StatusCode, err)
+	}
+
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Errorf("picture file still exists: %v", err)
+	}
+	saved, err := svc.TakePatientByID(t.Context(), user.ID, seed.UID)
+	if err != nil {
+		t.Fatalf("reload patient: %v", err)
+	}
+	if saved.ProfilePic != "" {
+		t.Errorf("ProfilePic = %q, want removed", saved.ProfilePic)
+	}
+}

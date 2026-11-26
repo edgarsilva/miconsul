@@ -221,6 +221,8 @@ func (s *service) HandleRemoveProfilePic(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/profile", "Failed to remove profile picture", view.LevelError)
 	}
 
+	s.removeProfilePicFiles(cu.UID)
+
 	cu.ProfilePic = ""
 	if err := auth.RefreshSessionUser(c, s, cu); err != nil {
 		log.Warn("refresh signed-in user after profile picture removal:", err)
@@ -241,6 +243,8 @@ func (s *service) HandleAdminRemoveProfilePic(c fiber.Ctx) error {
 	if err != nil {
 		return s.RedirectWithToast(c, "/admin/users", "Failed to remove profile picture", view.LevelError)
 	}
+
+	s.removeProfilePicFiles(updatedUser.UID)
 
 	vc := view.NewCtx(c)
 	return view.Render(c, templ.Join(

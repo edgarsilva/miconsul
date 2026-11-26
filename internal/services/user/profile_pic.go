@@ -8,6 +8,7 @@ import (
 	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/log"
 )
 
 const usersDir = "/users"
@@ -40,6 +41,16 @@ func SaveProfilePicPreviewToTmp(c fiber.Ctx, user models.User, assetsDir string)
 // ProfilePicPath returns the file path of a user picture in assetsDir.
 func ProfilePicPath(filename, assetsDir string) (string, error) {
 	return profilepic.Path(assetsDir, usersDir, filename)
+}
+
+// removeProfilePicFiles deletes the user's avatar and avatar preview files.
+func (s service) removeProfilePicFiles(userUID string) {
+	for _, suffix := range []string{"_avatar", "_preview"} {
+		err := profilepic.Remove(s.Env.AssetsDir, usersDir, userUID+suffix)
+		if err != nil {
+			log.Errorf("remove user profile pic file: %v", err)
+		}
+	}
 }
 
 func saveUpload(c fiber.Ctx, user models.User, assetsDir, suffix, urlPath string) (string, error) {

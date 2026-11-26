@@ -53,6 +53,7 @@ templ PatientFormPage(c *Ctx, patient models.Patient) {
 			@CmpBackBtn(c.l("btn.back"), "/patients")
 		</div>
 		@PatientProfileSection(c, patient)
+		<script defer src={ "/public/js/picture_preview.js?v=" + assetVersion }></script>
 	}
 }
 
@@ -91,7 +92,7 @@ templ PatientLi(c *Ctx, patient models.Patient, lastAppointment time.Time) {
 		<div class="hidden md:flex gap-2 items-center">
 			<a
 				class="btn btn-sm"
-				href={ templ.URL("/appointments?patientId=" + patient.UID) }
+				href={ templ.URL("/appointments?timeframe=month&patientId=" + patient.UID) }
 			>
 				@CmpCalendarIcon("size-4")
 				{ c.l("btn.appointments") }
@@ -156,6 +157,7 @@ templ PatientProfile(c *Ctx, patient models.Patient) {
 									type="file"
 									class="file-input w-full file-input-primary"
 									accept={ profilepic.Accept }
+									data-picture-preview="#avatar_pic"
 									if len(patient.FieldErrors()) > 0 {
 										hx-preserve
 									}
@@ -491,7 +493,7 @@ templ PatientProfileSection(c *Ctx, patient models.Patient) {
 			}
 			<div class="flex items-center gap-2">
 				<a
-					href={ templ.URL("/appointments?patientId=" + patient.UID) }
+					href={ templ.URL("/appointments?timeframe=month&patientId=" + patient.UID) }
 					class="btn btn-primary btn-sm"
 				>
 					@CmpCalendarIcon("")
