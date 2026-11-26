@@ -319,3 +319,60 @@ func TestAttachClinicPicRecordsAFailedDBUpdate(t *testing.T) {
 		t.Errorf("span status = %v %q, want the attach failure", status.Code, status.Description)
 	}
 }
+
+func TestAttachClinicPicDeletesTheReplacedFile(t *testing.T) {
+	svc, user := newClinicServiceForTests(t)
+	svc.Env.AssetsDir = t.TempDir()
+
+	clinic := models.Clinic{UserID: user.ID, Name: "Alpha"}
+	if err := svc.CreateClinic(t.Context(), &clinic); err != nil {
+		t.Fatalf("seed clinic: %v", err)
+	}
+
+	oldName := clinic.UID + "_ppic_old.png"
+	oldPath, err := ProfilePicPath(oldName, svc.Env.AssetsDir)
+	if err != nil {
+		t.Fatalf("old picture path: %v", err)
+	}
+	if err := os.WriteFile(oldPath, []byte("old"), 0o600); err != nil {
+		t.Fatalf("write old picture: %v", err)
+	}
+	clinic.ProfilePic = "/clinics/" + clinic.UID + "/profilepic/" + oldName
+
+	var got string
+	app := fiber.New()
+	app.Post("/pic", func(c fiber.Ctx) error {
+		got = svc.attachClinicPic(c, user.ID, clinic)
+		return c.SendStatus(fiber.StatusNoContent)
+	})
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("profilePic", "new.png")
+	if err != nil {
+		t.Fatalf("create multipart file: %v", err)
+	}
+	if _, err := part.Write([]byte("new")); err != nil {
+		t.Fatalf("write multipart file: %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("close multipart writer: %v", err)
+	}
+	req := httptest.NewRequest(http.MethodPost, "/pic", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	if _, err := app.Test(req); err != nil {
+		t.Fatalf("attach picture: %v", err)
+	}
+
+	if got == "" || got == clinic.ProfilePic {
+		t.Fatalf("picture = %q, want the new one", got)
+	}
+	if _, err := os.Stat(oldPath); !os.IsNotExist(err) {
+		t.Errorf("old picture file still exists: %v", err)
+	}
+	dir := filepath.Dir(oldPath)
+	entries, err := os.ReadDir(dir)
+	if err != nil || len(entries) != 1 {
+		t.Errorf("want only the new picture in %s, got %d entries err=%v", dir, len(entries), err)
+	}
+}

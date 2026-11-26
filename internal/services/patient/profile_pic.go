@@ -75,7 +75,28 @@ func (s service) attachPatientPic(c fiber.Ctx, userID uint, patient models.Patie
 		return patient.ProfilePic
 	}
 
+	s.removeReplacedPic(patient, path)
+
 	return path
+}
+
+// removeReplacedPic deletes the patient's previous picture file after a new one
+// is saved. Pictures that are not stored in the assets directory are kept.
+func (s service) removeReplacedPic(patient models.Patient, newPath string) {
+	prefix := "/patients/" + patient.UID + "/profilepic/"
+	if patient.ProfilePic == newPath || !strings.HasPrefix(patient.ProfilePic, prefix) {
+		return
+	}
+
+	filename := strings.TrimPrefix(patient.ProfilePic, prefix)
+	if !IsSafeProfilePicFilenameForPatient(patient.UID, filename) {
+		return
+	}
+
+	err := profilepic.Remove(s.Env.AssetsDir, patientsDir, filename)
+	if err != nil {
+		log.Errorf("remove replaced patient profile pic: %v", err)
+	}
 }
 
 // ProfilePicPath returns the file path of a patient picture in assetsDir.

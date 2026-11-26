@@ -356,3 +356,60 @@ func TestAttachPatientPicRecordsAFailedDBUpdate(t *testing.T) {
 		t.Errorf("span status = %v %q, want the attach failure", status.Code, status.Description)
 	}
 }
+
+func TestAttachPatientPicDeletesTheReplacedFile(t *testing.T) {
+	svc, user := newPatientServiceForTests(t)
+	svc.Env.AssetsDir = t.TempDir()
+
+	patient := models.Patient{UserID: user.ID, Name: "Alpha", Age: 30, Phone: "111"}
+	if err := svc.CreatePatient(t.Context(), &patient); err != nil {
+		t.Fatalf("seed patient: %v", err)
+	}
+
+	oldName := patient.UID + "_ppic_old.png"
+	oldPath, err := ProfilePicPath(oldName, svc.Env.AssetsDir)
+	if err != nil {
+		t.Fatalf("old picture path: %v", err)
+	}
+	if err := os.WriteFile(oldPath, []byte("old"), 0o600); err != nil {
+		t.Fatalf("write old picture: %v", err)
+	}
+	patient.ProfilePic = "/patients/" + patient.UID + "/profilepic/" + oldName
+
+	var got string
+	app := fiber.New()
+	app.Post("/pic", func(c fiber.Ctx) error {
+		got = svc.attachPatientPic(c, user.ID, patient)
+		return c.SendStatus(fiber.StatusNoContent)
+	})
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("profilePic", "new.png")
+	if err != nil {
+		t.Fatalf("create multipart file: %v", err)
+	}
+	if _, err := part.Write([]byte("new")); err != nil {
+		t.Fatalf("write multipart file: %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("close multipart writer: %v", err)
+	}
+	req := httptest.NewRequest(http.MethodPost, "/pic", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	if _, err := app.Test(req); err != nil {
+		t.Fatalf("attach picture: %v", err)
+	}
+
+	if got == "" || got == patient.ProfilePic {
+		t.Fatalf("picture = %q, want the new one", got)
+	}
+	if _, err := os.Stat(oldPath); !os.IsNotExist(err) {
+		t.Errorf("old picture file still exists: %v", err)
+	}
+	dir := filepath.Dir(oldPath)
+	entries, err := os.ReadDir(dir)
+	if err != nil || len(entries) != 1 {
+		t.Errorf("want only the new picture in %s, got %d entries err=%v", dir, len(entries), err)
+	}
+}

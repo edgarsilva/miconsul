@@ -83,3 +83,30 @@ func TestFormFileError(t *testing.T) {
 		t.Fatalf("other errors must not map to ErrNotProvided")
 	}
 }
+
+func TestRemove(t *testing.T) {
+	dir := t.TempDir()
+	path, err := Path(dir, "/patients", "a.png")
+	if err != nil {
+		t.Fatalf("path: %v", err)
+	}
+	if err := os.WriteFile(path, []byte("x"), 0o600); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+
+	if err := Remove(dir, "/patients", "a.png"); err != nil {
+		t.Fatalf("remove: %v", err)
+	}
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Fatalf("file still exists: %v", err)
+	}
+	if err := Remove(dir, "/patients", "a.png"); err != nil {
+		t.Fatalf("removing a missing file must not fail, got %v", err)
+	}
+	if err := Remove(dir, "/patients", "../a.png"); !errors.Is(err, ErrInvalidFilename) {
+		t.Fatalf("expected ErrInvalidFilename, got %v", err)
+	}
+	if err := Remove(" ", "/patients", "a.png"); !errors.Is(err, ErrNoAssetsDir) {
+		t.Fatalf("expected ErrNoAssetsDir, got %v", err)
+	}
+}

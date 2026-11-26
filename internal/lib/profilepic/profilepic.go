@@ -96,6 +96,31 @@ func Path(assetsDir, subdir, filename string) (string, error) {
 	return filepath.Join(dir, filename), nil
 }
 
+// Remove deletes filename from assetsDir/subdir. A file that does not exist is
+// not an error. It returns ErrInvalidFilename when filename is not safe.
+func Remove(assetsDir, subdir, filename string) error {
+	if !IsSafeFilename(filename) {
+		return ErrInvalidFilename
+	}
+
+	assetsDir = strings.TrimSpace(assetsDir)
+	if assetsDir == "" {
+		return ErrNoAssetsDir
+	}
+
+	absDir, err := filepath.Abs(assetsDir)
+	if err != nil {
+		return fmt.Errorf("resolve assets directory: %w", err)
+	}
+
+	err = os.Remove(filepath.Join(absDir, subdir, filename))
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("remove profile pic: %w", err)
+	}
+
+	return nil
+}
+
 func isMissing(err error) bool {
 	if errors.Is(err, http.ErrMissingFile) {
 		return true
