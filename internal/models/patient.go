@@ -3,7 +3,6 @@ package models
 import (
 	"errors"
 	"miconsul/internal/lib/xid"
-	"strings"
 
 	"github.com/microcosm-cc/bluemonday"
 	"gorm.io/gorm"
@@ -83,19 +82,7 @@ func (p *Patient) Sanitize() {
 }
 
 func (p Patient) Initials() string {
-	if p.Name == "" {
-		return "PA"
-	}
-
-	parts := strings.Split(p.Name, " ")
-	a := string(parts[0][0])
-	b := ""
-
-	if len(parts) > 1 {
-		b = string(parts[1][0])
-	}
-
-	return a + b
+	return initials(p.Name, "PA")
 }
 
 func (p *Patient) ProfilePicPath() string {

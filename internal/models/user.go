@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"miconsul/internal/lib/xid"
@@ -59,19 +58,7 @@ func (u User) IsAdmin() bool {
 }
 
 func (u User) Initials() string {
-	if u.Name == "" {
-		return "PA"
-	}
-
-	parts := strings.Split(u.Name, " ")
-	a := string(parts[0][0])
-	b := ""
-
-	if len(parts) > 1 {
-		b = string(parts[1][0])
-	}
-
-	return a + b
+	return initials(u.Name, "PA")
 }
 
 func (u User) ProfilePicPath() string {
