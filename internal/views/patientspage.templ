@@ -53,6 +53,7 @@ templ PatientFormPage(c *Ctx, patient models.Patient) {
 			@CmpBackBtn(c.l("btn.back"), "/patients")
 		</div>
 		@PatientProfileSection(c, patient)
+		<script defer src={ "/public/js/picture-preview.js?v=" + assetVersion }></script>
 	}
 }
 
@@ -156,6 +157,7 @@ templ PatientProfile(c *Ctx, patient models.Patient) {
 									type="file"
 									class="file-input w-full file-input-primary"
 									accept={ profilepic.Accept }
+									data-picture-preview="#avatar_pic"
 									if len(patient.FieldErrors()) > 0 {
 										hx-preserve
 									}

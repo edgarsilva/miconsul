@@ -50,6 +50,7 @@ templ ClinicFormPage(c *Ctx, clinic models.Clinic) {
 			@CmpBackBtn(c.l("btn.back"), "/clinics")
 		</div>
 		@ClinicProfileSection(c, clinic)
+		<script defer src={ "/public/js/picture-preview.js?v=" + assetVersion }></script>
 	}
 }
 
@@ -159,25 +160,28 @@ templ ClinicProfile(c *Ctx, clinic models.Clinic) {
 						<div class="col-span-full">
 							<label for="profile_pic" class="block text-sm font-medium leading-6">{ c.l("str.profile_pic") }</label>
 							<div class="mt-2 flex items-center gap-x-3">
-								if clinic.ProfilePic != "" {
-									<div class="avatar">
-										<div class="w-12 rounded-full">
-											<img src={ string(templ.URL(clinic.ProfilePic)) }/>
+								<div id="clinic_avatar">
+									if clinic.ProfilePic != "" {
+										<div class="avatar">
+											<div class="w-12 rounded-full">
+												<img src={ string(templ.URL(clinic.ProfilePic)) }/>
+											</div>
 										</div>
-									</div>
-								} else {
-									<div class="avatar placeholder">
-										<div class="bg-neutral text-neutral-content rounded-full w-12">
-											<span class="text-xl">{ clinic.Initials() }</span>
+									} else {
+										<div class="avatar placeholder">
+											<div class="bg-neutral text-neutral-content rounded-full w-12">
+												<span class="text-xl">{ clinic.Initials() }</span>
+											</div>
 										</div>
-									</div>
-								}
+									}
+								</div>
 								<input
 									id="profile_pic"
 									name="profilePic"
 									type="file"
 									class="file-input w-full file-input-primary"
 									accept={ profilepic.Accept }
+									data-picture-preview="#clinic_avatar"
 									if len(clinic.FieldErrors()) > 0 {
 										hx-preserve
 									}

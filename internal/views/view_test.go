@@ -1043,3 +1043,31 @@ func TestAdminIndexRuntimeCardIsNotBoosted(t *testing.T) {
 		}
 	})
 }
+
+func TestPictureFormPagesPreviewThePickedFile(t *testing.T) {
+	runViewCtx(t, "/ctx", func(fc fiber.Ctx) {
+		pages := map[string]templ.Component{
+			"patient": PatientFormPage(NewCtx(fc), models.Patient{UID: "ptnt_alma", Name: "Alma"}),
+			"clinic":  ClinicFormPage(NewCtx(fc), models.Clinic{UID: "clnc_north", Name: "North"}),
+		}
+		targets := map[string]string{"patient": `id="avatar_pic"`, "clinic": `id="clinic_avatar"`}
+
+		for name, page := range pages {
+			var html strings.Builder
+			if err := page.Render(fc.Context(), &html); err != nil {
+				t.Fatalf("render %s page: %v", name, err)
+			}
+
+			got := html.String()
+			for _, want := range []string{
+				`<script defer src="/public/js/picture-preview.js?v=` + assetVersion + `">`,
+				`data-picture-preview="#` + strings.Trim(strings.TrimPrefix(targets[name], "id="), `"`) + `"`,
+				targets[name],
+			} {
+				if !strings.Contains(got, want) {
+					t.Errorf("%s page: expected %s", name, want)
+				}
+			}
+		}
+	})
+}
