@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -506,5 +507,40 @@ func TestHandleIndexSearch(t *testing.T) {
 	short, err := app.Test(httptest.NewRequest(http.MethodGet, "/admin/users/search?searchTerm=ab", nil))
 	if err != nil || short.StatusCode != fiber.StatusOK {
 		t.Fatalf("short term expected 200, got status=%v err=%v", short, err)
+	}
+}
+
+func TestHandleRemoveProfilePicDeletesTheFiles(t *testing.T) {
+	svc, currentUser := newUserServiceForTests(t)
+	svc.Env.AssetsDir = t.TempDir()
+
+	var paths []string
+	for _, suffix := range []string{"_avatar", "_preview"} {
+		path, err := ProfilePicPath(currentUser.UID+suffix, svc.Env.AssetsDir)
+		if err != nil {
+			t.Fatalf("picture path: %v", err)
+		}
+		if err := os.WriteFile(path, []byte("img"), 0o600); err != nil {
+			t.Fatalf("write picture: %v", err)
+		}
+		paths = append(paths, path)
+	}
+
+	app := fiber.New()
+	app.Patch("/profile/removepic", func(c fiber.Ctx) error {
+		c.Locals("current_user", currentUser)
+		return svc.HandleRemoveProfilePic(c)
+	})
+
+	req := httptest.NewRequest(http.MethodPatch, "/profile/removepic", nil)
+	req.Header.Set("HX-Request", "true")
+	if _, err := app.Test(req); err != nil {
+		t.Fatalf("remove picture request: %v", err)
+	}
+
+	for _, path := range paths {
+		if _, err := os.Stat(path); !os.IsNotExist(err) {
+			t.Errorf("%s still exists: %v", filepath.Base(path), err)
+		}
 	}
 }
