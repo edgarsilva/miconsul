@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"mime/multipart"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -18,9 +17,7 @@ import (
 
 var (
 	ErrNotProvided     = errors.New("profile picture not provided")
-	ErrInvalidFilename = errors.New("invalid filename")
 	ErrUnsupportedType = errors.New("unsupported picture type")
-	ErrNoAssetsDir     = errors.New("assets directory not set")
 )
 
 // Accept lists the picture MIME types for the accept attribute of a file
@@ -126,56 +123,6 @@ func IsSafeFilename(name string) bool {
 	}
 
 	return true
-}
-
-// Path returns the file path of filename in assetsDir/subdir and creates the
-// directory. It returns ErrInvalidFilename when filename is not safe.
-func Path(assetsDir, subdir, filename string) (string, error) {
-	if !IsSafeFilename(filename) {
-		return "", ErrInvalidFilename
-	}
-
-	assetsDir = strings.TrimSpace(assetsDir)
-	if assetsDir == "" {
-		return "", ErrNoAssetsDir
-	}
-
-	absDir, err := filepath.Abs(assetsDir)
-	if err != nil {
-		return "", fmt.Errorf("resolve assets directory: %w", err)
-	}
-
-	dir := filepath.Join(absDir, subdir)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return "", fmt.Errorf("create %s directory: %w", subdir, err)
-	}
-
-	return filepath.Join(dir, filename), nil
-}
-
-// Remove deletes filename from assetsDir/subdir. A file that does not exist is
-// not an error. It returns ErrInvalidFilename when filename is not safe.
-func Remove(assetsDir, subdir, filename string) error {
-	if !IsSafeFilename(filename) {
-		return ErrInvalidFilename
-	}
-
-	assetsDir = strings.TrimSpace(assetsDir)
-	if assetsDir == "" {
-		return ErrNoAssetsDir
-	}
-
-	absDir, err := filepath.Abs(assetsDir)
-	if err != nil {
-		return fmt.Errorf("resolve assets directory: %w", err)
-	}
-
-	err = os.Remove(filepath.Join(absDir, subdir, filename))
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		return fmt.Errorf("remove profile pic: %w", err)
-	}
-
-	return nil
 }
 
 func uploadExt(uploadName string) (string, error) {

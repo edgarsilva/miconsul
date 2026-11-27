@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -165,15 +164,6 @@ func parseByteRange(header string, size int64) (start, end int64, result rangeRe
 	}
 
 	return start, min(end, size-1), rangeSatisfiable
-}
-
-func (s *Server) SendFile(c fiber.Ctx, path string) error {
-	fileBytes, err := os.ReadFile(path)
-	if err != nil {
-		return c.SendStatus(fiber.StatusInternalServerError)
-	}
-
-	return c.Send(fileBytes)
 }
 
 // redirectWithFlash redirects to path with a flash message and level. For htmx
