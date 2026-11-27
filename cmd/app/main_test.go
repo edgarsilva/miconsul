@@ -378,7 +378,8 @@ func setRequiredEnv(t *testing.T, overrides map[string]string) {
 		"GOOSE_DRIVER":        "sqlite3",
 		"GOOSE_DBSTRING":      "file:test.sqlite",
 		"GOOSE_MIGRATION_DIR": ".",
-		"ASSETS_DIR":          "assets",
+		"ASSETS_DIR":          t.TempDir(),
+		"STORAGE_BACKEND":     "disk",
 	}
 
 	maps.Copy(values, overrides)

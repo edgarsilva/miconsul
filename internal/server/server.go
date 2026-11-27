@@ -12,6 +12,7 @@ import (
 	"miconsul/internal/jobs"
 	"miconsul/internal/lib/appenv"
 	"miconsul/internal/lib/localize"
+	"miconsul/internal/lib/objstore"
 	"miconsul/internal/lib/ringbuf"
 	"miconsul/internal/models"
 
@@ -49,6 +50,7 @@ type Server struct {
 	wp                    *ants.Pool
 	jobs                  *jobs.Runtime
 	Cache                 Cache
+	Objects               objstore.Store
 	SessionStore          *session.Store
 	Localizer             *localize.Localizer
 	TracerProvider        trace.TracerProvider
@@ -125,6 +127,10 @@ func validateCriticalDeps(s *Server) error {
 
 	if s.LoggerProvider == nil {
 		return errors.New("logger provider is required; pass server.WithLoggerProvider(...) to server.New(...)")
+	}
+
+	if s.Objects == nil {
+		return errors.New("object store is required; pass server.WithObjects(...) to server.New(...)")
 	}
 
 	return nil
@@ -381,6 +387,18 @@ func WithCache(cache Cache) ServerOption {
 		}
 
 		server.Cache = cache
+		return nil
+	}
+}
+
+// WithObjects configures the store for uploaded files.
+func WithObjects(store objstore.Store) ServerOption {
+	return func(server *Server) error {
+		if store == nil {
+			return errors.New("object store is required")
+		}
+
+		server.Objects = store
 		return nil
 	}
 }
