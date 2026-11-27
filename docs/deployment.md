@@ -17,6 +17,8 @@ Minimum runtime vars for production deploy:
 
 Optional database pool limits (defaults in parentheses): `DB_MAX_OPEN_CONNS` (10), `DB_MAX_IDLE_CONNS` (5), `DB_CONN_MAX_LIFETIME` (30m), `DB_CONN_MAX_IDLE_TIME` (5m).
 
+Optional object storage: `STORAGE_BACKEND` is `disk` (default, files under `ASSETS_DIR`) or `s3`. With `s3`, `S3_ENDPOINT` (host:port, no scheme), `S3_ACCESS_KEY`, `S3_SECRET_KEY` and `S3_BUCKET` are required, and startup fails naming the missing ones. `S3_USE_SSL` (false) and `S3_REGION` are optional. Use one bucket per environment (`miconsul-prod`, `miconsul-stg`, `miconsul-dev`, `miconsul-preview`); buckets cannot be renamed.
+
 Optional runtime history for `/admin/runtime` (defaults in parentheses): `RUNTIME_SAMPLE_INTERVAL` (5s) and `RUNTIME_SAMPLE_SIZE` (720 samples, one hour at the default interval). History is kept in memory per process and resets on every deploy.
 
 Optional one-time admin bootstrap vars:
