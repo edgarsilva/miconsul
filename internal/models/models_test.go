@@ -7,14 +7,13 @@ import (
 	"strings"
 	"testing"
 	"time"
-	"uuid"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 func isUUIDv7(uid string) bool {
-	id, err := uuid.Parse(uid)
+	id, err := parseUID(uid)
 	return err == nil && id[6]>>4 == 7
 }
 

@@ -3,7 +3,6 @@ package models
 import (
 	"fmt"
 	"time"
-	"uuid"
 
 	"gorm.io/gorm"
 )
@@ -43,7 +42,7 @@ type User struct {
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
-	u.UID = uuid.NewV7().String()
+	u.UID = newUID()
 	return nil
 }
 
