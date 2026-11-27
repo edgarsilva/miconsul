@@ -49,10 +49,6 @@
   - Upload and retrieval path for patient/profile images via RustFS.
   - Migration/fallback strategy for existing disk-backed image files.
 
-- [infra/ids] Replace XIDs with UUIDv7
-  - [ ] `internal/lib/xid` builds record UIDs from `rs/xid`. Use the standard library `uuid.NewV7` instead, and drop the `rs/xid` dependency.
-  - [ ] Decide what happens to existing UIDs (`clnc...`, `ptnt...`) and their prefixes.
-
 ## Icebox
 
 - [external/runtime] Beta tester release prep
@@ -79,6 +75,8 @@
   - Define precedence rules explicitly (appointment overrides patient, or fallback behavior).
 
 ## Done
+
+- [infra/ids] Record UIDs are plain UUIDv7 strings from the standard library `uuid.NewV7()`, called in each model's `BeforeCreate`; the `internal/lib/xid` package and `rs/xid` are gone. The type prefixes (`clnc`, `ptnt`, ...) are dropped. Existing UIDs keep their XID form; the column is a string, so both formats live side by side. If a bare ID needs to say what it belongs to, add the entity to the telemetry instead.
 
 - [feature/pictures] Patient and clinic forms preview the picked picture before saving: `public/js/picture_preview.js` reads the file with `FileReader` and shows it in place of the avatar, so the CSP needs no `blob:`.
 

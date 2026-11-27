@@ -88,8 +88,8 @@ func TestGlobalFTSKeepsPatientsAndClinicsApart(t *testing.T) {
 	})
 
 	t.Run("uid is not searchable", func(t *testing.T) {
-		if got := searchPatientUIDs(t, db, "ptnt"); len(got) != 0 {
-			t.Fatalf("expected no patients for a uid prefix, got %v", got)
+		if got := searchPatientUIDs(t, db, patient.UID); len(got) != 0 {
+			t.Fatalf("expected no patients for a uid, got %v", got)
 		}
 	})
 

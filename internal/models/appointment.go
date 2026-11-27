@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"uuid"
 
 	"miconsul/internal/lib/amount"
 	"miconsul/internal/lib/libtime"
-	"miconsul/internal/lib/xid"
 
 	"gorm.io/gorm"
 )
@@ -84,7 +84,7 @@ type Appointment struct {
 }
 
 func (a *Appointment) BeforeCreate(tx *gorm.DB) error {
-	a.UID = xid.New("apnt")
+	a.UID = uuid.NewV7().String()
 	if a.Status == "" {
 		a.Status = AppointmentPending
 	}

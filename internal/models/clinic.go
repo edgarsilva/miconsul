@@ -2,8 +2,9 @@ package models
 
 import (
 	"errors"
+	"uuid"
+
 	"miconsul/internal/lib/amount"
-	"miconsul/internal/lib/xid"
 
 	"gorm.io/gorm"
 )
@@ -37,7 +38,7 @@ func (c *Clinic) BeforeCreate(tx *gorm.DB) error {
 		return errors.New("invalid data found in clinic record")
 	}
 
-	c.UID = xid.New("clnc")
+	c.UID = uuid.NewV7().String()
 	return nil
 }
 

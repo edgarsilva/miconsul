@@ -3,8 +3,7 @@ package models
 import (
 	"fmt"
 	"time"
-
-	"miconsul/internal/lib/xid"
+	"uuid"
 
 	"gorm.io/gorm"
 )
@@ -44,7 +43,7 @@ type User struct {
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
-	u.UID = xid.New("user")
+	u.UID = uuid.NewV7().String()
 	return nil
 }
 
