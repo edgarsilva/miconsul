@@ -3,9 +3,9 @@ package patient
 import (
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 
+	"miconsul/internal/lib/objstore"
 	"miconsul/internal/models"
 	view "miconsul/internal/views"
 
@@ -223,7 +223,7 @@ func (s *service) HandleRemovePic(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/patients", "Failed to remove profile picture", view.LevelError)
 	}
 
-	s.removeReplacedPic(patient, "")
+	s.removeReplacedPic(c.Context(), patient, "")
 	patient.ProfilePic = ""
 
 	vc := view.NewCtx(c)
@@ -288,20 +288,13 @@ func (s *service) HandleProfilePic(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	path, err := ProfilePicPath(filename, s.Env.AssetsDir)
-	if err != nil {
-		return c.SendStatus(fiber.StatusNotFound)
-	}
-	fileInfo, err := os.Stat(path)
-	if errors.Is(err, os.ErrNotExist) {
+	obj, err := s.Objects.Open(c.Context(), ProfilePicKey(filename))
+	if errors.Is(err, objstore.ErrNotFound) || errors.Is(err, objstore.ErrInvalidKey) {
 		return c.SendStatus(fiber.StatusNotFound)
 	}
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
-	if fileInfo.IsDir() {
-		return c.SendStatus(fiber.StatusNotFound)
-	}
 
-	return c.SendFile(path)
+	return s.SendObject(c, obj)
 }

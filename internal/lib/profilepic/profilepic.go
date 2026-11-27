@@ -1,15 +1,19 @@
-// Package profilepic names, validates and locates uploaded profile pictures on disk.
+// Package profilepic names, validates and stores uploaded profile pictures.
 package profilepic
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"miconsul/internal/lib/objstore"
 )
 
 var (
@@ -24,8 +28,13 @@ var (
 // every extension of these types.
 const Accept = "image/jpeg,image/png,image/webp"
 
-var allowedExts = map[string]struct{}{
-	".jpg": {}, ".jpeg": {}, ".jpe": {}, ".jfif": {}, ".png": {}, ".webp": {},
+var contentTypes = map[string]string{
+	".jpg":  "image/jpeg",
+	".jpeg": "image/jpeg",
+	".jpe":  "image/jpeg",
+	".jfif": "image/jpeg",
+	".png":  "image/png",
+	".webp": "image/webp",
 }
 
 // FormFileError maps the error of a multipart file lookup. A missing file
@@ -63,6 +72,42 @@ func RandomName(prefix, uploadName string) (string, error) {
 func CheckType(uploadName string) error {
 	_, err := uploadExt(uploadName)
 	return err
+}
+
+// ContentType returns the MIME type for the extension of uploadName. It returns
+// ErrUnsupportedType when the extension is not a picture type.
+func ContentType(uploadName string) (string, error) {
+	ext, err := uploadExt(uploadName)
+	if err != nil {
+		return "", err
+	}
+
+	return contentTypes[ext], nil
+}
+
+// Put stores the uploaded picture in store under key, with the content type of
+// the upload's extension.
+func Put(ctx context.Context, store objstore.Store, key string, upload *multipart.FileHeader) error {
+	contentType, err := ContentType(upload.Filename)
+	if err != nil {
+		return err
+	}
+
+	file, err := upload.Open()
+	if err != nil {
+		return fmt.Errorf("open uploaded picture: %w", err)
+	}
+
+	err = store.Put(ctx, key, file, upload.Size, contentType)
+	closeErr := file.Close()
+	if err != nil {
+		return fmt.Errorf("store picture: %w", err)
+	}
+	if closeErr != nil {
+		return fmt.Errorf("close uploaded picture: %w", closeErr)
+	}
+
+	return nil
 }
 
 // IsSafeFilename reports whether name is a single path segment made of
@@ -136,7 +181,7 @@ func Remove(assetsDir, subdir, filename string) error {
 func uploadExt(uploadName string) (string, error) {
 	uploadName = strings.ReplaceAll(strings.TrimSpace(uploadName), "\\", "/")
 	ext := strings.ToLower(filepath.Ext(filepath.Base(uploadName)))
-	if _, ok := allowedExts[ext]; !ok {
+	if _, ok := contentTypes[ext]; !ok {
 		return "", ErrUnsupportedType
 	}
 

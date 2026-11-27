@@ -1,10 +1,12 @@
 package clinic
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
 
+	"miconsul/internal/lib/objstore"
 	"miconsul/internal/lib/profilepic"
 	"miconsul/internal/models"
 
@@ -14,7 +16,7 @@ import (
 	"go.opentelemetry.io/otel/codes"
 )
 
-const clinicsDir = "/clinics"
+const clinicsKeyPrefix = "clinics/"
 
 const unsupportedPicMessage = "Unsupported picture type, use JPG, PNG or WebP"
 
@@ -29,9 +31,9 @@ func hasUnsupportedProfilePic(c fiber.Ctx) bool {
 	return errors.Is(profilepic.CheckType(upload.Filename), profilepic.ErrUnsupportedType)
 }
 
-// SaveProfilePicToDisk stores the uploaded profilePic under a random name and
-// returns the URL path that serves it.
-func SaveProfilePicToDisk(c fiber.Ctx, clinic models.Clinic, assetsDir string) (string, error) {
+// SaveProfilePic stores the uploaded profilePic in store under a random name
+// and returns the URL path that serves it.
+func SaveProfilePic(c fiber.Ctx, store objstore.Store, clinic models.Clinic) (string, error) {
 	upload, err := c.FormFile("profilePic")
 	if err != nil {
 		return "", profilepic.FormFileError(err)
@@ -46,22 +48,17 @@ func SaveProfilePicToDisk(c fiber.Ctx, clinic models.Clinic, assetsDir string) (
 		return "", fmt.Errorf("name profile pic: %w", err)
 	}
 
-	path, err := ProfilePicPath(filename, assetsDir)
+	err = profilepic.Put(c.Context(), store, ProfilePicKey(filename), upload)
 	if err != nil {
-		return "", fmt.Errorf("locate profile pic: %w", err)
-	}
-
-	err = c.SaveFile(upload, path)
-	if err != nil {
-		return "", fmt.Errorf("save profilePic to disk: %w", err)
+		return "", fmt.Errorf("save profile pic: %w", err)
 	}
 
 	return "/clinics/" + clinic.UID + "/profilepic/" + filename, nil
 }
 
-// ProfilePicPath returns the file path of a clinic picture in assetsDir.
-func ProfilePicPath(filename, assetsDir string) (string, error) {
-	return profilepic.Path(assetsDir, clinicsDir, filename)
+// ProfilePicKey returns the object key of a clinic picture file.
+func ProfilePicKey(filename string) string {
+	return clinicsKeyPrefix + filename
 }
 
 // IsSafeProfilePicFilenameForClinic reports whether filename is a safe
@@ -85,7 +82,7 @@ func (s service) attachClinicPic(c fiber.Ctx, userID uint, clinic models.Clinic)
 
 	span.SetAttributes(attribute.String("clinic.uid", clinic.UID))
 
-	path, err := SaveProfilePicToDisk(c, clinic, s.Env.AssetsDir)
+	path, err := SaveProfilePic(c, s.Objects, clinic)
 	if errors.Is(err, profilepic.ErrNotProvided) {
 		return clinic.ProfilePic
 	}
@@ -104,14 +101,14 @@ func (s service) attachClinicPic(c fiber.Ctx, userID uint, clinic models.Clinic)
 		return clinic.ProfilePic
 	}
 
-	s.removeReplacedPic(clinic, path)
+	s.removeReplacedPic(ctx, clinic, path)
 
 	return path
 }
 
 // removeReplacedPic deletes the clinic's previous picture file after a new one
-// is saved. Pictures that are not stored in the assets directory are kept.
-func (s service) removeReplacedPic(clinic models.Clinic, newPath string) {
+// is saved. Pictures that are not stored in the object store are kept.
+func (s service) removeReplacedPic(ctx context.Context, clinic models.Clinic, newPath string) {
 	prefix := "/clinics/" + clinic.UID + "/profilepic/"
 	if clinic.ProfilePic == newPath || !strings.HasPrefix(clinic.ProfilePic, prefix) {
 		return
@@ -122,7 +119,7 @@ func (s service) removeReplacedPic(clinic models.Clinic, newPath string) {
 		return
 	}
 
-	err := profilepic.Remove(s.Env.AssetsDir, clinicsDir, filename)
+	err := s.Objects.Delete(ctx, ProfilePicKey(filename))
 	if err != nil {
 		log.Errorf("remove replaced clinic profile pic: %v", err)
 	}

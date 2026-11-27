@@ -17,10 +17,10 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-func TestSaveProfilePicToDisk(t *testing.T) {
+func TestSaveProfilePic(t *testing.T) {
 	t.Run("missing file returns profilepic.ErrNotProvided", func(t *testing.T) {
 		runClinicCtx(t, "", nil, func(c fiber.Ctx) {
-			_, err := SaveProfilePicToDisk(c, models.Clinic{UID: "cln_1"}, t.TempDir())
+			_, err := SaveProfilePic(c, newTestStore(t, t.TempDir()), models.Clinic{UID: "cln_1"})
 			if !errors.Is(err, profilepic.ErrNotProvided) {
 				t.Fatalf("expected profilepic.ErrNotProvided, got %v", err)
 			}
@@ -29,7 +29,7 @@ func TestSaveProfilePicToDisk(t *testing.T) {
 
 	t.Run("missing clinic id returns error", func(t *testing.T) {
 		runClinicCtx(t, "photo.png", []byte("img"), func(c fiber.Ctx) {
-			_, err := SaveProfilePicToDisk(c, models.Clinic{}, t.TempDir())
+			_, err := SaveProfilePic(c, newTestStore(t, t.TempDir()), models.Clinic{})
 			if err == nil {
 				t.Fatalf("expected missing clinic id to fail")
 			}
@@ -38,7 +38,7 @@ func TestSaveProfilePicToDisk(t *testing.T) {
 
 	t.Run("rejects a non-image filename", func(t *testing.T) {
 		runClinicCtx(t, "..", []byte("img"), func(c fiber.Ctx) {
-			_, err := SaveProfilePicToDisk(c, models.Clinic{UID: "cln_1"}, t.TempDir())
+			_, err := SaveProfilePic(c, newTestStore(t, t.TempDir()), models.Clinic{UID: "cln_1"})
 			if !errors.Is(err, profilepic.ErrUnsupportedType) {
 				t.Fatalf("expected ErrUnsupportedType, got %v", err)
 			}
@@ -48,7 +48,7 @@ func TestSaveProfilePicToDisk(t *testing.T) {
 	t.Run("stores the upload under a random name", func(t *testing.T) {
 		dir := t.TempDir()
 		runClinicCtx(t, "Logo.PNG", []byte("img"), func(c fiber.Ctx) {
-			got, err := SaveProfilePicToDisk(c, models.Clinic{UID: "cln_1"}, dir)
+			got, err := SaveProfilePic(c, newTestStore(t, dir), models.Clinic{UID: "cln_1"})
 			if err != nil {
 				t.Fatalf("save: %v", err)
 			}

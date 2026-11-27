@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"miconsul/internal/lib/objstore"
 	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
@@ -122,7 +123,7 @@ func TestPatientProfilePicImageSourceHandler(t *testing.T) {
 	svc, user := newPatientServiceForTests(t)
 
 	assetsDir := t.TempDir()
-	svc.Env.AssetsDir = assetsDir
+	useDiskStore(t, svc, assetsDir)
 
 	patient := models.Patient{UserID: user.ID, Name: "Pic User", Age: 28, Phone: "123", Email: "pic@example.com"}
 	if err := svc.CreatePatient(t.Context(), &patient); err != nil {
@@ -130,11 +131,7 @@ func TestPatientProfilePicImageSourceHandler(t *testing.T) {
 	}
 
 	filename := patient.UID + "_ppic_avatar.png"
-	storagePath, err := ProfilePicPath(filename, assetsDir)
-	if err != nil {
-		t.Fatalf("profile pic path: %v", err)
-	}
-	if err := os.WriteFile(storagePath, []byte("fake-image"), 0o644); err != nil {
+	if err := svc.Objects.Put(t.Context(), ProfilePicKey(filename), strings.NewReader("fake-image"), 10, "image/png"); err != nil {
 		t.Fatalf("write profile pic file: %v", err)
 	}
 
@@ -161,7 +158,7 @@ func TestPatientProfilePicImageSourceHandler(t *testing.T) {
 		t.Fatalf("expected patient row to remain present, got %d", count)
 	}
 
-	if _, err := os.Stat(filepath.Dir(storagePath)); err != nil {
+	if _, err := os.Stat(filepath.Join(assetsDir, "patients")); err != nil {
 		t.Fatalf("expected profile pic directory to exist: %v", err)
 	}
 }
@@ -246,7 +243,7 @@ func TestPatientHTMXResponsesAreFragments(t *testing.T) {
 
 func TestHandleRemovePicDeletesTheFile(t *testing.T) {
 	svc, user := newPatientServiceForTests(t)
-	svc.Env.AssetsDir = t.TempDir()
+	useDiskStore(t, svc, t.TempDir())
 
 	seed := models.Patient{UserID: user.ID, Name: "Pic Owner", Age: 30, Phone: "123"}
 	if err := svc.CreatePatient(t.Context(), &seed); err != nil {
@@ -254,11 +251,7 @@ func TestHandleRemovePicDeletesTheFile(t *testing.T) {
 	}
 
 	filename := seed.UID + "_ppic_0123456789abcdef.png"
-	path, err := ProfilePicPath(filename, svc.Env.AssetsDir)
-	if err != nil {
-		t.Fatalf("picture path: %v", err)
-	}
-	if err := os.WriteFile(path, []byte("img"), 0o600); err != nil {
+	if err := svc.Objects.Put(t.Context(), ProfilePicKey(filename), strings.NewReader("img"), 3, "image/png"); err != nil {
 		t.Fatalf("write picture: %v", err)
 	}
 	if err := svc.UpdatePatientProfilePic(t.Context(), user.ID, seed.UID, "/patients/"+seed.UID+"/profilepic/"+filename); err != nil {
@@ -278,7 +271,7 @@ func TestHandleRemovePicDeletesTheFile(t *testing.T) {
 		t.Fatalf("remove picture: status=%d err=%v", resp.StatusCode, err)
 	}
 
-	if _, err := os.Stat(path); !os.IsNotExist(err) {
+	if _, err := svc.Objects.Open(t.Context(), ProfilePicKey(filename)); !errors.Is(err, objstore.ErrNotFound) {
 		t.Errorf("picture file still exists: %v", err)
 	}
 	saved, err := svc.TakePatientByID(t.Context(), user.ID, seed.UID)
