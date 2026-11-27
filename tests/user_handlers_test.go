@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"strings"
 	"testing"
 
@@ -170,12 +169,12 @@ func TestUserHandlers(t *testing.T) {
 			t.Fatalf("expected preview img src in response body, got %q", string(respBody))
 		}
 
-		previewFilePath, err := usersvc.ProfilePicPath(regular.UID+"_preview", h.env.AssetsDir)
+		preview, err := h.server.Objects.Open(t.Context(), usersvc.ProfilePicKey(regular.UID+"_preview"))
 		if err != nil {
-			t.Fatalf("resolve preview file path: %v", err)
+			t.Fatalf("expected preview in the object store: %v", err)
 		}
-		if _, err := os.Stat(previewFilePath); err != nil {
-			t.Fatalf("expected preview file in assets dir: %v", err)
+		if err := preview.Body.Close(); err != nil {
+			t.Fatalf("close preview: %v", err)
 		}
 
 	})

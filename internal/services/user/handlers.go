@@ -3,10 +3,10 @@ package user
 
 import (
 	"errors"
-	"os"
 	"strings"
 	"time"
 
+	"miconsul/internal/lib/objstore"
 	"miconsul/internal/lib/profilepic"
 	"miconsul/internal/models"
 	"miconsul/internal/services/auth"
@@ -121,7 +121,7 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 		return s.respondWithUserToast(c, userWithUpdates(cu, userUpds), unsupportedPicMessage, view.LevelWarning)
 	}
 
-	path, picErr := SaveProfilePicToDisk(c, cu, s.Env.AssetsDir)
+	path, picErr := SaveProfilePic(c, s.Objects, cu)
 	if picErr != nil {
 		if !errors.Is(picErr, profilepic.ErrNotProvided) {
 			return s.RedirectWithToast(c, "/profile", "Failed to upload profile picture", view.LevelError)
@@ -168,7 +168,7 @@ func (s *service) HandleProfilePicPreview(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/profile", unsupportedPicMessage, view.LevelWarning)
 	}
 
-	previewPath, err := SaveProfilePicPreviewToTmp(c, user, s.Env.AssetsDir)
+	previewPath, err := SaveProfilePicPreview(c, s.Objects, user)
 	if err != nil {
 		return s.RedirectWithToast(c, "/profile", "Failed to display profile picture", view.LevelError)
 	}
@@ -188,24 +188,15 @@ func (s *service) HandleProfilePic(c fiber.Ctx) error {
 		sufix = "preview"
 	}
 
-	filename := cu.UID + "_" + sufix
-	picPath, err := ProfilePicPath(filename, s.Env.AssetsDir)
-	if err != nil {
-		return c.SendStatus(fiber.StatusNotFound)
-	}
-
-	fileInfo, err := os.Stat(picPath)
-	if errors.Is(err, os.ErrNotExist) {
+	obj, err := s.Objects.Open(c.Context(), ProfilePicKey(cu.UID+"_"+sufix))
+	if errors.Is(err, objstore.ErrNotFound) || errors.Is(err, objstore.ErrInvalidKey) {
 		return c.SendStatus(fiber.StatusNotFound)
 	}
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
-	if fileInfo.IsDir() {
-		return c.SendStatus(fiber.StatusNotFound)
-	}
 
-	return s.SendFile(c, picPath)
+	return s.SendObject(c, obj)
 }
 
 // HandleRemoveProfilePic removes the current user's profile picture.
@@ -221,7 +212,7 @@ func (s *service) HandleRemoveProfilePic(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/profile", "Failed to remove profile picture", view.LevelError)
 	}
 
-	s.removeProfilePicFiles(cu.UID)
+	s.removeProfilePicFiles(c.Context(), cu.UID)
 
 	cu.ProfilePic = ""
 	if err := auth.RefreshSessionUser(c, s, cu); err != nil {
@@ -244,7 +235,7 @@ func (s *service) HandleAdminRemoveProfilePic(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/admin/users", "Failed to remove profile picture", view.LevelError)
 	}
 
-	s.removeProfilePicFiles(updatedUser.UID)
+	s.removeProfilePicFiles(c.Context(), updatedUser.UID)
 
 	vc := view.NewCtx(c)
 	return view.Render(c, templ.Join(
