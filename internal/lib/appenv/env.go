@@ -75,7 +75,23 @@ type Env struct {
 	ValkeyDB       int    `env:"VALKEY_DB;optional;min=0;max=15"`
 
 	AssetsDir string `env:"ASSETS_DIR"`
+
+	StorageBackend string `env:"STORAGE_BACKEND;optional;trimspace;oneof=disk,s3"`
+	S3Endpoint     string `env:"S3_ENDPOINT;optional;allowempty;trimspace"`
+	S3UseSSL       bool   `env:"S3_USE_SSL;optional"`
+	S3Region       string `env:"S3_REGION;optional;allowempty;trimspace"`
+	S3AccessKey    string `env:"S3_ACCESS_KEY;optional;allowempty;trimspace"`
+	S3SecretKey    string `env:"S3_SECRET_KEY;optional;allowempty"`
+	S3Bucket       string `env:"S3_BUCKET;optional;allowempty;trimspace;regex=^([a-z0-9][a-z0-9-]{1,61}[a-z0-9])?$"`
 }
+
+const (
+	StorageBackendDisk = "disk"
+	StorageBackendS3   = "s3"
+)
+
+// ErrS3ConfigRequired is returned by New when STORAGE_BACKEND is s3 and an S3 setting is missing.
+var ErrS3ConfigRequired = errors.New("S3 settings are required when STORAGE_BACKEND is s3")
 
 // ErrOTLPEndpointRequired is returned by New when production has no OTLP endpoint.
 var ErrOTLPEndpointRequired = errors.New("OTEL_EXPORTER_OTLP_ENDPOINT is required in production")
@@ -96,6 +112,7 @@ func New() (*Env, error) {
 		ValkeyHost:         "127.0.0.1",
 		ValkeyPort:         6379,
 		ValkeyDB:           0,
+		StorageBackend:     StorageBackendDisk,
 
 		RuntimeSampleInterval: 5 * time.Second,
 		RuntimeSampleSize:     720,
@@ -112,6 +129,10 @@ func New() (*Env, error) {
 
 	if env.IsProduction() && env.OTelOTLPEndpoint == "" {
 		return nil, ErrOTLPEndpointRequired
+	}
+
+	if missing := env.missingS3Settings(); len(missing) > 0 {
+		return nil, fmt.Errorf("%w: missing %s", ErrS3ConfigRequired, strings.Join(missing, ", "))
 	}
 
 	return env, nil
