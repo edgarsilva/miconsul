@@ -2,7 +2,6 @@ package models
 
 import (
 	"time"
-	"uuid"
 
 	"gorm.io/gorm"
 )
@@ -90,6 +89,6 @@ type FeedEvent struct {
 }
 
 func (fe *FeedEvent) BeforeCreate(tx *gorm.DB) (err error) {
-	fe.UID = uuid.NewV7().String()
+	fe.UID = newUID()
 	return nil
 }

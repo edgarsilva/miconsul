@@ -2,8 +2,6 @@
 package models
 
 import (
-	"uuid"
-
 	"gorm.io/gorm"
 )
 
@@ -29,6 +27,6 @@ type Logbook struct {
 }
 
 func (l *Logbook) BeforeCreate(tx *gorm.DB) (err error) {
-	l.UID = uuid.NewV7().String()
+	l.UID = newUID()
 	return nil
 }

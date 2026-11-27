@@ -1,8 +1,6 @@
 package models
 
 import (
-	"uuid"
-
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -50,7 +48,7 @@ func (Notification) TableName() string {
 }
 
 func (n *Notification) BeforeCreate(tx *gorm.DB) (err error) {
-	n.UID = uuid.NewV7().String()
+	n.UID = newUID()
 	return nil
 }
 

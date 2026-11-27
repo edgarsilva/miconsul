@@ -76,7 +76,7 @@
 
 ## Done
 
-- [infra/ids] Record UIDs are plain UUIDv7 strings from the standard library `uuid.NewV7()`, called in each model's `BeforeCreate`; the `internal/lib/xid` package and `rs/xid` are gone. The type prefixes (`clnc`, `ptnt`, ...) are dropped. Existing UIDs keep their XID form; the column is a string, so both formats live side by side. If a bare ID needs to say what it belongs to, add the entity to the telemetry instead.
+- [infra/ids] Record UIDs are UUIDv7 from the standard library `uuid.NewV7()`, written as 26 characters of a lowercase base32 alphabet without `i`, `l`, `o` and `u` by `newUID` in `internal/models/uid.go`: one word on double-click, sorted by creation time. The `internal/lib/xid` package, `rs/xid` and the type prefixes (`clnc`, `ptnt`, ...) are gone. Existing UIDs keep their XID form; the column is `TEXT`, so both formats live side by side. If a bare ID needs to say what it belongs to, add the entity to the telemetry instead.
 
 - [feature/pictures] Patient and clinic forms preview the picked picture before saving: `public/js/picture_preview.js` reads the file with `FileReader` and shows it in place of the avatar, so the CSP needs no `blob:`.
 

@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"uuid"
 
 	"github.com/microcosm-cc/bluemonday"
 	"gorm.io/gorm"
@@ -38,7 +37,7 @@ func (p *Patient) BeforeCreate(tx *gorm.DB) error {
 		return err
 	}
 
-	p.UID = uuid.NewV7().String()
+	p.UID = newUID()
 	return nil
 }
 
