@@ -1,7 +1,7 @@
 package models
 
 import (
-	"miconsul/internal/lib/xid"
+	"uuid"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -50,7 +50,7 @@ func (Notification) TableName() string {
 }
 
 func (n *Notification) BeforeCreate(tx *gorm.DB) (err error) {
-	n.UID = xid.New("ntfy")
+	n.UID = uuid.NewV7().String()
 	return nil
 }
 

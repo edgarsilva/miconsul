@@ -2,7 +2,7 @@
 package models
 
 import (
-	"miconsul/internal/lib/xid"
+	"uuid"
 
 	"gorm.io/gorm"
 )
@@ -29,6 +29,6 @@ type Logbook struct {
 }
 
 func (l *Logbook) BeforeCreate(tx *gorm.DB) (err error) {
-	l.UID = xid.New("lgbk")
+	l.UID = uuid.NewV7().String()
 	return nil
 }

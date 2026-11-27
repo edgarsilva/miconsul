@@ -1,8 +1,8 @@
 package models
 
 import (
-	"miconsul/internal/lib/xid"
 	"time"
+	"uuid"
 
 	"gorm.io/gorm"
 )
@@ -90,6 +90,6 @@ type FeedEvent struct {
 }
 
 func (fe *FeedEvent) BeforeCreate(tx *gorm.DB) (err error) {
-	fe.UID = xid.New("fevn")
+	fe.UID = uuid.NewV7().String()
 	return nil
 }

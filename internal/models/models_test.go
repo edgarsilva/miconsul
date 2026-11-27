@@ -7,29 +7,35 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"uuid"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
+func isUUIDv7(uid string) bool {
+	id, err := uuid.Parse(uid)
+	return err == nil && id[6]>>4 == 7
+}
+
 func TestEntityBeforeCreateHooksSetIDs(t *testing.T) {
 	notification := &Notification{}
-	if err := notification.BeforeCreate(nil); err != nil || !strings.HasPrefix(notification.UID, "ntfy") {
+	if err := notification.BeforeCreate(nil); err != nil || !isUUIDv7(notification.UID) {
 		t.Fatalf("notification before create failed: uid=%q err=%v", notification.UID, err)
 	}
 
 	fe := &FeedEvent{}
-	if err := fe.BeforeCreate(nil); err != nil || !strings.HasPrefix(fe.UID, "fevn") {
+	if err := fe.BeforeCreate(nil); err != nil || !isUUIDv7(fe.UID) {
 		t.Fatalf("feed event before create failed: uid=%q err=%v", fe.UID, err)
 	}
 
 	logbook := &Logbook{}
-	if err := logbook.BeforeCreate(nil); err != nil || !strings.HasPrefix(logbook.UID, "lgbk") {
+	if err := logbook.BeforeCreate(nil); err != nil || !isUUIDv7(logbook.UID) {
 		t.Fatalf("logbook before create failed: uid=%q err=%v", logbook.UID, err)
 	}
 
 	user := &User{}
-	if err := user.BeforeCreate(nil); err != nil || !strings.HasPrefix(user.UID, "user") {
+	if err := user.BeforeCreate(nil); err != nil || !isUUIDv7(user.UID) {
 		t.Fatalf("user before create failed: uid=%q err=%v", user.UID, err)
 	}
 
@@ -37,7 +43,7 @@ func TestEntityBeforeCreateHooksSetIDs(t *testing.T) {
 	if err := apnt.BeforeCreate(nil); err != nil {
 		t.Fatalf("appointment before create error: %v", err)
 	}
-	if !strings.HasPrefix(apnt.UID, "apnt") {
+	if !isUUIDv7(apnt.UID) {
 		t.Fatalf("unexpected appointment uid %q", apnt.UID)
 	}
 	if apnt.Status != AppointmentPending {
@@ -168,8 +174,8 @@ func TestClinicAndPatientValidationAndHelpers(t *testing.T) {
 	if err := clinic.BeforeCreate(nil); err != nil {
 		t.Fatalf("clinic before create should pass: %v", err)
 	}
-	if !strings.HasPrefix(clinic.UID, "clnc") {
-		t.Fatalf("expected clinic uid prefix, got %q", clinic.UID)
+	if !isUUIDv7(clinic.UID) {
+		t.Fatalf("expected clinic uuidv7 uid, got %q", clinic.UID)
 	}
 	if clinic.AvatarPic() != "clinic.png" {
 		t.Fatalf("unexpected clinic avatar")
