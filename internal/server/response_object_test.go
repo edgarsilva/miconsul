@@ -158,3 +158,26 @@ func TestSendObjectIgnoresInvalidIfModifiedSince(t *testing.T) {
 	}
 	waitClosed(t, body)
 }
+
+func TestSendObjectWithUnknownModTimeSendsTheBody(t *testing.T) {
+	app, body := objectApp(t, []byte("png-bytes"), time.Time{})
+
+	req := httptest.NewRequest(http.MethodGet, "/pic", nil)
+	req.Header.Set("If-Modified-Since", "Fri, 27 Nov 2026 22:13:12 GMT")
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatalf("request: %v", err)
+	}
+	got := drain(t, resp)
+
+	if resp.StatusCode != http.StatusOK || string(got) != "png-bytes" {
+		t.Fatalf("status %d body %q, want 200 and the body: an unknown date never matches the client's", resp.StatusCode, got)
+	}
+	if lm := resp.Header.Get("Last-Modified"); lm != "" {
+		t.Fatalf("Last-Modified = %q, want none for an unknown date", lm)
+	}
+	if ct := resp.Header.Get("Content-Type"); ct != "image/png" {
+		t.Fatalf("Content-Type = %q", ct)
+	}
+	waitClosed(t, body)
+}

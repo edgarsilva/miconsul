@@ -44,18 +44,30 @@ func (s *Server) RedirectWithAlert(c fiber.Ctx, path, msg string, level fmt.Stri
 func (s *Server) SendObject(c fiber.Ctx, obj objstore.Object) error {
 	c.Set(fiber.HeaderContentType, obj.ContentType)
 
-	modified := obj.ModTime.UTC().Truncate(time.Second)
-	if !modified.IsZero() {
-		c.Set(fiber.HeaderLastModified, modified.Format(http.TimeFormat))
+	lastModifiedAt := obj.ModTime.UTC().Truncate(time.Second)
+	lastModifiedAtUnknown := lastModifiedAt.IsZero()
+	if lastModifiedAtUnknown {
+		return c.SendStream(obj.Body, int(obj.Size))
+	}
 
-		since, err := http.ParseTime(c.Get(fiber.HeaderIfModifiedSince))
-		if err == nil && !modified.After(since) {
-			_ = obj.Body.Close()
-			return c.SendStatus(fiber.StatusNotModified)
-		}
+	c.Set(fiber.HeaderLastModified, lastModifiedAt.Format(http.TimeFormat))
+	if clientHasCurrentCopy(c, lastModifiedAt) {
+		_ = obj.Body.Close()
+		return c.SendStatus(fiber.StatusNotModified)
 	}
 
 	return c.SendStream(obj.Body, int(obj.Size))
+}
+
+// clientHasCurrentCopy reports whether the request's If-Modified-Since date is
+// the same as or later than lastModifiedAt.
+func clientHasCurrentCopy(c fiber.Ctx, lastModifiedAt time.Time) bool {
+	clientDate, err := http.ParseTime(c.Get(fiber.HeaderIfModifiedSince))
+	if err != nil {
+		return false
+	}
+
+	return clientDate.Equal(lastModifiedAt) || clientDate.After(lastModifiedAt)
 }
 
 // redirectWithFlash redirects to path with a flash message and level. For htmx
