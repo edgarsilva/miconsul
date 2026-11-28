@@ -2,10 +2,7 @@ package server
 
 import (
 	"fmt"
-	"io"
 	"net/http"
-	"strconv"
-	"strings"
 	"time"
 
 	"miconsul/internal/lib/objstore"
@@ -41,17 +38,11 @@ func (s *Server) RedirectWithAlert(c fiber.Ctx, path, msg string, level fmt.Stri
 }
 
 // SendObject sends obj as the response with its content type, size and
-// modification time. It answers 304 when the client's copy is current. When
-// obj.Body can seek, it also serves a single byte range of the object (206, or
-// 416 for a range outside it). It closes obj.Body: the response closes it after
-// streaming, and SendObject closes it on every other path.
+// modification time. It answers 304 when the client's copy is current. It
+// closes obj.Body: the response closes it after streaming, and SendObject
+// closes it on every other path.
 func (s *Server) SendObject(c fiber.Ctx, obj objstore.Object) error {
 	c.Set(fiber.HeaderContentType, obj.ContentType)
-
-	seeker, canSeek := obj.Body.(io.Seeker)
-	if canSeek {
-		c.Set(fiber.HeaderAcceptRanges, "bytes")
-	}
 
 	modified := obj.ModTime.UTC().Truncate(time.Second)
 	if !modified.IsZero() {
@@ -64,106 +55,7 @@ func (s *Server) SendObject(c fiber.Ctx, obj objstore.Object) error {
 		}
 	}
 
-	if canSeek && rangeApplies(c, modified) {
-		start, end, result := parseByteRange(c.Get(fiber.HeaderRange), obj.Size)
-		switch result {
-		case rangeSatisfiable:
-			if _, err := seeker.Seek(start, io.SeekStart); err != nil {
-				_ = obj.Body.Close()
-				return c.SendStatus(fiber.StatusInternalServerError)
-			}
-
-			length := end - start + 1
-			c.Status(fiber.StatusPartialContent)
-			c.Set(fiber.HeaderContentRange, fmt.Sprintf("bytes %d-%d/%d", start, end, obj.Size))
-			part := limitedBody{Reader: io.LimitReader(obj.Body, length), Closer: obj.Body}
-			return c.SendStream(part, int(length))
-		case rangeUnsatisfiable:
-			_ = obj.Body.Close()
-			c.Set(fiber.HeaderContentRange, fmt.Sprintf("bytes */%d", obj.Size))
-			c.Status(fiber.StatusRequestedRangeNotSatisfiable)
-			return nil
-		}
-	}
-
 	return c.SendStream(obj.Body, int(obj.Size))
-}
-
-type limitedBody struct {
-	io.Reader
-	io.Closer
-}
-
-type rangeResult int
-
-const (
-	rangeIgnored rangeResult = iota
-	rangeSatisfiable
-	rangeUnsatisfiable
-)
-
-// rangeApplies reports whether the request asks for a range that still matches
-// the object: a Range header, and an If-Range date, when present, equal to the
-// modification time.
-func rangeApplies(c fiber.Ctx, modified time.Time) bool {
-	if c.Get(fiber.HeaderRange) == "" {
-		return false
-	}
-
-	ifRange := c.Get(fiber.HeaderIfRange)
-	if ifRange == "" {
-		return true
-	}
-
-	since, err := http.ParseTime(ifRange)
-	return err == nil && since.Equal(modified)
-}
-
-// parseByteRange reads a single "bytes=start-end", "bytes=start-" or
-// "bytes=-suffix" range for an object of size bytes and returns the inclusive
-// start and end offsets. Multiple ranges and malformed values are ignored, which
-// serves the whole object.
-func parseByteRange(header string, size int64) (start, end int64, result rangeResult) {
-	spec, ok := strings.CutPrefix(header, "bytes=")
-	if !ok || strings.Contains(spec, ",") {
-		return 0, 0, rangeIgnored
-	}
-
-	first, last, ok := strings.Cut(spec, "-")
-	if !ok {
-		return 0, 0, rangeIgnored
-	}
-
-	if first == "" {
-		suffix, err := strconv.ParseInt(last, 10, 64)
-		if err != nil || suffix < 0 {
-			return 0, 0, rangeIgnored
-		}
-		if suffix == 0 || size == 0 {
-			return 0, 0, rangeUnsatisfiable
-		}
-
-		return max(size-suffix, 0), size - 1, rangeSatisfiable
-	}
-
-	start, err := strconv.ParseInt(first, 10, 64)
-	if err != nil || start < 0 {
-		return 0, 0, rangeIgnored
-	}
-
-	end = size - 1
-	if last != "" {
-		end, err = strconv.ParseInt(last, 10, 64)
-		if err != nil || end < start {
-			return 0, 0, rangeIgnored
-		}
-	}
-
-	if start >= size {
-		return 0, 0, rangeUnsatisfiable
-	}
-
-	return start, min(end, size-1), rangeSatisfiable
 }
 
 // redirectWithFlash redirects to path with a flash message and level. For htmx
