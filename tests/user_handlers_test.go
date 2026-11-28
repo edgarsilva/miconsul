@@ -169,7 +169,7 @@ func TestUserHandlers(t *testing.T) {
 			t.Fatalf("expected preview img src in response body, got %q", string(respBody))
 		}
 
-		preview, err := h.server.Objects.Open(t.Context(), usersvc.ProfilePicKey(regular.UID+"_preview"))
+		preview, err := h.server.ObjectStore.Open(t.Context(), usersvc.ProfilePicKey(regular.UID+"_preview"))
 		if err != nil {
 			t.Fatalf("expected preview in the object store: %v", err)
 		}

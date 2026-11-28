@@ -156,7 +156,7 @@ func bootstrapServer(ctx context.Context) (bootstrapResult, error) {
 	})
 
 	fmt.Println(" Opening object store...")
-	objects, err := server.NewObjectStore(env)
+	objectStore, err := server.NewObjectStore(env)
 	if err != nil {
 		log.Printf("failed to initialize object store: %v", err)
 		return result, err
@@ -168,7 +168,7 @@ func bootstrapServer(ctx context.Context) (bootstrapResult, error) {
 		server.WithDatabase(db),
 		server.WithWorkPool(wp.AntsPool()),
 		server.WithJobs(jobsRuntime),
-		server.WithObjects(objects),
+		server.WithObjectStore(objectStore),
 		server.WithTracerProvider(telemetry.tracerProvider),
 		server.WithMeterProvider(telemetry.meterProvider),
 		server.WithLoggerProvider(telemetry.loggerProvider),

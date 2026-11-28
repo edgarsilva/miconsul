@@ -182,13 +182,13 @@ func newTestStore(t *testing.T, dir string) *objstore.Disk {
 func useDiskStore(t *testing.T, svc service, dir string) {
 	t.Helper()
 
-	svc.Objects = newTestStore(t, dir)
+	svc.ObjectStore = newTestStore(t, dir)
 }
 
 func putTestObject(t *testing.T, svc service, key, content string) {
 	t.Helper()
 
-	if err := svc.Objects.Put(t.Context(), key, strings.NewReader(content), int64(len(content)), ""); err != nil {
+	if err := svc.ObjectStore.Put(t.Context(), key, strings.NewReader(content), int64(len(content)), ""); err != nil {
 		t.Fatalf("put %s: %v", key, err)
 	}
 }

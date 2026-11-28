@@ -163,5 +163,5 @@ func newTestStore(t *testing.T, dir string) *objstore.Disk {
 func useDiskStore(t *testing.T, svc service, dir string) {
 	t.Helper()
 
-	svc.Objects = newTestStore(t, dir)
+	svc.ObjectStore = newTestStore(t, dir)
 }

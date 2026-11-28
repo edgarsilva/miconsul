@@ -9,7 +9,7 @@ import (
 )
 
 func TestNewObjectStoreDisk(t *testing.T) {
-	env := &appenv.Env{StorageBackend: appenv.StorageBackendDisk, AssetsDir: t.TempDir()}
+	env := &appenv.Env{ObjectStoreBackend: appenv.ObjectStoreBackendDisk, AssetsDir: t.TempDir()}
 
 	store, err := NewObjectStore(env)
 	if err != nil {
@@ -21,7 +21,7 @@ func TestNewObjectStoreDisk(t *testing.T) {
 }
 
 func TestNewObjectStoreDiskRequiresAssetsDir(t *testing.T) {
-	env := &appenv.Env{StorageBackend: appenv.StorageBackendDisk}
+	env := &appenv.Env{ObjectStoreBackend: appenv.ObjectStoreBackendDisk}
 
 	store, err := NewObjectStore(env)
 	if err == nil || store != nil {
@@ -30,17 +30,17 @@ func TestNewObjectStoreDiskRequiresAssetsDir(t *testing.T) {
 }
 
 func TestNewObjectStoreS3IsNotImplemented(t *testing.T) {
-	env := &appenv.Env{StorageBackend: appenv.StorageBackendS3, AssetsDir: t.TempDir()}
+	env := &appenv.Env{ObjectStoreBackend: appenv.ObjectStoreBackendS3, AssetsDir: t.TempDir()}
 
 	store, err := NewObjectStore(env)
-	if !errors.Is(err, ErrStorageBackendNotImplemented) || store != nil {
-		t.Fatalf("expected ErrStorageBackendNotImplemented and no store, got %v, %v", store, err)
+	if !errors.Is(err, ErrObjectStoreBackendNotImplemented) || store != nil {
+		t.Fatalf("expected ErrObjectStoreBackendNotImplemented and no store, got %v, %v", store, err)
 	}
 }
 
 func TestNewObjectStoreRejectsUnknownBackend(t *testing.T) {
 	for _, backend := range []string{"", "ftp"} {
-		env := &appenv.Env{StorageBackend: backend, AssetsDir: t.TempDir()}
+		env := &appenv.Env{ObjectStoreBackend: backend, AssetsDir: t.TempDir()}
 
 		if store, err := NewObjectStore(env); err == nil || store != nil {
 			t.Fatalf("backend %q: expected an error and no store, got %v, %v", backend, store, err)
@@ -54,8 +54,8 @@ func TestNewObjectStoreRequiresEnv(t *testing.T) {
 	}
 }
 
-func TestWithObjectsRejectsNil(t *testing.T) {
-	if err := WithObjects(nil)(&Server{}); err == nil {
+func TestWithObjectStoreRejectsNil(t *testing.T) {
+	if err := WithObjectStore(nil)(&Server{}); err == nil {
 		t.Fatal("expected an error for a nil store")
 	}
 }

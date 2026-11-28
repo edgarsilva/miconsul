@@ -50,7 +50,7 @@ type Server struct {
 	wp                    *ants.Pool
 	jobs                  *jobs.Runtime
 	Cache                 Cache
-	Objects               objstore.Store
+	ObjectStore           objstore.Store
 	SessionStore          *session.Store
 	Localizer             *localize.Localizer
 	TracerProvider        trace.TracerProvider
@@ -129,8 +129,8 @@ func validateCriticalDeps(s *Server) error {
 		return errors.New("logger provider is required; pass server.WithLoggerProvider(...) to server.New(...)")
 	}
 
-	if s.Objects == nil {
-		return errors.New("object store is required; pass server.WithObjects(...) to server.New(...)")
+	if s.ObjectStore == nil {
+		return errors.New("object store is required; pass server.WithObjectStore(...) to server.New(...)")
 	}
 
 	return nil
@@ -391,14 +391,14 @@ func WithCache(cache Cache) ServerOption {
 	}
 }
 
-// WithObjects configures the store for uploaded files.
-func WithObjects(store objstore.Store) ServerOption {
+// WithObjectStore configures the store for uploaded files.
+func WithObjectStore(store objstore.Store) ServerOption {
 	return func(server *Server) error {
 		if store == nil {
 			return errors.New("object store is required")
 		}
 
-		server.Objects = store
+		server.ObjectStore = store
 		return nil
 	}
 }

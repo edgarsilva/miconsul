@@ -66,7 +66,7 @@ func (s service) attachPatientPic(c fiber.Ctx, userID uint, patient models.Patie
 
 	span.SetAttributes(attribute.String("patient.uid", patient.UID))
 
-	path, err := SaveProfilePic(c, s.Objects, patient)
+	path, err := SaveProfilePic(c, s.ObjectStore, patient)
 	if errors.Is(err, profilepic.ErrNotProvided) {
 		return patient.ProfilePic
 	}
@@ -103,7 +103,7 @@ func (s service) removeReplacedPic(ctx context.Context, patient models.Patient, 
 		return
 	}
 
-	err := s.Objects.Delete(ctx, ProfilePicKey(filename))
+	err := s.ObjectStore.Delete(ctx, ProfilePicKey(filename))
 	if err != nil {
 		log.Errorf("remove replaced patient profile pic: %v", err)
 	}

@@ -288,7 +288,7 @@ func (s *service) HandleProfilePic(c fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	obj, err := s.Objects.Open(c.Context(), ProfilePicKey(filename))
+	obj, err := s.ObjectStore.Open(c.Context(), ProfilePicKey(filename))
 	if errors.Is(err, objstore.ErrNotFound) || errors.Is(err, objstore.ErrInvalidKey) {
 		return c.SendStatus(fiber.StatusNotFound)
 	}

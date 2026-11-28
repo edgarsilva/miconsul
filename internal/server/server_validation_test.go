@@ -52,7 +52,7 @@ func TestValidateCriticalDeps(t *testing.T) {
 				MeterProvider:  metricnoop.NewMeterProvider(),
 				LoggerProvider: lognoop.NewLoggerProvider(),
 			},
-			want: "object store is required; pass server.WithObjects(...) to server.New(...)",
+			want: "object store is required; pass server.WithObjectStore(...) to server.New(...)",
 		},
 		{
 			name: "valid deps",
@@ -62,7 +62,7 @@ func TestValidateCriticalDeps(t *testing.T) {
 				TracerProvider: noop.NewTracerProvider(),
 				MeterProvider:  metricnoop.NewMeterProvider(),
 				LoggerProvider: lognoop.NewLoggerProvider(),
-				Objects:        &objstore.Disk{},
+				ObjectStore:    &objstore.Disk{},
 			},
 			want: "",
 		},
@@ -149,7 +149,7 @@ func TestNewReturnsSetupErrors(t *testing.T) {
 		WithTracerProvider(noop.NewTracerProvider()),
 		WithMeterProvider(metricnoop.NewMeterProvider()),
 		WithLoggerProvider(lognoop.NewLoggerProvider()),
-		WithObjects(&objstore.Disk{}),
+		WithObjectStore(&objstore.Disk{}),
 	}
 
 	tests := []struct {
@@ -207,7 +207,7 @@ func TestNewReturnsSessionStoreError(t *testing.T) {
 		WithTracerProvider(noop.NewTracerProvider()),
 		WithMeterProvider(metricnoop.NewMeterProvider()),
 		WithLoggerProvider(lognoop.NewLoggerProvider()),
-		WithObjects(&objstore.Disk{}),
+		WithObjectStore(&objstore.Disk{}),
 	)
 	if err == nil || !strings.HasPrefix(err.Error(), "open session store: ") {
 		t.Fatalf("New() error = %v, want an open session store error", err)

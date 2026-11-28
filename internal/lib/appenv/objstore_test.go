@@ -6,32 +6,32 @@ import (
 	"testing"
 )
 
-func TestNewStorageDefaultsToDisk(t *testing.T) {
+func TestNewObjectStoreBackendDefaultsToDisk(t *testing.T) {
 	setRequiredEnv(t)
-	clearEnv(t, "STORAGE_BACKEND")
+	clearEnv(t, "OBJECT_STORE_BACKEND")
 
 	env, err := New()
 	if err != nil {
 		t.Fatalf("unexpected New error: %v", err)
 	}
-	if env.StorageBackend != StorageBackendDisk || env.UsesS3() {
-		t.Fatalf("expected disk backend, got %q", env.StorageBackend)
+	if env.ObjectStoreBackend != ObjectStoreBackendDisk || env.UsesS3() {
+		t.Fatalf("expected disk backend, got %q", env.ObjectStoreBackend)
 	}
 }
 
-func TestNewRejectsUnknownStorageBackend(t *testing.T) {
+func TestNewRejectsUnknownObjectStoreBackend(t *testing.T) {
 	setRequiredEnv(t)
-	t.Setenv("STORAGE_BACKEND", "ftp")
+	t.Setenv("OBJECT_STORE_BACKEND", "ftp")
 
 	if _, err := New(); err == nil {
-		t.Fatal("expected error for unknown storage backend")
+		t.Fatal("expected error for unknown object store backend")
 	}
 }
 
 func TestNewRequiresS3SettingsForS3Backend(t *testing.T) {
 	setRequiredEnv(t)
 	clearEnv(t, "S3_ENDPOINT", "S3_ACCESS_KEY", "S3_SECRET_KEY", "S3_BUCKET")
-	t.Setenv("STORAGE_BACKEND", "s3")
+	t.Setenv("OBJECT_STORE_BACKEND", "s3")
 
 	_, err := New()
 	if !errors.Is(err, ErrS3ConfigRequired) {

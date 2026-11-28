@@ -6,7 +6,7 @@ func (e *Env) UsesS3() bool {
 		return false
 	}
 
-	return e.StorageBackend == StorageBackendS3
+	return e.ObjectStoreBackend == ObjectStoreBackendS3
 }
 
 func (e *Env) missingS3Settings() []string {

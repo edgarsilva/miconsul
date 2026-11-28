@@ -229,7 +229,7 @@ func TestAttachClinicPicRecordsAFailedSave(t *testing.T) {
 	t.Chdir(t.TempDir())
 
 	svc, user := newClinicServiceForTests(t)
-	svc.Objects = objstoretest.Failing{Err: errors.New("store down")}
+	svc.ObjectStore = objstoretest.Failing{Err: errors.New("store down")}
 	recorder := tracetest.NewSpanRecorder()
 	svc.Tracer = sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")
 
@@ -334,7 +334,7 @@ func TestAttachClinicPicDeletesTheReplacedFile(t *testing.T) {
 	}
 
 	oldName := clinic.UID + "_ppic_old.png"
-	if err := svc.Objects.Put(t.Context(), ProfilePicKey(oldName), strings.NewReader("old"), 3, "image/png"); err != nil {
+	if err := svc.ObjectStore.Put(t.Context(), ProfilePicKey(oldName), strings.NewReader("old"), 3, "image/png"); err != nil {
 		t.Fatalf("write old picture: %v", err)
 	}
 	clinic.ProfilePic = "/clinics/" + clinic.UID + "/profilepic/" + oldName
@@ -367,7 +367,7 @@ func TestAttachClinicPicDeletesTheReplacedFile(t *testing.T) {
 	if got == "" || got == clinic.ProfilePic {
 		t.Fatalf("picture = %q, want the new one", got)
 	}
-	if _, err := svc.Objects.Open(t.Context(), ProfilePicKey(oldName)); !errors.Is(err, objstore.ErrNotFound) {
+	if _, err := svc.ObjectStore.Open(t.Context(), ProfilePicKey(oldName)); !errors.Is(err, objstore.ErrNotFound) {
 		t.Errorf("old picture still exists: %v", err)
 	}
 	dir := filepath.Join(assetsDir, "clinics")

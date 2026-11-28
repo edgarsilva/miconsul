@@ -121,7 +121,7 @@ func (s *service) HandleUpdateProfile(c fiber.Ctx) error {
 		return s.respondWithUserToast(c, userWithUpdates(cu, userUpds), unsupportedPicMessage, view.LevelWarning)
 	}
 
-	path, picErr := SaveProfilePic(c, s.Objects, cu)
+	path, picErr := SaveProfilePic(c, s.ObjectStore, cu)
 	if picErr != nil {
 		if !errors.Is(picErr, profilepic.ErrNotProvided) {
 			return s.RedirectWithToast(c, "/profile", "Failed to upload profile picture", view.LevelError)
@@ -168,7 +168,7 @@ func (s *service) HandleProfilePicPreview(c fiber.Ctx) error {
 		return s.RedirectWithToast(c, "/profile", unsupportedPicMessage, view.LevelWarning)
 	}
 
-	previewPath, err := SaveProfilePicPreview(c, s.Objects, user)
+	previewPath, err := SaveProfilePicPreview(c, s.ObjectStore, user)
 	if err != nil {
 		return s.RedirectWithToast(c, "/profile", "Failed to display profile picture", view.LevelError)
 	}
@@ -188,7 +188,7 @@ func (s *service) HandleProfilePic(c fiber.Ctx) error {
 		sufix = "preview"
 	}
 
-	obj, err := s.Objects.Open(c.Context(), ProfilePicKey(cu.UID+"_"+sufix))
+	obj, err := s.ObjectStore.Open(c.Context(), ProfilePicKey(cu.UID+"_"+sufix))
 	if errors.Is(err, objstore.ErrNotFound) || errors.Is(err, objstore.ErrInvalidKey) {
 		return c.SendStatus(fiber.StatusNotFound)
 	}

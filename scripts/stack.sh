@@ -28,7 +28,7 @@ stack_env() {
 	export SESSION_DB_PATH="$RUN/session.sqlite"
 	export CACHE_DB_PATH="$RUN/cache.sqlite"
 	export ASSETS_DIR="$RUN/assets"
-	export STORAGE_BACKEND=disk
+	export OBJECT_STORE_BACKEND=disk
 	export GOOSE_DRIVER=sqlite3
 	export GOOSE_DBSTRING="$RUN/app.sqlite"
 	export GOOSE_MIGRATION_DIR=./goose/migrations

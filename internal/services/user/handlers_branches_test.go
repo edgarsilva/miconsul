@@ -457,7 +457,7 @@ func TestHandleUpdateProfileBlankNameKeepsTheAvatar(t *testing.T) {
 		t.Fatalf("blank name expected 200 with the form re-rendered, got status=%d err=%v", resp.StatusCode, err)
 	}
 
-	obj, err := svc.Objects.Open(t.Context(), ProfilePicKey(user.UID+"_avatar"))
+	obj, err := svc.ObjectStore.Open(t.Context(), ProfilePicKey(user.UID+"_avatar"))
 	if err != nil {
 		t.Fatalf("open avatar: %v", err)
 	}
@@ -523,7 +523,7 @@ func TestHandleRemoveProfilePicDeletesTheFiles(t *testing.T) {
 	}
 
 	for _, suffix := range []string{"_avatar", "_preview"} {
-		if _, err := svc.Objects.Open(t.Context(), ProfilePicKey(currentUser.UID+suffix)); !errors.Is(err, objstore.ErrNotFound) {
+		if _, err := svc.ObjectStore.Open(t.Context(), ProfilePicKey(currentUser.UID+suffix)); !errors.Is(err, objstore.ErrNotFound) {
 			t.Errorf("%s still exists: %v", suffix, err)
 		}
 	}

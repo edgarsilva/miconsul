@@ -48,7 +48,7 @@ func ProfilePicKey(filename string) string {
 // removeProfilePicFiles deletes the user's avatar and avatar preview.
 func (s service) removeProfilePicFiles(ctx context.Context, userUID string) {
 	for _, suffix := range []string{"_avatar", "_preview"} {
-		err := s.Objects.Delete(ctx, ProfilePicKey(userUID+suffix))
+		err := s.ObjectStore.Delete(ctx, ProfilePicKey(userUID+suffix))
 		if err != nil {
 			log.Errorf("remove user profile pic file: %v", err)
 		}

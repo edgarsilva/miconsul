@@ -126,12 +126,12 @@ func newTestHarness(t *testing.T, envOpts ...func(*appenv.Env)) *testHarness {
 		_ = os.Remove("public/favicon.ico")
 	})
 
-	objects, err := objstore.NewDisk(env.AssetsDir)
+	objectStore, err := objstore.NewDisk(env.AssetsDir)
 	if err != nil {
 		t.Fatalf("new object store: %v", err)
 	}
 	t.Cleanup(func() {
-		if err := objects.Close(); err != nil {
+		if err := objectStore.Close(); err != nil {
 			t.Errorf("close object store: %v", err)
 		}
 	})
@@ -139,7 +139,7 @@ func newTestHarness(t *testing.T, envOpts ...func(*appenv.Env)) *testHarness {
 	s, err := server.New(
 		server.WithEnv(env),
 		server.WithDatabase(db),
-		server.WithObjects(objects),
+		server.WithObjectStore(objectStore),
 		server.WithTracerProvider(tracenoop.NewTracerProvider()),
 		server.WithMeterProvider(metricnoop.NewMeterProvider()),
 		server.WithLoggerProvider(lognoop.NewLoggerProvider()),
