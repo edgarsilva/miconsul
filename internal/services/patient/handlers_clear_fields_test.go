@@ -16,6 +16,8 @@ import (
 	"strings"
 	"testing"
 
+	"miconsul/internal/lib/objstore"
+	"miconsul/internal/lib/objstore/objstoretest"
 	"miconsul/internal/models"
 
 	"github.com/gofiber/fiber/v3"
@@ -124,7 +126,8 @@ func TestHandleUpdateProfilePic(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			svc, user := newPatientServiceForTests(t)
-			svc.Env.AssetsDir = t.TempDir()
+			assetsDir := t.TempDir()
+			useDiskStore(t, svc, assetsDir)
 
 			seed := models.Patient{UserID: user.ID, Name: "Alpha", Age: 30, Phone: "111", ProfilePic: "old.png"}
 			if err := svc.CreatePatient(t.Context(), &seed); err != nil {
@@ -177,7 +180,7 @@ func TestHandleUpdateProfilePic(t *testing.T) {
 			if !tt.saved && saved.ProfilePic != "old.png" {
 				t.Errorf("ProfilePic = %q, want old.png kept after an invalid update", saved.ProfilePic)
 			}
-			entries, err := os.ReadDir(svc.Env.AssetsDir)
+			entries, err := os.ReadDir(assetsDir)
 			if err != nil {
 				t.Fatalf("read assets dir: %v", err)
 			}
@@ -257,11 +260,7 @@ func TestHandleUpdateRejectsBlankRequiredFields(t *testing.T) {
 func TestAttachPatientPicRecordsAFailedSave(t *testing.T) {
 	svc, user := newPatientServiceForTests(t)
 
-	notADir := filepath.Join(t.TempDir(), "file")
-	if err := os.WriteFile(notADir, []byte("x"), 0o600); err != nil {
-		t.Fatalf("write file: %v", err)
-	}
-	svc.Env.AssetsDir = notADir
+	svc.ObjectStore = objstoretest.Failing{Err: errors.New("store down")}
 
 	recorder := tracetest.NewSpanRecorder()
 	svc.Tracer = sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")
@@ -310,7 +309,7 @@ func TestAttachPatientPicRecordsAFailedSave(t *testing.T) {
 
 func TestAttachPatientPicRecordsAFailedDBUpdate(t *testing.T) {
 	svc, user := newPatientServiceForTests(t)
-	svc.Env.AssetsDir = t.TempDir()
+	useDiskStore(t, svc, t.TempDir())
 
 	recorder := tracetest.NewSpanRecorder()
 	svc.Tracer = sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")
@@ -359,7 +358,8 @@ func TestAttachPatientPicRecordsAFailedDBUpdate(t *testing.T) {
 
 func TestAttachPatientPicDeletesTheReplacedFile(t *testing.T) {
 	svc, user := newPatientServiceForTests(t)
-	svc.Env.AssetsDir = t.TempDir()
+	assetsDir := t.TempDir()
+	useDiskStore(t, svc, assetsDir)
 
 	patient := models.Patient{UserID: user.ID, Name: "Alpha", Age: 30, Phone: "111"}
 	if err := svc.CreatePatient(t.Context(), &patient); err != nil {
@@ -367,11 +367,7 @@ func TestAttachPatientPicDeletesTheReplacedFile(t *testing.T) {
 	}
 
 	oldName := patient.UID + "_ppic_old.png"
-	oldPath, err := ProfilePicPath(oldName, svc.Env.AssetsDir)
-	if err != nil {
-		t.Fatalf("old picture path: %v", err)
-	}
-	if err := os.WriteFile(oldPath, []byte("old"), 0o600); err != nil {
+	if err := svc.ObjectStore.Put(t.Context(), ProfilePicKey(oldName), strings.NewReader("old"), 3, "image/png"); err != nil {
 		t.Fatalf("write old picture: %v", err)
 	}
 	patient.ProfilePic = "/patients/" + patient.UID + "/profilepic/" + oldName
@@ -404,10 +400,10 @@ func TestAttachPatientPicDeletesTheReplacedFile(t *testing.T) {
 	if got == "" || got == patient.ProfilePic {
 		t.Fatalf("picture = %q, want the new one", got)
 	}
-	if _, err := os.Stat(oldPath); !os.IsNotExist(err) {
+	if _, err := svc.ObjectStore.Open(t.Context(), ProfilePicKey(oldName)); !errors.Is(err, objstore.ErrNotFound) {
 		t.Errorf("old picture file still exists: %v", err)
 	}
-	dir := filepath.Dir(oldPath)
+	dir := filepath.Join(assetsDir, "patients")
 	entries, err := os.ReadDir(dir)
 	if err != nil || len(entries) != 1 {
 		t.Errorf("want only the new picture in %s, got %d entries err=%v", dir, len(entries), err)
@@ -416,7 +412,7 @@ func TestAttachPatientPicDeletesTheReplacedFile(t *testing.T) {
 
 func TestHandleUpdateRejectsAnUnsupportedPicture(t *testing.T) {
 	svc, user := newPatientServiceForTests(t)
-	svc.Env.AssetsDir = t.TempDir()
+	useDiskStore(t, svc, t.TempDir())
 
 	seed := models.Patient{UserID: user.ID, Name: "Seed", Age: 30, Phone: "111"}
 	if err := svc.CreatePatient(t.Context(), &seed); err != nil {

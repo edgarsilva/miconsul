@@ -6,7 +6,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
-	"path/filepath"
 	"testing"
 
 	"miconsul/internal/lib/profilepic"
@@ -27,38 +26,17 @@ func TestIsSafeProfilePicFilenameForPatient(t *testing.T) {
 	}
 }
 
-func TestProfilePicPath(t *testing.T) {
-	t.Run("returns full path and creates parent dir", func(t *testing.T) {
-		assetsDir := t.TempDir()
-		path, err := ProfilePicPath("pat_1_ppic_photo.png", assetsDir)
-		if err != nil {
-			t.Fatalf("expected valid path, got error: %v", err)
-		}
-
-		expected := filepath.Join(assetsDir, patientsDir, "pat_1_ppic_photo.png")
-		if path != expected {
-			t.Fatalf("expected path %q, got %q", expected, path)
-		}
-	})
-
-	t.Run("fails with unsafe filename", func(t *testing.T) {
-		if _, err := ProfilePicPath("../../x.png", t.TempDir()); !errors.Is(err, profilepic.ErrInvalidFilename) {
-			t.Fatalf("expected profilepic.ErrInvalidFilename, got %v", err)
-		}
-	})
-
-	t.Run("fails with blank assets directory", func(t *testing.T) {
-		if _, err := ProfilePicPath("pat_1_ppic_photo.png", "   "); err == nil {
-			t.Fatalf("expected blank assets dir error")
-		}
-	})
+func TestProfilePicKey(t *testing.T) {
+	if got := ProfilePicKey("pat_1_ppic_photo.png"); got != "patients/pat_1_ppic_photo.png" {
+		t.Fatalf("ProfilePicKey = %q", got)
+	}
 }
 
-func TestSaveProfilePicToDisk(t *testing.T) {
+func TestSaveProfilePic(t *testing.T) {
 	t.Run("returns profilepic.ErrNotProvided when form file missing", func(t *testing.T) {
 		app := fiber.New()
 		app.Post("/", func(c fiber.Ctx) error {
-			_, err := SaveProfilePicToDisk(c, models.Patient{UID: "pat_1"}, t.TempDir())
+			_, err := SaveProfilePic(c, newTestStore(t, t.TempDir()), models.Patient{UID: "pat_1"})
 			if !errors.Is(err, profilepic.ErrNotProvided) {
 				t.Fatalf("expected profilepic.ErrNotProvided, got %v", err)
 			}
@@ -74,7 +52,7 @@ func TestSaveProfilePicToDisk(t *testing.T) {
 	t.Run("fails when patient id is blank", func(t *testing.T) {
 		app := fiber.New()
 		app.Post("/", func(c fiber.Ctx) error {
-			_, err := SaveProfilePicToDisk(c, models.Patient{}, t.TempDir())
+			_, err := SaveProfilePic(c, newTestStore(t, t.TempDir()), models.Patient{})
 			if err == nil {
 				t.Fatalf("expected missing patient id error")
 			}

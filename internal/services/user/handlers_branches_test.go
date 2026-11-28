@@ -3,16 +3,16 @@ package user
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
+	"miconsul/internal/lib/objstore"
 	"miconsul/internal/models"
 	"miconsul/internal/server/servertest"
 
@@ -78,14 +78,7 @@ func TestHandleEditPageSuccess(t *testing.T) {
 func TestHandleProfilePic(t *testing.T) {
 	svc, currentUser := newUserServiceForTests(t)
 
-	filename := currentUser.UID + "_preview"
-	picPath, err := ProfilePicPath(filename, svc.Env.AssetsDir)
-	if err != nil {
-		t.Fatalf("profile pic path: %v", err)
-	}
-	if err := os.WriteFile(picPath, []byte("img-bytes"), 0o644); err != nil {
-		t.Fatalf("write preview file: %v", err)
-	}
+	putTestObject(t, svc, ProfilePicKey(currentUser.UID+"_preview"), "\x89PNG\r\n\x1a\n")
 
 	app := fiber.New()
 	app.Get("/profile/avatar/preview", func(c fiber.Ctx) error {
@@ -96,6 +89,9 @@ func TestHandleProfilePic(t *testing.T) {
 	resp, err := app.Test(httptest.NewRequest(http.MethodGet, "/profile/avatar/preview", nil))
 	if err != nil || resp.StatusCode != fiber.StatusOK {
 		t.Fatalf("self preview pic expected 200, got status=%d err=%v", resp.StatusCode, err)
+	}
+	if ct := resp.Header.Get("Content-Type"); ct != "image/png" {
+		t.Errorf("Content-Type = %q, want image/png for a picture stored without an extension", ct)
 	}
 
 	resp2, err := app.Test(httptest.NewRequest(http.MethodGet, "/profile/avatar", nil))
@@ -429,15 +425,7 @@ func TestHandleUpdateRejectsBlankName(t *testing.T) {
 
 func TestHandleUpdateProfileBlankNameKeepsTheAvatar(t *testing.T) {
 	svc, user := newUserServiceForTests(t)
-	svc.Env.AssetsDir = t.TempDir()
-
-	avatarPath, err := ProfilePicPath(user.UID+"_avatar", svc.Env.AssetsDir)
-	if err != nil {
-		t.Fatalf("avatar path: %v", err)
-	}
-	if err := os.WriteFile(avatarPath, []byte("old-avatar"), 0o600); err != nil {
-		t.Fatalf("seed avatar: %v", err)
-	}
+	putTestObject(t, svc, ProfilePicKey(user.UID+"_avatar"), "old-avatar")
 
 	app := fiber.New()
 	app.Post("/profile", func(c fiber.Ctx) error {
@@ -469,7 +457,12 @@ func TestHandleUpdateProfileBlankNameKeepsTheAvatar(t *testing.T) {
 		t.Fatalf("blank name expected 200 with the form re-rendered, got status=%d err=%v", resp.StatusCode, err)
 	}
 
-	got, err := os.ReadFile(avatarPath)
+	obj, err := svc.ObjectStore.Open(t.Context(), ProfilePicKey(user.UID+"_avatar"))
+	if err != nil {
+		t.Fatalf("open avatar: %v", err)
+	}
+	defer func() { _ = obj.Body.Close() }()
+	got, err := io.ReadAll(obj.Body)
 	if err != nil {
 		t.Fatalf("read avatar: %v", err)
 	}
@@ -512,18 +505,9 @@ func TestHandleIndexSearch(t *testing.T) {
 
 func TestHandleRemoveProfilePicDeletesTheFiles(t *testing.T) {
 	svc, currentUser := newUserServiceForTests(t)
-	svc.Env.AssetsDir = t.TempDir()
 
-	var paths []string
 	for _, suffix := range []string{"_avatar", "_preview"} {
-		path, err := ProfilePicPath(currentUser.UID+suffix, svc.Env.AssetsDir)
-		if err != nil {
-			t.Fatalf("picture path: %v", err)
-		}
-		if err := os.WriteFile(path, []byte("img"), 0o600); err != nil {
-			t.Fatalf("write picture: %v", err)
-		}
-		paths = append(paths, path)
+		putTestObject(t, svc, ProfilePicKey(currentUser.UID+suffix), "img")
 	}
 
 	app := fiber.New()
@@ -538,9 +522,9 @@ func TestHandleRemoveProfilePicDeletesTheFiles(t *testing.T) {
 		t.Fatalf("remove picture request: %v", err)
 	}
 
-	for _, path := range paths {
-		if _, err := os.Stat(path); !os.IsNotExist(err) {
-			t.Errorf("%s still exists: %v", filepath.Base(path), err)
+	for _, suffix := range []string{"_avatar", "_preview"} {
+		if _, err := svc.ObjectStore.Open(t.Context(), ProfilePicKey(currentUser.UID+suffix)); !errors.Is(err, objstore.ErrNotFound) {
+			t.Errorf("%s still exists: %v", suffix, err)
 		}
 	}
 }

@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
+	"sync"
 	"testing"
 )
 
@@ -232,5 +235,101 @@ func TestDiskPutLeavesNoTemporaryFile(t *testing.T) {
 	}
 	if len(entries) != 1 || entries[0].Name() != "u1_avatar" {
 		t.Fatalf("unexpected directory contents: %v", entries)
+	}
+}
+
+func TestDiskConcurrentUse(t *testing.T) {
+	d, dir := newDisk(t)
+	ctx := context.Background()
+
+	const workers, rounds = 16, 40
+	payload := func(id int) []byte { return bytes.Repeat([]byte{byte('a' + id)}, 2048+id) }
+
+	var wg sync.WaitGroup
+	for w := range workers {
+		wg.Go(func() {
+
+			own := fmt.Sprintf("users/own_%d", w)
+			for range rounds {
+				if err := d.Put(ctx, "users/shared", bytes.NewReader(payload(w)), 0, ""); err != nil {
+					t.Errorf("worker %d: Put shared: %v", w, err)
+					return
+				}
+				if err := d.Put(ctx, own, bytes.NewReader(payload(w)), 0, ""); err != nil {
+					t.Errorf("worker %d: Put own: %v", w, err)
+					return
+				}
+
+				checkWhole(t, d, "users/shared", true)
+				checkOwn(t, d, own, payload(w))
+
+				if w%4 == 0 {
+					if err := d.Delete(ctx, "users/shared"); err != nil {
+						t.Errorf("worker %d: Delete shared: %v", w, err)
+						return
+					}
+				}
+				if err := d.Delete(ctx, own); err != nil {
+					t.Errorf("worker %d: Delete own: %v", w, err)
+					return
+				}
+			}
+		})
+	}
+	wg.Wait()
+
+	entries, err := os.ReadDir(filepath.Join(dir, "users"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, entry := range entries {
+		if strings.HasPrefix(entry.Name(), ".put-") {
+			t.Errorf("leftover temporary file %s", entry.Name())
+		}
+	}
+}
+
+func checkWhole(t *testing.T, d *Disk, key string, mayBeMissing bool) {
+	t.Helper()
+
+	obj, err := d.Open(context.Background(), key)
+	if errors.Is(err, ErrNotFound) && mayBeMissing {
+		return
+	}
+	if err != nil {
+		t.Errorf("Open %s: %v", key, err)
+		return
+	}
+	defer closeBody(t, obj)
+
+	got, err := io.ReadAll(obj.Body)
+	if err != nil {
+		t.Errorf("read %s: %v", key, err)
+		return
+	}
+	if len(got) == 0 {
+		t.Errorf("%s is empty", key)
+		return
+	}
+
+	want := bytes.Repeat([]byte{got[0]}, 2048+int(got[0]-'a'))
+	if !bytes.Equal(got, want) {
+		t.Errorf("%s is a mix of writes: %d bytes starting with %q", key, len(got), got[0])
+	}
+}
+
+func checkOwn(t *testing.T, d *Disk, key string, want []byte) {
+	t.Helper()
+
+	obj, err := d.Open(context.Background(), key)
+	if err != nil {
+		t.Errorf("Open %s: %v", key, err)
+		return
+	}
+	defer closeBody(t, obj)
+
+	got, err := io.ReadAll(obj.Body)
+	if err != nil || !bytes.Equal(got, want) {
+		t.Errorf("%s: %d bytes, err %v, want %d bytes", key, len(got), err, len(want))
 	}
 }

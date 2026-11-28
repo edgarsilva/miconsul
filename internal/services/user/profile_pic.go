@@ -1,9 +1,11 @@
 package user
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
+	"miconsul/internal/lib/objstore"
 	"miconsul/internal/lib/profilepic"
 	"miconsul/internal/models"
 
@@ -11,7 +13,7 @@ import (
 	"github.com/gofiber/fiber/v3/log"
 )
 
-const usersDir = "/users"
+const usersKeyPrefix = "users/"
 
 const unsupportedPicMessage = "Unsupported picture type, use JPG, PNG or WebP"
 
@@ -26,34 +28,34 @@ func hasUnsupportedProfilePic(c fiber.Ctx) bool {
 	return errors.Is(profilepic.CheckType(upload.Filename), profilepic.ErrUnsupportedType)
 }
 
-// SaveProfilePicToDisk stores the uploaded profilePic as the user's avatar and
-// returns the URL path that serves it.
-func SaveProfilePicToDisk(c fiber.Ctx, user models.User, assetsDir string) (string, error) {
-	return saveUpload(c, user, assetsDir, "_avatar", "/profile/avatar")
+// SaveProfilePic stores the uploaded profilePic in store as the user's avatar
+// and returns the URL path that serves it.
+func SaveProfilePic(c fiber.Ctx, store objstore.Store, user models.User) (string, error) {
+	return saveUpload(c, store, user, "_avatar", "/profile/avatar")
 }
 
-// SaveProfilePicPreviewToTmp stores the uploaded profilePic as the user's
+// SaveProfilePicPreview stores the uploaded profilePic in store as the user's
 // avatar preview and returns the URL path that serves it.
-func SaveProfilePicPreviewToTmp(c fiber.Ctx, user models.User, assetsDir string) (string, error) {
-	return saveUpload(c, user, assetsDir, "_preview", "/profile/avatar/preview")
+func SaveProfilePicPreview(c fiber.Ctx, store objstore.Store, user models.User) (string, error) {
+	return saveUpload(c, store, user, "_preview", "/profile/avatar/preview")
 }
 
-// ProfilePicPath returns the file path of a user picture in assetsDir.
-func ProfilePicPath(filename, assetsDir string) (string, error) {
-	return profilepic.Path(assetsDir, usersDir, filename)
+// ProfilePicKey returns the object key of a user picture file.
+func ProfilePicKey(filename string) string {
+	return usersKeyPrefix + filename
 }
 
-// removeProfilePicFiles deletes the user's avatar and avatar preview files.
-func (s service) removeProfilePicFiles(userUID string) {
+// removeProfilePicFiles deletes the user's avatar and avatar preview.
+func (s service) removeProfilePicFiles(ctx context.Context, userUID string) {
 	for _, suffix := range []string{"_avatar", "_preview"} {
-		err := profilepic.Remove(s.Env.AssetsDir, usersDir, userUID+suffix)
+		err := s.ObjectStore.Delete(ctx, ProfilePicKey(userUID+suffix))
 		if err != nil {
 			log.Errorf("remove user profile pic file: %v", err)
 		}
 	}
 }
 
-func saveUpload(c fiber.Ctx, user models.User, assetsDir, suffix, urlPath string) (string, error) {
+func saveUpload(c fiber.Ctx, store objstore.Store, user models.User, suffix, urlPath string) (string, error) {
 	upload, err := c.FormFile("profilePic")
 	if err != nil {
 		return "", profilepic.FormFileError(err)
@@ -68,14 +70,9 @@ func saveUpload(c fiber.Ctx, user models.User, assetsDir, suffix, urlPath string
 		return "", fmt.Errorf("check profile pic: %w", err)
 	}
 
-	filePath, err := ProfilePicPath(user.UID+suffix, assetsDir)
+	err = profilepic.Put(c.Context(), store, ProfilePicKey(user.UID+suffix), upload)
 	if err != nil {
-		return "", fmt.Errorf("locate profile pic: %w", err)
-	}
-
-	err = c.SaveFile(upload, filePath)
-	if err != nil {
-		return "", fmt.Errorf("save profile pic to disk: %w", err)
+		return "", fmt.Errorf("save profile pic: %w", err)
 	}
 
 	return urlPath, nil

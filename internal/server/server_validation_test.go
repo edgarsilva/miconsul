@@ -9,6 +9,7 @@ import (
 
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
+	"miconsul/internal/lib/objstore"
 
 	lognoop "go.opentelemetry.io/otel/log/noop"
 	metricnoop "go.opentelemetry.io/otel/metric/noop"
@@ -43,6 +44,17 @@ func TestValidateCriticalDeps(t *testing.T) {
 			want: "logger provider is required; pass server.WithLoggerProvider(...) to server.New(...)",
 		},
 		{
+			name: "missing object store",
+			s: &Server{
+				Env:            &appenv.Env{},
+				DB:             &database.Database{},
+				TracerProvider: noop.NewTracerProvider(),
+				MeterProvider:  metricnoop.NewMeterProvider(),
+				LoggerProvider: lognoop.NewLoggerProvider(),
+			},
+			want: "object store is required; pass server.WithObjectStore(...) to server.New(...)",
+		},
+		{
 			name: "valid deps",
 			s: &Server{
 				Env:            &appenv.Env{},
@@ -50,6 +62,7 @@ func TestValidateCriticalDeps(t *testing.T) {
 				TracerProvider: noop.NewTracerProvider(),
 				MeterProvider:  metricnoop.NewMeterProvider(),
 				LoggerProvider: lognoop.NewLoggerProvider(),
+				ObjectStore:    &objstore.Disk{},
 			},
 			want: "",
 		},
@@ -136,6 +149,7 @@ func TestNewReturnsSetupErrors(t *testing.T) {
 		WithTracerProvider(noop.NewTracerProvider()),
 		WithMeterProvider(metricnoop.NewMeterProvider()),
 		WithLoggerProvider(lognoop.NewLoggerProvider()),
+		WithObjectStore(&objstore.Disk{}),
 	}
 
 	tests := []struct {
@@ -193,6 +207,7 @@ func TestNewReturnsSessionStoreError(t *testing.T) {
 		WithTracerProvider(noop.NewTracerProvider()),
 		WithMeterProvider(metricnoop.NewMeterProvider()),
 		WithLoggerProvider(lognoop.NewLoggerProvider()),
+		WithObjectStore(&objstore.Disk{}),
 	)
 	if err == nil || !strings.HasPrefix(err.Error(), "open session store: ") {
 		t.Fatalf("New() error = %v, want an open session store error", err)

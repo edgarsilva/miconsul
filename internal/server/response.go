@@ -2,7 +2,10 @@ package server
 
 import (
 	"fmt"
-	"os"
+	"net/http"
+	"time"
+
+	"miconsul/internal/lib/objstore"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -34,13 +37,37 @@ func (s *Server) RedirectWithAlert(c fiber.Ctx, path, msg string, level fmt.Stri
 	return s.redirectWithFlash(c, path, "alert", msg, "alert_level", level.String())
 }
 
-func (s *Server) SendFile(c fiber.Ctx, path string) error {
-	fileBytes, err := os.ReadFile(path)
-	if err != nil {
-		return c.SendStatus(fiber.StatusInternalServerError)
+// SendObject sends obj as the response with its content type, size and
+// modification time. It answers 304 when the client's copy is current. It
+// closes obj.Body: the response closes it after streaming, and SendObject
+// closes it on every other path.
+func (s *Server) SendObject(c fiber.Ctx, obj objstore.Object) error {
+	c.Set(fiber.HeaderContentType, obj.ContentType)
+
+	lastModifiedAt := obj.ModTime.UTC().Truncate(time.Second)
+	lastModifiedAtUnknown := lastModifiedAt.IsZero()
+	if lastModifiedAtUnknown {
+		return c.SendStream(obj.Body, int(obj.Size))
 	}
 
-	return c.Send(fileBytes)
+	c.Set(fiber.HeaderLastModified, lastModifiedAt.Format(http.TimeFormat))
+	if clientHasCurrentCopy(c, lastModifiedAt) {
+		_ = obj.Body.Close()
+		return c.SendStatus(fiber.StatusNotModified)
+	}
+
+	return c.SendStream(obj.Body, int(obj.Size))
+}
+
+// clientHasCurrentCopy reports whether the request's If-Modified-Since date is
+// the same as or later than lastModifiedAt.
+func clientHasCurrentCopy(c fiber.Ctx, lastModifiedAt time.Time) bool {
+	clientDate, err := http.ParseTime(c.Get(fiber.HeaderIfModifiedSince))
+	if err != nil {
+		return false
+	}
+
+	return clientDate.Equal(lastModifiedAt) || clientDate.After(lastModifiedAt)
 }
 
 // redirectWithFlash redirects to path with a flash message and level. For htmx

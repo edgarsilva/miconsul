@@ -164,7 +164,7 @@ func TestHandleUpdateRejectsBlankName(t *testing.T) {
 
 func TestHandleUpdateRejectsAnUnsupportedPicture(t *testing.T) {
 	svc, user := newClinicServiceForTests(t)
-	svc.Env.AssetsDir = t.TempDir()
+	useDiskStore(t, svc, t.TempDir())
 
 	seed := models.Clinic{UserID: user.ID, Name: "Seed", Phone: "111"}
 	if err := svc.CreateClinic(t.Context(), &seed); err != nil {

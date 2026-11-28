@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
+	"miconsul/internal/lib/objstore"
 	"miconsul/internal/models"
 	"miconsul/internal/server"
 
@@ -108,13 +110,14 @@ func newUserServiceForTests(t *testing.T) (service, models.User) {
 	}
 
 	srv := &server.Server{
-		Env: &appenv.Env{AppName: "miconsul", JWTSecret: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", AssetsDir: t.TempDir()},
+		Env: &appenv.Env{AppName: "miconsul", JWTSecret: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"},
 		DB:  &database.Database{DB: gdb},
 	}
 	svc, err := NewService(srv)
 	if err != nil {
 		t.Fatalf("new user service: %v", err)
 	}
+	useDiskStore(t, svc, t.TempDir())
 
 	u := models.User{Email: "user@example.com", Password: "hash", Name: "Seed User", Role: models.UserRoleUser}
 	if err := gorm.G[models.User](gdb).Create(context.Background(), &u); err != nil {
@@ -157,5 +160,35 @@ func TestFindUsersBySearchTerm(t *testing.T) {
 		if len(users) != tt.want {
 			t.Errorf("search %q: got %d users, want %d", tt.term, len(users), tt.want)
 		}
+	}
+}
+
+func newTestStore(t *testing.T, dir string) *objstore.Disk {
+	t.Helper()
+
+	store, err := objstore.NewDisk(dir)
+	if err != nil {
+		t.Fatalf("new disk store: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := store.Close(); err != nil {
+			t.Errorf("close disk store: %v", err)
+		}
+	})
+
+	return store
+}
+
+func useDiskStore(t *testing.T, svc service, dir string) {
+	t.Helper()
+
+	svc.ObjectStore = newTestStore(t, dir)
+}
+
+func putTestObject(t *testing.T, svc service, key, content string) {
+	t.Helper()
+
+	if err := svc.ObjectStore.Put(t.Context(), key, strings.NewReader(content), int64(len(content)), ""); err != nil {
+		t.Fatalf("put %s: %v", key, err)
 	}
 }

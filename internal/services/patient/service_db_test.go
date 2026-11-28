@@ -9,6 +9,7 @@ import (
 
 	"miconsul/internal/database"
 	"miconsul/internal/lib/appenv"
+	"miconsul/internal/lib/objstore"
 	"miconsul/internal/models"
 	"miconsul/internal/server"
 
@@ -155,6 +156,7 @@ func newPatientServiceForTests(t *testing.T) (service, models.User) {
 	if err != nil {
 		t.Fatalf("new patient service: %v", err)
 	}
+	useDiskStore(t, svc, t.TempDir())
 
 	u := models.User{Email: "patient@example.com", Password: "hash", Role: models.UserRoleUser}
 	if err := gorm.G[models.User](gdb).Create(context.Background(), &u); err != nil {
@@ -226,4 +228,26 @@ func TestFindLastAppointmentsByPatient(t *testing.T) {
 	if err != nil || len(empty) != 0 {
 		t.Fatalf("expected empty result for no patients, got %v, %v", empty, err)
 	}
+}
+
+func newTestStore(t *testing.T, dir string) *objstore.Disk {
+	t.Helper()
+
+	store, err := objstore.NewDisk(dir)
+	if err != nil {
+		t.Fatalf("new disk store: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := store.Close(); err != nil {
+			t.Errorf("close disk store: %v", err)
+		}
+	})
+
+	return store
+}
+
+func useDiskStore(t *testing.T, svc service, dir string) {
+	t.Helper()
+
+	svc.ObjectStore = newTestStore(t, dir)
 }
